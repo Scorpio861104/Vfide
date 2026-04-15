@@ -6,6 +6,7 @@
 import { validateEthereumAddress, ValidationError } from './cryptoValidation';
 import { formatUnits, parseUnits } from 'viem';
 import * as React from 'react';
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { logger } from '@/lib/logger';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
@@ -30,17 +31,17 @@ const asAddressArray = (value: unknown, name: string): string[] => {
 
 /**
  * VFIDE Token Contract Address
- * Required: set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS in the environment.
- * Throws a ValidationError at import time if absent or clearly invalid.
+ * Required: configure VFIDEToken in the shared contract map.
+ * Throws a ValidationError at import time if absent or invalid.
  */
-const _rawTokenAddress = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? '';
-if (!_rawTokenAddress || _rawTokenAddress === '0x...' || !validateEthereumAddress(_rawTokenAddress)) {
+const _configuredTokenAddress = CONTRACT_ADDRESSES.VFIDEToken;
+if (!isConfiguredContractAddress(_configuredTokenAddress) || !validateEthereumAddress(_configuredTokenAddress)) {
   throw new ValidationError(
-    'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS is not configured or is invalid. ' +
-    'Set a valid ERC-20 contract address in your environment.'
+    'VFIDEToken is not configured or is invalid. ' +
+    'Set a valid VFIDE token contract address in the shared environment configuration.'
   );
 }
-export const VFIDE_TOKEN_ADDRESS: string = _rawTokenAddress;
+export const VFIDE_TOKEN_ADDRESS: string = _configuredTokenAddress;
 
 /**
  * Maximum uint256 value for unlimited token approval
@@ -48,7 +49,6 @@ export const VFIDE_TOKEN_ADDRESS: string = _rawTokenAddress;
  */
 export const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const ERC20_DECIMALS = 18;
 const DECIMAL_AMOUNT_REGEX = /^\d+(?:\.\d{1,18})?$/;
 const RECEIPT_POLL_INTERVAL_MS = 1000;

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { isAddress } from 'viem';
 import { useChainId, useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi';
+import { ZERO_ADDRESS } from '@/lib/contracts';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
@@ -10,8 +11,6 @@ import {
   ConfirmationModal,
   TransactionStatus,
 } from './SecurityComponents';
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function ProductionSetupPanel() {
   const chainId = useChainId();
@@ -32,6 +31,8 @@ export function ProductionSetupPanel() {
     functionName: 'system_getStatus',
   });
 
+  const systemStatusTuple = systemStatus as readonly [boolean, boolean, boolean, boolean, boolean, string] | undefined;
+
   const handleSafeDefaults = async () => {
     setLocalError(null);
     if (chainId !== CURRENT_CHAIN_ID) {
@@ -45,7 +46,7 @@ export function ProductionSetupPanel() {
     }
     setShowSafeDefaultsConfirm(false);
     setLoading(true);
-    
+
     try {
       await writeContractAsync({
         address: OWNER_CONTROL_PANEL_ADDRESS,
@@ -81,7 +82,7 @@ export function ProductionSetupPanel() {
     }
     setShowAutoSwapConfirm(false);
     setLoading(true);
-    
+
     try {
       await writeContractAsync({
         address: OWNER_CONTROL_PANEL_ADDRESS,
@@ -98,7 +99,7 @@ export function ProductionSetupPanel() {
   };
 
   const txStatus = localError ? 'error' : isConfirming ? 'pending' : isSuccess ? 'success' : error ? 'error' : 'idle';
-  const _isConfigured = systemStatus && systemStatus[0]; // Check if Howey-safe mode is enabled
+  const _isConfigured = systemStatusTuple && systemStatusTuple[0]; // Check if Howey-safe mode is enabled
 
   return (
     <div className="space-y-6">
@@ -110,20 +111,20 @@ export function ProductionSetupPanel() {
         </p>
 
         {/* Current Status */}
-        {systemStatus && (
+        {systemStatusTuple && (
           <div className={`p-4 rounded-lg mb-6 ${
-            systemStatus[0] 
-              ? 'bg-green-500/20 border border-green-500/50' 
+            systemStatusTuple[0]
+              ? 'bg-green-500/20 border border-green-500/50'
               : 'bg-yellow-500/20 border border-yellow-500/50'
           }`}>
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{systemStatus[0] ? '✅' : '⚠️'}</span>
+              <span className="text-2xl">{systemStatusTuple[0] ? '✅' : '⚠️'}</span>
               <div>
                 <div className="text-white font-bold">
-                  {systemStatus[0] ? 'Production Configuration Detected' : 'Not Yet Configured'}
+                  {systemStatusTuple[0] ? 'Production Configuration Detected' : 'Not Yet Configured'}
                 </div>
                 <div className="text-sm text-slate-300">
-                  {systemStatus[5] as string}
+                  {systemStatusTuple[5]}
                 </div>
               </div>
             </div>
@@ -139,7 +140,7 @@ export function ProductionSetupPanel() {
             <p className="text-slate-400 text-sm mb-4">
               Most secure configuration for production deployment.
             </p>
-            
+
             <div className="space-y-2 text-sm mb-6">
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-green-400">✓</span>
@@ -175,7 +176,7 @@ export function ProductionSetupPanel() {
             <p className="text-slate-400 text-sm mb-4">
               Full-featured setup with auto-conversion to stablecoins for council payments.
             </p>
-            
+
             <div className="space-y-2 text-sm mb-6">
               <div className="flex items-center gap-2 text-slate-300">
                 <span className="text-green-400">✓</span>
@@ -200,7 +201,6 @@ export function ProductionSetupPanel() {
                 label="DEX Router"
                 value={dexRouter}
                 onChange={setDexRouter}
-               
                 required
               />
 
@@ -208,7 +208,6 @@ export function ProductionSetupPanel() {
                 label="USDC Address"
                 value={usdc}
                 onChange={setUsdc}
-               
                 required
               />
 

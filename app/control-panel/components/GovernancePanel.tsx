@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useChainId, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { ZERO_ADDRESS } from '@/lib/contracts';
 import { OWNER_CONTROL_PANEL_ABI, OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { AddressInput, NumberInput, TransactionStatus } from './SecurityComponents';
 
 type GuardedAction = 'tokenLockPolicy' | 'autoSwapConfigure' | 'autoWorkPayoutConfigure';
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function GovernancePanel() {
   const chainId = useChainId();

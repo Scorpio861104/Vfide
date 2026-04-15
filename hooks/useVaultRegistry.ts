@@ -8,18 +8,21 @@
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { keccak256, toBytes, Address } from 'viem';
 import { useState, useCallback } from 'react';
+import { VaultRecoveryClaimABI } from '@/lib/abis';
+import { CONTRACT_ADDRESSES, VaultRegistryABI as SHARED_VAULT_REGISTRY_ABI, isConfiguredContractAddress } from '@/lib/contracts';
 
-// Contract addresses (will be updated after deployment)
-const VAULT_REGISTRY_ADDRESS = process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS as Address || '0x0000000000000000000000000000000000000000';
-const VAULT_RECOVERY_CLAIM_ADDRESS = process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS as Address || '0x0000000000000000000000000000000000000000';
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const IS_VAULT_RECOVERY_CLAIM_DEPLOYED = VAULT_RECOVERY_CLAIM_ADDRESS !== ZERO_ADDRESS;
+const VAULT_RECOVERY_CLAIM_ABI = VaultRecoveryClaimABI;
+
+const getVaultRegistryAddress = () => CONTRACT_ADDRESSES.VaultRegistry as Address;
+const getVaultRecoveryClaimAddress = () => CONTRACT_ADDRESSES.VaultRecoveryClaim as Address;
+const isVaultRegistryDeployed = () => isConfiguredContractAddress(getVaultRegistryAddress());
+const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(getVaultRecoveryClaimAddress());
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ABIs (minimal required functions)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const VAULT_REGISTRY_ABI = [
+const VAULT_REGISTRY_ABI = SHARED_VAULT_REGISTRY_ABI.length > 0 ? SHARED_VAULT_REGISTRY_ABI : [
   {
     name: 'searchByRecoveryId',
     type: 'function',
@@ -223,116 +226,6 @@ const VAULT_REGISTRY_ABI = [
   }
 ] as const;
 
-const VAULT_RECOVERY_CLAIM_ABI = [
-  {
-    name: 'initiateClaim',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'vault', type: 'address' },
-      { name: 'recoveryId', type: 'string' },
-      { name: 'evidenceHash', type: 'bytes32' },
-      { name: 'reason', type: 'string' }
-    ],
-    outputs: [{ name: 'claimId', type: 'uint256' }]
-  },
-  {
-    name: 'guardianVote',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'claimId', type: 'uint256' },
-      { name: 'approve', type: 'bool' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'finalizeClaim',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [{ name: 'claimId', type: 'uint256' }],
-    outputs: []
-  },
-  {
-    name: 'challengeClaim',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'claimId', type: 'uint256' },
-      { name: 'reason', type: 'string' }
-    ],
-    outputs: []
-  },
-  {
-    name: 'getClaim',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'claimId', type: 'uint256' }],
-    outputs: [
-      {
-        name: '',
-        type: 'tuple',
-        components: [
-          { name: 'vault', type: 'address' },
-          { name: 'claimant', type: 'address' },
-          { name: 'originalOwner', type: 'address' },
-          { name: 'initiatedAt', type: 'uint64' },
-          { name: 'challengeEndsAt', type: 'uint64' },
-          { name: 'expiresAt', type: 'uint64' },
-          { name: 'status', type: 'uint8' },
-          { name: 'guardianApprovals', type: 'uint8' },
-          { name: 'nodeVotes', type: 'uint8' },
-          { name: 'evidenceHash', type: 'bytes32' },
-          { name: 'claimReason', type: 'string' }
-        ]
-      }
-    ]
-  },
-  {
-    name: 'getActiveClaimForVault',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'vault', type: 'address' }],
-    outputs: [
-      { name: 'claimId', type: 'uint256' },
-      {
-        name: 'claim',
-        type: 'tuple',
-        components: [
-          { name: 'vault', type: 'address' },
-          { name: 'claimant', type: 'address' },
-          { name: 'originalOwner', type: 'address' },
-          { name: 'initiatedAt', type: 'uint64' },
-          { name: 'challengeEndsAt', type: 'uint64' },
-          { name: 'expiresAt', type: 'uint64' },
-          { name: 'status', type: 'uint8' },
-          { name: 'guardianApprovals', type: 'uint8' },
-          { name: 'nodeVotes', type: 'uint8' },
-          { name: 'evidenceHash', type: 'bytes32' },
-          { name: 'claimReason', type: 'string' }
-        ]
-      }
-    ]
-  },
-  {
-    name: 'canFinalize',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'claimId', type: 'uint256' }],
-    outputs: [
-      { name: '', type: 'bool' },
-      { name: 'reason', type: 'string' }
-    ]
-  },
-  {
-    name: 'challengeTimeRemaining',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'claimId', type: 'uint256' }],
-    outputs: [{ name: '', type: 'uint256' }]
-  }
-] as const;
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -393,13 +286,15 @@ export const ClaimStatusLabels: Record<number, string> = {
  * Search for a vault by recovery ID
  */
 export function useSearchByRecoveryId(recoveryId: string) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'searchByRecoveryId',
     args: [recoveryId],
     query: {
-      enabled: !!recoveryId && recoveryId.length > 0
+      enabled: isAvailable && !!recoveryId && recoveryId.length > 0
     }
   });
 
@@ -407,7 +302,8 @@ export function useSearchByRecoveryId(recoveryId: string) {
     vault: data as Address | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -416,14 +312,15 @@ export function useSearchByRecoveryId(recoveryId: string) {
  */
 export function useSearchByEmail(email: string) {
   const emailHash = email ? keccak256(toBytes(email.toLowerCase())) : undefined;
+  const isAvailable = isVaultRegistryDeployed();
   
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'searchByEmail',
     args: emailHash ? [emailHash] : undefined,
     query: {
-      enabled: !!emailHash
+      enabled: isAvailable && !!emailHash
     }
   });
 
@@ -431,7 +328,8 @@ export function useSearchByEmail(email: string) {
     vault: data as Address | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -439,13 +337,15 @@ export function useSearchByEmail(email: string) {
  * Search for a vault by username
  */
 export function useSearchByUsername(username: string) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'searchByUsername',
     args: [username],
     query: {
-      enabled: !!username && username.length > 0
+      enabled: isAvailable && !!username && username.length > 0
     }
   });
 
@@ -453,7 +353,8 @@ export function useSearchByUsername(username: string) {
     vault: data as Address | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -461,13 +362,15 @@ export function useSearchByUsername(username: string) {
  * Search for vaults by guardian address
  */
 export function useSearchByGuardian(guardianAddress: Address | undefined) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'searchByGuardian',
     args: guardianAddress ? [guardianAddress] : undefined,
     query: {
-      enabled: !!guardianAddress
+      enabled: isAvailable && !!guardianAddress
     }
   });
 
@@ -475,7 +378,8 @@ export function useSearchByGuardian(guardianAddress: Address | undefined) {
     vaults: data as Address[] | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -483,13 +387,15 @@ export function useSearchByGuardian(guardianAddress: Address | undefined) {
  * Get vault info for search results
  */
 export function useVaultInfo(vaultAddress: Address | undefined) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'getVaultInfo',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress
+      enabled: isAvailable && !!vaultAddress
     }
   });
 
@@ -497,7 +403,8 @@ export function useVaultInfo(vaultAddress: Address | undefined) {
     vaultInfo: data as VaultInfo | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -548,13 +455,15 @@ export function useVaultSearch() {
  * User may have their old address saved in email confirmations, browser history, etc.
  */
 export function useSearchByWalletAddress(oldWallet: Address | undefined) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'searchByWalletAddress',
     args: oldWallet ? [oldWallet] : undefined,
     query: {
-      enabled: !!oldWallet
+      enabled: isAvailable && !!oldWallet
     }
   });
 
@@ -565,7 +474,8 @@ export function useSearchByWalletAddress(oldWallet: Address | undefined) {
     vaultInfo: result?.[1],
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -574,13 +484,15 @@ export function useSearchByWalletAddress(oldWallet: Address | undefined) {
  * User may have their vault address saved from transaction history
  */
 export function useSearchByVaultAddress(vaultAddress: Address | undefined) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'searchByVaultAddress',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress
+      enabled: isAvailable && !!vaultAddress
     }
   });
 
@@ -588,7 +500,8 @@ export function useSearchByVaultAddress(vaultAddress: Address | undefined) {
     vaultInfo: data as VaultInfo | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -597,13 +510,15 @@ export function useSearchByVaultAddress(vaultAddress: Address | undefined) {
  * Helps users who remember approximately when they created their vault
  */
 export function useSearchByCreationTime(startTime: bigint | undefined, endTime: bigint | undefined, limit: number = 20) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'searchByCreationTime',
     args: startTime && endTime ? [startTime, endTime, BigInt(limit)] : undefined,
     query: {
-      enabled: !!startTime && !!endTime
+      enabled: isAvailable && !!startTime && !!endTime
     }
   });
 
@@ -611,7 +526,8 @@ export function useSearchByCreationTime(startTime: bigint | undefined, endTime: 
     matches: data as VaultInfo[] | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -619,16 +535,22 @@ export function useSearchByCreationTime(startTime: bigint | undefined, endTime: 
  * Get total number of vaults in registry
  */
 export function useTotalVaults() {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'getTotalVaults',
+    query: {
+      enabled: isAvailable,
+    }
   });
 
   return {
     totalVaults: data ? Number(data) : 0,
     isLoading,
-    error
+    error,
+    isAvailable,
   };
 }
 
@@ -636,13 +558,15 @@ export function useTotalVaults() {
  * Get vault by index for pagination/browsing
  */
 export function useVaultByIndex(index: number | undefined) {
+  const isAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'getVaultByIndex',
     args: index !== undefined ? [BigInt(index)] : undefined,
     query: {
-      enabled: index !== undefined
+      enabled: isAvailable && index !== undefined
     }
   });
 
@@ -653,7 +577,8 @@ export function useVaultByIndex(index: number | undefined) {
     vaultInfo: result?.[1],
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -665,23 +590,28 @@ export function useVaultByIndex(index: number | undefined) {
  * Set recovery ID for a vault
  */
 export function useSetRecoveryId() {
+  const isAvailable = isVaultRegistryDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const setRecoveryId = useCallback((vault: Address, recoveryId: string) => {
+    if (!isAvailable) {
+      throw new Error('Vault registry contract is not deployed. Set NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS.');
+    }
     writeContract({
-      address: VAULT_REGISTRY_ADDRESS,
+      address: getVaultRegistryAddress(),
       abi: VAULT_REGISTRY_ABI,
       functionName: 'setRecoveryId',
       args: [vault, recoveryId]
     });
-  }, [writeContract]);
+  }, [isAvailable, writeContract]);
 
   return {
     setRecoveryId,
     isPending: isPending || isConfirming,
     isSuccess,
-    error
+    error,
+    isAvailable,
   };
 }
 
@@ -689,24 +619,29 @@ export function useSetRecoveryId() {
  * Set email recovery for a vault
  */
 export function useSetEmailRecovery() {
+  const isAvailable = isVaultRegistryDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const setEmailRecovery = useCallback((vault: Address, email: string) => {
+    if (!isAvailable) {
+      throw new Error('Vault registry contract is not deployed. Set NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS.');
+    }
     const emailHash = keccak256(toBytes(email.toLowerCase()));
     writeContract({
-      address: VAULT_REGISTRY_ADDRESS,
+      address: getVaultRegistryAddress(),
       abi: VAULT_REGISTRY_ABI,
       functionName: 'setEmailRecovery',
       args: [vault, emailHash]
     });
-  }, [writeContract]);
+  }, [isAvailable, writeContract]);
 
   return {
     setEmailRecovery,
     isPending: isPending || isConfirming,
     isSuccess,
-    error
+    error,
+    isAvailable,
   };
 }
 
@@ -714,23 +649,28 @@ export function useSetEmailRecovery() {
  * Set username for a vault
  */
 export function useSetUsername() {
+  const isAvailable = isVaultRegistryDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const setUsername = useCallback((vault: Address, username: string) => {
+    if (!isAvailable) {
+      throw new Error('Vault registry contract is not deployed. Set NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS.');
+    }
     writeContract({
-      address: VAULT_REGISTRY_ADDRESS,
+      address: getVaultRegistryAddress(),
       abi: VAULT_REGISTRY_ABI,
       functionName: 'setUsername',
       args: [vault, username]
     });
-  }, [writeContract]);
+  }, [isAvailable, writeContract]);
 
   return {
     setUsername,
     isPending: isPending || isConfirming,
     isSuccess,
-    error
+    error,
+    isAvailable,
   };
 }
 
@@ -738,19 +678,22 @@ export function useSetUsername() {
  * Check if recovery ID is available
  */
 export function useIsRecoveryIdAvailable(recoveryId: string) {
+  const isRegistryAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'isRecoveryIdAvailable',
     args: [recoveryId],
     query: {
-      enabled: !!recoveryId && recoveryId.length > 0
+      enabled: isRegistryAvailable && !!recoveryId && recoveryId.length > 0
     }
   });
 
   return {
     isAvailable: data as boolean | undefined,
-    isLoading
+    isLoading,
+    isRegistryAvailable,
   };
 }
 
@@ -758,19 +701,22 @@ export function useIsRecoveryIdAvailable(recoveryId: string) {
  * Check if username is available
  */
 export function useIsUsernameAvailable(username: string) {
+  const isRegistryAvailable = isVaultRegistryDeployed();
+
   const { data, isLoading } = useReadContract({
-    address: VAULT_REGISTRY_ADDRESS,
+    address: getVaultRegistryAddress(),
     abi: VAULT_REGISTRY_ABI,
     functionName: 'isUsernameAvailable',
     args: [username],
     query: {
-      enabled: !!username && username.length > 0
+      enabled: isRegistryAvailable && !!username && username.length > 0
     }
   });
 
   return {
     isAvailable: data as boolean | undefined,
-    isLoading
+    isLoading,
+    isRegistryAvailable,
   };
 }
 
@@ -782,6 +728,7 @@ export function useIsUsernameAvailable(username: string) {
  * Initiate a recovery claim
  */
 export function useInitiateClaim() {
+  const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
@@ -791,23 +738,24 @@ export function useInitiateClaim() {
     reason: string,
     evidenceHash: `0x${string}` = '0x0000000000000000000000000000000000000000000000000000000000000000'
   ) => {
-    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+    if (!isAvailable) {
       throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
     }
     writeContract({
-      address: VAULT_RECOVERY_CLAIM_ADDRESS,
+      address: getVaultRecoveryClaimAddress(),
       abi: VAULT_RECOVERY_CLAIM_ABI,
       functionName: 'initiateClaim',
       args: [vault, recoveryId, evidenceHash, reason]
     });
-  }, [writeContract]);
+  }, [isAvailable, writeContract]);
 
   return {
     initiateClaim,
     isPending: isPending || isConfirming,
     isSuccess,
     error,
-    txHash: hash
+    txHash: hash,
+    isAvailable,
   };
 }
 
@@ -815,13 +763,15 @@ export function useInitiateClaim() {
  * Get claim details
  */
 export function useGetClaim(claimId: bigint | undefined) {
+  const isAvailable = isVaultRecoveryClaimDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_RECOVERY_CLAIM_ADDRESS,
+    address: getVaultRecoveryClaimAddress(),
     abi: VAULT_RECOVERY_CLAIM_ABI,
     functionName: 'getClaim',
     args: claimId !== undefined ? [claimId] : undefined,
     query: {
-      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && claimId !== undefined
+      enabled: isAvailable && claimId !== undefined
     }
   });
 
@@ -829,7 +779,8 @@ export function useGetClaim(claimId: bigint | undefined) {
     claim: data as RecoveryClaim | undefined,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -837,13 +788,15 @@ export function useGetClaim(claimId: bigint | undefined) {
  * Get active claim for a vault
  */
 export function useActiveClaimForVault(vaultAddress: Address | undefined) {
+  const isAvailable = isVaultRecoveryClaimDeployed();
+
   const { data, isLoading, error, refetch } = useReadContract({
-    address: VAULT_RECOVERY_CLAIM_ADDRESS,
+    address: getVaultRecoveryClaimAddress(),
     abi: VAULT_RECOVERY_CLAIM_ABI,
     functionName: 'getActiveClaimForVault',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && !!vaultAddress
+      enabled: isAvailable && !!vaultAddress
     }
   });
 
@@ -854,7 +807,8 @@ export function useActiveClaimForVault(vaultAddress: Address | undefined) {
     claim,
     isLoading,
     error,
-    refetch
+    refetch,
+    isAvailable,
   };
 }
 
@@ -862,26 +816,28 @@ export function useActiveClaimForVault(vaultAddress: Address | undefined) {
  * Guardian vote on a claim
  */
 export function useGuardianVote() {
+  const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const vote = useCallback((claimId: bigint, approve: boolean) => {
-    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+    if (!isAvailable) {
       throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
     }
     writeContract({
-      address: VAULT_RECOVERY_CLAIM_ADDRESS,
+      address: getVaultRecoveryClaimAddress(),
       abi: VAULT_RECOVERY_CLAIM_ABI,
       functionName: 'guardianVote',
       args: [claimId, approve]
     });
-  }, [writeContract]);
+  }, [isAvailable, writeContract]);
 
   return {
     vote,
     isPending: isPending || isConfirming,
     isSuccess,
-    error
+    error,
+    isAvailable,
   };
 }
 
@@ -889,26 +845,28 @@ export function useGuardianVote() {
  * Challenge a claim (original owner only)
  */
 export function useChallengeClaim() {
+  const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const challenge = useCallback((claimId: bigint, reason: string) => {
-    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+    if (!isAvailable) {
       throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
     }
     writeContract({
-      address: VAULT_RECOVERY_CLAIM_ADDRESS,
+      address: getVaultRecoveryClaimAddress(),
       abi: VAULT_RECOVERY_CLAIM_ABI,
       functionName: 'challengeClaim',
       args: [claimId, reason]
     });
-  }, [writeContract]);
+  }, [isAvailable, writeContract]);
 
   return {
     challenge,
     isPending: isPending || isConfirming,
     isSuccess,
-    error
+    error,
+    isAvailable,
   };
 }
 
@@ -916,26 +874,28 @@ export function useChallengeClaim() {
  * Finalize a claim after challenge period
  */
 export function useFinalizeClaim() {
+  const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   const finalize = useCallback((claimId: bigint) => {
-    if (!IS_VAULT_RECOVERY_CLAIM_DEPLOYED) {
+    if (!isAvailable) {
       throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
     }
     writeContract({
-      address: VAULT_RECOVERY_CLAIM_ADDRESS,
+      address: getVaultRecoveryClaimAddress(),
       abi: VAULT_RECOVERY_CLAIM_ABI,
       functionName: 'finalizeClaim',
       args: [claimId]
     });
-  }, [writeContract]);
+  }, [isAvailable, writeContract]);
 
   return {
     finalize,
     isPending: isPending || isConfirming,
     isSuccess,
-    error
+    error,
+    isAvailable,
   };
 }
 
@@ -943,13 +903,15 @@ export function useFinalizeClaim() {
  * Check if claim can be finalized
  */
 export function useCanFinalize(claimId: bigint | undefined) {
+  const isAvailable = isVaultRecoveryClaimDeployed();
+
   const { data, isLoading } = useReadContract({
-    address: VAULT_RECOVERY_CLAIM_ADDRESS,
+    address: getVaultRecoveryClaimAddress(),
     abi: VAULT_RECOVERY_CLAIM_ABI,
     functionName: 'canFinalize',
     args: claimId !== undefined ? [claimId] : undefined,
     query: {
-      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && claimId !== undefined
+      enabled: isAvailable && claimId !== undefined
     }
   });
 
@@ -958,7 +920,8 @@ export function useCanFinalize(claimId: bigint | undefined) {
   return {
     canFinalize,
     reason,
-    isLoading
+    isLoading,
+    isAvailable,
   };
 }
 
@@ -966,13 +929,15 @@ export function useCanFinalize(claimId: bigint | undefined) {
  * Get challenge time remaining
  */
 export function useChallengeTimeRemaining(claimId: bigint | undefined) {
+  const isAvailable = isVaultRecoveryClaimDeployed();
+
   const { data, isLoading } = useReadContract({
-    address: VAULT_RECOVERY_CLAIM_ADDRESS,
+    address: getVaultRecoveryClaimAddress(),
     abi: VAULT_RECOVERY_CLAIM_ABI,
     functionName: 'challengeTimeRemaining',
     args: claimId !== undefined ? [claimId] : undefined,
     query: {
-      enabled: IS_VAULT_RECOVERY_CLAIM_DEPLOYED && claimId !== undefined,
+      enabled: isAvailable && claimId !== undefined,
       refetchInterval: 60000 // Refetch every minute
     }
   });
@@ -988,6 +953,7 @@ export function useChallengeTimeRemaining(claimId: bigint | undefined) {
     hours: Math.floor(hours),
     minutes: Math.floor(minutes),
     isLoading,
-    formatted: seconds ? `${Math.floor(days)}d ${Math.floor(hours)}h ${Math.floor(minutes)}m` : ''
+    formatted: seconds ? `${Math.floor(days)}d ${Math.floor(hours)}h ${Math.floor(minutes)}m` : '',
+    isAvailable,
   };
 }

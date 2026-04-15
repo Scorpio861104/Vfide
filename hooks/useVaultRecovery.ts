@@ -1,11 +1,10 @@
 import { useAccount, useWriteContract, useReadContract, useWatchContractEvent, useChainId } from 'wagmi';
 import { useMemo, useEffect, useState } from 'react';
 import { isAddress } from 'viem';
-import { USER_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, USER_VAULT_ABI, VAULT_HUB_ABI, ZERO_ADDRESS, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
+const CARD_BOUND_ROTATION_DELAY_SECONDS = 7 * 24 * 60 * 60;
 
 interface RecoveryStatus {
   isActive: boolean;
@@ -29,14 +28,24 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
-  const recoverySupported = !isCardBoundVaultMode();
+  const cardBoundMode = isCardBoundVaultMode();
+  const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress) && vaultAddress !== ZERO_ADDRESS;
+  const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
+  const recoverySupported = true;
+  const inheritanceSupported = !cardBoundMode;
 
-  const assertRecoverySupported = () => {
-    if (!recoverySupported) {
-      throw new Error('Recovery/inheritance is not supported in CardBound vault mode');
-    }
+  const assertRecoveryActionSupported = () => {
     if (chainId !== CURRENT_CHAIN_ID) {
       throw new Error('Switch to the configured network before using recovery actions');
+    }
+  };
+
+  const assertInheritanceSupported = () => {
+    if (!inheritanceSupported) {
+      throw new Error('Inheritance is not supported in CardBound vault mode');
+    }
+    if (chainId !== CURRENT_CHAIN_ID) {
+      throw new Error('Switch to the configured network before using inheritance actions');
     }
   };
 
@@ -49,38 +58,45 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   // State only for time-based updates (countdown timer)
   const [now, setNow] = useState(() => Date.now());
 
-  // Read vault owner
-  const { data: vaultOwner } = useReadContract({
+  // Read vault owner/admin
+  const { data: legacyVaultOwner } = useReadContract({
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     functionName: 'owner',
-    query: { enabled: recoverySupported && !!vaultAddress },
+    query: { enabled: !cardBoundMode && hasVaultAddress },
+  });
+
+  const { data: cardBoundVaultAdmin } = useReadContract({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'admin',
+    query: { enabled: cardBoundMode && hasVaultAddress },
   });
 
   // Read guardian count
   const { data: guardianCount } = useReadContract({
     address: vaultAddress,
-    abi: USER_VAULT_ABI,
+    abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI,
     functionName: 'guardianCount',
-    query: { enabled: recoverySupported && !!vaultAddress },
+    query: { enabled: hasVaultAddress },
   });
 
   // Check if user is guardian
   const { data: isUserGuardian } = useReadContract({
     address: vaultAddress,
-    abi: USER_VAULT_ABI,
+    abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI,
     functionName: 'isGuardian',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: recoverySupported && !!vaultAddress && !!userAddress },
+    query: { enabled: hasVaultAddress && !!userAddress },
   });
 
   // Check if user guardian is mature (7-day waiting period)
-  const { data: isUserGuardianMature } = useReadContract({
+  const { data: legacyUserGuardianMature } = useReadContract({
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     functionName: 'isGuardianMature',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: recoverySupported && !!vaultAddress && !!userAddress && !!isUserGuardian },
+    query: { enabled: !cardBoundMode && hasVaultAddress && !!userAddress && !!isUserGuardian },
   });
 
   // Read Next of Kin address
@@ -88,7 +104,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     functionName: 'nextOfKin',
-    query: { enabled: recoverySupported && !!vaultAddress },
+    query: { enabled: inheritanceSupported && hasVaultAddress },
   });
 
   // Read guardians list
@@ -96,15 +112,37 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     functionName: 'getGuardians',
-    query: { enabled: recoverySupported && !!vaultAddress },
+    query: { enabled: inheritanceSupported && hasVaultAddress },
   });
 
   // Read recovery status from contract
-  const { data: recoveryData, refetch: refetchRecoveryStatus } = useReadContract({
+  const { data: legacyRecoveryData, refetch: refetchLegacyRecoveryStatus } = useReadContract({
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     functionName: 'getRecoveryStatus',
-    query: { enabled: recoverySupported && !!vaultAddress },
+    query: { enabled: !cardBoundMode && hasVaultAddress },
+  });
+
+  const { data: cardBoundGuardianThreshold } = useReadContract({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'guardianThreshold',
+    query: { enabled: cardBoundMode && hasVaultAddress },
+  });
+
+  const { data: cardBoundGuardianSetupComplete } = useReadContract({
+    address: CONTRACT_ADDRESSES.VaultHub,
+    abi: VAULT_HUB_ABI,
+    functionName: 'guardianSetupComplete',
+    args: vaultAddress ? [vaultAddress] : undefined,
+    query: { enabled: isVaultHubAvailable && cardBoundMode && hasVaultAddress },
+  });
+
+  const { data: cardBoundPendingRotation, refetch: refetchCardBoundPendingRotation } = useReadContract({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'pendingRotation',
+    query: { enabled: cardBoundMode && hasVaultAddress },
   });
 
   // Read inheritance status from contract
@@ -112,14 +150,33 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     functionName: 'getInheritanceStatus',
-    query: { enabled: recoverySupported && !!vaultAddress },
+    query: { enabled: inheritanceSupported && hasVaultAddress },
   });
+
+  const vaultOwner = cardBoundMode ? cardBoundVaultAdmin : legacyVaultOwner;
 
   // Derive recovery status from contract data using useMemo (not useState + useEffect)
   const recoveryStatus: RecoveryStatus = useMemo(() => {
-    // getRecoveryStatus returns: [proposedOwner, approvals, threshold, expiryTime, active]
-    const data = recoveryData as [string, bigint, bigint, bigint, boolean] | undefined;
-    
+    if (cardBoundMode) {
+      const data = cardBoundPendingRotation as [string, bigint, bigint, bigint] | undefined;
+      if (data) {
+        const [candidate, activateAt, approvals, _proposalNonce] = data;
+        const activateMs = Number(activateAt) * 1000;
+        const daysRemaining = Math.max(0, Math.ceil((activateMs - now) / (24 * 60 * 60 * 1000)));
+
+        return {
+          isActive: candidate !== ZERO_ADDRESS,
+          proposedOwner: candidate !== ZERO_ADDRESS ? candidate : null,
+          approvals: Number(approvals),
+          threshold: Number((cardBoundGuardianThreshold as bigint | undefined) ?? 0n),
+          expiryTime: activateMs > 0 ? activateMs : null,
+          daysRemaining: activateMs > 0 ? daysRemaining : null,
+        };
+      }
+    }
+
+    const data = legacyRecoveryData as [string, bigint, bigint, bigint, boolean] | undefined;
+
     if (data) {
       const [candidate, approvals, threshold, expiry, isActive] = data;
       const expiryMs = Number(expiry) * 1000;
@@ -142,7 +199,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
       expiryTime: null,
       daysRemaining: null,
     };
-  }, [recoveryData, now]);
+  }, [cardBoundMode, cardBoundPendingRotation, cardBoundGuardianThreshold, legacyRecoveryData, now]);
 
   // Derive inheritance status from contract data using useMemo
   const inheritanceStatus: InheritanceStatus = useMemo(() => {
@@ -189,9 +246,9 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     eventName: 'RecoveryRequested',
-    enabled: recoverySupported && !!vaultAddress,
+    enabled: !cardBoundMode && hasVaultAddress,
     onLogs: () => {
-      refetchRecoveryStatus();
+      refetchLegacyRecoveryStatus();
     },
   });
 
@@ -199,9 +256,9 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     eventName: 'RecoveryApproved',
-    enabled: recoverySupported && !!vaultAddress,
+    enabled: !cardBoundMode && hasVaultAddress,
     onLogs: () => {
-      refetchRecoveryStatus();
+      refetchLegacyRecoveryStatus();
     },
   });
 
@@ -209,9 +266,29 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     eventName: 'RecoveryFinalized',
-    enabled: recoverySupported && !!vaultAddress,
+    enabled: !cardBoundMode && !!vaultAddress,
     onLogs: () => {
-      refetchRecoveryStatus();
+      refetchLegacyRecoveryStatus();
+    },
+  });
+
+  useWatchContractEvent({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    eventName: 'WalletRotationProposed',
+    enabled: cardBoundMode && !!vaultAddress,
+    onLogs: () => {
+      refetchCardBoundPendingRotation();
+    },
+  });
+
+  useWatchContractEvent({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    eventName: 'WalletRotationApproved',
+    enabled: cardBoundMode && !!vaultAddress,
+    onLogs: () => {
+      refetchCardBoundPendingRotation();
     },
   });
 
@@ -220,7 +297,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     eventName: 'InheritanceRequested',
-    enabled: recoverySupported && !!vaultAddress,
+    enabled: inheritanceSupported && !!vaultAddress,
     onLogs: () => {
       refetchInheritanceStatus();
     },
@@ -230,7 +307,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     eventName: 'InheritanceApproved',
-    enabled: recoverySupported && !!vaultAddress,
+    enabled: inheritanceSupported && !!vaultAddress,
     onLogs: () => {
       refetchInheritanceStatus();
     },
@@ -240,7 +317,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     address: vaultAddress,
     abi: USER_VAULT_ABI,
     eventName: 'InheritanceFinalized',
-    enabled: recoverySupported && !!vaultAddress,
+    enabled: inheritanceSupported && !!vaultAddress,
     onLogs: () => {
       refetchInheritanceStatus();
     },
@@ -255,7 +332,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * The Next of Kin can claim the vault assets after a 1-year waiting period
    */
   const setNextOfKinAddress = async (nextOfKinAddress: `0x${string}`) => {
-    assertRecoverySupported();
+    assertInheritanceSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     assertNonZeroAddress(nextOfKinAddress, 'Next of Kin address');
     
@@ -282,14 +359,17 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Full UserVault uses address-based guardians (not slot-based)
    */
   const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
-    assertRecoverySupported();
+    assertRecoveryActionSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     assertNonZeroAddress(guardianAddress, 'Guardian address');
+    if (cardBoundMode && cardBoundGuardianSetupComplete) {
+      throw new Error('CardBound guardian changes are timelocked after setup. Use proposeGuardianChange/applyGuardianChange instead.');
+    }
     
     try {
       return await writeContractAsync({
         address: vaultAddress,
-        abi: USER_VAULT_ABI,
+        abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI,
         functionName: 'setGuardian',
         args: [guardianAddress, active],
       });
@@ -323,15 +403,16 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * The candidate becomes the proposed new owner
    */
   const requestRecovery = async (candidateAddress: `0x${string}`) => {
-    assertRecoverySupported();
+    assertRecoveryActionSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
+    assertNonZeroAddress(candidateAddress, 'Recovery target wallet');
     
     try {
       return await writeContractAsync({
         address: vaultAddress,
-        abi: USER_VAULT_ABI,
-        functionName: 'requestRecovery',
-        args: [candidateAddress],
+        abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI,
+        functionName: cardBoundMode ? 'proposeWalletRotation' : 'requestRecovery',
+        args: cardBoundMode ? [candidateAddress, BigInt(CARD_BOUND_ROTATION_DELAY_SECONDS)] : [candidateAddress],
       });
     } catch (error) {
       logError('requestRecovery', error);
@@ -344,14 +425,14 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Approve the current recovery request (by a mature guardian)
    */
   const approveRecovery = async () => {
-    assertRecoverySupported();
+    assertRecoveryActionSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
       return await writeContractAsync({
         address: vaultAddress,
-        abi: USER_VAULT_ABI,
-        functionName: 'guardianApproveRecovery',
+        abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI,
+        functionName: cardBoundMode ? 'approveWalletRotation' : 'guardianApproveRecovery',
       });
     } catch (error) {
       logError('approveRecovery', error);
@@ -364,14 +445,14 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Finalize the recovery after sufficient approvals
    */
   const finalizeRecovery = async () => {
-    assertRecoverySupported();
+    assertRecoveryActionSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
       return await writeContractAsync({
         address: vaultAddress,
-        abi: USER_VAULT_ABI,
-        functionName: 'finalizeRecovery',
+        abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI,
+        functionName: cardBoundMode ? 'finalizeWalletRotation' : 'finalizeRecovery',
       });
     } catch (error) {
       logError('finalizeRecovery', error);
@@ -384,8 +465,11 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Cancel a pending recovery (by owner)
    */
   const cancelRecovery = async () => {
-    assertRecoverySupported();
+    assertRecoveryActionSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
+    if (cardBoundMode) {
+      throw new Error('CardBound wallet rotations cannot be cancelled from the current recovery flow.');
+    }
     
     try {
       return await writeContractAsync({
@@ -408,7 +492,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Request inheritance claim (by Next of Kin)
    */
   const requestInheritance = async () => {
-    assertRecoverySupported();
+    assertInheritanceSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
@@ -428,7 +512,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Approve inheritance claim (by a guardian)
    */
   const approveInheritance = async () => {
-    assertRecoverySupported();
+    assertInheritanceSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
@@ -448,7 +532,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Deny inheritance claim (by owner)
    */
   const denyInheritance = async () => {
-    assertRecoverySupported();
+    assertInheritanceSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
@@ -468,7 +552,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Finalize inheritance (after waiting period + approvals)
    */
   const finalizeInheritance = async () => {
-    assertRecoverySupported();
+    assertInheritanceSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
@@ -488,7 +572,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Cancel inheritance claim (by owner)
    */
   const cancelInheritance = async () => {
-    assertRecoverySupported();
+    assertInheritanceSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
@@ -508,7 +592,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
    * Cancel inheritance claim (by a guardian)
    */
   const guardianCancelInheritance = async () => {
-    assertRecoverySupported();
+    assertInheritanceSupported();
     if (!vaultAddress) throw new Error('Vault address not provided');
     
     try {
@@ -530,12 +614,13 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     guardianCount: guardianCount ? Number(guardianCount) : 0,
     guardians: guardians as `0x${string}`[] | undefined,
     isUserGuardian: !!isUserGuardian,
-    isUserGuardianMature: !!isUserGuardianMature,
-    nextOfKin: nextOfKin as `0x${string}` | undefined,
+    isUserGuardianMature: cardBoundMode ? !!isUserGuardian : !!legacyUserGuardianMature,
+    nextOfKin: inheritanceSupported ? nextOfKin as `0x${string}` | undefined : undefined,
     recoveryStatus,
     inheritanceStatus,
     isWritePending,
     recoverySupported,
+    inheritanceSupported,
     
     // Next of Kin
     setNextOfKinAddress,
@@ -560,7 +645,7 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     guardianCancelInheritance,
     
     // Refetch functions
-    refetchRecoveryState: refetchRecoveryStatus,
+    refetchRecoveryState: cardBoundMode ? refetchCardBoundPendingRotation : refetchLegacyRecoveryStatus,
     refetchInheritanceState: refetchInheritanceStatus,
     refetchNextOfKin,
     refetchGuardians,

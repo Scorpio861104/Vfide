@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useReadContract, usePublicClient } from 'wagmi';
 import { parseAbiItem } from 'viem';
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { SeerSocialABI } from '@/lib/abis';
 
 type TimelineEvent = {
@@ -103,7 +103,7 @@ export function useSeerTimeline(address?: `0x${string}`) {
         setEvents([]);
         return;
       }
-      if (!CONTRACT_ADDRESSES.Seer || CONTRACT_ADDRESSES.Seer === '0x0000000000000000000000000000000000000000') {
+      if (!isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)) {
         setEvents([]);
         return;
       }
@@ -181,7 +181,7 @@ export function useSeerSystemStats(address?: `0x${string}`) {
     abi: SeerSocialABI,
     functionName: 'pendingAppealCount',
     query: {
-      enabled: CONTRACT_ADDRESSES.SeerSocial !== '0x0000000000000000000000000000000000000000',
+      enabled: isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial),
     },
   });
 
@@ -190,7 +190,7 @@ export function useSeerSystemStats(address?: `0x${string}`) {
 
     async function run() {
       if (!publicClient) return;
-      if (!CONTRACT_ADDRESSES.Seer || CONTRACT_ADDRESSES.Seer === '0x0000000000000000000000000000000000000000') return;
+      if (!isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)) return;
 
       setIsLoading(true);
       setError(null);
@@ -279,8 +279,8 @@ export function useSeerReasonCodeTimeline(address?: `0x${string}`) {
       const seerGuardian = CONTRACT_ADDRESSES.SeerGuardian;
 
       if (
-        (!seerAutonomous || seerAutonomous === '0x0000000000000000000000000000000000000000') &&
-        (!seerGuardian || seerGuardian === '0x0000000000000000000000000000000000000000')
+        !isConfiguredContractAddress(seerAutonomous) &&
+        !isConfiguredContractAddress(seerGuardian)
       ) {
         setEvents([]);
         return;
@@ -295,7 +295,7 @@ export function useSeerReasonCodeTimeline(address?: `0x${string}`) {
 
         const tasks: Array<Promise<SeerReasonCodeEvent[]>> = [];
 
-        if (seerAutonomous && seerAutonomous !== '0x0000000000000000000000000000000000000000') {
+        if (isConfiguredContractAddress(seerAutonomous)) {
           tasks.push(
             publicClient
               .getLogs({
@@ -337,7 +337,7 @@ export function useSeerReasonCodeTimeline(address?: `0x${string}`) {
           );
         }
 
-        if (seerGuardian && seerGuardian !== '0x0000000000000000000000000000000000000000') {
+        if (isConfiguredContractAddress(seerGuardian)) {
           tasks.push(
             publicClient
               .getLogs({

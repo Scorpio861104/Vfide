@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { encodeFunctionData } from "viem";
 import { useSimpleVault } from "@/hooks/useSimpleVault";
 import { useVaultHub } from "@/hooks/useVaultHub";
-import { CONTRACT_ADDRESSES } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts";
 import GuardianRegistryABI from "@/lib/abis/GuardianRegistry.json";
 import { Shield, Users, PenLine, CheckCircle } from "lucide-react";
 
@@ -22,6 +22,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
   const [guardians, setGuardians] = useState(['', '', '']);
   const { executeVaultAction, userMessage, actionStatus } = useSimpleVault();
   const { vaultAddress } = useVaultHub();
+  const isGuardianRegistryAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianRegistry)
 
   const steps: Step[] = [
     {
@@ -61,7 +62,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
 
     // Encode guardian setup: call addGuardian for each valid guardian address
     const guardianRegistryAddress = CONTRACT_ADDRESSES.GuardianRegistry;
-    if (!guardianRegistryAddress) {
+    if (!isGuardianRegistryAvailable) {
       alert('Guardian registry contract not configured.');
       return;
     }

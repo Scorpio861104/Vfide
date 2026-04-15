@@ -8,7 +8,7 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
 import { EcosystemVaultABI, EcosystemVaultViewABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress, getContractConfigurationError } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress, getContractConfigurationError } from '@/lib/contracts';
 
 const ECOSYSTEM_VAULT_ADDRESS = CONTRACT_ADDRESSES.EcosystemVault;
 const ECOSYSTEM_VAULT_VIEW_ADDRESS = CONTRACT_ADDRESSES.EcosystemVaultView || CONTRACT_ADDRESSES.EcosystemVault;
@@ -171,8 +171,8 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
 
   if (!data || !referred) {
     return {
-      merchantReferrer: '0x0000000000000000000000000000000000000000',
-      userReferrer: '0x0000000000000000000000000000000000000000',
+      merchantReferrer: ZERO_ADDRESS,
+      userReferrer: ZERO_ADDRESS,
       credited: false,
       isLoading,
       error: error as Error | null,

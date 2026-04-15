@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 /**
  * Safe JSON parsing utilities to prevent application crashes from malformed JSON
  * Addresses Critical Issue #4: Wrap all JSON.parse in try-catch
@@ -77,12 +78,8 @@ export function safeLocalStorageParse<T>(
   key: string,
   fallback: T
 ): T {
-  if (typeof window === 'undefined') {
-    return fallback;
-  }
-
   try {
-    const item = localStorage.getItem(key);
+    const item = safeLocalStorage.getItem(key);
     return safeJSONParse(item, fallback, false);
   } catch (_error) {
     // localStorage access might fail in some browsers

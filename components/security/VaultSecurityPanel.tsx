@@ -25,7 +25,7 @@ export function VaultSecurityPanel() {
   const { isLocked } = useIsVaultLocked(vaultAddress || undefined)
   const quarantineData = useQuarantineStatus(vaultAddress || undefined)
   const panicData = useCanSelfPanic()
-  const { selfPanic, isPanicking, isSuccess } = useSelfPanic()
+  const { selfPanic, isPanicking, isSuccess, supportsDuration } = useSelfPanic()
   const guardians = useVaultGuardians(vaultAddress || undefined)
   const guardianLock = useGuardianLockStatus(vaultAddress || undefined)
   const emergency = useEmergencyStatus()
@@ -50,7 +50,8 @@ export function VaultSecurityPanel() {
   
   // Compute quarantine status from raw timestamp
   const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now)
-  const isQuarantined = quarantineRemaining > 0
+  const hasTimer = quarantineData.supportsTimer && quarantineRemaining > 0
+  const isQuarantined = quarantineData.isQuarantined || hasTimer
   const remainingHours = Math.floor(quarantineRemaining / 3600)
   const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60)
   
@@ -130,13 +131,13 @@ export function VaultSecurityPanel() {
               {guardianLock.isLocked && (
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-orange-400" />
-                  <span>Guardian Lock Active</span>
+                  <span>{hasTimer ? 'Guardian Lock Active' : 'Vault Pause Active'}</span>
                 </div>
               )}
               {quarantine.isQuarantined && (
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-yellow-400" />
-                  <span>Quarantined for {quarantine.remainingHours}h {quarantine.remainingMinutes}m</span>
+                  <span>{hasTimer ? `Quarantined for ${quarantine.remainingHours}h ${quarantine.remainingMinutes}m` : 'Paused until manually unpaused'}</span>
                 </div>
               )}
             </div>
@@ -188,26 +189,32 @@ export function VaultSecurityPanel() {
             <Clock className="w-8 h-8 text-yellow-400" />
             <div>
               <div className="font-bold text-xl text-yellow-400">Quarantine Active</div>
-              <div className="text-sm text-gray-400">Auto-unlock when timer expires</div>
+              <div className="text-sm text-gray-400">{hasTimer ? 'Auto-unlock when timer expires' : 'Manual unpause required'}</div>
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <div className="text-2xl font-bold text-yellow-400">{quarantine.remainingHours}h</div>
-              <div className="text-xs text-gray-400">Hours Left</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-yellow-400">{quarantine.remainingMinutes}m</div>
-              <div className="text-xs text-gray-400">Minutes Left</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-400">
-                {new Date(quarantine.quarantineUntil * 1000).toLocaleDateString()}
+          {hasTimer ? (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="text-2xl font-bold text-yellow-400">{quarantine.remainingHours}h</div>
+                <div className="text-xs text-gray-400">Hours Left</div>
               </div>
-              <div className="text-xs text-gray-400">Until Date</div>
+              <div>
+                <div className="text-2xl font-bold text-yellow-400">{quarantine.remainingMinutes}m</div>
+                <div className="text-xs text-gray-400">Minutes Left</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-400">
+                  {new Date(quarantine.quarantineUntil * 1000).toLocaleDateString()}
+                </div>
+                <div className="text-xs text-gray-400">Until Date</div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="rounded-lg border border-yellow-500/20 bg-black/20 p-4 text-sm text-gray-300">
+              CardBound vaults use a direct pause rather than a timed quarantine window.
+            </div>
+          )}
         </motion.div>
       )}
 
@@ -220,8 +227,9 @@ export function VaultSecurityPanel() {
           <div className="flex-1">
             <div className="font-bold text-xl mb-2">Emergency Self-Panic</div>
             <p className="text-sm text-gray-400 mb-4">
-              Suspect your keys are compromised? Lock your vault immediately for up to 30 days.
-              Can only be used once per 24 hours.
+              {supportsDuration
+                ? 'Suspect your keys are compromised? Lock your vault immediately for up to 30 days. Can only be used once per 24 hours.'
+                : 'Suspect your keys are compromised? Pause your vault immediately. It stays paused until a follow-up unpause transaction is executed.'}
             </p>
             
             {!canPanic && (
@@ -237,20 +245,26 @@ export function VaultSecurityPanel() {
             
             {showPanicConfirm ? (
               <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Lock Duration (hours)</label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="720"
-                    value={panicDuration}
-                    onChange={(e) =>  setPanicDuration(safeParseInt(e.target.value, 24, { min: 1, max: 720 }))}
-                    className="w-full"
-                  />
-                  <div className="text-center text-white font-bold mt-2">
-                    {panicDuration} hours ({Math.floor(panicDuration / 24)} days)
+                {supportsDuration ? (
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Lock Duration (hours)</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="720"
+                      value={panicDuration}
+                      onChange={(e) =>  setPanicDuration(safeParseInt(e.target.value, 24, { min: 1, max: 720 }))}
+                      className="w-full"
+                    />
+                    <div className="text-center text-white font-bold mt-2">
+                      {panicDuration} hours ({Math.floor(panicDuration / 24)} days)
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-gray-300">
+                    This action pauses the vault immediately and does not expire on its own.
+                  </div>
+                )}
                 
                 <div className="flex gap-3">
                   <button
@@ -291,7 +305,7 @@ export function VaultSecurityPanel() {
             className="bg-green-900/20 border-2 border-green-500 rounded-xl p-4 text-center"
           >
             <div className="text-green-400 font-bold">✅ Vault Locked Successfully</div>
-            <div className="text-sm text-gray-400 mt-1">Your vault is now in quarantine</div>
+            <div className="text-sm text-gray-400 mt-1">{supportsDuration ? 'Your vault is now in quarantine' : 'Your vault is now paused'}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -301,15 +315,15 @@ export function VaultSecurityPanel() {
         <div className="text-xs text-gray-400 space-y-1">
           <div className="flex items-center gap-2">
             <Shield className="w-3 h-3" />
-            <span><strong>4-Layer Protection:</strong> Emergency Breaker → Guardian Lock → Quarantine → Global Risk</span>
+            <span><strong>Protection Model:</strong> {supportsDuration ? 'Emergency Breaker → Guardian Lock → Quarantine → Global Risk' : 'Guardian governance → direct vault pause → guarded recovery flows'}</span>
           </div>
           <div className="flex items-center gap-2">
             <Lock className="w-3 h-3" />
-            <span><strong>Guardian Lock:</strong> Requires {guardians.threshold} of {guardians.guardianCount} guardians to lock vault</span>
+            <span><strong>Guardian Lock:</strong> Requires {guardians.threshold} of {guardians.guardianCount} guardians to protect the vault</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="w-3 h-3" />
-            <span><strong>Quarantine:</strong> Time-based lock with automatic expiry</span>
+            <span><strong>{supportsDuration ? 'Quarantine' : 'Pause'}:</strong> {supportsDuration ? 'Time-based lock with automatic expiry' : 'Manual pause with explicit unpause recovery'}</span>
           </div>
         </div>
       </div>

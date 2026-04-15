@@ -1,6 +1,8 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
+import { ProofScoreBurnRouterABI, VFIDETokenABI } from '@/lib/abis';
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS } from '@/lib/contracts';
 import { safeBigIntToNumber, safeParseInt } from '@/lib/validation';
 import { useEffect, useState } from 'react';
 import { formatEther, isAddress } from 'viem';
@@ -129,317 +131,27 @@ type PendingAdminAction =
   | 'executeBatch'
   | 'clearBatch'
   | 'toggleCircuitBreaker';
-
-// ABI fragments for owner functions
-const TOKEN_ABI = [
-  {
-    inputs: [],
-    name: 'owner',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'vaultOnly',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'policyLocked',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'circuitBreaker',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'totalSupply',
-    outputs: [{ type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'addr', type: 'address' }],
-    name: 'whitelisted',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'addr', type: 'address' },
-      { name: 'status', type: 'bool' },
-    ],
-    name: 'proposeWhitelist',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    name: 'setVaultOnly',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'lockPolicy',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'enabled', type: 'bool' }],
-    name: 'setCircuitBreaker',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'hub', type: 'address' }],
-    name: 'setVaultHub',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: '_ledger', type: 'address' }],
-    name: 'setLedger',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'router', type: 'address' }],
-    name: 'setBurnRouter',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'sink', type: 'address' }],
-    name: 'setTreasurySink',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: '_sanctum', type: 'address' }],
-    name: 'setSanctumSink',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'who', type: 'address' },
-      { name: 'isExempt', type: 'bool' },
-    ],
-    name: 'proposeSystemExempt',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'confirmSystemExempt',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'user', type: 'address' },
-      { name: 'status', type: 'bool' },
-    ],
-    name: 'setBlacklist',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'addr', type: 'address' },
-      { name: 'status', type: 'bool' },
-    ],
-    name: 'proposeWhitelist',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'confirmWhitelist',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: 'addr', type: 'address' },
-      { name: 'exempt', type: 'bool' },
-    ],
-    name: 'setWhaleLimitExempt',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'addr', type: 'address' }],
-    name: 'whitelisted',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'addr', type: 'address' }],
-    name: 'whaleLimitExempt',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'addr', type: 'address' }],
-    name: 'systemExempt',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'user', type: 'address' }],
-    name: 'isBlacklisted',
-    outputs: [{ type: 'bool' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'vaultHub',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'ledger',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'burnRouter',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'treasurySink',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'sanctumSink',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ name: 'newOwner', type: 'address' }],
-    name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-] as const;
+const TOKEN_ABI = VFIDETokenABI;
 
 // Constants
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
-const TOKEN_ADDRESS = (process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
-const BURN_ROUTER_ADDRESS = (process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS || ZERO_ADDRESS) as `0x${string}`;
+const TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
+const BURN_ROUTER_ADDRESS = CONTRACT_ADDRESSES.ProofScoreBurnRouter;
 
 // Check if contracts are deployed (not zero address)
 const IS_TOKEN_DEPLOYED = TOKEN_ADDRESS !== ZERO_ADDRESS;
 const IS_BURN_ROUTER_DEPLOYED = BURN_ROUTER_ADDRESS !== ZERO_ADDRESS;
 
-// BurnRouter ABI
-const BURN_ROUTER_ABI = [
-  {
-    inputs: [],
-    name: 'owner',
-    outputs: [{ type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'baseBurnBps',
-    outputs: [{ type: 'uint16' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'baseSanctumBps',
-    outputs: [{ type: 'uint16' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'baseEcosystemBps',
-    outputs: [{ type: 'uint16' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'maxTotalBps',
-    outputs: [{ type: 'uint16' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'minTotalBps',
-    outputs: [{ type: 'uint16' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { name: '_minTotalBps', type: 'uint16' },
-      { name: '_maxTotalBps', type: 'uint16' },
-    ],
-    name: 'setFeePolicy',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-] as const;
+const BURN_ROUTER_ABI = ProofScoreBurnRouterABI;
 
 export default function AdminPanel() {
   const { address, isConnected } = useAccount();
   const [whitelistAddress, setWhitelistAddress] = useState('');
   const [checkAddress, setCheckAddress] = useState('');
   const [exemptAddress, setExemptAddress] = useState('');
-  const [blacklistAddress, setBlacklistAddress] = useState('');
   const [vaultBypassAddress, setVaultBypassAddress] = useState('');
   const [whaleExemptAddress, setWhaleExemptAddress] = useState('');
   const [moduleAddress, setModuleAddress] = useState('');
+  const [circuitBreakerDurationHours, setCircuitBreakerDurationHours] = useState('24');
   const [moduleType, setModuleType] = useState<'vaultHub' | 'ledger' | 'burnRouter' | 'treasurySink' | 'sanctumSink'>('vaultHub');
   const [newOwner, setNewOwner] = useState('');
   const [burnParams, setBurnParams] = useState({
@@ -530,14 +242,6 @@ export default function AdminPanel() {
     query: { enabled: IS_TOKEN_DEPLOYED && !!exemptAddress },
   });
 
-  const { data: isUserBlacklisted } = useReadContract({
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-    functionName: 'isBlacklisted',
-    args: blacklistAddress ? [blacklistAddress as `0x${string}`] : undefined,
-    query: { enabled: IS_TOKEN_DEPLOYED && !!blacklistAddress },
-  });
-
   // Read vault-only whitelist status (exchanges bypass)
   const { data: isVaultBypassWhitelisted } = useReadContract({
     address: TOKEN_ADDRESS,
@@ -593,6 +297,110 @@ export default function AdminPanel() {
     functionName: 'sanctumSink',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
+
+  const { data: pendingCircuitBreakerActiveRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingCircuitBreakerActive',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingCircuitBreakerActive = pendingCircuitBreakerActiveRaw as boolean | undefined;
+
+  const { data: pendingCircuitBreakerDurationRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingCircuitBreakerDuration',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingCircuitBreakerDuration = pendingCircuitBreakerDurationRaw as bigint | undefined;
+
+  const { data: pendingCircuitBreakerAtRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingCircuitBreakerAt',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingCircuitBreakerAt = pendingCircuitBreakerAtRaw as bigint | undefined;
+
+  const { data: pendingVaultHubRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingVaultHub',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingVaultHub = pendingVaultHubRaw as string | undefined;
+
+  const { data: pendingVaultHubAtRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingVaultHubAt',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingVaultHubAt = pendingVaultHubAtRaw as bigint | undefined;
+
+  const { data: pendingLedgerRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingLedger',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingLedger = pendingLedgerRaw as string | undefined;
+
+  const { data: pendingLedgerAtRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingLedgerAt',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingLedgerAt = pendingLedgerAtRaw as bigint | undefined;
+
+  const { data: pendingBurnRouterRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingBurnRouter',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingBurnRouter = pendingBurnRouterRaw as string | undefined;
+
+  const { data: pendingBurnRouterAtRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingBurnRouterAt',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingBurnRouterAt = pendingBurnRouterAtRaw as bigint | undefined;
+
+  const { data: pendingTreasurySinkRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingTreasurySink',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingTreasurySink = pendingTreasurySinkRaw as string | undefined;
+
+  const { data: pendingTreasurySinkAtRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingTreasurySinkAt',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingTreasurySinkAt = pendingTreasurySinkAtRaw as bigint | undefined;
+
+  const { data: pendingSanctumSinkRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingSanctumSink',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingSanctumSink = pendingSanctumSinkRaw as string | undefined;
+
+  const { data: pendingSanctumSinkAtRaw } = useReadContract({
+    address: TOKEN_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'pendingSanctumSinkAt',
+    query: { enabled: IS_TOKEN_DEPLOYED },
+  });
+  const pendingSanctumSinkAt = pendingSanctumSinkAtRaw as bigint | undefined;
 
   // Read BurnRouter parameters
   const { data: baseBurnBps } = useReadContract({
@@ -669,6 +477,22 @@ export default function AdminPanel() {
     return value as `0x${string}`;
   };
 
+  const formatEta = (timestamp?: bigint) => {
+    if (!timestamp || timestamp === 0n) return 'No pending action';
+    return new Date(Number(timestamp) * 1000).toLocaleString();
+  };
+
+  const modulePendingMap = {
+    vaultHub: { address: pendingVaultHub, eta: pendingVaultHubAt },
+    ledger: { address: pendingLedger, eta: pendingLedgerAt },
+    burnRouter: { address: pendingBurnRouter, eta: pendingBurnRouterAt },
+    treasurySink: { address: pendingTreasurySink, eta: pendingTreasurySinkAt },
+    sanctumSink: { address: pendingSanctumSink, eta: pendingSanctumSinkAt },
+  } as const;
+
+  const selectedPendingModule = modulePendingMap[moduleType];
+  const hasPendingModuleChange = !!selectedPendingModule.eta && selectedPendingModule.eta !== 0n;
+
   // Reset success message after 5 seconds
   useEffect(() => {
     if (isSuccess) {
@@ -720,11 +544,34 @@ export default function AdminPanel() {
 
   const handleToggleCircuitBreaker = () => {
     if (!requireTokenDeployment()) return;
+    if (circuitBreaker) {
+      writeContract({
+        address: TOKEN_ADDRESS,
+        abi: TOKEN_ABI,
+        functionName: 'setCircuitBreaker',
+        args: [false, 0n],
+      });
+      return;
+    }
+
+    const durationSeconds = BigInt(
+      safeParseInt(circuitBreakerDurationHours, 24, { min: 1, max: 24 * 7 }) * 3600,
+    );
+
     writeContract({
       address: TOKEN_ADDRESS,
       abi: TOKEN_ABI,
       functionName: 'setCircuitBreaker',
-      args: [!circuitBreaker],
+      args: [true, durationSeconds],
+    });
+  };
+
+  const handleConfirmCircuitBreaker = () => {
+    if (!requireTokenDeployment()) return;
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: 'confirmCircuitBreaker',
     });
   };
 
@@ -744,6 +591,40 @@ export default function AdminPanel() {
       abi: TOKEN_ABI,
       functionName: functionMap[moduleType] as 'setVaultHub' | 'setLedger' | 'setBurnRouter' | 'setTreasurySink' | 'setSanctumSink',
       args: [target],
+    });
+  };
+
+  const handleApplyModule = () => {
+    if (!requireTokenDeployment()) return;
+    const functionMap: Record<typeof moduleType, 'applyVaultHub' | 'applyLedger' | 'applyBurnRouter' | 'applyTreasurySink' | 'applySanctumSink'> = {
+      vaultHub: 'applyVaultHub',
+      ledger: 'applyLedger',
+      burnRouter: 'applyBurnRouter',
+      treasurySink: 'applyTreasurySink',
+      sanctumSink: 'applySanctumSink',
+    };
+
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: functionMap[moduleType],
+    });
+  };
+
+  const handleCancelModule = () => {
+    if (!requireTokenDeployment()) return;
+    const functionMap: Record<typeof moduleType, 'cancelVaultHub' | 'cancelLedger' | 'cancelBurnRouter' | 'cancelTreasurySink' | 'cancelSanctumSink'> = {
+      vaultHub: 'cancelVaultHub',
+      ledger: 'cancelLedger',
+      burnRouter: 'cancelBurnRouter',
+      treasurySink: 'cancelTreasurySink',
+      sanctumSink: 'cancelSanctumSink',
+    };
+
+    writeContract({
+      address: TOKEN_ADDRESS,
+      abi: TOKEN_ABI,
+      functionName: functionMap[moduleType],
     });
   };
 
@@ -778,30 +659,6 @@ export default function AdminPanel() {
       abi: TOKEN_ABI,
       functionName: 'confirmSystemExempt',
       args: [],
-    });
-  };
-
-  const handleBlacklistAdd = () => {
-    if (!requireTokenDeployment()) return;
-    const target = requireNonZeroAddress(blacklistAddress, 'Blacklist address');
-    if (!target) return;
-    writeContract({
-      address: TOKEN_ADDRESS,
-      abi: TOKEN_ABI,
-      functionName: 'setBlacklist',
-      args: [target, true],
-    });
-  };
-
-  const handleBlacklistRemove = () => {
-    if (!requireTokenDeployment()) return;
-    const target = requireNonZeroAddress(blacklistAddress, 'Blacklist address');
-    if (!target) return;
-    writeContract({
-      address: TOKEN_ADDRESS,
-      abi: TOKEN_ABI,
-      functionName: 'setBlacklist',
-      args: [target, false],
     });
   };
 
@@ -1439,8 +1296,16 @@ export default function AdminPanel() {
   const handleUpdateBurnPolicy = () => {
     if (!requireBurnRouterDeployment()) return;
     const params = {
-      minTotalBps: safeParseInt(burnParams.minTotalBps, safeParseInt(minTotalBps, 0), { min: 0, max: 10000 }),
-      maxTotalBps: safeParseInt(burnParams.maxTotalBps, safeParseInt(maxTotalBps, 0), { min: 0, max: 10000 }),
+      minTotalBps: safeParseInt(
+        burnParams.minTotalBps,
+        safeParseInt(minTotalBps as string | number | null | undefined, 0),
+        { min: 0, max: 10000 }
+      ),
+      maxTotalBps: safeParseInt(
+        burnParams.maxTotalBps,
+        safeParseInt(maxTotalBps as string | number | null | undefined, 0),
+        { min: 0, max: 10000 }
+      ),
     };
 
     // Validation
@@ -2045,7 +1910,7 @@ export default function AdminPanel() {
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-white mb-4">⚡ Circuit Breaker</h2>
             <p className="text-gray-300 text-sm mb-4">
-              Emergency circuit breaker bypasses external module checks. Use ONLY in emergencies.
+              Emergency activation is timelocked for 48 hours. Deactivation is immediate for liveness.
             </p>
 
             <div className="bg-black/30 rounded-lg p-4 mb-4">
@@ -2055,19 +1920,55 @@ export default function AdminPanel() {
                   {circuitBreaker ? '🔴 ACTIVE' : '🟢 INACTIVE'}
                 </span>
               </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-gray-400">Pending Activation:</span>
+                <span className={`font-bold ${pendingCircuitBreakerAt && pendingCircuitBreakerAt !== 0n ? 'text-yellow-300' : 'text-gray-400'}`}>
+                  {pendingCircuitBreakerAt && pendingCircuitBreakerAt !== 0n ? '⏳ Scheduled' : 'None'}
+                </span>
+              </div>
+              {pendingCircuitBreakerAt && pendingCircuitBreakerAt !== 0n && (
+                <div className="mt-3 text-xs text-gray-300 space-y-1">
+                  <p>Apply after: {formatEta(pendingCircuitBreakerAt)}</p>
+                  <p>Duration: {pendingCircuitBreakerDuration ? Number(pendingCircuitBreakerDuration) / 3600 : 0} hours</p>
+                  <p>Target state: {pendingCircuitBreakerActive ? 'activate' : 'deactivate'}</p>
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={handleToggleCircuitBreaker}
-              disabled={isPending || isConfirming}
-              className={`w-full font-bold py-4 px-6 rounded-lg transition-colors ${
-                circuitBreaker
-                  ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-red-600 hover:bg-red-700'
-              } text-white`}
-            >
-              {circuitBreaker ? '✅ Deactivate Circuit Breaker' : '⚠️ Activate Circuit Breaker'}
-            </button>
+            {!circuitBreaker && (
+              <div className="mb-4">
+                <label className="block text-gray-300 text-sm mb-2">Activation Duration (hours)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="168"
+                  value={circuitBreakerDurationHours}
+                  onChange={(e) => setCircuitBreakerDurationHours(e.target.value)}
+                  className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleToggleCircuitBreaker}
+                disabled={isPending || isConfirming}
+                className={`flex-1 font-bold py-4 px-6 rounded-lg transition-colors ${
+                  circuitBreaker
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                } text-white`}
+              >
+                {circuitBreaker ? '✅ Deactivate Now' : '⚠️ Schedule Activation'}
+              </button>
+              <button
+                onClick={handleConfirmCircuitBreaker}
+                disabled={isPending || isConfirming || !pendingCircuitBreakerAt || pendingCircuitBreakerAt === 0n}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-bold py-4 px-6 rounded-lg transition-colors"
+              >
+                ✔ Confirm After Delay
+              </button>
+            </div>
 
             {circuitBreaker && (
               <div className="bg-red-500/20 border border-red-500 rounded-lg p-4 mt-4">
@@ -2081,7 +1982,7 @@ export default function AdminPanel() {
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-white mb-4">🔧 Module Configuration</h2>
             <p className="text-gray-300 text-sm mb-4">
-              Connect system modules (VaultHub, Ledger, BurnRouter, TreasurySink, SanctumSink)
+              Module changes are timelocked. Schedule a change first, then apply it after the delay, or cancel it.
             </p>
 
             <div className="mb-4">
@@ -2115,8 +2016,31 @@ export default function AdminPanel() {
               disabled={!moduleAddress || isPending || isConfirming}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
             >
-              🔧 Set Module
+              🔧 Schedule Change
             </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <button
+                onClick={handleApplyModule}
+                disabled={isPending || isConfirming || !hasPendingModuleChange}
+                className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                ✔ Apply Scheduled Change
+              </button>
+              <button
+                onClick={handleCancelModule}
+                disabled={isPending || isConfirming || !hasPendingModuleChange}
+                className="bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+              >
+                ✖ Cancel Scheduled Change
+              </button>
+            </div>
+
+            <div className="mt-4 bg-black/30 rounded-lg p-4 text-sm">
+              <p className="text-gray-400">Pending selection</p>
+              <p className="text-white font-mono break-all">{selectedPendingModule.address || 'No pending address'}</p>
+              <p className="text-gray-300 mt-2">Apply after: {formatEta(selectedPendingModule.eta)}</p>
+            </div>
 
             {/* Current Modules Display */}
             <div className="mt-6 pt-6 border-t border-gray-600">
@@ -2197,58 +2121,6 @@ export default function AdminPanel() {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Blacklist Management */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6">
-            <h2 className="text-2xl font-bold text-white mb-4">🚫 Blacklist Management</h2>
-            <p className="text-gray-300 text-sm mb-4">
-              Block malicious addresses from transferring tokens (emergency only)
-            </p>
-
-            <div className="mb-4">
-              <label className="block text-gray-300 text-sm mb-2">Address</label>
-              <input
-                type="text"
-                value={blacklistAddress}
-                onChange={(e) =>  setBlacklistAddress(e.target.value)}
-               
-                className="w-full bg-black/30 text-white rounded-lg px-4 py-3 border border-gray-600 focus:border-purple-500 focus:outline-none font-mono text-sm"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleBlacklistAdd}
-                disabled={!blacklistAddress || isPending || isConfirming}
-                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-              >
-                🚫 Blacklist
-              </button>
-              <button
-                onClick={handleBlacklistRemove}
-                disabled={!blacklistAddress || isPending || isConfirming}
-                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-              >
-                ✅ Remove
-              </button>
-            </div>
-
-            {blacklistAddress && (
-              <div className="mt-4">
-                <div className={`rounded-lg p-4 ${isUserBlacklisted ? 'bg-red-500/20 border border-red-500' : 'bg-green-500/20 border border-green-500'}`}>
-                  <p className="text-white font-bold">
-                    {isUserBlacklisted ? '🚫 Blacklisted' : '✅ Not Blacklisted'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4 bg-yellow-500/20 border border-yellow-500 rounded-lg p-4">
-              <p className="text-yellow-400 text-xs">
-                ⚠️ Use blacklist only for emergency situations (hacked addresses, exploits)
-              </p>
-            </div>
           </div>
 
           {/* Vault-Only Bypass Whitelist (Exchanges) */}

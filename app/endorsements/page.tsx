@@ -7,20 +7,23 @@ import { useAccount, useReadContract } from 'wagmi'
 import { Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { SeerSocialABI, SeerViewABI } from '@/lib/abis'
 import { formatDistanceToNow } from 'date-fns'
 import { safeBigIntToNumber, ensureArray } from '@/lib/validation'
 
 export default function EndorsementsPage() {
   const { address } = useAccount()
+  const isSeerViewAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerView)
+  const isSeerSocialAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
+  const isSeerAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
 
   const { data: endorsementData } = useReadContract({
     address: CONTRACT_ADDRESSES.SeerView,
     abi: SeerViewABI,
     functionName: 'getActiveEndorsements',
     args: address ? [CONTRACT_ADDRESSES.Seer, address] : undefined,
-    query: { enabled: !!address },
+    query: { enabled: !!address && isSeerViewAvailable && isSeerAvailable },
   })
 
   const { data: endorsementStats } = useReadContract({
@@ -28,7 +31,7 @@ export default function EndorsementsPage() {
     abi: SeerSocialABI,
     functionName: 'getEndorsementStats',
     args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    query: { enabled: !!address && isSeerSocialAvailable },
   })
 
   const endorsementsTuple = endorsementData as

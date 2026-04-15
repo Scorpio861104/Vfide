@@ -8,10 +8,13 @@ import { Footer } from '@/components/layout/Footer'
 import { VaultSettingsPanel } from '@/components/vault/VaultSettingsPanel'
 import { GuardianManagementPanel } from '@/components/security/GuardianManagementPanel'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
+import { isCardBoundVaultMode } from '@/lib/contracts'
 import { Vault, Shield, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function VaultSettingsPage() {
+  const cardBoundMode = isCardBoundVaultMode()
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white pt-20">
@@ -120,9 +123,11 @@ export default function VaultSettingsPage() {
               <div className="w-16 h-16 mx-auto mb-3 bg-yellow-600/20 border-2 border-yellow-500 rounded-xl flex items-center justify-center">
                 <span className="text-3xl">⚖️</span>
               </div>
-              <div className="font-bold text-yellow-400 mb-2">Inheritance Guard</div>
+              <div className="font-bold text-yellow-400 mb-2">{cardBoundMode ? 'Guardian Governance' : 'Inheritance Guard'}</div>
               <div className="text-xs text-gray-400">
-                Guardians can cancel fraudulent inheritance claims when owner is unreachable
+                {cardBoundMode
+                  ? 'Guardians approve wallet-rotation and vault-protection actions instead of legacy inheritance claims'
+                  : 'Guardians can cancel fraudulent inheritance claims when owner is unreachable'}
               </div>
             </div>
           </div>

@@ -15,12 +15,13 @@ import {
   useEscrow,
 } from '@/lib/vfide-hooks'
 import { useAccount } from 'wagmi'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
 import { isAddress } from 'viem'
 
 export function PaymentInterface() {
   const { address } = useAccount()
+  const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
   const [merchantAddress, setMerchantAddress] = useState('')
   const [amount, setAmount] = useState('')
   const [orderId, setOrderId] = useState('')
@@ -36,6 +37,7 @@ export function PaymentInterface() {
 
   const handlePayment = async (): Promise<void> => {
     if (!merchantAddress || !amount || !orderId) return
+    if (!isEscrowMode && !isVfideTokenAvailable) return
     
     try {
       if (isEscrowMode) {
@@ -60,7 +62,7 @@ export function PaymentInterface() {
 
   const isValidMerchant = isAddress(merchantAddress) && merchantInfo.isMerchant && !merchantInfo.isSuspended
   const canUseInstant = trustScore.highTrust
-  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (isEscrowMode || canUseInstant)
+  const canSubmit = isValidMerchant && amount && orderId && trustScore.eligible && (isEscrowMode || (canUseInstant && isVfideTokenAvailable))
   const combinedError = error || escrowError
 
   useEffect(() => {

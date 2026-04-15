@@ -4,7 +4,18 @@ import { useMerchantStatus } from '../useMerchantStatus'
 import { useReadContract } from 'wagmi'
 
 jest.mock('wagmi')
-jest.mock('@/lib/contracts')
+jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    MerchantPortal: '0x1234567890123456789012345678901234567890',
+  },
+  MerchantPortalABI: [],
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
+}))
 
 const mockUseReadContract = useReadContract as jest.MockedFunction<typeof useReadContract>
 

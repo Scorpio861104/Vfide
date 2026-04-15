@@ -7,9 +7,12 @@ const mockCreateVault = jest.fn(async () => {});
 const mockSetNextOfKinAddress = jest.fn(async (_address: `0x${string}`) => {});
 const mockAddGuardian = jest.fn(async (_address: `0x${string}`) => {});
 const mockRefetchAllowance = jest.fn(async () => ({ data: 0n }));
+const mockWriteContractAsync = jest.fn(async () => {});
 
 let mockAddress: `0x${string}` | undefined;
 let mockRainbowMounted = true;
+let mockCardBoundMode = false;
+let mockQueuedWithdrawalData: readonly [bigint[], bigint[], bigint[]] | undefined;
 
 let mockVaultHubState: {
   vaultAddress?: `0x${string}`;
@@ -86,18 +89,21 @@ jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VFIDEToken: '0x1111111111111111111111111111111111111111',
     VaultHub: '0x2222222222222222222222222222222222222222',
+    MerchantPortal: '0x3333333333333333333333333333333333333333',
   },
   isConfiguredContractAddress: () => true,
   VFIDETokenABI: [],
   VaultHubABI: [],
+  ERC20ABI: [],
   UserVaultABI: [],
   CARD_BOUND_VAULT_ABI: [],
-  isCardBoundVaultMode: () => false,
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  isCardBoundVaultMode: () => mockCardBoundMode,
 }));
 
 jest.mock('wagmi', () => ({
   useAccount: () => ({ address: mockAddress }),
-  useWriteContract: () => ({ writeContractAsync: jest.fn() }),
+  useWriteContract: () => ({ writeContractAsync: mockWriteContractAsync }),
   useChainId: () => 1,
   useSignTypedData: () => ({ signTypedDataAsync: jest.fn() }),
   useReadContract: (args: { functionName?: string }) => {
@@ -113,6 +119,24 @@ jest.mock('wagmi', () => ({
     if (args?.functionName === 'walletEpoch') {
       return { data: 0n };
     }
+    if (args?.functionName === 'getPendingQueuedWithdrawals') {
+      return { data: mockQueuedWithdrawalData, refetch: jest.fn(async () => ({ data: mockQueuedWithdrawalData })) };
+    }
+    if (args?.functionName === 'activeQueuedWithdrawals') {
+      return { data: mockQueuedWithdrawalData?.[0]?.length ?? 0 };
+    }
+    if (args?.functionName === 'dailyTransferLimit') {
+      return { data: 100000000000000000000n };
+    }
+    if (args?.functionName === 'maxPerTransfer') {
+      return { data: 25000000000000000000n };
+    }
+    if (args?.functionName === 'largeTransferThreshold') {
+      return { data: 10000000000000000000n };
+    }
+    if (args?.functionName === 'viewRemainingDailyCapacity') {
+      return { data: 75000000000000000000n, refetch: jest.fn(async () => ({ data: 75000000000000000000n })) };
+    }
     return { data: undefined };
   },
 }));
@@ -121,6 +145,7 @@ jest.mock('viem', () => ({
   isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
   parseUnits: (value: string) => BigInt(Math.floor(parseFloat(value || '0') * 1e18)),
   formatUnits: (value: bigint) => String(Number(value) / 1e18),
+  maxUint256: (1n << 256n) - 1n,
 }));
 
 jest.mock('framer-motion', () => {
@@ -156,11 +181,16 @@ jest.mock('lucide-react', () => {
     Heart: Icon,
     ArrowDownToLine: Icon,
     ArrowUpFromLine: Icon,
+    CreditCard: Icon,
+    Clock3: Icon,
     RefreshCw: Icon,
     CheckCircle2: Icon,
+    Play: Icon,
+    TimerReset: Icon,
     Zap: Icon,
     DollarSign: Icon,
     TrendingUp: Icon,
+    Wallet: Icon,
     X: Icon,
     Loader2: Icon,
   };
@@ -172,6 +202,8 @@ describe('Vault page logic pathways', () => {
 
     mockAddress = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
     mockRainbowMounted = true;
+    mockCardBoundMode = false;
+    mockQueuedWithdrawalData = undefined;
     mockVaultHubState = {
       vaultAddress: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       hasVault: true,
@@ -322,5 +354,34 @@ describe('Vault page logic pathways', () => {
     expect(mockRefetchVault).toHaveBeenCalledTimes(1);
 
     jest.useRealTimers();
+  });
+
+  it('shows queued withdrawal controls in CardBound mode', async () => {
+    mockCardBoundMode = true;
+    mockQueuedWithdrawalData = [[3n], [5000000000000000000n], [BigInt(Math.floor(Date.now() / 1000) - 60)]];
+    mockVaultRecoveryState = {
+      ...mockVaultRecoveryState,
+      nextOfKin: '0x9999999999999999999999999999999999999999',
+    };
+
+    renderVaultPage();
+
+  expect(screen.getByText(/guardian-backed wallet rotation and queued transfer protection/i)).toBeTruthy();
+  expect(screen.getByText(/^Wallet Rotation$/i)).toBeTruthy();
+  expect(screen.getByText(/^Guardian Protections$/i)).toBeTruthy();
+  expect(screen.queryByText(/^Next of Kin$/i)).toBeNull();
+    expect(await screen.findByText(/Queued Withdrawals/i)).toBeTruthy();
+    expect(screen.getByText(/Queue #3/i)).toBeTruthy();
+    expect(screen.getAllByText(/VFIDE/i).some((node) => node.textContent?.includes('5 VFIDE'))).toBe(true);
+    expect(screen.getByRole('button', { name: /Execute/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Cancel/i })).toBeTruthy();
+    expect(screen.getByText(/Current Per Transfer/i)).toBeTruthy();
+    expect(screen.getByText(/Current Threshold/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Update Spend Limits/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Update Threshold/i })).toBeTruthy();
+    expect(screen.queryByText(/Next of Kin \(Inheritance\)/i)).toBeNull();
+    expect(screen.getByText(/CardBound Guardian Setup/i)).toBeTruthy();
+    expect(screen.getByText(/Manage guardian setup and post-setup guardian changes from the Guardians dashboard/i)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Add Guardian/i })).toBeNull();
   });
 });

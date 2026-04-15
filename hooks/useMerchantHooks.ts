@@ -3,13 +3,11 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
 import { parseEther, formatEther, isAddress } from 'viem'
 import { useState } from 'react'
-import { CONTRACT_ADDRESSES } from '../lib/contracts'
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
 import { MerchantPortalABI } from '../lib/abis'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
 
 // ============================================
 // MERCHANT HOOKS - No processor fees (burn + gas apply)
@@ -22,6 +20,7 @@ type MerchantInfo = [boolean, boolean, string, string, bigint, bigint, bigint]
 export function useIsMerchant(address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
   const { data: merchantInfo, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.MerchantPortal,
@@ -29,7 +28,7 @@ export function useIsMerchant(address?: `0x${string}`) {
     functionName: 'getMerchantInfo',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress && CONTRACT_ADDRESSES.MerchantPortal !== '0x0000000000000000000000000000000000000000',
+      enabled: !!targetAddress && isAvailable,
     }
   })
   
@@ -45,6 +44,7 @@ export function useIsMerchant(address?: `0x${string}`) {
     txCount: info?.[6] ? safeBigIntToNumber(info[6], 0) : 0,
     isLoading,
     refetch,
+    isAvailable,
   }
 }
 
@@ -57,11 +57,12 @@ export function useRegisterMerchant() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
   const registerMerchant = async (businessName: string, category: string) => {
     setError(null)
     try {
-      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+      if (!isAvailable) {
         throw new Error('MerchantPortal is not configured in this environment')
       }
       if (!businessName.trim() || !category.trim()) {
@@ -96,6 +97,7 @@ export function useRegisterMerchant() {
     isSuccess,
     txHash: data,
     error,
+    isAvailable,
   }
 }
 
@@ -111,6 +113,7 @@ export function useProcessPayment() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
   const processPayment = async (
     customer: `0x${string}`,
@@ -120,7 +123,7 @@ export function useProcessPayment() {
   ) => {
     setError(null)
     try {
-      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+      if (!isAvailable) {
         throw new Error('MerchantPortal is not configured in this environment')
       }
       if (!isAddress(customer) || customer.toLowerCase() === ZERO_ADDRESS) {
@@ -164,6 +167,7 @@ export function useProcessPayment() {
     isSuccess,
     txHash: data,
     error,
+    isAvailable,
   }
 }
 
@@ -179,6 +183,7 @@ export function useSetMerchantPullPermit() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
 
   const setMerchantPullPermit = async (
     merchant: `0x${string}`,
@@ -187,7 +192,7 @@ export function useSetMerchantPullPermit() {
   ) => {
     setError(null)
     try {
-      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+      if (!isAvailable) {
         throw new Error('MerchantPortal is not configured in this environment')
       }
       if (!isAddress(merchant) || merchant.toLowerCase() === ZERO_ADDRESS) {
@@ -225,6 +230,7 @@ export function useSetMerchantPullPermit() {
     isSuccess,
     txHash: data,
     error,
+    isAvailable,
   }
 }
 
@@ -240,6 +246,7 @@ export function usePayMerchant() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
   const payMerchant = async (
     merchant: `0x${string}`,
@@ -249,7 +256,7 @@ export function usePayMerchant() {
   ) => {
     setError(null)
     try {
-      if (CONTRACT_ADDRESSES.MerchantPortal === ZERO_ADDRESS) {
+      if (!isAvailable) {
         throw new Error('MerchantPortal is not configured in this environment')
       }
       if (!isAddress(merchant) || merchant.toLowerCase() === ZERO_ADDRESS) {
@@ -293,6 +300,7 @@ export function usePayMerchant() {
     isSuccess,
     txHash: data,
     error,
+    isAvailable,
   }
 }
 
@@ -304,13 +312,15 @@ type CustomerTrustInfo = [bigint, boolean, boolean, boolean]
  * Get customer trust assessment for merchants
  */
 export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
+
   const { data, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.MerchantPortal,
     abi: MerchantPortalABI,
     functionName: 'getCustomerTrustScore',
     args: customerAddress ? [customerAddress] : undefined,
     query: {
-      enabled: !!customerAddress && CONTRACT_ADDRESSES.MerchantPortal !== '0x0000000000000000000000000000000000000000',
+      enabled: !!customerAddress && isAvailable,
     }
   })
   
@@ -322,6 +332,7 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
     lowTrust: info?.[2] ?? false,
     eligible: info?.[3] ?? false,
     isLoading,
+    isAvailable,
   }
 }
 
@@ -330,12 +341,14 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
  */
 export function useSetAutoConvert() {
   const { writeContract, data, isPending } = useWriteContract()
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
   const setAutoConvert = (enabled: boolean) => {
+    if (!isAvailable) return
     writeContract({
       address: CONTRACT_ADDRESSES.MerchantPortal,
       abi: MerchantPortalABI,
@@ -349,6 +362,7 @@ export function useSetAutoConvert() {
     isSetting: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    isAvailable,
   }
 }
 
@@ -357,12 +371,14 @@ export function useSetAutoConvert() {
  */
 export function useSetPayoutAddress() {
   const { writeContract, data, isPending } = useWriteContract()
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
   const setPayoutAddress = (payoutAddress: `0x${string}`) => {
+    if (!isAvailable) return
     writeContract({
       address: CONTRACT_ADDRESSES.MerchantPortal,
       abi: MerchantPortalABI,
@@ -376,5 +392,6 @@ export function useSetPayoutAddress() {
     isSetting: isPending || isConfirming,
     isSuccess,
     txHash: data,
+    isAvailable,
   }
 }

@@ -6,6 +6,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 type EventType = 
   | 'wallet_connected'
@@ -68,7 +69,7 @@ class SocialAnalytics {
    */
   private storeLocally(event: typeof this.events[0]) {
     try {
-      const stored = localStorage.getItem('vfide_analytics_events');
+      const stored = safeLocalStorage.getItem('vfide_analytics_events');
       const events = stored ? JSON.parse(stored) : [];
       events.push(event);
 
@@ -77,7 +78,7 @@ class SocialAnalytics {
         events.splice(0, events.length - 50);
       }
 
-      localStorage.setItem('vfide_analytics_events', JSON.stringify(events));
+      safeLocalStorage.setItem('vfide_analytics_events', JSON.stringify(events));
     } catch (error) {
       logger.error('Failed to store analytics event:', error);
     }

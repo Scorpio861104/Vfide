@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { isAddress } from 'viem';
 import { Shield, Users, Clock } from 'lucide-react';
-import { USER_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
+import { USER_VAULT_ABI, ZERO_ADDRESS, isCardBoundVaultMode } from '@/lib/contracts';
 import { safeLocalStorage } from '@/lib/utils';
 
 type WatchedVault = {
@@ -560,7 +560,7 @@ function GuardianPendingRecoveryCard({
   const active = !!recovery && recovery[4];
   const approvals = recovery ? Number(recovery[1]) : 0;
   const threshold = recovery ? Number(recovery[2]) : 0;
-  const proposedOwner = recovery ? recovery[0] : '0x0000000000000000000000000000000000000000';
+  const proposedOwner = recovery ? recovery[0] : ZERO_ADDRESS;
   const expirySec = recovery ? Number(recovery[3]) : 0;
   const daysLeft = expirySec > 0 ? Math.max(0, Math.ceil((expirySec * 1000 - Date.now()) / (24 * 60 * 60 * 1000))) : null;
 
@@ -697,7 +697,7 @@ function GuardianPendingRecoveryCard({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-black/30 border border-white/10 rounded-xl p-3">
           <div className="text-gray-500 text-xs mb-1">Proposed Owner</div>
-          <div className="text-white text-sm font-mono">{proposedOwner !== '0x0000000000000000000000000000000000000000' ? shortAddress(proposedOwner) : 'n/a'}</div>
+          <div className="text-white text-sm font-mono">{proposedOwner !== ZERO_ADDRESS ? shortAddress(proposedOwner) : 'n/a'}</div>
         </div>
         <div className="bg-black/30 border border-white/10 rounded-xl p-3">
           <div className="text-gray-500 text-xs mb-1">Approvals</div>

@@ -14,6 +14,11 @@ jest.mock('@/lib/contracts', () => ({
     Seer: '0x1234567890123456789012345678901234567890',
     BadgeNFT: '0x1234567890123456789012345678901234567891',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock ABIs
@@ -85,6 +90,11 @@ describe('useBadgeHooks', () => {
       expect(tokenIds).toEqual([1n, 2n, 3n])
       expect(count).toBe(3)
     })
+
+    it('reports availability when BadgeNFT is configured', () => {
+      const { isAvailable } = useBadgeNFTs()
+      expect(isAvailable).toBe(true)
+    })
   })
 
   describe('useMintBadge', () => {
@@ -116,6 +126,26 @@ describe('useBadgeHooks', () => {
           functionName: 'mintBadge',
         })
       )
+    })
+
+    it('does not write when BadgeNFT is not configured', () => {
+      const contracts = jest.requireMock('@/lib/contracts') as {
+        CONTRACT_ADDRESSES: { BadgeNFT: string }
+      }
+      contracts.CONTRACT_ADDRESSES.BadgeNFT = '0x0000000000000000000000000000000000000000'
+
+      const mockWriteContract = jest.fn()
+      jest.mocked(useWriteContract).mockReturnValue({
+        writeContract: mockWriteContract,
+        data: null,
+        isPending: false,
+      } as unknown as ReturnType<typeof useWriteContract>)
+
+      const { mintBadge, isAvailable } = useMintBadge()
+      mintBadge('0xbadge123456789012345678901234567890123456789012345678901234567890' as `0x${string}`)
+
+      expect(isAvailable).toBe(false)
+      expect(mockWriteContract).not.toHaveBeenCalled()
     })
 
     it('tracks minting state', () => {
@@ -187,6 +217,16 @@ describe('useBadgeHooks', () => {
 
       const { isLoading } = useCanMintBadge('0xbadge123456789012345678901234567890123456789012345678901234567890' as `0x${string}`)
       expect(isLoading).toBe(true)
+    })
+
+    it('reports unavailable when BadgeNFT is not configured', () => {
+      const contracts = jest.requireMock('@/lib/contracts') as {
+        CONTRACT_ADDRESSES: { BadgeNFT: string }
+      }
+      contracts.CONTRACT_ADDRESSES.BadgeNFT = '0x0000000000000000000000000000000000000000'
+
+      const { isAvailable } = useCanMintBadge('0xbadge123456789012345678901234567890123456789012345678901234567890' as `0x${string}`)
+      expect(isAvailable).toBe(false)
     })
   })
 })

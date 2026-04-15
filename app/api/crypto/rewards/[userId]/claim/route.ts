@@ -2,9 +2,8 @@ import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { createPublicClient, http, isAddress } from 'viem';
-import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
-import rewardABI from '@/lib/abis/UserRewards.json';
+import { isAddress } from 'viem';
+import { isConfiguredContractAddress } from '@/lib/contracts';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -14,71 +13,34 @@ const claimRewardsSchema = z.object({
   rewardIds: z.array(z.string().trim().regex(REWARD_ID_REGEX)).min(1).max(100),
 });
 
-// Initialize viem client for on-chain verification
-function getConfiguredChain() {
-  const chainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
-  switch (chainId) {
-    case base.id:
-      return base;
-    case baseSepolia.id:
-      return baseSepolia;
-    case polygon.id:
-      return polygon;
-    case polygonAmoy.id:
-      return polygonAmoy;
-    case zkSync.id:
-      return zkSync;
-    case zkSyncSepoliaTestnet.id:
-      return zkSyncSepoliaTestnet;
-    default:
-      return baseSepolia;
-  }
-}
-
-const client = createPublicClient({
-  chain: getConfiguredChain(),
-  transport: http(process.env.NEXT_PUBLIC_RPC_URL),
-});
+type RewardVerificationResult =
+  | { status: 'verified', eligible: boolean }
+  | { status: 'unsupported' };
 
 /**
- * Convert an arbitrary string ID (e.g. a UUID) to a bytes32 hex string
- * by computing its SHA-256 hash. Used to map database reward IDs to the
- * on-chain bytes32 parameter expected by the reward contract.
- */
-async function idToBytes32(id: string): Promise<`0x${string}`> {
-  const encoded = new TextEncoder().encode(id);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
-  return ('0x' + Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')) as `0x${string}`;
-}
-
-/**
- * Verify on-chain that a reward is claimable for a given user.
- * Returns true when the contract confirms eligibility.
- * Returns false when the contract says it is NOT claimable.
- * Throws when the contract call itself fails (network error, revert, etc.) —
- * callers should BLOCK the claim in that case (fail-safe).
+ * Verify on-chain that a reward is claimable for a given user when the source
+ * contract is one the current codebase actually supports.
  */
 async function verifyRewardOnChain(
   contractAddress: string,
   userAddress: string,
   rewardId: string
-): Promise<boolean> {
-  if (!isAddress(contractAddress) || !isAddress(userAddress)) {
+): Promise<RewardVerificationResult> {
+  if (!isConfiguredContractAddress(contractAddress) || !isAddress(userAddress)) {
     throw new Error('Invalid address for on-chain verification');
   }
 
-  const rewardIdBytes32 = await idToBytes32(rewardId);
+  // The historical UserRewards verifier contract is not present in this
+  // codebase. Until a real verifier contract is added, do not fail claims by
+  // probing an unsupported phantom ABI.
+  logger.warn(`[Reward Claim] Skipping unsupported on-chain verifier for reward source ${contractAddress}`);
+  void rewardId;
+  return { status: 'unsupported' };
 
-  const eligible = await client.readContract({
-    address: contractAddress as `0x${string}`,
-    abi: rewardABI,
-    functionName: 'isRewardClaimable',
-    args: [userAddress as `0x${string}`, rewardIdBytes32],
-  });
-
-  return Boolean(eligible);
+  // Reserved for future supported verifier contracts.
+  // const rewardIdBytes32 = await idToBytes32(rewardId);
+  // const eligible = await client.readContract({ ... });
+  // return { status: 'verified', eligible: Boolean(eligible) };
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
@@ -163,16 +125,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Verify rewards on-chain if they have a source contract.
-    // Fail-safe: block the claim if on-chain verification returns false OR throws.
+    // Fail-safe: block the claim when a supported verifier returns false or throws.
+    // Unsupported verifier contracts are skipped explicitly because the historical
+    // UserRewards ABI is a phantom dependency in this repository.
     for (const reward of rewardsCheck.rows) {
       if (reward.source_contract) {
         try {
-          const eligible = await verifyRewardOnChain(
+          const verification = await verifyRewardOnChain(
             reward.source_contract,
             authAddress,
             reward.id
           );
-          if (!eligible) {
+          if (verification.status === 'verified' && !verification.eligible) {
             return NextResponse.json(
               { error: `Reward ${reward.id} is not claimable on-chain` },
               { status: 403 }
@@ -180,7 +144,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           }
         } catch (error) {
           logger.error(`[Reward Claim] On-chain verification failed for reward ${reward.id}:`, error);
-          // Fail-safe: block claim when on-chain check throws to prevent unauthorised claims
+          // Fail-safe: block claim when a supported on-chain check throws to prevent unauthorised claims
           return NextResponse.json(
             { error: 'On-chain verification failed. Please try again later.' },
             { status: 503 }

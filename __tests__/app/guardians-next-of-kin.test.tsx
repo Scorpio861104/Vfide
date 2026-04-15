@@ -72,6 +72,7 @@ jest.mock('@/hooks/useVaultRecovery', () => ({
 jest.mock('@/lib/contracts', () => ({
   USER_VAULT_ABI: [],
   isCardBoundVaultMode: () => false,
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }));
 
 jest.mock('wagmi', () => ({

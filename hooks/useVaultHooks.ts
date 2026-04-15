@@ -3,7 +3,7 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts, usePublicClient, useChainId } from 'wagmi'
 import { parseEther, formatEther, type Abi } from 'viem'
 import { useState, useEffect } from 'react'
-import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI } from '../lib/contracts'
+import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI, isCardBoundVaultMode, isConfiguredContractAddress } from '../lib/contracts'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI } from '../lib/abis'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
@@ -31,6 +31,7 @@ const LEGACY_VAULT_UNSUPPORTED_MESSAGE = 'This action is not supported in CardBo
 
 export function useUserVault() {
   const { address } = useAccount()
+  const hasVaultHubConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub)
   
   const { data: vaultAddress, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
@@ -38,7 +39,7 @@ export function useUserVault() {
     functionName: 'vaultOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && hasVaultHubConfig,
     }
   })
   
@@ -58,6 +59,7 @@ export function useCreateVault() {
   const publicClient = usePublicClient()
   const { address } = useAccount()
   const { writeContractAsync, data, isPending } = useWriteContract()
+  const hasVaultHubConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -66,7 +68,7 @@ export function useCreateVault() {
   // VaultHub ensureVault() creates if doesn't exist, returns existing vault if it does
   const createVault = async () => {
     if (!address) return null
-    if (CONTRACT_ADDRESSES.VaultHub === ZERO_ADDRESS) {
+    if (!hasVaultHubConfig) {
       throw new Error('VaultHub is not configured in this environment')
     }
     if (chainId !== CURRENT_CHAIN_ID) {
@@ -97,6 +99,7 @@ export function useVaultBalance() {
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
   const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
+  const hasTokenConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
   
   const { data: balance, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
@@ -104,7 +107,7 @@ export function useVaultBalance() {
     functionName: 'balanceOf',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress,
+      enabled: !!vaultAddress && hasTokenConfig,
       refetchInterval: 2000, // Refresh every 2 seconds
     }
   })
@@ -286,6 +289,7 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const cardBoundMode = isCardBoundVaultMode()
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
@@ -294,6 +298,11 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
   // Fixed: setGuardian(address g, bool active) matches actual ABI
   const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
     setError(null)
+
+    if (cardBoundMode) {
+      setError(LEGACY_VAULT_UNSUPPORTED_MESSAGE)
+      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    }
     
     // Validate guardian address (don't allow zero address for adding)
     const addressValidation = validateAddress(guardianAddress, { allowZeroAddress: !active })
@@ -721,19 +730,24 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
  * Get inheritance request status with cancellation tracking
  */
 export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
+  const cardBoundMode = isCardBoundVaultMode()
 
   const { data: nextOfKin } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'nextOfKin',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: !cardBoundMode && !!vaultAddress,
     }
   })
 
+  const resolvedNextOfKin = cardBoundMode
+    ? ZERO_ADDRESS
+    : ((nextOfKin as `0x${string}` | undefined) ?? ZERO_ADDRESS)
+  const hasNextOfKin = !cardBoundMode && !!vaultAddress && resolvedNextOfKin !== ZERO_ADDRESS
+
   return {
-    nextOfKin: (nextOfKin as `0x${string}`) || ZERO_ADDRESS,
-    hasNextOfKin: nextOfKin !== ZERO_ADDRESS,
+    nextOfKin: resolvedNextOfKin,
+    hasNextOfKin,
   }
 }

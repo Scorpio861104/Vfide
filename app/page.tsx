@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
+import { isCardBoundVaultMode } from '@/lib/contracts';
 import { HeroVisualization } from './components/HeroVisualization';
 import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
@@ -13,6 +14,7 @@ import { Step } from './components/Step';
 
 export default function Home() {
   const { state } = useOnboarding();
+  const cardBoundMode = isCardBoundVaultMode();
   return (
     <>
       <div className="min-h-screen bg-zinc-950 relative overflow-hidden">
@@ -33,7 +35,7 @@ export default function Home() {
         </section>
         {state.path === 'undecided' && <section className="py-12 border-y border-white/5"><OnboardingPathChooser /></section>}
         <section className="py-16 border-y border-white/5"><div className="container mx-auto px-4 max-w-6xl"><div className="grid grid-cols-2 md:grid-cols-4 gap-8"><StatItem value={0} label="Merchant Fees" suffix="%" color="cyan" /><StatItem value={10000} label="Max ProofScore" color="amber" /><StatItem value={35} label="Burn Rate" suffix="%" color="emerald" /><StatItem value={20} label="Sanctum Fund" suffix="%" color="pink" /></div></div></section>
-        <section className="py-20"><div className="container mx-auto px-4 max-w-6xl"><h2 className="text-3xl font-bold text-white text-center mb-12">How it works</h2><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><FeatureCard icon="Shield" title="Non-Custodial Vaults" description="You hold the keys. Recovery via guardians. Inheritance via Next of Kin." color="cyan" /><FeatureCard icon="Zap" title="Zero Merchant Fees" description="Sellers keep 100%. Buyers pay a trust fee that drops as ProofScore grows." color="amber" /><FeatureCard icon="Users" title="Social Commerce" description="Buy, sell, share, endorse. Every transaction builds trust." color="emerald" /></div></div></section>
+        <section className="py-20"><div className="container mx-auto px-4 max-w-6xl"><h2 className="text-3xl font-bold text-white text-center mb-12">How it works</h2><div className="grid grid-cols-1 md:grid-cols-3 gap-6"><FeatureCard icon="Shield" title="Non-Custodial Vaults" description={cardBoundMode ? "You hold the keys. Guardians help rotate wallet access and protect queued transfers." : "You hold the keys. Recovery via guardians. Inheritance via Next of Kin."} color="cyan" /><FeatureCard icon="Zap" title="Zero Merchant Fees" description="Sellers keep 100%. Buyers pay a trust fee that drops as ProofScore grows." color="amber" /><FeatureCard icon="Users" title="Social Commerce" description="Buy, sell, share, endorse. Every transaction builds trust." color="emerald" /></div></div></section>
         <section className="py-20 bg-white/[0.02]"><div className="container mx-auto px-4"><FeeSavingsCalculator /></div></section>
         <section className="py-20"><div className="container mx-auto px-4 max-w-4xl"><h2 className="text-3xl font-bold text-white text-center mb-12">Get started in 60 seconds</h2><div className="space-y-6"><Step number={1} title="Create your account" description="Connect your wallet to continue." time="10 sec" index={0} /><Step number={2} title="Set up your store" description="Name, category, add one product. You are live." time="30 sec" index={1} /><Step number={3} title="Share your link" description="Send to customers via WhatsApp, Instagram, anywhere." time="20 sec" index={2} /></div></div></section>
       </div>

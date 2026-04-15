@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { motion } from "framer-motion";
 import { Clock, BarChart3, Gift } from "lucide-react";
+import { CONTRACT_ADDRESSES, DevReserveVestingABI, isConfiguredContractAddress } from "@/lib/contracts";
 
 import { OverviewTab } from "./components/OverviewTab";
 import { ScheduleTab } from "./components/ScheduleTab";
@@ -16,18 +17,20 @@ const tabs = [
   { id: 'claim', label: 'Claim Tokens', icon: Gift },
 ] as const;
 
-const VESTING_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-const VESTING_ABI = [] as const;
+const VESTING_ADDRESS = CONTRACT_ADDRESSES.DevReserveVesting;
+const VESTING_ABI = DevReserveVestingABI;
 
 type TabId = typeof tabs[number]['id'];
 
 export default function VestingPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected, address } = useAccount();
-  const { data: beneficiary } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'BENEFICIARY' });
-  const { data: claimsPaused } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'claimsPaused' });
-  const { data: vestingStatus } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'getVestingStatus' });
-  const { data: schedule } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'getVestingSchedule' });
+  const isAvailable = isConfiguredContractAddress(VESTING_ADDRESS)
+  const readQuery = { enabled: isAvailable }
+  const { data: beneficiary } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'BENEFICIARY', query: readQuery });
+  const { data: claimsPaused } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'claimsPaused', query: readQuery });
+  const { data: vestingStatus } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'getVestingStatus', query: readQuery });
+  const { data: schedule } = useReadContract({ address: VESTING_ADDRESS, abi: VESTING_ABI, functionName: 'getVestingSchedule', query: readQuery });
   const typedVestingStatus = vestingStatus as readonly [bigint, bigint, bigint, bigint, number, bigint, boolean] | undefined;
   const claimable = typedVestingStatus?.[3] ?? 0n;
   const isBeneficiary = Boolean(address && beneficiary && String(beneficiary).toLowerCase() === String(address).toLowerCase());

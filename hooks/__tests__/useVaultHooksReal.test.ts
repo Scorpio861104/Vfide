@@ -23,6 +23,8 @@ jest.mock('@/lib/abis', () => ({
 }))
 
 // Mock contracts
+const mockIsCardBoundVaultMode = jest.fn(() => false)
+
 jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VFIDEToken: '0x1234567890123456789012345678901234567890',
@@ -30,6 +32,12 @@ jest.mock('@/lib/contracts', () => ({
   },
   ACTIVE_VAULT_IMPLEMENTATION: 'uservault',
   ACTIVE_VAULT_ABI: [],
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock utils
@@ -66,6 +74,7 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockIsCardBoundVaultMode.mockReturnValue(false)
     ;(useAccount as Mock).mockReturnValue({
       address: mockAddress,
       isConnected: true,
@@ -821,6 +830,10 @@ describe('useVaultHooks - Comprehensive Tests', () => {
 
   // ==================== useInheritanceStatus ====================
   describe('useInheritanceStatus', () => {
+    beforeEach(() => {
+      mockIsCardBoundVaultMode.mockReturnValue(false)
+    })
+
     it('should return next of kin when set', () => {
       const nextOfKinAddress = '0x5555555555555555555555555555555555555555'
       ;(useReadContract as Mock).mockReturnValue({
@@ -852,9 +865,28 @@ describe('useVaultHooks - Comprehensive Tests', () => {
       const { result } = renderHook(() => useInheritanceStatus(undefined))
 
       expect(result.current.nextOfKin).toBe('0x0000000000000000000000000000000000000000')
-      // Note: hasNextOfKin is true when data is undefined because undefined !== '0x00...' is true
-      // This matches the actual hook behavior
-      expect(result.current.hasNextOfKin).toBe(true)
+      expect(result.current.hasNextOfKin).toBe(false)
+    })
+  })
+
+  describe('useSetGuardian CardBound guard', () => {
+    it('should reject setGuardian in CardBound mode without writing', async () => {
+      mockIsCardBoundVaultMode.mockReturnValue(true)
+      const mockWriteAsync = jest.fn()
+      ;(useWriteContract as Mock).mockReturnValue({
+        writeContractAsync: mockWriteAsync,
+      })
+
+      const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
+
+      await act(async () => {
+        const response = await result.current.setGuardian(mockGuardianAddress, true)
+        expect(response.success).toBe(false)
+        expect(response.error).toBe('This action is not supported in CardBound vault mode.')
+      })
+
+      expect(result.current.error).toBe('This action is not supported in CardBound vault mode.')
+      expect(mockWriteAsync).not.toHaveBeenCalled()
     })
   })
 

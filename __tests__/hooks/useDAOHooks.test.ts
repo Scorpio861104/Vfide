@@ -12,6 +12,11 @@ jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     DAO: '0x1234567890123456789012345678901234567890',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock ABIs
@@ -38,8 +43,9 @@ describe('useDAOHooks', () => {
         data: 42n as unknown as undefined,
       } as ReturnType<typeof useReadContract>)
 
-      const { proposalCount } = useDAOProposals()
+      const { proposalCount, isAvailable } = useDAOProposals()
       expect(proposalCount).toBe(42)
+      expect(isAvailable).toBe(true)
     })
 
     it('handles large proposal counts', () => {
@@ -124,6 +130,26 @@ describe('useDAOHooks', () => {
 
       const { isSuccess } = useVote()
       expect(isSuccess).toBe(true)
+    })
+
+    it('does not write when DAO is not configured', async () => {
+      const contracts = jest.requireMock('@/lib/contracts') as {
+        CONTRACT_ADDRESSES: { DAO: string }
+      }
+      contracts.CONTRACT_ADDRESSES.DAO = '0x0000000000000000000000000000000000000000'
+
+      const mockWriteContract = jest.fn()
+      jest.mocked(useWriteContract).mockReturnValue({
+        writeContract: mockWriteContract,
+        data: null,
+        isPending: false,
+      } as unknown as ReturnType<typeof useWriteContract>)
+
+      const { vote, isAvailable } = useVote()
+      vote(1n, true)
+
+      expect(isAvailable).toBe(false)
+      expect(mockWriteContract).not.toHaveBeenCalled()
     })
   })
 })

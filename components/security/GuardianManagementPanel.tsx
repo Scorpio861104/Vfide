@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { MyGuardiansTab } from '@/app/guardians/components/MyGuardiansTab'
 import { 
   useUserVault, 
   useVaultGuardians, 
@@ -13,7 +14,7 @@ import {
   useInheritanceStatus,
 } from '@/lib/vfide-hooks'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES, isCardBoundVaultMode } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts'
 import { Users, Plus, X, Shield, AlertTriangle, Clock } from 'lucide-react'
 import { isAddress, zeroAddress } from 'viem'
 import { safeParseInt } from '@/lib/validation'
@@ -21,9 +22,19 @@ import { safeParseInt } from '@/lib/validation'
 const ZERO_ADDRESS = zeroAddress
 
 export function GuardianManagementPanel() {
+  const { isConnected } = useAccount()
+  if (isCardBoundVaultMode()) {
+    return <MyGuardiansTab isConnected={isConnected} />
+  }
+
+  return <LegacyGuardianManagementPanel />
+}
+
+function LegacyGuardianManagementPanel() {
   const { address: userAddress } = useAccount()
   const { vaultAddress } = useUserVault()
   const cardBoundMode = isCardBoundVaultMode()
+  const isGuardianRegistryAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianRegistry)
   const guardians = useVaultGuardians(vaultAddress || undefined)
   
   const [newGuardian, setNewGuardian] = useState('')
@@ -52,6 +63,11 @@ export function GuardianManagementPanel() {
 
   const handleAddGuardian = () => {
     setAddError(null)
+
+    if (!isGuardianRegistryAvailable) {
+      setAddError('Guardian registry is not configured in this environment')
+      return
+    }
     
     if (!isAddress(newGuardian)) {
       setAddError('Invalid Ethereum address format')
@@ -94,6 +110,11 @@ export function GuardianManagementPanel() {
 
   const handleRemoveGuardian = () => {
     setRemoveError(null)
+
+    if (!isGuardianRegistryAvailable) {
+      setRemoveError('Guardian registry is not configured in this environment')
+      return
+    }
     
     if (!isAddress(removeAddress)) {
       setRemoveError('Invalid Ethereum address format')
@@ -126,6 +147,11 @@ export function GuardianManagementPanel() {
 
   const handleSetThreshold = () => {
     setThresholdError(null)
+
+    if (!isGuardianRegistryAvailable) {
+      setThresholdError('Guardian registry is not configured in this environment')
+      return
+    }
     
     if (newThreshold < 1 || newThreshold > guardians.guardianCount) {
       setThresholdError(`Threshold must be between 1 and ${guardians.guardianCount}`)

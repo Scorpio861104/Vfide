@@ -5,6 +5,7 @@
  * Legacy constant names (e.g. VFIDE_TOKEN_ABI) are preserved as aliases.
  */
 import { isAddress } from 'viem'
+import { ZERO_ADDRESS } from './constants'
 import {
   VFIDETokenABI,
   StablecoinRegistryABI,
@@ -27,7 +28,6 @@ import {
   CommerceEscrowABI,
   OwnerControlPanelABI,
   EscrowManagerABI,
-  VaultHubLiteABI,
   UserVaultLiteABI,
   BurnRouterABI,
   DutyDistributorABI,
@@ -40,6 +40,7 @@ import {
   EcosystemVaultABI,
   EcosystemVaultViewABI,
   VaultRegistryABI,
+  VaultRecoveryClaimABI,
   FeeDistributorABI,
   WithdrawalQueueABI,
   ERC20ABI,
@@ -51,8 +52,7 @@ import {
 } from './abis'
 import { logger } from '@/lib/logger';
 
-// Zero address placeholder for missing contracts
-export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const
+export { ZERO_ADDRESS }
 
 const contractAddressWarningState = ((globalThis as typeof globalThis & {
   __vfideContractWarnings?: Set<string>;
@@ -113,6 +113,7 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   EcosystemVault: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS',
   EcosystemVaultView: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS',
   VaultRegistry: 'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS',
+  VaultRecoveryClaim: 'NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS',
   CommerceEscrow: 'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS',
   WithdrawalQueue: 'NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS',
   FraudRegistry: 'NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS',
@@ -204,6 +205,7 @@ export const CONTRACT_ADDRESSES = {
   EcosystemVault: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS, 'EcosystemVault'),
   EcosystemVaultView: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS, 'EcosystemVaultView'),
   VaultRegistry: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS, 'VaultRegistry'),
+  VaultRecoveryClaim: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS, 'VaultRecoveryClaim'),
   CommerceEscrow: validateContractAddress(process.env.NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS, 'CommerceEscrow'),
   WithdrawalQueue: validateContractAddress(process.env.NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS, 'WithdrawalQueue'),
   FraudRegistry: validateContractAddress(process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS, 'FraudRegistry'),
@@ -214,7 +216,7 @@ export const CONTRACT_ADDRESSES = {
 export const MERCHANT_PORTAL_ABI = MerchantPortalABI;
 export const SEER_ABI = SeerABI;
 export const VFIDE_TOKEN_ABI = VFIDETokenABI;
-// Use full VaultHub (VaultInfrastructure) instead of VaultHubLite for all features
+// Use the full VaultHub ABI for all features.
 export const VAULT_HUB_ABI = VaultHubABI;
 // UserVault ABI for individual vault operations (Next of Kin, guardians, inheritance)
 export const USER_VAULT_ABI = UserVaultABI;
@@ -273,7 +275,6 @@ export {
   CommerceEscrowABI,
   OwnerControlPanelABI,
   EscrowManagerABI,
-  VaultHubLiteABI,
   UserVaultLiteABI,
   BurnRouterABI,
   DutyDistributorABI,
@@ -286,6 +287,7 @@ export {
   EcosystemVaultABI,
   EcosystemVaultViewABI,
   VaultRegistryABI,
+  VaultRecoveryClaimABI,
   FeeDistributorABI,
   WithdrawalQueueABI,
   ERC20ABI,

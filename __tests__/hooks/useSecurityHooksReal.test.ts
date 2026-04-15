@@ -21,6 +21,8 @@ jest.mock('wagmi', () => ({
 
 // Mock contracts
 jest.mock('../../lib/contracts', () => ({
+  ACTIVE_VAULT_ABI: [],
+  CARD_BOUND_VAULT_ABI: [],
   CONTRACT_ADDRESSES: {
     SecurityHub: '0x1234567890123456789012345678901234567890',
     PanicGuard: '0x0987654321098765432109876543210987654321',
@@ -29,6 +31,9 @@ jest.mock('../../lib/contracts', () => ({
     EmergencyBreaker: '0xcccc1111222233334444555566667777',
     VaultHub: '0xdddd8888999900001111222233334444',
   },
+  VAULT_HUB_ABI: [],
+  isCardBoundVaultMode: () => false,
+  isConfiguredContractAddress: (address: string) => address !== '0x0000000000000000000000000000000000000000',
 }))
 
 // Mock ABIs

@@ -76,6 +76,10 @@ jest.mock('@/lib/contracts', () => ({
   },
   CARD_BOUND_VAULT_ABI: [],
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x'),
 }));
 
 // Mock framer-motion

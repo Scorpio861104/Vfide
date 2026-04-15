@@ -6,7 +6,8 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
-import { VFIDETestnetFaucetABI } from '@/lib/contracts';
+import { VFIDETestnetFaucetABI } from '@/lib/abis';
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 
 const claimSchema = z.object({
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -38,13 +39,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
     }
 
-    const referrerAddr = referrer && isAddress(referrer) ? referrer : '0x0000000000000000000000000000000000000000';
+    const referrerAddr = referrer && isAddress(referrer) ? referrer : ZERO_ADDRESS;
 
-    const faucetAddress = process.env.NEXT_PUBLIC_FAUCET_ADDRESS;
+    const faucetAddress = CONTRACT_ADDRESSES.VFIDETestnetFaucet;
     const operatorKey = process.env.FAUCET_OPERATOR_PRIVATE_KEY;
     const rpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
 
-    if (!faucetAddress || !operatorKey) {
+    if (!isConfiguredContractAddress(faucetAddress) || !operatorKey) {
       return NextResponse.json({ error: 'Faucet not configured' }, { status: 503 });
     }
 
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     const walletClient = createWalletClient({ account, chain: baseSepolia, transport: http(rpcUrl) });
 
     const remaining = await publicClient.readContract({
-      address: faucetAddress as `0x${string}`, abi: VFIDETestnetFaucetABI,
+      address: faucetAddress, abi: VFIDETestnetFaucetABI,
       functionName: 'getRemainingToday',
     });
 
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     const hash = await walletClient.writeContract({
-      address: faucetAddress as `0x${string}`, abi: VFIDETestnetFaucetABI,
+      address: faucetAddress, abi: VFIDETestnetFaucetABI,
       functionName: 'claim', args: [address as `0x${string}`, referrerAddr as `0x${string}`],
     });
 
@@ -87,13 +88,13 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const faucetAddress = process.env.NEXT_PUBLIC_FAUCET_ADDRESS;
+    const faucetAddress = CONTRACT_ADDRESSES.VFIDETestnetFaucet;
     const rpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
-    if (!faucetAddress) return NextResponse.json({ error: 'Faucet not configured' }, { status: 503 });
+    if (!isConfiguredContractAddress(faucetAddress)) return NextResponse.json({ error: 'Faucet not configured' }, { status: 503 });
 
     const publicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) });
     const remaining = await publicClient.readContract({
-      address: faucetAddress as `0x${string}`, abi: VFIDETestnetFaucetABI, functionName: 'getRemainingToday',
+      address: faucetAddress, abi: VFIDETestnetFaucetABI, functionName: 'getRemainingToday',
     });
 
     return NextResponse.json({ remainingToday: Number(remaining), faucetAddress });

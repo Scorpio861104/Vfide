@@ -10,6 +10,11 @@ jest.mock('@/lib/contracts', () => ({
   },
   SeerABI: [],
   ProofScoreBurnRouterABI: [],
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 describe('useProofScore', () => {

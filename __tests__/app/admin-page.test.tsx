@@ -26,6 +26,7 @@ jest.mock('@/components/layout/Footer', () => ({
 
 jest.mock('viem', () => ({
   formatEther: () => '0',
+  isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
 }));
 
 jest.mock('wagmi', () => ({

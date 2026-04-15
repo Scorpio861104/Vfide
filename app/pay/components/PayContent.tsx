@@ -10,7 +10,7 @@ import { isAddress, verifyMessage } from 'viem';
 import { useToast } from '@/components/ui/toast';
 import { usePayMerchant } from '@/hooks/useMerchantHooks';
 import { useVfidePrice } from '@/hooks/usePriceHooks';
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { useEscrow } from '@/lib/escrow/useEscrow';
 import { buildQrSignatureMessage, parseExpiry } from '@/lib/payments/qrSignature';
 import { safeParseFloat } from '@/lib/validation';
@@ -62,6 +62,7 @@ export function PayContent() {
   const telemetrySentRef = useRef<Set<string>>(new Set());
   const { showToast } = useToast();
   const { isConnected, address } = useAccount();
+  const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
   const { priceUsd, isLoading: priceLoading } = useVfidePrice();
   const { payMerchant, isPaying, isSuccess: instantSuccess, error: instantError } = usePayMerchant();
   const { createEscrow, loading: isEscrowLoading, isSuccess: escrowSuccess, error: escrowError } = useEscrow();
@@ -204,6 +205,11 @@ export function PayContent() {
 
     if (selectedMethod !== 'vfide') {
       showToast('Stablecoin checkout is not enabled on this route yet. Please select VFIDE.', 'error');
+      return;
+    }
+
+    if (!isVfideTokenAvailable) {
+      showToast('VFIDE token contract is not configured in this environment', 'error');
       return;
     }
 

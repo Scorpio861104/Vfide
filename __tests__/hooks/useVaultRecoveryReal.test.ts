@@ -351,12 +351,20 @@ describe('useVaultRecovery', () => {
   describe('CardBound vault mode restrictions', () => {
     it('blocks recovery actions when CardBound mode is enabled', async () => {
       mockIsCardBoundVaultMode.mockReturnValue(true)
+      mockWriteContractAsync.mockResolvedValue('0xtx')
       const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
 
       await expect(result.current.setNextOfKinAddress(nextOfKinAddress))
-        .rejects.toThrow('Recovery/inheritance is not supported in CardBound vault mode')
-      await expect(result.current.requestRecovery(candidateAddress))
-        .rejects.toThrow('Recovery/inheritance is not supported in CardBound vault mode')
+        .rejects.toThrow('Inheritance is not supported in CardBound vault mode')
+
+      await act(async () => {
+        await result.current.requestRecovery(candidateAddress)
+      })
+
+      expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
+        functionName: 'proposeWalletRotation',
+        args: [candidateAddress, 604800n],
+      }))
     })
   })
 })

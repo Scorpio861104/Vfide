@@ -4,8 +4,9 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { containerVariants, itemVariants } from '@/lib/motion-presets';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
-import { Shield, Plus, Key, Heart } from 'lucide-react';
+import { Shield, Plus, Key } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
+import { isCardBoundVaultMode } from '@/lib/contracts';
 import { devLog } from '@/lib/utils';
 
 interface VaultHeaderProps {
@@ -24,6 +25,7 @@ export function VaultHeader({
   isOnCorrectChain, expectedChainName, refetchVault,
 }: VaultHeaderProps) {
   const { showToast } = useToast();
+  const cardBoundMode = isCardBoundVaultMode();
 
   return (
     <section className="relative py-12 border-b border-white/5">
@@ -36,7 +38,9 @@ export function VaultHeader({
             </motion.span>
           </h1>
           <p className="text-xl text-white/60 mb-6">
-            Non-custodial storage with dual protection: recovery + inheritance
+            {cardBoundMode
+              ? 'Non-custodial storage with guardian-backed wallet rotation and queued transfer protection'
+              : 'Non-custodial storage with dual protection: recovery + inheritance'}
           </p>
         </motion.div>
 
@@ -151,18 +155,26 @@ export function VaultHeader({
               <GlassCard className="p-5 border-cyan-500/30" gradient="cyan">
                 <div className="flex items-center gap-3 mb-2">
                   <Key className="text-cyan-400" size={24} />
-                  <span className="text-cyan-400 font-bold">Chain of Return</span>
+                  <span className="text-cyan-400 font-bold">{cardBoundMode ? 'Wallet Rotation' : 'Chain of Return'}</span>
                 </div>
-                <p className="text-white/60 text-sm">Lost wallet? Guardians verify your identity and help YOU regain access.</p>
+                <p className="text-white/60 text-sm">
+                  {cardBoundMode
+                    ? 'Lost wallet? Guardians approve a signer rotation so you regain control without using the legacy inheritance surface.'
+                    : 'Lost wallet? Guardians verify your identity and help YOU regain access.'}
+                </p>
               </GlassCard>
             </motion.div>
             <motion.div variants={itemVariants}>
               <GlassCard className="p-5 border-amber-500/30" gradient="gold">
                 <div className="flex items-center gap-3 mb-2">
-                  <Heart className="text-amber-400" size={24} />
-                  <span className="text-amber-400 font-bold">Next of Kin</span>
+                  <Shield className="text-amber-400" size={24} />
+                  <span className="text-amber-400 font-bold">{cardBoundMode ? 'Guardian Protections' : 'Next of Kin'}</span>
                 </div>
-                <p className="text-white/60 text-sm">Estate planning. If you die, guardians verify and your HEIR inherits.</p>
+                <p className="text-white/60 text-sm">
+                  {cardBoundMode
+                    ? 'Guardian setup, queued withdrawal review, and transfer guardrails stay active while legacy next-of-kin inheritance remains unavailable.'
+                    : 'Estate planning. If you die, guardians verify and your HEIR inherits.'}
+                </p>
               </GlassCard>
             </motion.div>
           </motion.div>

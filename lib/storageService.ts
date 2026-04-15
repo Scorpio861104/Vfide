@@ -13,6 +13,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { safeLocalStorage } from './utils';
 
 // ============================================================================
 // Storage Keys - Centralized key management
@@ -79,18 +80,54 @@ type StorageItem<T> = NewStorageFormat<T> | LegacyStorageFormat<T> | T;
 class StorageServiceClass {
   private prefix = 'vfide_';
 
+  private getStorageLength(): number {
+    if (typeof window === 'undefined') return 0;
+
+    try {
+      return localStorage.length;
+    } catch {
+      return 0;
+    }
+  }
+
+  private getStorageKey(index: number): string | null {
+    if (typeof window === 'undefined') return null;
+
+    try {
+      return localStorage.key(index);
+    } catch {
+      return null;
+    }
+  }
+
+  private getStorageItem(key: string): string | null {
+    return safeLocalStorage.getItem(key);
+  }
+
+  private removeStorageItem(key: string): boolean {
+    return safeLocalStorage.removeItem(key);
+  }
+
+  private setStorageItem(key: string, value: string): { ok: boolean; error?: unknown } {
+    if (typeof window === 'undefined') return { ok: false };
+
+    try {
+      localStorage.setItem(key, value);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error };
+    }
+  }
+
   /**
    * Check if localStorage is available
    */
   isAvailable(): boolean {
-    try {
-      const testKey = '__storage_test__';
-      localStorage.setItem(testKey, 'test');
-      localStorage.removeItem(testKey);
-      return true;
-    } catch {
-      return false;
-    }
+    const testKey = '__storage_test__';
+    const writeResult = this.setStorageItem(testKey, 'test');
+    if (!writeResult.ok) return false;
+    this.removeStorageItem(testKey);
+    return true;
   }
 
   /**
@@ -100,7 +137,7 @@ class StorageServiceClass {
     if (typeof window === 'undefined') return defaultValue;
 
     try {
-      const raw = localStorage.getItem(key);
+      const raw = this.getStorageItem(key);
       if (!raw) return defaultValue;
 
       const item = JSON.parse(raw) as StorageItem<T>;
@@ -131,7 +168,7 @@ class StorageServiceClass {
     } catch {
       // If parsing fails, try to return raw value for backwards compatibility
       try {
-        const raw = localStorage.getItem(key);
+        const raw = this.getStorageItem(key);
         if (raw) {
           const parsed = JSON.parse(raw);
           // If it's not a StorageItem wrapper, return as-is
@@ -164,7 +201,11 @@ class StorageServiceClass {
         _timestamp: Date.now(),
         _ttl: options?.ttl,
       };
-      localStorage.setItem(key, JSON.stringify(item));
+      const serialized = JSON.stringify(item);
+      const writeResult = this.setStorageItem(key, serialized);
+      if (!writeResult.ok) {
+        throw writeResult.error ?? new Error('localStorage write failed');
+      }
       return true;
     } catch (error) {
       // Handle quota exceeded
@@ -181,8 +222,7 @@ class StorageServiceClass {
             _timestamp: Date.now(),
             _ttl: options?.ttl,
           };
-          localStorage.setItem(key, JSON.stringify(item));
-          return true;
+          return this.setStorageItem(key, JSON.stringify(item)).ok;
         } catch {
           return false;
         }
@@ -197,12 +237,7 @@ class StorageServiceClass {
   remove(key: StorageKey): boolean {
     if (typeof window === 'undefined') return false;
 
-    try {
-      localStorage.removeItem(key);
-      return true;
-    } catch {
-      return false;
-    }
+    return this.removeStorageItem(key);
   }
 
   /**
@@ -213,13 +248,15 @@ class StorageServiceClass {
 
     try {
       const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+      for (let i = 0; i < this.getStorageLength(); i++) {
+        const key = this.getStorageKey(i);
         if (key && (key.startsWith(this.prefix) || key.startsWith('vfide'))) {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach(key => {
+        this.removeStorageItem(key);
+      });
     } catch {
       // Ignore errors
     }
@@ -235,10 +272,10 @@ class StorageServiceClass {
 
     try {
       let used = 0;
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+      for (let i = 0; i < this.getStorageLength(); i++) {
+        const key = this.getStorageKey(i);
         if (key) {
-          const value = localStorage.getItem(key);
+          const value = this.getStorageItem(key);
           if (value) {
             used += key.length + value.length;
           }
@@ -288,12 +325,12 @@ class StorageServiceClass {
     try {
       // First, remove expired items
       const expiredKeys: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+      for (let i = 0; i < this.getStorageLength(); i++) {
+        const key = this.getStorageKey(i);
         if (!key) continue;
 
         try {
-          const raw = localStorage.getItem(key);
+          const raw = this.getStorageItem(key);
           if (!raw) continue;
 
           const item = JSON.parse(raw);
@@ -306,11 +343,13 @@ class StorageServiceClass {
           // Not a JSON item, skip
         }
       }
-      expiredKeys.forEach(key => localStorage.removeItem(key));
+      expiredKeys.forEach(key => {
+        this.removeStorageItem(key);
+      });
 
       // If still need space, remove analytics events (they're least critical)
-      if (localStorage.getItem(STORAGE_KEYS.ANALYTICS_EVENTS)) {
-        localStorage.removeItem(STORAGE_KEYS.ANALYTICS_EVENTS);
+      if (this.getStorageItem(STORAGE_KEYS.ANALYTICS_EVENTS)) {
+        this.removeStorageItem(STORAGE_KEYS.ANALYTICS_EVENTS);
       }
     } catch {
       // Ignore cleanup errors
@@ -337,11 +376,8 @@ class StorageServiceClass {
    */
   getRaw(key: string): string | null {
     if (typeof window === 'undefined') return null;
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      return null;
-    }
+
+    return this.getStorageItem(key);
   }
 
   /**
@@ -349,12 +385,8 @@ class StorageServiceClass {
    */
   setRaw(key: string, value: string): boolean {
     if (typeof window === 'undefined') return false;
-    try {
-      localStorage.setItem(key, value);
-      return true;
-    } catch {
-      return false;
-    }
+
+    return this.setStorageItem(key, value).ok;
   }
 }
 

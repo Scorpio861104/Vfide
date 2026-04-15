@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useChainId, useWriteContract, useReadContract, useWaitForTransactionReceipt } from 'wagmi';
+import { ZERO_ADDRESS } from '@/lib/contracts';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
@@ -9,8 +10,6 @@ import {
   ConfirmationModal,
   TransactionStatus,
 } from './SecurityComponents';
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function AutoSwapPanel() {
   const chainId = useChainId();
@@ -32,10 +31,11 @@ export function AutoSwapPanel() {
     functionName: 'autoSwap_getConfig',
   });
 
-  const currentRouter = currentConfig?.[0] as string | undefined;
-  const currentStablecoin = currentConfig?.[1] as string | undefined;
-  const currentEnabled = currentConfig?.[2] as boolean | undefined;
-  const currentSlippage = currentConfig?.[3] as number | undefined;
+  const currentConfigTuple = currentConfig as readonly [string, string, boolean, number] | undefined;
+  const currentRouter = currentConfigTuple?.[0];
+  const currentStablecoin = currentConfigTuple?.[1];
+  const currentEnabled = currentConfigTuple?.[2];
+  const currentSlippage = currentConfigTuple?.[3];
 
   const handleConfigure = async () => {
     setFormError(null);
@@ -49,7 +49,7 @@ export function AutoSwapPanel() {
     }
     setShowConfirmation(false);
     setLoading(true);
-    
+
     try {
       await writeContractAsync({
         address: OWNER_CONTROL_PANEL_ADDRESS,
@@ -58,7 +58,7 @@ export function AutoSwapPanel() {
         args: [router as `0x${string}`, stablecoin as `0x${string}`, enabled, slippageBps],
         chainId: CURRENT_CHAIN_ID,
       });
-      
+
       // Refetch configuration after transaction
       setTimeout(() => refetch(), 2000);
     } catch {
@@ -93,7 +93,7 @@ export function AutoSwapPanel() {
         args: [router as `0x${string}`, stablecoin as `0x${string}`],
         chainId: CURRENT_CHAIN_ID,
       });
-      
+
       setTimeout(() => refetch(), 2000);
     } catch {
       // Error is surfaced via wagmi error state in TransactionStatus
@@ -121,7 +121,7 @@ export function AutoSwapPanel() {
         args: [!currentEnabled],
         chainId: CURRENT_CHAIN_ID,
       });
-      
+
       setTimeout(() => refetch(), 2000);
     } catch {
       // Error is surfaced via wagmi error state in TransactionStatus
@@ -142,7 +142,7 @@ export function AutoSwapPanel() {
         </p>
 
         {/* Current Configuration Display */}
-        {currentConfig && (
+        {currentConfigTuple && (
           <div className="bg-black/30 rounded-lg p-4 mb-6">
             <h3 className="text-white font-bold mb-3">Current Configuration</h3>
             <div className="space-y-2 text-sm">
@@ -169,7 +169,7 @@ export function AutoSwapPanel() {
                 <span className="text-white">{currentSlippage ? currentSlippage / 100 : 0}%</span>
               </div>
             </div>
-            
+
             {currentRouter && currentStablecoin && (
               <button
                 onClick={handleToggle}
@@ -195,7 +195,6 @@ export function AutoSwapPanel() {
               setRouter(value);
               if (formError) setFormError(null);
             }}
-           
             required
           />
 
@@ -206,7 +205,6 @@ export function AutoSwapPanel() {
               setStablecoin(value);
               if (formError) setFormError(null);
             }}
-           
             required
           />
 
@@ -226,7 +224,7 @@ export function AutoSwapPanel() {
               max="500"
               step="50"
               value={slippageBps}
-              onChange={(e) =>  setSlippageBps(Number(e.target.value))}
+              onChange={(e) => setSlippageBps(Number(e.target.value))}
               className="w-full"
             />
             <div className="flex justify-between text-sm text-slate-400">
@@ -289,7 +287,7 @@ export function AutoSwapPanel() {
           <li>✓ <strong>Fallback Safety:</strong> Pays in VFIDE if swap fails</li>
           <li>✓ <strong>Gas Efficient:</strong> Swaps happen during reward distribution</li>
         </ul>
-        
+
         <div className="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
           <p className="text-yellow-200 text-sm">
             <strong>Note:</strong> Make sure the DEX has sufficient VFIDE/Stablecoin liquidity before enabling.

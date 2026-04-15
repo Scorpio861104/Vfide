@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
-import { CONTRACT_ADDRESSES } from '../lib/contracts'
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '../lib/contracts'
 import { SeerABI, SeerSocialABI } from '../lib/abis'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
@@ -16,6 +16,7 @@ import { safeBigIntToNumber } from '@/lib/validation';
 export function useProofScore(userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
+  const hasSeerConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
   
   const { data: score, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
@@ -23,7 +24,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
     functionName: 'getScore',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress,
+      enabled: !!targetAddress && hasSeerConfig,
     }
   })
   
@@ -73,6 +74,7 @@ export function useEndorse(targetAddress?: `0x${string}`) {
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
+  const hasSeerSocialConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -84,7 +86,7 @@ export function useEndorse(targetAddress?: `0x${string}`) {
       setError('Invalid target address')
       return { success: false, error: 'Invalid target address' }
     }
-    if (CONTRACT_ADDRESSES.SeerSocial === ZERO_ADDRESS) {
+    if (!hasSeerSocialConfig) {
       const message = 'SeerSocial contract is not configured'
       setError(message)
       return { success: false, error: message }
@@ -121,7 +123,7 @@ export function useEndorse(targetAddress?: `0x${string}`) {
     isSuccess,
     error,
     isValid: !!targetAddress && targetAddress !== ZERO_ADDRESS,
-    isAvailable: !!targetAddress,
+    isAvailable: !!targetAddress && hasSeerSocialConfig,
   }
 }
 
@@ -132,6 +134,7 @@ export function useEndorse(targetAddress?: `0x${string}`) {
 export function useScoreBreakdown(userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
+  const hasSeerConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
   
   const { data, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
@@ -139,7 +142,7 @@ export function useScoreBreakdown(userAddress?: `0x${string}`) {
     functionName: 'getScore',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress,
+      enabled: !!targetAddress && hasSeerConfig,
     }
   })
   

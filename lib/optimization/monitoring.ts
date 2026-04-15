@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { safeLocalStorage, safeSessionStorage } from '@/lib/utils';
 /**
  * Monitoring and Observability Enhancements
  * 
@@ -189,7 +190,7 @@ export function trackPageView(path: string, referrer?: string) {
  * Monitors DAU/MAU and user engagement
  */
 export function trackRetention() {
-  const lastVisit = localStorage.getItem('last_visit');
+  const lastVisit = safeLocalStorage.getItem('last_visit');
   const now = Date.now();
 
   if (lastVisit) {
@@ -214,7 +215,7 @@ export function trackRetention() {
     });
   }
 
-  localStorage.setItem('last_visit', now.toString());
+  safeLocalStorage.setItem('last_visit', now.toString());
 }
 
 /**
@@ -327,16 +328,16 @@ if (typeof window !== 'undefined') {
  */
 function getUserId(): string | undefined {
   if (typeof window === 'undefined') return undefined;
-  return localStorage.getItem('user_id') || undefined;
+  return safeLocalStorage.getItem('user_id') || undefined;
 }
 
 function getSessionId(): string | undefined {
   if (typeof window === 'undefined') return undefined;
   
-  let sessionId = sessionStorage.getItem('session_id');
+  let sessionId = safeSessionStorage.getItem('session_id');
   if (!sessionId) {
     sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    sessionStorage.setItem('session_id', sessionId);
+    safeSessionStorage.setItem('session_id', sessionId);
   }
   
   return sessionId;

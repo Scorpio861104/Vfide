@@ -4,14 +4,15 @@ import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
+import { isCardBoundVaultMode } from '@/lib/contracts';
 import { useGuardianWatchlist, useGuardianAttestations, mergeInboxEntries } from './hooks';
-import { GuardianResponsibilitiesCard } from './GuardianResponsibilitiesCard';
 import { GuardianPendingRecoveryCard } from './GuardianPendingRecoveryCard';
 
 export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
   const [vaultInput, setVaultInput] = useState('');
   const [vaultLabel, setVaultLabel] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
+  const cardBoundMode = isCardBoundVaultMode();
   const { address } = useAccount();
   const { entries, addEntry, removeEntry } = useGuardianWatchlist();
   const { attestations } = useGuardianAttestations(address);
@@ -33,7 +34,7 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
           <Shield className="w-16 h-16 mx-auto mb-4 text-gray-400" />
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
-        <p className="text-gray-400">Connect your wallet to see pending recovery requests</p>
+        <p className="text-gray-400">Connect your wallet to see pending guardian actions</p>
       </motion.div>
     );
   }
@@ -47,7 +48,9 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
           Guardian Inbox
         </h2>
         <p className="text-white mb-4">
-          As a guardian, you may be asked to vote on recovery or inheritance requests. Track vault addresses you guard and act when needed.
+          {cardBoundMode
+            ? 'As a guardian, you may be asked to approve pending wallet rotations on CardBound vaults. Track vault addresses you guard and act when needed.'
+            : 'As a guardian, you may be asked to vote on recovery or inheritance requests. Track vault addresses you guard and act when needed.'}
         </p>
       </motion.div>
 
@@ -71,7 +74,11 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
         {inboxEntries.length === 0 ? (
           <div className="mt-4 p-6 bg-black/30 border border-white/10 rounded-xl text-center">
             <p className="text-gray-400">No vaults in watchlist yet.</p>
-            <p className="text-gray-500 text-sm mt-1">Add vault addresses to monitor recovery and inheritance status.</p>
+            <p className="text-gray-500 text-sm mt-1">
+              {cardBoundMode
+                ? 'Add vault addresses to monitor pending wallet rotations and guardian approvals.'
+                : 'Add vault addresses to monitor recovery and inheritance status.'}
+            </p>
           </div>
         ) : (
           <div className="space-y-3 mt-4">

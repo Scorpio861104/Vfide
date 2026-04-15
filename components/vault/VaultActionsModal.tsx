@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowDownToLine, ArrowUpFromLine, RefreshCw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useChainId, useSignTypedData } from 'wagmi';
 import { parseEther, formatEther, isAddress } from 'viem';
-import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, isCardBoundVaultMode } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
 import { VFIDETokenABI, UserVaultABI } from '@/lib/abis';
 import { useVaultBalance } from '@/hooks/useVaultHooks';
 import { useToast } from '@/components/ui/toast';
@@ -25,6 +25,8 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
   const { signTypedDataAsync } = useSignTypedData();
   const { showToast } = useToast();
   const cardBoundMode = isCardBoundVaultMode();
+  const isTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
+  const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress);
   const [amount, setAmount] = useState('');
   const [recipientAddress, setRecipientAddress] = useState('');
   const [step, setStep] = useState<'input' | 'confirm' | 'pending' | 'success' | 'error'>('input');
@@ -36,7 +38,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
     abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    query: { enabled: !!address && isTokenAvailable },
   });
 
   // Get vault balance
@@ -47,7 +49,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'nextNonce',
     query: {
-      enabled: !!vaultAddress && cardBoundMode && actionType === 'transfer',
+      enabled: hasVaultAddress && cardBoundMode && actionType === 'transfer',
     },
   });
 
@@ -56,7 +58,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'walletEpoch',
     query: {
-      enabled: !!vaultAddress && cardBoundMode && actionType === 'transfer',
+      enabled: hasVaultAddress && cardBoundMode && actionType === 'transfer',
     },
   });
 
@@ -164,7 +166,11 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
   };
 
   const executeAction = async () => {
-    if (!vaultAddress) return;
+    if (!hasVaultAddress) {
+      setErrorMessage('Vault address is not configured');
+      setStep('error');
+      return;
+    }
 
     const amountBigInt = parseEther(amount);
 
@@ -227,6 +233,11 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
           ],
         });
       } else if (actionType === 'deposit') {
+        if (!isTokenAvailable) {
+          setErrorMessage('VFIDE token contract is not configured');
+          setStep('error');
+          return;
+        }
         // Transfer VFIDE from wallet to vault (standard ERC20 transfer)
         writeContract({
           address: CONTRACT_ADDRESSES.VFIDEToken,

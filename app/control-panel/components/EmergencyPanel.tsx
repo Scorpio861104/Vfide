@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useChainId, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { ZERO_ADDRESS } from '@/lib/contracts';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
@@ -10,8 +11,6 @@ import {
   DangerWarning,
   NumberInput,
 } from './SecurityComponents';
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function EmergencyPanel() {
   const chainId = useChainId();

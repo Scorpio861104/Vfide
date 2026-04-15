@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { UserStatsWidget } from '@/components/gamification/GamificationWidgets';
 import { FirstTimeUserBanner } from '@/components/ui/FirstTimeUserBanner';
 import { useHasVault } from '@/hooks/useHasVault';
+import { ZERO_ADDRESS } from '@/lib/contracts';
 import { analytics } from '@/lib/socialAnalytics';
 import { useGamification } from '@/lib/gamification';
 import { AccountTab } from './components/AccountTab';
@@ -85,7 +86,7 @@ export default function SocialMessagingPage() {
           <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
             <FirstTimeUserBanner message="Secure your profile and start building trusted circles." />
             <div className="rounded-2xl border border-white/10 bg-white/3 p-4">
-              <UserStatsWidget userAddress={address ?? '0x0000000000000000000000000000000000000000'} />
+              <UserStatsWidget userAddress={address ?? ZERO_ADDRESS} />
             </div>
           </div>
 

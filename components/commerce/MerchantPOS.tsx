@@ -11,7 +11,7 @@ import { useAccount, useWatchContractEvent } from 'wagmi'
 import { QRCodeSVG } from 'qrcode.react'
 import { formatEther } from 'viem'
 import { useIsMerchant, useFeeCalculator } from '@/lib/vfide-hooks'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { MerchantPortalABI } from '@/lib/abis'
 import { safeParseFloat } from '@/lib/validation'
 import { DEFAULT_VFIDE_PRICE } from '@/lib/price-utils'
@@ -31,6 +31,7 @@ interface CartItem extends Product {
 
 export function MerchantPOS() {
   const { address } = useAccount()
+  const isMerchantPortalAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   const { isMerchant, businessName } = useIsMerchant(address)
   
   // Product Management — DB-backed, persisted via /api/merchant/products
@@ -171,7 +172,7 @@ export function MerchantPOS() {
         }
       }
     },
-    enabled: showQRPayment && !!address,
+    enabled: isMerchantPortalAvailable && showQRPayment && !!address,
   })
   
   // Handle confirmed payment from blockchain event

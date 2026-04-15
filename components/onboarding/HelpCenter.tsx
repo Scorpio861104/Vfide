@@ -5,6 +5,7 @@ import { Book, ChevronRight, Droplets, Globe, HelpCircle, Shield, Star, Store, V
 import { useState, useEffect } from "react";
 import { useChainId } from "wagmi";
 import { isTestnetChainId } from "@/lib/chains";
+import { isCardBoundVaultMode } from "@/lib/contracts";
 import { safeLocalStorage } from "@/lib/utils";
 import { WIZARD_ENABLED_KEY, TOUR_COMPLETED_KEY, BEGINNER_COMPLETED_KEY } from "@/components/onboarding/OnboardingManager";
 
@@ -16,8 +17,9 @@ interface HelpTopic {
   content: string[];
 }
 
-const helpTopics: HelpTopic[] = [
-  {
+function getHelpTopics(cardBoundMode: boolean): HelpTopic[] {
+  return [
+    {
     id: "getting-started",
     title: "Getting Started",
     icon: <Book size={24} />,
@@ -30,7 +32,7 @@ const helpTopics: HelpTopic[] = [
       "5. Start building your ProofScore by completing tasks"
     ]
   },
-  {
+    {
     id: "network-setup",
     title: "Network Setup",
     icon: <Globe size={24} />,
@@ -52,7 +54,7 @@ const helpTopics: HelpTopic[] = [
       "Tip: Click 'Switch Network' in the app and your wallet should auto-add it!"
     ]
   },
-  {
+    {
     id: "get-test-eth",
     title: "Get Test ETH",
     icon: <Droplets size={24} />,
@@ -69,7 +71,7 @@ const helpTopics: HelpTopic[] = [
       "Tip: Use the 'Get ETH' button in the app header for quick faucet links"
     ]
   },
-  {
+    {
     id: "wallet-setup",
     title: "Wallet Setup",
     icon: <Wallet size={24} />,
@@ -82,20 +84,22 @@ const helpTopics: HelpTopic[] = [
       "Pro tip: Enable hardware wallet or multi-sig for extra security"
     ]
   },
-  {
+    {
     id: "vault-security",
     title: "Vault Security",
     icon: <Shield size={24} />,
     description: "Keep your funds safe with advanced features",
     content: [
       "Guardian Recovery: Add trusted friends/family as guardians",
-      "Next of Kin: Designate an heir to inherit your vault if something happens",
+      cardBoundMode
+        ? "Wallet Rotation: Guardians can approve signer rotation and protect queued transfers without exposing legacy inheritance flows"
+        : "Next of Kin: Designate an heir to inherit your vault if something happens",
       "7-day Guardian Maturity: New guardians must wait 7 days before they can help with recovery",
       "30-day Recovery Window: Recovery requests expire after 30 days",
       "Withdrawal Cooldowns: Optional delays before large withdrawals"
     ]
   },
-  {
+    {
     id: "merchant-tools",
     title: "Merchant Tools",
     icon: <Store size={24} />,
@@ -108,7 +112,7 @@ const helpTopics: HelpTopic[] = [
       "Integrate with e-commerce, retail stores, or service businesses"
     ]
   },
-  {
+    {
     id: "trust-score",
     title: "Seer Trust & ProofScore",
     icon: <Star size={24} />,
@@ -136,7 +140,7 @@ const helpTopics: HelpTopic[] = [
       "Tip: See docs for the Seer reason-code registry and user guide."
     ]
   },
-  {
+    {
     id: "governance",
     title: "Governance",
     icon: <Vote size={24} />,
@@ -149,7 +153,7 @@ const helpTopics: HelpTopic[] = [
       "Current fee rate (0%) was voted on by the community"
     ]
   },
-  {
+    {
     id: "streaming-payroll",
     title: "Streaming Payroll",
     icon: <Droplets size={24} />,
@@ -193,8 +197,9 @@ const helpTopics: HelpTopic[] = [
       "✅ Lower fees than traditional payroll",
       "✅ Multi-token support (VFIDE, USDC, USDT, DAI, WETH)"
     ]
-  }
-];
+    }
+  ];
+}
 
 export function HelpCenter() {
   const [isOpen, setIsOpen] = useState(false);
@@ -202,6 +207,8 @@ export function HelpCenter() {
   const [wizardEnabled, setWizardEnabled] = useState(true);
   const chainId = useChainId();
   const isTestnet = chainId ? isTestnetChainId(chainId) : false;
+  const cardBoundMode = isCardBoundVaultMode();
+  const helpTopics = getHelpTopics(cardBoundMode);
 
   // Read wizard enabled state from localStorage (after mount to avoid SSR mismatch)
   useEffect(() => {

@@ -70,6 +70,7 @@ export function WithdrawModal({
                 type="text"
                 value={withdrawRecipient}
                 onChange={(e) =>  setWithdrawRecipient(e.target.value)}
+                placeholder={cardBoundMode ? '0x... destination vault address' : '0x... recipient wallet address'}
                
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
               />
@@ -81,6 +82,11 @@ export function WithdrawModal({
                 >
                   Use my wallet address
                 </button>
+              )}
+              {cardBoundMode && (
+                <div className="text-white/50 text-xs mt-2">
+                  Enter the recipient vault address, not the recipient wallet address.
+                </div>
               )}
             </div>
 

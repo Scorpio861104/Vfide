@@ -12,7 +12,6 @@ const ARTIFACT_OVERRIDES: Record<string, string> = {
   'ERC20.json': 'artifacts/contracts/SharedInterfaces.sol/IERC20.json',
   'UserVault.json': 'artifacts/contracts/VaultInfrastructure.sol/UserVaultLegacy.json',
   'UserVaultLite.json': 'artifacts/contracts/VaultInfrastructure.sol/UserVaultLegacy.json',
-  'VaultHubLite.json': 'artifacts/contracts/VaultHub.sol/VaultHub.json',
 };
 
 type PlaceholderSignoff = {
@@ -39,7 +38,6 @@ const PARITY_EXEMPTIONS = new Set<string>([
   'ERC20.json',
   'MainstreamPayments.json',
   'UserVaultLite.json',
-  'VaultHubLite.json',
   'VFIDECommerce.json',
 ]);
 

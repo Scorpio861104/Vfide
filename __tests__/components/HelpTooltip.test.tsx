@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
+const mockIsCardBoundVaultMode = jest.fn(() => false)
+
 // Mock lucide-react
 jest.mock('lucide-react', () => ({
   HelpCircle: ({ className }: { className?: string }) => 
@@ -17,9 +19,18 @@ jest.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: React.PropsWithChildren) => children,
 }))
 
+jest.mock('@/lib/contracts', () => ({
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+}))
+
 import { HelpTooltip, HelpTerm } from '@/components/ui/HelpTooltip'
 
 describe('HelpTooltip', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockIsCardBoundVaultMode.mockReturnValue(false)
+  })
+
   it('renders the help icon', () => {
     render(<HelpTooltip term="ProofScore" />)
     expect(screen.getByTestId('help-icon')).toBeInTheDocument()
@@ -77,6 +88,17 @@ describe('HelpTooltip', () => {
     
     fireEvent.touchStart(trigger)
     expect(screen.queryByText(/dynamic reputation score/i)).not.toBeInTheDocument()
+  })
+
+  it('shows CardBound-aware glossary copy for legacy next-of-kin terms', () => {
+    mockIsCardBoundVaultMode.mockReturnValue(true)
+
+    render(<HelpTooltip term="Next of Kin" />)
+    const trigger = screen.getByTestId('help-icon').parentElement!
+
+    fireEvent.mouseEnter(trigger)
+    expect(screen.getByText(/legacy UserVault inheritance role/i)).toBeInTheDocument()
+    expect(screen.queryByText(/designated heir who can claim vault ownership/i)).not.toBeInTheDocument()
   })
 
   describe('positions', () => {

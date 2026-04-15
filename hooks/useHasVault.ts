@@ -2,13 +2,10 @@
 
 import { useAccount, useReadContract } from 'wagmi';
 import { useMemo } from 'react';
-import { VaultHubABI } from '@/lib/abis';
+import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { logger } from '@/lib/logger';
 
-// VaultHub address (from deployment)
-// Base: 0x090014f269f642656394E2FEaB038b92387B4db3
-// Base Sepolia: 0x090014f269f642656394E2FEaB038b92387B4db3
-const VAULT_HUB_ADDRESS = (process.env.NEXT_PUBLIC_VAULTHUB_ADDRESS || '0x090014f269f642656394E2FEaB038b92387B4db3') as `0x${string}`;
+const VAULT_HUB_ADDRESS = CONTRACT_ADDRESSES.VaultHub;
 
 /**
  * Hook to check if the connected user has a vault
@@ -16,14 +13,15 @@ const VAULT_HUB_ADDRESS = (process.env.NEXT_PUBLIC_VAULTHUB_ADDRESS || '0x090014
  */
 export function useHasVault() {
   const { address, isConnected } = useAccount();
+  const isAvailable = isConfiguredContractAddress(VAULT_HUB_ADDRESS);
 
   const { data: vaultAddress, isLoading, isError, error } = useReadContract({
     address: VAULT_HUB_ADDRESS,
-    abi: VaultHubABI,
+    abi: VAULT_HUB_ABI,
     functionName: 'vaultOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && isConnected,
+      enabled: !!address && isConnected && isAvailable,
       retry: 3,
       retryDelay: 1000,
     },
@@ -31,7 +29,7 @@ export function useHasVault() {
 
   const hasVault = useMemo(() => {
     if (!vaultAddress) return false;
-    return vaultAddress !== '0x0000000000000000000000000000000000000000';
+    return vaultAddress !== ZERO_ADDRESS;
   }, [vaultAddress]);
 
   // Log errors for debugging
@@ -45,5 +43,6 @@ export function useHasVault() {
     isLoading,
     isError,
     isConnected,
+    isAvailable,
   };
 }

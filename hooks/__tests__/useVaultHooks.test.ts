@@ -21,6 +21,8 @@ import {
     useVaultGuardiansDetailed,
 } from '../useVaultHooks'
 
+const mockIsCardBoundVaultMode = jest.fn(() => false)
+
 jest.mock('wagmi')
 jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
@@ -29,6 +31,12 @@ jest.mock('@/lib/contracts', () => ({
   },
   ACTIVE_VAULT_IMPLEMENTATION: 'uservault',
   ACTIVE_VAULT_ABI: [],
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock the abis module - must match exact import path from useVaultHooks.ts
@@ -50,6 +58,7 @@ const mockVaultAddress = '0xabcdef1234567890abcdef1234567890abcdef12' as `0x${st
 const mockGuardianAddress = '0x1111111111111111111111111111111111111111' as `0x${string}`
 
 beforeEach(() => {
+  mockIsCardBoundVaultMode.mockReturnValue(false)
   ;(wagmi.useChainId as jest.Mock).mockReturnValue(84532)
   ;(wagmi.usePublicClient as jest.Mock).mockReturnValue({
     waitForTransactionReceipt: jest.fn(),
@@ -1299,6 +1308,10 @@ describe('useGuardianCancelInheritance', () => {
 })
 
 describe('useInheritanceStatus', () => {
+  beforeEach(() => {
+    mockIsCardBoundVaultMode.mockReturnValue(false)
+  })
+
   it('returns next of kin when set', () => {
     const nokAddress = '0xnextofkin12345678901234567890123456789012' as `0x${string}`
     ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
@@ -1329,8 +1342,7 @@ describe('useInheritanceStatus', () => {
     const { result } = renderHook(() => useInheritanceStatus(mockVaultAddress))
 
     expect(result.current.nextOfKin).toBe('0x0000000000000000000000000000000000000000')
-    // Note: hasNextOfKin is true when data is undefined due to the !== check
-    expect(result.current.hasNextOfKin).toBe(true)
+    expect(result.current.hasNextOfKin).toBe(false)
   })
 
   it('handles undefined vault address', () => {
@@ -1341,14 +1353,26 @@ describe('useInheritanceStatus', () => {
     const { result } = renderHook(() => useInheritanceStatus(undefined))
 
     expect(result.current.nextOfKin).toBe('0x0000000000000000000000000000000000000000')
-    // Note: hasNextOfKin is true when data is undefined due to the !== check
-    expect(result.current.hasNextOfKin).toBe(true)
+    expect(result.current.hasNextOfKin).toBe(false)
+  })
+
+  it('returns no next of kin in CardBound mode', () => {
+    mockIsCardBoundVaultMode.mockReturnValue(true)
+    ;(wagmi.useReadContract as jest.Mock).mockReturnValue({
+      data: '0x1111111111111111111111111111111111111111',
+    })
+
+    const { result } = renderHook(() => useInheritanceStatus(mockVaultAddress))
+
+    expect(result.current.nextOfKin).toBe('0x0000000000000000000000000000000000000000')
+    expect(result.current.hasNextOfKin).toBe(false)
   })
 })
 
 describe('useSetGuardian edge cases', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockIsCardBoundVaultMode.mockReturnValue(false)
   })
 
   it('handles invalid guardian address validation (line 195-196)', async () => {
@@ -1408,6 +1432,26 @@ describe('useSetGuardian edge cases', () => {
       functionName: 'setGuardian',
       args: [mockGuardianAddress, false],
     })
+  })
+
+  it('blocks guardian writes in CardBound mode', async () => {
+    mockIsCardBoundVaultMode.mockReturnValue(true)
+    const mockWriteAsync = jest.fn()
+    ;(wagmi.useWriteContract as jest.Mock).mockReturnValue({
+      writeContractAsync: mockWriteAsync,
+    })
+
+    const { result } = renderHook(() => useSetGuardian(mockVaultAddress))
+
+    let response: { success: boolean; error?: string }
+    await act(async () => {
+      response = await result.current.setGuardian(mockGuardianAddress, true)
+    })
+
+    expect(response!.success).toBe(false)
+    expect(response!.error).toBe('This action is not supported in CardBound vault mode.')
+    expect(result.current.error).toBe('This action is not supported in CardBound vault mode.')
+    expect(mockWriteAsync).not.toHaveBeenCalled()
   })
 })
 

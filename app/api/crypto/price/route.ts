@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http } from 'viem';
 import { base, baseSepolia, polygon, polygonAmoy, zkSync, zkSyncSepoliaTestnet } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { logger } from '@/lib/logger';
 
-const VFIDE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS;
+const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
 
 function getConfiguredChain() {
   const chainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
@@ -79,7 +80,7 @@ function parseRefreshParam(refreshParam: string | null): boolean | null {
  * Calculate price from Uniswap V3 sqrtPriceX96
  */
 function calculatePrice(sqrtPriceX96: bigint, token0: string, decimals0: number, decimals1: number): number {
-  if (!VFIDE_TOKEN_ADDRESS) {
+  if (!isConfiguredContractAddress(VFIDE_TOKEN_ADDRESS)) {
     throw new Error('VFIDE token address not configured');
   }
 
@@ -119,8 +120,8 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  if (!VFIDE_TOKEN_ADDRESS) {
-    return NextResponse.json({ error: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS not configured' }, { status: 500 });
+  if (!isConfiguredContractAddress(VFIDE_TOKEN_ADDRESS)) {
+    return NextResponse.json({ error: 'VFIDEToken contract not configured' }, { status: 500 });
   }
   
   try {
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
     let priceSource: 'uniswap' | 'tokenomics' | 'fallback' = 'tokenomics';
 
     // Try to fetch live price from Uniswap if pool is deployed
-    if (VFIDE_WETH_POOL && VFIDE_WETH_POOL !== '0x0000000000000000000000000000000000000000') {
+    if (VFIDE_WETH_POOL && VFIDE_WETH_POOL !== ZERO_ADDRESS) {
       try {
         const [slot0Data, token0] = await Promise.all([
           client.readContract({

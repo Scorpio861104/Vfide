@@ -18,7 +18,7 @@ import { useReadContract } from 'wagmi';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Shield, Zap, TrendingUp, Clock, CheckCircle2, Award } from 'lucide-react';
-import { CONTRACT_ADDRESSES, MerchantPortalABI } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, MerchantPortalABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { SeerABI } from '@/lib/abis';
 import { safeBigIntToNumber } from '@/lib/validation';
 import { formatEther } from 'viem';
@@ -45,13 +45,16 @@ function getFeeRate(score: number): string {
 }
 
 export function MerchantTrustBadge({ merchantAddress, variant = 'full', className = '' }: MerchantTrustBadgeProps) {
+  const isSeerAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
+  const isMerchantPortalAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
+
   // Read ProofScore from Seer contract
   const { data: scoreData } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
     abi: SeerABI,
     functionName: 'getScore',
     args: [merchantAddress],
-    query: { enabled: CONTRACT_ADDRESSES.Seer !== '0x0000000000000000000000000000000000000000' },
+    query: { enabled: isSeerAvailable },
   });
 
   // Read merchant info from MerchantPortal
@@ -60,7 +63,7 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
     abi: MerchantPortalABI,
     functionName: 'getMerchantInfo',
     args: [merchantAddress],
-    query: { enabled: CONTRACT_ADDRESSES.MerchantPortal !== '0x0000000000000000000000000000000000000000' },
+    query: { enabled: isMerchantPortalAvailable },
   });
 
   const info = useMemo(() => {

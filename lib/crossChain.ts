@@ -30,6 +30,8 @@ const lifiRouteCache = new Map<string, LifiRoute>();
 // Types
 // ============================================================================
 
+import { ZERO_ADDRESS } from './constants';
+
 export interface Chain {
   id: number;
   name: string;
@@ -209,25 +211,25 @@ export const SUPPORTED_CHAINS: Chain[] = [
 
 export const COMMON_TOKENS: Record<number, Token[]> = {
   1: [
-    { address: '0x0000000000000000000000000000000000000000', symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 1 },
+    { address: ZERO_ADDRESS, symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 1 },
     { address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', symbol: 'USDC', name: 'USD Coin', decimals: 6, chainId: 1 },
     { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', symbol: 'USDT', name: 'Tether USD', decimals: 6, chainId: 1 },
     { address: '0x6B175474E89094C44Da98b954EescdeCB5BE3830', symbol: 'DAI', name: 'Dai Stablecoin', decimals: 18, chainId: 1 },
   ],
   8453: [
-    { address: '0x0000000000000000000000000000000000000000', symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 8453 },
+    { address: ZERO_ADDRESS, symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 8453 },
     { address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', symbol: 'USDC', name: 'USD Coin', decimals: 6, chainId: 8453 },
   ],
   42161: [
-    { address: '0x0000000000000000000000000000000000000000', symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 42161 },
+    { address: ZERO_ADDRESS, symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 42161 },
     { address: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', symbol: 'USDC', name: 'USD Coin', decimals: 6, chainId: 42161 },
   ],
   10: [
-    { address: '0x0000000000000000000000000000000000000000', symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 10 },
+    { address: ZERO_ADDRESS, symbol: 'ETH', name: 'Ether', decimals: 18, chainId: 10 },
     { address: '0x7F5c764cBc14f9669B88837ca1490cCa17c31607', symbol: 'USDC', name: 'USD Coin', decimals: 6, chainId: 10 },
   ],
   137: [
-    { address: '0x0000000000000000000000000000000000000000', symbol: 'MATIC', name: 'MATIC', decimals: 18, chainId: 137 },
+    { address: ZERO_ADDRESS, symbol: 'MATIC', name: 'MATIC', decimals: 18, chainId: 137 },
     { address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174', symbol: 'USDC', name: 'USD Coin', decimals: 6, chainId: 137 },
   ],
 };

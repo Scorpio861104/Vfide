@@ -11,17 +11,16 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
 import { PayrollManagerABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 // Contract addresses from environment
 const PAYROLL_MANAGER_ADDRESS = CONTRACT_ADDRESSES.PayrollManager;
 const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 // Check if contract is deployed
-const IS_DEPLOYED = PAYROLL_MANAGER_ADDRESS !== '0x0000000000000000000000000000000000000000';
-const HAS_TOKEN_CONFIG = VFIDE_TOKEN_ADDRESS !== ZERO_ADDRESS;
+const IS_DEPLOYED = isConfiguredContractAddress(PAYROLL_MANAGER_ADDRESS);
+const HAS_TOKEN_CONFIG = isConfiguredContractAddress(VFIDE_TOKEN_ADDRESS);
 
 export interface PayrollStream {
   id: bigint;
@@ -146,8 +145,8 @@ export function usePayroll() {
           // Placeholder - in production each stream would be fetched
           loadedStreams.push({
             id,
-            payer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-            payee: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+            payer: ZERO_ADDRESS,
+            payee: ZERO_ADDRESS,
             token: VFIDE_TOKEN_ADDRESS,
             ratePerSecond: BigInt(0),
             startTime: BigInt(Math.floor(Date.now() / 1000)),

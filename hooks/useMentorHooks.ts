@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { SeerSocialABI, SeerViewABI } from '@/lib/abis'
 
 type MentorInfo = {
@@ -17,12 +17,17 @@ type MentorInfo = {
 }
 
 export function useMentorInfo(address?: `0x${string}`) {
+  const hasSeerViewConfig =
+    isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerView) &&
+    isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
+  const hasSeerSocialConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
+
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.SeerView,
     abi: SeerViewABI,
     functionName: 'getMentorInfo',
     args: address ? [CONTRACT_ADDRESSES.Seer, address] : undefined,
-    query: { enabled: Boolean(address) },
+    query: { enabled: Boolean(address) && hasSeerViewConfig },
   })
 
   const { data: menteesData } = useReadContract({
@@ -30,7 +35,7 @@ export function useMentorInfo(address?: `0x${string}`) {
     abi: SeerSocialABI,
     functionName: 'getMentees',
     args: address ? [address] : undefined,
-    query: { enabled: Boolean(address) },
+    query: { enabled: Boolean(address) && hasSeerSocialConfig },
   })
 
   const parsed = useMemo<MentorInfo>(() => {
@@ -55,7 +60,7 @@ export function useMentorInfo(address?: `0x${string}`) {
     isLoading,
     error,
     refetch,
-    isAvailable: true,
+    isAvailable: hasSeerViewConfig && hasSeerSocialConfig,
   }
 }
 
@@ -72,9 +77,10 @@ export function useBecomeMentor() {
   const { address } = useAccount()
   const { writeContract, data: hash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({ hash })
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
 
   const becomeMentor = () => {
-    if (!address) return
+    if (!address || !isAvailable) return
     writeContract({
       address: CONTRACT_ADDRESSES.SeerSocial,
       abi: SeerSocialABI,
@@ -83,16 +89,17 @@ export function useBecomeMentor() {
     })
   }
 
-  return { becomeMentor, isLoading: isPending || isConfirming, isSuccess, error, isAvailable: true }
+  return { becomeMentor, isLoading: isPending || isConfirming, isSuccess, error, isAvailable }
 }
 
 export function useSponsorMentee(menteeAddress?: `0x${string}`) {
   const { address } = useAccount()
   const { writeContract, data: hash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({ hash })
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
 
   const sponsorMentee = () => {
-    if (!address || !menteeAddress) return
+    if (!address || !menteeAddress || !isAvailable) return
     writeContract({
       address: CONTRACT_ADDRESSES.SeerSocial,
       abi: SeerSocialABI,
@@ -101,5 +108,5 @@ export function useSponsorMentee(menteeAddress?: `0x${string}`) {
     })
   }
 
-  return { sponsorMentee, isSponsoring: isPending || isConfirming, isSuccess, error, isAvailable: true }
+  return { sponsorMentee, isSponsoring: isPending || isConfirming, isSuccess, error, isAvailable }
 }

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { isAddress } from 'viem';
 import { useVaultHub } from './useVaultHub';
 import { devLog } from '../lib/utils';
+import { isCardBoundVaultMode } from '@/lib/contracts';
 
 /**
  * Simple vault hook that hides the complexity of vault.execute()
@@ -12,6 +13,7 @@ export function useSimpleVault() {
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   const { vaultAddress } = useVaultHub();
+  const cardBoundMode = isCardBoundVaultMode();
   const [actionStatus, setActionStatus] = useState<'idle' | 'preparing' | 'signing' | 'confirming' | 'success' | 'error'>('idle');
   const [userMessage, setUserMessage] = useState('');
 
@@ -39,6 +41,12 @@ export function useSimpleVault() {
     if (!callData || !callData.startsWith('0x')) {
       setActionStatus('error');
       setUserMessage('❌ Invalid call data.');
+      return;
+    }
+
+    if (cardBoundMode) {
+      setActionStatus('error');
+      setUserMessage('❌ Generic vault execute() actions are not supported in CardBound mode. Use CardBound-specific flows instead.');
       return;
     }
 

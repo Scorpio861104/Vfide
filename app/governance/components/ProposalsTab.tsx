@@ -5,7 +5,7 @@ import { useReadContract, usePublicClient } from "wagmi"
 import { Sparkles } from "lucide-react"
 
 import { DAOABI } from "@/lib/abis"
-import { CONTRACT_ADDRESSES } from "@/lib/contracts"
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts"
 import { GOVERNANCE_QUORUM_VOTES } from "@/lib/constants"
 import { VirtualizedList } from "@/lib/ux/performanceUtils"
 
@@ -26,6 +26,7 @@ export function ProposalsTab({
   onFinalize?: (proposalId: bigint) => void
 }) {
   const publicClient = usePublicClient()
+  const isAvailable = isConfiguredContractAddress(DAO_ADDRESS)
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
   const [filterType, setFilterType] = useState<string>("all")
   const [showAllProposals, setShowAllProposals] = useState(false)
@@ -34,6 +35,9 @@ export function ProposalsTab({
     address: DAO_ADDRESS,
     abi: DAOABI,
     functionName: 'getActiveProposals',
+    query: {
+      enabled: isAvailable,
+    },
   })
 
   const ids = (activeProposalIds ?? (liveActiveIds as readonly bigint[] | undefined) ?? [])
@@ -42,7 +46,7 @@ export function ProposalsTab({
 
   useEffect(() => {
     const load = async () => {
-      if (!publicClient || ids.length === 0) {
+      if (!publicClient || !isAvailable || ids.length === 0) {
         setProposals([])
         return
       }
@@ -115,7 +119,7 @@ export function ProposalsTab({
     }
 
     load().catch(() => setProposals([]))
-  }, [ids, publicClient])
+  }, [ids, publicClient, isAvailable])
 
   const filteredProposals = useMemo(() => {
     return proposals.filter((p) => {

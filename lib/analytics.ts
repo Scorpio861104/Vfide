@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 // ============================================================================
 // Types & Interfaces
@@ -149,7 +150,7 @@ function initializeAnalyticsStore(): void {
   if (!isBrowserRuntime()) return;
 
   try {
-    const serialized = window.localStorage.getItem(ANALYTICS_STORAGE_KEY);
+    const serialized = safeLocalStorage.getItem(ANALYTICS_STORAGE_KEY);
     if (!serialized) return;
 
     const parsed = JSON.parse(serialized) as unknown;
@@ -175,7 +176,7 @@ function persistAnalyticsStore(): void {
     const latestEvents = Array.from(analyticsStore.values())
       .sort((a, b) => a.timestamp - b.timestamp)
       .slice(-MAX_LOCAL_ANALYTICS_EVENTS);
-    window.localStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(latestEvents));
+    safeLocalStorage.setItem(ANALYTICS_STORAGE_KEY, JSON.stringify(latestEvents));
   } catch (err) {
     logger.warn('Analytics local store persistence failed:', err);
   }

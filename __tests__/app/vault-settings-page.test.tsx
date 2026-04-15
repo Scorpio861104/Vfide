@@ -2,6 +2,8 @@ import { describe, it, expect, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import type React from 'react';
 
+const mockIsCardBoundVaultMode = jest.fn(() => false);
+
 const renderVaultSettingsPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/vault/settings/page');
@@ -19,6 +21,10 @@ jest.mock('@/components/vault/VaultSettingsPanel', () => ({
 
 jest.mock('@/components/security/GuardianManagementPanel', () => ({
   GuardianManagementPanel: () => <div data-testid="guardian-management-panel">GuardianManagementPanel</div>,
+}));
+
+jest.mock('@/lib/contracts', () => ({
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
 }));
 
 jest.mock('framer-motion', () => {
@@ -42,6 +48,11 @@ jest.mock('lucide-react', () => {
 });
 
 describe('Vault settings page logic pathways', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockIsCardBoundVaultMode.mockReturnValue(false);
+  });
+
   it('renders primary security control sections and mounted panels', () => {
     renderVaultSettingsPage();
 
@@ -51,5 +62,15 @@ describe('Vault settings page logic pathways', () => {
 
     expect(screen.getByTestId('vault-settings-panel')).toBeTruthy();
     expect(screen.getByTestId('guardian-management-panel')).toBeTruthy();
+  });
+
+  it('relabels legacy inheritance guidance in CardBound mode', () => {
+    mockIsCardBoundVaultMode.mockReturnValue(true);
+
+    renderVaultSettingsPage();
+
+    expect(screen.getByText(/Guardian Governance/i)).toBeTruthy();
+    expect(screen.getByText(/wallet-rotation and vault-protection actions instead of legacy inheritance claims/i)).toBeTruthy();
+    expect(screen.queryByText(/^Inheritance Guard$/i)).toBeNull();
   });
 });

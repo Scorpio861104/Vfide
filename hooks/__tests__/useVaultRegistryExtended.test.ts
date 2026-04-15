@@ -14,9 +14,24 @@ jest.mock('wagmi', () => ({
 jest.mock('viem', () => ({
   keccak256: jest.fn((input: unknown) => '0x' + 'a'.repeat(64)),
   toBytes: jest.fn((input: string) => new Uint8Array([...input].map(c => c.charCodeAt(0)))),
+  isAddress: jest.fn((value: string) => /^0x[a-fA-F0-9]{40}$/.test(value)),
+}))
+
+jest.mock('@/lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    VaultRegistry: '0x1234567890123456789012345678901234567890',
+    VaultRecoveryClaim: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
+  },
+  VaultRegistryABI: [],
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { CONTRACT_ADDRESSES } from '@/lib/contracts'
 import {
   useSearchByRecoveryId,
   useSearchByEmail,
@@ -508,6 +523,8 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useInitiateClaim ====================
   describe('useInitiateClaim', () => {
     it('should throw when recovery-claim contract is not deployed', () => {
+      const originalAddress = CONTRACT_ADDRESSES.VaultRecoveryClaim
+      CONTRACT_ADDRESSES.VaultRecoveryClaim = '0x0000000000000000000000000000000000000000'
       const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
@@ -527,6 +544,7 @@ describe('useVaultRegistry - Extended Tests', () => {
       }).toThrow(/not deployed/i)
 
       expect(mockWriteContract).not.toHaveBeenCalled()
+      CONTRACT_ADDRESSES.VaultRecoveryClaim = originalAddress
     })
 
     it('should track pending state', () => {
@@ -624,6 +642,8 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useGuardianVote ====================
   describe('useGuardianVote', () => {
     it('should throw when recovery-claim contract is not deployed', async () => {
+      const originalAddress = CONTRACT_ADDRESSES.VaultRecoveryClaim
+      CONTRACT_ADDRESSES.VaultRecoveryClaim = '0x0000000000000000000000000000000000000000'
       const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
@@ -639,6 +659,7 @@ describe('useVaultRegistry - Extended Tests', () => {
       }).toThrow(/not deployed/i)
 
       expect(mockWriteContract).not.toHaveBeenCalled()
+      CONTRACT_ADDRESSES.VaultRecoveryClaim = originalAddress
     })
 
     it('should track voting state', () => {
@@ -658,6 +679,8 @@ describe('useVaultRegistry - Extended Tests', () => {
   // ==================== useChallengeClaim ====================
   describe('useChallengeClaim', () => {
     it('should throw when recovery-claim contract is not deployed', () => {
+      const originalAddress = CONTRACT_ADDRESSES.VaultRecoveryClaim
+      CONTRACT_ADDRESSES.VaultRecoveryClaim = '0x0000000000000000000000000000000000000000'
       const mockWriteContract = jest.fn()
       ;(useWriteContract as Mock).mockReturnValue({
         writeContract: mockWriteContract,
@@ -673,6 +696,7 @@ describe('useVaultRegistry - Extended Tests', () => {
       }).toThrow(/not deployed/i)
 
       expect(mockWriteContract).not.toHaveBeenCalled()
+      CONTRACT_ADDRESSES.VaultRecoveryClaim = originalAddress
     })
 
     it('should track challenging state', () => {

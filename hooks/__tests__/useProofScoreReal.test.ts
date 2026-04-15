@@ -16,6 +16,12 @@ jest.mock('@/lib/contracts', () => ({
   },
   SeerABI: [],
   ProofScoreBurnRouterABI: [],
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 import { useAccount, useReadContract } from 'wagmi'

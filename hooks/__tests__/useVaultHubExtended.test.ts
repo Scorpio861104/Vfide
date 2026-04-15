@@ -34,6 +34,12 @@ jest.mock('@/lib/contracts', () => ({
     VaultHub: '0x6666666666666666666666666666666666666666',
   },
   VAULT_HUB_ABI: [],
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock lib/utils

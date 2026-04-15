@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useChainId, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { ZERO_ADDRESS } from '@/lib/contracts';
 import { OWNER_CONTROL_PANEL_ABI, OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import {
@@ -9,8 +10,6 @@ import {
   NumberInput,
   TransactionStatus,
 } from './SecurityComponents';
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 export function EcosystemPanel() {
   const chainId = useChainId();
@@ -30,10 +29,11 @@ export function EcosystemPanel() {
     functionName: 'ecosystem_getAutoWorkPayoutConfig',
   });
 
-  const currentEnabled = currentConfig?.[0] as boolean | undefined;
-  const currentMerchantTxReward = currentConfig?.[1] as bigint | undefined;
-  const currentMerchantReferralReward = currentConfig?.[2] as bigint | undefined;
-  const currentUserReferralReward = currentConfig?.[3] as bigint | undefined;
+  const currentConfigTuple = currentConfig as readonly [boolean, bigint, bigint, bigint] | undefined;
+  const currentEnabled = currentConfigTuple?.[0];
+  const currentMerchantTxReward = currentConfigTuple?.[1];
+  const currentMerchantReferralReward = currentConfigTuple?.[2];
+  const currentUserReferralReward = currentConfigTuple?.[3];
 
   const handleConfigure = async () => {
     setLocalError(null);
@@ -74,7 +74,7 @@ export function EcosystemPanel() {
         <h2 className="text-2xl font-bold text-white mb-4">🌿 Ecosystem Management</h2>
         <p className="text-slate-400 mb-6">Configure automatic fixed work payouts funded by ecosystem pools.</p>
 
-        {currentConfig && (
+        {currentConfigTuple && (
           <div className="bg-black/30 rounded-lg p-4 mb-6">
             <h3 className="text-white font-bold mb-3">Current Auto Work Payout Configuration</h3>
             <div className="space-y-2 text-sm">

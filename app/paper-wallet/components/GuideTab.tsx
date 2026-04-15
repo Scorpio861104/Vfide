@@ -40,7 +40,7 @@ export function GuideTab() {
           <li>• Long-term cold storage you won’t access for months or years</li>
           <li>• Gifting crypto to someone without a wallet</li>
           <li>• Disaster recovery backup when hardware wallets fail</li>
-          <li>• Emergency access copy for inheritance planning</li>
+          <li>• Emergency access copy for disaster recovery planning</li>
         </ul>
       </div>
 

@@ -22,6 +22,11 @@ jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     DAO: '0x1234567890123456789012345678901234567890',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock ABIs
@@ -48,6 +53,7 @@ describe('useDAOProposals', () => {
     const { result } = renderHook(() => useDAOProposals())
     
     expect(result.current.proposalCount).toBe(10)
+    expect(result.current.isAvailable).toBe(true)
   })
 
   it('returns 0 when no data', () => {
@@ -153,5 +159,19 @@ describe('useVote', () => {
       functionName: 'vote',
       args: [BigInt(3), false],
     }))
+  })
+
+  it('fails closed when DAO is not configured', () => {
+    const contracts = jest.requireMock('../../lib/contracts') as {
+      CONTRACT_ADDRESSES: { DAO: string }
+    }
+    contracts.CONTRACT_ADDRESSES.DAO = '0x0000000000000000000000000000000000000000'
+
+    const { result } = renderHook(() => useVote())
+
+    result.current.vote(BigInt(1), true)
+
+    expect(result.current.isAvailable).toBe(false)
+    expect(mockWriteContract).not.toHaveBeenCalled()
   })
 })

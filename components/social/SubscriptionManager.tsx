@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { parseUnits, maxUint256 } from 'viem';
-import { CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { SubscriptionManagerABI } from '@/lib/abis';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
@@ -73,8 +73,6 @@ const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
   },
 ];
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-
 export function SubscriptionManager({
   creatorAddress,
   creatorName,
@@ -85,6 +83,8 @@ export function SubscriptionManager({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
+  const isSubscriptionManagerConfigured = isConfiguredContractAddress(CONTRACT_ADDRESSES.SubscriptionManager);
+  const isVfideTokenConfigured = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
 
   const publicClient = usePublicClient();
   const { writeContractAsync, data: hash, error } = useWriteContract();
@@ -103,10 +103,7 @@ export function SubscriptionManager({
       return;
     }
 
-    if (
-      CONTRACT_ADDRESSES.SubscriptionManager === ZERO_ADDRESS ||
-      CONTRACT_ADDRESSES.VFIDEToken === ZERO_ADDRESS
-    ) {
+    if (!isSubscriptionManagerConfigured || !isVfideTokenConfigured) {
       alert('Subscription contracts are not configured for this environment');
       return;
     }

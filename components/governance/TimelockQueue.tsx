@@ -5,11 +5,9 @@ import { isAddress } from "viem";
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"; 
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, CheckCircle, XCircle, AlertTriangle, PlayCircle, Loader2 } from "lucide-react";
-import { CONTRACT_ADDRESSES } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from "@/lib/contracts";
 import { useToast } from "@/components/ui/toast";
 import { DAOTimelockABI } from "@/lib/abis";
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
 
 function useNowSeconds(intervalMs: number = 1000) {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
@@ -35,6 +33,7 @@ export function TimelockQueue() {
   const { toast } = useToast();
   const [selectedTx, setSelectedTx] = useState<QueuedTransaction | null>(null);
   const [cancelCandidateTxId, setCancelCandidateTxId] = useState<string | null>(null);
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.DAOTimelock);
 
   // Read queued transactions
   const { data: queueData, refetch: refetchQueue } = useReadContract({
@@ -100,7 +99,7 @@ export function TimelockQueue() {
     : [];
 
   const handleExecute = (txId: string) => {
-    if (CONTRACT_ADDRESSES.DAOTimelock === ZERO_ADDRESS) {
+    if (!isAvailable) {
       toast({
         title: "Timelock Unavailable",
         description: "DAOTimelock is not configured in this environment.",
@@ -123,7 +122,7 @@ export function TimelockQueue() {
   };
 
   const handleCancel = (txId: string) => {
-    if (CONTRACT_ADDRESSES.DAOTimelock === ZERO_ADDRESS) {
+    if (!isAvailable) {
       toast({
         title: "Timelock Unavailable",
         description: "DAOTimelock is not configured in this environment.",

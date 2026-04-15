@@ -3,7 +3,7 @@
 import { useReadContract, useAccount } from 'wagmi'
 import { motion } from 'framer-motion'
 import { Users, TrendingUp, Clock } from 'lucide-react'
-import { CONTRACT_ADDRESSES } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { SeerSocialABI } from '@/lib/abis'
 import { safeBigIntToNumber } from '@/lib/validation'
 
@@ -18,6 +18,7 @@ export function EndorsementStats({
 }: EndorsementStatsProps) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerSocial)
 
   const { data: statsData, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.SeerSocial,
@@ -25,7 +26,7 @@ export function EndorsementStats({
     functionName: 'getEndorsementStats',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
-      enabled: !!targetAddress,
+      enabled: !!targetAddress && isAvailable,
     }
   })
 

@@ -2,7 +2,8 @@
 
 import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
-import { CouncilElectionABI, CouncilSalaryABI } from "@/lib/abis";
+import { CouncilElectionABI } from "@/lib/abis";
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS } from "@/lib/contracts";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, DollarSign, Vote, Crown } from "lucide-react";
@@ -12,8 +13,8 @@ const MembersTab = lazy(() => import('./components/MembersTab').then(m => ({ def
 const SalaryTab = lazy(() => import('./components/SalaryTab').then(m => ({ default: m.SalaryTab })));
 const VotingTab = lazy(() => import('./components/VotingTab').then(m => ({ default: m.VotingTab })));
 
-const COUNCIL_ELECTION_ADDRESS = (process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`;
-const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== '0x0000000000000000000000000000000000000000';
+const COUNCIL_ELECTION_ADDRESS = CONTRACT_ADDRESSES.CouncilElection;
+const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== ZERO_ADDRESS;
 
 type TabType = 'overview' | 'members' | 'salary' | 'voting';
 

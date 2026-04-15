@@ -23,6 +23,7 @@ describe('/api/crypto/fees', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.NEXT_PUBLIC_IS_TESTNET = 'true';
+    process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC = 'https://sepolia.base.org';
   });
 
   describe('GET', () => {
@@ -41,6 +42,7 @@ describe('/api/crypto/fees', () => {
 
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
+      expect(createPublicClient).toHaveBeenCalledTimes(1);
       expect(data.fees).toHaveProperty('slow');
       expect(data.fees).toHaveProperty('standard');
       expect(data.fees).toHaveProperty('fast');

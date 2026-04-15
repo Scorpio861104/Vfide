@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { HelpCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { isCardBoundVaultMode } from '@/lib/contracts'
 
 interface HelpTooltipProps {
   term: string
@@ -17,22 +18,28 @@ interface HelpTooltipProps {
 }
 
 // Predefined explanations for common terms
-const glossary: Record<string, string> = {
-  'ProofScore': 'A dynamic reputation score (0-10,000) based on your on-chain behavior. Higher scores = lower transfer fees (0.25% vs 5%).',
-  'Vault': 'Your personal smart contract wallet with built-in security features like guardians, inheritance, and panic buttons.',
-  'Guardian': 'Trusted addresses you designate to help recover your vault if you lose access. They cannot access your funds directly.',
-  'Next of Kin': 'Your designated heir who can claim vault ownership if you pass away, after a 30-day waiting period.',
-  'Escrow': 'Funds held by a smart contract until both buyer and seller agree the transaction is complete. Protects both parties.',
-  'Burn': 'Tokens permanently destroyed (sent to 0x0 address). Reduces total supply, making remaining tokens more scarce.',
-  'Sanctum': 'VFIDE\'s charity vault. 10% of all transfer fees go here to fund social good initiatives voted by the community.',
-  'Quarantine': 'A self-imposed lock on your vault. Use it if you suspect your account is compromised. Blocks all outgoing transactions.',
-  'Council': 'A 12-member elected body that provides oversight and can approve emergency actions. Requires 70%+ ProofScore.',
-  'Tier': 'Your trust level based on ProofScore: Elite (8000+), Verified (7000+), Trusted (5000+), Neutral (below 5000).',
-  'Transfer Fee': 'Fee applied when sending VFIDE tokens. Ranges from 0.25% (Elite) to 5% (Low Trust). Split between burn, Sanctum, and ecosystem.',
-  'Commitment Period': 'Time during which locked tokens are held. 180-day lock: 10% immediate, 90% vested. 90-day lock: 20% immediate, 80% vested.',
-  'Badge': 'On-chain achievement that boosts your ProofScore. Can be minted as soulbound NFTs.',
-  'Soulbound': 'NFTs that cannot be transferred. They stay with the original wallet forever, proving authentic achievements.',
-  'Gas': 'Network fees paid to blockchain validators. On Base, typically $0.01-0.10 per transaction.',
+function getGlossary(cardBoundMode: boolean): Record<string, string> {
+  return {
+    'ProofScore': 'A dynamic reputation score (0-10,000) based on your on-chain behavior. Higher scores = lower transfer fees (0.25% vs 5%).',
+    'Vault': cardBoundMode
+      ? 'Your personal smart contract wallet with built-in security features like guardians, wallet rotation, queued-transfer protections, and panic buttons.'
+      : 'Your personal smart contract wallet with built-in security features like guardians, inheritance, and panic buttons.',
+    'Guardian': 'Trusted addresses you designate to help recover your vault if you lose access. They cannot access your funds directly.',
+    'Next of Kin': cardBoundMode
+      ? 'A legacy UserVault inheritance role. Active CardBound vault mode does not expose next-of-kin inheritance flows.'
+      : 'Your designated heir who can claim vault ownership if you pass away, after a 30-day waiting period.',
+    'Escrow': 'Funds held by a smart contract until both buyer and seller agree the transaction is complete. Protects both parties.',
+    'Burn': 'Tokens permanently destroyed (sent to 0x0 address). Reduces total supply, making remaining tokens more scarce.',
+    'Sanctum': 'VFIDE\'s charity vault. 10% of all transfer fees go here to fund social good initiatives voted by the community.',
+    'Quarantine': 'A self-imposed lock on your vault. Use it if you suspect your account is compromised. Blocks all outgoing transactions.',
+    'Council': 'A 12-member elected body that provides oversight and can approve emergency actions. Requires 70%+ ProofScore.',
+    'Tier': 'Your trust level based on ProofScore: Elite (8000+), Verified (7000+), Trusted (5000+), Neutral (below 5000).',
+    'Transfer Fee': 'Fee applied when sending VFIDE tokens. Ranges from 0.25% (Elite) to 5% (Low Trust). Split between burn, Sanctum, and ecosystem.',
+    'Commitment Period': 'Time during which locked tokens are held. 180-day lock: 10% immediate, 90% vested. 90-day lock: 20% immediate, 80% vested.',
+    'Badge': 'On-chain achievement that boosts your ProofScore. Can be minted as soulbound NFTs.',
+    'Soulbound': 'NFTs that cannot be transferred. They stay with the original wallet forever, proving authentic achievements.',
+    'Gas': 'Network fees paid to blockchain validators. On Base, typically $0.01-0.10 per transaction.',
+  }
 }
 
 export function HelpTooltip({ 
@@ -42,6 +49,7 @@ export function HelpTooltip({
   className = '' 
 }: HelpTooltipProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const glossary = getGlossary(isCardBoundVaultMode())
   
   const explanation = children || glossary[term] || `Learn more about ${term}`
   

@@ -7,6 +7,7 @@ const mockRequestRecovery = jest.fn(async (_candidate: `0x${string}`) => {});
 const mockApproveRecovery = jest.fn(async () => {});
 const mockFinalizeRecovery = jest.fn(async () => {});
 const mockCancelRecovery = jest.fn(async () => {});
+const mockIsCardBoundVaultMode = jest.fn(() => false);
 
 let mockVaultHubState: {
   vaultAddress?: `0x${string}`;
@@ -55,6 +56,11 @@ jest.mock('wagmi', () => ({
   useWriteContract: () => ({ writeContractAsync: jest.fn(), isPending: false }),
   useSignMessage: () => ({ signMessageAsync: jest.fn() }),
   usePublicClient: () => null,
+}));
+
+jest.mock('@/lib/contracts', () => ({
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }));
 
 jest.mock('viem', () => ({
@@ -119,6 +125,7 @@ describe('Guardians page Chain of Return', () => {
       createVault: mockCreateVault,
       isCreatingVault: false,
     };
+    mockIsCardBoundVaultMode.mockReturnValue(false);
 
     mockVaultRecoveryState = {
       recoveryStatus: {
@@ -198,5 +205,18 @@ describe('Guardians page Chain of Return', () => {
     fireEvent.click(screen.getByRole('tab', { name: /Pending Actions/i }));
     expect(await screen.findByText(/Guardian Inbox/i)).toBeTruthy();
     expect(screen.getByText(/No vaults in watchlist yet/i)).toBeTruthy();
+  });
+
+  it('hides inheritance navigation in CardBound mode and relabels recovery', async () => {
+    mockIsCardBoundVaultMode.mockReturnValue(true);
+
+    renderGuardiansPage();
+
+    expect(screen.queryByRole('tab', { name: /Next of Kin/i })).toBeNull();
+
+    fireEvent.click(screen.getByRole('tab', { name: /Wallet Rotation/i }));
+    expect(await screen.findByText(/CardBound Wallet Rotation/i)).toBeTruthy();
+    expect(screen.getByText(/Wallet Rotation Timeline/i)).toBeTruthy();
+    expect(screen.getByText(/finalizeWalletRotation\(\)/i)).toBeTruthy();
   });
 });

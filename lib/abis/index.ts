@@ -5,7 +5,6 @@ import VFIDETokenRaw from './VFIDEToken.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
 import VaultHubFullRaw from './VaultHub.json'
-import VaultHubLiteABI from './VaultHubLite.json'
 import UserVaultLiteABI from './UserVaultLite.json'
 import UserVaultABI from './UserVault.json'
 import CardBoundVaultABI from './CardBoundVault.json'
@@ -255,7 +254,6 @@ export {
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubABI,
-  VaultHubLiteABI,
   UserVaultLiteABI,
   UserVaultABI,
   CardBoundVaultABI,

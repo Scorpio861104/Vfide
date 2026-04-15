@@ -1,3 +1,5 @@
+import { safeLocalStorage } from './utils';
+
 export type StaffRole = 'admin' | 'manager' | 'cashier';
 
 export interface StaffPermissions {
@@ -81,10 +83,8 @@ export function isStaffSessionActive(session: StaffSession | null | undefined): 
 }
 
 export function getStoredStaffSession(): StaffSession | null {
-  if (typeof window === 'undefined') return null;
-
   try {
-    const raw = window.localStorage.getItem(STAFF_SESSION_STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(STAFF_SESSION_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StaffSession;
     if (!isStaffSessionActive(parsed)) {
@@ -98,20 +98,16 @@ export function getStoredStaffSession(): StaffSession | null {
 }
 
 export function storeStaffSession(session: StaffSession): void {
-  if (typeof window === 'undefined') return;
-
   try {
-    window.localStorage.setItem(STAFF_SESSION_STORAGE_KEY, JSON.stringify(session));
+    safeLocalStorage.setItem(STAFF_SESSION_STORAGE_KEY, JSON.stringify(session));
   } catch {
     // Storage may be unavailable in private browsing or restricted environments.
   }
 }
 
 export function clearStoredStaffSession(): void {
-  if (typeof window === 'undefined') return;
-
   try {
-    window.localStorage.removeItem(STAFF_SESSION_STORAGE_KEY);
+    safeLocalStorage.removeItem(STAFF_SESSION_STORAGE_KEY);
   } catch {
     // Ignore storage cleanup failures in restricted environments.
   }

@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, Heart, Key, FileText, Clock } from "lucide-react";
+import { isCardBoundVaultMode } from '@/lib/contracts';
 
 import type { TabType } from './components/types';
 
@@ -49,7 +50,15 @@ function TabSkeleton() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
   const { isConnected } = useAccount();
+  const cardBoundMode = isCardBoundVaultMode();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const visibleTabs = TAB_CONFIG
+    .filter((tab) => !cardBoundMode || tab.id !== 'next-of-kin')
+    .map((tab) => (
+      cardBoundMode && tab.id === 'recovery'
+        ? { ...tab, label: 'Wallet Rotation' }
+        : tab
+    ));
 
   return (
     <>
@@ -84,7 +93,7 @@ export default function GuardiansPage() {
         <section className="bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 sticky top-20 z-40">
           <div className="container mx-auto px-3 sm:px-4">
             <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Guardian management sections">
-              {TAB_CONFIG.map(tab => {
+              {visibleTabs.map(tab => {
                 const isActive = activeTab === tab.id;
                 const colors = COLOR_MAP[tab.id];
                 return (
@@ -112,12 +121,12 @@ export default function GuardiansPage() {
           <Suspense fallback={<TabSkeleton />}>
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && (
-                <div key="overview" role="tabpanel" id="tabpanel-overview"><OverviewTab /></div>
+                <div key="overview" role="tabpanel" id="tabpanel-overview"><OverviewTab cardBoundMode={cardBoundMode} /></div>
               )}
               {activeTab === 'my-guardians' && (
                 <div key="my-guardians" role="tabpanel" id="tabpanel-my-guardians"><MyGuardiansTab isConnected={isConnected} /></div>
               )}
-              {activeTab === 'next-of-kin' && (
+              {!cardBoundMode && activeTab === 'next-of-kin' && (
                 <div key="next-of-kin" role="tabpanel" id="tabpanel-next-of-kin"><NextOfKinTab isConnected={isConnected} /></div>
               )}
               {activeTab === 'recovery' && (

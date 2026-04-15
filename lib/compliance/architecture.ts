@@ -68,10 +68,10 @@
  *    → Frontend reads from chain / subgraph, does not maintain its own ledger
  * 
  * 6. DO display on-chain sanctions screening results.
- *    → If VFIDEToken has address blacklisting (it does during pre-handover),
- *      the contract itself blocks sanctioned addresses
- *    → Post-handover, blacklisting is architecturally impossible by design
- *    → Frontend just reflects what the contract allows
+ *    → VFIDE does not rely on address blacklisting in the live token architecture
+ *    → If sanctions or risk checks are surfaced, they must come from explicit policy/risk modules
+ *      or external compliance providers rather than hidden token-level transfer censorship
+ *    → Frontend should only reflect the actual on-chain or policy-layer decision path in use
  * 
  * 7. DO include protocol disclaimers on relevant pages.
  *    → See ProtocolDisclaimer component below

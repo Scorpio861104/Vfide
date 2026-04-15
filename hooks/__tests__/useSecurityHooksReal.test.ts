@@ -22,6 +22,8 @@ jest.mock('@/lib/abis', () => ({
 
 // Mock contracts
 jest.mock('@/lib/contracts', () => ({
+  ACTIVE_VAULT_ABI: [],
+  CARD_BOUND_VAULT_ABI: [],
   CONTRACT_ADDRESSES: {
     SecurityHub: '0x1111111111111111111111111111111111111111',
     PanicGuard: '0x2222222222222222222222222222222222222222',
@@ -30,6 +32,9 @@ jest.mock('@/lib/contracts', () => ({
     EmergencyBreaker: '0x5555555555555555555555555555555555555555',
     VaultHub: '0x6666666666666666666666666666666666666666',
   },
+  VAULT_HUB_ABI: [],
+  isCardBoundVaultMode: () => false,
+  isConfiguredContractAddress: (address: string) => address !== '0x0000000000000000000000000000000000000000',
 }))
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
@@ -370,14 +375,16 @@ describe('useSecurityHooks - Comprehensive Tests', () => {
   // ==================== useGuardianLockStatus ====================
   describe('useGuardianLockStatus', () => {
     it('should return lock status and approval count', () => {
-      let callCount = 0
-      ;(useReadContract as Mock).mockImplementation(() => {
-        callCount++
-        if (callCount === 1) {
-          return { data: true } // locked
-        } else {
-          return { data: BigInt(2) } // approvals
+      ;(useReadContract as Mock).mockImplementation((config: { functionName?: string }) => {
+        if (config.functionName === 'locked') {
+          return { data: true }
         }
+
+        if (config.functionName === 'approvals') {
+          return { data: BigInt(2) }
+        }
+
+        return { data: undefined }
       })
 
       const { result } = renderHook(() => useGuardianLockStatus(mockVaultAddress))

@@ -1,9 +1,12 @@
 import { NextRequest } from 'next/server';
+process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS = '0x1111111111111111111111111111111111111111';
+process.env.NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS = '0x0000000000000000000000000000000000000000';
 import { GET } from '@/app/api/crypto/price/route';
 
 jest.mock('viem', () => ({
   createPublicClient: jest.fn(),
   http: jest.fn(),
+  isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
 }));
 
 jest.mock('viem/chains', () => ({
@@ -27,7 +30,7 @@ describe('/api/crypto/price', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS = '0xVFIDE_TOKEN_ADDRESS';
+    process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS = '0x1111111111111111111111111111111111111111';
     process.env.NEXT_PUBLIC_VFIDE_WETH_POOL_ADDRESS = '0x0000000000000000000000000000000000000000';
   });
 

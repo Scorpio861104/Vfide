@@ -10,7 +10,13 @@ jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     MerchantPortal: '0x1234567890123456789012345678901234567890',
   },
-  MERCHANT_PORTAL_ABI: [],
+  MerchantPortalABI: [],
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 import { useReadContract } from 'wagmi'

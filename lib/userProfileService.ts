@@ -2,6 +2,7 @@
 
 import { UserProfile, UsernameRegistry } from '@/types/userProfile';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 const STORAGE_KEYS = {
   PROFILE: 'vfide_profile',
@@ -13,7 +14,7 @@ export class UserProfileService {
   // Get user's own profile
   static getMyProfile(address: string): UserProfile | null {
     try {
-      const stored = localStorage.getItem(`${STORAGE_KEYS.PROFILE}_${address}`);
+      const stored = safeLocalStorage.getItem(`${STORAGE_KEYS.PROFILE}_${address}`);
       if (stored) {
         return JSON.parse(stored);
       }
@@ -27,7 +28,7 @@ export class UserProfileService {
   // Save user's own profile
   static saveMyProfile(profile: UserProfile): boolean {
     try {
-      localStorage.setItem(`${STORAGE_KEYS.PROFILE}_${profile.address}`, JSON.stringify(profile));
+      safeLocalStorage.setItem(`${STORAGE_KEYS.PROFILE}_${profile.address}`, JSON.stringify(profile));
       
       // Update username registry if username exists
       if (profile.username) {
@@ -47,7 +48,7 @@ export class UserProfileService {
   // Get any user's profile (from cache)
   static getProfile(address: string): UserProfile | null {
     try {
-      const cache = localStorage.getItem(STORAGE_KEYS.PROFILES_CACHE);
+      const cache = safeLocalStorage.getItem(STORAGE_KEYS.PROFILES_CACHE);
       if (cache) {
         const profiles: Record<string, UserProfile> = JSON.parse(cache);
         return profiles[address.toLowerCase()] || null;
@@ -62,10 +63,10 @@ export class UserProfileService {
   // Cache a profile for quick lookup
   static cacheProfile(profile: UserProfile): void {
     try {
-      const cache = localStorage.getItem(STORAGE_KEYS.PROFILES_CACHE);
+      const cache = safeLocalStorage.getItem(STORAGE_KEYS.PROFILES_CACHE);
       const profiles: Record<string, UserProfile> = cache ? JSON.parse(cache) : {};
       profiles[profile.address.toLowerCase()] = profile;
-      localStorage.setItem(STORAGE_KEYS.PROFILES_CACHE, JSON.stringify(profiles));
+      safeLocalStorage.setItem(STORAGE_KEYS.PROFILES_CACHE, JSON.stringify(profiles));
     } catch (e) {
       logger.error('Failed to cache profile:', e);
     }
@@ -98,7 +99,7 @@ export class UserProfileService {
       
       // Register new username
       registry[username.toLowerCase()] = address;
-      localStorage.setItem(STORAGE_KEYS.USERNAME_REGISTRY, JSON.stringify(registry));
+      safeLocalStorage.setItem(STORAGE_KEYS.USERNAME_REGISTRY, JSON.stringify(registry));
     } catch (e) {
       logger.error('Failed to register username:', e);
     }
@@ -107,7 +108,7 @@ export class UserProfileService {
   // Get username registry
   static getUsernameRegistry(): UsernameRegistry {
     try {
-      const stored = localStorage.getItem(STORAGE_KEYS.USERNAME_REGISTRY);
+      const stored = safeLocalStorage.getItem(STORAGE_KEYS.USERNAME_REGISTRY);
       return stored ? JSON.parse(stored) : {};
     } catch (e) {
       logger.error('Failed to load username registry:', e);
@@ -142,7 +143,7 @@ export class UserProfileService {
   // Search profiles by username
   static searchByUsername(query: string): UserProfile[] {
     try {
-      const cache = localStorage.getItem(STORAGE_KEYS.PROFILES_CACHE);
+      const cache = safeLocalStorage.getItem(STORAGE_KEYS.PROFILES_CACHE);
       if (!cache) return [];
       
       const profiles: Record<string, UserProfile> = JSON.parse(cache);

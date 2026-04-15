@@ -4,6 +4,7 @@
  */
 
 import { formatUnits, isAddress as viemIsAddress } from 'viem';
+import { ZERO_ADDRESS } from '@/lib/constants';
 
 // ==================== NUMERIC VALIDATION ====================
 
@@ -168,7 +169,7 @@ export function validateAddress(
   }
 
   // Check not zero address
-  if (address === '0x0000000000000000000000000000000000000000') {
+  if (address === ZERO_ADDRESS) {
     if (!options?.allowZeroAddress) {
       return { valid: false, error: 'Cannot use zero address' };
     }

@@ -11,7 +11,7 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, keccak256, stringToHex, isAddress } from 'viem';
-import { ACTIVE_VAULT_ABI, CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts';
+import { ACTIVE_VAULT_ABI, CommerceEscrowABI, CONTRACT_ADDRESSES, VFIDETokenABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
 export interface Escrow {
@@ -48,8 +48,8 @@ export function useEscrow() {
   const escrowAddress = CONTRACT_ADDRESSES.CommerceEscrow;
   const tokenAddress = CONTRACT_ADDRESSES.VFIDEToken;
   const hasEscrowConfig =
-    escrowAddress !== '0x0000000000000000000000000000000000000000' &&
-    tokenAddress !== '0x0000000000000000000000000000000000000000';
+    isConfiguredContractAddress(escrowAddress) &&
+    isConfiguredContractAddress(tokenAddress);
   const assertEscrowWriteReady = () => {
     if (!hasEscrowConfig) {
       throw new Error('Escrow contracts are not configured');
@@ -97,7 +97,7 @@ export function useEscrow() {
       throw new Error('Wallet client not available');
     }
     assertEscrowWriteReady();
-    if (spender === '0x0000000000000000000000000000000000000000') {
+    if (spender === ZERO_ADDRESS) {
       throw new Error('Escrow spender is not configured');
     }
 
@@ -248,7 +248,7 @@ export function useEscrow() {
   ) => {
     if (!address) throw new Error('Wallet not connected');
     assertEscrowWriteReady();
-    if (!isAddress(merchant) || merchant === '0x0000000000000000000000000000000000000000') {
+    if (!isAddress(merchant) || merchant === ZERO_ADDRESS) {
       throw new Error('Merchant must be a valid non-zero address');
     }
     if (!amount || Number(amount) <= 0) {
@@ -266,7 +266,7 @@ export function useEscrow() {
       
       // Step 1: Check/request vault token approval required by CommerceEscrow
       const { buyerVault, spender } = await getRequiredApproval(address as `0x${string}`);
-      if (buyerVault === '0x0000000000000000000000000000000000000000') {
+      if (buyerVault === ZERO_ADDRESS) {
         throw new Error('No vault found for this wallet. Create a vault before using escrow checkout.');
       }
 

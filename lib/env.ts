@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod4';
+import { ZERO_ADDRESS } from '@/lib/constants';
 import { logger } from '@/lib/logger';
 
 // Ethereum address regex validator
@@ -319,7 +320,7 @@ export function getContractAddress(contractName: string): `0x${string}` {
   const address = env[key] as string | undefined;
   
   // Return zero address if not configured (allows graceful fallback)
-  return (address as `0x${string}`) || ('0x0000000000000000000000000000000000000000' as const);
+  return (address as `0x${string}`) || ZERO_ADDRESS;
 }
 
 // Export the function itself (lazy evaluation)

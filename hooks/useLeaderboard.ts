@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { usePublicClient, useAccount, useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES, SeerABI } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, SeerABI, getContractConfigurationError, isConfiguredContractAddress } from '@/lib/contracts';
 import { getScoreTier as _getScoreTier } from './useProofScore';
 import { parseAbiItem } from 'viem';
 import { safeGetJSON, safeSetJSON, safeRemoveItem } from '@/lib/storage';
@@ -94,6 +94,7 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & {
 } {
   const publicClient = usePublicClient();
   const { address: userAddress } = useAccount();
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
   
   const [state, setState] = useState<LeaderboardState>({
     entries: [],
@@ -106,6 +107,18 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & {
   const fetchLeaderboard = useCallback(async () => {
     if (!publicClient) {
       setState(prev => ({ ...prev, isLoading: false, error: new Error('No client') }));
+      return;
+    }
+
+    if (!isAvailable) {
+      setState(prev => ({
+        ...prev,
+        entries: [],
+        isLoading: false,
+        error: getContractConfigurationError('Seer'),
+        userRank: null,
+        totalParticipants: 0,
+      }));
       return;
     }
 
@@ -235,7 +248,7 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & {
         error: error instanceof Error ? error : new Error('Failed to fetch leaderboard'),
       }));
     }
-  }, [publicClient, userAddress, limit]);
+  }, [publicClient, userAddress, limit, isAvailable]);
 
   useEffect(() => {
     fetchLeaderboard();

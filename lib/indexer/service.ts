@@ -1,16 +1,16 @@
 import { logger } from '@/lib/logger';
 import { type Address, createPublicClient, http, parseAbiItem, type Log } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
+import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { query } from '@/lib/db';
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const CHAIN = process.env.NEXT_PUBLIC_CHAIN_ID === '8453' ? base : baseSepolia;
 const RPC_URL = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || process.env.NEXT_PUBLIC_RPC_URL || 'https://sepolia.base.org';
 const BATCH_SIZE = Number.parseInt(process.env.INDEXER_BATCH_SIZE || '2000', 10);
 
 interface EventDef {
-  contract: string;
-  addressEnv: string;
+  contract: keyof typeof CONTRACT_ADDRESSES;
+  address: Address;
   event: string;
   abi: string;
   handler: (log: Log, args: Record<string, unknown>) => Promise<void>;
@@ -92,7 +92,7 @@ async function setLastIndexedBlock(block: number): Promise<void> {
 const INDEXED_EVENTS: EventDef[] = [
   {
     contract: 'VFIDEToken',
-    addressEnv: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS',
+    address: CONTRACT_ADDRESSES.VFIDEToken,
     event: 'Transfer',
     abi: 'event Transfer(address indexed from, address indexed to, uint256 value)',
     handler: async (log, args) => {
@@ -107,7 +107,7 @@ const INDEXED_EVENTS: EventDef[] = [
   },
   {
     contract: 'Seer',
-    addressEnv: 'NEXT_PUBLIC_SEER_ADDRESS',
+    address: CONTRACT_ADDRESSES.Seer,
     event: 'ScoreUpdated',
     abi: 'event ScoreUpdated(address indexed subject, uint16 oldScore, uint16 newScore, address indexed by)',
     handler: async (log, args) => {
@@ -123,7 +123,7 @@ const INDEXED_EVENTS: EventDef[] = [
   },
   {
     contract: 'SeerSocial',
-    addressEnv: 'NEXT_PUBLIC_SEER_SOCIAL_ADDRESS',
+    address: CONTRACT_ADDRESSES.SeerSocial,
     event: 'Endorsed',
     abi: 'event Endorsed(address indexed endorser, address indexed subject, string reason)',
     handler: async (log, args) => {
@@ -138,7 +138,7 @@ const INDEXED_EVENTS: EventDef[] = [
   },
   {
     contract: 'MerchantPortal',
-    addressEnv: 'NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS',
+    address: CONTRACT_ADDRESSES.MerchantPortal,
     event: 'PaymentProcessed',
     abi: 'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, string orderId)',
     handler: async (log, args) => {
@@ -177,14 +177,13 @@ export async function pollEvents(): Promise<{ indexed: number; toBlock: number }
   let totalIndexed = 0;
 
   for (const eventDef of INDEXED_EVENTS) {
-    const contractAddress = process.env[eventDef.addressEnv];
-    if (!contractAddress || contractAddress === ZERO_ADDRESS) {
+    if (!isConfiguredContractAddress(eventDef.address)) {
       continue;
     }
 
     try {
       const logs = await client.getLogs({
-        address: contractAddress as Address,
+        address: eventDef.address,
         event: parseAbiItem(eventDef.abi) as never,
         fromBlock,
         toBlock,

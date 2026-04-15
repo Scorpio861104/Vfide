@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAccount, useWriteContract, useReadContract, useChainId, useSignTypedData } from 'wagmi';
 import { isAddress, parseUnits, formatUnits } from 'viem';
 import { useToast } from '@/components/ui/toast';
@@ -9,8 +9,14 @@ import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultBalance } from '@/lib/vfide-hooks';
 import { safeParseFloat } from '@/lib/validation';
 import { devLog } from '@/lib/utils';
-import { CONTRACT_ADDRESSES, VFIDETokenABI, UserVaultABI, CARD_BOUND_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, VFIDETokenABI, UserVaultABI, ZERO_ADDRESS, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
 import { TOKEN_REFERENCE_PRICE } from '@/lib/constants';
+
+export interface QueuedWithdrawal {
+  index: bigint;
+  amount: bigint;
+  executeAfter: bigint;
+}
 
 export function useVaultOperations() {
   const { showToast } = useToast();
@@ -18,9 +24,12 @@ export function useVaultOperations() {
   const chainId = useChainId();
   const { signTypedDataAsync } = useSignTypedData();
   const cardBoundMode = isCardBoundVaultMode();
+  const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
+  const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
 
   const vaultHub = useVaultHub();
-  const { vaultAddress, hasVault } = vaultHub;
+  const { vaultAddress } = vaultHub;
+  const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress) && vaultAddress !== ZERO_ADDRESS;
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
   const usdValue = (safeParseFloat(vaultBalance, 0) * TOKEN_REFERENCE_PRICE).toFixed(2);
 
@@ -35,6 +44,13 @@ export function useVaultOperations() {
   const [isDepositing, setIsDepositing] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [depositStep, setDepositStep] = useState<'approve' | 'deposit'>('approve');
+  const [pendingQueueActionIndex, setPendingQueueActionIndex] = useState<bigint | null>(null);
+  const [pendingQueueActionType, setPendingQueueActionType] = useState<'execute' | 'cancel' | null>(null);
+  const [spendLimitPerTransfer, setSpendLimitPerTransfer] = useState('');
+  const [spendLimitPerDay, setSpendLimitPerDay] = useState('');
+  const [largeTransferThresholdInput, setLargeTransferThresholdInput] = useState('');
+  const [isUpdatingSpendLimits, setIsUpdatingSpendLimits] = useState(false);
+  const [isUpdatingLargeTransferThreshold, setIsUpdatingLargeTransferThreshold] = useState(false);
 
   // Guardian/NextOfKin form state
   const [newGuardianAddress, setNewGuardianAddress] = useState('');
@@ -47,6 +63,7 @@ export function useVaultOperations() {
     abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
+    query: { enabled: !!address && isVfideTokenAvailable },
   });
   const walletBalanceFormatted = walletBalance ? formatUnits(walletBalance as bigint, 18) : '0';
 
@@ -54,15 +71,79 @@ export function useVaultOperations() {
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'nextNonce',
-    query: { enabled: !!vaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress && cardBoundMode },
   });
 
   const { data: walletEpoch } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'walletEpoch',
-    query: { enabled: !!vaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress && cardBoundMode },
   });
+
+  const { data: isDestinationVault } = useReadContract({
+    address: CONTRACT_ADDRESSES.VaultHub,
+    abi: VAULT_HUB_ABI,
+    functionName: 'isVault',
+    args: withdrawRecipient && isAddress(withdrawRecipient) ? [withdrawRecipient as `0x${string}`] : undefined,
+    query: { enabled: isVaultHubAvailable && !!withdrawRecipient && isAddress(withdrawRecipient) && cardBoundMode },
+  });
+
+  const { data: pendingQueuedWithdrawalData, refetch: refetchPendingQueuedWithdrawals } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'getPendingQueuedWithdrawals',
+    query: { enabled: hasVaultAddress && cardBoundMode },
+  });
+
+  const { data: activeQueuedWithdrawals } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'activeQueuedWithdrawals',
+    query: { enabled: hasVaultAddress && cardBoundMode },
+  });
+
+  const { data: dailyTransferLimit } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'dailyTransferLimit',
+    query: { enabled: hasVaultAddress && cardBoundMode },
+  });
+
+  const { data: maxPerTransfer } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'maxPerTransfer',
+    query: { enabled: hasVaultAddress && cardBoundMode },
+  });
+
+  const { data: largeTransferThreshold } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'largeTransferThreshold',
+    query: { enabled: hasVaultAddress && cardBoundMode },
+  });
+
+  const { data: remainingDailyCapacity, refetch: refetchRemainingDailyCapacity } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'viewRemainingDailyCapacity',
+    query: { enabled: hasVaultAddress && cardBoundMode },
+  });
+
+  const queuedWithdrawals = useMemo<QueuedWithdrawal[]>(() => {
+    if (!cardBoundMode || !pendingQueuedWithdrawalData) {
+      return [];
+    }
+
+    const [indices = [], amounts = [], executeAfters = []] = pendingQueuedWithdrawalData as readonly [bigint[], bigint[], bigint[]];
+
+    return indices.map((index, position) => ({
+      index,
+      amount: amounts[position] ?? 0n,
+      executeAfter: executeAfters[position] ?? 0n,
+    }));
+  }, [cardBoundMode, pendingQueuedWithdrawalData]);
 
   const handleDeposit = async () => {
     if (cardBoundMode) {
@@ -73,8 +154,12 @@ export function useVaultOperations() {
       showToast('Enter a valid amount', 'error');
       return;
     }
-    if (!vaultAddress) {
+    if (!hasVaultAddress) {
       showToast('No vault found. Create a vault first.', 'error');
+      return;
+    }
+    if (!isVfideTokenAvailable) {
+      showToast('VFIDE token contract is not configured.', 'error');
       return;
     }
 
@@ -111,11 +196,15 @@ export function useVaultOperations() {
       return;
     }
     if (!withdrawRecipient || !isAddress(withdrawRecipient)) {
-      showToast('Enter a valid recipient address', 'error');
+      showToast(cardBoundMode ? 'Enter a valid destination vault address' : 'Enter a valid recipient address', 'error');
       return;
     }
-    if (!vaultAddress) {
+    if (!hasVaultAddress) {
       showToast('No vault found', 'error');
+      return;
+    }
+    if (cardBoundMode && !isVaultHubAvailable) {
+      showToast('Vault hub contract is not configured.', 'error');
       return;
     }
 
@@ -125,6 +214,10 @@ export function useVaultOperations() {
       if (cardBoundMode) {
         if (transferNonce === undefined || walletEpoch === undefined) {
           showToast('Vault transfer state unavailable. Please retry.', 'error');
+          return;
+        }
+        if (!isDestinationVault) {
+          showToast('Destination must be a registered vault address.', 'error');
           return;
         }
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
@@ -206,7 +299,151 @@ export function useVaultOperations() {
     }
   };
 
+  const refreshQueuedWithdrawals = async () => {
+    await Promise.all([
+      refetchPendingQueuedWithdrawals(),
+      refetchRemainingDailyCapacity(),
+    ]);
+  };
+
+  const handleSetSpendLimits = async () => {
+    if (!hasVaultAddress || !cardBoundMode) {
+      return;
+    }
+
+    const maxTransferValue = safeParseFloat(spendLimitPerTransfer, 0);
+    const dailyLimitValue = safeParseFloat(spendLimitPerDay, 0);
+
+    if (maxTransferValue <= 0 || dailyLimitValue <= 0) {
+      showToast('Enter valid positive spend limits.', 'error');
+      return;
+    }
+
+    if (maxTransferValue > dailyLimitValue) {
+      showToast('Per-transfer limit cannot exceed daily limit.', 'error');
+      return;
+    }
+
+    setIsUpdatingSpendLimits(true);
+    try {
+      showToast('Updating spend limits...', 'info');
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: CARD_BOUND_VAULT_ABI,
+        functionName: 'setSpendLimits',
+        args: [parseUnits(spendLimitPerTransfer, 18), parseUnits(spendLimitPerDay, 18)],
+      });
+      showToast('Spend limits updated.', 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (!message.includes('rejected') && !message.includes('denied')) {
+        showToast('Failed to update spend limits: ' + message.slice(0, 60), 'error');
+      } else {
+        showToast('Transaction cancelled', 'info');
+      }
+    } finally {
+      setIsUpdatingSpendLimits(false);
+    }
+  };
+
+  const handleSetLargeTransferThreshold = async () => {
+    if (!hasVaultAddress || !cardBoundMode) {
+      return;
+    }
+
+    const thresholdValue = safeParseFloat(largeTransferThresholdInput, -1);
+    if (thresholdValue < 0) {
+      showToast('Enter a valid large-transfer threshold.', 'error');
+      return;
+    }
+
+    setIsUpdatingLargeTransferThreshold(true);
+    try {
+      showToast('Updating queue threshold...', 'info');
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: CARD_BOUND_VAULT_ABI,
+        functionName: 'setLargeTransferThreshold',
+        args: [parseUnits(largeTransferThresholdInput || '0', 18)],
+      });
+      showToast('Queue threshold updated.', 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (!message.includes('rejected') && !message.includes('denied')) {
+        showToast('Failed to update queue threshold: ' + message.slice(0, 60), 'error');
+      } else {
+        showToast('Transaction cancelled', 'info');
+      }
+    } finally {
+      setIsUpdatingLargeTransferThreshold(false);
+    }
+  };
+
+  const handleExecuteQueuedWithdrawal = async (queueIndex: bigint) => {
+    if (!hasVaultAddress || !cardBoundMode) {
+      return;
+    }
+
+    setPendingQueueActionIndex(queueIndex);
+    setPendingQueueActionType('execute');
+    try {
+      showToast('Executing queued withdrawal...', 'info');
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: CARD_BOUND_VAULT_ABI,
+        functionName: 'executeQueuedWithdrawal',
+        args: [queueIndex],
+      });
+      await refreshQueuedWithdrawals();
+      showToast('Queued withdrawal executed.', 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (!message.includes('rejected') && !message.includes('denied')) {
+        showToast('Queued withdrawal execution failed: ' + message.slice(0, 60), 'error');
+      } else {
+        showToast('Transaction cancelled', 'info');
+      }
+    } finally {
+      setPendingQueueActionIndex(null);
+      setPendingQueueActionType(null);
+    }
+  };
+
+  const handleCancelQueuedWithdrawal = async (queueIndex: bigint) => {
+    if (!hasVaultAddress || !cardBoundMode) {
+      return;
+    }
+
+    setPendingQueueActionIndex(queueIndex);
+    setPendingQueueActionType('cancel');
+    try {
+      showToast('Cancelling queued withdrawal...', 'info');
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: CARD_BOUND_VAULT_ABI,
+        functionName: 'cancelQueuedWithdrawal',
+        args: [queueIndex],
+      });
+      await refreshQueuedWithdrawals();
+      showToast('Queued withdrawal cancelled.', 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (!message.includes('rejected') && !message.includes('denied')) {
+        showToast('Queued withdrawal cancellation failed: ' + message.slice(0, 60), 'error');
+      } else {
+        showToast('Transaction cancelled', 'info');
+      }
+    } finally {
+      setPendingQueueActionIndex(null);
+      setPendingQueueActionType(null);
+    }
+  };
+
   const handleSetNextOfKin = async () => {
+    if (cardBoundMode) {
+      showToast('Next of Kin is not available in CardBound vault mode.', 'error');
+      return;
+    }
     if (!isAddress(newNextOfKinAddress)) {
       showToast('Invalid address format', 'error');
       return;
@@ -222,6 +459,10 @@ export function useVaultOperations() {
   };
 
   const handleAddGuardian = async () => {
+    if (cardBoundMode) {
+      showToast('Manage CardBound guardians from the Guardians dashboard.', 'error');
+      return;
+    }
     if (!isAddress(newGuardianAddress)) {
       showToast('Invalid address format', 'error');
       return;
@@ -236,7 +477,9 @@ export function useVaultOperations() {
     }
   };
 
-  const hasNextOfKin = recovery.nextOfKin && recovery.nextOfKin !== '0x0000000000000000000000000000000000000000';
+  const hasNextOfKin = !cardBoundMode
+    && recovery.nextOfKin
+    && recovery.nextOfKin !== ZERO_ADDRESS;
 
   return {
     // Identity
@@ -263,6 +506,26 @@ export function useVaultOperations() {
     withdrawRecipient, setWithdrawRecipient,
     isWithdrawing,
     handleWithdraw,
+    queuedWithdrawals,
+    activeQueuedWithdrawals: Number(activeQueuedWithdrawals ?? 0),
+    maxPerTransfer: (maxPerTransfer as bigint | undefined) ?? 0n,
+    dailyTransferLimit: (dailyTransferLimit as bigint | undefined) ?? 0n,
+    remainingDailyCapacity: (remainingDailyCapacity as bigint | undefined) ?? 0n,
+    largeTransferThreshold: (largeTransferThreshold as bigint | undefined) ?? 0n,
+    pendingQueueActionIndex,
+    pendingQueueActionType,
+    spendLimitPerTransfer,
+    setSpendLimitPerTransfer,
+    spendLimitPerDay,
+    setSpendLimitPerDay,
+    largeTransferThresholdInput,
+    setLargeTransferThresholdInput,
+    isUpdatingSpendLimits,
+    isUpdatingLargeTransferThreshold,
+    handleExecuteQueuedWithdrawal,
+    handleCancelQueuedWithdrawal,
+    handleSetSpendLimits,
+    handleSetLargeTransferThreshold,
     // Guardian/NextOfKin form
     newGuardianAddress, setNewGuardianAddress,
     newNextOfKinAddress, setNewNextOfKinAddress,

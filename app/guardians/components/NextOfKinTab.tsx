@@ -7,9 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, AlertCircle } from 'lucide-react';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
+import { isCardBoundVaultMode } from '@/lib/contracts';
 
 import { useNextOfKinWatchlist } from './hooks';
-import { shortAddress, ZERO_ADDRESS } from './types';
+import { ZERO_ADDRESS } from './types';
 import { NextOfKinInboxCard } from './NextOfKinInboxCard';
 
 export function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
@@ -21,6 +22,7 @@ export function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
   const [inboxVaultLabel, setInboxVaultLabel] = useState('');
   const [inboxNotice, setInboxNotice] = useState<string | null>(null);
 
+  const cardBoundMode = isCardBoundVaultMode();
   const { address } = useAccount();
   const { vaultAddress, hasVault, isLoadingVault, createVault, isCreatingVault } = useVaultHub();
   const { entries: inboxEntries, addEntry: addInboxEntry, removeEntry: removeInboxEntry } = useNextOfKinWatchlist();
@@ -51,6 +53,23 @@ export function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to manage your Next of Kin</p>
+      </motion.div>
+    );
+  }
+
+  if (cardBoundMode) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="bg-gradient-to-br from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6">
+          <h2 className="text-xl font-bold text-yellow-400 mb-4 flex items-center gap-3"><Heart size={24} />Next of Kin Unavailable</h2>
+          <p className="text-white mb-4">
+            CardBound vaults do not implement the legacy inheritance and next-of-kin contract surface. This tab is disabled in CardBound mode to avoid calling missing functions.
+          </p>
+          <div className="bg-black/30 rounded-xl p-4 border border-white/10 text-sm text-gray-300">
+            Guardian setup, wallet rotation, and vault-to-vault transfer protections remain available. Inheritance-specific actions require a legacy UserVault deployment and are not part of the active CardBound system.
+          </div>
+        </motion.div>
       </motion.div>
     );
   }

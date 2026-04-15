@@ -24,10 +24,12 @@ function getConfiguredChain() {
   }
 }
 
-const client = createPublicClient({
-  chain: getConfiguredChain(),
-  transport: http(process.env.NEXT_PUBLIC_RPC_URL),
-});
+function createFeeClient() {
+  return createPublicClient({
+    chain: getConfiguredChain(),
+    transport: http(process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || process.env.NEXT_PUBLIC_RPC_URL || 'https://sepolia.base.org'),
+  });
+}
 
 const FALLBACK_GAS_LIMIT = 200000n;
 const FALLBACK_GAS_PRICE = 1000000000n;
@@ -35,6 +37,7 @@ const FALLBACK_TOTAL_FEE = FALLBACK_GAS_LIMIT * FALLBACK_GAS_PRICE;
 
 async function estimateNetworkFee(): Promise<{ gasLimit: bigint; gasPrice: bigint; totalFee: bigint }> {
   try {
+    const client = createFeeClient();
     const gasPrice = await client.getGasPrice();
     if (gasPrice <= 0n) {
       return {

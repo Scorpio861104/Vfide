@@ -12,6 +12,7 @@ import { VaultQuickActions } from './VaultQuickActions';
 import { MerchantApprovalPanel } from './MerchantApprovalPanel';
 import { VaultSecuritySection } from './VaultSecuritySection';
 import { VaultRecoveryPanel } from './VaultRecoveryPanel';
+import { VaultQueueSection } from './VaultQueueSection';
 import { DepositModal } from './DepositModal';
 import { WithdrawModal } from './WithdrawModal';
 
@@ -62,7 +63,33 @@ export function VaultContent() {
 
             <VaultSecuritySection vaultAddress={ops.vaultAddress} />
 
+            <VaultQueueSection
+              cardBoundMode={ops.cardBoundMode}
+              vaultAddress={ops.vaultAddress}
+              queuedWithdrawals={ops.queuedWithdrawals}
+              activeQueuedWithdrawals={ops.activeQueuedWithdrawals}
+              maxPerTransfer={ops.maxPerTransfer}
+              dailyTransferLimit={ops.dailyTransferLimit}
+              remainingDailyCapacity={ops.remainingDailyCapacity}
+              largeTransferThreshold={ops.largeTransferThreshold}
+              pendingQueueActionIndex={ops.pendingQueueActionIndex}
+              pendingQueueActionType={ops.pendingQueueActionType}
+              spendLimitPerTransfer={ops.spendLimitPerTransfer}
+              setSpendLimitPerTransfer={ops.setSpendLimitPerTransfer}
+              spendLimitPerDay={ops.spendLimitPerDay}
+              setSpendLimitPerDay={ops.setSpendLimitPerDay}
+              largeTransferThresholdInput={ops.largeTransferThresholdInput}
+              setLargeTransferThresholdInput={ops.setLargeTransferThresholdInput}
+              isUpdatingSpendLimits={ops.isUpdatingSpendLimits}
+              isUpdatingLargeTransferThreshold={ops.isUpdatingLargeTransferThreshold}
+              onExecuteQueuedWithdrawal={ops.handleExecuteQueuedWithdrawal}
+              onCancelQueuedWithdrawal={ops.handleCancelQueuedWithdrawal}
+              onSetSpendLimits={ops.handleSetSpendLimits}
+              onSetLargeTransferThreshold={ops.handleSetLargeTransferThreshold}
+            />
+
             <VaultRecoveryPanel
+              cardBoundMode={ops.cardBoundMode}
               address={ops.address}
               vaultOwner={ops.vaultOwner}
               hasNextOfKin={ops.hasNextOfKin}

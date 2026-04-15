@@ -3,7 +3,15 @@
 import { useMemo, useState } from 'react';
 import { useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 
-import { USER_VAULT_ABI, isCardBoundVaultMode } from '@/lib/contracts';
+import {
+  CARD_BOUND_VAULT_ABI,
+  CONTRACT_ADDRESSES,
+  USER_VAULT_ABI,
+  VAULT_HUB_ABI,
+  ZERO_ADDRESS,
+  isConfiguredContractAddress,
+  isCardBoundVaultMode,
+} from '@/lib/contracts';
 import { shortAddress, type WatchedVault } from './types';
 
 export function GuardianPendingRecoveryCard({
@@ -15,7 +23,9 @@ export function GuardianPendingRecoveryCard({
   userAddress?: `0x${string}`;
   onRemove?: () => void;
 }) {
-  const recoverySupported = !isCardBoundVaultMode();
+  const cardBoundMode = isCardBoundVaultMode();
+  const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub)
+  const recoverySupported = !cardBoundMode;
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [actionTone, setActionTone] = useState<'info' | 'success' | 'error'>('info');
   const [isReportingFraud, setIsReportingFraud] = useState(false);
@@ -24,7 +34,7 @@ export function GuardianPendingRecoveryCard({
   const { writeContractAsync, isPending } = useWriteContract();
   const publicClient = usePublicClient();
 
-  const { data: isGuardian } = useReadContract({
+  const { data: legacyIsGuardian } = useReadContract({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'isGuardian',
@@ -32,12 +42,20 @@ export function GuardianPendingRecoveryCard({
     query: { enabled: recoverySupported && !!userAddress },
   });
 
+  const { data: cardBoundIsGuardian } = useReadContract({
+    address: entry.address,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'isGuardian',
+    args: userAddress ? [userAddress] : undefined,
+    query: { enabled: cardBoundMode && !!userAddress },
+  });
+
   const { data: isGuardianMature } = useReadContract({
     address: entry.address,
     abi: USER_VAULT_ABI,
     functionName: 'isGuardianMature',
     args: userAddress ? [userAddress] : undefined,
-    query: { enabled: recoverySupported && !!userAddress && !!isGuardian },
+    query: { enabled: recoverySupported && !!userAddress && !!legacyIsGuardian },
   });
 
   const { data: recoveryStatus, refetch: refetchRecoveryStatus } = useReadContract({
@@ -47,12 +65,51 @@ export function GuardianPendingRecoveryCard({
     query: { enabled: recoverySupported, refetchInterval: 15000 },
   });
 
+  const { data: guardianSetupComplete } = useReadContract({
+    address: CONTRACT_ADDRESSES.VaultHub,
+    abi: VAULT_HUB_ABI,
+    functionName: 'guardianSetupComplete',
+    args: [entry.address],
+    query: { enabled: isVaultHubAvailable && cardBoundMode },
+  });
+
+  const { data: guardianThreshold } = useReadContract({
+    address: entry.address,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'guardianThreshold',
+    query: { enabled: cardBoundMode },
+  });
+
+  const { data: pendingRotation, refetch: refetchPendingRotation } = useReadContract({
+    address: entry.address,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'pendingRotation',
+    query: { enabled: cardBoundMode, refetchInterval: 15000 },
+  });
+
   const recovery = recoveryStatus as [string, bigint, bigint, bigint, boolean] | undefined;
-  const active = !!recovery && recovery[4];
-  const approvals = recovery ? Number(recovery[1]) : 0;
-  const threshold = recovery ? Number(recovery[2]) : 0;
-  const proposedOwner = recovery ? recovery[0] : '0x0000000000000000000000000000000000000000';
-  const expirySec = recovery ? Number(recovery[3]) : 0;
+  const pendingRotationData = pendingRotation as {
+    newWallet: `0x${string}`;
+    activateAt: bigint;
+    approvals: bigint;
+    proposalNonce: bigint;
+  } | undefined;
+  const isGuardian = cardBoundMode ? !!cardBoundIsGuardian : !!legacyIsGuardian;
+  const active = cardBoundMode
+    ? !!pendingRotationData && pendingRotationData.newWallet !== ZERO_ADDRESS
+    : !!recovery && recovery[4];
+  const approvals = cardBoundMode
+    ? Number(pendingRotationData?.approvals ?? 0n)
+    : recovery ? Number(recovery[1]) : 0;
+  const threshold = cardBoundMode
+    ? Number((guardianThreshold as bigint | undefined) ?? 0n)
+    : recovery ? Number(recovery[2]) : 0;
+  const proposedOwner = cardBoundMode
+    ? pendingRotationData?.newWallet ?? ZERO_ADDRESS
+    : recovery ? recovery[0] : ZERO_ADDRESS;
+  const expirySec = cardBoundMode
+    ? Number(pendingRotationData?.activateAt ?? 0n)
+    : recovery ? Number(recovery[3]) : 0;
   const daysLeft = expirySec > 0 ? Math.max(0, Math.ceil((expirySec * 1000 - Date.now()) / (24 * 60 * 60 * 1000))) : null;
 
   const riskScore = useMemo(() => {
@@ -61,9 +118,10 @@ export function GuardianPendingRecoveryCard({
     if (active && approvals < threshold) score += 20;
     if (active && daysLeft !== null && daysLeft <= 2) score += 25;
     if (!isGuardian) score += 15;
-    if (isGuardian && !isGuardianMature) score += 15;
+    if (!cardBoundMode && isGuardian && !isGuardianMature) score += 15;
+    if (cardBoundMode && !guardianSetupComplete) score += 15;
     return Math.min(100, score);
-  }, [active, approvals, threshold, daysLeft, isGuardian, isGuardianMature]);
+  }, [active, approvals, threshold, daysLeft, isGuardian, isGuardianMature, cardBoundMode, guardianSetupComplete]);
 
   const riskLevel = riskScore >= 70 ? 'High' : riskScore >= 40 ? 'Medium' : 'Low';
 
@@ -71,48 +129,53 @@ export function GuardianPendingRecoveryCard({
     setActionNotice(null);
     setActionTone('info');
 
-    if (!recoverySupported) {
-      setActionTone('error');
-      setActionNotice('Recovery approvals are not supported in CardBound vault mode.');
-      return;
-    }
-
-    if (!active) {
-      setActionTone('error');
-      setActionNotice('No active recovery request on this vault.');
-      return;
-    }
-    if (!isGuardian) {
-      setActionTone('error');
-      setActionNotice('This wallet is not an assigned guardian for this vault.');
-      return;
-    }
-    if (!isGuardianMature) {
-      setActionTone('error');
-      setActionNotice('Guardian maturity period has not completed yet.');
-      return;
-    }
-
     try {
+      if (!active) {
+        setActionTone('error');
+        setActionNotice(cardBoundMode ? 'No pending wallet rotation on this vault.' : 'No active recovery request on this vault.');
+        return;
+      }
+      if (!isGuardian) {
+        setActionTone('error');
+        setActionNotice('This wallet is not an assigned guardian for this vault.');
+        return;
+      }
+      if (cardBoundMode && !guardianSetupComplete) {
+        setActionTone('error');
+        setActionNotice(isVaultHubAvailable
+          ? 'Guardian setup must be completed before rotation approvals are available.'
+          : 'Vault hub contract is not configured in this environment.');
+        return;
+      }
+      if (!cardBoundMode && !isGuardianMature) {
+        setActionTone('error');
+        setActionNotice('Guardian maturity period has not completed yet.');
+        return;
+      }
+
       setTxStage('signing');
       const txHash = await writeContractAsync({
         address: entry.address,
-        abi: USER_VAULT_ABI,
-        functionName: 'guardianApproveRecovery',
+        abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI,
+        functionName: cardBoundMode ? 'approveWalletRotation' : 'guardianApproveRecovery',
       });
       const txHashText = String(txHash);
       setTxHashPreview(txHashText);
       setTxStage('submitted');
       setActionTone('success');
-      setActionNotice(`Recovery approval submitted: ${txHashText.slice(0, 12)}...`);
+      setActionNotice(`${cardBoundMode ? 'Rotation' : 'Recovery'} approval submitted: ${txHashText.slice(0, 12)}...`);
 
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash: txHash as `0x${string}` });
         setTxStage('confirmed');
-        setActionNotice(`Recovery approval confirmed: ${txHashText.slice(0, 12)}...`);
+        setActionNotice(`${cardBoundMode ? 'Rotation' : 'Recovery'} approval confirmed: ${txHashText.slice(0, 12)}...`);
       }
 
       setTimeout(() => {
+        if (cardBoundMode) {
+          void refetchPendingRotation();
+          return;
+        }
         void refetchRecoveryStatus();
       }, 2000);
     } catch (error) {
@@ -143,6 +206,7 @@ export function GuardianPendingRecoveryCard({
           approvals,
           threshold,
           active,
+          flow: cardBoundMode ? 'cardbound-rotation' : 'legacy-recovery',
           watcher: userAddress || 'unknown',
         }),
       });
@@ -173,7 +237,7 @@ export function GuardianPendingRecoveryCard({
         </div>
         <div className="flex items-center gap-2">
           <span className={`px-3 py-1 rounded-full text-xs font-bold ${active ? 'bg-amber-500/20 text-amber-300' : 'bg-green-500/20 text-green-300'}`}>
-            {active ? 'Recovery Active' : 'No Active Recovery'}
+            {active ? cardBoundMode ? 'Rotation Active' : 'Recovery Active' : cardBoundMode ? 'No Pending Rotation' : 'No Active Recovery'}
           </span>
           {onRemove ? (
             <button
@@ -190,21 +254,21 @@ export function GuardianPendingRecoveryCard({
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-black/30 border border-white/10 rounded-xl p-3">
-          <div className="text-gray-500 text-xs mb-1">Proposed Owner</div>
-          <div className="text-white text-sm font-mono">{proposedOwner !== '0x0000000000000000000000000000000000000000' ? shortAddress(proposedOwner) : 'n/a'}</div>
+          <div className="text-gray-500 text-xs mb-1">{cardBoundMode ? 'Proposed Wallet' : 'Proposed Owner'}</div>
+          <div className="text-white text-sm font-mono">{proposedOwner !== ZERO_ADDRESS ? shortAddress(proposedOwner) : 'n/a'}</div>
         </div>
         <div className="bg-black/30 border border-white/10 rounded-xl p-3">
           <div className="text-gray-500 text-xs mb-1">Approvals</div>
           <div className="text-white text-sm font-bold">{approvals}/{threshold}</div>
         </div>
         <div className="bg-black/30 border border-white/10 rounded-xl p-3">
-          <div className="text-gray-500 text-xs mb-1">Expires In</div>
+          <div className="text-gray-500 text-xs mb-1">{cardBoundMode ? 'Activates In' : 'Expires In'}</div>
           <div className="text-white text-sm font-bold">{daysLeft !== null ? `${daysLeft}d` : 'n/a'}</div>
         </div>
         <div className="bg-black/30 border border-white/10 rounded-xl p-3">
           <div className="text-gray-500 text-xs mb-1">Your Guardian Status</div>
           <div className="text-white text-sm font-bold">
-            {!isGuardian ? 'Not assigned' : isGuardianMature ? 'Mature' : 'Maturing'}
+            {!isGuardian ? 'Not assigned' : cardBoundMode ? guardianSetupComplete ? 'Assigned' : 'Setup Pending' : isGuardianMature ? 'Mature' : 'Maturing'}
           </div>
         </div>
         <div className="bg-black/30 border border-white/10 rounded-xl p-3">
@@ -218,10 +282,10 @@ export function GuardianPendingRecoveryCard({
       <div className="flex flex-col md:flex-row gap-3">
         <button
           onClick={() => void handleApprove()}
-          disabled={!active || !isGuardian || !isGuardianMature || isPending || approvals >= threshold}
+          disabled={!active || !isGuardian || (!cardBoundMode && !isGuardianMature) || (cardBoundMode && !guardianSetupComplete) || isPending || approvals >= threshold}
           className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold disabled:opacity-50"
         >
-          {isPending ? 'Submitting...' : approvals >= threshold ? 'Threshold Reached' : 'Approve Recovery'}
+          {isPending ? 'Submitting...' : approvals >= threshold ? 'Threshold Reached' : cardBoundMode ? 'Approve Rotation' : 'Approve Recovery'}
         </button>
         <button
           onClick={() => void handleReportFraud()}

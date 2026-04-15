@@ -2,6 +2,7 @@
 
 import { analytics } from './socialAnalytics';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from './utils';
 
 /**
  * Gamification system for VFIDE
@@ -379,6 +380,23 @@ export const HEADHUNTER_BADGE_PERKS: Pick<LevelPerk, 'title' | 'description' | '
   },
 ];
 
+function getLocalStorageKeys(): string[] {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const keys: string[] = [];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (key) {
+        keys.push(key);
+      }
+    }
+    return keys;
+  } catch {
+    return [];
+  }
+}
+
 class GamificationEngine {
   private storageKey = 'vfide_gamification';
 
@@ -391,7 +409,7 @@ class GamificationEngine {
     }
 
     try {
-      const stored = localStorage.getItem(`${this.storageKey}_${userAddress}`);
+      const stored = safeLocalStorage.getItem(`${this.storageKey}_${userAddress}`);
       if (stored) {
         const parsed: UserProgress = JSON.parse(stored);
         // Backfill anti-abuse fields added after initial launch so existing
@@ -414,10 +432,13 @@ class GamificationEngine {
    * Save user progress
    */
   private saveProgress(userAddress: string, progress: UserProgress) {
-    try {
-      localStorage.setItem(`${this.storageKey}_${userAddress}`, JSON.stringify(progress));
-    } catch (error) {
-      logger.error('Failed to save gamification progress:', error);
+    const didPersist = safeLocalStorage.setItem(
+      `${this.storageKey}_${userAddress}`,
+      JSON.stringify(progress)
+    );
+
+    if (!didPersist) {
+      logger.error('Failed to save gamification progress:', new Error('localStorage write failed'));
     }
   }
 
@@ -697,19 +718,18 @@ export function getAllUserProgress(): Array<UserProgress & { address: string; al
   const allProgress: Array<UserProgress & { address: string; alias?: string; totalXP: number; unlockedAchievements: Achievement[] }> = [];
 
   // Iterate through localStorage to find all gamification entries
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
+  for (const key of getLocalStorageKeys()) {
     if (key?.startsWith('vfide_gamification_')) {
       try {
         const address = key.replace('vfide_gamification_', '');
-        const data = localStorage.getItem(key);
+        const data = safeLocalStorage.getItem(key);
         if (data) {
           const progress: UserProgress = JSON.parse(data);
           
           // Get user alias if available
           let alias: string | undefined;
           try {
-            const profileData = localStorage.getItem(`vfide_profile_${address}`);
+            const profileData = safeLocalStorage.getItem(`vfide_profile_${address}`);
             if (profileData) {
               const profile = JSON.parse(profileData);
               alias = profile.alias;

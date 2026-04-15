@@ -3,6 +3,8 @@
  * Threads, reactions, editing, pinned messages, and more
  */
 
+import { safeLocalStorage } from '@/lib/utils';
+
 export interface MessageThread {
   parentMessageId: string;
   replies: ThreadReply[];
@@ -415,10 +417,19 @@ export function shouldTriggerAutoReply(
  * Storage for advanced features
  */
 export const advancedMessageStorage = {
+  readArray<T>(key: string): T[] {
+    const stored = safeLocalStorage.getItem(key);
+    return stored ? JSON.parse(stored) : [];
+  },
+
+  writeArray<T>(key: string, value: T[]): void {
+    safeLocalStorage.setItem(key, JSON.stringify(value));
+  },
+
   // Threads
   saveThread(conversationId: string, thread: MessageThread): void {
     const key = `vfide_threads_${conversationId}`;
-    const threads: MessageThread[] = JSON.parse(localStorage.getItem(key) || '[]');
+    const threads = this.readArray<MessageThread>(key);
     const index = threads.findIndex((t) => t.parentMessageId === thread.parentMessageId);
     
     if (index >= 0) {
@@ -427,61 +438,61 @@ export const advancedMessageStorage = {
       threads.push(thread);
     }
     
-    localStorage.setItem(key, JSON.stringify(threads));
+    this.writeArray(key, threads);
   },
 
   loadThreads(conversationId: string): MessageThread[] {
     const key = `vfide_threads_${conversationId}`;
-    return JSON.parse(localStorage.getItem(key) || '[]');
+    return this.readArray<MessageThread>(key);
   },
 
   // Pinned messages
   savePinned(conversationId: string, pinned: PinnedMessage): void {
     const key = `vfide_pinned_${conversationId}`;
-    const pinnedMessages: PinnedMessage[] = JSON.parse(localStorage.getItem(key) || '[]');
+    const pinnedMessages = this.readArray<PinnedMessage>(key);
     pinnedMessages.push(pinned);
-    localStorage.setItem(key, JSON.stringify(pinnedMessages));
+    this.writeArray(key, pinnedMessages);
   },
 
   loadPinned(conversationId: string): PinnedMessage[] {
     const key = `vfide_pinned_${conversationId}`;
-    return JSON.parse(localStorage.getItem(key) || '[]');
+    return this.readArray<PinnedMessage>(key);
   },
 
   removePinned(conversationId: string, messageId: string): void {
     const key = `vfide_pinned_${conversationId}`;
-    const pinnedMessages: PinnedMessage[] = JSON.parse(localStorage.getItem(key) || '[]');
+    const pinnedMessages = this.readArray<PinnedMessage>(key);
     const filtered = pinnedMessages.filter((p) => p.messageId !== messageId);
-    localStorage.setItem(key, JSON.stringify(filtered));
+    this.writeArray(key, filtered);
   },
 
   // Scheduled messages
   saveScheduled(scheduled: ScheduledMessage): void {
     const key = 'vfide_scheduled_messages';
-    const messages: ScheduledMessage[] = JSON.parse(localStorage.getItem(key) || '[]');
+    const messages = this.readArray<ScheduledMessage>(key);
     messages.push(scheduled);
-    localStorage.setItem(key, JSON.stringify(messages));
+    this.writeArray(key, messages);
   },
 
   loadScheduled(): ScheduledMessage[] {
     const key = 'vfide_scheduled_messages';
-    return JSON.parse(localStorage.getItem(key) || '[]');
+    return this.readArray<ScheduledMessage>(key);
   },
 
   updateScheduled(scheduled: ScheduledMessage): void {
     const key = 'vfide_scheduled_messages';
-    const messages: ScheduledMessage[] = JSON.parse(localStorage.getItem(key) || '[]');
+    const messages = this.readArray<ScheduledMessage>(key);
     const index = messages.findIndex((m) => m.id === scheduled.id);
     if (index >= 0) {
       messages[index] = scheduled;
-      localStorage.setItem(key, JSON.stringify(messages));
+      this.writeArray(key, messages);
     }
   },
 
   // Auto-replies
   saveAutoReply(autoReply: AutoReply): void {
     const key = 'vfide_auto_replies';
-    const replies: AutoReply[] = JSON.parse(localStorage.getItem(key) || '[]');
+    const replies = this.readArray<AutoReply>(key);
     const index = replies.findIndex((r) => r.id === autoReply.id);
     
     if (index >= 0) {
@@ -490,12 +501,12 @@ export const advancedMessageStorage = {
       replies.push(autoReply);
     }
     
-    localStorage.setItem(key, JSON.stringify(replies));
+    this.writeArray(key, replies);
   },
 
   loadAutoReplies(): AutoReply[] {
     const key = 'vfide_auto_replies';
-    return JSON.parse(localStorage.getItem(key) || '[]');
+    return this.readArray<AutoReply>(key);
   },
 };
 

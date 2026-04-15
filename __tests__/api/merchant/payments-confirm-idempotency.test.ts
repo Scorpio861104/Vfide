@@ -39,6 +39,7 @@ jest.mock('viem', () => ({
   })),
   getAddress: jest.fn((value: string) => value.toLowerCase()),
   http: jest.fn(() => ({})),
+  isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
   parseAbiItem: jest.fn(() => ({})),
 }));
 

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem } from 'viem';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
@@ -82,7 +83,11 @@ function parseAmountToUnits(value: unknown): bigint | null {
 }
 
 function getMerchantPortalAddress(): string | null {
-  const value = process.env.MERCHANT_PORTAL_ADDRESS || process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS;
+  if (isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)) {
+    return CONTRACT_ADDRESSES.MerchantPortal;
+  }
+
+  const value = process.env.MERCHANT_PORTAL_ADDRESS;
   if (!value) return null;
   const normalized = value.trim();
   return ADDRESS_LIKE_REGEX.test(normalized) ? normalized : null;

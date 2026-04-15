@@ -1,18 +1,20 @@
 import { useReadContract } from 'wagmi'
-import { CONTRACT_ADDRESSES, MerchantPortalABI } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, MerchantPortalABI, isConfiguredContractAddress } from '@/lib/contracts'
 
 /**
  * Check if an address is a registered merchant
  * Uses getMerchantInfo which returns (registered, suspended, businessName, category, registeredAt, totalVolume, txCount)
  */
 export function useMerchantStatus(address?: `0x${string}`) {
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
+
   const { data, isError, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.MerchantPortal,
     abi: MerchantPortalABI,
     functionName: 'getMerchantInfo',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && CONTRACT_ADDRESSES.MerchantPortal !== '0x0000000000000000000000000000000000000000',
+      enabled: !!address && isAvailable,
     }
   })
 
@@ -24,5 +26,6 @@ export function useMerchantStatus(address?: `0x${string}`) {
     isSuspended: info?.[1] || false,
     isError,
     isLoading,
+    isAvailable,
   }
 }

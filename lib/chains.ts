@@ -19,6 +19,11 @@ import {
 } from 'wagmi/chains'
 
 import type { Chain } from 'viem'
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
+
+function configuredContractOrEmpty(address: string): string {
+  return isConfiguredContractAddress(address) ? address : ''
+}
 
 // ========================================
 // CHAIN DEFINITIONS
@@ -70,9 +75,9 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
       },
       testnet: {
         // Deployed on Base Sepolia - Dec 25, 2025
-        vfideToken: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS || '',
-        vaultHub: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS || '',
-        seer: process.env.NEXT_PUBLIC_SEER_ADDRESS || '',
+        vfideToken: configuredContractOrEmpty(CONTRACT_ADDRESSES.VFIDEToken),
+        vaultHub: configuredContractOrEmpty(CONTRACT_ADDRESSES.VaultHub),
+        seer: configuredContractOrEmpty(CONTRACT_ADDRESSES.Seer),
       },
     },
     faucetUrl: 'https://portal.cdp.coinbase.com/products/faucet',

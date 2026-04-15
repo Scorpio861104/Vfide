@@ -10,7 +10,7 @@ import { useCanSelfPanic, useQuarantineStatus, useSelfPanic } from '@/lib/vfide-
 export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
   const panicData = useCanSelfPanic();
-  const { selfPanic, isPanicking, isAvailable: isPanicAvailable } = useSelfPanic();
+  const { selfPanic, isPanicking, isAvailable: isPanicAvailable, supportsDuration } = useSelfPanic();
   
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
   const [panicDuration, setPanicDuration] = useState(24);
@@ -28,7 +28,8 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
   }, []);
   
   const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
-  const isQuarantined = quarantineRemaining > 0;
+  const hasTimer = quarantineData.supportsTimer && quarantineRemaining > 0;
+  const isQuarantined = quarantineData.isQuarantined || hasTimer;
   const remainingHours = Math.floor(quarantineRemaining / 3600);
   const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60);
   
@@ -70,7 +71,9 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                 </h3>
                 <p className="text-white/60 text-sm">
                   {isQuarantined 
-                    ? `Locked for ${remainingHours}h ${remainingMinutes}m`
+                    ? hasTimer
+                      ? `Locked for ${remainingHours}h ${remainingMinutes}m`
+                      : 'Paused until you explicitly unpause the vault'
                     : 'Suspect compromise? Lock immediately.'}
                 </p>
                 {!isQuarantined && (
@@ -111,17 +114,23 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="flex flex-col sm:flex-row items-center gap-3"
                 >
-                  <select
-                    value={panicDuration}
-                    onChange={(e) => setPanicDuration(Number(e.target.value))}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white"
-                  >
-                    <option value={1}>1 hour</option>
-                    <option value={6}>6 hours</option>
-                    <option value={24}>24 hours</option>
-                    <option value={72}>3 days</option>
-                    <option value={168}>7 days</option>
-                  </select>
+                  {supportsDuration ? (
+                    <select
+                      value={panicDuration}
+                      onChange={(e) => setPanicDuration(Number(e.target.value))}
+                      className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white"
+                    >
+                      <option value={1}>1 hour</option>
+                      <option value={6}>6 hours</option>
+                      <option value={24}>24 hours</option>
+                      <option value={72}>3 days</option>
+                      <option value={168}>7 days</option>
+                    </select>
+                  ) : (
+                    <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white/70 text-sm">
+                      This action pauses the vault until it is manually unpaused.
+                    </div>
+                  )}
                   <button
                     onClick={handlePanic}
                     disabled={isPanicking}
@@ -146,12 +155,19 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
               animate={{ opacity: 1, height: 'auto' }}
               className="mt-4 pt-4 border-t border-white/10"
             >
-              <div className="flex items-center gap-2 text-red-400">
-                <Clock size={16} />
-                <span className="text-sm">
-                  Auto-unlock in <strong>{remainingHours}h {remainingMinutes}m</strong>
-                </span>
-              </div>
+              {hasTimer ? (
+                <div className="flex items-center gap-2 text-red-400">
+                  <Clock size={16} />
+                  <span className="text-sm">
+                    Auto-unlock in <strong>{remainingHours}h {remainingMinutes}m</strong>
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-red-400">
+                  <Lock size={16} />
+                  <span className="text-sm">Manual unpause required to resume withdrawals and transfers.</span>
+                </div>
+              )}
             </motion.div>
           )}
         </GlassCard>

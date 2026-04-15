@@ -109,16 +109,13 @@ describe('useFileAppeal', () => {
     }))
   })
 
-  it('still attempts write when SeerSocial is not configured', () => {
+  it('fails closed when SeerSocial is not configured', () => {
     mockContractAddresses.SeerSocial = '0x0000000000000000000000000000000000000000'
 
     const { result } = renderHook(() => useFileAppeal())
 
     result.current.fileAppeal('help')
 
-    expect(mockWriteContract).toHaveBeenCalledWith(expect.objectContaining({
-      address: '0x0000000000000000000000000000000000000000',
-      functionName: 'fileAppeal',
-    }))
+    expect(mockWriteContract).not.toHaveBeenCalled()
   })
 })

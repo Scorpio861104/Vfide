@@ -1,4 +1,4 @@
-import { clearStoredStaffSession, storeStaffSession, type StaffSession } from '../../lib/merchantStaff';
+import { clearStoredStaffSession, getStoredStaffSession, storeStaffSession, type StaffSession } from '../../lib/merchantStaff';
 
 describe('merchantStaff storage safety', () => {
   const sampleSession: StaffSession = {
@@ -39,5 +39,13 @@ describe('merchantStaff storage safety', () => {
     });
 
     expect(() => clearStoredStaffSession()).not.toThrow();
+  });
+
+  it('returns null when localStorage.getItem fails', () => {
+    jest.spyOn(window.localStorage.__proto__, 'getItem').mockImplementation(() => {
+      throw new DOMException('Blocked', 'SecurityError');
+    });
+
+    expect(getStoredStaffSession()).toBeNull();
   });
 });

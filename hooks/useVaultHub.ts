@@ -1,6 +1,6 @@
 import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
 import { isAddress } from 'viem';
-import { CONTRACT_ADDRESSES, VAULT_HUB_ABI } from '../lib/contracts';
+import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts';
 import { CURRENT_CHAIN_ID } from '../lib/testnet';
 import { getChainByChainId, isTestnetChainId } from '../lib/chains';
 import { devLog } from '../lib/utils';
@@ -96,6 +96,7 @@ export function useVaultHub() {
 
   // Validate VaultHub address format
   const isValidVaultHubAddress = VAULT_HUB_ADDRESS && isAddress(VAULT_HUB_ADDRESS);
+  const isContractConfigured = isConfiguredContractAddress(VAULT_HUB_ADDRESS);
 
   // Get user's vault address
   const { data: vaultAddress, isLoading: isLoadingVault, refetch: refetchVault } = useReadContract({
@@ -105,18 +106,16 @@ export function useVaultHub() {
     args: userAddress ? [userAddress] : undefined,
     chainId: EXPECTED_CHAIN_ID,
     query: { 
-      enabled: !!isValidVaultHubAddress && !!userAddress && isOnCorrectChain,
+      enabled: isContractConfigured && !!userAddress && isOnCorrectChain,
       refetchInterval: 10000, // Refetch every 10 seconds
       retry: 3,
       retryDelay: 1000,
     },
   });
 
-  const isContractConfigured = !!isValidVaultHubAddress;
-
   // Check if vault exists (not zero address)
   const vaultAddressHex = vaultAddress as `0x${string}` | undefined;
-  const hasVault = !!vaultAddressHex && vaultAddressHex !== '0x0000000000000000000000000000000000000000';
+  const hasVault = !!vaultAddressHex && vaultAddressHex !== ZERO_ADDRESS;
 
   // Create vault for user using ensureVault()
   // VaultInfrastructure uses ensureVault() which creates if doesn't exist
@@ -164,7 +163,7 @@ export function useVaultHub() {
     isCreatingVault,
     createVault,
     refetchVault,
-    vaultHubConfigured: !!isValidVaultHubAddress,
+    vaultHubConfigured: isContractConfigured,
     isContractConfigured,
     isOnCorrectChain,
     expectedChainId: EXPECTED_CHAIN_ID,

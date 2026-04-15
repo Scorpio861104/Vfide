@@ -23,12 +23,20 @@ jest.mock('wagmi', () => ({
 jest.mock('../../lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
+    SeerView: '0x1234567890123456789012345678901234567891',
+    SeerSocial: '0x1234567890123456789012345678901234567892',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock ABIs
 jest.mock('../../lib/abis', () => ({
-  SeerABI: [],
+  SeerViewABI: [],
+  SeerSocialABI: [],
 }))
 
 // Import hooks after mocks

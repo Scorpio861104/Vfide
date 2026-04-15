@@ -10,52 +10,48 @@ export function SystemStatusPanel() {
     functionName: 'system_getStatus',
   });
 
-  const _statusColors = {
-    'Production Ready - All Systems Safe': 'bg-green-500',
-    'Warning - Howey-safe mode disabled': 'bg-yellow-500',
-    'Circuit Breaker Active': 'bg-red-500',
-  };
+  const systemStatusTuple = systemStatus as readonly [boolean, boolean, boolean, boolean, boolean, string] | undefined;
 
   return (
     <div className="space-y-6">
       <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
         <h2 className="text-2xl font-bold text-white mb-6">System Overview</h2>
         
-        {systemStatus && (
+        {systemStatusTuple && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <StatusCard
               title="Howey-Safe Mode"
-              value={systemStatus[0] ? 'ON' : 'OFF'}
+              value={systemStatusTuple[0] ? 'ON' : 'OFF'}
               icon="🛡️"
-              status={systemStatus[0] ? 'success' : 'warning'}
+              status={systemStatusTuple[0] ? 'success' : 'warning'}
             />
             <StatusCard
               title="Auto-Swap"
-              value={systemStatus[1] ? 'ENABLED' : 'DISABLED'}
+              value={systemStatusTuple[1] ? 'ENABLED' : 'DISABLED'}
               icon="🔄"
-              status={systemStatus[1] ? 'info' : 'default'}
+              status={systemStatusTuple[1] ? 'info' : 'default'}
             />
             <StatusCard
               title="Circuit Breaker"
-              value={systemStatus[2] ? 'ACTIVE' : 'INACTIVE'}
+              value={systemStatusTuple[2] ? 'ACTIVE' : 'INACTIVE'}
               icon="⚡"
-              status={systemStatus[2] ? 'error' : 'success'}
+              status={systemStatusTuple[2] ? 'error' : 'success'}
             />
             <StatusCard
               title="Vault-Only Mode"
-              value={systemStatus[3] ? 'ON' : 'OFF'}
+              value={systemStatusTuple[3] ? 'ON' : 'OFF'}
               icon="🔒"
-              status={systemStatus[3] ? 'info' : 'default'}
+              status={systemStatusTuple[3] ? 'info' : 'default'}
             />
             <StatusCard
               title="Policy Locked"
-              value={systemStatus[4] ? 'YES' : 'NO'}
+              value={systemStatusTuple[4] ? 'YES' : 'NO'}
               icon="🔐"
-              status={systemStatus[4] ? 'warning' : 'default'}
+              status={systemStatusTuple[4] ? 'warning' : 'default'}
             />
             <StatusCard
               title="Overall Status"
-              value={systemStatus[5] || 'Unknown'}
+              value={systemStatusTuple[5] || 'Unknown'}
               icon="📊"
               status="info"
               fullWidth
@@ -63,7 +59,7 @@ export function SystemStatusPanel() {
           </div>
         )}
 
-        {!systemStatus && (
+        {!systemStatusTuple && (
           <div className="text-center py-12 text-slate-400">
             <div className="animate-spin text-4xl mb-4">⏳</div>
             <p>Loading system status...</p>

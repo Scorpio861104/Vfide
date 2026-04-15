@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { useAccount, usePublicClient } from "wagmi";
 import { isAddress, keccak256, stringToHex, zeroAddress } from "viem";
-import { CONTRACT_ADDRESSES } from "@/lib/contracts";
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts";
 import { SeerABI, VFIDEBadgeNFTABI, VaultRegistryABI } from "@/lib/abis";
 
 import { AuroraBackground, FloatingParticles, VaultKeyVisualization, GlassCard } from "./components/VisualEffects";
@@ -31,6 +31,9 @@ const RECOVERY_STEPS = [
 export default function VaultRecoveryPage() {
   const { address } = useAccount();
   const publicClient = usePublicClient();
+  const isVaultRegistryAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultRegistry)
+  const isSeerAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
+  const isBadgeNftAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -48,7 +51,7 @@ export default function VaultRecoveryPage() {
 
     try {
       if (!publicClient) { setError("Wallet client not ready. Please connect and try again."); return; }
-      if (CONTRACT_ADDRESSES.VaultRegistry === zeroAddress) { setError("Vault registry contract is not configured in this environment."); return; }
+      if (!isVaultRegistryAvailable) { setError("Vault registry contract is not configured in this environment."); return; }
 
       const normalizedQuery = searchQuery.trim();
       let resolvedVault: `0x${string}` | undefined;
@@ -70,6 +73,11 @@ export default function VaultRecoveryPage() {
       }
 
       if (!resolvedVault) { setError(`No vault found for the provided ${searchMethod}.`); return; }
+
+      if (!isSeerAvailable || !isBadgeNftAvailable) {
+        setError("Vault metadata contracts are not fully configured in this environment.")
+        return
+      }
 
       const [info, score, badges] = await Promise.all([
         publicClient.readContract({ address: CONTRACT_ADDRESSES.VaultRegistry, abi: VaultRegistryABI, functionName: "getVaultInfo", args: [resolvedVault] }),

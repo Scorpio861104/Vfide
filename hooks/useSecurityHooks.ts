@@ -1,13 +1,12 @@
 'use client'
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES } from '../lib/contracts'
+import { ACTIVE_VAULT_ABI, CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, isCardBoundVaultMode, isConfiguredContractAddress } from '../lib/contracts'
 import { 
   PanicGuardABI, 
   GuardianRegistryABI, 
   GuardianLockABI, 
   EmergencyBreakerABI,
-  VaultHubABI 
 } from '../lib/abis'
 import { logger } from '@/lib/logger';
 
@@ -32,23 +31,34 @@ export function useIsVaultLocked(_vaultAddress?: `0x${string}`) {
  * Get quarantine status and expiry time for a vault
  */
 export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
-  const { data: quarantineUntil, isLoading } = useReadContract({
+  const cardBoundMode = isCardBoundVaultMode()
+
+  const { data: paused, isLoading: isLoadingPaused } = useReadContract({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'paused',
+    query: {
+      enabled: cardBoundMode && !!vaultAddress,
+    }
+  })
+
+  const { data: quarantineUntil, isLoading: isLoadingQuarantine } = useReadContract({
     address: CONTRACT_ADDRESSES.PanicGuard,
     abi: PanicGuardABI,
     functionName: 'quarantineUntil',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
+      enabled: !cardBoundMode && !!vaultAddress && isConfiguredContractAddress(CONTRACT_ADDRESSES.PanicGuard),
     }
   })
   
-  const until = quarantineUntil ? Number(quarantineUntil) : 0
-  // Return raw timestamp - component should calculate isQuarantined using useEffect with current time
+  const until = cardBoundMode ? 0 : quarantineUntil ? Number(quarantineUntil) : 0
   
   return {
     quarantineUntil: until,
-    // Components should calculate these using: until > Date.now() / 1000
-    isLoading,
+    isQuarantined: cardBoundMode ? !!paused : until > Math.floor(Date.now() / 1000),
+    supportsTimer: !cardBoundMode,
+    isLoading: cardBoundMode ? isLoadingPaused : isLoadingQuarantine,
   }
 }
 
@@ -57,18 +67,22 @@ export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
  */
 export function useCanSelfPanic() {
   const { address } = useAccount()
-  // Note: Circular dependency if we use useUserVault here? 
-  // useUserVault is in useVaultHooks.ts. 
-  // To avoid circular deps, we should probably pass vaultAddress as arg or duplicate logic.
-  // But useUserVault is simple. Let's assume we can import it or just use the logic.
-  // For now, I'll just use the logic directly to be safe.
+  const cardBoundMode = isCardBoundVaultMode()
   
   const { data: vaultAddress } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
-    abi: VaultHubABI,
+    abi: VAULT_HUB_ABI,
     functionName: 'vaultOf',
     args: address ? [address] : undefined,
     query: { enabled: !!address }
+  })
+  const resolvedVaultAddress = vaultAddress as `0x${string}` | undefined
+
+  const { data: paused, isLoading: isLoadingPaused } = useReadContract({
+    address: resolvedVaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'paused',
+    query: { enabled: cardBoundMode && !!resolvedVaultAddress },
   })
   
   const { data: lastPanic, isLoading: isLoadingLastPanic } = useReadContract({
@@ -77,7 +91,7 @@ export function useCanSelfPanic() {
     functionName: 'lastSelfPanic',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
+      enabled: !cardBoundMode && !!address && isConfiguredContractAddress(CONTRACT_ADDRESSES.PanicGuard),
     }
   })
   
@@ -85,25 +99,26 @@ export function useCanSelfPanic() {
     address: CONTRACT_ADDRESSES.PanicGuard,
     abi: PanicGuardABI,
     functionName: 'vaultCreationTime',
-    args: vaultAddress ? [vaultAddress] : undefined,
+    args: resolvedVaultAddress ? [resolvedVaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
+      enabled: !cardBoundMode && !!resolvedVaultAddress && isConfiguredContractAddress(CONTRACT_ADDRESSES.PanicGuard),
     }
   })
   
-  const lastPanicTime = lastPanic ? Number(lastPanic) : 0
-  const creationTime = vaultCreationTime ? Number(vaultCreationTime) : 0
+  const lastPanicTime = cardBoundMode ? 0 : lastPanic ? Number(lastPanic) : 0
+  const creationTime = cardBoundMode ? 0 : vaultCreationTime ? Number(vaultCreationTime) : 0
   
-  const COOLDOWN = 24 * 3600 // 24 hours
-  const MIN_AGE = 3600 // 1 hour
+  const COOLDOWN = cardBoundMode ? 0 : 24 * 3600
+  const MIN_AGE = cardBoundMode ? 0 : 3600
   
-  // Return raw timestamps for component to compute time-sensitive values
   return {
+    vaultAddress: resolvedVaultAddress,
     lastPanicTime,
     creationTime,
     cooldownSeconds: COOLDOWN,
     minAgeSeconds: MIN_AGE,
-    isLoading: isLoadingLastPanic || isLoadingCreationTime,
+    isPaused: !!paused,
+    isLoading: cardBoundMode ? isLoadingPaused : isLoadingLastPanic || isLoadingCreationTime,
   }
 }
 
@@ -112,22 +127,51 @@ export function useCanSelfPanic() {
  * NOTE: Returns isAvailable=false if PanicGuard is not deployed
  */
 export function useSelfPanic() {
+  const cardBoundMode = isCardBoundVaultMode()
+  const { address } = useAccount()
   const { writeContract, data, isPending } = useWriteContract()
+
+  const { data: vaultAddress } = useReadContract({
+    address: CONTRACT_ADDRESSES.VaultHub,
+    abi: VAULT_HUB_ABI,
+    functionName: 'vaultOf',
+    args: address ? [address] : undefined,
+    query: { enabled: cardBoundMode && !!address },
+  })
+  const resolvedVaultAddress = vaultAddress as `0x${string}` | undefined
+
+  const { data: paused } = useReadContract({
+    address: resolvedVaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'paused',
+    query: { enabled: cardBoundMode && !!resolvedVaultAddress },
+  })
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
-  // Check if PanicGuard is deployed
-  const isAvailable = CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000' && CONTRACT_ADDRESSES.PanicGuard !== '0x' && CONTRACT_ADDRESSES.PanicGuard.length === 42
+  const isAvailable = cardBoundMode
+    ? !!resolvedVaultAddress && !paused
+    : isConfiguredContractAddress(CONTRACT_ADDRESSES.PanicGuard)
   
   const selfPanic = (durationHours: number = 24) => {
     if (!isAvailable) {
       if (process.env.NODE_ENV === 'development') {
-        logger.error('PanicGuard contract not deployed - selfPanic unavailable')
+        logger.error(cardBoundMode ? 'Vault is unavailable or already paused - selfPanic unavailable' : 'PanicGuard contract not deployed - selfPanic unavailable')
       }
       return
     }
+
+    if (cardBoundMode && resolvedVaultAddress) {
+      writeContract({
+        address: resolvedVaultAddress,
+        abi: ACTIVE_VAULT_ABI,
+        functionName: 'pause',
+      })
+      return
+    }
+
     const durationSeconds = durationHours * 3600
     writeContract({
       address: CONTRACT_ADDRESSES.PanicGuard,
@@ -142,7 +186,8 @@ export function useSelfPanic() {
     isPanicking: isPending || isConfirming,
     isSuccess,
     txHash: data,
-    isAvailable, // New: indicates if the feature is available
+    isAvailable,
+    supportsDuration: !cardBoundMode,
   }
 }
 
@@ -150,23 +195,25 @@ export function useSelfPanic() {
  * Get vault guardians list and threshold
  */
 export function useVaultGuardians(vaultAddress?: `0x${string}`) {
+  const cardBoundMode = isCardBoundVaultMode()
+
   const { data: guardianCount } = useReadContract({
-    address: CONTRACT_ADDRESSES.GuardianRegistry,
-    abi: GuardianRegistryABI,
+    address: cardBoundMode ? vaultAddress : CONTRACT_ADDRESSES.GuardianRegistry,
+    abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : GuardianRegistryABI,
     functionName: 'guardianCount',
-    args: vaultAddress ? [vaultAddress] : undefined,
+    args: cardBoundMode ? undefined : vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianRegistry !== '0x0000000000000000000000000000000000000000',
+      enabled: cardBoundMode ? !!vaultAddress : !!vaultAddress && isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianRegistry),
     }
   })
   
   const { data: threshold } = useReadContract({
-    address: CONTRACT_ADDRESSES.GuardianRegistry,
-    abi: GuardianRegistryABI,
-    functionName: 'guardiansNeeded',
-    args: vaultAddress ? [vaultAddress] : undefined,
+    address: cardBoundMode ? vaultAddress : CONTRACT_ADDRESSES.GuardianRegistry,
+    abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : GuardianRegistryABI,
+    functionName: cardBoundMode ? 'guardianThreshold' : 'guardiansNeeded',
+    args: cardBoundMode ? undefined : vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianRegistry !== '0x0000000000000000000000000000000000000000',
+      enabled: cardBoundMode ? !!vaultAddress : !!vaultAddress && isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianRegistry),
     }
   })
   
@@ -180,13 +227,19 @@ export function useVaultGuardians(vaultAddress?: `0x${string}`) {
  * Check if address is guardian for vault
  */
 export function useIsGuardian(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
+  const cardBoundMode = isCardBoundVaultMode()
+
   const { data: isGuardian } = useReadContract({
-    address: CONTRACT_ADDRESSES.GuardianRegistry,
-    abi: GuardianRegistryABI,
+    address: cardBoundMode ? vaultAddress : CONTRACT_ADDRESSES.GuardianRegistry,
+    abi: cardBoundMode ? CARD_BOUND_VAULT_ABI : GuardianRegistryABI,
     functionName: 'isGuardian',
-    args: vaultAddress && guardianAddress ? [vaultAddress, guardianAddress] : undefined,
+    args: cardBoundMode
+      ? guardianAddress ? [guardianAddress] : undefined
+      : vaultAddress && guardianAddress ? [vaultAddress, guardianAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && !!guardianAddress && CONTRACT_ADDRESSES.GuardianRegistry !== '0x0000000000000000000000000000000000000000',
+      enabled: cardBoundMode
+        ? !!vaultAddress && !!guardianAddress
+        : !!vaultAddress && !!guardianAddress && isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianRegistry),
     }
   })
   
@@ -197,13 +250,24 @@ export function useIsGuardian(vaultAddress?: `0x${string}`, guardianAddress?: `0
  * Get guardian lock status and approval count
  */
 export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
+  const cardBoundMode = isCardBoundVaultMode()
+
+  const { data: paused } = useReadContract({
+    address: vaultAddress,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'paused',
+    query: {
+      enabled: cardBoundMode && !!vaultAddress,
+    }
+  })
+
   const { data: locked } = useReadContract({
     address: CONTRACT_ADDRESSES.GuardianLock,
     abi: GuardianLockABI,
     functionName: 'locked',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianLock !== '0x0000000000000000000000000000000000000000',
+      enabled: !cardBoundMode && !!vaultAddress && isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianLock),
     }
   })
   
@@ -213,13 +277,13 @@ export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
     functionName: 'approvals',
     args: vaultAddress ? [vaultAddress] : undefined,
     query: {
-      enabled: !!vaultAddress && CONTRACT_ADDRESSES.GuardianLock !== '0x0000000000000000000000000000000000000000',
+      enabled: !cardBoundMode && !!vaultAddress && isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianLock),
     }
   })
   
   return {
-    isLocked: locked || false,
-    approvals: approvals ? Number(approvals) : 0,
+    isLocked: cardBoundMode ? !!paused : locked || false,
+    approvals: cardBoundMode ? 0 : approvals ? Number(approvals) : 0,
   }
 }
 
@@ -227,6 +291,7 @@ export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
  * Cast guardian lock vote
  */
 export function useCastGuardianLock(vaultAddress: `0x${string}`) {
+  const cardBoundMode = isCardBoundVaultMode()
   const { writeContract, data, isPending } = useWriteContract()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
@@ -234,6 +299,15 @@ export function useCastGuardianLock(vaultAddress: `0x${string}`) {
   })
   
   const castLock = (reason: string = 'Security concern') => {
+    if (cardBoundMode) {
+      writeContract({
+        address: vaultAddress,
+        abi: ACTIVE_VAULT_ABI,
+        functionName: 'pause',
+      })
+      return
+    }
+
     writeContract({
       address: CONTRACT_ADDRESSES.GuardianLock,
       abi: GuardianLockABI,
@@ -254,12 +328,14 @@ export function useCastGuardianLock(vaultAddress: `0x${string}`) {
  * Check global emergency breaker status
  */
 export function useEmergencyStatus() {
+  const cardBoundMode = isCardBoundVaultMode()
+
   const { data: halted, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.EmergencyBreaker,
     abi: EmergencyBreakerABI,
     functionName: 'halted',
     query: {
-      enabled: CONTRACT_ADDRESSES.EmergencyBreaker !== '0x0000000000000000000000000000000000000000',
+      enabled: !cardBoundMode && isConfiguredContractAddress(CONTRACT_ADDRESSES.EmergencyBreaker),
       refetchInterval: 10000, // Check every 10 seconds
     }
   })
@@ -269,15 +345,15 @@ export function useEmergencyStatus() {
     abi: PanicGuardABI,
     functionName: 'globalRisk',
     query: {
-      enabled: CONTRACT_ADDRESSES.PanicGuard !== '0x0000000000000000000000000000000000000000',
+      enabled: !cardBoundMode && isConfiguredContractAddress(CONTRACT_ADDRESSES.PanicGuard),
       refetchInterval: 10000,
     }
   })
   
   return {
-    isHalted: halted || false,
-    isGlobalRisk: globalRisk || false,
-    isEmergency: halted || globalRisk || false,
-    refetch,
+    isHalted: cardBoundMode ? false : halted || false,
+    isGlobalRisk: cardBoundMode ? false : globalRisk || false,
+    isEmergency: cardBoundMode ? false : halted || globalRisk || false,
+    refetch: refetch ?? (() => Promise.resolve()),
   }
 }

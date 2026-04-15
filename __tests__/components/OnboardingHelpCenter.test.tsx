@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from '@jest/globals'
+import { beforeEach, describe, expect, it, vi } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
+
+const mockIsCardBoundVaultMode = jest.fn(() => false)
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({
@@ -34,10 +36,25 @@ jest.mock('lucide-react', () => ({
   ChevronLeft: () => <span>ChevronLeft</span>,
 }))
 
+jest.mock('@/lib/contracts', () => ({
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+}))
+
+jest.mock('@/components/onboarding/OnboardingManager', () => ({
+  WIZARD_ENABLED_KEY: 'vfide_wizard_enabled',
+  TOUR_COMPLETED_KEY: 'vfide_tour_completed',
+  BEGINNER_COMPLETED_KEY: 'vfide_beginner_completed',
+}))
+
 // Import after mocking
 import { HelpCenter } from '@/components/onboarding/HelpCenter'
 
 describe('HelpCenter', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockIsCardBoundVaultMode.mockReturnValue(false)
+  })
+
   it('renders help button', () => {
     render(<HelpCenter />)
     expect(screen.getByTestId('help-icon')).toBeInTheDocument()
@@ -109,5 +126,17 @@ describe('HelpCenter', () => {
     
     // Panel should be closed
     expect(screen.queryByText('Help Center')).not.toBeInTheDocument()
+  })
+
+  it('shows CardBound-safe vault security guidance when CardBound mode is active', () => {
+    mockIsCardBoundVaultMode.mockReturnValue(true)
+
+    render(<HelpCenter />)
+    const helpButton = screen.getByTestId('help-icon').closest('button') || screen.getByTestId('help-icon')
+    fireEvent.click(helpButton)
+    fireEvent.click(screen.getByText('Vault Security'))
+
+    expect(screen.getByText(/Wallet Rotation: Guardians can approve signer rotation and protect queued transfers without exposing legacy inheritance flows/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Next of Kin: Designate an heir to inherit your vault if something happens/i)).not.toBeInTheDocument()
   })
 })

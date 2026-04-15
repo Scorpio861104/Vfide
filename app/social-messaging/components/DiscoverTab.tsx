@@ -1,6 +1,7 @@
 'use client';
 
 import { useAccount } from 'wagmi';
+import { ZERO_ADDRESS } from '@/lib/contracts';
 import { ActivityFeed } from '@/components/social/ActivityFeed';
 import { GlobalUserSearch } from '@/components/social/GlobalUserSearch';
 
@@ -13,7 +14,7 @@ export function DiscoverTab() {
         <GlobalUserSearch />
       </div>
       <div className="rounded-2xl border border-white/10 bg-white/3 p-4">
-        <ActivityFeed userAddress={address ?? '0x0000000000000000000000000000000000000000'} />
+        <ActivityFeed userAddress={address ?? ZERO_ADDRESS} />
       </div>
     </div>
   );

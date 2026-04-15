@@ -21,6 +21,20 @@ jest.mock('wagmi', () => ({
 jest.mock('viem', () => ({
   keccak256: (input: unknown) => '0xhash',
   toBytes: (input: string) => new Uint8Array(),
+  isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
+}))
+
+jest.mock('../../lib/contracts', () => ({
+  CONTRACT_ADDRESSES: {
+    VaultRegistry: '0x1234567890123456789012345678901234567890',
+    VaultRecoveryClaim: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
+  },
+  VaultRegistryABI: [],
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Import hooks after mocks

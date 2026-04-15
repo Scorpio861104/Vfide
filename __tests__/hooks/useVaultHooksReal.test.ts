@@ -41,6 +41,11 @@ jest.mock('../../lib/contracts', () => ({
     VaultHub: '0x1234567890123456789012345678901234567890',
     VFIDEToken: '0x0987654321098765432109876543210987654321',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
 }))
 
 // Mock ABIs

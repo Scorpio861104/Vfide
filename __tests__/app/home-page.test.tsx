@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import type React from 'react';
 
+const mockIsCardBoundVaultMode = jest.fn(() => false);
+
 const renderHomePage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const pageModule = require('../../app/page');
@@ -36,9 +38,14 @@ jest.mock('@/components/fees', () => ({
   FeeSavingsCalculator: () => <div data-testid="fee-savings-calculator" />,
 }));
 
+jest.mock('@/lib/contracts', () => ({
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+}));
+
 describe('Home page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockIsCardBoundVaultMode.mockReturnValue(false);
   });
 
   it('renders hero content and primary actions', () => {
@@ -62,5 +69,14 @@ describe('Home page pathways', () => {
     renderHomePage();
 
     expect(screen.getByText(/Connect your wallet to continue/i)).toBeTruthy();
+  });
+
+  it('uses CardBound-safe vault marketing copy when CardBound mode is active', () => {
+    mockIsCardBoundVaultMode.mockReturnValue(true);
+
+    renderHomePage();
+
+    expect(screen.getByText(/Guardians help rotate wallet access and protect queued transfers/i)).toBeTruthy();
+    expect(screen.queryByText(/Inheritance via Next of Kin/i)).toBeNull();
   });
 });

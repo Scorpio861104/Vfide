@@ -1,14 +1,16 @@
 import { useReadContract } from 'wagmi'
-import { CONTRACT_ADDRESSES, VFIDETokenABI } from '@/lib/contracts'
+import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts'
 
 export function useVFIDEBalance(address?: `0x${string}`) {
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+
   const { data, isError, isLoading } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
     abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && CONTRACT_ADDRESSES.VFIDEToken !== '0x0000000000000000000000000000000000000000',
+      enabled: !!address && isAvailable,
       refetchInterval: 10_000,
     }
   })
@@ -17,5 +19,6 @@ export function useVFIDEBalance(address?: `0x${string}`) {
     balance: data,
     isError,
     isLoading,
+    isAvailable,
   }
 }
