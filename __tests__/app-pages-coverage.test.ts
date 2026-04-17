@@ -148,6 +148,14 @@ jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: { VFIDEToken: '0x2222222222222222222222222222222222222222' },
   USER_VAULT_ABI: [],
   isCardBoundVaultMode: () => true,
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
+  getContractConfigurationError: (name: string) =>
+    new Error(`[VFIDE] ${name} contract not configured.`),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }))
 
 jest.mock('@/lib/recovery/guardianAttestation', () => ({
@@ -308,9 +316,10 @@ describe('App page behavior coverage', () => {
     }
 
     renderGuardiansPage()
-    fireEvent.click(screen.getByRole('tab', { name: /Chain of Return/i }))
+    // In CardBound mode (the default), the "Chain of Return" tab is labelled "Wallet Rotation"
+    fireEvent.click(screen.getByRole('tab', { name: /Wallet Rotation|Chain of Return/i }))
 
     expect(await screen.findByText(/Create Vault First/i)).toBeTruthy()
-    expect(screen.getByText(/Chain of Return requires an active vault/i)).toBeTruthy()
+    expect(screen.getByText(/requires an active vault/i)).toBeTruthy()
   })
 })

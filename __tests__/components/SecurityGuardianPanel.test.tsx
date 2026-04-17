@@ -62,6 +62,14 @@ jest.mock('@/lib/contracts', () => ({
     GuardianRegistry: '0x9999999999999999999999999999999999999999',
   },
   isCardBoundVaultMode: () => false,
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
+  getContractConfigurationError: (name: string) =>
+    new Error(`[VFIDE] ${name} contract not configured.`),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }))
 
 // Mock lucide-react

@@ -49,6 +49,14 @@ jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     VFIDEToken: '0x2222222222222222222222222222222222222222',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
+  getContractConfigurationError: (name: string) =>
+    new Error(`[VFIDE] ${name} contract not configured.`),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }));
 
 jest.mock('viem', () => ({

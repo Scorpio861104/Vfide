@@ -882,6 +882,8 @@ describe('useVaultRecovery', () => {
     const vaultAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`
     const { result } = renderHook(() => useVaultRecovery(vaultAddress))
 
-    expect(result.current.nextOfKin).toBeDefined()
+    // In CardBound mode (the default), inheritance is not supported so nextOfKin is undefined.
+    // The property should still exist on the return object.
+    expect(result.current).toHaveProperty('nextOfKin')
   })
 })

@@ -38,6 +38,15 @@ jest.mock('lucide-react', () => ({
 
 jest.mock('@/lib/contracts', () => ({
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
+  getContractConfigurationError: (name: string) =>
+    new Error(`[VFIDE] ${name} contract not configured.`),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CONTRACT_ADDRESSES: {},
 }))
 
 jest.mock('@/components/onboarding/OnboardingManager', () => ({

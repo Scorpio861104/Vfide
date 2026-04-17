@@ -38,6 +38,14 @@ jest.mock('@/lib/contracts', () => ({
     DAO: '0x2222222222222222222222222222222222222222',
     CouncilElection: '0x1111111111111111111111111111111111111111',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
+  getContractConfigurationError: (name: string) =>
+    new Error(`[VFIDE] ${name} contract not configured.`),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }));
 
 jest.mock('@/lib/validation', () => ({

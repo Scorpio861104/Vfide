@@ -27,6 +27,14 @@ jest.mock('@/lib/contracts', () => ({
     Seer: '0x3333333333333333333333333333333333333333',
     BadgeNFT: '0x4444444444444444444444444444444444444444',
   },
+  isConfiguredContractAddress: (address?: string | null) =>
+    typeof address === 'string' &&
+    address !== '0x0000000000000000000000000000000000000000' &&
+    address.startsWith('0x') &&
+    address.length === 42,
+  getContractConfigurationError: (name: string) =>
+    new Error(`[VFIDE] ${name} contract not configured.`),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }));
 
 jest.mock('wagmi', () => ({

@@ -26,6 +26,12 @@ jest.mock('../../lib/utils', () => ({
   },
 }))
 
+// Mock contracts - disable CardBound mode so generic execute() tests work
+jest.mock('@/lib/contracts', () => ({
+  ...jest.requireActual('../../lib/__mocks__/contracts'),
+  isCardBoundVaultMode: () => false,
+}))
+
 import { useWriteContract } from 'wagmi'
 import { usePublicClient } from 'wagmi'
 import { useVaultHub } from '../useVaultHub'
