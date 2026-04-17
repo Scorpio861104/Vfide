@@ -35,6 +35,12 @@ jest.mock('../../lib/utils', () => ({
   },
 }))
 
+// Mock contracts - disable CardBound mode so generic execute() tests work
+jest.mock('@/lib/contracts', () => ({
+  ...jest.requireActual('../../lib/__mocks__/contracts'),
+  isCardBoundVaultMode: () => false,
+}))
+
 // Import hooks after mocks
 import {
   useSimpleVault,
