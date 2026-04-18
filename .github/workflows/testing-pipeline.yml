@@ -48,6 +48,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci
+      - run: npm install --no-save @nomicfoundation/hardhat-coverage
       - run: npx hardhat coverage
       - name: Check coverage thresholds
         run: |
@@ -89,6 +90,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci
+      - run: npm install --no-save hardhat-contract-sizer
       - run: npx hardhat compile
       - name: Check contract sizes
         run: |
@@ -119,13 +121,15 @@ jobs:
       - run: npx hardhat compile
       - name: Run Slither
         run: |
+          mkdir -p reports
           slither . \
-            --config-file slither/slither.config.json \
+            --config-file slither.config.json \
             --sarif reports/slither.sarif \
             --json reports/slither.json
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
         if: always()
+        continue-on-error: true
         with:
           sarif_file: reports/slither.sarif
       - name: Upload Slither report

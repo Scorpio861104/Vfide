@@ -65,7 +65,6 @@ medusa-logs/
 # TypeScript
 *.tsbuildinfo
 .tsbuildinfo.contracts
-next-env.d.ts
 .env*.local
 
 # logs

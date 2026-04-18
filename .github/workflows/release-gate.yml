@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
@@ -67,6 +67,9 @@ jobs:
 
       - name: Performance budget gate
         run: npm run -s test:performance
+
+      - name: Compile contracts
+        run: npm run -s contract:compile
 
       - name: Governance safety invariants
         run: npm run -s contract:verify:governance-safety:local
@@ -127,7 +130,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
