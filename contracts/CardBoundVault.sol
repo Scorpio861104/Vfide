@@ -529,21 +529,29 @@ contract CardBoundVault is ReentrancyGuard {
         if (msg.sender != admin) revert CBV_NotAdmin();
 
         // Apply daily limit at execution time as an additional guard.
-        // NOTE: spentToday was already incremented at queue time (H-5 FIX), so do not
-        // add w.amount again here. The daily window check below catches the case where
-        // this execution window differs from the queue window (i.e., a new day has started
-        // and a fresh daily limit is in effect) — in that case spentToday was reset to 0
-        // by _refreshDailyWindow and the queued amount no longer consumes this day's budget.
+        // H-5 FIX: spentToday was charged at queue time. Only re-charge if a new daily window
+        // started since the withdrawal was queued (indicated by dayStart having advanced past
+        // w.requestTime). If still in the same window, the amount is already committed to
+        // spentToday and must not be added again.
         _refreshDailyWindow();
-        if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
+        bool newWindowSinceQueue = (dayStart > w.requestTime);
+        if (newWindowSinceQueue) {
+            if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
+        } else {
+            // Same window — amount was already committed at queue time.
+            // Sanity-check that the daily total hasn't somehow been exceeded.
+            if (spentToday > dailyTransferLimit) revert CBV_DailyLimit();
+        }
 
         w.executed = true;
         if (activeQueuedWithdrawals > 0) {
             activeQueuedWithdrawals -= 1;
         }
-        // H-5 FIX: spentToday was charged at queue time; re-charge only if the daily window
-        // has rolled over since then (i.e., execution day differs from queue day).
-        spentToday += w.amount;
+        // Only charge spentToday when executing in a new window (window rolled over since queue).
+        // In the original queue window, the amount was already charged at queue time.
+        if (newWindowSinceQueue) {
+            spentToday += w.amount;
+        }
 
         IERC20(vfideToken).safeTransfer(w.toVault, w.amount);
 
