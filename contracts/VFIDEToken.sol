@@ -1178,8 +1178,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 revert VF_DailyLimitExceeded();
             }
         }
-        // Note: cachedStoredUsed is 0 when dailyTransferLimit == 0; _recordActualDailyTransfer
-        // still records correctly in that case because it re-reads only if the window is expired.
+        // Note: when dailyTransferLimit == 0, cachedStoredUsed stays 0 and cachedWindowStart
+        // holds the last reset timestamp.  _recordActualDailyTransfer uses only the cached
+        // parameters — no storage re-reads happen there under any code path.
         
         // 4. Transfer cooldown check (for sender)
         if (transferCooldown > 0) {
