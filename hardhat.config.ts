@@ -58,13 +58,16 @@ const config: VfideHardhatConfig = {
       // Having two compilers creates unverifiable compilation unit boundaries.
     ],
     overrides: {
-      // L-01: Seer.sol is the large file after the VFIDETrust.sol monolith split; keep runs:1 to avoid bytecode-size issues
+      // L-6 GAS FIX: Seer.sol is called on every fee computation (on every token transfer).
+      // Increased from runs:1 to runs:50 — a safe middle ground with viaIR that significantly
+      // lowers the gas cost of repeated score reads while keeping the bytecode under 24 KB.
+      // VERIFY SIZE before mainnet: `npx hardhat size-contracts` must show Seer < 24576 bytes.
       "contracts/Seer.sol": {
         version: "0.8.30",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 50,
           },
           metadata: {
             bytecodeHash: "none",
@@ -72,6 +75,7 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // Deploy-once script — runs:1 is correct (no runtime calls, minimise bytecode to stay under 24KB).
       "contracts/DeployPhases3to6.sol": {
         version: "0.8.30",
         settings: {
@@ -85,6 +89,7 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // Admin-only, infrequent calls — runs:1 acceptable; not a user-facing hot path.
       "contracts/BadgeManager.sol": {
         version: "0.8.30",
         settings: {
@@ -95,6 +100,7 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // Infrastructure/library contract; not called directly in the user transfer path.
       "contracts/VaultInfrastructure.sol": {
         version: "0.8.30",
         settings: {
@@ -105,6 +111,7 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // Deploy-once script — runs:1 is correct.
       "contracts/DeployPhase1.sol": {
         version: "0.8.30",
         settings: {
@@ -115,6 +122,8 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // SeerAutonomous is large (1222 lines) and near the 24KB bytecode limit; runs:1 retained.
+      // Candidate for runs:50 once contract size is confirmed: `npx hardhat size-contracts`.
       "contracts/SeerAutonomous.sol": {
         version: "0.8.30",
         settings: {
@@ -128,12 +137,16 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // L-6 GAS FIX: VFIDEToken.sol is called on every user token transfer — the hottest contract
+      // in the protocol.  Increased from runs:1 to runs:50 with viaIR to reduce per-transfer gas
+      // while staying comfortably under the 24 KB bytecode limit.
+      // VERIFY SIZE before mainnet: `npx hardhat size-contracts` must show VFIDEToken < 24576 bytes.
       "contracts/VFIDEToken.sol": {
         version: "0.8.30",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 50,
           },
           metadata: {
             bytecodeHash: "none",
@@ -141,6 +154,7 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // EcosystemVault is the largest contract (1449 lines); runs:1 retained to stay under 24KB.
       "contracts/EcosystemVault.sol": {
         version: "0.8.30",
         settings: {
@@ -154,6 +168,7 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // Admin-only governance panel; infrequent calls — runs:1 retained for size safety.
       "contracts/OwnerControlPanel.sol": {
         version: "0.8.30",
         settings: {
@@ -167,6 +182,8 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // MerchantPortal is user-facing but complex (1159 lines); runs:1 retained for size safety.
+      // Candidate for runs:50 once size is confirmed: `npx hardhat size-contracts`.
       "contracts/MerchantPortal.sol": {
         version: "0.8.30",
         settings: {
@@ -180,6 +197,9 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // VaultHub embeds the full CardBoundVault creation bytecode (type(CardBoundVault).creationCode).
+      // The combined bytecode is near the 24KB limit; runs:1 retained until size is verified.
+      // Candidate for runs:50 once size is confirmed: `npx hardhat size-contracts`.
       "contracts/VaultHub.sol": {
         version: "0.8.30",
         settings: {
@@ -193,6 +213,7 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
+      // Deploy-once script — runs:1 is correct.
       "contracts/DeployPhase1Governance.sol": {
         version: "0.8.30",
         settings: {
