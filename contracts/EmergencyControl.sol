@@ -193,7 +193,6 @@ contract EmergencyControl is ReentrancyGuard {
         if (msg.sender == dao) {
             // DAO: immediate (DAO proposals already carry their own governance timelock)
             _applyAddMember(m);
-            _log("ec_member_add");
         } else {
             // Foundation: 24-hour queue — gives DAO time to observe and react
             if (pendingFoundationMemberChange.effectiveAt != 0) revert EC_PendingFoundationChange();
@@ -212,7 +211,6 @@ contract EmergencyControl is ReentrancyGuard {
             // DAO: immediate
             if (!isMember[m]) revert EC_NotMember();
             _applyRemoveMember(m);
-            _log("ec_member_remove");
         } else {
             // Foundation: 24-hour queue
             if (!isMember[m]) revert EC_NotMember();
@@ -261,6 +259,7 @@ contract EmergencyControl is ReentrancyGuard {
         memberCount += 1;
         currentMembers.push(m);
         emit MemberAdded(m);
+        _log("ec_member_add");
     }
 
     function _applyRemoveMember(address m) internal {
@@ -286,6 +285,7 @@ contract EmergencyControl is ReentrancyGuard {
         if (threshold > memberCount) {
             threshold = memberCount; // clamp for safety
         }
+        _log("ec_member_remove");
     }
 
     function setThreshold(uint8 _threshold) external onlyDAO nonReentrant {
