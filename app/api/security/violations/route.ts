@@ -20,10 +20,6 @@ const securityViolationSchema = z.object({
   ipAddress: z.string().trim().max(MAX_IP_LENGTH).optional(),
 });
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
 }

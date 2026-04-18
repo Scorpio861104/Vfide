@@ -6,7 +6,6 @@
  */
 'use client';
 
-import { useState } from 'react';
 import { Package, ExternalLink, Shield } from 'lucide-react';
 
 interface Product {

@@ -1,8 +1,6 @@
 'use client';
 
 // Extracted from page.tsx — verify imports
-import { GlassCard } from '@/components/ui/GlassCard';
-import { motion } from 'framer-motion';
 
 export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?: boolean }) {
   const rewardCategories = [

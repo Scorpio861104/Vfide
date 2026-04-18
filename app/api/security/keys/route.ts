@@ -26,12 +26,6 @@ interface KeyDirectoryRow {
   updated_at: string;
 }
 
-function toNonEmptyString(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
 const keyDirectoryUpdateSchema = z.object({
   address: z.string().trim().toLowerCase(),
   encryptionPublicKey: z.string().trim().min(1),

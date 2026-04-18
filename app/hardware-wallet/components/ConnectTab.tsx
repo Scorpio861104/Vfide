@@ -30,7 +30,7 @@ export function ConnectTab() {
         deviceType === 'ledger'
           ? [{ vendorId: 0x2c97 }]
           : [{ vendorId: 0x534c }, { vendorId: 0x1209 }];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const devices = await (navigator as any).hid.requestDevice({ filters });
       if (devices && devices.length > 0) {
         setStatus('connected');

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Vote, Users, Shield, Clock, Check, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
+import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { SEED_CANDIDATES } from '@/lib/data/seed';
 import { CONTRACT_ADDRESSES, CouncilElectionABI, isConfiguredContractAddress } from '@/lib/contracts';
@@ -45,15 +45,15 @@ const DEFAULT_ELECTION: ElectionInfo = {
 };
 
 export default function ElectionsPage() {
-  const { address, isConnected } = useAccount();
-  const [candidates, setCandidates] = useState<Candidate[]>(SEED_CANDIDATES.map(c => ({
+  const { isConnected } = useAccount();
+  const [candidates] = useState<Candidate[]>(SEED_CANDIDATES.map(c => ({
     ...c, registered: true, elected: false, badges: c.badges,
   })));
   const [proposals, setProposals] = useState<ProposalPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
-  const [hasVoted, setHasVoted] = useState(false);
+  const [hasVoted] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [platform, setPlatform] = useState('');
   const [tab, setTab] = useState<'candidates' | 'council' | 'rules'>('candidates');

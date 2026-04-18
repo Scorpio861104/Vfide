@@ -28,7 +28,7 @@ function getImageUrl(img: string | { url: string }): string {
   return typeof img === 'string' ? img : img.url;
 }
 
-export function ProductCard({ product, merchantSlug, viewMode, themeColor }: ProductCardProps) {
+export function ProductCard({ product, merchantSlug, viewMode, themeColor: _themeColor }: ProductCardProps) {
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
   const hasDiscount = product.compare_at_price && parseFloat(product.compare_at_price) > parseFloat(product.price);

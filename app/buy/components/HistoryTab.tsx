@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { History, Loader2, ArrowDownLeft, ArrowUpRight, ExternalLink } from 'lucide-react';
+import { History, Loader2, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 
 interface Activity {
   id: number;

@@ -17,10 +17,6 @@ import { motion } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function MerchantSetupPage() {
-  const { isConnected } = useAccount();
-  const router = useRouter();
-
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">

@@ -6,7 +6,6 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
-const ALLOWED_PREFERENCE_KEYS = new Set(['messages', 'proposals', 'endorsements', 'system_updates']);
 
 const notificationPreferencesUpdateSchema = z.object({
   userAddress: z.string().trim(),
@@ -15,10 +14,6 @@ const notificationPreferencesUpdateSchema = z.object({
   endorsements: z.boolean().optional(),
   system_updates: z.boolean().optional(),
 });
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();

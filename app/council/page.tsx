@@ -32,11 +32,11 @@ function TabSkeleton() {
 }
 
 export default function CouncilPage() {
-  const { address, isConnected } = useAccount();
+  const { isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   // Contract reads (prefetch for child components)
-  const { writeContract, data: hash } = useWriteContract();
+  const { data: hash } = useWriteContract();
   useWaitForTransactionReceipt({ hash });
 
   useReadContract({ address: COUNCIL_ELECTION_ADDRESS, abi: CouncilElectionABI, functionName: 'getCouncilMembers', query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED } });

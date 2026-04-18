@@ -200,7 +200,7 @@ export function AddressInput({
   label,
   value,
   onChange,
-  placeholder = '0x...',
+  placeholder: _placeholder = '0x...',
   required = false,
   disabled = false,
 }: {
@@ -253,7 +253,7 @@ export function NumberInput({
   min = 0,
   max,
   step = 1,
-  placeholder,
+  placeholder: _placeholder,
   suffix,
   required = false,
   disabled = false,

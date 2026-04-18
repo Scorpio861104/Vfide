@@ -42,11 +42,6 @@ const qrSignatureEventSchema = z.object({
   reason: z.unknown().optional(),
 });
 
-function asEventType(value: unknown): EventType | null {
-  if (typeof value !== 'string') return null;
-  return EVENT_TYPES.includes(value as EventType) ? (value as EventType) : null;
-}
-
 function asSourceType(value: unknown): SourceType {
   if (typeof value !== 'string') return 'unknown';
   return SOURCE_TYPES.includes(value as SourceType) ? (value as SourceType) : 'unknown';

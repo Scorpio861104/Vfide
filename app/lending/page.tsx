@@ -3,11 +3,11 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Banknote, Plus, Search, Clock, Check, X, Shield, AlertTriangle, Users, ChevronDown, ChevronUp, Zap, ArrowRight, HandCoins } from 'lucide-react';
-import { formatEther, parseEther } from 'viem';
+import { Banknote, Plus, Search, AlertTriangle, Users, Zap, ArrowRight, HandCoins } from 'lucide-react';
+import { formatEther } from 'viem';
 import { Footer } from '@/components/layout/Footer';
 
 type Tab = 'borrow' | 'lend' | 'my-loans' | 'flash';
@@ -42,7 +42,6 @@ export default function LendingPage() {
   const { address, isConnected } = useAccount();
   const [tab, setTab] = useState<Tab>('borrow');
   const [showCreate, setShowCreate] = useState(false);
-  const [expandedLoan, setExpandedLoan] = useState<number | null>(null);
 
   // Create loan form
   const [principal, setPrincipal] = useState('');
@@ -50,9 +49,8 @@ export default function LendingPage() {
   const [durationDays, setDurationDays] = useState('14');
 
   // Live data from DB-backed loans table
-  const [openLoans, setOpenLoans] = useState<LoanData[]>([]);
   const [openLoanOffers, setOpenLoanOffers] = useState<DbLoanOffer[]>([]);
-  const [myLoans, setMyLoans] = useState<LoanData[]>([]);
+  const [myLoans] = useState<LoanData[]>([]);
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(true);
   const [previewLaneCount, setPreviewLaneCount] = useState(0);

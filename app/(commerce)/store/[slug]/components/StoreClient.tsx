@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingCart, Share2, Filter, Grid, List, Package } from 'lucide-react';
+import { Search, Share2, Grid, List, Package } from 'lucide-react';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
 import { Footer } from '@/components/layout/Footer';
 import { CheckoutPanel } from '@/components/checkout/CheckoutPanel';

@@ -114,26 +114,27 @@ async function runValidationSuite(): Promise<void> {
   console.log(`\n${BOLD}${BLUE}TIER 2: Security & Infrastructure Checks${RESET}`);
   console.log('─'.repeat(60));
 
-  // Check proxy/middleware security layer exists and stays aligned
+  // Check proxy security layer exists. In Next.js 16 (Turbopack) only proxy.ts is supported;
+  // middleware.ts must NOT exist alongside it.
   const proxyExists = existsSync('proxy.ts');
-  const middlewareExists = existsSync('middleware.ts');
-  console.log(`\n${BLUE}Running:${RESET} Root middleware check`);
-  if (proxyExists || middlewareExists) {
-    const proxySource = proxyExists ? readFileSync('proxy.ts', 'utf8') : '';
-    const middlewareSource = middlewareExists ? readFileSync('middleware.ts', 'utf8') : '';
-    const middlewareDelegatesToProxy = !middlewareExists || middlewareSource.includes("export { proxy as middleware, config } from './proxy'");
-    const cspHandledInProxy = !proxyExists || proxySource.includes('Content-Security-Policy');
-
-    if (middlewareDelegatesToProxy && cspHandledInProxy) {
+  console.log(`\n${BLUE}Running:${RESET} Root proxy security check`);
+  if (proxyExists) {
+    const proxySource = readFileSync('proxy.ts', 'utf8');
+    const cspHandledInProxy = proxySource.includes('Content-Security-Policy');
+    const middlewareStillPresent = existsSync('middleware.ts');
+    if (cspHandledInProxy && !middlewareStillPresent) {
       console.log(`${GREEN}✓ Passed${RESET} (proxy.ts is the CSP/CSRF source of truth)`);
       results.push(new CheckResult('proxy security layer aligned', true));
+    } else if (middlewareStillPresent) {
+      console.error(`${RED}✗ FAILED${RESET} (middleware.ts must be removed — Next.js 16 requires proxy.ts only)`);
+      results.push(new CheckResult('proxy security layer aligned', false, 'middleware.ts must not coexist with proxy.ts in Next.js 16'));
     } else {
-      console.error(`${RED}✗ FAILED${RESET} (proxy/middleware security layer is misaligned)`);
-      results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts and middleware.ts are not aligned'));
+      console.error(`${RED}✗ FAILED${RESET} (proxy.ts exists but does not handle CSP)`);
+      results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts does not contain Content-Security-Policy logic'));
     }
   } else {
-    console.error(`${RED}✗ FAILED${RESET} (proxy.ts and middleware.ts not found)`);
-    results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts and middleware.ts not found'));
+    console.error(`${RED}✗ FAILED${RESET} (proxy.ts not found)`);
+    results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts not found'));
   }
 
   // Check Next.js image config is restricted to explicit hosts

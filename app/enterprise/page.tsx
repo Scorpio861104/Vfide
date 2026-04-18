@@ -5,7 +5,6 @@ export const dynamic = 'force-dynamic';
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { motion } from "framer-motion";
 import { Building2, CreditCard, TrendingUp, Zap } from "lucide-react";
 
 import { OverviewTab } from "./components/OverviewTab";

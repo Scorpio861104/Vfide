@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { BuyTab } from './components/BuyTab';
 import { HistoryTab } from './components/HistoryTab';
