@@ -77,13 +77,13 @@ describe('useProofScore', () => {
       const getBurnFee = (score: number) => 
         score >= 8000 ? 0.25 :
         score >= 7000 ? 1.0 :
-        score >= 5000 ? 2.0 :
+        score >= 5000 ? 2.5 :
         score >= 4000 ? 3.5 :
         5.0
 
       expect(getBurnFee(8000)).toBe(0.25)
       expect(getBurnFee(7000)).toBe(1.0)
-      expect(getBurnFee(5000)).toBe(2.0)
+      expect(getBurnFee(5000)).toBe(2.5)
       expect(getBurnFee(4000)).toBe(3.5)
       expect(getBurnFee(3999)).toBe(5.0)
     })

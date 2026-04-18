@@ -125,7 +125,7 @@ describe('useProofScore - Comprehensive Tests', () => {
 
       expect(result.current.score).toBe(6000)
       expect(result.current.tier.label).toBe('Trusted')
-      expect(result.current.burnFee).toBe(2.0)
+      expect(result.current.burnFee).toBe(2.5)
       expect(result.current.color).toBe('#FFD700')
       expect(result.current.canVote).toBe(true)
       expect(result.current.canMerchant).toBe(true)
@@ -349,11 +349,11 @@ describe('useProofScore - Comprehensive Tests', () => {
       expect(result.current.burnFee).toBe(1.0)
     })
 
-    it('should return 2.0% fee for score >= 5000 and < 7000', () => {
+    it('should return 2.5% fee for score >= 5000 and < 7000', () => {
       mockScore(BigInt(5000))
 
       const { result } = renderHook(() => useProofScore())
-      expect(result.current.burnFee).toBe(2.0)
+      expect(result.current.burnFee).toBe(2.5)
     })
 
     it('should return 3.5% fee for score >= 4000 and < 5000', () => {

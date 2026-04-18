@@ -68,7 +68,7 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
 
     expect(result.current.score).toBe(5500)
-    expect(result.current.burnFee).toBe(2.0)
+    expect(result.current.burnFee).toBe(2.5)
     expect(result.current.color).toBe('#FFD700')
   })
 

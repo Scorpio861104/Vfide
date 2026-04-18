@@ -43,10 +43,11 @@ export function useProofScore(userAddress?: `0x${string}`) {
   
   // Calculate burn fee based on ProofScore
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
+  // Neutral score (5000) sits at the midpoint → 2.5%
   const fallbackBurnFee =
     scoreNum >= 8000 ? 0.25 :
     scoreNum >= 7000 ? 1.0 :
-    scoreNum >= 5000 ? 2.0 :
+    scoreNum >= 5000 ? 2.5 :
     scoreNum >= 4000 ? 3.5 :
     5.0
   const burnFee = onChainFeeQuote !== undefined

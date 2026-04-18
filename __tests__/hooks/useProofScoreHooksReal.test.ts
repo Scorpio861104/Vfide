@@ -94,7 +94,7 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
     
     expect(result.current.tier).toBe('Neutral')
-    expect(result.current.burnFee).toBe(2.0)
+    expect(result.current.burnFee).toBe(2.5)
   })
 
   it('returns Low Trust tier for score >= 3500', () => {
