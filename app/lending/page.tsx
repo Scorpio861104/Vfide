@@ -206,9 +206,9 @@ export default function LendingPage() {
               ) : (
                 openLoanOffers.map(loan => {
                   const principalNum = parseFloat(loan.principal);
-                  const interestRate = loan.interest_bps / 100;
+                  const interestRatePercent = loan.interest_bps / 100;
                   const durationDaysNum = Math.round(loan.duration_seconds / 86400);
-                  const repayAmount = principalNum * (1 + loan.interest_bps / 10000);
+                  const repayAmount = principalNum * (1 + interestRatePercent / 100);
                   return (
                     <div key={loan.id} className="p-4 bg-white/3 border border-white/10 rounded-2xl">
                       <div className="flex items-center justify-between mb-3">
@@ -219,7 +219,7 @@ export default function LendingPage() {
                         <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400">OPEN</span>
                       </div>
                       <div className="flex gap-4 text-sm text-gray-400 mb-3">
-                        <span>Interest: <span className="text-white">{interestRate.toFixed(2)}%</span></span>
+                        <span>Interest: <span className="text-white">{interestRatePercent.toFixed(2)}%</span></span>
                         <span>Duration: <span className="text-white">{durationDaysNum}d</span></span>
                         <span>Repay: <span className="text-white">{repayAmount.toFixed(2)} VFIDE</span></span>
                       </div>

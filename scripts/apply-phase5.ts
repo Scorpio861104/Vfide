@@ -55,7 +55,7 @@ async function main() {
         await ledger.setLogger(addr, true);
         console.log(`  ✅ ${name} registered as logger`);
       } catch (e: any) {
-        console.log(`  ⏭️  ${name}: ${(e as Error).message?.slice(0, 60)}`);
+        console.log(`  ⏭️  ${name}: ${e.reason || e.message}`);
       }
     }
   }

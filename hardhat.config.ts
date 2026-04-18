@@ -58,10 +58,10 @@ const config: VfideHardhatConfig = {
       // Having two compilers creates unverifiable compilation unit boundaries.
     ],
     overrides: {
-      // L-6 GAS FIX: Seer.sol is called on every fee computation (on every token transfer).
+      // L-6 GAS FIX (internal audit finding — hot-path gas reduction): Seer.sol is called on every fee computation (on every token transfer).
       // Increased from runs:1 to runs:50 — a safe middle ground with viaIR that significantly
       // lowers the gas cost of repeated score reads while keeping the bytecode under 24 KB.
-      // VERIFY SIZE before mainnet: `npx hardhat size-contracts` must show Seer < 24576 bytes.
+      // Pre-mainnet checklist: run `npx hardhat size-contracts` and confirm Seer.sol < 24576 bytes.
       "contracts/Seer.sol": {
         version: "0.8.30",
         settings: {
@@ -137,10 +137,10 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
-      // L-6 GAS FIX: VFIDEToken.sol is called on every user token transfer — the hottest contract
+      // L-6 GAS FIX (internal audit finding — hot-path gas reduction): VFIDEToken.sol is called on every user token transfer — the hottest contract
       // in the protocol.  Increased from runs:1 to runs:50 with viaIR to reduce per-transfer gas
       // while staying comfortably under the 24 KB bytecode limit.
-      // VERIFY SIZE before mainnet: `npx hardhat size-contracts` must show VFIDEToken < 24576 bytes.
+      // Pre-mainnet checklist: run `npx hardhat size-contracts` and confirm VFIDEToken.sol < 24576 bytes.
       "contracts/VFIDEToken.sol": {
         version: "0.8.30",
         settings: {
