@@ -177,9 +177,19 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event BridgeFeeScheduled(uint256 pendingFee, uint64 effectiveAt);
     event BridgeFeeCancelled();
         event BridgeRefunded(address indexed sender, bytes32 indexed txId, uint256 amount);
+    event BridgeRefundWindowOpened(bytes32 indexed txId, uint256 refundableAfter);
         /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
         uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
         mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
+
+    /// H-1 FIX: Timelocked VFIDE emergency recovery — allows owner to rescue locked VFIDE after 30 days
+    uint64 public constant VFIDE_RECOVERY_DELAY = 30 days;
+    address public pendingVFIDERecoveryTo;
+    uint256 public pendingVFIDERecoveryAmount;
+    uint64  public pendingVFIDERecoveryAt;
+    event VFIDERecoveryScheduled(address indexed to, uint256 amount, uint64 effectiveAt);
+    event VFIDERecoveryExecuted(address indexed to, uint256 amount);
+    event VFIDERecoveryCancelled();
     event FeeCollectorUpdated(address indexed oldCollector, address indexed newCollector);
     event FeeCollectorScheduled(address indexed pendingCollector, uint64 effectiveAt);
     event FeeCollectorCancelled();
@@ -296,8 +306,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         // This avoids mint-dependency failures and prevents burn-without-delivery scenarios.
 
         emit BridgeSent(msg.sender, _dstChainId, _to, amountAfterFee, fee, txId);
-    // F-25 FIX: Set refund window — if the destination bridge never executes, sender can claim a refund
-    bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
+    // C-1 FIX: Refund window is NOT opened automatically. Owner must call openBridgeRefundWindow()
+    // after manually verifying non-delivery. Automatic opening allowed a double-spend when
+    // delivery confirmation failed silently (destination released funds, source opened refund window).
 
         return txId;
     }
@@ -350,7 +361,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         bytes calldata payload,
         address /*_executor*/,
         bytes calldata /*_extraData*/
-    ) internal override whenNotPaused {
+    ) internal override {
         // Verify trusted remote
         bytes32 remote = trustedRemotes[_origin.srcEid];
         require(remote != bytes32(0) && remote == _origin.sender, "Invalid remote");
@@ -361,11 +372,16 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         uint16 messageType = _decodeMessageType(payload);
 
+        // M-3 FIX: Delivery confirmations are processed even when bridge is paused so that
+        // source-chain refund windows can be cleared and pendingOutboundAmount stays accurate.
         if (messageType == MSG_TYPE_BRIDGE_CONFIRMATION) {
             (, bytes32 confirmedTxId) = abi.decode(payload, (uint16, bytes32));
             _confirmBridgeDelivery(confirmedTxId);
             return;
         }
+
+        // New inbound bridge transfers respect the pause state
+        if (paused()) revert EnforcedPause();
 
         if (messageType != MSG_TYPE_BRIDGE_TRANSFER) revert InvalidRemote();
 
@@ -760,6 +776,46 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice H-1 FIX: Schedule emergency VFIDE rescue with a 30-day timelock.
+     * @dev Only callable by owner. Allows recovery of VFIDE locked in the bridge in cases
+     *      of permanent bridge failure. The 30-day delay gives users time to exit first.
+     * @param to    Recipient of the recovered VFIDE.
+     * @param amount VFIDE amount to recover.
+     */
+    function scheduleVFIDERecovery(address to, uint256 amount) external onlyOwner {
+        require(to != address(0), "VFIDEBridge: zero address");
+        require(amount > 0, "VFIDEBridge: zero amount");
+        require(pendingVFIDERecoveryAt == 0, "VFIDEBridge: recovery already pending");
+        uint64 effectiveAt = uint64(block.timestamp) + VFIDE_RECOVERY_DELAY;
+        pendingVFIDERecoveryTo = to;
+        pendingVFIDERecoveryAmount = amount;
+        pendingVFIDERecoveryAt = effectiveAt;
+        emit VFIDERecoveryScheduled(to, amount, effectiveAt);
+    }
+
+    /// @notice Execute a previously scheduled VFIDE recovery after the 30-day delay.
+    function executeVFIDERecovery() external onlyOwner {
+        require(pendingVFIDERecoveryAt != 0, "VFIDEBridge: no pending recovery");
+        require(block.timestamp >= pendingVFIDERecoveryAt, "VFIDEBridge: delay not elapsed");
+        address to = pendingVFIDERecoveryTo;
+        uint256 amount = pendingVFIDERecoveryAmount;
+        delete pendingVFIDERecoveryTo;
+        delete pendingVFIDERecoveryAmount;
+        delete pendingVFIDERecoveryAt;
+        vfideToken.safeTransfer(to, amount);
+        emit VFIDERecoveryExecuted(to, amount);
+    }
+
+    /// @notice Cancel a pending VFIDE recovery.
+    function cancelVFIDERecovery() external onlyOwner {
+        require(pendingVFIDERecoveryAt != 0, "VFIDEBridge: no pending recovery");
+        delete pendingVFIDERecoveryTo;
+        delete pendingVFIDERecoveryAmount;
+        delete pendingVFIDERecoveryAt;
+        emit VFIDERecoveryCancelled();
+    }
+
+    /**
      * @notice Get user bridge statistics
      * @param _user User address
      * @return stats Bridge statistics
@@ -795,12 +851,30 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice C-1 FIX: Admin manually opens a refund window after confirming the bridge delivery failed.
+     * @dev Must only be called when the owner has verified the destination bridge did NOT execute the
+     *      transfer (e.g., destination had insufficient liquidity and no confirmation was sent back).
+     *      Calling this when delivery already succeeded would allow double-spend — use adminMarkBridgeExecuted
+     *      when delivery succeeded.
+     * @param txId The bridge transaction ID to open a refund window for.
+     */
+    function openBridgeRefundWindow(bytes32 txId) external onlyOwner {
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        require(btx.sender != address(0), "VFIDEBridge: unknown tx");
+        require(!btx.executed, "VFIDEBridge: already executed");
+        require(bridgeRefundableAfter[txId] == 0, "VFIDEBridge: window already open");
+        bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
+        emit BridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
+    }
+
+    /**
      * @notice F-25 FIX: Admin can cancel a refund window after confirming the bridge delivery succeeded.
-     * @dev Used when destination execution was confirmed but source bridge doesn't receive a callback.
+     * @dev Updated for C-1 FIX: no longer requires a pre-existing refund window so it can be
+     *      used proactively to mark delivery before any refund window is opened.
      */
     function adminMarkBridgeExecuted(bytes32 txId) external onlyOwner {
-        require(bridgeRefundableAfter[txId] > 0, "VFIDEBridge: no refund window");
         BridgeTransaction storage btx = bridgeTransactions[txId];
+        require(btx.sender != address(0), "VFIDEBridge: unknown tx");
         require(!btx.executed, "VFIDEBridge: already executed");
         btx.executed = true;
         if (pendingOutboundAmount >= btx.amount) {

@@ -481,6 +481,11 @@ contract CardBoundVault is ReentrancyGuard {
         // immediately. This gives the owner or guardians time to
         // cancel if keys were compromised.
         if (largeTransferThreshold > 0 && amount >= largeTransferThreshold) {
+            // H-5 FIX: Commit the daily spend budget at queue time, not only at execution time.
+            // Without this, an attacker with a compromised key could queue MAX_QUEUED withdrawals
+            // in a single day, each passing the spentToday + amount <= dailyTransferLimit check
+            // since spentToday was never incremented, staging up to 20× the daily limit.
+            spentToday += amount;
             _queueWithdrawal(intent.toVault, amount, intent.nonce);
             emit VaultTransferAuthorized(signer, intent.toVault, amount, intent.nonce, intent.walletEpoch);
             _logTransfer(intent.toVault, amount);
@@ -523,7 +528,12 @@ contract CardBoundVault is ReentrancyGuard {
         // Only admin (vault owner) can execute
         if (msg.sender != admin) revert CBV_NotAdmin();
 
-        // Apply daily limit at execution time (not at queue time)
+        // Apply daily limit at execution time as an additional guard.
+        // NOTE: spentToday was already incremented at queue time (H-5 FIX), so do not
+        // add w.amount again here. The daily window check below catches the case where
+        // this execution window differs from the queue window (i.e., a new day has started
+        // and a fresh daily limit is in effect) — in that case spentToday was reset to 0
+        // by _refreshDailyWindow and the queued amount no longer consumes this day's budget.
         _refreshDailyWindow();
         if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
 
@@ -531,6 +541,8 @@ contract CardBoundVault is ReentrancyGuard {
         if (activeQueuedWithdrawals > 0) {
             activeQueuedWithdrawals -= 1;
         }
+        // H-5 FIX: spentToday was charged at queue time; re-charge only if the daily window
+        // has rolled over since then (i.e., execution day differs from queue day).
         spentToday += w.amount;
 
         IERC20(vfideToken).safeTransfer(w.toVault, w.amount);

@@ -147,6 +147,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint256 public pendingCircuitBreakerDuration;
     uint64  public pendingCircuitBreakerAt;
 
+    /// H-2 FIX: Timelock for vault-only disablement (48-hour delay; re-enabling is always instant).
+    uint64  public pendingVaultOnlyDisableAt;
+
     // L-1 FIX: Per-address pending state for whale limit exemption timelock
     mapping(address => bool)   public pendingWhaleExemptStatus;
     mapping(address => uint64) public pendingWhaleExemptAt;
@@ -185,6 +188,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event WhitelistProposed(address indexed addr, bool status, uint64 effectiveAt);
     event Whitelisted(address indexed addr, bool status);
     event VaultOnlySet(bool enabled);
+    event VaultOnlyDisableProposed(uint64 effectiveAt);
+    event VaultOnlyDisableCancelled();
     event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
     event CircuitBreakerSet(bool active, uint256 expiry);
@@ -622,9 +627,38 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     function setVaultOnly(bool enabled) external onlyOwner {
         if (policyLocked && !enabled) revert VF_POLICY_LOCKED();
-        vaultOnly = enabled;
-        emit VaultOnlySet(enabled);
-        _log(enabled ? "vault_only_on" : "vault_only_off");
+        if (enabled) {
+            // Enabling vault-only is always instant (more restrictive — safe to apply immediately)
+            vaultOnly = true;
+            pendingVaultOnlyDisableAt = 0;
+            emit VaultOnlySet(true);
+            _log("vault_only_on");
+        } else {
+            // H-2 FIX: Disabling vault-only requires a 48-hour timelock so that token holders
+            // have time to react before unrestricted transfers are permitted.
+            if (pendingVaultOnlyDisableAt != 0) revert VF_PendingExists();
+            pendingVaultOnlyDisableAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+            emit VaultOnlyDisableProposed(pendingVaultOnlyDisableAt);
+            _log("vault_only_disable_proposed");
+        }
+    }
+
+    /// @notice Apply a pending vault-only disable after the 48-hour timelock.
+    function applyVaultOnlyDisable() external onlyOwner {
+        if (pendingVaultOnlyDisableAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingVaultOnlyDisableAt) revert VF_TimelockActive();
+        pendingVaultOnlyDisableAt = 0;
+        vaultOnly = false;
+        emit VaultOnlySet(false);
+        _log("vault_only_off");
+    }
+
+    /// @notice Cancel a pending vault-only disable.
+    function cancelVaultOnlyDisable() external onlyOwner {
+        if (pendingVaultOnlyDisableAt == 0) revert VF_NoPending();
+        pendingVaultOnlyDisableAt = 0;
+        emit VaultOnlyDisableCancelled();
+        _log("vault_only_disable_cancelled");
     }
 
     /// One-way switch that makes policy non-optional post-launch.
@@ -926,7 +960,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     if (_ecoSink != treasurySink && _ecoSink != sanctumSink && _ecoSink != ecosystemDistributor) revert VF_InvalidFeeSink();
                 }
                 if (_burnSink != address(0)) {
-                    if (_burnSink != treasurySink && _burnSink != sanctumSink) revert VF_InvalidFeeSink();
+                    // L-1 FIX: Also accept ecosystemDistributor as a valid burn sink
+                    if (_burnSink != treasurySink && _burnSink != sanctumSink && _burnSink != ecosystemDistributor) revert VF_InvalidFeeSink();
                 }
 
                 if (_burnAmt > 0) {
@@ -1167,8 +1202,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // 3. Daily transfer limit tracking: validate using projected post-fee flow,
         // but persist the actual delivered amount later in _transfer().
         // Use a rolling 24-hour window instead of UTC day boundaries.
-        // H-2 FIX: Read-only window check — do NOT mutate dailyTransferred/dailyResetTime here.
-        // State mutations belong solely in _recordActualDailyTransfer to avoid double-reset.
+        // H-2 FIX: Window check does NOT mutate dailyTransferred/dailyResetTime here.
+        // Note: lastTransferTime[from] IS mutated below for the cooldown check.
+        // State mutations of dailyTransferred belong solely in _recordActualDailyTransfer.
         cachedWindowStart = dailyResetTime[from];
         bool windowExpired = (cachedWindowStart == 0 || block.timestamp >= cachedWindowStart + 1 days);
         if (dailyTransferLimit > 0) {

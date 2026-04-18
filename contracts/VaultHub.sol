@@ -182,10 +182,18 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // IVaultHub compatibility wrapper
     /// @notice Add a DAO recovery approver multisig.
     /// @param multisig Address that may approve force recovery operations.
+    /// @dev C-2 FIX: Routes through timelocked setRecoveryApprover path to prevent instant authorization.
+    ///      Instant approval grants `executeRecoveryRotation` power and must be subject to the same
+    ///      48-hour timelock as any other recovery approver change.
     function setDAORecoveryMultisig(address multisig) external onlyOwner {
         if (multisig == address(0)) revert VH_Zero();
-        isRecoveryApprover[multisig] = true;
-        _log("recovery_multisig_set");
+        if (pendingRecoveryApproverAt != 0) revert VH_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingRecoveryApproverAddr = multisig;
+        pendingRecoveryApproverStatus = true;
+        pendingRecoveryApproverAt = effectiveAt;
+        emit RecoveryApproverProposed(multisig, true, effectiveAt);
+        _log("recovery_multisig_scheduled");
     }
 
     // IVaultHub compatibility wrapper
