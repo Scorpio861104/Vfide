@@ -970,7 +970,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         if (!whaleLimitExempt[from] && !whaleLimitExempt[custodyTo] &&
             !systemExempt[from] && !systemExempt[logicalTo]) {
-            _recordActualDailyTransfer(from, remaining);
+            // M-7 FIX: Record gross `amount` for daily whale-limit accounting, not `remaining`.
+            // The whale check at step 2 uses `amount` (gross), so daily tracking must use the
+            // same value to ensure the limit is consistently enforced.  Using `remaining` (post-fee)
+            // let users exceed the daily cap by a fee fraction on every transfer.
+            _recordActualDailyTransfer(from, amount);
         }
 
         // ── Fraud escrow: flagged senders get 30-day delay ─────

@@ -36,6 +36,7 @@ contract EmergencyControl is ReentrancyGuard {
     event MemberAdded(address member);
     event MemberRemoved(address member);
     event FoundationRotated(address indexed oldFoundation, address indexed newFoundation);
+    event FoundationRotationProposed(address indexed newFoundation, uint64 effectiveAt);
     event CommitteeVote(address indexed member, bool halt, uint8 approvals, string reason);
     event CommitteeTriggered(bool halt, string reason);
     event DAOToggled(bool halt, string reason);
@@ -80,6 +81,10 @@ contract EmergencyControl is ReentrancyGuard {
     }
     PendingModules public pendingModules;
     uint64 public pendingModulesAt;
+
+    /// @notice 48h timelock state for foundation rotation (M-5).
+    address public pendingFoundation;
+    uint64  public pendingFoundationAt;
 
     /// @notice 24-hour queue for foundation-initiated committee member changes.
     /// @dev DAO-initiated changes are immediate (DAO already has its own governance timelock).
@@ -145,6 +150,9 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     function setCooldown(uint64 secondsMin) external onlyDAO nonReentrant {
+        // L-2 FIX: Zero cooldown would disable anti-flap protection entirely.
+        // Enforce a minimum of 5 minutes so rapid repeated toggles are always blocked.
+        require(secondsMin >= 5 minutes, "EC: cooldown too short");
         minCooldown = secondsMin;
         emit CooldownSet(secondsMin);
         _log("ec_cooldown_set");
@@ -294,14 +302,42 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_threshold_set");
     }
 
-    /// @notice Rotate foundation address (only callable by current foundation)
+    /// @notice Propose rotating the foundation address (48h timelock).
+    /// @dev M-5 FIX: An instant unilateral foundation rotation was a key compromise vector.
+    ///      An attacker who obtains the foundation key could queue committee changes within
+    ///      24h of rotating.  The 48h timelock gives the DAO time to observe and intervene.
+    ///      Both the current foundation AND the DAO can apply or cancel the rotation.
     function rotateFoundation(address newFoundation) external nonReentrant {
         require(msg.sender == foundation, "EC: not foundation");
         require(newFoundation != address(0), "EC: foundation=0");
+        require(pendingFoundationAt == 0, "EC: rotation pending");
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingFoundation = newFoundation;
+        pendingFoundationAt = effectiveAt;
+        emit FoundationRotationProposed(newFoundation, effectiveAt);
+        _log("ec_foundation_rotation_proposed");
+    }
+
+    /// @notice Apply a pending foundation rotation after the 48-hour timelock.
+    function applyFoundationRotation() external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not authorized");
+        require(pendingFoundationAt != 0, "EC: no pending rotation");
+        require(block.timestamp >= pendingFoundationAt, "EC: rotation timelock");
         address old = foundation;
-        foundation = newFoundation;
-        emit FoundationRotated(old, newFoundation);
+        foundation = pendingFoundation;
+        delete pendingFoundation;
+        delete pendingFoundationAt;
+        emit FoundationRotated(old, foundation);
         _log("ec_foundation_rotated");
+    }
+
+    /// @notice Cancel a pending foundation rotation.
+    function cancelFoundationRotation() external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not authorized");
+        require(pendingFoundationAt != 0, "EC: no pending rotation");
+        delete pendingFoundation;
+        delete pendingFoundationAt;
+        _log("ec_foundation_rotation_cancelled");
     }
 
     // ───────────────────────────────── Actions

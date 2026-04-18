@@ -141,8 +141,25 @@ contract DevReserveVestingVault is ReentrancyGuard {
         return v - totalClaimed;
     }
 
-    function beneficiaryVault() public returns (address) {
+    /// @notice Return the beneficiary's current vault address without creating one.
+    /// @dev M-11 FIX: The old `beneficiaryVault()` had a misleading view-like name but
+    ///      was state-mutating (it called `ensureVault` which deploys a vault as a side
+    ///      effect).  Off-chain tooling calling this for a balance check would accidentally
+    ///      create a vault and spend gas.  This pure view reads the existing vault mapping.
+    function beneficiaryVaultAddress() public view returns (address) {
+        return IVaultHub(VAULT_HUB).vaultOf(BENEFICIARY);
+    }
+
+    /// @notice Ensure the beneficiary vault exists, creating it if necessary.
+    /// @dev Explicitly state-mutating; used only inside `claim()`.
+    function getOrCreateBeneficiaryVault() internal returns (address) {
         return IVaultHub(VAULT_HUB).ensureVault(BENEFICIARY);
+    }
+
+    /// @dev Kept for external backward compatibility only (e.g. existing monitoring scripts).
+    ///      Prefer `beneficiaryVaultAddress()` for read-only lookups.
+    function beneficiaryVault() public returns (address) {
+        return getOrCreateBeneficiaryVault();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -173,7 +190,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
         if (startTimestamp == 0) revert DV_NotStarted();
 
-        address vault = beneficiaryVault();
+        address vault = getOrCreateBeneficiaryVault();
 
         // SecurityHub lock check removed — non-custodial
 

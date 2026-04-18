@@ -223,11 +223,12 @@ contract FraudRegistry is ReentrancyGuard {
 
     /// @notice Check if transfers from this address require escrow
     /// @param user Address to check
-    /// @return required True if flagged (3+ complaints) and not cleared
+    /// @return required True if flagged (3+ complaints) or permanently banned
+    /// @dev H-3 FIX: Permanently banned users must also have escrow applied.
+    ///      Previously `isPermanentlyBanned` silently removed the escrow restriction,
+    ///      meaning the most severely sanctioned users had the fewest transfer restrictions.
     function requiresEscrow(address user) external view returns (bool) {
-        return isFlagged[user] && !isPermanentlyBanned[user];
-        // Permanently banned users can't use services at all,
-        // so escrow is moot for them
+        return isFlagged[user] || isPermanentlyBanned[user];
     }
 
     // ═══════════════════════════════════════════════════════════

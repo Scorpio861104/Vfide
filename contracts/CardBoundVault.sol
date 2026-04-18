@@ -234,6 +234,14 @@ contract CardBoundVault is ReentrancyGuard {
 
         guardianThreshold = _guardianThreshold;
         emit GuardianThresholdSet(_guardianThreshold);
+
+        // L-5 FIX: Enable withdrawal queue protection by default.
+        // Any transfer >= dailyTransferLimit requires the 7-day queue, protecting
+        // against compromised wallet keys.  The admin can adjust or disable this
+        // via setLargeTransferThreshold() at any time.
+        largeTransferThreshold = _dailyTransferLimit;
+        emit LargeTransferThresholdSet(_dailyTransferLimit);
+
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
 

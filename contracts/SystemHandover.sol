@@ -89,6 +89,9 @@ contract SystemHandover {
 
     function setParams(uint64 _monthsDelay, uint16 _minAvg, uint8 _maxExt, uint64 _extSpan) external onlyDev {
         if (_monthsDelay<90 days) _monthsDelay=90 days;
+        // M-4 FIX: Once the handover is armed, the delay may only be extended, never shortened.
+        // Without this guard the dev team could arm for 6 months then immediately reduce to 90 days.
+        if (start != 0) require(_monthsDelay >= monthsDelay, "SH: cannot shorten after arm");
         monthsDelay=_monthsDelay; minAvgCouncilScore=_minAvg; maxExtensions=_maxExt; extensionSpan=_extSpan;
         if (start!=0) handoverAt = start + monthsDelay;
         emit ParamsSet(monthsDelay,minAvgCouncilScore,maxExtensions,extensionSpan);

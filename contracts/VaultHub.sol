@@ -65,6 +65,13 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     uint256 public pendingCardDailyLimit;
     uint64 public pendingCardLimitsAt;
 
+    // 48h timelock state for setRecoveryApprover and setCouncil (H-1)
+    address public pendingRecoveryApproverAddr;
+    bool    public pendingRecoveryApproverStatus;
+    uint64  public pendingRecoveryApproverAt;
+    address public pendingCouncil;
+    uint64  public pendingCouncilAt;
+
     /// Events
     event VFIDEScheduled_VH(address indexed vfide, uint64 effectiveAt);
     event ProofLedgerScheduled_VH(address indexed ledger, uint64 effectiveAt);
@@ -75,6 +82,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     event CouncilSet(address council);
     event CardDefaultLimitsProposed(uint256 maxPerTransfer, uint256 dailyLimit, uint64 effectiveAt);
     event CardDefaultLimitsSet(uint256 maxPerTransfer, uint256 dailyLimit);
+    event RecoveryApproverProposed(address indexed approver, bool status, uint64 effectiveAt);
+    event RecoveryApproverSet(address indexed approver, bool status);
+    event CouncilProposed(address indexed council, uint64 effectiveAt);
 
     event GuardianSetupCompleted(address indexed owner, address indexed vault);
 
@@ -94,6 +104,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_RecoveryDisabled();
     error VH_GuardianSetupRequired(); // M-3 FIX: grace period expired, setup must be completed first
     error VH_InvalidLimits();
+    error VH_PendingExists();
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
@@ -115,6 +126,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param _vfide New VFIDE token address.
     function setVFIDE(address _vfide) external onlyOwner {
         if (_vfide == address(0)) revert VH_Zero();
+        if (pendingVFIDEAt_VH != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingVFIDE_VH = _vfide;
         pendingVFIDEAt_VH = effectiveAt;
@@ -127,6 +139,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param token New VFIDE token address.
     function setVFIDEToken(address token) external onlyOwner {
         if (token == address(0)) revert VH_Zero();
+        if (pendingVFIDEAt_VH != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingVFIDE_VH = token;
         pendingVFIDEAt_VH = effectiveAt;
@@ -204,22 +217,70 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _log("hub_dao_set");
     }
     
-    /// @notice Add or remove an address allowed to approve force recovery.
-    /// @param approver Address to update.
+    /// @notice Propose adding or removing a recovery approver (48h timelock).
+    /// @dev H-1 FIX: Instant approval grants `executeRecoveryRotation` power — must be timelocked.
+    /// @param approver Address to authorize or revoke.
     /// @param status True to authorize, false to revoke.
     function setRecoveryApprover(address approver, bool status) external onlyOwner {
         if (approver == address(0)) revert VH_Zero();
+        if (pendingRecoveryApproverAt != 0) revert VH_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingRecoveryApproverAddr = approver;
+        pendingRecoveryApproverStatus = status;
+        pendingRecoveryApproverAt = effectiveAt;
+        emit RecoveryApproverProposed(approver, status, effectiveAt);
+        _log(status ? "recovery_approver_proposed_add" : "recovery_approver_proposed_remove");
+    }
+
+    /// @notice Apply a pending recovery approver change after the 48-hour timelock.
+    function applyRecoveryApprover() external onlyOwner {
+        if (pendingRecoveryApproverAt == 0 || block.timestamp < pendingRecoveryApproverAt) revert VH_Timelock();
+        address approver = pendingRecoveryApproverAddr;
+        bool status = pendingRecoveryApproverStatus;
         isRecoveryApprover[approver] = status;
+        emit RecoveryApproverSet(approver, status);
+        delete pendingRecoveryApproverAddr;
+        delete pendingRecoveryApproverStatus;
+        delete pendingRecoveryApproverAt;
         _log(status ? "recovery_approver_added" : "recovery_approver_removed");
     }
 
-    /// @notice Set council contract used for approver fallback checks.
+    /// @notice Cancel a pending recovery approver change.
+    function cancelRecoveryApprover() external onlyOwner {
+        if (pendingRecoveryApproverAt == 0) revert VH_Timelock();
+        delete pendingRecoveryApproverAddr;
+        delete pendingRecoveryApproverStatus;
+        delete pendingRecoveryApproverAt;
+    }
+
+    /// @notice Propose updating the council contract (48h timelock).
+    /// @dev H-1 FIX: Council used in approver fallback checks — must be timelocked.
     /// @param _council Council election/registry contract.
     function setCouncil(address _council) external onlyOwner {
         if (_council == address(0)) revert VH_Zero();
-        council = _council;
-        emit CouncilSet(_council);
+        if (pendingCouncilAt != 0) revert VH_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingCouncil = _council;
+        pendingCouncilAt = effectiveAt;
+        emit CouncilProposed(_council, effectiveAt);
+        _log("hub_council_proposed");
+    }
+
+    /// @notice Apply a pending council update after the 48-hour timelock.
+    function applyCouncil() external onlyOwner {
+        if (pendingCouncilAt == 0 || block.timestamp < pendingCouncilAt) revert VH_Timelock();
+        council = pendingCouncil;
+        emit CouncilSet(pendingCouncil);
+        delete pendingCouncil;
+        delete pendingCouncilAt;
         _log("hub_council_set");
+    }
+
+    /// @notice Cancel a pending council update.
+    function cancelCouncil() external onlyOwner {
+        if (pendingCouncilAt == 0) revert VH_Timelock();
+        delete pendingCouncil;
+        delete pendingCouncilAt;
     }
 
     // ——— Deterministic address prediction for UX
