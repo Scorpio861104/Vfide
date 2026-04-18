@@ -286,7 +286,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     // ADMIN
     // ═══════════════════════════════════════════════════════════
 
-    function setMaxParticipants(uint256 _max) external onlyRole(ADMIN_ROLE) {
+    function setMaxParticipants(uint256 _max) external virtual onlyRole(ADMIN_ROLE) {
         maxParticipants = _max;
     }
 

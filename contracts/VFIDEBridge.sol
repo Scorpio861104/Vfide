@@ -63,6 +63,14 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Fee collector address
     address public feeCollector;
 
+    /// @notice Secondary cosigner required to activate a refund window when set.
+    /// @dev When non-zero, owner proposes a refund window and cosigner must approve it.
+    ///      If zero, owner alone can open refund windows (backwards-compatible default).
+    address public refundWindowCosigner;
+
+    /// @notice Pending refund window proposals awaiting cosigner approval.
+    mapping(bytes32 => bool) public pendingRefundWindowProposal;
+
     /// @notice Total bridged out from this chain
     uint256 public totalBridgedOut;
 
@@ -178,6 +186,12 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event BridgeFeeCancelled();
         event BridgeRefunded(address indexed sender, bytes32 indexed txId, uint256 amount);
     event BridgeRefundWindowOpened(bytes32 indexed txId, uint256 refundableAfter);
+    /// @notice Emitted when owner proposes a refund window pending cosigner approval.
+    event BridgeRefundWindowProposed(bytes32 indexed txId);
+    /// @notice Emitted when cosigner approves and activates a proposed refund window.
+    event BridgeRefundWindowCosigned(bytes32 indexed txId, uint256 refundableAfter);
+    /// @notice Emitted when the refund window cosigner address is updated.
+    event RefundWindowCosignerSet(address indexed cosigner);
         /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
         uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
         mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
@@ -856,6 +870,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      *      transfer (e.g., destination had insufficient liquidity and no confirmation was sent back).
      *      Calling this when delivery already succeeded would allow double-spend — use adminMarkBridgeExecuted
      *      when delivery succeeded.
+     *
+     *      If refundWindowCosigner is set, this call only *proposes* the refund window. The cosigner
+     *      must then call approveRefundWindow(txId) to activate it, reducing single-admin trust risk.
+     *      If refundWindowCosigner is address(0), the window opens immediately (backwards-compatible).
+     *
      * @param txId The bridge transaction ID to open a refund window for.
      */
     function openBridgeRefundWindow(bytes32 txId) external onlyOwner {
@@ -863,14 +882,55 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         require(btx.sender != address(0), "VFIDEBridge: unknown tx");
         require(!btx.executed, "VFIDEBridge: already executed");
         require(bridgeRefundableAfter[txId] == 0, "VFIDEBridge: window already open");
+        require(!pendingRefundWindowProposal[txId], "VFIDEBridge: proposal already pending");
+
+        if (refundWindowCosigner == address(0)) {
+            // No cosigner configured: owner alone activates the window immediately.
+            bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
+            emit BridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
+        } else {
+            // Cosigner is set: propose only; cosigner must call approveRefundWindow to activate.
+            pendingRefundWindowProposal[txId] = true;
+            emit BridgeRefundWindowProposed(txId);
+        }
+    }
+
+    /**
+     * @notice Cosigner approves a pending refund window proposal, activating the user refund path.
+     * @dev Only callable by refundWindowCosigner. Validates the transaction is still unexecuted and
+     *      the window has not already been opened by another path.
+     * @param txId The bridge transaction ID previously proposed by the owner.
+     */
+    function approveRefundWindow(bytes32 txId) external {
+        require(msg.sender == refundWindowCosigner, "VFIDEBridge: not cosigner");
+        require(pendingRefundWindowProposal[txId], "VFIDEBridge: no pending proposal");
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        require(btx.sender != address(0), "VFIDEBridge: unknown tx");
+        require(!btx.executed, "VFIDEBridge: already executed");
+        require(bridgeRefundableAfter[txId] == 0, "VFIDEBridge: window already open");
+
+        delete pendingRefundWindowProposal[txId];
         bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
+        emit BridgeRefundWindowCosigned(txId, bridgeRefundableAfter[txId]);
         emit BridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
+    }
+
+    /**
+     * @notice Set or clear the refund window cosigner address.
+     * @dev Setting to address(0) reverts to owner-only single-approver mode.
+     *      Only callable by owner. No timelock — cosigner is a security enhancement, not a
+     *      privileged role that can steal funds.
+     */
+    function setRefundWindowCosigner(address cosigner) external onlyOwner {
+        refundWindowCosigner = cosigner;
+        emit RefundWindowCosignerSet(cosigner);
     }
 
     /**
      * @notice F-25 FIX: Admin can cancel a refund window after confirming the bridge delivery succeeded.
      * @dev Updated for C-1 FIX: no longer requires a pre-existing refund window so it can be
      *      used proactively to mark delivery before any refund window is opened.
+     *      Also cancels any pending refund window proposal to prevent activation after delivery.
      */
     function adminMarkBridgeExecuted(bytes32 txId) external onlyOwner {
         BridgeTransaction storage btx = bridgeTransactions[txId];
@@ -880,6 +940,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         if (pendingOutboundAmount >= btx.amount) {
             pendingOutboundAmount -= btx.amount;
         }
+        delete pendingRefundWindowProposal[txId]; // cancel any pending proposal
         delete bridgeRefundableAfter[txId];
         emit BridgeDeliveryConfirmed(txId);
     }

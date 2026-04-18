@@ -215,6 +215,11 @@ contract Seer is ReentrancyGuard {
     uint8 public daoScoreWeight = 100;     // 100% from DAO-set/automated scores
     uint8 public onChainScoreWeight = 0;   // 0% from external on-chain sources (enable via DAO)
 
+    /// @notice Minimum on-chain weight that must be maintained once active score sources are registered.
+    /// @dev Prevents a captured DAO from silently reclaiming 100% score authority after community
+    ///      oracle sources have been established. Value is 10 (= 10%).
+    uint8 public constant MIN_ONCHAIN_WEIGHT_WITH_SOURCES = 10;
+
     // policy thresholds (DAO-tunable) - 10x scale for better precision
     uint16 public constant MIN_SCORE = 10;
     uint16 public constant MAX_SCORE = 10000;
@@ -424,9 +429,19 @@ contract Seer is ReentrancyGuard {
      * @notice Set the balance between DAO-set and on-chain scores
      * @param daoWeight Weight for DAO-set scores (0-100)
      * @param onChainWeight Weight for on-chain sources (0-100)
+     * @dev Once active score sources have been registered, on-chain weight cannot be reduced
+     *      below MIN_ONCHAIN_WEIGHT_WITH_SOURCES. This prevents a captured DAO from silently
+     *      reclaiming full score authority after community reputation infrastructure is deployed.
      */
     function setDecentralizationWeights(uint8 daoWeight, uint8 onChainWeight) external onlyDAO nonReentrant {
         if (daoWeight + onChainWeight != 100) revert TRUST_Bounds();
+        // Count active score sources to determine if the floor applies.
+        uint256 activeSources = 0;
+        for (uint256 i = 0; i < scoreSources.length;) {
+            if (scoreSources[i].active) activeSources++;
+            unchecked { i++; }
+        }
+        if (activeSources > 0 && onChainWeight < MIN_ONCHAIN_WEIGHT_WITH_SOURCES) revert TRUST_Bounds();
         daoScoreWeight = daoWeight;
         onChainScoreWeight = onChainWeight;
         emit DecentralizationUpdated(daoWeight, onChainWeight);

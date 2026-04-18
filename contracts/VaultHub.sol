@@ -28,6 +28,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // M-3 FIX: Vaults have 30 days after creation to complete guardian setup.
     // After this window, certain critical operations require setup to be complete.
     uint256 public constant GUARDIAN_SETUP_GRACE = 30 days;
+    /// @notice How early before the guardian setup deadline a warning can be emitted.
+    uint256 public constant GUARDIAN_SETUP_WARNING = 7 days;
 
     /// Registry
     mapping(address => address) public vaultOf;
@@ -87,6 +89,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     event CouncilProposed(address indexed council, uint64 effectiveAt);
 
     event GuardianSetupCompleted(address indexed owner, address indexed vault);
+    /// @notice Emitted when a vault is within GUARDIAN_SETUP_WARNING of its guardian setup deadline.
+    event GuardianSetupExpiring(address indexed vault, address indexed owner, uint256 deadline);
 
     /// Errors
     error VH_Zero();
@@ -429,6 +433,37 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         if (guardianSetupComplete[vault]) return false;
         uint256 created = vaultCreatedAt[vault];
         return created > 0 && block.timestamp > created + GUARDIAN_SETUP_GRACE;
+    }
+
+    /// @notice Returns the guardian setup status and time remaining for a vault.
+    /// @return remaining Seconds until the guardian setup deadline (0 if expired or complete).
+    /// @return isExpired True if the grace period has elapsed without setup completion.
+    /// @return isComplete True if guardian setup has already been completed.
+    function guardianSetupTimeRemaining(address vault)
+        external
+        view
+        returns (uint256 remaining, bool isExpired, bool isComplete)
+    {
+        isComplete = guardianSetupComplete[vault];
+        if (isComplete) return (0, false, true);
+        uint256 created = vaultCreatedAt[vault];
+        if (created == 0) return (0, false, false);
+        uint256 deadline = created + GUARDIAN_SETUP_GRACE;
+        if (block.timestamp >= deadline) return (0, true, false);
+        remaining = deadline - block.timestamp;
+    }
+
+    /// @notice Anyone can call this to emit a warning event for a vault approaching its guardian setup deadline.
+    /// @dev Emits GuardianSetupExpiring if setup is incomplete and within GUARDIAN_SETUP_WARNING of the deadline.
+    ///      Use this to trigger off-chain alerts (indexers, bots, UI) before the window expires.
+    function emitGuardianSetupWarning(address vault) external {
+        if (guardianSetupComplete[vault]) return;
+        uint256 created = vaultCreatedAt[vault];
+        if (created == 0) return;
+        uint256 deadline = created + GUARDIAN_SETUP_GRACE;
+        if (block.timestamp >= deadline) return;                      // already expired
+        if (block.timestamp + GUARDIAN_SETUP_WARNING < deadline) return; // too early to warn
+        emit GuardianSetupExpiring(vault, ownerOfVault[vault], deadline);
     }
 
     function executeRecoveryRotation(address vault, address newWallet) external nonReentrant {
