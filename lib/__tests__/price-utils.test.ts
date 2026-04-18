@@ -94,6 +94,10 @@ describe('Price Utils', () => {
       expect(formatPrice(100, 'EUR')).toMatch(/100.*€/)
     })
 
+    it('uses locale fallback for supported unknown-locale currencies', () => {
+      expect(formatPrice(100, 'JPY')).toContain('¥')
+    })
+
     it('handles non-finite value', () => {
       expect(formatPrice(Infinity)).toBe('$0.00')
     })
@@ -134,6 +138,11 @@ describe('Price Utils', () => {
 
     it('formats converted USD amount in target currency', () => {
       expect(formatConvertedUsd(10, 'EUR')).toMatch(/9.20|9,20/)
+    })
+
+    it('supports default USD currency argument', () => {
+      expect(convertUsdToCurrency(10)).toBe(10)
+      expect(formatConvertedUsd(10)).toBe('$10.00')
     })
   })
 })

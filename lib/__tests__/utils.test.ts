@@ -6,10 +6,17 @@ import {
     formatTokenAmount,
     formatUSD,
     getScoreTierColor,
+    isNonZeroAddress,
+    isValidAddress,
     parseTokenAmount,
+    safeInt,
+    safeNumber,
+    safePercentage,
+    safePositive,
     safeSessionStorage,
     safeLocalStorage,
     timeUntil,
+    truncateAddress,
     truncate,
     validateAddress,
 } from '../utils'
@@ -180,6 +187,25 @@ describe('formatAddress', () => {
   })
 })
 
+describe('address helpers', () => {
+  const validAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+
+  it('isValidAddress accepts valid format and rejects invalid input', () => {
+    expect(isValidAddress(validAddress)).toBe(true)
+    expect(isValidAddress('bad')).toBe(false)
+  })
+
+  it('isNonZeroAddress rejects zero address', () => {
+    expect(isNonZeroAddress(validAddress)).toBe(true)
+    expect(isNonZeroAddress('0x0000000000000000000000000000000000000000')).toBe(false)
+  })
+
+  it('truncateAddress truncates only valid 42-char addresses', () => {
+    expect(truncateAddress(validAddress)).toMatch(/\.\.\./)
+    expect(truncateAddress('not-an-address')).toBe('not-an-address')
+  })
+})
+
 describe('formatNumber', () => {
   it('formats number with commas', () => {
     expect(formatNumber(1000)).toBe('1,000')
@@ -231,6 +257,10 @@ describe('parseTokenAmount', () => {
     expect(parseTokenAmount('1.5')).toBe(BigInt('1500000000000000000'))
   })
 
+  it('pads fractional component to token decimals', () => {
+    expect(parseTokenAmount('1.234', 6)).toBe(BigInt('1234000'))
+  })
+
   it('handles custom decimals', () => {
     expect(parseTokenAmount('1', 6)).toBe(BigInt('1000000'))
   })
@@ -244,6 +274,27 @@ describe('parseTokenAmount', () => {
     expect(() => parseTokenAmount('abc')).toThrow('Invalid token amount')
     expect(() => parseTokenAmount('.')).toThrow('Invalid token amount')
     expect(() => parseTokenAmount('1.2.3')).toThrow('Invalid token amount')
+  })
+})
+
+describe('safe numeric helpers', () => {
+  it('safeNumber uses fallback for nullish values', () => {
+    expect(safeNumber(null, 7)).toBe(7)
+    expect(safeNumber(undefined, 9)).toBe(9)
+  })
+
+  it('safeInt floors non-integer values', () => {
+    expect(safeInt(3.9)).toBe(3)
+  })
+
+  it('safePercentage rejects out of range values', () => {
+    expect(safePercentage(50)).toBe(50)
+    expect(safePercentage(101, 8)).toBe(8)
+  })
+
+  it('safePositive rejects negative values', () => {
+    expect(safePositive(10)).toBe(10)
+    expect(safePositive(-1, 5)).toBe(5)
   })
 })
 
