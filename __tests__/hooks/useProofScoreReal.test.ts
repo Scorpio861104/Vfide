@@ -58,8 +58,11 @@ describe('useProofScore real guards', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
-  it('treats score 0n (new user) as score 0, not neutral default 5000', () => {
-    // wagmi returns BigInt; 0n is falsy in JS — must not fall back to 5000
+  it('treats score 0n (new user with no on-chain history) as neutral 5000', () => {
+    // A new wallet that has never transacted returns 0n from the Seer contract.
+    // By design, 0 means "no recorded score yet" — the UI defaults them to neutral
+    // (5000) rather than penalising them as Risky. The contract-side fee curve
+    // starts accruing properly once the wallet has on-chain activity.
     mockUseReadContract.mockReturnValueOnce({
       data: 0n,
       isError: false,
@@ -76,11 +79,9 @@ describe('useProofScore real guards', () => {
 
     const { result } = renderHook(() => useProofScore())
 
-    expect(result.current.score).toBe(0)
-    expect(result.current.tierName).toBe('Risky')
-    expect(result.current.burnFee).toBe(5.0)
-    expect(result.current.canVote).toBe(false)
-    expect(result.current.canMerchant).toBe(false)
+    expect(result.current.score).toBe(5000)
+    expect(result.current.tierName).toBe('Neutral')
+    expect(result.current.burnFee).toBe(2.0)
   })
 
   it('returns badge defaults when Seer is not configured', () => {

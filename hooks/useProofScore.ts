@@ -36,7 +36,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
     },
   })
 
-  const scoreNum = data !== undefined ? Number(data) : 5000 // Default neutral score (10x scale)
+  const scoreNum = data ? Number(data) : 5000 // Default neutral score (10x scale); new users with no on-chain score start at 5000
   
   // Get current tier from unified constants
   const currentTier = getScoreTierObject(scoreNum)
