@@ -47,6 +47,10 @@ jest.mock('@/lib/vfide-hooks', () => ({
   useUserBadges: () => ({ badgeIds: [], isLoading: false }),
 }));
 
+jest.mock('@/hooks/useProofScore', () => ({
+  useProofScore: () => ({ score: 7600, burnFee: 1.5, isLoading: false }),
+}));
+
 jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
@@ -171,7 +175,7 @@ describe('Dashboard page logic pathways', () => {
     renderDashboardPage();
 
     expect(screen.getByText(/Dashboard/i)).toBeTruthy();
-    expect(screen.getAllByText(/ProofScoreRing 4500/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/ProofScoreRing 7600/i).length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /Fee Sim/i }));
     expect(await screen.findByRole('heading', { name: /Fee Simulator/i })).toBeTruthy();
