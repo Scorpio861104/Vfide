@@ -77,7 +77,7 @@ describe('useVaultHub', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'userVaults',
+        functionName: 'vaultOf',
       })
       
       expect(result.data).toBe(MOCK_VAULT)
@@ -98,7 +98,7 @@ describe('useVaultHub', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'userVaults',
+        functionName: 'vaultOf',
       })
       
       expect(result.data).toBe(MOCK_ZERO)
@@ -125,7 +125,7 @@ describe('useVaultHub', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'userVaults',
+        functionName: 'vaultOf',
       })
       
       expect(result.isLoading).toBe(true)
@@ -146,7 +146,7 @@ describe('useVaultHub', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'userVaults',
+        functionName: 'vaultOf',
       })
       
       expect(result.error).toBeDefined()

@@ -151,7 +151,7 @@ describe('useDAOHooks', () => {
       await result.writeContractAsync({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'castVote',
+        functionName: 'vote',
         args: [BigInt(1), 1], // Vote FOR (1)
       })
       
@@ -361,7 +361,7 @@ describe('Council Hooks', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'getCurrentElection',
+        functionName: 'getElectionStatus',
       })
       
       expect(result.data?.isActive).toBe(true)
@@ -400,7 +400,7 @@ describe('Timelock Hooks', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'getDelay',
+        functionName: 'delay',
       })
       
       const delayDays = Number(result.data) / 86400
@@ -422,7 +422,7 @@ describe('Timelock Hooks', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'getTimestamp',
+        functionName: 'getTransactionStatus',
         args: ['0xoperationId'],
       })
       
