@@ -45,11 +45,12 @@ export function OverviewTab({
   });
 
   // breakdown: [daoSetScore, onChainScore, finalScore, daoWeight, onChainWeight, hasVault]
-  const daoSetScore = breakdown ? Number(breakdown[0]) : null;
-  const onChainScore = breakdown ? Number(breakdown[1]) : null;
-  const daoWeight = breakdown ? Number(breakdown[3]) : 30;
-  const onChainWeight = breakdown ? Number(breakdown[4]) : 70;
-  const hasVault = breakdown ? Boolean(breakdown[5]) : null;
+  const bd = breakdown as readonly [bigint, bigint, bigint, bigint, bigint, boolean] | undefined;
+  const daoSetScore = bd ? Number(bd[0]) : null;
+  const onChainScore = bd ? Number(bd[1]) : null;
+  const daoWeight = bd ? Number(bd[3]) : 30;
+  const onChainWeight = bd ? Number(bd[4]) : 70;
+  const hasVault = bd ? Boolean(bd[5]) : null;
 
   const breakdownRows = [
     {

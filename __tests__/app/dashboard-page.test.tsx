@@ -20,6 +20,7 @@ const renderDashboardPage = () => {
 jest.mock('wagmi', () => ({
   useAccount: () => mockAccountState,
   useChainId: () => 8453,
+  useReadContract: () => ({ data: undefined, isLoading: false }),
 }));
 
 jest.mock('@/lib/chains', () => ({
