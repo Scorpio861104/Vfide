@@ -90,9 +90,10 @@
     "deploy:arm-handover:sepolia": "hardhat run contracts/scripts/arm-handover.ts --network sepolia",
     "deploy:arm-handover:mainnet": "hardhat run contracts/scripts/arm-handover.ts --network mainnet",
     "deploy:all": "hardhat run scripts/deploy-all.ts --network",
+    "deploy:phase1": "hardhat run contracts/scripts/deploy-phase1.ts --network",
     "apply:all": "hardhat run scripts/apply-all.ts --network",
     "deploy:phase2": "hardhat run scripts/deploy-phase2.ts --network",
-    "deploy:phase3": "hardhat run scripts/deploy-phase3.ts --network",
+    "deploy:phase3": "hardhat run contracts/scripts/deploy-phase3.ts --network",
     "deploy:phase4": "hardhat run scripts/deploy-phase4.ts --network",
     "deploy:phase5": "hardhat run scripts/deploy-phase5.ts --network",
     "apply:phase2": "hardhat run scripts/apply-phase2.ts --network",
@@ -170,10 +171,7 @@
     "chromatic": "chromatic --exit-zero-on-changes",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish",
-    "test:ui": "vitest --ui",
-    "test:vitest": "vitest",
-    "test:vitest:watch": "vitest --watch"
+    "changeset:publish": "changeset publish"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1029.0",

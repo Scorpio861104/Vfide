@@ -88,27 +88,7 @@ jobs:
 
   seer-watcher:
     name: Seer watcher verifiers
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci --prefer-offline
-
-      - name: Compile contracts
-        run: npm run -s contract:compile
-
-      - name: Run Seer watcher checks
-        run: npm run -s contract:verify:seer:watcher:local
+    uses: ./.github/workflows/seer-watcher.yml
 
   e2e-runtime-matrix:
     name: Runtime E2E Matrix

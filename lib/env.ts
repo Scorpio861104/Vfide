@@ -116,8 +116,10 @@ const envSchema = z.object({
   // Push Notifications
   NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
 
-  // Wagmi Configuration
-  NEXT_PUBLIC_WAGMI_PROJECT_ID: z.string().default(''),
+  // Wagmi / WalletConnect Configuration
+  // Canonical key: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+  // NEXT_PUBLIC_WAGMI_PROJECT_ID is accepted as a legacy fallback in lib/wagmi.ts
+  // but should not be set in new deployments.
   NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: z.string().default(''),
 
   // Build Information
@@ -232,9 +234,9 @@ function parseEnv(): Environment {
     // Push Notifications
     NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     
-    // Wagmi Configuration
-    NEXT_PUBLIC_WAGMI_PROJECT_ID: process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID,
-    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
+    // Wagmi / WalletConnect Configuration
+    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+      ?? process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID,
     
     // Build Information
     NEXT_PUBLIC_BUILD_ID: process.env.NEXT_PUBLIC_BUILD_ID,
@@ -252,7 +254,7 @@ function parseEnv(): Environment {
       throw new Error('Environment validation failed in production');
     } else {
       logger.warn('⚠️  Some environment variables are missing or invalid. Using defaults.');
-      logger.warn('For production, set these in Vercel: NEXT_PUBLIC_WAGMI_PROJECT_ID, NEXT_PUBLIC_CHAIN_ID, NEXT_PUBLIC_RPC_URL');
+      logger.warn('For production, set these in Vercel: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID, NEXT_PUBLIC_CHAIN_ID, NEXT_PUBLIC_RPC_URL');
       // Return safe defaults in non-production so local development can continue.
       return envSchema.parse({});
     }

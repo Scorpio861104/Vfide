@@ -1,3 +1,5 @@
+# This is the single canonical OpenAPI spec for the Vfide API.
+# Do NOT create a parallel openapi-spec.json — use this file only.
 openapi: 3.0.3
 info:
   title: Vfide API
