@@ -482,7 +482,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
      */
     function setCardDefaultLimits(uint256 _maxPerTransfer, uint256 _dailyLimit) external onlyOwner {
         if (_maxPerTransfer == 0 || _dailyLimit == 0 || _maxPerTransfer > _dailyLimit) revert VH_InvalidLimits();
-        if (pendingCardLimitsAt != 0) revert VH_Timelock();
+        if (pendingCardLimitsAt != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingCardMaxPerTransfer = _maxPerTransfer;
         pendingCardDailyLimit = _dailyLimit;

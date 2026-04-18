@@ -151,7 +151,10 @@ contract EmergencyControl is ReentrancyGuard {
 
     function setCooldown(uint64 secondsMin) external onlyDAO nonReentrant {
         // L-2 FIX: Zero cooldown would disable anti-flap protection entirely.
-        // Enforce a minimum of 5 minutes so rapid repeated toggles are always blocked.
+        // 5 minutes is the minimum because: (a) the breaker is a last-resort emergency
+        // mechanism, not a ping-pong switch; (b) rapid repeated toggles could be used to
+        // DoS the protocol or mask other attacks; (c) 5 min still allows a responsive
+        // unhalt within a single Ethereum epoch after a false-positive halt.
         require(secondsMin >= 5 minutes, "EC: cooldown too short");
         minCooldown = secondsMin;
         emit CooldownSet(secondsMin);
