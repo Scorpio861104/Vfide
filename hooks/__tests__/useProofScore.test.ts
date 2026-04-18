@@ -171,6 +171,25 @@ describe('useProofScore', () => {
 
     expect(result.current.refetch).toBe(mockRefetch)
   })
+
+  it('uses on-chain fee quote when burn router returns fee tuple', () => {
+    ;(wagmi.useReadContract as jest.Mock)
+      .mockReturnValueOnce({ data: BigInt(5000), isError: false, isLoading: false, refetch: jest.fn() })
+      .mockReturnValueOnce({
+        data: [
+          100n * 10n ** 18n,
+          50n * 10n ** 18n,
+          50n * 10n ** 18n,
+        ],
+        isError: false,
+        isLoading: false,
+        refetch: jest.fn(),
+      })
+
+    const { result } = renderHook(() => useProofScore())
+
+    expect(result.current.burnFee).toBe(2)
+  })
 })
 describe('getScoreTier', () => {
   it('returns Elite for scores >= 8000', () => {

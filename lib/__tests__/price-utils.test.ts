@@ -1,4 +1,12 @@
-import { formatPrice, parsePrice, DEFAULT_VFIDE_PRICE, vfideToUsd, formatVfideWithUsd } from '../price-utils'
+import {
+  formatPrice,
+  parsePrice,
+  DEFAULT_VFIDE_PRICE,
+  vfideToUsd,
+  formatVfideWithUsd,
+  convertUsdToCurrency,
+  formatConvertedUsd,
+} from '../price-utils'
 
 describe('Price Utils', () => {
   describe('constants', () => {
@@ -89,6 +97,10 @@ describe('Price Utils', () => {
     it('handles non-finite value', () => {
       expect(formatPrice(Infinity)).toBe('$0.00')
     })
+
+    it('falls back when Intl formatter rejects currency code', () => {
+      expect(formatPrice(12.34, 'INVALID')).toBe('12.34 INVALID')
+    })
   })
 
   describe('parsePrice', () => {
@@ -108,6 +120,20 @@ describe('Price Utils', () => {
 
     it('returns 0 for non-numeric string', () => {
       expect(parsePrice('abc')).toBe(0)
+    })
+  })
+
+  describe('USD conversion helpers', () => {
+    it('converts usd using known exchange rates', () => {
+      expect(convertUsdToCurrency(10, 'EUR')).toBeCloseTo(9.2)
+    })
+
+    it('uses USD fallback for unknown currencies', () => {
+      expect(convertUsdToCurrency(10, 'XYZ')).toBe(10)
+    })
+
+    it('formats converted USD amount in target currency', () => {
+      expect(formatConvertedUsd(10, 'EUR')).toMatch(/9.20|9,20/)
     })
   })
 })

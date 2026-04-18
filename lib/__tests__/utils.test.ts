@@ -7,6 +7,7 @@ import {
     formatUSD,
     getScoreTierColor,
     parseTokenAmount,
+    safeSessionStorage,
     safeLocalStorage,
     timeUntil,
     truncate,
@@ -64,11 +65,16 @@ describe('validateAddress', () => {
   })
 
   it('handles malformed address gracefully (catch block line 164)', () => {
-    // Mock isAddress to throw an error to trigger the catch block
-    const invalidButLengthCorrect = '0x' + 'z'.repeat(40)
-    const result = validateAddress(invalidButLengthCorrect)
-    // Should return the trimmed value as fallback
-    expect(result).toBeTruthy()
+    const viem = require('viem')
+    const isAddressSpy = jest.spyOn(viem, 'isAddress').mockReturnValue(true)
+    const getAddressSpy = jest.spyOn(viem, 'getAddress').mockImplementation(() => {
+      throw new Error('checksum failure')
+    })
+    const validLengthAddress = ' 0x1234567890123456789012345678901234567890 '
+    const result = validateAddress(validLengthAddress)
+    expect(result).toBe('0x1234567890123456789012345678901234567890')
+    isAddressSpy.mockRestore()
+    getAddressSpy.mockRestore()
   })
 })
 
@@ -118,6 +124,44 @@ describe('safeLocalStorage', () => {
       throw new Error('Storage error')
     })
     expect(safeLocalStorage.removeItem('key')).toBe(false)
+    jest.restoreAllMocks()
+  })
+})
+
+describe('safeSessionStorage', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('getItem returns value', () => {
+    sessionStorage.setItem('key', 'value')
+    expect(safeSessionStorage.getItem('key')).toBe('value')
+  })
+
+  it('setItem stores value', () => {
+    expect(safeSessionStorage.setItem('key', 'value')).toBe(true)
+    expect(sessionStorage.getItem('key')).toBe('value')
+  })
+
+  it('removeItem removes value', () => {
+    sessionStorage.setItem('key', 'value')
+    expect(safeSessionStorage.removeItem('key')).toBe(true)
+    expect(sessionStorage.getItem('key')).toBeNull()
+  })
+
+  it('handles storage exceptions', () => {
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage error')
+    })
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('Storage error')
+    })
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new Error('Storage error')
+    })
+    expect(safeSessionStorage.getItem('key')).toBeNull()
+    expect(safeSessionStorage.setItem('key', 'value')).toBe(false)
+    expect(safeSessionStorage.removeItem('key')).toBe(false)
     jest.restoreAllMocks()
   })
 })
