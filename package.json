@@ -171,7 +171,10 @@
     "chromatic": "chromatic --exit-zero-on-changes",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
+    "changeset:publish": "changeset publish",
+    "test:ui": "vitest --ui",
+    "test:vitest": "vitest run",
+    "test:vitest:watch": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1029.0",
