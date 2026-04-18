@@ -58,6 +58,31 @@ describe('useProofScore real guards', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
+  it('treats score 0n (new user) as score 0, not neutral default 5000', () => {
+    // wagmi returns BigInt; 0n is falsy in JS — must not fall back to 5000
+    mockUseReadContract.mockReturnValueOnce({
+      data: 0n,
+      isError: false,
+      isLoading: false,
+      refetch: jest.fn(),
+    })
+    // second call is for computeFees (onChainFeeQuote)
+    mockUseReadContract.mockReturnValueOnce({
+      data: undefined,
+      isError: false,
+      isLoading: false,
+      refetch: jest.fn(),
+    })
+
+    const { result } = renderHook(() => useProofScore())
+
+    expect(result.current.score).toBe(0)
+    expect(result.current.tierName).toBe('Risky')
+    expect(result.current.burnFee).toBe(5.0)
+    expect(result.current.canVote).toBe(false)
+    expect(result.current.canMerchant).toBe(false)
+  })
+
   it('returns badge defaults when Seer is not configured', () => {
     mockContractAddresses.Seer = '0x0000000000000000000000000000000000000000'
 
