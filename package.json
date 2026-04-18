@@ -89,6 +89,8 @@
     "deploy:start-vesting:mainnet": "hardhat run contracts/scripts/start-vesting.ts --network mainnet",
     "deploy:arm-handover:sepolia": "hardhat run contracts/scripts/arm-handover.ts --network sepolia",
     "deploy:arm-handover:mainnet": "hardhat run contracts/scripts/arm-handover.ts --network mainnet",
+    "deploy:full": "hardhat run scripts/deploy-full.ts --network",
+    "apply:full": "hardhat run scripts/apply-full.ts --network",
     "deploy:all": "hardhat run scripts/deploy-all.ts --network",
     "deploy:phase1": "hardhat run contracts/scripts/deploy-phase1.ts --network",
     "apply:all": "hardhat run scripts/apply-all.ts --network",
