@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=20 <23",
+    "node": ">=20 <25",
     "npm": ">=10"
   },
   "scripts": {
@@ -318,7 +318,9 @@
     },
     "hono": "^4.12.7",
     "axios": "^1.13.5",
-    "bn.js": "^5.2.3"
+    "bn.js": "^5.2.3",
+    "serialize-javascript": "^7.0.5",
+    "diff": "^8.0.3"
   },
   "msw": {
     "workerDirectory": [
