@@ -1,9 +1,13 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Merchant Setup Page — /merchant/setup
  * Mobile-first wizard to create a storefront in under 2 minutes
  */
 
-'use client';
+
 
 import { Footer } from '@/components/layout/Footer';
 import { MerchantQuickSetup } from '@/components/merchant/MerchantQuickSetup';

@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart3, LayoutDashboard, RefreshCcw, Search } from 'lucide-react';

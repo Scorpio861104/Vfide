@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';

@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { BarChart3 } from 'lucide-react';
 import FinancialDashboard from '@/components/FinancialDashboard';
 import { PageWrapper, PageHeader } from '@/components/ui/PageLayout';

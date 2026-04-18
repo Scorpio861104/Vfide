@@ -1,9 +1,12 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Point of Sale Page
  * Full merchant POS system with product management and QR payments
  */
 
-'use client'
 
 import { Footer } from '@/components/layout/Footer'
 import { MerchantPOS } from '@/components/commerce/MerchantPOS'

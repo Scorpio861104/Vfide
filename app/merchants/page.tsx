@@ -1,7 +1,10 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Merchant Directory — Browse and discover VFIDE merchants
  */
-'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';

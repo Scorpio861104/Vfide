@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState } from 'react';
 import { TwoFactorSetup } from '@/components/security/TwoFactorSetup';
 import { BiometricSetup } from '@/components/security/BiometricSetup';

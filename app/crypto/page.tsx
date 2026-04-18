@@ -1,10 +1,14 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Crypto Dashboard Page
  * 
  * Central hub for wallet, payments, and transactions.
  */
 
-'use client';
+
 
 import React from 'react';
 import { motion } from 'framer-motion';

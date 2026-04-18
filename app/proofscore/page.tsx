@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Footer } from '@/components/layout/Footer';
 import { useAccount } from 'wagmi';
 import { useProofScore } from '@/hooks/useProofScore';

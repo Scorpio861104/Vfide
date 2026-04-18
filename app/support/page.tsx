@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Footer } from '@/components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';

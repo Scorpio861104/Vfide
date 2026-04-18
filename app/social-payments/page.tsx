@@ -1,3 +1,7 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Social Payments Dashboard
  * 
@@ -5,7 +9,7 @@
  * Seamlessly blends cryptocurrency payments with social interactions.
  */
 
-'use client';
+
 
 import { SocialFeed } from '@/components/social/SocialFeed';
 import { UnifiedActivityFeed } from '@/components/social/UnifiedActivityFeed';

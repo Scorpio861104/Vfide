@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Footer } from '@/components/layout/Footer';
 import { PageWrapper } from '@/components/ui/PageLayout';
 import { StoryViewer } from '@/components/social/StoryViewer';

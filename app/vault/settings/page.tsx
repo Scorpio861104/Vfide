@@ -1,8 +1,11 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Vault Settings Page - Advanced vault management and configuration
  */
 
-'use client'
 
 import { Footer } from '@/components/layout/Footer'
 import { VaultSettingsPanel } from '@/components/vault/VaultSettingsPanel'

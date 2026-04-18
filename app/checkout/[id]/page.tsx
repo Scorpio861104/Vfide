@@ -1,3 +1,7 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Hosted Checkout Page
  * 
@@ -6,7 +10,7 @@
  * No customer authentication required to view — wallet connection to pay.
  */
 
-'use client';
+
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';

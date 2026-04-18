@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { lazy, Suspense } from 'react';
 
 const VaultContent = lazy(() => import('./components/VaultContent').then(m => ({ default: m.VaultContent })));
