@@ -192,7 +192,8 @@ describe('timeUntil', () => {
   })
 
   it('returns hours for future dates < 24h', () => {
-    const future = new Date(Date.now() + 5 * 60 * 60 * 1000)
+    // Add extra milliseconds to ensure we're well over 5 hours
+    const future = new Date(Date.now() + 5 * 60 * 60 * 1000 + 60000)
     expect(timeUntil(future)).toBe('5 hours')
   })
 
@@ -203,7 +204,8 @@ describe('timeUntil', () => {
   })
 
   it('handles singular forms', () => {
-    const oneDay = new Date(Date.now() + 24 * 60 * 60 * 1000)
+    // Add extra milliseconds to ensure we're well over 1 day
+    const oneDay = new Date(Date.now() + 24 * 60 * 60 * 1000 + 60000)
     expect(timeUntil(oneDay)).toBe('1 day')
   })
 })
