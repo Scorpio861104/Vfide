@@ -8,13 +8,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { isAddress } from 'viem';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
-
-const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const createOrderSchema = z.object({
   orderId: z.string().trim().min(1).max(100),
@@ -28,7 +27,7 @@ async function resolveAddress(request: NextRequest): Promise<string | NextRespon
   const addr = typeof authResult.user?.address === 'string'
     ? authResult.user.address.trim().toLowerCase()
     : '';
-  if (!addr || !ADDRESS_LIKE_REGEX.test(addr)) {
+  if (!addr || !isAddress(addr)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   return addr;

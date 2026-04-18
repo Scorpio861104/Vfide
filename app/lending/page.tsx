@@ -111,13 +111,22 @@ export default function LendingPage() {
     setOffersLoading(true);
 
     fetch('/api/loans?status=open&limit=20')
-      .then(r => r.ok ? r.json() : { loans: [] })
+      .then(r => {
+        if (!r.ok) {
+          console.warn('[Lending] /api/loans returned', r.status);
+          return { loans: [] };
+        }
+        return r.json() as Promise<{ loans?: DbLoanOffer[] }>;
+      })
       .then((data: { loans?: DbLoanOffer[] }) => {
         if (!cancelled) {
           setOpenLoanOffers(Array.isArray(data?.loans) ? data.loans : []);
         }
       })
-      .catch(() => { if (!cancelled) setOpenLoanOffers([]); })
+      .catch((err: unknown) => {
+        console.warn('[Lending] Failed to load loan offers', err);
+        if (!cancelled) setOpenLoanOffers([]);
+      })
       .finally(() => { if (!cancelled) setOffersLoading(false); });
 
     return () => { cancelled = true; };
