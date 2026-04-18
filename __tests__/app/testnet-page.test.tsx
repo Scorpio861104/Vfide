@@ -6,6 +6,11 @@ let mockChainId = 84532;
 let mockAddress: `0x${string}` | undefined = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const mockPush = jest.fn();
 const mockCopy = jest.fn();
+let mockFetchResponse: { ok: boolean; status: number; json: () => Promise<unknown> } = {
+  ok: true,
+  status: 200,
+  json: async () => ({ success: true, txHash: '0xdeadbeef' }),
+};
 
 const renderTestnetPage = () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -49,16 +54,28 @@ describe('Testnet page pathways', () => {
     jest.clearAllMocks();
     mockChainId = 84532;
     mockAddress = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    mockFetchResponse = {
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true, txHash: '0xdeadbeef' }),
+    };
+    global.fetch = jest.fn(async () => mockFetchResponse) as unknown as typeof fetch;
   });
 
   it('renders faucet links and manual network details on testnet', () => {
     renderTestnetPage();
 
-    expect(screen.getByRole('heading', { name: /Get Test ETH/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Testnet Setup/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Coinbase Faucet/i }).getAttribute('href')).toBe('https://coinbase.example/faucet');
     expect(screen.getByRole('link', { name: /Alchemy Faucet/i }).getAttribute('href')).toBe('https://alchemy.example/faucet');
     expect(screen.getByRole('link', { name: /QuickNode Faucet/i }).getAttribute('href')).toBe('https://quicknode.example/faucet');
     expect(screen.getAllByText(/Base Sepolia/i).length).toBeGreaterThan(0);
+  });
+
+  it('back link points to home', () => {
+    renderTestnetPage();
+    const backLink = screen.getByRole('link', { name: /Back to app/i });
+    expect(backLink.getAttribute('href')).toBe('/');
   });
 
   it('copies connected address when clicked', () => {
@@ -74,6 +91,59 @@ describe('Testnet page pathways', () => {
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/');
+    });
+  });
+
+  it('shows claim button when wallet is connected', () => {
+    renderTestnetPage();
+    expect(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i })).toBeTruthy();
+  });
+
+  it('shows disabled state when wallet is not connected', () => {
+    mockAddress = undefined;
+    renderTestnetPage();
+    const claimBtn = screen.getByRole('button', { name: /Connect wallet to claim/i });
+    expect(claimBtn).toBeTruthy();
+    expect((claimBtn as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('calls faucet API and shows success on claim', async () => {
+    renderTestnetPage();
+    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith('/api/faucet/claim', expect.objectContaining({ method: 'POST' }));
+      expect(screen.getByText(/1,000 VFIDE \+ gas ETH sent/i)).toBeTruthy();
+    });
+  });
+
+  it('shows tx hash link after successful claim', async () => {
+    renderTestnetPage();
+    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+
+    await waitFor(() => {
+      const txLink = screen.getByRole('link', { name: /View transaction/i });
+      expect(txLink.getAttribute('href')).toContain('0xdeadbeef');
+    });
+  });
+
+  it('handles already-claimed (409) gracefully', async () => {
+    mockFetchResponse = { ok: false, status: 409, json: async () => ({ error: 'Already claimed' }) };
+    renderTestnetPage();
+    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Already claimed/i)).toBeTruthy();
+    });
+  });
+
+  it('shows error message when claim fails', async () => {
+    mockFetchResponse = { ok: false, status: 503, json: async () => ({ error: 'Faucet not configured' }) };
+    renderTestnetPage();
+    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Faucet not configured/i)).toBeTruthy();
     });
   });
 });
