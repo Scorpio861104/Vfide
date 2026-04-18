@@ -191,7 +191,7 @@ contract Seer is ReentrancyGuard {
     // SCORE DECAY - Inactive users slowly drift toward neutral
     // ═══════════════════════════════════════════════════════════════════════
     
-    bool public decayEnabled = false;  // DAO can enable decay
+    bool public decayEnabled = true;  // Enabled by default per Seer Constitution §2-3: penalties must decay
     uint64 public decayStartDays = 90;  // Days of inactivity before decay starts
     uint16 public decayPerMonth = 100;  // Score points lost per month toward neutral
     

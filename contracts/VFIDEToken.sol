@@ -756,6 +756,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 _dailyLimit,
         uint256 _cooldown
     ) external onlyOwner {
+        // Once policy is locked, whale limits must remain active (non-zero).
+        // Allowing a full disable post-lock would silently remove the anti-whale
+        // guarantee that was part of the published policy at lock time.
+        if (policyLocked) {
+            if (_maxTransfer == 0 || _maxWallet == 0 || _dailyLimit == 0) revert VF_POLICY_LOCKED();
+        }
         // Sanity checks: limits should be reasonable if enabled
         if (_maxTransfer > 0 && _maxTransfer < 100_000e18) revert VF_InvalidAntiWhaleConfig();
         if (_maxWallet > 0 && _maxWallet < 200_000e18) revert VF_InvalidAntiWhaleConfig();

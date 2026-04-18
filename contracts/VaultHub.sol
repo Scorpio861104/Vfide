@@ -17,8 +17,14 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     address public dao;               // DAO can force recover
 
     uint8 public constant CARD_GUARDIAN_THRESHOLD = 1;
-    uint256 public constant CARD_MAX_PER_TRANSFER = 100 * 1e18;
-    uint256 public constant CARD_DAILY_TRANSFER_LIMIT = 300 * 1e18;
+    /// @notice Default per-transfer limit for newly created vaults.
+    /// @dev Raised from 100 VFIDE to 500,000 VFIDE so vaults are usable for DeFi operations
+    ///      (liquidity provision, lending, farming) from day one.  Individual vault owners
+    ///      can still tighten limits at any time via CardBoundVault.setSpendLimits().
+    ///      Changes to these defaults apply to new vaults only; existing vaults are unaffected.
+    uint256 public cardDefaultMaxPerTransfer = 500_000 * 1e18;
+    /// @notice Default daily transfer limit for newly created vaults.
+    uint256 public cardDefaultDailyLimit = 2_000_000 * 1e18;
     // M-3 FIX: Vaults have 30 days after creation to complete guardian setup.
     // After this window, certain critical operations require setup to be complete.
     uint256 public constant GUARDIAN_SETUP_GRACE = 30 days;
@@ -54,6 +60,11 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     address public pendingDAO_VH;
     uint64 public pendingDAOAt_VH;
 
+    // Pending state for card default limit changes
+    uint256 public pendingCardMaxPerTransfer;
+    uint256 public pendingCardDailyLimit;
+    uint64 public pendingCardLimitsAt;
+
     /// Events
     event VFIDEScheduled_VH(address indexed vfide, uint64 effectiveAt);
     event ProofLedgerScheduled_VH(address indexed ledger, uint64 effectiveAt);
@@ -62,6 +73,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     event VFIDESet(address vfide);
     event DAOSet(address dao);
     event CouncilSet(address council);
+    event CardDefaultLimitsProposed(uint256 maxPerTransfer, uint256 dailyLimit, uint64 effectiveAt);
+    event CardDefaultLimitsSet(uint256 maxPerTransfer, uint256 dailyLimit);
 
     event GuardianSetupCompleted(address indexed owner, address indexed vault);
 
@@ -80,6 +93,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_NotRecoveryContract();
     error VH_RecoveryDisabled();
     error VH_GuardianSetupRequired(); // M-3 FIX: grace period expired, setup must be completed first
+    error VH_InvalidLimits();
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
@@ -385,8 +399,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
                 owner_,
                 guardians,
                 CARD_GUARDIAN_THRESHOLD,
-                CARD_MAX_PER_TRANSFER,
-                CARD_DAILY_TRANSFER_LIMIT,
+                cardDefaultMaxPerTransfer,
+                cardDefaultDailyLimit,
                 address(ledger)
             )
         );
@@ -394,6 +408,44 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     function _hasIndependentGuardian(CardBoundVault vault, address owner_) internal view returns (bool) {
         return !(vault.guardianCount() == 2 && vault.isGuardian(owner_) && vault.isGuardian(dao));
+    }
+
+    // ——— Card vault default limit management (timelocked)
+    /**
+     * @notice Schedule an update to the default per-transfer and daily limits applied to
+     *         newly created vaults.  Changes take effect after the 48-hour timelock and
+     *         apply only to vaults created after that point; existing vault limits are
+     *         unchanged.
+     * @param _maxPerTransfer New default max per-transfer (must be > 0 and <= _dailyLimit).
+     * @param _dailyLimit     New default daily transfer limit (must be > 0).
+     */
+    function setCardDefaultLimits(uint256 _maxPerTransfer, uint256 _dailyLimit) external onlyOwner {
+        if (_maxPerTransfer == 0 || _dailyLimit == 0 || _maxPerTransfer > _dailyLimit) revert VH_InvalidLimits();
+        if (pendingCardLimitsAt != 0) revert VH_Timelock();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingCardMaxPerTransfer = _maxPerTransfer;
+        pendingCardDailyLimit = _dailyLimit;
+        pendingCardLimitsAt = effectiveAt;
+        emit CardDefaultLimitsProposed(_maxPerTransfer, _dailyLimit, effectiveAt);
+    }
+
+    /// @notice Apply pending default limit change after the 48-hour timelock.
+    function applyCardDefaultLimits() external onlyOwner {
+        if (pendingCardLimitsAt == 0 || block.timestamp < pendingCardLimitsAt) revert VH_Timelock();
+        cardDefaultMaxPerTransfer = pendingCardMaxPerTransfer;
+        cardDefaultDailyLimit = pendingCardDailyLimit;
+        emit CardDefaultLimitsSet(pendingCardMaxPerTransfer, pendingCardDailyLimit);
+        delete pendingCardMaxPerTransfer;
+        delete pendingCardDailyLimit;
+        delete pendingCardLimitsAt;
+    }
+
+    /// @notice Cancel a pending default limit change.
+    function cancelCardDefaultLimits() external onlyOwner {
+        if (pendingCardLimitsAt == 0) revert VH_Timelock();
+        delete pendingCardMaxPerTransfer;
+        delete pendingCardDailyLimit;
+        delete pendingCardLimitsAt;
     }
 
     function _log(string memory action) internal {
