@@ -62,7 +62,7 @@ export default function DashboardPage() {
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {tabs.map(tab => (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'}`}><tab.icon size={16} />{tab.label}</button>))}
           </div>
-          {activeTab === 'overview' && <OverviewTab proofscore={proofScore} feeRate={feeRate} />}
+          {activeTab === 'overview' && <OverviewTab proofscore={proofScore} feeRate={feeRate} address={address} />}
           {activeTab === 'badges' && <BadgesTab address={address as `0x${string}` | undefined} />}
           {activeTab === 'score' && <ScoreSimulatorTab currentScore={proofScore} />}
           {activeTab === 'fees' && <FeeSimulatorTab currentScore={proofScore} />}

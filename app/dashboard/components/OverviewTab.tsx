@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useReadContract } from 'wagmi';
 import {
   ArrowUpRight,
   Banknote,
@@ -17,11 +18,54 @@ import {
 } from 'lucide-react';
 
 import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
+import { CONTRACT_ADDRESSES, SeerABI, isConfiguredContractAddress } from '@/lib/contracts';
 
 import { RecentActivitySection } from './RecentActivity';
 import { GlassCard, QuickAction, containerVariants, ecosystemLoadout, itemVariants } from './shared';
 
-export function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRate: number }) {
+export function OverviewTab({
+  proofscore,
+  feeRate,
+  address,
+}: {
+  proofscore: number;
+  feeRate: number;
+  address?: `0x${string}`;
+}) {
+  const hasSeer = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer);
+
+  const { data: breakdown } = useReadContract({
+    address: CONTRACT_ADDRESSES.Seer,
+    abi: SeerABI,
+    functionName: 'getScoreBreakdown',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address && hasSeer,
+    },
+  });
+
+  // breakdown: [daoSetScore, onChainScore, finalScore, daoWeight, onChainWeight, hasVault]
+  const daoSetScore = breakdown ? Number(breakdown[0]) : null;
+  const onChainScore = breakdown ? Number(breakdown[1]) : null;
+  const daoWeight = breakdown ? Number(breakdown[3]) : 30;
+  const onChainWeight = breakdown ? Number(breakdown[4]) : 70;
+  const hasVault = breakdown ? Boolean(breakdown[5]) : null;
+
+  const breakdownRows = [
+    {
+      label: `DAO Score (${daoWeight}% weight)`,
+      value: daoSetScore ?? proofscore,
+      max: 10000,
+      color: 'cyan' as const,
+    },
+    {
+      label: `On-Chain Score (${onChainWeight}% weight)`,
+      value: onChainScore ?? proofscore,
+      max: 10000,
+      color: 'emerald' as const,
+    },
+  ];
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-8">
       <motion.div variants={itemVariants}>
@@ -105,13 +149,7 @@ export function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRa
               Score Breakdown
             </h2>
             <div className="space-y-4">
-              {[
-                { label: 'Transaction Volume', value: 2500, max: 3000, color: 'cyan' },
-                { label: 'Account Age', value: 1200, max: 2000, color: 'emerald' },
-                { label: 'Badge Bonuses', value: 800, max: 1500, color: 'amber' },
-                { label: 'Governance Participation', value: 500, max: 1000, color: 'purple' },
-                { label: 'Community Endorsements', value: 300, max: 500, color: 'pink' },
-              ].map((item, index) => (
+              {breakdownRows.map((item, index) => (
                 <motion.div
                   key={item.label}
                   initial={{ opacity: 0, x: -20 }}
@@ -133,19 +171,21 @@ export function OverviewTab({ proofscore, feeRate }: { proofscore: number; feeRa
                       className={`h-full rounded-full bg-gradient-to-r ${
                         item.color === 'cyan'
                           ? 'from-cyan-500 to-cyan-400'
-                          : item.color === 'emerald'
-                            ? 'from-emerald-500 to-emerald-400'
-                            : item.color === 'amber'
-                              ? 'from-amber-500 to-amber-400'
-                              : item.color === 'purple'
-                                ? 'from-purple-500 to-purple-400'
-                                : 'from-pink-500 to-pink-400'
+                          : 'from-emerald-500 to-emerald-400'
                       }`}
                     />
                   </div>
                 </motion.div>
               ))}
             </div>
+            {hasVault !== null && (
+              <div className="mt-4 flex items-center gap-2">
+                <Shield size={14} className={hasVault ? 'text-emerald-400' : 'text-gray-500'} />
+                <span className={`text-xs ${hasVault ? 'text-emerald-400' : 'text-gray-500'}`}>
+                  {hasVault ? 'Vault active — score bonus applied' : 'No vault detected'}
+                </span>
+              </div>
+            )}
             <div className="mt-6 border-t border-white/10 pt-6">
               <div className="flex items-center justify-between">
                 <span className="text-white/60">Total ProofScore</span>
