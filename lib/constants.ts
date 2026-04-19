@@ -116,13 +116,7 @@ export const DEFAULT_PAYROLL_TOPUP = '5000';
 // TOKEN PRICING
 // ========================================
 
-/**
- * Reference price for VFIDE token in USD.
- * Used for displaying estimated USD values in the UI.
- * When tokens are listed on DEX, this should be replaced with a live
- * price oracle (e.g., from Seer or a DEX aggregator).
- */
-export const TOKEN_REFERENCE_PRICE = 0.05;
+// TOKEN_REFERENCE_PRICE has been removed. Obtain live price from an oracle or DEX feed.
 
 /**
  * Lock period unlock schedules (locking reflects commitment only)
