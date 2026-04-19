@@ -129,13 +129,13 @@ export default function TestnetPage() {
           {/* Step 2 – Claim test VFIDE */}
           <h2 className="text-lg font-semibold mb-3 text-zinc-200">Step 2 — Claim test VFIDE</h2>
           <p className="text-zinc-500 text-sm mb-4">
-            Receive 1,000 test VFIDE + 0.005 ETH gas top-up directly to your wallet.
+            Receive 10,000 test VFIDE + 0.005 ETH gas top-up directly to your wallet.
           </p>
 
           {claimSuccess ? (
             <div className="bg-emerald-900/40 border border-emerald-700 rounded-lg px-4 py-4 mb-6">
               <p className="text-emerald-400 font-medium">
-                {alreadyClaimed ? '✓ Already claimed — your VFIDE is in your wallet.' : '✓ 1,000 VFIDE + gas ETH sent to your wallet!'}
+                {alreadyClaimed ? '✓ Already claimed — your VFIDE is in your wallet.' : '✓ 10,000 VFIDE + gas ETH sent to your wallet!'}
               </p>
               {claimTxHash && (
                 <a
@@ -158,7 +158,7 @@ export default function TestnetPage() {
                 disabled={!address || isClaiming}
                 className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 rounded-lg font-medium transition-colors mb-6"
               >
-                {isClaiming ? 'Claiming…' : address ? 'Claim 1,000 VFIDE' : 'Connect wallet to claim'}
+                {isClaiming ? 'Claiming…' : address ? 'Claim 10,000 VFIDE' : 'Connect wallet to claim'}
               </button>
             </>
           )}

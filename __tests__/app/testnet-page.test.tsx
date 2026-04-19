@@ -96,7 +96,7 @@ describe('Testnet page pathways', () => {
 
   it('shows claim button when wallet is connected', () => {
     renderTestnetPage();
-    expect(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Claim 10,000 VFIDE/i })).toBeTruthy();
   });
 
   it('shows disabled state when wallet is not connected', () => {
@@ -109,17 +109,17 @@ describe('Testnet page pathways', () => {
 
   it('calls faucet API and shows success on claim', async () => {
     renderTestnetPage();
-    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Claim 10,000 VFIDE/i }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/faucet/claim', expect.objectContaining({ method: 'POST' }));
-      expect(screen.getByText(/1,000 VFIDE \+ gas ETH sent/i)).toBeTruthy();
+      expect(screen.getByText(/10,000 VFIDE \+ gas ETH sent/i)).toBeTruthy();
     });
   });
 
   it('shows tx hash link after successful claim', async () => {
     renderTestnetPage();
-    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Claim 10,000 VFIDE/i }));
 
     await waitFor(() => {
       const txLink = screen.getByRole('link', { name: /View transaction/i });
@@ -130,7 +130,7 @@ describe('Testnet page pathways', () => {
   it('handles already-claimed (409) gracefully', async () => {
     mockFetchResponse = { ok: false, status: 409, json: async () => ({ error: 'Already claimed' }) };
     renderTestnetPage();
-    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Claim 10,000 VFIDE/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Already claimed/i)).toBeTruthy();
@@ -140,7 +140,7 @@ describe('Testnet page pathways', () => {
   it('shows error message when claim fails', async () => {
     mockFetchResponse = { ok: false, status: 503, json: async () => ({ error: 'Faucet not configured' }) };
     renderTestnetPage();
-    fireEvent.click(screen.getByRole('button', { name: /Claim 1,000 VFIDE/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Claim 10,000 VFIDE/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Faucet not configured/i)).toBeTruthy();
