@@ -1,4 +1,6 @@
 'use client';
+
+export const dynamic = 'force-dynamic';
 import { containerVariants, fadeSlideUp as itemVariants } from "@/lib/motion-presets";
 
 import { useState } from "react";

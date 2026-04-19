@@ -234,6 +234,14 @@ contract CardBoundVault is ReentrancyGuard {
 
         guardianThreshold = _guardianThreshold;
         emit GuardianThresholdSet(_guardianThreshold);
+
+        // L-5 FIX: Enable withdrawal queue protection by default.
+        // Any transfer >= dailyTransferLimit requires the 7-day queue, protecting
+        // against compromised wallet keys.  The admin can adjust or disable this
+        // via setLargeTransferThreshold() at any time.
+        largeTransferThreshold = _dailyTransferLimit;
+        emit LargeTransferThresholdSet(_dailyTransferLimit);
+
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
 
@@ -473,6 +481,11 @@ contract CardBoundVault is ReentrancyGuard {
         // immediately. This gives the owner or guardians time to
         // cancel if keys were compromised.
         if (largeTransferThreshold > 0 && amount >= largeTransferThreshold) {
+            // H-5 FIX: Commit the daily spend budget at queue time, not only at execution time.
+            // Without this, an attacker with a compromised key could queue MAX_QUEUED withdrawals
+            // in a single day, each passing the spentToday + amount <= dailyTransferLimit check
+            // since spentToday was never incremented, staging up to 20× the daily limit.
+            spentToday += amount;
             _queueWithdrawal(intent.toVault, amount, intent.nonce);
             emit VaultTransferAuthorized(signer, intent.toVault, amount, intent.nonce, intent.walletEpoch);
             _logTransfer(intent.toVault, amount);
@@ -515,15 +528,30 @@ contract CardBoundVault is ReentrancyGuard {
         // Only admin (vault owner) can execute
         if (msg.sender != admin) revert CBV_NotAdmin();
 
-        // Apply daily limit at execution time (not at queue time)
+        // Apply daily limit at execution time as an additional guard.
+        // H-5 FIX: spentToday was charged at queue time. Only re-charge if a new daily window
+        // started since the withdrawal was queued (indicated by dayStart having advanced past
+        // w.requestTime). If still in the same window, the amount is already committed to
+        // spentToday and must not be added again.
         _refreshDailyWindow();
-        if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
+        bool newWindowSinceQueue = (dayStart > w.requestTime);
+        if (newWindowSinceQueue) {
+            if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
+        } else {
+            // Same window — amount was already committed at queue time.
+            // Sanity-check that the daily total hasn't somehow been exceeded.
+            if (spentToday > dailyTransferLimit) revert CBV_DailyLimit();
+        }
 
         w.executed = true;
         if (activeQueuedWithdrawals > 0) {
             activeQueuedWithdrawals -= 1;
         }
-        spentToday += w.amount;
+        // Only charge spentToday when executing in a new window (window rolled over since queue).
+        // In the original queue window, the amount was already charged at queue time.
+        if (newWindowSinceQueue) {
+            spentToday += w.amount;
+        }
 
         IERC20(vfideToken).safeTransfer(w.toVault, w.amount);
 

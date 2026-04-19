@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Gift, Users, Shield, ArrowRight, Check, Loader2 } from 'lucide-react';
+import { Gift, Shield, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function InvitePage() {
   const params = useParams();

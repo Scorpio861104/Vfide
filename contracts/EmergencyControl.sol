@@ -25,6 +25,9 @@ error EC_AlreadyMember();
 error EC_NotMember();
 error EC_AlreadyVoted();
 error EC_Cooldown();
+error EC_PendingFoundationChange();
+error EC_NoPendingFoundationChange();
+error EC_FoundationChangeLocked();
 
 contract EmergencyControl is ReentrancyGuard {
     event ModulesSet(address dao, address breaker, address ledger);
@@ -33,11 +36,14 @@ contract EmergencyControl is ReentrancyGuard {
     event MemberAdded(address member);
     event MemberRemoved(address member);
     event FoundationRotated(address indexed oldFoundation, address indexed newFoundation);
+    event FoundationRotationProposed(address indexed newFoundation, uint64 effectiveAt);
     event CommitteeVote(address indexed member, bool halt, uint8 approvals, string reason);
     event CommitteeTriggered(bool halt, string reason);
     event DAOToggled(bool halt, string reason);
     event ModulesChangeQueued(address dao, address breaker, address ledger, uint64 executeAfter);
     event ModulesChangeCancelled(address dao, address breaker, address ledger);
+    event FoundationMemberChangeQueued(address indexed member, bool isAdd, uint64 effectiveAt);
+    event FoundationMemberChangeCancelled(address indexed member);
 
     address public dao;
     /// @notice Foundation address that can manage committee members
@@ -76,14 +82,24 @@ contract EmergencyControl is ReentrancyGuard {
     PendingModules public pendingModules;
     uint64 public pendingModulesAt;
 
+    /// @notice 48h timelock state for foundation rotation (M-5).
+    address public pendingFoundation;
+    uint64  public pendingFoundationAt;
+
+    /// @notice 24-hour queue for foundation-initiated committee member changes.
+    /// @dev DAO-initiated changes are immediate (DAO already has its own governance timelock).
+    ///      When the foundation adds or removes a member, the change is queued here so the
+    ///      DAO has a window to observe and react before it takes effect.
+    uint64 public constant FOUNDATION_MEMBER_CHANGE_DELAY = 24 hours;
+    struct PendingFoundationMemberChange {
+        address member;
+        bool isAdd;
+        uint64 effectiveAt;
+    }
+    PendingFoundationMemberChange public pendingFoundationMemberChange;
+
     modifier onlyDAO() {
         _checkDAO();
-        _;
-    }
-
-    /// @notice FINAL-10 FIX: Allow either DAO or foundation to manage committee membership.
-    modifier onlyDAOOrFoundation() {
-        require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
         _;
     }
 
@@ -134,6 +150,12 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     function setCooldown(uint64 secondsMin) external onlyDAO nonReentrant {
+        // L-2 FIX (internal audit finding — anti-flap bypass): Zero cooldown would disable anti-flap protection entirely.
+        // 5 minutes is the minimum because: (a) the breaker is a last-resort emergency
+        // mechanism, not a ping-pong switch; (b) rapid repeated toggles could be used to
+        // DoS the protocol or mask other attacks; (c) 5 min still allows a responsive
+        // unhalt within a single Ethereum epoch after a false-positive halt.
+        require(secondsMin >= 5 minutes, "EC: cooldown too short");
         minCooldown = secondsMin;
         emit CooldownSet(secondsMin);
         _log("ec_cooldown_set");
@@ -174,20 +196,87 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_votes_reset");
     }
 
-    function addMember(address m) external onlyDAOOrFoundation nonReentrant {
+    function addMember(address m) external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
         if (m == address(0)) revert EC_Zero();
         if (isMember[m]) revert EC_AlreadyMember();
-        isMember[m] = true; memberCount += 1;
-        currentMembers.push(m);
-        emit MemberAdded(m);
-        _log("ec_member_add");
+
+        if (msg.sender == dao) {
+            // DAO: immediate (DAO proposals already carry their own governance timelock)
+            _applyAddMember(m);
+        } else {
+            // Foundation: 24-hour queue — gives DAO time to observe and react
+            if (pendingFoundationMemberChange.effectiveAt != 0) revert EC_PendingFoundationChange();
+            uint64 effectiveAt = uint64(block.timestamp) + FOUNDATION_MEMBER_CHANGE_DELAY;
+            pendingFoundationMemberChange = PendingFoundationMemberChange(m, true, effectiveAt);
+            emit FoundationMemberChangeQueued(m, true, effectiveAt);
+            _log("ec_foundation_add_queued");
+        }
         // threshold unchanged; DAO should adjust separately if desired
     }
 
-    function removeMember(address m) external onlyDAOOrFoundation nonReentrant {
-        if (!isMember[m]) revert EC_NotMember();
-        isMember[m] = false; memberCount -= 1;
-        
+    function removeMember(address m) external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
+
+        if (msg.sender == dao) {
+            // DAO: immediate
+            if (!isMember[m]) revert EC_NotMember();
+            _applyRemoveMember(m);
+        } else {
+            // Foundation: 24-hour queue
+            if (!isMember[m]) revert EC_NotMember();
+            if (pendingFoundationMemberChange.effectiveAt != 0) revert EC_PendingFoundationChange();
+            uint64 effectiveAt = uint64(block.timestamp) + FOUNDATION_MEMBER_CHANGE_DELAY;
+            pendingFoundationMemberChange = PendingFoundationMemberChange(m, false, effectiveAt);
+            emit FoundationMemberChangeQueued(m, false, effectiveAt);
+            _log("ec_foundation_remove_queued");
+        }
+    }
+
+    /// @notice Apply a pending foundation-initiated member change after the 24-hour timelock.
+    function applyFoundationMemberChange() external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
+        PendingFoundationMemberChange memory p = pendingFoundationMemberChange;
+        if (p.effectiveAt == 0) revert EC_NoPendingFoundationChange();
+        if (block.timestamp < p.effectiveAt) revert EC_FoundationChangeLocked();
+        delete pendingFoundationMemberChange;
+
+        if (p.isAdd) {
+            if (!isMember[p.member]) {
+                _applyAddMember(p.member);
+            }
+        } else {
+            if (isMember[p.member]) {
+                _applyRemoveMember(p.member);
+            }
+        }
+        _log("ec_foundation_change_applied");
+    }
+
+    /// @notice Cancel a pending foundation-initiated member change.
+    function cancelFoundationMemberChange() external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
+        if (pendingFoundationMemberChange.effectiveAt == 0) revert EC_NoPendingFoundationChange();
+        address m = pendingFoundationMemberChange.member;
+        delete pendingFoundationMemberChange;
+        emit FoundationMemberChangeCancelled(m);
+        _log("ec_foundation_change_cancelled");
+    }
+
+    // ─── Internal member mutation helpers ───────────────────────────────────
+
+    function _applyAddMember(address m) internal {
+        isMember[m] = true;
+        memberCount += 1;
+        currentMembers.push(m);
+        emit MemberAdded(m);
+        _log("ec_member_add");
+    }
+
+    function _applyRemoveMember(address m) internal {
+        isMember[m] = false;
+        memberCount -= 1;
+
         for (uint256 i = 0; i < currentMembers.length; i++) {
             if (currentMembers[i] == m) {
                 currentMembers[i] = currentMembers[currentMembers.length - 1];
@@ -197,17 +286,16 @@ contract EmergencyControl is ReentrancyGuard {
         }
 
         emit MemberRemoved(m);
-        
+
         // H-1 FIX: Reset votes when membership changes to prevent threshold manipulation
         _resetVotes();
         // M-3 FIX: Reset vote timers
         haltVotingStartTime = 0;
         unhaltVotingStartTime = 0;
-        
+
         if (threshold > memberCount) {
             threshold = memberCount; // clamp for safety
         }
-
         _log("ec_member_remove");
     }
 
@@ -217,14 +305,42 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_threshold_set");
     }
 
-    /// @notice Rotate foundation address (only callable by current foundation)
+    /// @notice Propose rotating the foundation address (48h timelock).
+    /// @dev M-5 FIX: An instant unilateral foundation rotation was a key compromise vector.
+    ///      An attacker who obtains the foundation key could queue committee changes within
+    ///      24h of rotating.  The 48h timelock gives the DAO time to observe and intervene.
+    ///      Both the current foundation AND the DAO can apply or cancel the rotation.
     function rotateFoundation(address newFoundation) external nonReentrant {
         require(msg.sender == foundation, "EC: not foundation");
         require(newFoundation != address(0), "EC: foundation=0");
+        require(pendingFoundationAt == 0, "EC: rotation pending");
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingFoundation = newFoundation;
+        pendingFoundationAt = effectiveAt;
+        emit FoundationRotationProposed(newFoundation, effectiveAt);
+        _log("ec_foundation_rotation_proposed");
+    }
+
+    /// @notice Apply a pending foundation rotation after the 48-hour timelock.
+    function applyFoundationRotation() external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not authorized");
+        require(pendingFoundationAt != 0, "EC: no pending rotation");
+        require(block.timestamp >= pendingFoundationAt, "EC: rotation timelock");
         address old = foundation;
-        foundation = newFoundation;
-        emit FoundationRotated(old, newFoundation);
+        foundation = pendingFoundation;
+        delete pendingFoundation;
+        delete pendingFoundationAt;
+        emit FoundationRotated(old, foundation);
         _log("ec_foundation_rotated");
+    }
+
+    /// @notice Cancel a pending foundation rotation.
+    function cancelFoundationRotation() external nonReentrant {
+        require(msg.sender == dao || msg.sender == foundation, "EC: not authorized");
+        require(pendingFoundationAt != 0, "EC: no pending rotation");
+        delete pendingFoundation;
+        delete pendingFoundationAt;
+        _log("ec_foundation_rotation_cancelled");
     }
 
     // ───────────────────────────────── Actions

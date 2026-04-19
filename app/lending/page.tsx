@@ -1,12 +1,13 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Banknote, Plus, Search, Clock, Check, X, Shield, AlertTriangle, Users, ChevronDown, ChevronUp, Zap, ArrowRight, HandCoins } from 'lucide-react';
-import { formatEther, parseEther } from 'viem';
-import { SEED_LOAN_OFFERS } from '@/lib/data/seed';
+import { Banknote, Plus, Search, AlertTriangle, Users, Zap, ArrowRight, HandCoins } from 'lucide-react';
+import { formatEther } from 'viem';
 import { Footer } from '@/components/layout/Footer';
 
 type Tab = 'borrow' | 'lend' | 'my-loans' | 'flash';
@@ -26,21 +27,32 @@ interface LoanData {
   amountRepaid: bigint; revenueAssignment: boolean; state: number;
 }
 
+interface DbLoanOffer {
+  id: number;
+  on_chain_id: number;
+  lender_address: string;
+  principal: string;
+  interest_bps: number;
+  duration_seconds: number;
+  status: string;
+  created_at: string;
+}
+
 export default function LendingPage() {
   const { address, isConnected } = useAccount();
   const [tab, setTab] = useState<Tab>('borrow');
   const [showCreate, setShowCreate] = useState(false);
-  const [expandedLoan, setExpandedLoan] = useState<number | null>(null);
 
   // Create loan form
   const [principal, setPrincipal] = useState('');
   const [interestBps, setInterestBps] = useState('500'); // 5% default
   const [durationDays, setDurationDays] = useState('14');
 
-  // Mock data — in production, read from contract events / subgraph
-  const [openLoans, setOpenLoans] = useState<LoanData[]>([]);
-  const [myLoans, setMyLoans] = useState<LoanData[]>([]);
+  // Live data from DB-backed loans table
+  const [openLoanOffers, setOpenLoanOffers] = useState<DbLoanOffer[]>([]);
+  const [myLoans] = useState<LoanData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [offersLoading, setOffersLoading] = useState(true);
   const [previewLaneCount, setPreviewLaneCount] = useState(0);
   const [previewError, setPreviewError] = useState<string | null>(null);
 
@@ -51,6 +63,7 @@ export default function LendingPage() {
     return eth.toLocaleString(undefined, { maximumFractionDigits: 2 });
   };
 
+  // Load flash-loan lane preview
   useEffect(() => {
     let cancelled = false;
 
@@ -91,6 +104,33 @@ export default function LendingPage() {
       cancelled = true;
     };
   }, [address]);
+
+  // Load open loan offers from the loans table
+  useEffect(() => {
+    let cancelled = false;
+    setOffersLoading(true);
+
+    fetch('/api/loans?status=open&limit=20')
+      .then(r => {
+        if (!r.ok) {
+          console.warn('[Lending] /api/loans returned', r.status);
+          return { loans: [] };
+        }
+        return r.json() as Promise<{ loans?: DbLoanOffer[] }>;
+      })
+      .then((data: { loans?: DbLoanOffer[] }) => {
+        if (!cancelled) {
+          setOpenLoanOffers(Array.isArray(data?.loans) ? data.loans : []);
+        }
+      })
+      .catch((err: unknown) => {
+        console.warn('[Lending] Failed to load loan offers', err);
+        if (!cancelled) setOpenLoanOffers([]);
+      })
+      .finally(() => { if (!cancelled) setOffersLoading(false); });
+
+    return () => { cancelled = true; };
+  }, []);
 
   if (!isConnected) return (
     <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center">
@@ -149,33 +189,46 @@ export default function LendingPage() {
                 <p className="text-gray-400 text-xs">Browse offers from lenders. Accept one and your vault guardian co-signs. No token collateral — your ProofScore and your guardian&apos;s commitment are your guarantee. Interest is capped at 12%. Duration is max 30 days.</p>
               </div>
 
-              {SEED_LOAN_OFFERS.length === 0 ? (
+              {offersLoading ? (
+                <div className="text-center py-12">
+                  <div className="animate-pulse space-y-3">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-28 rounded-2xl bg-white/5" />
+                    ))}
+                  </div>
+                </div>
+              ) : openLoanOffers.length === 0 ? (
                 <div className="text-center py-16">
                   <Search size={48} className="mx-auto mb-4 text-gray-600" />
                   <p className="text-gray-400 mb-1">No loan offers available right now</p>
                   <p className="text-gray-600 text-xs">Check back later or ask a community member to create an offer</p>
                 </div>
               ) : (
-                SEED_LOAN_OFFERS.map(loan => (
-                  <div key={loan.id} className="p-4 bg-white/3 border border-white/10 rounded-2xl">
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <span className="text-white font-mono font-bold text-lg">{loan.principal} VFIDE</span>
-                        <span className="text-gray-500 text-xs ml-2">from {loan.lenderName}</span>
-                        <span className="text-cyan-400 text-[10px] ml-1 flex items-center gap-0.5 inline-flex"><Shield size={8} />{loan.lenderScore}</span>
+                openLoanOffers.map(loan => {
+                  const principalNum = parseFloat(loan.principal);
+                  const interestRatePercent = loan.interest_bps / 100;
+                  const durationDaysNum = Math.round(loan.duration_seconds / 86400);
+                  const repayAmount = principalNum * (1 + interestRatePercent / 100);
+                  return (
+                    <div key={loan.id} className="p-4 bg-white/3 border border-white/10 rounded-2xl">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <span className="text-white font-mono font-bold text-lg">{principalNum.toLocaleString(undefined, { maximumFractionDigits: 2 })} VFIDE</span>
+                          <span className="text-gray-500 text-xs ml-2">from {shortAddr(loan.lender_address)}</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400">OPEN</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400">{loan.state}</span>
+                      <div className="flex gap-4 text-sm text-gray-400 mb-3">
+                        <span>Interest: <span className="text-white">{interestRatePercent.toFixed(2)}%</span></span>
+                        <span>Duration: <span className="text-white">{durationDaysNum}d</span></span>
+                        <span>Repay: <span className="text-white">{repayAmount.toFixed(2)} VFIDE</span></span>
+                      </div>
+                      <button className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
+                        Accept Loan <ArrowRight size={14} />
+                      </button>
                     </div>
-                    <div className="flex gap-4 text-sm text-gray-400 mb-3">
-                      <span>Interest: <span className="text-white">{loan.interestBps / 100}%</span></span>
-                      <span>Duration: <span className="text-white">{loan.durationDays} days</span></span>
-                      <span>Repay: <span className="text-white">{(loan.principal * (1 + loan.interestBps / 10000)).toFixed(0)} VFIDE</span></span>
-                    </div>
-                    <button className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2">
-                      Accept Loan <ArrowRight size={14} />
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}

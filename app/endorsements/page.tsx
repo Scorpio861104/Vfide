@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic';
+
 import { useMemo } from 'react'
 import { Footer } from '@/components/layout/Footer'
 import { SurfaceCard, SectionHeading } from '@/components/ui/primitives'

@@ -83,6 +83,8 @@ import SharedInterfacesABI from './SharedInterfaces.json'
 import VFIDEFinanceABI from './VFIDEFinance.json'
 import VFIDESecurityABI from './VFIDESecurity.json'
 import VFIDETrustABI from './VFIDETrust.json'
+import VFIDETermLoanABI from './VFIDETermLoan.json'
+import VFIDEFlashLoanABI from './VFIDEFlashLoan.json'
 import { logger } from '@/lib/logger';
 
 const KNOWN_EMPTY_ABIS = new Set([
@@ -332,4 +334,6 @@ export {
   VFIDEFinanceABI,
   VFIDESecurityABI,
   VFIDETrustABI,
+  VFIDETermLoanABI,
+  VFIDEFlashLoanABI,
 }

@@ -1,12 +1,15 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Vote, Users, Shield, Clock, Check, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
+import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { SEED_CANDIDATES } from '@/lib/data/seed';
+import { CONTRACT_ADDRESSES, CouncilElectionABI, isConfiguredContractAddress } from '@/lib/contracts';
 
 interface Candidate {
   address: string;
@@ -36,25 +39,61 @@ interface ProposalPreview {
   status?: string;
 }
 
-const MOCK_ELECTION: ElectionInfo = {
+const DEFAULT_ELECTION: ElectionInfo = {
   councilSize: 12, termDays: 365, minScore: 6000, currentTermEnd: 0,
   electionActive: true, totalVotes: 0, totalVotePower: 0,
 };
 
 export default function ElectionsPage() {
-  const { address, isConnected } = useAccount();
-  const [candidates, setCandidates] = useState<Candidate[]>(SEED_CANDIDATES.map(c => ({
+  const { isConnected } = useAccount();
+  const [candidates] = useState<Candidate[]>(SEED_CANDIDATES.map(c => ({
     ...c, registered: true, elected: false, badges: c.badges,
   })));
-  const [electionInfo] = useState<ElectionInfo>(MOCK_ELECTION);
   const [proposals, setProposals] = useState<ProposalPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
-  const [hasVoted, setHasVoted] = useState(false);
+  const [hasVoted] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [platform, setPlatform] = useState('');
   const [tab, setTab] = useState<'candidates' | 'council' | 'rules'>('candidates');
+
+  const isElectionAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.CouncilElection);
+
+  const { data: councilSizeData } = useReadContract({
+    address: CONTRACT_ADDRESSES.CouncilElection,
+    abi: CouncilElectionABI,
+    functionName: 'councilSize',
+    query: { enabled: isElectionAvailable },
+  });
+  const { data: minScoreData } = useReadContract({
+    address: CONTRACT_ADDRESSES.CouncilElection,
+    abi: CouncilElectionABI,
+    functionName: 'minCouncilScore',
+    query: { enabled: isElectionAvailable },
+  });
+  const { data: termSecondsData } = useReadContract({
+    address: CONTRACT_ADDRESSES.CouncilElection,
+    abi: CouncilElectionABI,
+    functionName: 'termSeconds',
+    query: { enabled: isElectionAvailable },
+  });
+  const { data: electionStatusData } = useReadContract({
+    address: CONTRACT_ADDRESSES.CouncilElection,
+    abi: CouncilElectionABI,
+    functionName: 'getElectionStatus',
+    query: { enabled: isElectionAvailable },
+  });
+
+  const electionInfo: ElectionInfo = {
+    councilSize: councilSizeData !== undefined ? Number(councilSizeData) : DEFAULT_ELECTION.councilSize,
+    minScore: minScoreData !== undefined ? Number(minScoreData) : DEFAULT_ELECTION.minScore,
+    termDays: termSecondsData !== undefined ? Math.round(Number(termSecondsData) / 86400) : DEFAULT_ELECTION.termDays,
+    currentTermEnd: electionStatusData ? Number((electionStatusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[2]) : DEFAULT_ELECTION.currentTermEnd,
+    electionActive: electionStatusData ? Number((electionStatusData as readonly [bigint, bigint, bigint, bigint, bigint, bigint])[0]) > 0 : DEFAULT_ELECTION.electionActive,
+    totalVotes: DEFAULT_ELECTION.totalVotes,
+    totalVotePower: DEFAULT_ELECTION.totalVotePower,
+  };
 
   useEffect(() => {
     let cancelled = false;

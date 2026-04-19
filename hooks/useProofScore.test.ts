@@ -31,7 +31,7 @@ describe('useProofScore hook', () => {
     const { result } = renderHook(() => useProofScore())
     expect(result.current.score).toBe(5000)
     expect(result.current.tierName).toBe(PROOF_SCORE_TIERS.NEUTRAL.label)
-    expect(result.current.burnFee).toBe(2.0)
+    expect(result.current.burnFee).toBe(2.5)
     expect(result.current.canVote).toBe(false)
     expect(result.current.color).toBe('#FFD700')
   })

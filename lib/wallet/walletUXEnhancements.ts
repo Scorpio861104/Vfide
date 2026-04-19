@@ -13,6 +13,7 @@ import { base, baseSepolia } from 'wagmi/chains';
 import { getChainByChainId } from '@/lib/chains';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { logger } from '@/lib/logger';
+import { safeLocalStorage } from '@/lib/utils';
 
 const preferredChainConfig = getChainByChainId(CURRENT_CHAIN_ID);
 
@@ -43,7 +44,7 @@ export function getWalletPreferences(): WalletPreferences {
   }
 
   try {
-    const stored = localStorage.getItem(PREFERENCES_KEY);
+    const stored = safeLocalStorage.getItem(PREFERENCES_KEY);
     if (stored) {
       return { ...getDefaultPreferences(), ...JSON.parse(stored) };
     }
@@ -60,7 +61,7 @@ export function saveWalletPreferences(prefs: Partial<WalletPreferences>): void {
   try {
     const current = getWalletPreferences();
     const updated = { ...current, ...prefs };
-    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
+    safeLocalStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
   } catch (error) {
     logger.warn('Failed to save wallet preferences:', error);
   }

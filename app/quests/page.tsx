@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
 import { Target } from 'lucide-react';

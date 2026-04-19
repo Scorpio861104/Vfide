@@ -27,6 +27,9 @@ import "./SharedInterfaces.sol";
 
 interface ISeer_FR {
     function getScore(address subject) external view returns (uint16);
+    /// @dev L-4 FIX: Used to apply score penalty to reporters whose complaints are dismissed.
+    ///      Requires FraudRegistry to be registered as an authorized operator in Seer.
+    function punish(address subject, uint16 delta, string calldata reason) external;
 }
 
 error FR_Zero();
@@ -45,6 +48,8 @@ contract FraudRegistry is ReentrancyGuard {
     // ── Configuration ────────────────────────────────────────
     uint8 public constant COMPLAINTS_TO_FLAG = 3;
     uint256 public constant ESCROW_DURATION = 30 days;
+    /// @notice H-4 FIX: Timelock for permanent ban — gives subject time to appeal before irreversible action
+    uint256 public constant PERMANENT_BAN_DELAY = 7 days;
     uint16 public constant MIN_REPORTER_SCORE = 5000;
     uint16 public constant COMPLAINT_REPORTER_PENALTY = 50; // Filing false complaints costs score
 
@@ -72,6 +77,8 @@ contract FraudRegistry is ReentrancyGuard {
     mapping(address => bool) public isPermanentlyBanned; // DAO escalation
     mapping(address => uint64) public flaggedAt;
     mapping(address => uint64) public pendingReviewAt;  // When review was triggered
+    // H-4 FIX: Pending permanent ban state (7-day timelock)
+    mapping(address => uint64) public pendingPermanentBanAt; // 0 = no pending ban
 
     // ── Transfer escrow for flagged addresses ────────────────
     struct EscrowedTransfer {
@@ -95,6 +102,8 @@ contract FraudRegistry is ReentrancyGuard {
     event ComplaintsDismissedByDAO(address indexed target, address indexed dismissedBy);
     event FlagCleared(address indexed target, address indexed clearedBy);
     event PermanentBanSet(address indexed target, bool banned);
+    event PermanentBanScheduled(address indexed target, uint64 effectiveAt);
+    event PermanentBanCancelled(address indexed target);
     event TransferEscrowed(uint256 indexed escrowIndex, address indexed from, address indexed to, uint256 amount, uint64 releaseAt);
     event EscrowReleased(uint256 indexed escrowIndex, address indexed to, uint256 amount);
     event EscrowCancelledOnClear(uint256 indexed escrowIndex, address indexed from, uint256 amount);
@@ -223,11 +232,12 @@ contract FraudRegistry is ReentrancyGuard {
 
     /// @notice Check if transfers from this address require escrow
     /// @param user Address to check
-    /// @return required True if flagged (3+ complaints) and not cleared
+    /// @return required True if flagged (3+ complaints) or permanently banned
+    /// @dev H-3 FIX: Permanently banned users must also have escrow applied.
+    ///      Previously `isPermanentlyBanned` silently removed the escrow restriction,
+    ///      meaning the most severely sanctioned users had the fewest transfer restrictions.
     function requiresEscrow(address user) external view returns (bool) {
-        return isFlagged[user] && !isPermanentlyBanned[user];
-        // Permanently banned users can't use services at all,
-        // so escrow is moot for them
+        return isFlagged[user] || isPermanentlyBanned[user];
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -254,6 +264,8 @@ contract FraudRegistry is ReentrancyGuard {
     /// @param target Address whose complaints are dismissed
     /// @dev Clears pending review. Complaint history stays on-chain.
     ///      No consequences were ever applied (review was pending, not active).
+    ///      L-4 FIX: Applies COMPLAINT_REPORTER_PENALTY to all reporters whose complaints
+    ///      are dismissed, discouraging coordinated false reports.
     function dismissComplaints(address target) external onlyDAO nonReentrant {
         require(isPendingReview[target], "FR: not pending review");
 
@@ -261,6 +273,12 @@ contract FraudRegistry is ReentrancyGuard {
         pendingReviewAt[target] = 0;
         // Complaint count and history stay — on-chain record is permanent
         // But no consequences are applied
+
+        // L-4 FIX: Penalize all reporters for filing dismissed (false/unfounded) complaints
+        Complaint[] storage filed = complaints[target];
+        for (uint256 i = 0; i < filed.length; i++) {
+            try seer.punish(filed[i].reporter, COMPLAINT_REPORTER_PENALTY, "false_complaint_dismissed") {} catch {}
+        }
 
         emit ComplaintsDismissedByDAO(target, msg.sender);
     }
@@ -276,12 +294,41 @@ contract FraudRegistry is ReentrancyGuard {
         emit FlagCleared(target, msg.sender);
     }
 
-    /// @notice Permanently ban an address from all protocol services
-    /// @param target Address to ban
-    /// @param banned True to ban, false to unban
+    /// @notice Schedule a permanent ban with a 7-day timelock (H-4 FIX).
+    /// @param target Address to permanently ban.
+    /// @dev Unbanning (banned=false) remains instant to allow emergency rehabilitation.
+    ///      Banning must wait 7 days so the subject has time to appeal through DAO governance.
     function setPermanentBan(address target, bool banned) external onlyDAO {
-        isPermanentlyBanned[target] = banned;
-        emit PermanentBanSet(target, banned);
+        if (!banned) {
+            // Instant unban — cancel any pending ban and immediately lift
+            isPermanentlyBanned[target] = false;
+            delete pendingPermanentBanAt[target];
+            emit PermanentBanSet(target, false);
+            return;
+        }
+        // H-4 FIX: Schedule ban with 7-day timelock
+        require(pendingPermanentBanAt[target] == 0, "FR: ban already pending");
+        pendingPermanentBanAt[target] = uint64(block.timestamp) + uint64(PERMANENT_BAN_DELAY);
+        emit PermanentBanScheduled(target, pendingPermanentBanAt[target]);
+    }
+
+    /// @notice Apply a pending permanent ban after the 7-day timelock has elapsed.
+    /// @param target Address to finalize the ban on.
+    function applyPermanentBan(address target) external onlyDAO {
+        uint64 effectiveAt = pendingPermanentBanAt[target];
+        require(effectiveAt != 0, "FR: no pending ban");
+        require(block.timestamp >= effectiveAt, "FR: ban timelock active");
+        delete pendingPermanentBanAt[target];
+        isPermanentlyBanned[target] = true;
+        emit PermanentBanSet(target, true);
+    }
+
+    /// @notice Cancel a pending permanent ban before it takes effect.
+    /// @param target Address whose pending ban should be cancelled.
+    function cancelPermanentBan(address target) external onlyDAO {
+        require(pendingPermanentBanAt[target] != 0, "FR: no pending ban");
+        delete pendingPermanentBanAt[target];
+        emit PermanentBanCancelled(target);
     }
 
     /// @notice Update DAO address

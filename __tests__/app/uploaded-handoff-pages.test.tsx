@@ -8,6 +8,9 @@ jest.mock('@/components/layout/Footer', () => ({
 
 jest.mock('wagmi', () => ({
   useAccount: () => ({ address: '0x1111111111111111111111111111111111111111', isConnected: true }),
+  useReadContract: () => ({ data: undefined, isLoading: false }),
+  useWriteContract: () => ({ writeContract: jest.fn(), data: undefined, isPending: false }),
+  useWaitForTransactionReceipt: () => ({ isLoading: false, isSuccess: false }),
 }));
 
 jest.mock('framer-motion', () => ({

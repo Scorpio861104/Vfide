@@ -1,8 +1,9 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { RefreshCcw, Trophy, Users } from 'lucide-react';
+import { RefreshCcw, Trophy } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { useLeaderboard, useUserRank } from '@/hooks/useLeaderboard';
 import { AllTab } from './components/AllTab';

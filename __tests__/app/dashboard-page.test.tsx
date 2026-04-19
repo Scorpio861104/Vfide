@@ -20,6 +20,7 @@ const renderDashboardPage = () => {
 jest.mock('wagmi', () => ({
   useAccount: () => mockAccountState,
   useChainId: () => 8453,
+  useReadContract: () => ({ data: undefined, isLoading: false }),
 }));
 
 jest.mock('@/lib/chains', () => ({
@@ -45,6 +46,10 @@ jest.mock('@/lib/vfide-hooks', () => ({
   useProofScore: () => ({ score: 7600, tier: 'SILVER', isLoading: false }),
   useVfidePrice: () => ({ priceUsd: 0.5, isLoading: false }),
   useUserBadges: () => ({ badgeIds: [], isLoading: false }),
+}));
+
+jest.mock('@/hooks/useProofScore', () => ({
+  useProofScore: () => ({ score: 7600, burnFee: 1.5, isLoading: false }),
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -171,7 +176,7 @@ describe('Dashboard page logic pathways', () => {
     renderDashboardPage();
 
     expect(screen.getByText(/Dashboard/i)).toBeTruthy();
-    expect(screen.getAllByText(/ProofScoreRing 4500/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/ProofScoreRing 7600/i).length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /Fee Sim/i }));
     expect(await screen.findByRole('heading', { name: /Fee Simulator/i })).toBeTruthy();

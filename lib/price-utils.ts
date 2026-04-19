@@ -1,12 +1,9 @@
 /**
  * VFIDE token price utilities
- * 
- * For testnet: Uses a default display price
- * For mainnet: Will integrate Chainlink/DEX price feeds
+ *
+ * Price must be sourced from a live oracle or DEX feed.
+ * No hardcoded default is provided; callers must supply a current price.
  */
-
-// Default price for display
-export const DEFAULT_VFIDE_PRICE = 0.05;
 
 const CURRENCY_LOCALES: Record<string, string> = {
   USD: 'en-US',
@@ -78,7 +75,7 @@ export function parsePrice(value: string | number): number {
 /**
  * Convert VFIDE amount to USD string
  */
-export function vfideToUsd(amount: number | string, pricePerToken: number = DEFAULT_VFIDE_PRICE): string {
+export function vfideToUsd(amount: number | string, pricePerToken: number): string {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (isNaN(numAmount) || numAmount === 0) return '$0.00';
   
@@ -99,8 +96,8 @@ export function vfideToUsd(amount: number | string, pricePerToken: number = DEFA
  * Format VFIDE amount with USD value
  */
 export function formatVfideWithUsd(
-  amount: number | string, 
-  pricePerToken: number = DEFAULT_VFIDE_PRICE
+  amount: number | string,
+  pricePerToken: number
 ): { vfide: string; usd: string } {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   

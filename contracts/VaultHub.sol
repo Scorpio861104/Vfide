@@ -17,11 +17,19 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     address public dao;               // DAO can force recover
 
     uint8 public constant CARD_GUARDIAN_THRESHOLD = 1;
-    uint256 public constant CARD_MAX_PER_TRANSFER = 100 * 1e18;
-    uint256 public constant CARD_DAILY_TRANSFER_LIMIT = 300 * 1e18;
+    /// @notice Default per-transfer limit for newly created vaults.
+    /// @dev Raised from 100 VFIDE to 500,000 VFIDE so vaults are usable for DeFi operations
+    ///      (liquidity provision, lending, farming) from day one.  Individual vault owners
+    ///      can still tighten limits at any time via CardBoundVault.setSpendLimits().
+    ///      Changes to these defaults apply to new vaults only; existing vaults are unaffected.
+    uint256 public cardDefaultMaxPerTransfer = 500_000 * 1e18;
+    /// @notice Default daily transfer limit for newly created vaults.
+    uint256 public cardDefaultDailyLimit = 2_000_000 * 1e18;
     // M-3 FIX: Vaults have 30 days after creation to complete guardian setup.
     // After this window, certain critical operations require setup to be complete.
     uint256 public constant GUARDIAN_SETUP_GRACE = 30 days;
+    /// @notice How early before the guardian setup deadline a warning can be emitted.
+    uint256 public constant GUARDIAN_SETUP_WARNING = 7 days;
 
     /// Registry
     mapping(address => address) public vaultOf;
@@ -54,6 +62,18 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     address public pendingDAO_VH;
     uint64 public pendingDAOAt_VH;
 
+    // Pending state for card default limit changes
+    uint256 public pendingCardMaxPerTransfer;
+    uint256 public pendingCardDailyLimit;
+    uint64 public pendingCardLimitsAt;
+
+    // 48h timelock state for setRecoveryApprover and setCouncil (H-1)
+    address public pendingRecoveryApproverAddr;
+    bool    public pendingRecoveryApproverStatus;
+    uint64  public pendingRecoveryApproverAt;
+    address public pendingCouncil;
+    uint64  public pendingCouncilAt;
+
     /// Events
     event VFIDEScheduled_VH(address indexed vfide, uint64 effectiveAt);
     event ProofLedgerScheduled_VH(address indexed ledger, uint64 effectiveAt);
@@ -62,8 +82,15 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     event VFIDESet(address vfide);
     event DAOSet(address dao);
     event CouncilSet(address council);
+    event CardDefaultLimitsProposed(uint256 maxPerTransfer, uint256 dailyLimit, uint64 effectiveAt);
+    event CardDefaultLimitsSet(uint256 maxPerTransfer, uint256 dailyLimit);
+    event RecoveryApproverProposed(address indexed approver, bool status, uint64 effectiveAt);
+    event RecoveryApproverSet(address indexed approver, bool status);
+    event CouncilProposed(address indexed council, uint64 effectiveAt);
 
     event GuardianSetupCompleted(address indexed owner, address indexed vault);
+    /// @notice Emitted when a vault is within GUARDIAN_SETUP_WARNING of its guardian setup deadline.
+    event GuardianSetupExpiring(address indexed vault, address indexed owner, uint256 deadline);
 
     /// Errors
     error VH_Zero();
@@ -80,6 +107,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_NotRecoveryContract();
     error VH_RecoveryDisabled();
     error VH_GuardianSetupRequired(); // M-3 FIX: grace period expired, setup must be completed first
+    error VH_InvalidLimits();
+    error VH_PendingExists();
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
@@ -101,6 +130,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param _vfide New VFIDE token address.
     function setVFIDE(address _vfide) external onlyOwner {
         if (_vfide == address(0)) revert VH_Zero();
+        if (pendingVFIDEAt_VH != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingVFIDE_VH = _vfide;
         pendingVFIDEAt_VH = effectiveAt;
@@ -113,6 +143,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param token New VFIDE token address.
     function setVFIDEToken(address token) external onlyOwner {
         if (token == address(0)) revert VH_Zero();
+        if (pendingVFIDEAt_VH != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingVFIDE_VH = token;
         pendingVFIDEAt_VH = effectiveAt;
@@ -155,10 +186,18 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // IVaultHub compatibility wrapper
     /// @notice Add a DAO recovery approver multisig.
     /// @param multisig Address that may approve force recovery operations.
+    /// @dev C-2 FIX: Routes through timelocked setRecoveryApprover path to prevent instant authorization.
+    ///      Instant approval grants `executeRecoveryRotation` power and must be subject to the same
+    ///      48-hour timelock as any other recovery approver change.
     function setDAORecoveryMultisig(address multisig) external onlyOwner {
         if (multisig == address(0)) revert VH_Zero();
-        isRecoveryApprover[multisig] = true;
-        _log("recovery_multisig_set");
+        if (pendingRecoveryApproverAt != 0) revert VH_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingRecoveryApproverAddr = multisig;
+        pendingRecoveryApproverStatus = true;
+        pendingRecoveryApproverAt = effectiveAt;
+        emit RecoveryApproverProposed(multisig, true, effectiveAt);
+        _log("recovery_multisig_scheduled");
     }
 
     // IVaultHub compatibility wrapper
@@ -190,22 +229,70 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _log("hub_dao_set");
     }
     
-    /// @notice Add or remove an address allowed to approve force recovery.
-    /// @param approver Address to update.
+    /// @notice Propose adding or removing a recovery approver (48h timelock).
+    /// @dev H-1 FIX: Instant approval grants `executeRecoveryRotation` power — must be timelocked.
+    /// @param approver Address to authorize or revoke.
     /// @param status True to authorize, false to revoke.
     function setRecoveryApprover(address approver, bool status) external onlyOwner {
         if (approver == address(0)) revert VH_Zero();
+        if (pendingRecoveryApproverAt != 0) revert VH_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingRecoveryApproverAddr = approver;
+        pendingRecoveryApproverStatus = status;
+        pendingRecoveryApproverAt = effectiveAt;
+        emit RecoveryApproverProposed(approver, status, effectiveAt);
+        _log(status ? "recovery_approver_proposed_add" : "recovery_approver_proposed_remove");
+    }
+
+    /// @notice Apply a pending recovery approver change after the 48-hour timelock.
+    function applyRecoveryApprover() external onlyOwner {
+        if (pendingRecoveryApproverAt == 0 || block.timestamp < pendingRecoveryApproverAt) revert VH_Timelock();
+        address approver = pendingRecoveryApproverAddr;
+        bool status = pendingRecoveryApproverStatus;
         isRecoveryApprover[approver] = status;
+        emit RecoveryApproverSet(approver, status);
+        delete pendingRecoveryApproverAddr;
+        delete pendingRecoveryApproverStatus;
+        delete pendingRecoveryApproverAt;
         _log(status ? "recovery_approver_added" : "recovery_approver_removed");
     }
 
-    /// @notice Set council contract used for approver fallback checks.
+    /// @notice Cancel a pending recovery approver change.
+    function cancelRecoveryApprover() external onlyOwner {
+        if (pendingRecoveryApproverAt == 0) revert VH_Timelock();
+        delete pendingRecoveryApproverAddr;
+        delete pendingRecoveryApproverStatus;
+        delete pendingRecoveryApproverAt;
+    }
+
+    /// @notice Propose updating the council contract (48h timelock).
+    /// @dev H-1 FIX: Council used in approver fallback checks — must be timelocked.
     /// @param _council Council election/registry contract.
     function setCouncil(address _council) external onlyOwner {
         if (_council == address(0)) revert VH_Zero();
-        council = _council;
-        emit CouncilSet(_council);
+        if (pendingCouncilAt != 0) revert VH_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingCouncil = _council;
+        pendingCouncilAt = effectiveAt;
+        emit CouncilProposed(_council, effectiveAt);
+        _log("hub_council_proposed");
+    }
+
+    /// @notice Apply a pending council update after the 48-hour timelock.
+    function applyCouncil() external onlyOwner {
+        if (pendingCouncilAt == 0 || block.timestamp < pendingCouncilAt) revert VH_Timelock();
+        council = pendingCouncil;
+        emit CouncilSet(pendingCouncil);
+        delete pendingCouncil;
+        delete pendingCouncilAt;
         _log("hub_council_set");
+    }
+
+    /// @notice Cancel a pending council update.
+    function cancelCouncil() external onlyOwner {
+        if (pendingCouncilAt == 0) revert VH_Timelock();
+        delete pendingCouncil;
+        delete pendingCouncilAt;
     }
 
     // ——— Deterministic address prediction for UX
@@ -348,6 +435,37 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         return created > 0 && block.timestamp > created + GUARDIAN_SETUP_GRACE;
     }
 
+    /// @notice Returns the guardian setup status and time remaining for a vault.
+    /// @return remaining Seconds until the guardian setup deadline (0 if expired or complete).
+    /// @return isExpired True if the grace period has elapsed without setup completion.
+    /// @return isComplete True if guardian setup has already been completed.
+    function guardianSetupTimeRemaining(address vault)
+        external
+        view
+        returns (uint256 remaining, bool isExpired, bool isComplete)
+    {
+        isComplete = guardianSetupComplete[vault];
+        if (isComplete) return (0, false, true);
+        uint256 created = vaultCreatedAt[vault];
+        if (created == 0) return (0, false, false);
+        uint256 deadline = created + GUARDIAN_SETUP_GRACE;
+        if (block.timestamp >= deadline) return (0, true, false);
+        remaining = deadline - block.timestamp;
+    }
+
+    /// @notice Anyone can call this to emit a warning event for a vault approaching its guardian setup deadline.
+    /// @dev Emits GuardianSetupExpiring if setup is incomplete and within GUARDIAN_SETUP_WARNING of the deadline.
+    ///      Use this to trigger off-chain alerts (indexers, bots, UI) before the window expires.
+    function emitGuardianSetupWarning(address vault) external {
+        if (guardianSetupComplete[vault]) return;
+        uint256 created = vaultCreatedAt[vault];
+        if (created == 0) return;
+        uint256 deadline = created + GUARDIAN_SETUP_GRACE;
+        if (block.timestamp >= deadline) return;                      // already expired
+        if (block.timestamp + GUARDIAN_SETUP_WARNING < deadline) return; // too early to warn
+        emit GuardianSetupExpiring(vault, ownerOfVault[vault], deadline);
+    }
+
     function executeRecoveryRotation(address vault, address newWallet) external nonReentrant {
         if (!isRecoveryApprover[msg.sender]) revert VH_NotRecoveryContract();
         // M-3 FIX: Block recovery if guardian setup grace period has expired without completion.
@@ -385,8 +503,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
                 owner_,
                 guardians,
                 CARD_GUARDIAN_THRESHOLD,
-                CARD_MAX_PER_TRANSFER,
-                CARD_DAILY_TRANSFER_LIMIT,
+                cardDefaultMaxPerTransfer,
+                cardDefaultDailyLimit,
                 address(ledger)
             )
         );
@@ -394,6 +512,44 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     function _hasIndependentGuardian(CardBoundVault vault, address owner_) internal view returns (bool) {
         return !(vault.guardianCount() == 2 && vault.isGuardian(owner_) && vault.isGuardian(dao));
+    }
+
+    // ——— Card vault default limit management (timelocked)
+    /**
+     * @notice Schedule an update to the default per-transfer and daily limits applied to
+     *         newly created vaults.  Changes take effect after the 48-hour timelock and
+     *         apply only to vaults created after that point; existing vault limits are
+     *         unchanged.
+     * @param _maxPerTransfer New default max per-transfer (must be > 0 and <= _dailyLimit).
+     * @param _dailyLimit     New default daily transfer limit (must be > 0).
+     */
+    function setCardDefaultLimits(uint256 _maxPerTransfer, uint256 _dailyLimit) external onlyOwner {
+        if (_maxPerTransfer == 0 || _dailyLimit == 0 || _maxPerTransfer > _dailyLimit) revert VH_InvalidLimits();
+        if (pendingCardLimitsAt != 0) revert VH_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingCardMaxPerTransfer = _maxPerTransfer;
+        pendingCardDailyLimit = _dailyLimit;
+        pendingCardLimitsAt = effectiveAt;
+        emit CardDefaultLimitsProposed(_maxPerTransfer, _dailyLimit, effectiveAt);
+    }
+
+    /// @notice Apply pending default limit change after the 48-hour timelock.
+    function applyCardDefaultLimits() external onlyOwner {
+        if (pendingCardLimitsAt == 0 || block.timestamp < pendingCardLimitsAt) revert VH_Timelock();
+        cardDefaultMaxPerTransfer = pendingCardMaxPerTransfer;
+        cardDefaultDailyLimit = pendingCardDailyLimit;
+        emit CardDefaultLimitsSet(pendingCardMaxPerTransfer, pendingCardDailyLimit);
+        delete pendingCardMaxPerTransfer;
+        delete pendingCardDailyLimit;
+        delete pendingCardLimitsAt;
+    }
+
+    /// @notice Cancel a pending default limit change.
+    function cancelCardDefaultLimits() external onlyOwner {
+        if (pendingCardLimitsAt == 0) revert VH_Timelock();
+        delete pendingCardMaxPerTransfer;
+        delete pendingCardDailyLimit;
+        delete pendingCardLimitsAt;
     }
 
     function _log(string memory action) internal {

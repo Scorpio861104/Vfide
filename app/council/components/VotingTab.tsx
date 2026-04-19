@@ -1,10 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, CheckCircle2 as CheckCircle, Clock, Shield, Users, Vote } from 'lucide-react';
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
-import { CouncilElectionABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES } from '@/lib/contracts';
+import { motion } from 'framer-motion';
+import { AlertTriangle, CheckCircle2 as CheckCircle, Clock, Vote } from 'lucide-react';
 
 export function VotingTab({ isConnected }: { isConnected: boolean }) {
   const removalVotes = [

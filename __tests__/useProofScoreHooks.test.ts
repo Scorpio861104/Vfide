@@ -210,7 +210,7 @@ describe('useProofScoreHooks', () => {
       await result.writeContractAsync({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'endorseUser',
+        functionName: 'endorse',
         args: [MOCK_MERCHANT],
       })
       
@@ -261,14 +261,14 @@ describe('useProofScoreHooks', () => {
       await result.writeContractAsync({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'flagUser',
+        functionName: 'fileComplaint',
         args: [MOCK_MERCHANT, 'Suspicious activity'],
       })
       
       expect(result.writeContractAsync).toHaveBeenCalledWith({
         address: MOCK_USER,
         abi: [],
-        functionName: 'flagUser',
+        functionName: 'fileComplaint',
         args: [MOCK_MERCHANT, 'Suspicious activity'],
       })
     })

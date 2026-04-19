@@ -438,7 +438,7 @@ export async function deriveStorageKey(userAddress: string): Promise<CryptoKey> 
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: new Uint8Array(saltBytes).buffer as ArrayBuffer,
+      salt: new Uint8Array(saltBytes),
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256',
     },
@@ -462,7 +462,7 @@ export async function encryptStealthKeys(
   const plaintext = encoder.encode(JSON.stringify(keys));
 
   const ciphertextBuffer = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(iv).buffer as ArrayBuffer },
+    { name: 'AES-GCM', iv: new Uint8Array(iv) },
     cryptoKey,
     plaintext
   );
@@ -496,9 +496,9 @@ export async function decryptStealthKeys(
   const ciphertextBytes = hexToBytes(ciphertext);
 
   const plaintextBuffer = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(ivBytes).buffer as ArrayBuffer },
+    { name: 'AES-GCM', iv: new Uint8Array(ivBytes) },
     cryptoKey,
-    new Uint8Array(ciphertextBytes).buffer as ArrayBuffer
+    new Uint8Array(ciphertextBytes)
   );
 
   const decoder = new TextDecoder();

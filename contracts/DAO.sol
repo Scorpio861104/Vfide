@@ -47,6 +47,7 @@ contract DAO is ReentrancyGuard {
     event ProposalTypeTargetPolicySet(ProposalType indexed ptype, address indexed target, bool allowed);
     event ProposalTypeSelectorPolicySet(ProposalType indexed ptype, bytes4 indexed selector, bool allowed);
     event SeerAutonomousSet(address seerAutonomous);
+    event RequireProposalPoliciesSet(bool required);
     event EmergencyQuorumRescueInitiated(uint256 readyAt);
     event EmergencyQuorumRescueApproved(); // DAO-03 FIX: Track secondary approval
     event EmergencyQuorumRescueExecuted(uint256 newMinVotes, uint256 newMinParticipation);
@@ -93,6 +94,10 @@ contract DAO is ReentrancyGuard {
     mapping(ProposalType => uint256) public proposalTypeTargetPolicyCount;
     mapping(ProposalType => mapping(bytes4 => bool)) public proposalTypeSelectorAllowed;
     mapping(ProposalType => uint256) public proposalTypeSelectorPolicyCount;
+
+    /// @notice H-3 FIX: When true, proposals are fail-closed — types without any configured policy are rejected.
+    /// @dev Default false preserves backward compatibility. Enable via governance once policies are configured.
+    bool public requireProposalPolicies;
 
     /// @notice DAO-10 FIX: Cap total proposals to prevent unbounded iteration
     uint256 public constant MAX_PROPOSALS = 200;
@@ -376,6 +381,14 @@ contract DAO is ReentrancyGuard {
         emit ProposalTypeSelectorPolicySet(ptype, selector, allowed);
     }
 
+    /// @notice H-3 FIX: Set fail-closed mode for proposal policies.
+    /// @dev When true, any proposal type that has no configured target or selector policy is rejected.
+    ///      Enable only after all required policies have been configured via governance.
+    function setRequireProposalPolicies(bool required) external onlyTimelock {
+        requireProposalPolicies = required;
+        emit RequireProposalPoliciesSet(required);
+    }
+
     function _selector(bytes calldata data) internal pure returns (bytes4 selector) {
         if (data.length < 4) return bytes4(0);
         assembly {
@@ -404,9 +417,18 @@ contract DAO is ReentrancyGuard {
         }
 
         // Optional allowlist matrix by proposal type.
-        // Policies are enforced only when configured for a given type, preserving backward compatibility.
+        // H-3 FIX: When requireProposalPolicies is true, the check is fail-closed:
+        // proposal types with NO configured policy are rejected outright to prevent
+        // unintended governance actions on unconfigured target/selector combinations.
+        if (requireProposalPolicies && proposalTypeTargetPolicyCount[ptype] == 0) {
+            revert DAO_ProposalTargetNotAllowed(uint8(ptype), target);
+        }
         if (target != address(0) && proposalTypeTargetPolicyCount[ptype] > 0 && !proposalTypeTargetAllowed[ptype][target]) {
             revert DAO_ProposalTargetNotAllowed(uint8(ptype), target);
+        }
+        if (requireProposalPolicies && proposalTypeSelectorPolicyCount[ptype] == 0) {
+            bytes4 sel = _selector(data);
+            revert DAO_ProposalSelectorNotAllowed(uint8(ptype), sel);
         }
         if (proposalTypeSelectorPolicyCount[ptype] > 0) {
             bytes4 selector = _selector(data);

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { ConnectTab } from './components/ConnectTab';
 import { GuideTab } from './components/GuideTab';

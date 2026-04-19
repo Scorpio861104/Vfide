@@ -14,7 +14,6 @@ import { useIsMerchant, useFeeCalculator } from '@/lib/vfide-hooks'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { MerchantPortalABI } from '@/lib/abis'
 import { safeParseFloat } from '@/lib/validation'
-import { DEFAULT_VFIDE_PRICE } from '@/lib/price-utils'
 
 interface Product {
   id: string
@@ -104,7 +103,7 @@ export function MerchantPOS() {
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const calculator = useFeeCalculator(subtotal.toString())
-  const vfideAmount = (subtotal / DEFAULT_VFIDE_PRICE).toFixed(2)
+  const vfideAmount = 'N/A' // requires live price feed
   
   // Multi-processor comparison
   const calculateProcessorFees = (amount: number) => {

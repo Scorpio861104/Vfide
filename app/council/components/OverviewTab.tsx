@@ -1,8 +1,7 @@
 'use client';
 import { GlassCard } from "@/components/ui/GlassCard";
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, CheckCircle2, Clock, Crown, DollarSign, Shield, Sparkles, Star, TrendingUp, Users, Vote } from 'lucide-react';
+import { DollarSign, Shield, Sparkles, TrendingUp, Users, Vote } from 'lucide-react';
 
 
 

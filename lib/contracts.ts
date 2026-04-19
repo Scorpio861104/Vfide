@@ -49,6 +49,8 @@ import {
   UserRewardsABI,
   FraudRegistryABI,
   VFIDETestnetFaucetABI,
+  VFIDETermLoanABI,
+  VFIDEFlashLoanABI,
 } from './abis'
 import { logger } from '@/lib/logger';
 
@@ -118,6 +120,8 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   WithdrawalQueue: 'NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS',
   FraudRegistry: 'NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS',
   VFIDETestnetFaucet: 'NEXT_PUBLIC_FAUCET_ADDRESS',
+  VFIDETermLoan: 'NEXT_PUBLIC_TERM_LOAN_ADDRESS',
+  VFIDEFlashLoan: 'NEXT_PUBLIC_FLASH_LOAN_ADDRESS',
 };
 
 /**
@@ -210,6 +214,8 @@ export const CONTRACT_ADDRESSES = {
   WithdrawalQueue: validateContractAddress(process.env.NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS, 'WithdrawalQueue'),
   FraudRegistry: validateContractAddress(process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS, 'FraudRegistry'),
   VFIDETestnetFaucet: validateContractAddress(process.env.NEXT_PUBLIC_FAUCET_ADDRESS, 'VFIDETestnetFaucet'),
+  VFIDETermLoan: validateContractAddress(process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS, 'VFIDETermLoan'),
+  VFIDEFlashLoan: validateContractAddress(process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS, 'VFIDEFlashLoan'),
 }
 
 // Legacy ABI alias names for compatibility with existing hooks
@@ -296,4 +302,6 @@ export {
   UserRewardsABI,
   FraudRegistryABI,
   VFIDETestnetFaucetABI,
+  VFIDETermLoanABI,
+  VFIDEFlashLoanABI,
 }

@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=20 <23",
+    "node": ">=20 <25",
     "npm": ">=10"
   },
   "scripts": {
@@ -89,10 +89,13 @@
     "deploy:start-vesting:mainnet": "hardhat run contracts/scripts/start-vesting.ts --network mainnet",
     "deploy:arm-handover:sepolia": "hardhat run contracts/scripts/arm-handover.ts --network sepolia",
     "deploy:arm-handover:mainnet": "hardhat run contracts/scripts/arm-handover.ts --network mainnet",
+    "deploy:full": "hardhat run scripts/deploy-full.ts --network",
+    "apply:full": "hardhat run scripts/apply-full.ts --network",
     "deploy:all": "hardhat run scripts/deploy-all.ts --network",
+    "deploy:phase1": "hardhat run contracts/scripts/deploy-phase1.ts --network",
     "apply:all": "hardhat run scripts/apply-all.ts --network",
     "deploy:phase2": "hardhat run scripts/deploy-phase2.ts --network",
-    "deploy:phase3": "hardhat run scripts/deploy-phase3.ts --network",
+    "deploy:phase3": "hardhat run contracts/scripts/deploy-phase3.ts --network",
     "deploy:phase4": "hardhat run scripts/deploy-phase4.ts --network",
     "deploy:phase5": "hardhat run scripts/deploy-phase5.ts --network",
     "apply:phase2": "hardhat run scripts/apply-phase2.ts --network",
@@ -172,8 +175,8 @@
     "changeset:version": "changeset version",
     "changeset:publish": "changeset publish",
     "test:ui": "vitest --ui",
-    "test:vitest": "vitest",
-    "test:vitest:watch": "vitest --watch"
+    "test:vitest": "vitest run",
+    "test:vitest:watch": "vitest"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1029.0",
@@ -204,7 +207,7 @@
     "jsonwebtoken": "9.0.3",
     "lucide-react": "^1.7.0",
     "mlkem": "^2.2.0",
-    "next": "^16.2.1",
+    "next": "^16.2.4",
     "next-themes": "^0.4.6",
     "otplib": "^12.0.1",
     "pdf-lib": "^1.17.1",
@@ -318,7 +321,9 @@
     },
     "hono": "^4.12.7",
     "axios": "^1.13.5",
-    "bn.js": "^5.2.3"
+    "bn.js": "^5.2.3",
+    "serialize-javascript": "^7.0.5",
+    "diff": "^8.0.3"
   },
   "msw": {
     "workerDirectory": [

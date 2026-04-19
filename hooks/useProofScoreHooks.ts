@@ -41,10 +41,11 @@ export function useProofScore(userAddress?: `0x${string}`) {
   
   // Total fees based on ProofScore (linear interpolation in contract)
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
+  // Neutral (5000) is the midpoint → 2.5%
   const burnFee = 
     scoreNum >= 8000 ? 0.25 :  // Elite: 0.25% total (contract minimum)
     scoreNum >= 7000 ? 1.0 :   // High Trust: ~1% (interpolated)
-    scoreNum >= 5000 ? 2.0 :   // Neutral: ~2% (interpolated)
+    scoreNum >= 5000 ? 2.5 :   // Neutral: 2.5% (midpoint of fee range)
     scoreNum >= 4000 ? 3.5 :   // Low Trust: ~3.5% (interpolated)
     5.0                        // Risky (≤4000): 5% max (contract maximum)
   

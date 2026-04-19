@@ -99,14 +99,14 @@ function requireAddress(book: AddressBook, key: string): string {
 
 async function readAddressGetter(provider: JsonRpcProvider, contractAddress: string, getter: string): Promise<string> {
   const c = new Contract(contractAddress, [`function ${getter}() view returns (address)`], provider);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const value = await (c as any)[getter]();
   return String(value);
 }
 
 async function readUintGetter(provider: JsonRpcProvider, contractAddress: string, getter: string): Promise<bigint> {
   const c = new Contract(contractAddress, [`function ${getter}() view returns (uint256)`], provider);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const value = await (c as any)[getter]();
   return BigInt(value.toString());
 }

@@ -68,7 +68,7 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
 
     expect(result.current.score).toBe(5500)
-    expect(result.current.burnFee).toBe(2.0)
+    expect(result.current.burnFee).toBe(2.5)
     expect(result.current.color).toBe('#FFD700')
   })
 
@@ -170,6 +170,54 @@ describe('useProofScore', () => {
     const { result } = renderHook(() => useProofScore())
 
     expect(result.current.refetch).toBe(mockRefetch)
+  })
+
+  it('uses on-chain fee quote when burn router returns fee tuple', () => {
+    ;(wagmi.useReadContract as jest.Mock).mockImplementation((params: { functionName: string }) => {
+      if (params.functionName === 'getScore') {
+        return { data: BigInt(5000), isError: false, isLoading: false, refetch: jest.fn() }
+      }
+      return {
+        data: [
+          100n * 10n ** 18n,
+          50n * 10n ** 18n,
+          50n * 10n ** 18n,
+        ],
+        isError: false,
+        isLoading: false,
+        refetch: jest.fn(),
+      }
+    })
+
+    const { result } = renderHook(() => useProofScore())
+
+    expect(result.current.burnFee).toBe(2)
+  })
+
+  it('falls back to score-based fee when burn router quote is not an array', () => {
+    ;(wagmi.useReadContract as jest.Mock).mockImplementation((params: { functionName: string }) => {
+      if (params.functionName === 'getScore') {
+        return { data: BigInt(7500), isError: false, isLoading: false, refetch: jest.fn() }
+      }
+      return { data: { total: 123n }, isError: false, isLoading: false, refetch: jest.fn() }
+    })
+
+    const { result } = renderHook(() => useProofScore())
+
+    expect(result.current.burnFee).toBe(1)
+  })
+
+  it('treats missing fee tuple entries as zero values', () => {
+    ;(wagmi.useReadContract as jest.Mock).mockImplementation((params: { functionName: string }) => {
+      if (params.functionName === 'getScore') {
+        return { data: BigInt(5000), isError: false, isLoading: false, refetch: jest.fn() }
+      }
+      return { data: [], isError: false, isLoading: false, refetch: jest.fn() }
+    })
+
+    const { result } = renderHook(() => useProofScore())
+
+    expect(result.current.burnFee).toBe(0)
   })
 })
 describe('getScoreTier', () => {

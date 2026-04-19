@@ -1,9 +1,13 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * VFIDE Live Demo Page
  * Shows ALL real-time features in one mind-blowing showcase
  */
 
-'use client'
+
 
 import { Footer } from '@/components/layout/Footer'
 import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'

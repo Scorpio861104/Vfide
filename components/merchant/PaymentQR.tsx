@@ -9,7 +9,6 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { useIsMerchant } from '@/lib/vfide-hooks'
 import { buildQrSignatureMessage } from '@/lib/payments/qrSignature'
-import { TOKEN_REFERENCE_PRICE } from '@/lib/constants'
 import { 
   QrCode, 
   Download, 
@@ -70,8 +69,8 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
       })()
     : ''
 
-  // USD estimate using canonical token reference price
-  const usdValue = amount ? (parseFloat(amount) * TOKEN_REFERENCE_PRICE).toFixed(2) : '0.00'
+  // USD estimate – requires a live price feed; shown as N/A until one is available
+  const usdValue = 'N/A'
   const merchantName = merchantInfo.businessName || 'VFIDE Merchant'
 
   const copyPaymentLink = () => {

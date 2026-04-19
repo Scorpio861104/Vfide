@@ -6,9 +6,17 @@ import {
     formatTokenAmount,
     formatUSD,
     getScoreTierColor,
+    isNonZeroAddress,
+    isValidAddress,
     parseTokenAmount,
+    safeInt,
+    safeNumber,
+    safePercentage,
+    safePositive,
+    safeSessionStorage,
     safeLocalStorage,
     timeUntil,
+    truncateAddress,
     truncate,
     validateAddress,
 } from '../utils'
@@ -64,11 +72,16 @@ describe('validateAddress', () => {
   })
 
   it('handles malformed address gracefully (catch block line 164)', () => {
-    // Mock isAddress to throw an error to trigger the catch block
-    const invalidButLengthCorrect = '0x' + 'z'.repeat(40)
-    const result = validateAddress(invalidButLengthCorrect)
-    // Should return the trimmed value as fallback
-    expect(result).toBeTruthy()
+    const viem = require('viem')
+    const isAddressSpy = jest.spyOn(viem, 'isAddress').mockReturnValue(true)
+    const getAddressSpy = jest.spyOn(viem, 'getAddress').mockImplementation(() => {
+      throw new Error('checksum failure')
+    })
+    const validLengthAddress = ' 0x1234567890123456789012345678901234567890 '
+    const result = validateAddress(validLengthAddress)
+    expect(result).toBe('0x1234567890123456789012345678901234567890')
+    isAddressSpy.mockRestore()
+    getAddressSpy.mockRestore()
   })
 })
 
@@ -122,6 +135,44 @@ describe('safeLocalStorage', () => {
   })
 })
 
+describe('safeSessionStorage', () => {
+  beforeEach(() => {
+    sessionStorage.clear()
+  })
+
+  it('getItem returns value', () => {
+    sessionStorage.setItem('key', 'value')
+    expect(safeSessionStorage.getItem('key')).toBe('value')
+  })
+
+  it('setItem stores value', () => {
+    expect(safeSessionStorage.setItem('key', 'value')).toBe(true)
+    expect(sessionStorage.getItem('key')).toBe('value')
+  })
+
+  it('removeItem removes value', () => {
+    sessionStorage.setItem('key', 'value')
+    expect(safeSessionStorage.removeItem('key')).toBe(true)
+    expect(sessionStorage.getItem('key')).toBeNull()
+  })
+
+  it('handles storage exceptions', () => {
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('Storage error')
+    })
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('Storage error')
+    })
+    jest.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
+      throw new Error('Storage error')
+    })
+    expect(safeSessionStorage.getItem('key')).toBeNull()
+    expect(safeSessionStorage.setItem('key', 'value')).toBe(false)
+    expect(safeSessionStorage.removeItem('key')).toBe(false)
+    jest.restoreAllMocks()
+  })
+})
+
 describe('formatAddress', () => {
   it('formats address with default chars', () => {
     expect(formatAddress('0x1234567890abcdef1234567890abcdef12345678')).toBe('0x1234...5678')
@@ -133,6 +184,25 @@ describe('formatAddress', () => {
 
   it('handles empty address', () => {
     expect(formatAddress('')).toBe('')
+  })
+})
+
+describe('address helpers', () => {
+  const validAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'
+
+  it('isValidAddress accepts valid format and rejects invalid input', () => {
+    expect(isValidAddress(validAddress)).toBe(true)
+    expect(isValidAddress('bad')).toBe(false)
+  })
+
+  it('isNonZeroAddress rejects zero address', () => {
+    expect(isNonZeroAddress(validAddress)).toBe(true)
+    expect(isNonZeroAddress('0x0000000000000000000000000000000000000000')).toBe(false)
+  })
+
+  it('truncateAddress truncates only valid 42-char addresses', () => {
+    expect(truncateAddress(validAddress)).toMatch(/\.\.\./)
+    expect(truncateAddress('not-an-address')).toBe('not-an-address')
   })
 })
 
@@ -187,6 +257,10 @@ describe('parseTokenAmount', () => {
     expect(parseTokenAmount('1.5')).toBe(BigInt('1500000000000000000'))
   })
 
+  it('pads fractional component to token decimals', () => {
+    expect(parseTokenAmount('1.234', 6)).toBe(BigInt('1234000'))
+  })
+
   it('handles custom decimals', () => {
     expect(parseTokenAmount('1', 6)).toBe(BigInt('1000000'))
   })
@@ -200,6 +274,27 @@ describe('parseTokenAmount', () => {
     expect(() => parseTokenAmount('abc')).toThrow('Invalid token amount')
     expect(() => parseTokenAmount('.')).toThrow('Invalid token amount')
     expect(() => parseTokenAmount('1.2.3')).toThrow('Invalid token amount')
+  })
+})
+
+describe('safe numeric helpers', () => {
+  it('safeNumber uses fallback for nullish values', () => {
+    expect(safeNumber(null, 7)).toBe(7)
+    expect(safeNumber(undefined, 9)).toBe(9)
+  })
+
+  it('safeInt floors non-integer values', () => {
+    expect(safeInt(3.9)).toBe(3)
+  })
+
+  it('safePercentage rejects out of range values', () => {
+    expect(safePercentage(50)).toBe(50)
+    expect(safePercentage(101, 8)).toBe(8)
+  })
+
+  it('safePositive rejects negative values', () => {
+    expect(safePositive(10)).toBe(10)
+    expect(safePositive(-1, 5)).toBe(5)
   })
 })
 

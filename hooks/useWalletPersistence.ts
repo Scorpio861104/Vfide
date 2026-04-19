@@ -261,9 +261,10 @@ export function useWalletPersistence() {
 
   // Clear session on disconnect
   useEffect(() => {
-    if (!isConnected) {
+    if (!isConnected && !isReconnecting) {
       // Clear session whenever disconnected, whether from user action or other reasons
-      // But only after mount to avoid clearing valid sessions on initial load
+      // But only after mount and only when not in the middle of a reconnect attempt,
+      // to avoid clearing a valid session before the reconnect finishes.
       if (hasAttemptedReconnect.current) {
         const session = getSession();
         if (session) {
@@ -271,7 +272,7 @@ export function useWalletPersistence() {
         }
       }
     }
-  }, [isConnected, getSession, clearSession]);
+  }, [isConnected, isReconnecting, getSession, clearSession]);
 
   // Activity heartbeat - update last active every 5 minutes
   useEffect(() => {

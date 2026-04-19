@@ -1,9 +1,11 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Footer } from '@/components/layout/Footer';
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, SlidersHorizontal, Grid, List, X, Loader2, Package } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Search, SlidersHorizontal, Grid, List, Loader2, Package } from 'lucide-react';
 
 import { FilterContent } from './components/FilterContent';
 import { ProductGridCard } from './components/ProductGridCard';

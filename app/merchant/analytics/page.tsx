@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Footer } from '@/components/layout/Footer';
 import { MerchantAnalytics } from '@/components/analytics/MerchantAnalytics';
 import { useAccount } from 'wagmi';

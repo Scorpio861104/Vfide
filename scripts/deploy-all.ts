@@ -334,6 +334,10 @@ async function main() {
   console.log(`NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS=${deployed.FraudRegistry}`);
   console.log(`NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS=${deployed.FeeDistributor}`);
   console.log(`NEXT_PUBLIC_FAUCET_ADDRESS=${deployed.VFIDETestnetFaucet}`);
+  console.log(`NEXT_PUBLIC_PROOF_LEDGER_ADDRESS=${deployed.ProofLedger}`);
+  console.log(`NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS=${deployed.GovernanceHooks}`);
+  console.log(`NEXT_PUBLIC_FLASH_LOAN_ADDRESS=${deployed.VFIDEFlashLoan}`);
+  console.log(`NEXT_PUBLIC_TERM_LOAN_ADDRESS=${deployed.VFIDETermLoan}`);
   
   console.log("\n⚠️  IMPORTANT: Wait 48 hours, then run apply-all.ts to finalize wiring.");
   console.log("⚠️  IMPORTANT: Transfer ownership to multisig before mainnet announcement.");

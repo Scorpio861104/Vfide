@@ -97,14 +97,16 @@ contract DevReserveVestingVault is ReentrancyGuard {
     /**
      * @notice Set the vesting start timestamp (one-time, callable by beneficiary or DAO).
      * @dev    Called at protocol launch to initialize the vesting start timestamp.
-     *         The timestamp must be in the past or present (not more than 7 days in the future)
-     *         to prevent accidental future-dating.
+     *         The timestamp must be in the past or present — no future-dating is allowed.
+     *         L-2 FIX: The original 7-day future buffer created a race condition where
+     *         beneficiary could set start up to 7 days ahead, silently delaying all
+     *         cliff/unlock dates.  Remove the buffer entirely.
      */
     function setVestingStart(uint64 timestamp) external {
         require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
         if (startTimestamp != 0) revert DV_AlreadyStarted();
         if (timestamp == 0) revert DV_Zero();
-        if (timestamp > block.timestamp + 7 days) revert DV_InvalidStartTimestamp();
+        if (timestamp > block.timestamp) revert DV_InvalidStartTimestamp();
         startTimestamp  = timestamp;
         cliffTimestamp  = timestamp + CLIFF;
         endTimestamp    = timestamp + VESTING;
@@ -141,8 +143,25 @@ contract DevReserveVestingVault is ReentrancyGuard {
         return v - totalClaimed;
     }
 
-    function beneficiaryVault() public returns (address) {
+    /// @notice Return the beneficiary's current vault address without creating one.
+    /// @dev M-11 FIX: The old `beneficiaryVault()` had a misleading view-like name but
+    ///      was state-mutating (it called `ensureVault` which deploys a vault as a side
+    ///      effect).  Off-chain tooling calling this for a balance check would accidentally
+    ///      create a vault and spend gas.  This pure view reads the existing vault mapping.
+    function beneficiaryVaultAddress() public view returns (address) {
+        return IVaultHub(VAULT_HUB).vaultOf(BENEFICIARY);
+    }
+
+    /// @notice Ensure the beneficiary vault exists, creating it if necessary.
+    /// @dev Explicitly state-mutating; used only inside `claim()`.
+    function getOrCreateBeneficiaryVault() internal returns (address) {
         return IVaultHub(VAULT_HUB).ensureVault(BENEFICIARY);
+    }
+
+    /// @dev Kept for external backward compatibility only (e.g. existing monitoring scripts).
+    ///      Prefer `beneficiaryVaultAddress()` for read-only lookups.
+    function beneficiaryVault() public returns (address) {
+        return getOrCreateBeneficiaryVault();
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -173,7 +192,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
         if (startTimestamp == 0) revert DV_NotStarted();
 
-        address vault = beneficiaryVault();
+        address vault = getOrCreateBeneficiaryVault();
 
         // SecurityHub lock check removed — non-custodial
 

@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { SystemStatusPanel } from './components/SystemStatusPanel';

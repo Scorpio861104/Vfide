@@ -10,7 +10,6 @@ import { useVaultBalance } from '@/lib/vfide-hooks';
 import { safeParseFloat } from '@/lib/validation';
 import { devLog } from '@/lib/utils';
 import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, VFIDETokenABI, UserVaultABI, ZERO_ADDRESS, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
-import { TOKEN_REFERENCE_PRICE } from '@/lib/constants';
 
 export interface QueuedWithdrawal {
   index: bigint;
@@ -31,7 +30,7 @@ export function useVaultOperations() {
   const { vaultAddress } = vaultHub;
   const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress) && vaultAddress !== ZERO_ADDRESS;
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
-  const usdValue = (safeParseFloat(vaultBalance, 0) * TOKEN_REFERENCE_PRICE).toFixed(2);
+  const usdValue = '0.00'; // requires live price feed
 
   const recovery = useVaultRecovery(vaultAddress);
 

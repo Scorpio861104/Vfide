@@ -7,7 +7,7 @@ import "./ServicePool.sol";
 // 1. DAO PAYROLL — 12 max members, equal scoring per governance action
 // ═══════════════════════════════════════════════════════════════
 
-/// @title DAOPayrollPool — Monthly governance compensation for up to 12 members
+/// @title DAOPayrollPool — Monthly governance compensation for DAO members
 /// @notice Each governance action (vote, review, discussion) earns 1 point.
 ///         At period end, the pool is split proportional to points earned.
 ///         More work = bigger share. Zero work = zero pay.
@@ -15,18 +15,45 @@ import "./ServicePool.sol";
 ///         The DAO always has at least 1 active member, so this pool always
 ///         distributes each period (unlike merchant/headhunter which may roll over).
 ///
+///         The member cap starts at a configurable initial value (recommended: 12) and
+///         can be grown over time by the pool ADMIN_ROLE as the DAO expands. It is
+///         bounded between MIN_DAO_MEMBERS_CAP and MAX_DAO_MEMBERS_CAP to prevent
+///         accidental misconfiguration in either direction.
+///
 ///         Example: Pool has 90,000 VFIDE. 3 members scored 10, 20, 30 points.
 ///         Total = 60. Member A gets 10/60 = 15,000. B gets 20/60 = 30,000.
 ///         C gets 30/60 = 45,000. More active = bigger cut.
 contract DAOPayrollPool is ServicePool {
 
-    uint256 public constant MAX_DAO_MEMBERS = 12;
+    /// @notice Absolute minimum the member cap can be reduced to.
+    uint256 public constant MIN_DAO_MEMBERS_CAP = 3;
+
+    /// @notice Absolute ceiling the member cap can be grown to over time.
+    uint256 public constant MAX_DAO_MEMBERS_CAP = 500;
+
+    event DAOMemberCapUpdated(uint256 oldCap, uint256 newCap);
 
     constructor(
         address _token,
         address _admin,
+        uint256 _initialMaxMembers,
         uint256 _maxPayoutPerPeriod
-    ) ServicePool(_token, _admin, MAX_DAO_MEMBERS, _maxPayoutPerPeriod) {}
+    ) ServicePool(_token, _admin, _initialMaxMembers, _maxPayoutPerPeriod) {
+        require(
+            _initialMaxMembers >= MIN_DAO_MEMBERS_CAP && _initialMaxMembers <= MAX_DAO_MEMBERS_CAP,
+            "DAOPayrollPool: initial cap out of bounds"
+        );
+    }
+
+    /// @notice Override to enforce DAO membership cap bounds before accepting a change.
+    /// @dev Reverts if _max is below MIN_DAO_MEMBERS_CAP or above MAX_DAO_MEMBERS_CAP.
+    function setMaxParticipants(uint256 _max) external override onlyRole(ADMIN_ROLE) {
+        require(_max >= MIN_DAO_MEMBERS_CAP, "DAOPayrollPool: below minimum cap");
+        require(_max <= MAX_DAO_MEMBERS_CAP, "DAOPayrollPool: above maximum cap");
+        uint256 old = maxParticipants;
+        maxParticipants = _max;
+        emit DAOMemberCapUpdated(old, _max);
+    }
 
     /// @notice Record a governance vote. 1 point per vote.
     function recordVote(address member) external onlyRole(RECORDER_ROLE) nonReentrant {
@@ -51,7 +78,7 @@ contract DAOPayrollPool is ServicePool {
     /// @notice Batch record votes for all voters on a proposal.
     function batchRecordVotes(address[] calldata members) external onlyRole(RECORDER_ROLE) nonReentrant {
         uint256 len = members.length;
-        require(len <= MAX_DAO_MEMBERS, "Exceeds max members");
+        require(len <= maxParticipants, "Exceeds max members");
         for (uint256 i = 0; i < len;) {
             if (members[i] != address(0)) {
                 _recordContribution(members[i], 1);

@@ -21,10 +21,6 @@ interface CSPViolation {
   'status-code'?: number;
 }
 
-interface CSPReport {
-  'csp-report': CSPViolation;
-}
-
 // In-memory store for violations (in production, use database)
 const violations: Array<CSPViolation & { timestamp: number; userAgent: string }> = [];
 const MAX_VIOLATIONS = 1000;

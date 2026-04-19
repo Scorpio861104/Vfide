@@ -1,7 +1,9 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { Footer } from '@/components/layout/Footer';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { Home, BarChart3, Award, Calculator, Activity } from 'lucide-react';
@@ -9,6 +11,7 @@ import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore'
 import { FeeSavingsCard } from '@/components/fees';
 import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
+import { useProofScore } from '@/hooks/useProofScore';
 import { OverviewTab } from './components/OverviewTab';
 import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
@@ -27,10 +30,25 @@ type TabId = typeof tabs[number]['id'];
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address } = useAccount();
-  const proofScore = 4500;
-  const totalVolume = 3200;
-  const txCount = 87;
-  const feeRate = proofScore <= 4000 ? 5.0 : proofScore >= 8000 ? 0.25 : 5.0 - ((proofScore - 4000) * 4.75) / 4000;
+  const { score: proofScore, burnFee: feeRate } = useProofScore();
+  const [txCount, setTxCount] = useState(0);
+  const [totalVolume, setTotalVolume] = useState(0);
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    fetch(`/api/activities/${address}`)
+      .then(r => r.ok ? r.json() : { activities: [] })
+      .then((data: { activities?: { data?: { amount?: number } }[] }) => {
+        if (cancelled) return;
+        const acts = Array.isArray(data?.activities) ? data.activities : [];
+        setTxCount(acts.length);
+        const vol = acts.reduce((sum, a) => sum + (Number(a?.data?.amount) || 0), 0);
+        setTotalVolume(vol);
+      })
+      .catch(() => { /* leave defaults */ });
+    return () => { cancelled = true; };
+  }, [address]);
 
   return (
     <>
@@ -46,7 +64,7 @@ export default function DashboardPage() {
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {tabs.map(tab => (<button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'}`}><tab.icon size={16} />{tab.label}</button>))}
           </div>
-          {activeTab === 'overview' && <OverviewTab proofscore={proofScore} feeRate={feeRate} />}
+          {activeTab === 'overview' && <OverviewTab proofscore={proofScore} feeRate={feeRate} address={address} />}
           {activeTab === 'badges' && <BadgesTab address={address as `0x${string}` | undefined} />}
           {activeTab === 'score' && <ScoreSimulatorTab currentScore={proofScore} />}
           {activeTab === 'fees' && <FeeSimulatorTab currentScore={proofScore} />}

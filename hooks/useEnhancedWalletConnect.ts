@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { useToast } from '@/components/ui/toast';
 import {
@@ -40,7 +40,7 @@ export function useEnhancedWalletConnect() {
   const { disconnect } = useDisconnect();
   const { showToast } = useToast();
   const [lastError, setLastError] = useState<string | null>(null);
-  const [connectionTimeout, setConnectionTimeout] = useState<NodeJS.Timeout | null>(null);
+  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [cooldownRemaining, setCooldownRemaining] = useState(0);
 
   // Track connection status and show appropriate messages
@@ -120,9 +120,9 @@ export function useEnhancedWalletConnect() {
   useEffect(() => {
     if (isConnecting || isPending) {
       // Clear any existing timeout first
-      if (connectionTimeout) {
-        clearTimeout(connectionTimeout);
-        setConnectionTimeout(null);
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
       }
       
       const timeout = setTimeout(() => {
@@ -130,19 +130,19 @@ export function useEnhancedWalletConnect() {
         setLastError('Connection timed out');
         // Force disconnect to reset state
         disconnect();
-        setConnectionTimeout(null);
+        connectionTimeoutRef.current = null;
       }, CONNECTION_TIMEOUT_MS);
 
-      setConnectionTimeout(timeout);
+      connectionTimeoutRef.current = timeout;
 
       return () => {
         clearTimeout(timeout);
-        setConnectionTimeout(null);
+        connectionTimeoutRef.current = null;
       };
     } else {
-      if (connectionTimeout) {
-        clearTimeout(connectionTimeout);
-        setConnectionTimeout(null);
+      if (connectionTimeoutRef.current) {
+        clearTimeout(connectionTimeoutRef.current);
+        connectionTimeoutRef.current = null;
       }
     }
     return undefined;

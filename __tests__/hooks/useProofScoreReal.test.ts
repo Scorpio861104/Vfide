@@ -58,6 +58,32 @@ describe('useProofScore real guards', () => {
     expect(result.current.isLoading).toBe(false)
   })
 
+  it('treats score 0n (new user with no on-chain history) as neutral 5000', () => {
+    // A new wallet that has never transacted returns 0n from the Seer contract.
+    // By design, 0 means "no recorded score yet" — the UI defaults them to neutral
+    // (5000) rather than penalising them as Risky. The contract-side fee curve
+    // starts accruing properly once the wallet has on-chain activity.
+    mockUseReadContract.mockReturnValueOnce({
+      data: 0n,
+      isError: false,
+      isLoading: false,
+      refetch: jest.fn(),
+    })
+    // second call is for computeFees (onChainFeeQuote)
+    mockUseReadContract.mockReturnValueOnce({
+      data: undefined,
+      isError: false,
+      isLoading: false,
+      refetch: jest.fn(),
+    })
+
+    const { result } = renderHook(() => useProofScore())
+
+    expect(result.current.score).toBe(5000)
+    expect(result.current.tierName).toBe('Neutral')
+    expect(result.current.burnFee).toBe(2.5)
+  })
+
   it('returns badge defaults when Seer is not configured', () => {
     mockContractAddresses.Seer = '0x0000000000000000000000000000000000000000'
 

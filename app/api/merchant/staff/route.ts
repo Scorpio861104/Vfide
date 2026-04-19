@@ -5,7 +5,7 @@ import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
-import { buildStaffPermissionsForRole, normalizeStaffPermissions, type StaffRole } from '@/lib/merchantStaff';
+import { normalizeStaffPermissions, type StaffRole } from '@/lib/merchantStaff';
 
 const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const STAFF_ROLES = ['admin', 'manager', 'cashier'] as const;

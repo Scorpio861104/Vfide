@@ -1,0 +1,551 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "internalType": "address", "name": "_token", "type": "address" },
+      { "internalType": "address", "name": "_dao", "type": "address" },
+      { "internalType": "address", "name": "_seer", "type": "address" },
+      { "internalType": "address", "name": "_vaultHub", "type": "address" },
+      { "internalType": "address", "name": "_feeDist", "type": "address" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  { "type": "error", "name": "TL_AlreadySigned", "inputs": [] },
+  { "type": "error", "name": "TL_DebtOutstanding", "inputs": [] },
+  { "type": "error", "name": "TL_ExceedsLimit", "inputs": [] },
+  { "type": "error", "name": "TL_GraceNotExpired", "inputs": [] },
+  { "type": "error", "name": "TL_InvalidTerms", "inputs": [] },
+  { "type": "error", "name": "TL_LoanCap", "inputs": [] },
+  { "type": "error", "name": "TL_NeedGuarantors", "inputs": [] },
+  { "type": "error", "name": "TL_NotBorrower", "inputs": [] },
+  { "type": "error", "name": "TL_NotDAO", "inputs": [] },
+  { "type": "error", "name": "TL_NotGuarantor", "inputs": [] },
+  { "type": "error", "name": "TL_NotLender", "inputs": [] },
+  { "type": "error", "name": "TL_NothingDue", "inputs": [] },
+  { "type": "error", "name": "TL_Paused", "inputs": [] },
+  { "type": "error", "name": "TL_PlanExists", "inputs": [] },
+  { "type": "error", "name": "TL_PlanNotAccepted", "inputs": [] },
+  { "type": "error", "name": "TL_ScoreTooLow", "inputs": [] },
+  { "type": "error", "name": "TL_SelfLoan", "inputs": [] },
+  { "type": "error", "name": "TL_WrongState", "inputs": [] },
+  { "type": "error", "name": "TL_Zero", "inputs": [] },
+  {
+    "type": "event",
+    "name": "GuarantorExtracted",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "guarantor", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "totalFromGuarantor", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "GuarantorRelieved",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "guarantor", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "remainingLiability", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "GuarantorSigned",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "guarantor", "type": "address" },
+      { "indexed": false, "internalType": "uint8", "name": "totalSigs", "type": "uint8" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "InstallmentPaid",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "uint8", "name": "installmentNumber", "type": "uint8" },
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "LoanAccepted",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "borrower", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "maxBorrowable", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "LoanActivated",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "uint64", "name": "deadline", "type": "uint64" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "LoanCancelled",
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" }]
+  },
+  {
+    "type": "event",
+    "name": "LoanCreated",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": true, "internalType": "address", "name": "lender", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "principal", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "interestBps", "type": "uint256" },
+      { "indexed": false, "internalType": "uint64", "name": "duration", "type": "uint64" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "LoanDefaulted",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "bool", "name": "planFailed", "type": "bool" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "LoanRepaid",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "totalPaid", "type": "uint256" },
+      { "indexed": false, "internalType": "bool", "name": "late", "type": "bool" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "PaymentPlanAccepted",
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" }]
+  },
+  {
+    "type": "event",
+    "name": "PaymentPlanCompleted",
+    "anonymous": false,
+    "inputs": [{ "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" }]
+  },
+  {
+    "type": "event",
+    "name": "PaymentPlanProposed",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "uint8", "name": "installments", "type": "uint8" },
+      { "indexed": false, "internalType": "uint64", "name": "intervalDays", "type": "uint64" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "RevenueAssignmentSet",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "bool", "name": "enabled", "type": "bool" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "TiersUpdated",
+    "anonymous": false,
+    "inputs": [
+      { "indexed": false, "internalType": "uint256", "name": "t1", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "t2", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "t3", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "t4", "type": "uint256" }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "GRACE_PERIOD",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_ACTIVE_LOANS",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_DURATION",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_INTEREST_BPS",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_DURATION",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "acceptLoan",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "acceptPaymentPlan",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "activeLoanCount",
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "amountOwed",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [
+      { "internalType": "uint256", "name": "remaining", "type": "uint256" },
+      { "internalType": "bool", "name": "overdue", "type": "bool" },
+      { "internalType": "bool", "name": "defaultable", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "cancelLoan",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "claimDefault",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "createLoan",
+    "inputs": [
+      { "internalType": "uint256", "name": "principal", "type": "uint256" },
+      { "internalType": "uint256", "name": "interestBps", "type": "uint256" },
+      { "internalType": "uint64", "name": "duration", "type": "uint64" }
+    ],
+    "outputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "dao",
+    "inputs": [],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "extractFromGuarantors",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "feeDistributor",
+    "inputs": [],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "fraudRegistry",
+    "inputs": [],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasSigned",
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "loans",
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      { "internalType": "address", "name": "lender", "type": "address" },
+      { "internalType": "address", "name": "borrower", "type": "address" },
+      { "internalType": "uint256", "name": "principal", "type": "uint256" },
+      { "internalType": "uint256", "name": "interestBps", "type": "uint256" },
+      { "internalType": "uint64", "name": "duration", "type": "uint64" },
+      { "internalType": "uint64", "name": "startTime", "type": "uint64" },
+      { "internalType": "uint64", "name": "deadline", "type": "uint64" },
+      { "internalType": "uint256", "name": "amountRepaid", "type": "uint256" },
+      { "internalType": "bool", "name": "revenueAssignment", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "maxBorrowable",
+    "inputs": [{ "internalType": "address", "name": "user", "type": "address" }],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nextLoanId",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "paused",
+    "inputs": [],
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "payFromRevenue",
+    "inputs": [
+      { "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "payInstallment",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "plans",
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      { "internalType": "uint256", "name": "totalOwed", "type": "uint256" },
+      { "internalType": "uint256", "name": "installmentAmount", "type": "uint256" },
+      { "internalType": "uint8", "name": "totalInstallments", "type": "uint8" },
+      { "internalType": "uint8", "name": "paidInstallments", "type": "uint8" },
+      { "internalType": "uint64", "name": "intervalDays", "type": "uint64" },
+      { "internalType": "uint64", "name": "nextDue", "type": "uint64" },
+      { "internalType": "bool", "name": "accepted", "type": "bool" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proposePaymentPlan",
+    "inputs": [
+      { "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "internalType": "uint8", "name": "installments", "type": "uint8" },
+      { "internalType": "uint64", "name": "intervalDays", "type": "uint64" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "repay",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "repayDefaultedLoan",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setDAO",
+    "inputs": [{ "internalType": "address", "name": "_d", "type": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setFeeDistributor",
+    "inputs": [{ "internalType": "address", "name": "_f", "type": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setFraudRegistry",
+    "inputs": [{ "internalType": "address", "name": "_fr", "type": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setPaused",
+    "inputs": [{ "internalType": "bool", "name": "_p", "type": "bool" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setRevenueAssignment",
+    "inputs": [
+      { "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "internalType": "bool", "name": "enabled", "type": "bool" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setScoreTiers",
+    "inputs": [
+      { "internalType": "uint256", "name": "t1", "type": "uint256" },
+      { "internalType": "uint256", "name": "t2", "type": "uint256" },
+      { "internalType": "uint256", "name": "t3", "type": "uint256" },
+      { "internalType": "uint256", "name": "t4", "type": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setSeer",
+    "inputs": [{ "internalType": "address", "name": "_s", "type": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setVaultHub",
+    "inputs": [{ "internalType": "address", "name": "_v", "type": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "signAsGuarantor",
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "signatureCount",
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [{ "internalType": "uint8", "name": "", "type": "uint8" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tier1Limit",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tier2Limit",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tier3Limit",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "tier4Limit",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalDefaults",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalLoans",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalProtocolFees",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalRestructured",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalVolume",
+    "inputs": [],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "unresolvedDefaults",
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "vfideToken",
+    "inputs": [],
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view"
+  }
+]

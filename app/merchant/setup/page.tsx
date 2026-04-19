@@ -1,9 +1,13 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Merchant Setup Page — /merchant/setup
  * Mobile-first wizard to create a storefront in under 2 minutes
  */
 
-'use client';
+
 
 import { Footer } from '@/components/layout/Footer';
 import { MerchantQuickSetup } from '@/components/merchant/MerchantQuickSetup';
@@ -12,10 +16,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-export default function MerchantSetupPage() {
-  const { isConnected } = useAccount();
-  const router = useRouter();
 
   if (!isConnected) {
     return (

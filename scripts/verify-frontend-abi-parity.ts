@@ -97,6 +97,13 @@ function extractAbi(doc: unknown, sourcePath: string): unknown[] {
 }
 
 function main(): void {
+  if (!fs.existsSync(artifactsRoot)) {
+    console.warn(
+      `[abi-parity] artifacts/contracts not found — contracts have not been compiled yet. Skipping parity check.`
+    );
+    return;
+  }
+
   const indexContents = fs.readFileSync(indexPath, 'utf8');
   const abiFiles = getExportedAbiFiles(indexContents);
 

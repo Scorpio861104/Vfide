@@ -147,6 +147,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint256 public pendingCircuitBreakerDuration;
     uint64  public pendingCircuitBreakerAt;
 
+    /// H-2 FIX: Timelock for vault-only disablement (48-hour delay; re-enabling is always instant).
+    uint64  public pendingVaultOnlyDisableAt;
+
     // L-1 FIX: Per-address pending state for whale limit exemption timelock
     mapping(address => bool)   public pendingWhaleExemptStatus;
     mapping(address => uint64) public pendingWhaleExemptAt;
@@ -185,6 +188,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event WhitelistProposed(address indexed addr, bool status, uint64 effectiveAt);
     event Whitelisted(address indexed addr, bool status);
     event VaultOnlySet(bool enabled);
+    event VaultOnlyDisableProposed(uint64 effectiveAt);
+    event VaultOnlyDisableCancelled();
     event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
     event CircuitBreakerSet(bool active, uint256 expiry);
@@ -622,9 +627,38 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     function setVaultOnly(bool enabled) external onlyOwner {
         if (policyLocked && !enabled) revert VF_POLICY_LOCKED();
-        vaultOnly = enabled;
-        emit VaultOnlySet(enabled);
-        _log(enabled ? "vault_only_on" : "vault_only_off");
+        if (enabled) {
+            // Enabling vault-only is always instant (more restrictive — safe to apply immediately)
+            vaultOnly = true;
+            pendingVaultOnlyDisableAt = 0;
+            emit VaultOnlySet(true);
+            _log("vault_only_on");
+        } else {
+            // H-2 FIX: Disabling vault-only requires a 48-hour timelock so that token holders
+            // have time to react before unrestricted transfers are permitted.
+            if (pendingVaultOnlyDisableAt != 0) revert VF_PendingExists();
+            pendingVaultOnlyDisableAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+            emit VaultOnlyDisableProposed(pendingVaultOnlyDisableAt);
+            _log("vault_only_disable_proposed");
+        }
+    }
+
+    /// @notice Apply a pending vault-only disable after the 48-hour timelock.
+    function applyVaultOnlyDisable() external onlyOwner {
+        if (pendingVaultOnlyDisableAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingVaultOnlyDisableAt) revert VF_TimelockActive();
+        pendingVaultOnlyDisableAt = 0;
+        vaultOnly = false;
+        emit VaultOnlySet(false);
+        _log("vault_only_off");
+    }
+
+    /// @notice Cancel a pending vault-only disable.
+    function cancelVaultOnlyDisable() external onlyOwner {
+        if (pendingVaultOnlyDisableAt == 0) revert VF_NoPending();
+        pendingVaultOnlyDisableAt = 0;
+        emit VaultOnlyDisableCancelled();
+        _log("vault_only_disable_cancelled");
     }
 
     /// One-way switch that makes policy non-optional post-launch.
@@ -756,6 +790,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 _dailyLimit,
         uint256 _cooldown
     ) external onlyOwner {
+        // Once policy is locked, whale limits must remain active (non-zero).
+        // Allowing a full disable post-lock would silently remove the anti-whale
+        // guarantee that was part of the published policy at lock time.
+        if (policyLocked) {
+            if (_maxTransfer == 0 || _maxWallet == 0 || _dailyLimit == 0) revert VF_POLICY_LOCKED();
+        }
         // Sanity checks: limits should be reasonable if enabled
         if (_maxTransfer > 0 && _maxTransfer < 100_000e18) revert VF_InvalidAntiWhaleConfig();
         if (_maxWallet > 0 && _maxWallet < 200_000e18) revert VF_InvalidAntiWhaleConfig();
@@ -856,9 +896,15 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
 
         // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
-        if (!whaleLimitExempt[from] && !whaleLimitExempt[custodyTo] && 
-            !systemExempt[from] && !systemExempt[logicalTo]) {
-            _checkWhaleProtection(from, custodyTo, amount);
+        // EE-1 GAS FIX: _checkWhaleProtection now returns the daily window state it read from
+        // storage so _recordActualDailyTransfer (called after fees) can reuse the cached values
+        // and avoid re-reading the same slots (~2 100–4 200 gas saved per non-exempt transfer).
+        uint256 _cachedWindowStart;
+        uint256 _cachedStoredUsed;
+        bool    _dailyExempt = whaleLimitExempt[from] || whaleLimitExempt[custodyTo] ||
+                                systemExempt[from] || systemExempt[logicalTo];
+        if (!_dailyExempt) {
+            (_cachedWindowStart, _cachedStoredUsed) = _checkWhaleProtection(from, custodyTo, amount);
         }
 
         // 3. Auto-create vaults if needed (vault-only enforcement)
@@ -914,7 +960,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     if (_ecoSink != treasurySink && _ecoSink != sanctumSink && _ecoSink != ecosystemDistributor) revert VF_InvalidFeeSink();
                 }
                 if (_burnSink != address(0)) {
-                    if (_burnSink != treasurySink && _burnSink != sanctumSink) revert VF_InvalidFeeSink();
+                    // L-1 FIX: Also accept ecosystemDistributor as a valid burn sink
+                    if (_burnSink != treasurySink && _burnSink != sanctumSink && _burnSink != ecosystemDistributor) revert VF_InvalidFeeSink();
                 }
 
                 if (_burnAmt > 0) {
@@ -962,9 +1009,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
         }
 
-        if (!whaleLimitExempt[from] && !whaleLimitExempt[custodyTo] &&
-            !systemExempt[from] && !systemExempt[logicalTo]) {
-            _recordActualDailyTransfer(from, remaining);
+        if (!_dailyExempt) {
+            // M-7 FIX: Record gross `amount` for daily whale-limit accounting, not `remaining`.
+            // The whale check at step 2 uses `amount` (gross), so daily tracking must use the
+            // same value to ensure the limit is consistently enforced.  Using `remaining` (post-fee)
+            // let users exceed the daily cap by a fee fraction on every transfer.
+            // EE-1 GAS FIX: Pass cached window state to avoid re-reading the same storage slots.
+            _recordActualDailyTransfer(from, amount, _cachedWindowStart, _cachedStoredUsed);
         }
 
         // ── Fraud escrow: flagged senders get 30-day delay ─────
@@ -1105,10 +1156,22 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     // ─────────────────────────── Anti-Whale Protection Logic
     
     /**
-     * @dev Check and enforce all anti-whale protections
-     * Reverts if any limit is exceeded
+     * @dev Check and enforce all anti-whale protections.
+     * Reverts if any limit is exceeded.
+     *
+     * EE-1 GAS FIX: Returns the daily window state already read from storage so the
+     * caller can pass it straight to _recordActualDailyTransfer, avoiding a second
+     * SLOAD of dailyResetTime[from] and dailyTransferred[from] per transfer
+     * (~2 100–4 200 gas saved on non-exempt transfers).
+     *
+     * @return cachedWindowStart  The dailyResetTime[from] value read here.
+     * @return cachedStoredUsed   The dailyTransferred[from] value read here
+     *                            (0 if the window has expired or limit is disabled).
      */
-    function _checkWhaleProtection(address from, address to, uint256 amount) internal {
+    function _checkWhaleProtection(address from, address to, uint256 amount)
+        internal
+        returns (uint256 cachedWindowStart, uint256 cachedStoredUsed)
+    {
         uint256 trackedAmount = amount;
 
         // Track recipient impact and daily usage using expected post-fee net amount.
@@ -1139,17 +1202,21 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // 3. Daily transfer limit tracking: validate using projected post-fee flow,
         // but persist the actual delivered amount later in _transfer().
         // Use a rolling 24-hour window instead of UTC day boundaries.
-        // H-2 FIX: Read-only window check — do NOT mutate dailyTransferred/dailyResetTime here.
-        // State mutations belong solely in _recordActualDailyTransfer to avoid double-reset.
-        uint256 windowStart = dailyResetTime[from];
-        bool windowExpired = (windowStart == 0 || block.timestamp >= windowStart + 1 days);
+        // H-2 FIX: Window check does NOT mutate dailyTransferred/dailyResetTime here.
+        // Note: lastTransferTime[from] IS mutated below for the cooldown check.
+        // State mutations of dailyTransferred belong solely in _recordActualDailyTransfer.
+        cachedWindowStart = dailyResetTime[from];
+        bool windowExpired = (cachedWindowStart == 0 || block.timestamp >= cachedWindowStart + 1 days);
         if (dailyTransferLimit > 0) {
-            uint256 effectiveTransferred = windowExpired ? 0 : dailyTransferred[from];
-            uint256 projectedTransferred = effectiveTransferred + trackedAmount;
+            cachedStoredUsed = windowExpired ? 0 : dailyTransferred[from];
+            uint256 projectedTransferred = cachedStoredUsed + trackedAmount;
             if (projectedTransferred > dailyTransferLimit) {
                 revert VF_DailyLimitExceeded();
             }
         }
+        // Note: when dailyTransferLimit == 0, cachedStoredUsed stays 0 and cachedWindowStart
+        // holds the last reset timestamp.  _recordActualDailyTransfer uses only the cached
+        // parameters — no storage re-reads happen there under any code path.
         
         // 4. Transfer cooldown check (for sender)
         if (transferCooldown > 0) {
@@ -1161,14 +1228,32 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
     }
 
-    function _recordActualDailyTransfer(address from, uint256 actualAmount) internal {
-        uint256 windowStart = dailyResetTime[from];
-        if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
-            dailyTransferred[from] = 0;
+    /**
+     * @dev Record daily transfer amount, using cached storage values from _checkWhaleProtection
+     *      to avoid a redundant second SLOAD of dailyResetTime[from]/dailyTransferred[from].
+     *
+     * @param from              Sender address.
+     * @param actualAmount      Gross amount to record (M-7: always use gross, not post-fee).
+     * @param cachedWindowStart dailyResetTime[from] already read in _checkWhaleProtection.
+     * @param cachedStoredUsed  dailyTransferred[from] already read in _checkWhaleProtection
+     *                          (0 if window was expired or limit disabled at check time).
+     */
+    function _recordActualDailyTransfer(
+        address from,
+        uint256 actualAmount,
+        uint256 cachedWindowStart,
+        uint256 cachedStoredUsed
+    ) internal {
+        bool windowExpired = (cachedWindowStart == 0 || block.timestamp >= cachedWindowStart + 1 days);
+        if (windowExpired) {
+            // EE-1 GAS FIX: Directly assign actualAmount instead of zeroing then incrementing —
+            // eliminates the extra SLOAD produced by the old `dailyTransferred[from] += 0;` pattern.
+            dailyTransferred[from] = actualAmount;
             dailyResetTime[from] = block.timestamp;
+        } else {
+            // Use cached storedUsed to avoid re-reading the slot.
+            dailyTransferred[from] = cachedStoredUsed + actualAmount;
         }
-
-        dailyTransferred[from] += actualAmount;
     }
     
     /// @notice T-02 FIX: Helper to compute expected net amount after fees

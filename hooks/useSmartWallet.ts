@@ -113,11 +113,6 @@ async function detectWalletType(
       if (implSlot && implSlot !== '0x' + '0'.repeat(64)) {
         const implAddress = ('0x' + implSlot.slice(-40)) as Address;
         
-        // Check if it's a known Coinbase implementation
-        if (implAddress.toLowerCase().includes('coinbase')) {
-          return { type: 'coinbase-smart', implementation: implAddress };
-        }
-        
         return { type: 'smart-contract', implementation: implAddress };
       }
     } catch {
