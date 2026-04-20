@@ -296,7 +296,7 @@
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "solc": "^0.8.30",
-    "storybook": "^10.2.13",
+    "storybook": "^10.3.5",
     "supertest": "^7.2.2",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
