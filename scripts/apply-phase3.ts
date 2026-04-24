@@ -10,9 +10,36 @@
 import hre from "hardhat";
 const ethers = (hre as any).ethers;
 
+const BENIGN_PATTERNS = [/already applied/i, /no pending/i, /VF_NoPending/i, /already set/i];
+
+function classifyError(err: any): { kind: "skipped" | "failed"; message: string } {
+  const message = String(err?.reason || err?.shortMessage || err?.message || err);
+  if (BENIGN_PATTERNS.some((pattern) => pattern.test(message))) {
+    return { kind: "skipped", message };
+  }
+  return { kind: "failed", message };
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Phase 3 (final) — applying with:", deployer.address);
+  let hardFailures = 0;
+
+  async function safeApply(label: string, action: () => Promise<any>) {
+    try {
+      await action();
+      console.log(`  ✅ ${label}`);
+      return;
+    } catch (e: any) {
+      const outcome = classifyError(e);
+      if (outcome.kind === "skipped") {
+        console.log(`  ⏭️  ${label}: ${outcome.message}`);
+      } else {
+        hardFailures++;
+        console.error(`  ❌ ${label}: ${outcome.message}`);
+      }
+    }
+  }
 
   const tokenAddr = process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS;
   if (!tokenAddr) throw new Error("Set NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS in .env");
@@ -20,11 +47,10 @@ async function main() {
   const token = await ethers.getContractAt("VFIDEToken", tokenAddr);
 
   // Confirm FlashLoan systemExempt (proposed in Phase 2)
-  try {
-    await token.confirmSystemExempt();
-    console.log("  ✅ FlashLoan systemExempt confirmed");
-  } catch (e: any) {
-    console.log("  ⏭️  confirmSystemExempt:", e.reason || e.message);
+  await safeApply("FlashLoan systemExempt confirmed", async () => token.confirmSystemExempt());
+
+  if (hardFailures > 0) {
+    throw new Error(`apply-phase3 encountered ${hardFailures} non-benign failure(s)`);
   }
 
   console.log("\n✅ All wiring complete.");
