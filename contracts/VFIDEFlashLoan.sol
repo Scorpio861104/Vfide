@@ -115,6 +115,11 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @notice ProofScore reward for lenders per loan facilitated (+0.1)
     uint16 public constant LENDER_REWARD = 1;
 
+    /// @notice F-32 FIX: Volume-based reward gating — only reward after lender accumulates this much volume
+    /// Prevents ProofScore pump via high-frequency low-value flash loans.
+    /// 10,000 VFIDE = ~$10,000 at $1/token. One reward per $10k+ lent.
+    uint256 public constant VOLUME_PER_REWARD = 10_000 * 1e18;
+
     /// @notice Cap on registered lenders for gas-safe iteration
     uint256 public constant MAX_LENDERS = 500;
 
@@ -162,6 +167,9 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     address[] public lenderList;
     mapping(address => uint256) private lenderListIndex;
     mapping(address => uint256) public lastFlashLoan;
+    
+    // F-32 FIX: Volume tracking for reward gating
+    mapping(address => uint256) public lenderVolumeSinceLastReward;
 
     uint256 public totalTrackedBalance;
     uint256 public totalProtocolFees;
@@ -369,9 +377,15 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         totalVolume += amount;
         totalLoans++;
 
-        // Reward lender with ProofScore (providing a community service)
-        if (address(seer) != address(0)) {
-            try seer.reward(lender, LENDER_REWARD, "flashloan_lender") {} catch {}
+        // F-32 FIX: Reward lender only after accumulated volume reaches threshold
+        // Prevents ProofScore pump via frequent small flash loans.
+        // Accumulate volume; reward only when VOLUME_PER_REWARD is crossed.
+        lenderVolumeSinceLastReward[lender] += amount;
+        if (lenderVolumeSinceLastReward[lender] >= VOLUME_PER_REWARD) {
+            lenderVolumeSinceLastReward[lender] = 0;
+            if (address(seer) != address(0)) {
+                try seer.reward(lender, LENDER_REWARD, "flashloan_lender") {} catch {}
+            }
         }
 
         emit FlashLoanExecuted(lender, msg.sender, address(receiver), amount, lenderFee, protocolFee);
