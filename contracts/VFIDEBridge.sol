@@ -162,6 +162,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         uint256 fee,
         bytes32 txId
     );
+    event BridgeFeeRecorded(bytes32 indexed txId, uint256 bridgeFee, uint256 tokenTransferFee);
 
     event BridgeReceived(
         address indexed receiver,
@@ -289,7 +290,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         uint256 amountAfterFee = _amount - fee;
 
         // Transfer tokens from sender
+        uint256 balanceBefore = vfideToken.balanceOf(address(this));
         vfideToken.safeTransferFrom(msg.sender, address(this), _amount);
+        uint256 balanceAfter = vfideToken.balanceOf(address(this));
+        uint256 received = balanceAfter > balanceBefore ? balanceAfter - balanceBefore : 0;
+        uint256 tokenTransferFee = _amount > received ? _amount - received : 0;
 
         // Transfer fee to collector
         if (fee > 0) {
@@ -332,6 +337,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         // This avoids mint-dependency failures and prevents burn-without-delivery scenarios.
 
         emit BridgeSent(msg.sender, _dstChainId, _to, amountAfterFee, fee, txId);
+        emit BridgeFeeRecorded(txId, fee, tokenTransferFee);
     // C-1 FIX: Refund window is NOT opened automatically. Owner must call openBridgeRefundWindow()
     // after manually verifying non-delivery. Automatic opening allowed a double-spend when
     // delivery confirmation failed silently (destination released funds, source opened refund window).

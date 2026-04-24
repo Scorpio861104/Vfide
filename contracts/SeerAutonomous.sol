@@ -95,6 +95,7 @@ contract SeerAutonomous is ReentrancyGuard {
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event OperatorSet(address indexed operator, bool authorized);
     event RiskOracleSet(address indexed oldOracle, address indexed newOracle);
+    event RiskOracleOutOfRange(address indexed subject, uint8 risk);
     
     // Automatic enforcement
     event AutoEnforced(address indexed subject, ActionType action, EnforcementResult result);
@@ -427,6 +428,9 @@ contract SeerAutonomous is ReentrancyGuard {
         // Incorporate oracle risk score as an additional soft signal (defensive wrapping)
         if (address(riskOracle) != address(0)) {
             try riskOracle.getRiskScore(subject) returns (uint8 risk) {
+                if (risk > 100) {
+                    emit RiskOracleOutOfRange(subject, risk);
+                } else
                 if (risk > 80) {
                     // High risk: escalate to at least Restricted for a short period
                     _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK, false);
@@ -661,7 +665,9 @@ contract SeerAutonomous is ReentrancyGuard {
         // Blend oracle risk if available
         if (address(riskOracle) != address(0)) {
             uint8 risk = riskOracle.getRiskScore(subject);
-            if (risk > 0) {
+            if (risk > 100) {
+                emit RiskOracleOutOfRange(subject, risk);
+            } else if (risk > 0) {
                 _saturatingAddViolationScore(subject, risk);
                 severity += risk > 50 ? 20 : 0; // bump severity for high risk
             }

@@ -142,6 +142,8 @@ contract Seer is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     mapping(address => bool) public operators;
+    mapping(address => uint64) public operatorAddedAt;
+    uint64 public constant OPERATOR_WARMUP = 24 hours;
     bool public paused;
     
     // C-2 FIX: Rate limiting for operators to prevent score inflation attacks
@@ -242,7 +244,13 @@ contract Seer is ReentrancyGuard {
     }
     
     modifier onlyOperator() {
-        if (msg.sender != dao && !operators[msg.sender]) revert TRUST_NotOperator();
+        if (msg.sender != dao) {
+            if (!operators[msg.sender]) revert TRUST_NotOperator();
+            // F-81: newly authorized operators must pass warmup before acting.
+            if (block.timestamp < uint256(operatorAddedAt[msg.sender]) + OPERATOR_WARMUP) {
+                revert TRUST_InvalidState();
+            }
+        }
         _;
     }
     
@@ -337,6 +345,11 @@ contract Seer is ReentrancyGuard {
     function setOperator(address operator, bool authorized) external onlyDAO nonReentrant {
         if (operator == address(0)) revert TRUST_Zero();
         operators[operator] = authorized;
+        if (authorized) {
+            operatorAddedAt[operator] = uint64(block.timestamp);
+        } else {
+            operatorAddedAt[operator] = 0;
+        }
         emit OperatorSet(operator, authorized);
         _logSystem();
     }

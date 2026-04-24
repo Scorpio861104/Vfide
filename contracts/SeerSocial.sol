@@ -29,6 +29,11 @@ interface IProofLedgerSocial {
     function logSystemEvent(address who, string calldata action, address by) external;
 }
 
+interface ISeerPolicyGuard_Social {
+    function consume(bytes4 selector, uint8 pclass) external;
+}
+error SOCIAL_PolicyGuardNotSet();
+
 /// ────────────────────────── Errors
 error SOCIAL_NotDAO();
 error SOCIAL_NotSeer();
@@ -71,6 +76,11 @@ contract SeerSocial {
     // ═══════════════════════════════════════════════════════════════════════
     
     ISeerCore public seer;
+    address public policyGuard;
+    uint8 private constant POLICY_CLASS_CRITICAL = 0;
+    bytes4 private constant SEL_SET_ENDORSEMENT_POLICY =
+        bytes4(keccak256("setEndorsementPolicy(uint16,uint16,uint16,uint16,uint16,uint64,uint64,uint16)"));
+        event PolicyGuardSet(address indexed newPolicyGuard);
     /// @notice BATCH-14 FIX: Timelock state for Seer reference changes (48-hour delay).
     address public pendingSeer;
     uint64  public pendingSeerAt;
@@ -193,6 +203,13 @@ contract SeerSocial {
         emit SeerChangeCancelled();
     }
 
+    /// @notice Set SeerPolicyGuard used for endorsement policy timelock consumption.
+    function setPolicyGuard(address _policyGuard) external onlyDAO {
+        if (_policyGuard == address(0)) revert SOCIAL_Zero();
+        policyGuard = _policyGuard;
+        emit PolicyGuardSet(_policyGuard);
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // ENDORSEMENT FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
@@ -207,6 +224,10 @@ contract SeerSocial {
         uint64 cooldown,
         uint16 minScore
     ) external onlyDAO {
+        // F-85 FIX: Require Seer-side timelock consumption for endorsement policy changes.
+        if (policyGuard == address(0)) revert SOCIAL_PolicyGuardNotSet();
+        ISeerPolicyGuard_Social(policyGuard).consume(SEL_SET_ENDORSEMENT_POLICY, POLICY_CLASS_CRITICAL);
+
         require(baseValue > 0 && baseValue <= 200, "SOCIAL: base out of range");
         require(maxPerEndorser >= baseValue && maxPerEndorser <= 300, "SOCIAL: max per endorser");
         require(bonusCap >= baseValue, "SOCIAL: bonus cap low");
