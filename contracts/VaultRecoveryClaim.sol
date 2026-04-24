@@ -129,6 +129,13 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     PendingVerifierChange public pendingVerifierChange;
     PendingModuleChange public pendingVaultHubChange;
     PendingModuleChange public pendingVaultRegistryChange;
+
+    // F-54 FIX: Track last vault activity to extend challenge window for active vaults.
+    // Any on-chain vault activity within 30 days extends the challenge period to 14 days,
+    // giving active owners more time to detect and challenge fraudulent claims.
+    mapping(address => uint64) public vaultLastActivity;
+    uint64 public constant ACTIVE_VAULT_CHALLENGE_PERIOD = 14 days;
+    uint64 public constant VAULT_ACTIVITY_WINDOW = 30 days;
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
@@ -141,7 +148,10 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         address originalOwner,
         uint64 expiresAt
     );
-    
+
+    // F-54: Emitted when vault activity is recorded (extends future challenge windows)
+    event VaultActivityRecorded(address indexed vault, uint64 timestamp);
+
     event GuardianVoteCast(
         uint256 indexed claimId,
         address indexed guardian,
@@ -240,6 +250,20 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     /**
+     * @notice Record vault activity to extend the challenge window on future claims.
+     * @dev F-54 FIX: Called by the vault itself (or its admin) on any significant action.
+     *      Callable by vaultHub.ownerOfVault(vault) or the vault contract itself.
+     */
+    function recordVaultActivity(address vault) external {
+        require(
+            msg.sender == vault || msg.sender == vaultHub.ownerOfVault(vault),
+            "VaultRecoveryClaim: not vault or owner"
+        );
+        vaultLastActivity[vault] = uint64(block.timestamp);
+        emit VaultActivityRecorded(vault, uint64(block.timestamp));
+    }
+
+    /**
      * @notice Initiate a recovery claim for a vault
      * @dev User must have found the vault via VaultRegistry search first
      * @param vault The vault address to claim
@@ -306,12 +330,19 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // Create claim
         claimId = ++claimCounter;
         
+        // F-54 FIX: Extend challenge period to 14 days when vault had activity within 30 days.
+        // This reduces UX brittleness for active owners who are likely still reachable.
+        uint64 effectiveChallengePeriod = (vaultLastActivity[vault] != 0 &&
+            block.timestamp - vaultLastActivity[vault] <= VAULT_ACTIVITY_WINDOW)
+            ? ACTIVE_VAULT_CHALLENGE_PERIOD
+            : CHALLENGE_PERIOD;
+
         claims[claimId] = RecoveryClaim({
             vault: vault,
             claimant: msg.sender,
             originalOwner: originalOwner,
             initiatedAt: uint64(block.timestamp),
-            challengeEndsAt: uint64(block.timestamp + CHALLENGE_PERIOD),
+            challengeEndsAt: uint64(block.timestamp + effectiveChallengePeriod),
             expiresAt: uint64(block.timestamp + CLAIM_EXPIRY),
             status: ClaimStatus.Pending,
             guardianApprovals: 0,
