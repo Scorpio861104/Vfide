@@ -22,6 +22,7 @@ contract DAOTimelock is ReentrancyGuard {
     event GracePeriodExpired(bytes32 id);
     /// @notice TL-02 FIX: Events for secondary executor role
     event SecondaryExecutorSet(address indexed executor);
+    event SecondaryExecutorEOAWarning(address indexed executor);
     event ExecutedBySecondary(bytes32 indexed id);
 
     address public admin;
@@ -62,6 +63,10 @@ contract DAOTimelock is ReentrancyGuard {
     function setAdmin(address _admin) external onlyTimelockSelf { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
     /// @notice TL-02 FIX: Set or remove the secondary executor (backup execution role).
     function setSecondaryExecutor(address _executor) external onlyTimelockSelf {
+        // F-78 FIX: warn (do not block) if executor is an EOA.
+        if (_executor != address(0) && _executor.code.length == 0) {
+            emit SecondaryExecutorEOAWarning(_executor);
+        }
         secondaryExecutor = _executor;
         emit SecondaryExecutorSet(_executor);
         _log("tl_secondary_executor_set");

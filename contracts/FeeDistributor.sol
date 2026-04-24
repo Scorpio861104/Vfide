@@ -175,6 +175,13 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 balance = vfideToken.balanceOf(address(this));
         if (balance < minDistributionAmount) revert BelowMinimum();
 
+        // F-76 FIX: Reconcile totalReceived with actual token balance so direct transfers
+        // (outside receiveFee) are accounted for in cumulative reporting.
+        uint256 accountedBalance = totalReceived >= totalDistributed ? totalReceived - totalDistributed : 0;
+        if (balance > accountedBalance) {
+            totalReceived += (balance - accountedBalance);
+        }
+
         uint256 toBurn = (balance * feeSplit.burnBps) / MAX_BPS;
         uint256 toSanctum = (balance * feeSplit.sanctumBps) / MAX_BPS;
         uint256 toDAO = (balance * feeSplit.daoPayrollBps) / MAX_BPS;
@@ -270,7 +277,9 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
 
     /// @notice Cancel any pending split change proposal.
     function cancelSplitChange() external onlyRole(ADMIN_ROLE) {
-        pendingSplitChange.pending = false;
+        if (!pendingSplitChange.pending) revert NoSplitChangePending();
+        // F-77 FIX: Clear the full pending struct, including newSplit values.
+        delete pendingSplitChange;
         emit SplitChangeCancelled();
     }
 
