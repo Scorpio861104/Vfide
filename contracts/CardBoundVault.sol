@@ -734,25 +734,19 @@ contract CardBoundVault is ReentrancyGuard {
         // started since the withdrawal was queued (indicated by dayStart having advanced past
         // w.requestTime). If still in the same window, the amount is already committed to
         // spentToday and must not be added again.
+        // F-48 FIX: Remove unreachable "same window" branch. WITHDRAWAL_DELAY = 7 days
+        // guarantees _refreshDailyWindow() always advances dayStart past w.requestTime
+        // well before executeAfter is reached. The "same window" path is dead code.
+        // Invariant: block.timestamp >= w.executeAfter >= w.requestTime + 7 days,
+        //            so dayStart > w.requestTime is always true here.
         _refreshDailyWindow();
-        bool newWindowSinceQueue = (dayStart > w.requestTime);
-        if (newWindowSinceQueue) {
-            if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
-        } else {
-            // Same window — amount was already committed at queue time.
-            // Sanity-check that the daily total hasn't somehow been exceeded.
-            if (spentToday > dailyTransferLimit) revert CBV_DailyLimit();
-        }
+        if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
 
         w.executed = true;
         if (activeQueuedWithdrawals > 0) {
             activeQueuedWithdrawals -= 1;
         }
-        // Only charge spentToday when executing in a new window (window rolled over since queue).
-        // In the original queue window, the amount was already charged at queue time.
-        if (newWindowSinceQueue) {
-            spentToday += w.amount;
-        }
+        spentToday += w.amount;
 
         // C-7 FIX: Prevent queued withdrawal to an unguarded vault that would breach cap.
         if (!ICardBoundVaultView(w.toVault).canReceiveTransfer(w.amount)) revert CBV_ReceiverNeedsGuardian();
