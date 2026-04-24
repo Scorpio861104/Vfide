@@ -10,6 +10,11 @@ pragma solidity 0.8.30;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+// F-38 FIX: minimal interface used to cross-check the DAO state before recording attestation.
+interface IDAO_WA {
+    function hasVoted(uint256 proposalId, address voter) external view returns (bool);
+}
+
 /// @title SeerWorkAttestation — The Seer's work verification module
 /// @notice Records verified task completions and generates attestation proofs
 ///         that the WorkPaymentManager requires before releasing any payment.
@@ -208,6 +213,11 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @notice Called by DAO when a governance vote is cast.
     function onGovernanceVote(address voter, bytes32 proposalId) external {
         require(msg.sender == daoContract, "Only DAO");
+        // F-38 FIX: cross-check that voter actually voted; prevents caller bugs from polluting attestations.
+        require(
+            IDAO_WA(daoContract).hasVoted(uint256(proposalId), voter),
+            "SWA: voter did not vote on proposal"
+        );
         bytes32 evidence = keccak256(abi.encodePacked("gov_vote", proposalId, voter, block.number));
         _autoVerify(voter, 0, proposalId, evidence);
     }
