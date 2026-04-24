@@ -163,15 +163,19 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
             "WithdrawalQueue: daily cap exceeded"
         );
 
+        // F-45 FIX (CEI): Commit state before any external token transfer path.
+        dailyWithdrawn[today] += totalAmount;
         for (uint256 i = 0; i < _indices.length; i++) {
             WithdrawalRequest storage request = withdrawalQueue[_indices[i]];
             request.executed = true;
+        }
+
+        for (uint256 i = 0; i < _indices.length; i++) {
+            WithdrawalRequest storage request = withdrawalQueue[_indices[i]];
             _executeWithdrawal(request.user, request.amount);
             _syncVaultBalanceAfterWithdrawal(request.amount);
             emit WithdrawalExecuted(request.user, _indices[i], request.amount);
         }
-
-        dailyWithdrawn[today] += totalAmount;
     }
 
     /**
