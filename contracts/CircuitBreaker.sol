@@ -18,12 +18,14 @@ interface ITVLSource_CB {
  */
 contract CircuitBreaker is VFIDEAccessControl {
     bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
+        // F-63 FIX: Renamed from BLACKLIST_MANAGER_ROLE to reflect non-custodial philosophy.
+        bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
     
     struct TriggerConfig {
         bool enabled;
         uint256 dailyVolumeThreshold;    // % of TVL (e.g., 50 = 50%)
         uint256 priceDropThreshold;       // % drop in 1h (e.g., 20 = 20%)
-        uint256 blacklistThreshold;       // count in 24h
+        uint256 suspiciousActivityThreshold;       // count in 24h
         uint256 monitoringWindow;         // time window for metrics
     }
 
@@ -33,7 +35,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         uint256 lastVolumeReset;
         uint256 lastPrice;
         uint256 lastPriceUpdate;
-        uint256 blacklistCount24h;
+        uint256 suspiciousActivityCount24h;
         uint256 lastBlacklistReset;
     }
 
@@ -65,7 +67,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     event CircuitBreakerConfigured(
         uint256 dailyVolumeThreshold,
         uint256 priceDropThreshold,
-        uint256 blacklistThreshold
+        uint256 suspiciousActivityThreshold
     );
     
     event CircuitBreakerTriggered(
@@ -79,7 +81,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     event PriceOracleUpdated(address indexed newOracle);
     event EmergencyControllerUpdated(address indexed newController);
     event VolumeRecorded(uint256 amount, uint256 totalDaily);
-    event BlacklistIncremented(uint256 count24h);
+    event SuspiciousActivityRecorded(uint256 count24h);
     event TVLUpdated(uint256 previousTVL, uint256 newTVL);
     event TVLSourceUpdated(address indexed newSource);
 
@@ -121,7 +123,7 @@ contract CircuitBreaker is VFIDEAccessControl {
             enabled: true,
             dailyVolumeThreshold: 50,      // 50% of TVL
             priceDropThreshold: 20,         // 20% drop
-            blacklistThreshold: 10,         // 10 blacklists
+            suspiciousActivityThreshold: 10,         // 10 suspicious activities
             monitoringWindow: 1 hours
         });
 
@@ -134,21 +136,21 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Configure circuit breaker thresholds
      * @param _dailyVolumeThreshold Daily volume threshold as % of TVL
      * @param _priceDropThreshold Price drop threshold %
-     * @param _blacklistThreshold Blacklist count threshold in 24h
+     * @param _suspiciousActivityThreshold Suspicious activity count threshold in 24h
      */
     function configure(
         uint256 _dailyVolumeThreshold,
         uint256 _priceDropThreshold,
-        uint256 _blacklistThreshold
+        uint256 _suspiciousActivityThreshold
     ) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         require(_dailyVolumeThreshold <= 100, "CircuitBreaker: invalid volume threshold");
         require(_priceDropThreshold <= 100, "CircuitBreaker: invalid price threshold");
 
         config.dailyVolumeThreshold = _dailyVolumeThreshold;
         config.priceDropThreshold = _priceDropThreshold;
-        config.blacklistThreshold = _blacklistThreshold;
+        config.suspiciousActivityThreshold = _suspiciousActivityThreshold;
 
-        emit CircuitBreakerConfigured(_dailyVolumeThreshold, _priceDropThreshold, _blacklistThreshold);
+        emit CircuitBreakerConfigured(_dailyVolumeThreshold, _priceDropThreshold, _suspiciousActivityThreshold);
     }
 
     /**
@@ -227,25 +229,25 @@ contract CircuitBreaker is VFIDEAccessControl {
     }
 
     /**
-     * @notice Increment blacklist counter and check threshold
+     * @notice Increment suspicious activity counter and check threshold
      */
-    function incrementBlacklist() external onlyRole(BLACKLIST_MANAGER_ROLE) notTriggered nonReentrantCB {
+    function recordSuspiciousActivity() external onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE) notTriggered nonReentrantCB {
         if (!config.enabled) return;
 
         // Reset counter after 24h
         if (block.timestamp >= monitoring.lastBlacklistReset + 1 days) {
-            monitoring.blacklistCount24h = 0;
+            monitoring.suspiciousActivityCount24h = 0;
             monitoring.lastBlacklistReset = block.timestamp;
         }
 
-        monitoring.blacklistCount24h++;
+        monitoring.suspiciousActivityCount24h++;
 
-        emit BlacklistIncremented(monitoring.blacklistCount24h);
+        emit SuspiciousActivityRecorded(monitoring.suspiciousActivityCount24h);
 
-        if (monitoring.blacklistCount24h > config.blacklistThreshold) {
+        if (monitoring.suspiciousActivityCount24h > config.suspiciousActivityThreshold) {
             _trigger(
-                "Blacklist count exceeded threshold",
-                monitoring.blacklistCount24h
+                "Suspicious activity count exceeded threshold",
+                monitoring.suspiciousActivityCount24h
             );
         }
     }
@@ -315,9 +317,9 @@ contract CircuitBreaker is VFIDEAccessControl {
             }
         }
 
-        // Check blacklist threshold
-        if (config.blacklistThreshold > 0 && monitoring.blacklistCount24h >= config.blacklistThreshold) {
-            _trigger("auto: blacklist threshold exceeded", monitoring.blacklistCount24h);
+        // Check suspicious activity threshold
+        if (config.suspiciousActivityThreshold > 0 && monitoring.suspiciousActivityCount24h >= config.suspiciousActivityThreshold) {
+            _trigger("auto: suspicious activity threshold exceeded", monitoring.suspiciousActivityCount24h);
             return true;
         }
 
@@ -335,7 +337,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         
         // Reset monitoring counters
         monitoring.dailyVolume = 0;
-        monitoring.blacklistCount24h = 0;
+        monitoring.suspiciousActivityCount24h = 0;
         monitoring.lastVolumeReset = block.timestamp;
         monitoring.lastBlacklistReset = block.timestamp;
 
@@ -394,7 +396,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         * @return dailyVolume Daily volume
         * @return volumePercent Daily volume percent of TVL
         * @return currentPrice Last observed price
-        * @return blacklistCount Blacklist count in 24h window
+        * @return suspiciousActivityCount Suspicious activity count in 24h window
         * @return isTriggered Whether circuit breaker is triggered
      */
     function getMonitoringStatus() 
@@ -405,7 +407,7 @@ contract CircuitBreaker is VFIDEAccessControl {
             uint256 dailyVolume,
             uint256 volumePercent,
             uint256 currentPrice,
-            uint256 blacklistCount,
+            uint256 suspiciousActivityCount,
             bool isTriggered
         ) 
     {
@@ -413,7 +415,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         dailyVolume = monitoring.dailyVolume;
         volumePercent = tvl > 0 ? (dailyVolume * 100) / tvl : 0;
         currentPrice = monitoring.lastPrice;
-        blacklistCount = monitoring.blacklistCount24h;
+        suspiciousActivityCount = monitoring.suspiciousActivityCount24h;
         isTriggered = circuitBreakerTriggered;
     }
 
@@ -435,9 +437,9 @@ contract CircuitBreaker is VFIDEAccessControl {
         }
 
         // Blacklist warning (80% of threshold)
-        uint256 blacklistWarning = (config.blacklistThreshold * 80) / 100;
-        if (monitoring.blacklistCount24h > blacklistWarning) {
-            tempWarnings[warningCount++] = "Blacklist count approaching threshold";
+        uint256 suspiciousActivityWarning = (config.suspiciousActivityThreshold * 80) / 100;
+        if (monitoring.suspiciousActivityCount24h > suspiciousActivityWarning) {
+            tempWarnings[warningCount++] = "Suspicious activity count approaching threshold";
         }
 
         // Price volatility warning

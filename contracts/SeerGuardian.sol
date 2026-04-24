@@ -97,6 +97,8 @@ contract SeerGuardian is ReentrancyGuard {
     event ViolationRecorded(address indexed subject, ViolationType vtype, uint8 count);
     event PenaltyApplied(address indexed subject, uint16 scorePenalty, string reason);
     event PenaltyAppliedCode(address indexed subject, uint16 scorePenalty, uint16 indexed reasonCode, string reason);
+        // F-68: Emitted when seer.punish() fails so off-chain tooling can detect state drift.
+        event PenaltyApplicationFailed(address indexed subject, uint16 scorePenalty, bytes revertReason);
     
     // Override events  
     event DAOOverride(address indexed subject, bytes32 indexed actionId, string reason);
@@ -321,16 +323,22 @@ contract SeerGuardian is ReentrancyGuard {
         try seer.punish(subject, penalty, reason) {
             emit PenaltyApplied(subject, penalty, reason);
             emit PenaltyAppliedCode(subject, penalty, _violationReasonCode(vtype), reason);
-        } catch {}
+        } catch (bytes memory punishErr) {
+            // F-68 FIX: Emit failure event instead of silently swallowing the error.
+            // SeerGuardian restriction is still applied; this surfaces the state drift to off-chain tooling.
+            emit PenaltyApplicationFailed(subject, penalty, punishErr);
+        }
         
         _log("violation_recorded");
     }
     
     function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason, uint16 reasonCode) internal {
+        RestrictionType old = activeRestriction[subject];
         activeRestriction[subject] = rtype;
-        // H-22 FIX: Use <= block.timestamp so expired restrictions are treated the same as never-set.
-        // Previously used < 1, which left stale (past) expiry values in place.
-        if (restrictionExpiry[subject] <= block.timestamp) {
+        // F-70 FIX: Overwrite restrictionExpiry whenever a harsher restriction is applied.
+        // Previously the expiry was only set when it was expired/zero; a harsher re-restriction
+        // kept the earlier (shorter) expiry, making the protection weaker than intended.
+        if (rtype > old || restrictionExpiry[subject] < block.timestamp + maxRestrictionDuration) {
             restrictionExpiry[subject] = uint64(block.timestamp) + maxRestrictionDuration;
         }
         emit AutoRestrictionApplied(subject, rtype, reason);

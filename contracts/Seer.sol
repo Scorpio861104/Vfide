@@ -732,7 +732,9 @@ contract Seer is ReentrancyGuard {
     /// DAO can directly set scores for migrations or rectifications.
     function setScore(address subject, uint16 newScore, string calldata reason) external onlyDAO nonReentrant {
         if (subject == address(0)) revert TRUST_Zero();
+        // F-64 FIX: Clamp newScore to [MIN_SCORE, MAX_SCORE] so no path can set a sub-floor value.
         if (newScore > MAX_SCORE) revert TRUST_Bounds();
+        if (newScore < MIN_SCORE) newScore = MIN_SCORE;
         // S-04 FIX: Enforce per-subject cooldown on DAO score changes (max 1 per hour)
         if (block.timestamp < lastDAOScoreChange[subject] + DAO_SCORE_COOLDOWN) revert TRUST_InvalidState();
         uint16 old = getScore(subject);
