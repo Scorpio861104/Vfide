@@ -378,31 +378,6 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
     }
 }
 
-/**
- * @title WithdrawalQueueStub
- * @notice Minimal concrete implementation for deployment/testing
- * @dev Replace with a vault-integrated implementation in production
- */
-contract WithdrawalQueueStub is WithdrawalQueue {
-    mapping(address => uint256) private balances;
-
-    constructor(address _admin, uint256 _minimumDelayAmount)
-        WithdrawalQueue(_admin, _minimumDelayAmount)
-    {}
-
-    function setUserBalance(address user, uint256 balance)
-        external
-        onlyRole(CONFIG_MANAGER_ROLE)
-    {
-        balances[user] = balance;
-    }
-
-    function _executeWithdrawal(address user, uint256 amount) internal override {
-        require(balances[user] >= amount, "WithdrawalQueue: insufficient balance");
-        balances[user] -= amount;
-    }
-
-    function _getUserBalance(address user) internal view override returns (uint256) {
-        return balances[user];
-    }
-}
+// F-44 FIX: WithdrawalQueueStub has been moved to contracts/mocks/WithdrawalQueueStub.sol
+// to prevent accidental use in production deploy scripts.
+// Do NOT add a new stub here.
