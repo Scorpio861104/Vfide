@@ -96,6 +96,12 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         bytes32 evidenceHash,
         address verifiedBy
     );
+    event DuplicateTaskSkipped(
+        address indexed worker,
+        uint8 indexed category,
+        bytes32 indexed taskId,
+        address caller
+    );
     event TaskAttested(
         address indexed worker,
         bytes32 indexed taskId
@@ -243,7 +249,11 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     ) internal {
         bytes32 key = keccak256(abi.encodePacked(worker, category, taskId));
 
-        if (taskExists[key]) return; // Skip if already verified (idempotent)
+        if (taskExists[key]) {
+            // F-39 FIX: Emit explicit signal when duplicate key is skipped.
+            emit DuplicateTaskSkipped(worker, category, taskId, msg.sender);
+            return;
+        }
 
         _recordTask(key, worker, category, taskId, evidenceHash, msg.sender);
     }
