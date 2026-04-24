@@ -62,6 +62,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     uint256 public totalReceived;
     uint256 public totalDistributed;
     uint256 public totalBurned;
+    uint256 public totalBurnSinkHeld;
     uint256 public totalToSanctum;
     uint256 public totalToDAO;
     uint256 public totalToMerchants;
@@ -189,6 +190,8 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
                 distributedThisRun += toBurn;
             } catch {
                 if (_safeTransferOut(burnAddress, toBurn)) {
+                    // F-51 FIX: Track soft-burn sink flow separately from hard burn().
+                    totalBurnSinkHeld += toBurn;
                     distributedThisRun += toBurn;
                     emit BurnFallbackTransfer(toBurn, burnAddress);
                 } else {
