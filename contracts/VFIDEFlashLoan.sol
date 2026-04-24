@@ -65,6 +65,10 @@ interface ISystemExemptQuery {
     function systemExempt(address) external view returns (bool);
 }
 
+interface IFeeDistributor_FL {
+    function receiveFee(uint256 amount) external;
+}
+
 interface ISeerFL {
     function getScore(address subject) external view returns (uint16);
     function reward(address subject, uint16 delta, string calldata reason) external;
@@ -367,6 +371,9 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         // Protocol fee → FeeDistributor → 5-way community split
         if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
+                // F-33 FIX: Call receiveFee to update FeeDistributor accounting
+                try IFeeDistributor_FL(feeDistributor).receiveFee(protocolFee) {} 
+                catch {}
         }
 
         // ── BOOKKEEPING ──────────────────────────────────────────

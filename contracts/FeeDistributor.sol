@@ -67,6 +67,10 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     uint256 public totalToMerchants;
     uint256 public totalToHeadhunters;
 
+    // F-33 FIX: Authorized fee sources (in addition to vfideToken)
+    // Allows other contracts to call receiveFee() while maintaining security gate
+    mapping(address => bool) public authorizedFeeSources;
+
     uint256 public minDistributionAmount;
 
     // Timelock
@@ -141,12 +145,22 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         minDistributionAmount = 100 * 1e18;
     }
 
-    /// @notice Receive fee tokens from VFIDEToken._transfer().
-    function receiveFee(uint256 amount) external nonReentrant {
-        if (msg.sender != address(vfideToken)) revert NotAuthorized();
-        totalReceived += amount;
-        emit FeeReceived(amount);
-    }
+        /// @notice Set authorization for a fee source contract (Flash loans, Bridges, etc.)
+        /// @dev Admin-only. Allows contracts other than VFIDEToken to call receiveFee().
+        function setAuthorizedFeeSource(address source, bool authorized) external onlyRole(ADMIN_ROLE) {
+            if (source == address(0)) revert ZeroAddress();
+            authorizedFeeSources[source] = authorized;
+        }
+
+        /// @notice Receive fee tokens from VFIDEToken._transfer() or authorized sources.
+        function receiveFee(uint256 amount) external nonReentrant {
+            // F-33 FIX: Allow both VFIDEToken and authorized fee sources to report fees
+            bool isVFIDEToken = msg.sender == address(vfideToken);
+            bool isAuthorizedSource = authorizedFeeSources[msg.sender];
+            if (!isVFIDEToken && !isAuthorizedSource) revert NotAuthorized();
+            totalReceived += amount;
+            emit FeeReceived(amount);
+        }
 
     // M-6 FIX: Minimum interval between distribution calls to prevent spam/dust accumulation attacks
     uint256 public constant MIN_DISTRIBUTION_INTERVAL = 1 hours;
