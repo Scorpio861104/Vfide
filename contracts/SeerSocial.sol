@@ -49,6 +49,7 @@ contract SeerSocial {
     // EVENTS
     // ═══════════════════════════════════════════════════════════════════════
     event UserEndorsed(address indexed endorser, address indexed subject, uint16 weight, uint64 expiry, string reason);
+    event EndorsementRevoked(address indexed endorser, address indexed subject, uint16 weight, string reason);
     event MentorRegistered(address indexed mentor);
     event MentorRevoked(address indexed mentor);
     event MenteeSponsored(address indexed mentor, address indexed mentee);
@@ -244,7 +245,8 @@ contract SeerSocial {
         Endorsement storage existing = endorsements[subject][msg.sender];
         if (existing.expiry > block.timestamp) revert SOCIAL_EndorseExists();
 
-        uint16 activeReceived = uint16(endorsersOf[subject].length);
+        // F-71 FIX: endorsementsReceived is the canonical active counter.
+        uint16 activeReceived = endorsementsReceived[subject];
         if (activeReceived >= maxEndorsersPerSubject) revert SOCIAL_EndorseLimit();
         if (endorsementsGiven[msg.sender] >= maxActiveGivenPerUser) revert SOCIAL_EndorseLimit();
 
@@ -283,6 +285,35 @@ contract SeerSocial {
         _logEv(subject, "endorsement", weight, reason);
     }
 
+    /// @notice Revoke an active endorsement before expiry.
+    /// @dev F-74: Endorsers need an explicit opt-out path for newly malicious subjects.
+    function revokeEndorsement(address subject, string calldata reason) external onlyNotPaused {
+        Endorsement storage e = endorsements[subject][msg.sender];
+        if (e.expiry <= block.timestamp || e.weight == 0) revert SOCIAL_InvalidEndorse();
+
+        uint16 weight = e.weight;
+        uint64 expiry = e.expiry;
+        delete endorsements[subject][msg.sender];
+
+        if (endorsementsReceived[subject] > 0) endorsementsReceived[subject]--;
+        if (endorsementsGiven[msg.sender] > 0) endorsementsGiven[msg.sender]--;
+        _removeEndorserFromSubjectList(subject, msg.sender);
+
+        // Keep cache coherent for fast-path reads.
+        if (cachedEndorsementBonus[subject] >= weight) {
+            cachedEndorsementBonus[subject] -= weight;
+        } else {
+            cachedEndorsementBonus[subject] = 0;
+        }
+        if (cachedEndorsementExpiry[subject] == expiry) {
+            // Conservative invalidation: next read falls back to full recompute.
+            cachedEndorsementExpiry[subject] = 0;
+        }
+
+        emit EndorsementRevoked(msg.sender, subject, weight, reason);
+        _logEv(subject, "endorsement_revoke", weight, reason);
+    }
+
     function pruneEndorsements(address subject) external onlyNotPaused {
         _pruneExpiredEndorsements(subject);
     }
@@ -303,9 +334,20 @@ contract SeerSocial {
             
             // If endorsement expired, clean it up
             if (e.expiry > 0 && e.expiry <= block.timestamp) {
+                uint16 weight = e.weight;
+                uint64 expiry = e.expiry;
                 delete endorsements[subject][msg.sender];
                 if (endorsementsReceived[subject] > 0) endorsementsReceived[subject]--;
                 if (endorsementsGiven[msg.sender] > 0) endorsementsGiven[msg.sender]--;
+                _removeEndorserFromSubjectList(subject, msg.sender);
+                if (cachedEndorsementBonus[subject] >= weight) {
+                    cachedEndorsementBonus[subject] -= weight;
+                } else {
+                    cachedEndorsementBonus[subject] = 0;
+                }
+                if (cachedEndorsementExpiry[subject] == expiry) {
+                    cachedEndorsementExpiry[subject] = 0;
+                }
                 cleaned++;
                 
                 // Remove subject from list
@@ -437,6 +479,18 @@ contract SeerSocial {
         }
         cachedEndorsementBonus[subject] = newBonus > endorsementBonusCap ? endorsementBonusCap : newBonus;
         cachedEndorsementExpiry[subject] = newMinExpiry;
+    }
+
+    function _removeEndorserFromSubjectList(address subject, address endorser) internal {
+        address[] storage endorsers = endorsersOf[subject];
+        uint256 len = endorsers.length;
+        for (uint256 i = 0; i < len; i++) {
+            if (endorsers[i] == endorser) {
+                endorsers[i] = endorsers[len - 1];
+                endorsers.pop();
+                break;
+            }
+        }
     }
 
     function _checkActiveBadge(address subject, bytes32 badge) internal view returns (bool) {

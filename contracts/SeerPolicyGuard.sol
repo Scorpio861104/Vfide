@@ -17,12 +17,16 @@ contract SeerPolicyGuard {
 
     address public dao;
     address public seer;
+    bool public seerMigrationInProgress;
+    address public pendingSeer;
     uint256 private _guardLock;
 
     mapping(bytes32 => uint64) public policyChangeReadyAt;
 
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event SeerSet(address indexed oldSeer, address indexed newSeer);
+    event SeerMigrationStarted(address indexed oldSeer, address indexed newSeer);
+    event SeerMigrationCancelled(address indexed oldSeer, address indexed pendingSeer);
     event PolicyChangeScheduled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass, uint64 readyAt);
     event PolicyChangeConsumed(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
     event PolicyChangeCancelled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
@@ -59,9 +63,39 @@ contract SeerPolicyGuard {
 
     function setSeer(address _seer) external onlyDAO nonReentrantSPG {
         if (_seer == address(0)) revert SPG_Zero();
+        if (seerMigrationInProgress) revert SPG_InvalidState();
         address old = seer;
         seer = _seer;
         emit SeerSet(old, _seer);
+    }
+
+    /// @notice Begin planned Seer migration and freeze policy consumption during handoff.
+    function beginSeerMigration(address _seer) external onlyDAO nonReentrantSPG {
+        if (_seer == address(0) || _seer == seer) revert SPG_InvalidState();
+        if (seerMigrationInProgress) revert SPG_InvalidState();
+        seerMigrationInProgress = true;
+        pendingSeer = _seer;
+        emit SeerMigrationStarted(seer, _seer);
+    }
+
+    /// @notice Finalize migration by applying pendingSeer and unfreezing consumes.
+    function finalizeSeerMigration() external onlyDAO nonReentrantSPG {
+        if (!seerMigrationInProgress || pendingSeer == address(0)) revert SPG_InvalidState();
+        address old = seer;
+        seer = pendingSeer;
+        pendingSeer = address(0);
+        seerMigrationInProgress = false;
+        emit SeerSet(old, seer);
+    }
+
+    /// @notice Cancel an in-progress Seer migration and unfreeze consumes.
+    function cancelSeerMigration() external onlyDAO nonReentrantSPG {
+        if (!seerMigrationInProgress) revert SPG_InvalidState();
+        address old = seer;
+        address pending = pendingSeer;
+        pendingSeer = address(0);
+        seerMigrationInProgress = false;
+        emit SeerMigrationCancelled(old, pending);
     }
 
     function schedulePolicyChange(bytes4 selector, uint8 pclass) external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt) {
@@ -82,6 +116,7 @@ contract SeerPolicyGuard {
     }
 
     function consume(bytes4 selector, uint8 pclass) external onlySeer nonReentrantSPG {
+        if (seerMigrationInProgress) revert SPG_InvalidState();
         bytes32 changeId = getPolicyChangeId(selector, pclass);
         uint64 readyAt = policyChangeReadyAt[changeId];
         if (readyAt == 0 || block.timestamp < readyAt) revert SPG_InvalidState();
@@ -125,6 +160,7 @@ contract SeerPolicyGuard {
         function consumeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash)
             external onlySeer nonReentrantSPG
         {
+            if (seerMigrationInProgress) revert SPG_InvalidState();
             bytes32 changeId = getPolicyChangeIdWithHash(selector, pclass, paramHash);
             uint64 readyAt = policyChangeReadyAt[changeId];
             if (readyAt == 0 || block.timestamp < readyAt) revert SPG_InvalidState();

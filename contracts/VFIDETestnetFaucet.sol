@@ -38,11 +38,14 @@ error Faucet_ReferrerNotEligible();
 error Faucet_OperatorDailyCapReached();
 error Faucet_NoPendingWithdraw();
 error Faucet_WithdrawTimelockActive();
+error Faucet_NoPendingOwner();
+error Faucet_OwnerTransferTimelockActive();
 
 contract VFIDETestnetFaucet is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint64 public constant WITHDRAW_DELAY = 24 hours;
+    uint64 public constant OWNER_TRANSFER_DELAY = 7 days;
 
     IERC20 public immutable vfideToken;
     
@@ -66,6 +69,8 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     address public ecosystemVault;
     address public pendingWithdrawRecipient;
     uint64 public pendingWithdrawAt;
+    address public pendingOwner;
+    uint64 public pendingOwnerAt;
     
     event Claimed(address indexed user, address indexed referrer, uint256 vfideAmount, uint256 ethAmount);
     event BatchClaimProcessed(address indexed user, address indexed referrer, uint256 vfideAmount, uint256 ethAmount, bool ethTransferFailed);
@@ -78,6 +83,9 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     event WithdrawScheduled(address indexed recipient, uint64 executeAfter);
     event WithdrawCancelled(address indexed recipient);
     event WithdrawExecuted(address indexed recipient, uint256 vfideAmount, uint256 ethAmount);
+    event OwnerTransferProposed(address indexed currentOwner, address indexed pendingOwner, uint64 executeAfter);
+    event OwnerTransferCancelled(address indexed currentOwner, address indexed pendingOwner);
+    event OwnerTransferred(address indexed oldOwner, address indexed newOwner);
     
     modifier onlyOwner() {
         require(msg.sender == owner, "Faucet: not owner");
@@ -230,6 +238,37 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         delete pendingWithdrawRecipient;
         delete pendingWithdrawAt;
         emit WithdrawCancelled(recipient);
+    }
+
+    /// @notice Propose a new faucet owner behind a timelock.
+    function proposeOwnerTransfer(address newOwner) external onlyOwner {
+        if (newOwner == address(0)) revert Faucet_Zero();
+        pendingOwner = newOwner;
+        pendingOwnerAt = uint64(block.timestamp) + OWNER_TRANSFER_DELAY;
+        emit OwnerTransferProposed(owner, newOwner, pendingOwnerAt);
+    }
+
+    /// @notice Cancel a pending owner transfer.
+    function cancelOwnerTransfer() external onlyOwner {
+        if (pendingOwnerAt == 0) revert Faucet_NoPendingOwner();
+        address pending = pendingOwner;
+        delete pendingOwner;
+        delete pendingOwnerAt;
+        emit OwnerTransferCancelled(owner, pending);
+    }
+
+    /// @notice Accept ownership after timelock elapses.
+    function acceptOwnerTransfer() external {
+        if (pendingOwnerAt == 0 || pendingOwner == address(0)) revert Faucet_NoPendingOwner();
+        if (msg.sender != pendingOwner) revert Faucet_NotOperator();
+        if (block.timestamp < pendingOwnerAt) revert Faucet_OwnerTransferTimelockActive();
+
+        address oldOwner = owner;
+        owner = pendingOwner;
+        operators[pendingOwner] = true;
+        delete pendingOwner;
+        delete pendingOwnerAt;
+        emit OwnerTransferred(oldOwner, owner);
     }
 
     /// @notice Withdraw remaining funds (owner only) after the timelock elapses.

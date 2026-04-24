@@ -90,6 +90,15 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     uint256 public totalTasksVerified;
     mapping(uint8 => uint256) public categoryTaskCount;
 
+    // F-72 FIX: Fraud-flag attestations are queued first, then finalized by an
+    // independent verifier after a review delay.
+    uint64 public constant FRAUD_FLAG_ATTESTATION_DELAY = 48 hours;
+    struct PendingFraudAttestation {
+        address flagger;
+        uint64 readyAt;
+    }
+    mapping(bytes32 => PendingFraudAttestation) public pendingFraudAttestation;
+
     // ═══════════════════════════════════════════════════════════
     // EVENTS
     // ═══════════════════════════════════════════════════════════
@@ -111,6 +120,8 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         address indexed worker,
         bytes32 indexed taskId
     );
+    event FraudFlagAttestationQueued(address indexed flagger, bytes32 indexed flagId, uint64 readyAt);
+    event FraudFlagAttestationFinalized(address indexed flagger, bytes32 indexed flagId, address indexed verifier);
     event ProtocolContractUpdated(string name, address newAddress);
     event ProtocolContractsChangeProposed(
         address dao,
@@ -246,8 +257,32 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @notice Called by PanicGuard when a fraud flag is confirmed valid.
     function onFraudFlagConfirmed(address flagger, bytes32 flagId) external {
         require(msg.sender == panicGuard, "Only PanicGuard");
-        bytes32 evidence = keccak256(abi.encodePacked("fraud_flag", flagId, block.number));
-        _autoVerify(flagger, 5, flagId, evidence);
+        // F-72 FIX: Do not attest immediately from the fraud pipeline hook.
+        // Queue first, then require independent verifier finalization after delay.
+        PendingFraudAttestation storage pending = pendingFraudAttestation[flagId];
+        require(pending.flagger == address(0), "SWA: fraud attestation already queued");
+        uint64 readyAt = uint64(block.timestamp + FRAUD_FLAG_ATTESTATION_DELAY);
+        pendingFraudAttestation[flagId] = PendingFraudAttestation({
+            flagger: flagger,
+            readyAt: readyAt
+        });
+        emit FraudFlagAttestationQueued(flagger, flagId, readyAt);
+    }
+
+    /// @notice Finalize a queued fraud-flag attestation after review delay.
+    /// @dev Requires independent verifier role to reduce single-pipeline farming risk.
+    function finalizeFraudFlagAttestation(bytes32 flagId) external nonReentrant onlyRole(VERIFIER_ROLE) {
+        PendingFraudAttestation memory pending = pendingFraudAttestation[flagId];
+        require(pending.flagger != address(0), "SWA: no pending fraud attestation");
+        require(block.timestamp >= pending.readyAt, "SWA: review delay active");
+
+        delete pendingFraudAttestation[flagId];
+
+        bytes32 evidence = keccak256(
+            abi.encodePacked("fraud_flag_finalized", flagId, pending.readyAt, msg.sender)
+        );
+        _autoVerify(pending.flagger, 5, flagId, evidence);
+        emit FraudFlagAttestationFinalized(pending.flagger, flagId, msg.sender);
     }
 
     /// @dev Internal automated verification — called by protocol hooks.
