@@ -72,20 +72,18 @@
 | Category | Count | Coverage |
 |----------|-------|----------|
 | Critical (F-01–F-09) | 9 | 5/9 fixed (56%) |
-| High (F-10–F-42) | 33 | 0/33 fixed (0%) |
+| High (F-10–F-42) | 33 | 1/33 fixed (3%) |
 | Medium (F-43–F-75) | 33 | 0/33 fixed (0%) |
 | Low (F-76–F-89) | 14 | 0/14 fixed (0%) |
-| **TOTAL** | **89** | **5/89 fixed (6%)** |
+| **TOTAL** | **89** | **6/89 fixed (7%)** |
 
 ### High Priority Remaining
 
 1. **F-06**: Already resolved (WithdrawalQueueStub deployer disabled)
-2. **F-07**: MerchantPortal VFIDE underdelivery
-3. **F-08**: SeerAutonomous oracle defensive wrapping
-4. **F-09**: SeerGuardian freeze semantics clarity
-5. **F-10**: VFIDETestnetFaucet referral missing registration
-6. **F-11**: FraudRegistry systemExempt sanity check
-7. **F-12**: FraudRegistry escrow cancellation gap
+2. **F-10**: Already fixed (VFIDETestnetFaucet calls `_registerReferral` → `ecosystemVault.registerUserReferral()`)
+3. **F-07**: MerchantPortal VFIDE underdelivery
+4. **F-08**: SeerAutonomous oracle defensive wrapping
+5. **F-09**: SeerGuardian freeze semantics clarity
 
 ### Deployment Blockers
 
