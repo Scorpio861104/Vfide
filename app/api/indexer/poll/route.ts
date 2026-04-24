@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { pollEvents } from '@/lib/indexer/service';
@@ -6,21 +7,20 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function isAuthorized(request: NextRequest): boolean {
-  if (process.env.NODE_ENV !== 'production') {
-    return true;
-  }
-
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
-    logger.error('[Indexer API] CRON_SECRET is required in production');
+    logger.error('[Indexer API] CRON_SECRET is required');
     return false;
   }
 
-  return request.headers.get('authorization') === `Bearer ${cronSecret}`;
+  const expected = Buffer.from(`Bearer ${cronSecret}`);
+  const actual = Buffer.from(request.headers.get('authorization') ?? '');
+
+  return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
 
 export async function GET(request: NextRequest) {
-  if (process.env.NODE_ENV === 'production' && !process.env.CRON_SECRET) {
+  if (!process.env.CRON_SECRET) {
     return NextResponse.json(
       { success: false, error: 'CRON_SECRET not configured' },
       { status: 503 }

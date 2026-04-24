@@ -310,6 +310,11 @@ contract CardBoundVault is ReentrancyGuard {
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
 
+    /// @notice Get the current admin (owner) of this vault. Exposed for compatibility with VaultRecoveryClaim.
+    function owner() external view returns (address) {
+        return admin;
+    }
+
     /// @notice Start two-step admin transfer for this vault.
     /// @param newAdmin Address that must call `acceptAdmin` to complete transfer.
     function transferAdmin(address newAdmin) external onlyAdmin {

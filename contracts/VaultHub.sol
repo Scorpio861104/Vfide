@@ -117,6 +117,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_PendingExists();
     error VH_RecoveryCandidateMismatch();
     error VH_InsufficientRecoveryApprovals();
+    error VH_AlreadyOwnsVault();
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
@@ -489,6 +490,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         if (isGuardianSetupExpired(vault)) revert VH_GuardianSetupRequired();
         if (vault == address(0) || newWallet == address(0)) revert VH_Zero();
         if (ownerOfVault[vault] == address(0)) revert VH_UnknownVault();
+        if (vaultOf[newWallet] != address(0)) revert VH_AlreadyOwnsVault();
 
         uint256 nonce = recoveryNonce[vault];
         if (recoveryUnlockTime[vault] == 0) {
