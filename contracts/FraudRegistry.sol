@@ -61,6 +61,7 @@ contract FraudRegistry is ReentrancyGuard {
     uint8 public constant COMPLAINTS_TO_FLAG = 3;
     uint256 public constant ESCROW_DURATION = 30 days;
     uint256 public constant ESCROW_RESCUE_DELAY = 90 days;
+    uint256 public constant PENDING_REVIEW_APPEAL_WINDOW = 48 hours;
     /// @notice H-4 FIX: Timelock for permanent ban — gives subject time to appeal before irreversible action
     uint256 public constant PERMANENT_BAN_DELAY = 7 days;
     uint16 public constant MIN_REPORTER_SCORE = 5000;
@@ -311,8 +312,13 @@ contract FraudRegistry is ReentrancyGuard {
     function confirmFraud(address target) external onlyDAO nonReentrant {
         require(isPendingReview[target], "FR: not pending review");
         require(!isFlagged[target], "FR: already flagged");
+        require(
+            block.timestamp >= pendingReviewAt[target] + PENDING_REVIEW_APPEAL_WINDOW,
+            "FR: appeal window not elapsed"
+        );
 
         isPendingReview[target] = false;
+        pendingReviewAt[target] = 0;
         isFlagged[target] = true;
         flaggedAt[target] = uint64(block.timestamp);
 
