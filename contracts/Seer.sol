@@ -589,7 +589,11 @@ contract Seer is ReentrancyGuard {
             }
         }
 
-        return oldest.oldScore;
+        // F-27 FIX: Ring buffer fallback — if queried timestamp is older than all retained history,
+        // return conservative value instead of oldest.oldScore.
+        // This prevents exploiting buffer eviction to claim inflated historical scores.
+        // If oldest.oldScore is above NEUTRAL, cap at NEUTRAL; if below, return the lower value.
+        return oldest.oldScore < NEUTRAL ? oldest.oldScore : NEUTRAL;
     }
     
     /**
