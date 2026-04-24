@@ -7,6 +7,10 @@ interface IEmergencyController {
     function emergencyPause() external;
 }
 
+interface ITVLSource_CB {
+    function getTotalValueLocked() external view returns (uint256);
+}
+
 /**
  * @title CircuitBreaker
  * @notice Auto-pause system based on monitoring key ecosystem metrics
@@ -49,6 +53,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     
     address public priceOracle;
     address public emergencyController;
+    address public tvlSource;
     
     bool public circuitBreakerTriggered;
     uint256 public lastTriggerTime;
@@ -76,6 +81,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     event VolumeRecorded(uint256 amount, uint256 totalDaily);
     event BlacklistIncremented(uint256 count24h);
     event TVLUpdated(uint256 previousTVL, uint256 newTVL);
+    event TVLSourceUpdated(address indexed newSource);
 
     modifier notTriggered() {
         require(!circuitBreakerTriggered, "CircuitBreaker: already triggered");
@@ -249,9 +255,31 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @param _tvl New TVL value
      */
     function updateTVL(uint256 _tvl) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+        // F-30 FIX: Once a TVL oracle source is configured, block arbitrary manual writes.
+        require(tvlSource == address(0), "CircuitBreaker: use TVL source");
         uint256 previousTVL = monitoring.totalValueLocked;
         monitoring.totalValueLocked = _tvl;
         emit TVLUpdated(previousTVL, _tvl);
+    }
+
+    /**
+     * @notice Set on-chain TVL source used for authoritative updates.
+     * @dev Set to zero address to temporarily re-enable manual TVL writes.
+     */
+    function updateTVLSource(address _source) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+        tvlSource = _source;
+        emit TVLSourceUpdated(_source);
+    }
+
+    /**
+     * @notice Pull TVL from configured source and update monitoring value.
+     */
+    function updateTVLFromSource() external nonReentrantCB {
+        require(tvlSource != address(0), "CircuitBreaker: TVL source not set");
+        uint256 newTVL = ITVLSource_CB(tvlSource).getTotalValueLocked();
+        uint256 previousTVL = monitoring.totalValueLocked;
+        monitoring.totalValueLocked = newTVL;
+        emit TVLUpdated(previousTVL, newTVL);
     }
 
     /**
