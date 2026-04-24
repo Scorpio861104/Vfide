@@ -87,6 +87,9 @@ contract SeerSocial {
     mapping(address => mapping(address => Endorsement)) public endorsements; // subject => endorser => endorsement
     mapping(address => address[]) private endorsersOf;                       // subject => list of endorsers
     mapping(address => uint16) public endorsementsReceived;                 // active endorsements per subject
+    // F-36 FIX: Incremental cache for endorsement bonus — avoids O(n) SLOADs on every score read.
+    mapping(address => uint256) public cachedEndorsementBonus;  // running total, invalidated by prune
+    mapping(address => uint64)  public cachedEndorsementExpiry; // min(expiry) of active endorsements; 0 = dirty
     mapping(address => uint16) public endorsementsGiven;                    // active endorsements given by user
     mapping(address => uint64) public lastEndorseTime;                      // cooldown tracker per endorser
     mapping(address => uint64) public lastActivity;                         // For decay tracking
@@ -264,6 +267,11 @@ contract SeerSocial {
         endorsersOf[subject].push(msg.sender);
         endorsementsReceived[subject] = activeReceived + 1;
         endorsementsGiven[msg.sender] += 1;
+        // F-36 FIX: Update incremental cache.
+        cachedEndorsementBonus[subject] += weight;
+        if (cachedEndorsementExpiry[subject] == 0 || expiry < cachedEndorsementExpiry[subject]) {
+            cachedEndorsementExpiry[subject] = expiry;
+        }
         
         // L-9 FIX: Track subjects endorsed by this user for later cleanup
         endorsedSubjects[msg.sender].push(subject);
@@ -314,6 +322,14 @@ contract SeerSocial {
     }
 
     function calculateEndorsementBonus(address subject) public view returns (uint256 bonus) {
+        // F-36 FIX: return incremental cache when none of the active endorsements have expired yet.
+        uint64 cacheExpiry = cachedEndorsementExpiry[subject];
+        if (cacheExpiry > block.timestamp) {
+            bonus = cachedEndorsementBonus[subject];
+            if (bonus > endorsementBonusCap) bonus = endorsementBonusCap;
+            return bonus;
+        }
+        // Cache stale: full recompute (also used on first call).
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
         for (uint256 i = 0; i < len; i++) {
@@ -321,8 +337,6 @@ contract SeerSocial {
             Endorsement storage e = endorsements[subject][endorser];
             if (e.weight > 0 && e.expiry > block.timestamp) {
                 // F-35 FIX: Only count endorsements from endorsers still in good standing.
-                // Even if endorsement is not expired, skip if endorser score has dropped below threshold.
-                // This prevents endorsements from flagged/punished accounts from inflating scores.
                 if (seer.getScore(endorser) >= minScoreToEndorse) {
                     bonus += e.weight;
                 }
@@ -410,6 +424,19 @@ contract SeerSocial {
             i++;
         }
         endorsementsReceived[subject] = uint16(endorsers.length);
+        // F-36 FIX: Rebuild incremental cache after prune so next read is O(1).
+        uint256 newBonus;
+        uint64 newMinExpiry;
+        uint256 eLen = endorsers.length;
+        for (uint256 j = 0; j < eLen; j++) {
+            Endorsement storage pe = endorsements[subject][endorsers[j]];
+            if (pe.weight > 0 && pe.expiry > block.timestamp) {
+                newBonus += pe.weight;
+                if (newMinExpiry == 0 || pe.expiry < newMinExpiry) newMinExpiry = pe.expiry;
+            }
+        }
+        cachedEndorsementBonus[subject] = newBonus > endorsementBonusCap ? endorsementBonusCap : newBonus;
+        cachedEndorsementExpiry[subject] = newMinExpiry;
     }
 
     function _checkActiveBadge(address subject, bytes32 badge) internal view returns (bool) {
