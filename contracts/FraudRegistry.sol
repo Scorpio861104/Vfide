@@ -36,6 +36,11 @@ interface IVaultHub_FR {
     function isVault(address account) external view returns (bool);
 }
 
+/// @dev F-11 FIX: Minimal interface to check systemExempt status on token
+interface IVFIDEToken_SystemExempt {
+    function systemExempt(address account) external view returns (bool);
+}
+
 error FR_Zero();
 error FR_AlreadyComplained();
 error FR_InsufficientScore();
@@ -48,6 +53,7 @@ error FR_EscrowAlreadyProcessed();
 error FR_EscrowInvalidIndex();
 error FR_ReviewActive();
 error FR_InvalidTarget();
+error FR_SystemExemptViolation();
 
 contract FraudRegistry is ReentrancyGuard {
 
@@ -74,6 +80,8 @@ contract FraudRegistry is ReentrancyGuard {
     uint64 public constant VAULT_HUB_CHANGE_DELAY_FR = 48 hours;
 
     // ── Complaint tracking ───────────────────────────────────
+    event SystemExemptCheckFailed(address indexed fraudRegistry);
+
     struct Complaint {
         address reporter;
         string reason;
@@ -236,6 +244,16 @@ contract FraudRegistry is ReentrancyGuard {
         e.released = true;
         // H-3 FIX: Decrement active escrow counter before transfer
         totalActiveEscrowed -= e.amount;
+
+        // F-11 FIX: Verify systemExempt is configured so recipient receives full amount.
+        // If FraudRegistry is not systemExempt on VFIDEToken, this transfer would incur
+        // burn/sanctum/ecosystem fees, and recipient gets less than escrowed.
+        try IVFIDEToken_SystemExempt(address(vfideToken)).systemExempt(address(this)) returns (bool exempt) {
+            require(exempt, "FR: not systemExempt on token; recipient would get less than escrowed");
+        } catch {
+            // If systemExempt query fails, emit warning but continue (fallback for older token versions)
+            emit SystemExemptCheckFailed(address(this));
+        }
 
         // Transfer tokens from this contract to the intended recipient
         // FraudRegistry must be systemExempt on VFIDEToken so this transfer
