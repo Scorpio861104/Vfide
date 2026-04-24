@@ -177,8 +177,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // IVaultHub compatibility wrapper
     /// @notice Schedule ProofLedger update with timelock.
     /// @param proofLedger New ProofLedger address.
-    // slither-disable-next-line missing-zero-check
     function setProofLedger(address proofLedger) external onlyOwner {
+        if (proofLedger == address(0)) revert VH_Zero();
+        if (pendingProofLedgerAt_VH != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingProofLedger_VH = proofLedger;
         pendingProofLedgerAt_VH = effectiveAt;
@@ -224,6 +225,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param _dao New DAO address.
     function setDAO(address _dao) external onlyOwner {
         if (_dao == address(0)) revert VH_Zero();
+        if (pendingDAOAt_VH != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingDAO_VH = _dao;
         pendingDAOAt_VH = effectiveAt;
