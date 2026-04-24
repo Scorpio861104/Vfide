@@ -2,11 +2,11 @@
 
 **Date**: 2026-04-24  
 **Scope**: Fixes for findings in VFIDE_AUDIT_FINDINGS.md (89 total findings)  
-**Status**: 6+ critical/high findings resolved
+**Status**: 15 critical/high findings resolved or verified in current tree
 
 ---
 
-## Critical Fixes (9 findings total, 5 resolved)
+## Critical Fixes (9 findings total, 7 resolved)
 
 ### ✅ F-01: middleware.ts missing
 - **Status**: Resolved (pre-existing in codebase)
@@ -47,14 +47,64 @@
 - **Recommendation**: Reject VFIDE as a settlement token (stablecoin-only model) or implement fee-aware accounting
 
 ### ⚠️ F-08: SeerAutonomous.beforeAction — uncaught oracle call freezes actions  
-- **Status**: OPEN
-- **Severity**: Critical
-- **Recommendation**: Add try/catch around riskOracle.getRiskScore() call
+- **Status**: Fixed
+- **Commit**: `7169b411`
+- **Change**: Wrapped `riskOracle.getRiskScore(subject)` in `try/catch` and emit `ExternalCallFailed` instead of reverting the entire action path
+- **Impact**: Misconfigured or unhealthy oracle can no longer freeze all transfers, votes, or deposits protocol-wide
 
 ### ⚠️ F-09: SeerGuardian.checkAndEnforce permissionless freeze contradicts non-custodial story
 - **Status**: OPEN
 - **Severity**: Critical
 - **Recommendation**: Clarify freeze semantics or restrict to DAO-only enforcement
+
+---
+
+## High Fixes (F-10-F42)
+
+### ✅ F-10: VFIDETestnetFaucet referral bridge
+- **Status**: Resolved (pre-existing in codebase)
+- **Commit**: Verified in current tree
+- **Change**: Faucet referral flow already bridges into EcosystemVault registration path
+
+### ✅ F-11: FraudRegistry systemExempt guard on escrow release
+- **Status**: Fixed
+- **Commit**: `b40311b2`
+- **Change**: Added `systemExempt` validation around escrow release path and emitted failure signal when the token exemption assumption is broken
+
+### ✅ F-12: FraudRegistry escrow cancellation on flag clear
+- **Status**: Fixed
+- **Commit**: `1866708a`
+- **Change**: `clearFlag()` now cancels all pending escrows for the cleared user and refunds the original sender
+
+### ✅ F-13: ProofScoreBurnRouter fee policy rate-limit bypass
+- **Status**: Fixed
+- **Commit**: `ef46ec60`
+- **Change**: Added persistent `feePolicyInitialized` flag so DAO cannot bypass the 2x fee increase guard via `0 -> max` sequencing
+
+### ✅ F-15: VaultRegistry recovery ID plaintext exposure
+- **Status**: Resolved (already implemented)
+- **Commit**: Verified in current tree
+- **Change**: `setRecoveryId` already accepts a precomputed `bytes32` hash rather than plaintext calldata
+
+### ✅ F-16: VaultRegistry guardian registration divergence
+- **Status**: Resolved (already implemented)
+- **Commit**: Verified in current tree
+- **Change**: `registerGuardian` already cross-checks the vault's live `isGuardian` mapping before indexing the guardian relationship
+
+### ✅ F-17: CardBoundVault pending guardian change survives recovery
+- **Status**: Fixed
+- **Commit**: `f32fc048`
+- **Change**: Recovery rotation now clears `pendingGuardianChange` so attacker-queued guardian changes do not survive wallet recovery
+
+### ✅ F-18: VaultHub independent guardian check too narrow
+- **Status**: Fixed
+- **Commit**: `f32fc048`
+- **Change**: Hub now requires at least one guardian beyond owner and DAO by comparing guardian count against reserved guardian slots
+
+### ✅ F-19: VaultHub guardian setup completion becomes stale
+- **Status**: Fixed
+- **Commit**: `f32fc048`
+- **Change**: CardBoundVault now invalidates `guardianSetupComplete` in the hub if later guardian changes weaken the vault below recovery minimums
 
 ---
 
@@ -71,26 +121,26 @@
 
 | Category | Count | Coverage |
 |----------|-------|----------|
-| Critical (F-01–F-09) | 9 | 5/9 fixed (56%) |
-| High (F-10–F-42) | 33 | 1/33 fixed (3%) |
+| Critical (F-01–F-09) | 9 | 7/9 fixed (78%) |
+| High (F-10–F-42) | 33 | 9/33 fixed (27%) |
 | Medium (F-43–F-75) | 33 | 0/33 fixed (0%) |
 | Low (F-76–F-89) | 14 | 0/14 fixed (0%) |
-| **TOTAL** | **89** | **6/89 fixed (7%)** |
+| **TOTAL** | **89** | **16/89 fixed (18%)** |
 
 ### High Priority Remaining
 
 1. **F-06**: Already resolved (WithdrawalQueueStub deployer disabled)
 2. **F-10**: Already fixed (VFIDETestnetFaucet calls `_registerReferral` → `ecosystemVault.registerUserReferral()`)
 3. **F-07**: MerchantPortal VFIDE underdelivery
-4. **F-08**: SeerAutonomous oracle defensive wrapping
-5. **F-09**: SeerGuardian freeze semantics clarity
+4. **F-09**: SeerGuardian freeze semantics clarity
+5. **F-14 / F-20**: Next concrete high-priority code fixes in the vault recovery surface
 
 ### Deployment Blockers
 
 Before mainnet deployment, ensure:
-✅ F-01–F-05 are fixed (done — all commit hashes recorded)  
-❌ F-07–F-09 critically reviewed and fixed/accepted as operational risks  
-⚠️ F-10–F-42 assessed for impact on target deployment (testnet vs. mainnet)
+✅ F-01–F-06 and F-08 are fixed or verified in tree  
+❌ F-07 and F-09 still require explicit product/architecture decisions  
+⚠️ F-10–F-42 still need continued implementation and deployment-impact review
 
 ---
 

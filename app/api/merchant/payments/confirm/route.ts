@@ -94,7 +94,7 @@ function getMerchantPortalAddress(): string | null {
 }
 
 function getRpcUrl(): string | null {
-  const value = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL;
+  const value = process.env.RPC_URL;
   if (!value) return null;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : null;

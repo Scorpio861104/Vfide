@@ -17,6 +17,7 @@ contract DAOTimelock is ReentrancyGuard {
     event PanicGuardSet(address panicGuard);
     event Queued(bytes32 id, address target, uint256 value, bytes data, uint64 eta);
     event Cancelled(bytes32 id);
+    event CancelledBySecondary(bytes32 indexed id);
     event Executed(bytes32 id);
     event GracePeriodExpired(bytes32 id);
     /// @notice TL-02 FIX: Events for secondary executor role
@@ -105,6 +106,21 @@ contract DAOTimelock is ReentrancyGuard {
     }
 
     function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; _removeFromQueuedIds(id); emit Cancelled(id); _log("tl_cancelled"); }
+
+    function cancelBySecondary(bytes32 id) external {
+        require(secondaryExecutor != address(0), "TL: secondary executor not set");
+        require(msg.sender == secondaryExecutor, "TL: not secondary executor");
+
+        Op storage op = queue[id];
+        if (op.eta == 0) revert TL_NotQueued();
+        if (op.done) revert TL_AlreadyExecuted();
+        require(block.timestamp >= op.eta + SECONDARY_EXECUTOR_DELAY, "TL: secondary delay not elapsed");
+
+        delete queue[id];
+        _removeFromQueuedIds(id);
+        emit CancelledBySecondary(id);
+        _log("tl_cancelled_by_secondary");
+    }
 
     function execute(bytes32 id) external payable nonReentrant returns(bytes memory res){
         // H-23: Only admin (DAO) can execute to prevent front-running

@@ -119,6 +119,28 @@ describe('/api/merchant/payments/confirm', () => {
     expect(dispatchWebhook).not.toHaveBeenCalled();
   });
 
+  it('does not use NEXT_PUBLIC_RPC_URL for server-side payment confirmation', async () => {
+    delete process.env.RPC_URL;
+    process.env.NEXT_PUBLIC_RPC_URL = 'https://public-rpc.example';
+
+    const request = new NextRequest('http://localhost:3000/api/merchant/payments/confirm', {
+      method: 'POST',
+      body: JSON.stringify({
+        customer_address: mockCustomer,
+        amount: '1000',
+        order_id: 'order-1',
+        tx_hash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(422);
+    expect(data.error).toContain('missing chain configuration');
+    expect(createPublicClient).not.toHaveBeenCalled();
+  });
+
   it('dispatches webhook when on-chain verification succeeds', async () => {
     query.mockResolvedValueOnce({ rows: [{ id: '1' }] });
     const request = new NextRequest('http://localhost:3000/api/merchant/payments/confirm', {
