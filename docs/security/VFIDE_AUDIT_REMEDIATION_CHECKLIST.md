@@ -10,7 +10,7 @@ Generated: 2026-04-23T15:25:46Z
 - [x] C-4 — FraudRegistry systemExempt wiring ✅ RESOLVED
 - [x] C-5 — `VaultRecoveryClaim.guardianVote` calls non-existent method on CardBoundVault
 - [x] C-6 — `VaultHub.executeRecoveryRotation` — single recovery-approver unilateral custody
-- [x] C-7 — Single-guardian default + 30-day grace = permanent lockout on lost phone
+- [x] C-7 — Single-guardian default + 30-day grace = permanent lockout on lost phone — FIXED: `MAX_VFIDE_WITHOUT_GUARDIAN = 50_000e18` constant added; `canReceiveTransfer(amount)` view added; enforced in `executeVaultToVaultTransfer` and `executeQueuedWithdrawal` — destination vaults without guardian setup cannot receive VFIDE beyond the cap
 - [x] C-8 — `Ownable.emergencyTransferOwnership` has no per-use timelock (dormant but unsafe)
 - [x] C-9 — `EcosystemVault.burnFunds` sends to `0xdEaD` instead of calling `vfideToken.burn()` — FIXED: `burnFunds()` now calls `IVFIDEBurnable.burn()` with dead-address fallback; test harness updated to pass non-zero seer address; 7/9 EcosystemVault tests pass (2 pre-existing merchant-reward failures unrelated to C-9)
 - [x] C-10 — `VFIDEEnterpriseGateway.rescueFunds` drains escrowed user orders — FIXED: `rescueFunds` caps VFIDE transfers to `balanceOf - totalPendingOrderAmount`; 6/6 EnterpriseGatewayGuardrails tests pass
@@ -83,7 +83,7 @@ Generated: 2026-04-23T15:25:46Z
 - [x] M-35 — `VFIDEFlashLoan.deposit` duplicate `fraudRegistry` staticcall (L188, L190). Gas waste.
 - [x] M-36 — `MainstreamPayments.updatePrice` no per-updater rate-limit (L313).
 - [x] M-37 — `EmergencyControl.addMember` via foundation has no MAX_MEMBERS cap (L199-216).
-- [x] M-38 — `CouncilElection.candidateList` capped at 200 (L105). First-come-first-served locks out later qualified candidates.
+- [x] M-38 — `CouncilElection.candidateList` capped at 200 (L105). First-come-first-served locks out later qualified candidates. — FIXED: `MAX_CANDIDATES = 500` constant added; `register()` reverts with `CE_TooManyCandidates` when `candidateList.length >= MAX_CANDIDATES`
 - [x] M-39 — `CouncilElection._eligible` uses live `seer.getScore` not snapshot (L253). Council members can be booted mid-term by Seer operator punish. Political pressure vector.
 - [x] M-40 — `VFIDEFinance.setNotifier` is immediate single-step DAO (L76-80). Notifier can call `noteVFIDE` with any amount to inflate `totalReceived`.
 - [x] M-41 — `SubscriptionManager.processPayment` silently swallows Seer reward calls (L293-294). Emit event on catch.

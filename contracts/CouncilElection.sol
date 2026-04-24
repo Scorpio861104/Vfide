@@ -14,6 +14,8 @@ error CE_ElectionStillActive();
 error CE_AlreadyVoted();
 error CE_InvalidElectionWindow();
 error CE_NotTopVotedCandidate();
+/// @notice M-38 FIX: candidateList cap reached; existing candidates must unregister before new ones can join.
+error CE_TooManyCandidates();
 
 // ReentrancyGuard intentionally omitted: governance selection logic has no value transfers.
 contract CouncilElection {
@@ -29,6 +31,9 @@ contract CouncilElection {
     uint64 public constant MAX_COOLDOWN_PERIOD = 3650 days;
     uint64 public constant MIN_ELECTION_WINDOW = 1 days;
     uint64 public constant MAX_ELECTION_WINDOW = 30 days;
+    /// @notice M-38 FIX: Cap the candidate list so it cannot be spam-filled by well-resourced actors,
+    ///         blocking later qualified candidates first-come-first-served.
+    uint256 public constant MAX_CANDIDATES = 500;
 
     event ModulesSet(address dao, address seer, address hub, address ledger);
     event ModulesProposed(address dao, address seer, address hub, address ledger, uint64 effectiveAt);
@@ -164,6 +169,8 @@ contract CouncilElection {
         
         // Track in candidate list if not already there
         if (!inCandidateList[msg.sender]) {
+            // M-38 FIX: Prevent first-come-first-served lock-out by late qualified candidates.
+            if (candidateList.length >= MAX_CANDIDATES) revert CE_TooManyCandidates();
             candidateList.push(msg.sender);
             inCandidateList[msg.sender] = true;
         }

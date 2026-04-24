@@ -7,6 +7,11 @@ interface IVaultHubGuardianSetup {
     function guardianSetupComplete(address vault) external view returns (bool);
 }
 
+/// @dev C-7 FIX: Minimal interface for checking if a peer vault can accept an incoming transfer.
+interface ICardBoundVaultView {
+    function canReceiveTransfer(uint256 amount) external view returns (bool);
+}
+
 /**
  * @title CardBoundVault
  * @notice Active vault implementation — wallet is authorization-only (ATM-card model).
@@ -56,6 +61,11 @@ contract CardBoundVault is ReentrancyGuard {
     uint8 public guardianThreshold;
 
     uint64 public constant GUARDIAN_MATURITY_PERIOD = 7 days;
+
+    /// @notice C-7 FIX: Maximum VFIDE a vault may hold while guardian setup is incomplete.
+    ///         Prevents a user who loses their phone before completing guardian setup from
+    ///         losing more than this amount.  50,000 VFIDE (18 decimals).
+    uint256 public constant MAX_VFIDE_WITHOUT_GUARDIAN = 50_000e18;
 
     uint256 public maxPerTransfer;
     uint256 public dailyTransferLimit;
@@ -218,6 +228,8 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_QueueInvalidIndex();
     error CBV_QueueNotReady();
     error CBV_QueueAlreadyProcessed();
+    /// @notice C-7 FIX: Destination vault cannot receive transfer (unguarded and cap would be exceeded).
+    error CBV_ReceiverNeedsGuardian();
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert CBV_NotAdmin();
@@ -438,6 +450,14 @@ contract CardBoundVault is ReentrancyGuard {
         emit SpendLimitsChangeCancelled();
     }
 
+    /// @notice C-7 FIX: Returns true if this vault can receive `amount` more VFIDE without
+    ///         guardian setup complete.  Once guardian setup is done the cap is lifted.
+    function canReceiveTransfer(uint256 amount) external view returns (bool) {
+        if (_guardianSetupComplete()) return true;
+        uint256 currentBalance = IERC20(vfideToken).balanceOf(address(this));
+        return currentBalance + amount <= MAX_VFIDE_WITHOUT_GUARDIAN;
+    }
+
     function isGuardianMature(address guardian) external view returns (bool) {
         uint64 addedAt = guardianAddedAt[guardian];
         return addedAt != 0 && block.timestamp >= addedAt + GUARDIAN_MATURITY_PERIOD;
@@ -633,6 +653,10 @@ contract CardBoundVault is ReentrancyGuard {
 
         // Small transfer — execute immediately
         spentToday += amount;
+
+        // C-7 FIX: Prevent pre-loading an unguarded destination vault beyond safe threshold.
+        if (!ICardBoundVaultView(intent.toVault).canReceiveTransfer(amount)) revert CBV_ReceiverNeedsGuardian();
+
         IERC20(vfideToken).safeTransfer(intent.toVault, amount);
 
         emit VaultTransferAuthorized(signer, intent.toVault, amount, intent.nonce, intent.walletEpoch);
@@ -714,6 +738,9 @@ contract CardBoundVault is ReentrancyGuard {
         if (newWindowSinceQueue) {
             spentToday += w.amount;
         }
+
+        // C-7 FIX: Prevent queued withdrawal to an unguarded vault that would breach cap.
+        if (!ICardBoundVaultView(w.toVault).canReceiveTransfer(w.amount)) revert CBV_ReceiverNeedsGuardian();
 
         IERC20(vfideToken).safeTransfer(w.toVault, w.amount);
 
