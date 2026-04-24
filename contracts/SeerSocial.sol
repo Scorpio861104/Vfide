@@ -317,9 +317,15 @@ contract SeerSocial {
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
         for (uint256 i = 0; i < len; i++) {
-            Endorsement storage e = endorsements[subject][endorsers[i]];
+            address endorser = endorsers[i];
+            Endorsement storage e = endorsements[subject][endorser];
             if (e.weight > 0 && e.expiry > block.timestamp) {
-                bonus += e.weight;
+                // F-35 FIX: Only count endorsements from endorsers still in good standing.
+                // Even if endorsement is not expired, skip if endorser score has dropped below threshold.
+                // This prevents endorsements from flagged/punished accounts from inflating scores.
+                if (seer.getScore(endorser) >= minScoreToEndorse) {
+                    bonus += e.weight;
+                }
             }
         }
         if (bonus > endorsementBonusCap) {
