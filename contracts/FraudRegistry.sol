@@ -371,6 +371,27 @@ contract FraudRegistry is ReentrancyGuard {
         if (!isFlagged[target]) revert FR_NotFlagged();
         isFlagged[target] = false;
         flaggedAt[target] = 0;
+        
+        // F-12 FIX: When a flag is cleared (fraud was false), retroactively cancel
+        // pending escrows and refund the flagged user. Otherwise users falsely flagged
+        // pay the full 30-day time penalty even after rehabilitation.
+        uint256[] storage userIndices = userEscrowIndices[target];
+        uint256 indexCount = userIndices.length;
+        
+        for (uint256 i = 0; i < indexCount; i++) {
+            uint256 escrowIndex = userIndices[i];
+            if (escrowIndex >= escrowedTransfers.length) continue;
+            
+            EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
+            if (!e.released && !e.cancelled) {
+                // Cancel the escrow and refund to sender (the user who was flagged)
+                e.cancelled = true;
+                totalActiveEscrowed -= e.amount;
+                SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
+                emit EscrowCancelledOnClear(escrowIndex, e.from, e.amount);
+            }
+        }
+        
         emit FlagCleared(target, msg.sender);
     }
 
