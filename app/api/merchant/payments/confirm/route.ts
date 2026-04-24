@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem } from 'viem';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, StablecoinRegistryABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
@@ -111,6 +111,37 @@ function getMinConfirmations(): bigint {
   return parsed;
 }
 
+async function isAcceptedSettlementToken(params: {
+  client: ReturnType<typeof createPublicClient>;
+  token: string;
+}): Promise<boolean> {
+  const normalizedToken = getAddress(params.token);
+
+  if (
+    isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken) &&
+    getAddress(CONTRACT_ADDRESSES.VFIDEToken) === normalizedToken
+  ) {
+    return true;
+  }
+
+  if (!isConfiguredContractAddress(CONTRACT_ADDRESSES.StablecoinRegistry)) {
+    return false;
+  }
+
+  try {
+    const allowed = await params.client.readContract({
+      address: CONTRACT_ADDRESSES.StablecoinRegistry,
+      abi: StablecoinRegistryABI,
+      functionName: 'isAllowed',
+      args: [normalizedToken],
+    });
+    return Boolean(allowed);
+  } catch (error) {
+    logger.warn('[Merchant Payment Confirm] StablecoinRegistry lookup failed', error);
+    return false;
+  }
+}
+
 async function verifyPaymentEventOnChain(params: {
   txHash: `0x${string}`;
   merchant: string;
@@ -170,11 +201,17 @@ async function verifyPaymentEventOnChain(params: {
         orderId: string;
       };
 
+      const eventToken = getAddress(args.token);
+      const acceptedToken = await isAcceptedSettlementToken({ client, token: eventToken });
+      if (!acceptedToken) {
+        return { ok: false, error: 'Token not in accepted settlement list' };
+      }
+
       if (getAddress(args.customer) !== expectedCustomer) continue;
       if (getAddress(args.merchant) !== expectedMerchant) continue;
       if (args.amount !== params.amount) continue;
       if (typeof params.orderId === 'string' && params.orderId.length > 0 && args.orderId !== params.orderId) continue;
-      if (expectedToken && getAddress(args.token) !== expectedToken) continue;
+      if (expectedToken && eventToken !== expectedToken) continue;
 
       return { ok: true };
     } catch (error) {
