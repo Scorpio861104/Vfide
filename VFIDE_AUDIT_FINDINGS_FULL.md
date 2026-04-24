@@ -1,5 +1,7 @@
 # VFIDE Protocol — Consolidated Security Audit Findings
 
+Status note: This document is the historical findings inventory. The canonical current remediation state lives in `docs/security/VFIDE_AUDIT_REMEDIATION_CHECKLIST.md`, which records whether each finding is fixed, partial, accepted risk, duplicate, or otherwise resolved.
+
 **Audit scope:** 7-stage adversarial audit of Solidity contracts, API routes, deployment wiring, environment files, and Next.js middleware.
 
 **Coverage:** ~50% of the 109-contract Solidity surface (by LOC of safety-relevant contracts), ~15% of the 120 API routes (18 routes spot-checked), deployment wiring, 6 `.env.*.example` files, Next.js middleware verification.
