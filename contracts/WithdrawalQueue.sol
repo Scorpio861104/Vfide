@@ -79,9 +79,13 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
 
         uint256 executionTime = block.timestamp;
         
-        // Apply delay for large withdrawals
+        // F-46 FIX: Apply a minimum 1-day delay to ALL withdrawals to prevent amount-splitting
+        // bypass (splitting a large amount into many small ones to avoid WITHDRAWAL_DELAY).
+        // Large withdrawals (>= minimumDelayAmount) still get the full WITHDRAWAL_DELAY.
         if (_amount >= minimumDelayAmount) {
             executionTime += WITHDRAWAL_DELAY;
+        } else {
+            executionTime += 1 days;
         }
 
         require(withdrawalQueue.length < 10000, "WQ: queue full"); // I-11: Cap queue size
