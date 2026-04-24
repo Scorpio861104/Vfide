@@ -52,14 +52,17 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    uint64 public constant CHALLENGE_PERIOD = 7 days;      // Time for original owner to cancel
+    uint64 public constant CHALLENGE_PERIOD = 7 days;      // Time for original owner to cancel (guardian path)
+    // F-41 FIX: verifier-only path (no guardians) gets a longer challenge window and higher quorum.
+    uint64 public constant VERIFIER_ONLY_CHALLENGE_PERIOD = 14 days; // doubled window when no guardians
     uint64 public constant FINALIZATION_GRACE_PERIOD = 1 days;
     uint64 public constant GUARDIAN_VOTE_WINDOW = 14 days; // Time for guardians to vote
     uint64 public constant CLAIM_EXPIRY = 30 days;         // Max time for claim process
     uint64 public constant VERIFIER_CHANGE_DELAY = 1 days;
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
     uint8 public constant MIN_GUARDIAN_APPROVALS = 2;      // Minimum guardian approvals needed
-    uint8 public constant MIN_VERIFIER_VOTES = 3;          // Minimum trusted verifier votes
+    uint8 public constant MIN_VERIFIER_VOTES = 3;          // Minimum trusted verifier votes (guardian path)
+    uint8 public constant MIN_VERIFIER_VOTES_NO_GUARDIAN = 5; // F-41 FIX: raised quorum for verifier-only path
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // STORAGE
@@ -411,9 +414,10 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         emit VerifierVoteCast(claimId, msg.sender, approve, claim.verifierVotes);
         
         IUserVaultRecovery userVault = IUserVaultRecovery(claim.vault);
-        if (_verifierFallbackAvailable(userVault) && claim.verifierVotes >= MIN_VERIFIER_VOTES) {
+        // F-41 FIX: verifier-only path requires higher quorum (5 instead of 3) and a 14-day challenge window.
+        if (_verifierFallbackAvailable(userVault) && claim.verifierVotes >= MIN_VERIFIER_VOTES_NO_GUARDIAN) {
             claim.status = ClaimStatus.GuardianApproved;
-            claim.challengeEndsAt = uint64(block.timestamp + CHALLENGE_PERIOD);
+            claim.challengeEndsAt = uint64(block.timestamp + VERIFIER_ONLY_CHALLENGE_PERIOD);
         }
     }
 
