@@ -505,7 +505,9 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         );
         if (!ok || data.length < 64) return false;
 
-        (uint256 price, ) = abi.decode(data, (uint256, uint8));
+        // F-59 FIX: Decode second return as uint256 to avoid implicit coupling to
+        // VFIDEPriceOracle.PriceSource enum storage size.
+        (uint256 price, ) = abi.decode(data, (uint256, uint256));
         if (price == 0) return false;
 
         uint256 amountUsd6 = (amount * price) / 1e30;
