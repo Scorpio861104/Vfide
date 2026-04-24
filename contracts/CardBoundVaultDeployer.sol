@@ -21,7 +21,7 @@ contract CardBoundVaultDeployer {
         uint256 dailyLimit,
         address ledger
     ) external view returns (address predicted) {
-        bytes32 salt = _salt(owner_);
+        bytes32 salt = _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger);
         bytes32 codeHash = keccak256(
             _creationCode(hub, vfideToken, owner_, guardianThreshold, maxPerTransfer, dailyLimit, ledger)
         );
@@ -56,7 +56,7 @@ contract CardBoundVaultDeployer {
         guardians[0] = owner_;
 
         vault = address(
-            new CardBoundVault{salt: _salt(owner_)}(
+            new CardBoundVault{salt: _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger)}(
                 hub,
                 vfideToken,
                 owner_,
@@ -98,7 +98,16 @@ contract CardBoundVaultDeployer {
         );
     }
 
-    function _salt(address owner_) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(owner_));
+    function _salt(
+        address owner_,
+        address hub,
+        address token,
+        uint256 maxPerTransfer,
+        uint256 dailyLimit,
+        address ledger
+    ) internal pure returns (bytes32) {
+        // F-04 FIX: Include configuration in salt so prefunded vault predictions remain reachable
+        // even if VaultHub defaults are updated. Each (owner, hub, token, limits, ledger) gets unique salt.
+        return keccak256(abi.encodePacked(owner_, hub, token, maxPerTransfer, dailyLimit, ledger));
     }
 }
