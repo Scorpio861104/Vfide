@@ -315,6 +315,14 @@ describe('R-055 – Proposal payload validation', () => {
     expect(daoSrc).toMatch(/revert DAO_ProposalSelectorNotAllowed/);
   });
 
+  it('proposal policy enforcement defaults fail-closed', () => {
+    expect(daoSrc).toMatch(/requireProposalPolicies\s*=\s*true/);
+  });
+
+  it('selector policy configuration permits short-calldata proposals', () => {
+    expect(daoSrc).not.toMatch(/require\(selector != bytes4\(0\), "DAO: invalid selector policy"\)/);
+  });
+
   it('selector extraction handles short calldata safely', () => {
     expect(daoSrc).toMatch(/if \(data\.length < 4\) return bytes4\(0\)/);
   });

@@ -7,6 +7,7 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
+import { getRequestIp } from '@/lib/security/requestContext';
 
 // Rate limit configurations for different endpoint types
 export const RATE_LIMITS = {
@@ -137,17 +138,12 @@ function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
  * Get client identifier for rate limiting
  */
 export function getClientIdentifier(request: NextRequest): string {
-  // Try to get real IP from various headers
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIp = request.headers.get('x-real-ip');
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  
-  const ip = cfConnectingIp || realIp || forwarded?.split(',')[0]?.trim() || 'unknown';
-  
+  const { ip } = getRequestIp(request.headers);
+
   // Include user agent for additional uniqueness
   const userAgent = request.headers.get('user-agent') || 'unknown';
   const hash = simpleHash(userAgent);
-  
+
   return `${ip}:${hash}`;
 }
 
@@ -170,6 +166,17 @@ export async function rateLimit(
 ): Promise<{ success: boolean; response?: NextResponse }> {
   const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[type];
+
+  if (!hasRedisConfiguration() && process.env.NODE_ENV === 'production') {
+    logger.error('[RateLimit] Redis is required in production but not configured.');
+    return {
+      success: false,
+      response: NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      ),
+    };
+  }
 
   if (!hasRedisConfiguration()) {
     if (!missingRedisWarningLogged) {
@@ -235,7 +242,28 @@ export async function rateLimit(
     return { success: true };
   } catch (error) {
     logger.error('[RateLimit] Error:', error as Error);
-    // On error, allow the request to proceed
+    const fallback = memoryRateLimit(identifier, type);
+    if (!fallback.success) {
+      const retryAfter = Math.ceil((fallback.reset - Date.now()) / 1000);
+      return {
+        success: false,
+        response: NextResponse.json(
+          {
+            error: 'Too many requests',
+            retryAfter,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': retryAfter.toString(),
+              'X-RateLimit-Limit': config.requests.toString(),
+              'X-RateLimit-Remaining': fallback.remaining.toString(),
+              'X-RateLimit-Reset': fallback.reset.toString(),
+            },
+          }
+        ),
+      };
+    }
     return { success: true };
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { FileText, RefreshCw, Copy, Eye, EyeOff, AlertTriangle, Printer } from 'lucide-react';
+import { FileText, RefreshCw, Copy, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 
 interface GeneratedWallet {
   address: string;
@@ -84,13 +84,10 @@ export function GenerateTab() {
                 <button onClick={() => setShowKey((v) => !v)} className="flex-shrink-0 text-gray-400 hover:text-cyan-400">
                   {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
-                {showKey && (
-                  <button onClick={() => copy(wallet.privateKey, 'pk')} className="flex-shrink-0 text-gray-400 hover:text-cyan-400">
-                    <Copy size={13} />
-                  </button>
-                )}
               </div>
-              {copied === 'pk' && <p className="text-xs text-green-400 mt-1">Copied!</p>}
+              <p className="text-xs text-amber-300/90 mt-1">
+                Copy for private key is intentionally disabled to reduce clipboard exfiltration risk.
+              </p>
             </div>
 
             {/* Mnemonic */}
@@ -122,18 +119,15 @@ export function GenerateTab() {
 
             <div className="flex gap-3 pt-2">
               <button
-                onClick={() => window.print()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-sm font-semibold hover:bg-white/10 transition-colors"
-              >
-                <Printer size={14} /> Print
-              </button>
-              <button
                 onClick={generate}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 text-sm hover:bg-white/10 transition-colors"
               >
                 <RefreshCw size={14} /> New
               </button>
             </div>
+            <p className="text-xs text-amber-300/90">
+              Print is disabled to avoid exposing plaintext secrets in printer queues, PDF history, and shared-device caches.
+            </p>
           </div>
         )}
       </div>

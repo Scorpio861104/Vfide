@@ -8,6 +8,9 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Share2, X, Trophy, Sparkles } from 'lucide-react'
+import { safeWindowOpen } from '@/lib/security/urlValidation'
+import { useChainId } from 'wagmi'
+import { getExplorerLink } from '@/components/ui/EtherscanLink'
 
 interface TransactionSuccessProps {
   isOpen: boolean
@@ -96,6 +99,7 @@ export function TransactionSuccess({
   badgeUnlocked,
   type = 'payment'
 }: TransactionSuccessProps) {
+  const chainId = useChainId()
   useEffect(() => {
     if (isOpen) {
       // Auto-close after 5 seconds
@@ -120,9 +124,9 @@ export function TransactionSuccess({
       ? `Just voted on a VFIDE proposal! Building the future of trust-based payments 🗳️`
       : `Just completed a transaction on VFIDE! 0% payment processing fees 🚀`
     
-    window.open(
+    safeWindowOpen(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://vfide.app')}`,
-      '_blank'
+      { allowRelative: false, allowedHosts: ['twitter.com', 'x.com'] }
     )
   }
 
@@ -214,7 +218,7 @@ export function TransactionSuccess({
             {/* Transaction Hash */}
             {txHash && (
               <motion.a
-                href={`https://sepolia.basescan.org/tx/${txHash}`}
+                href={getExplorerLink(chainId, txHash, 'tx')}
                 target="_blank"
                 rel="noopener noreferrer"
                 initial={{ opacity: 0 }}

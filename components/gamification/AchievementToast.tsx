@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Trophy, Star, Award, Flame, Gift, Zap, Share2, Copy, Check, ChevronUp, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 // ==================== TYPES ====================
 
@@ -113,7 +114,11 @@ function ShareMenu({ notification, onClose: _onClose }: { notification: Achievem
 
   const shareToTwitter = () => {
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(url, '_blank', 'width=550,height=420');
+    safeWindowOpen(url, {
+      features: 'width=550,height=420,noopener,noreferrer',
+      allowRelative: false,
+      allowedHosts: ['twitter.com', 'x.com'],
+    });
   };
 
   const nativeShare = async () => {

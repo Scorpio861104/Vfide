@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { runWithDbUserAddressContext } from '@/lib/db';
 import { query } from '@/lib/db';
 
 export const runtime = 'nodejs';
@@ -26,6 +28,16 @@ type SubscriptionRecord = {
 
 function normalizeAddress(value: string) {
   return value.trim().toLowerCase();
+}
+
+function sanitizeSubscriptionLabel(value: string | undefined) {
+  const sanitized = (value ?? '')
+    .replace(/[<>]/g, '')
+    .replace(/[\u0000-\u001f\u007f]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return sanitized.slice(0, 80) || 'Recurring payment';
 }
 
 function getNextPaymentDate(interval: BillingInterval, from = new Date()) {
@@ -105,6 +117,15 @@ async function ensureUserId(address: string) {
   return userId;
 }
 
+async function findUserId(address: string) {
+  const result = await query<{ id: number }>(
+    'SELECT id FROM users WHERE wallet_address = $1',
+    [normalizeAddress(address)],
+  );
+
+  return result.rows[0]?.id ?? null;
+}
+
 async function listSubscriptions(address: string) {
   const result = await query<SubscriptionRow>(
     `SELECT s.id,
@@ -132,14 +153,21 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const address = request.nextUrl.searchParams.get('address');
 
   if (!address || !ADDRESS_REGEX.test(address)) {
     return NextResponse.json({ error: 'Valid address query parameter is required' }, { status: 400 });
   }
 
+  if (normalizeAddress(address) !== normalizeAddress(authResult.user.address)) {
+    return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
+  }
+
   try {
-    const subscriptions = await listSubscriptions(address);
+    const subscriptions = await runWithDbUserAddressContext(authResult.user.address, () => listSubscriptions(address));
 
     return NextResponse.json({
       subscriptions,
@@ -155,6 +183,9 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json().catch(() => null) as {
     address?: string;
     recipient?: string;
@@ -168,9 +199,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Valid address is required' }, { status: 400 });
   }
 
+  if (normalizeAddress(body.address) !== normalizeAddress(authResult.user.address)) {
+    return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
+  }
+
+  const userAddress = body.address;
+
   const recipient = body.recipient?.trim() ?? '';
   const amount = body.amount?.trim() ?? '';
-  const label = body.label?.trim() || 'Recurring payment';
+  const label = sanitizeSubscriptionLabel(body.label);
   const interval = body.interval ?? 'monthly';
   const numericAmount = Number.parseFloat(amount);
 
@@ -185,8 +222,9 @@ export async function POST(request: NextRequest) {
     : 'Stored in the VFIDE backend schedule until production contract addresses are restored.';
 
   try {
-    const userId = await ensureUserId(body.address);
-    const result = await query<SubscriptionRow>(
+    const result = await runWithDbUserAddressContext(authResult.user.address, async () => {
+      const userId = await ensureUserId(userAddress);
+      return query<SubscriptionRow>(
       `INSERT INTO subscriptions (
          user_id,
          merchant_address,
@@ -224,8 +262,9 @@ export async function POST(request: NextRequest) {
         note,
       ],
     );
+    });
 
-    const subscriptions = await listSubscriptions(body.address);
+    const subscriptions = await runWithDbUserAddressContext(authResult.user.address, () => listSubscriptions(userAddress));
 
     return NextResponse.json(
       {
@@ -245,6 +284,9 @@ export async function PATCH(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json().catch(() => null) as {
     address?: string;
     id?: string;
@@ -255,6 +297,12 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'address, id, and action are required' }, { status: 400 });
   }
 
+  if (normalizeAddress(body.address) !== normalizeAddress(authResult.user.address)) {
+    return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
+  }
+
+  const userAddress = body.address;
+
   const nextStatus: SubscriptionStatus = body.action === 'cancel'
     ? 'cancelled'
     : body.action === 'pause'
@@ -262,8 +310,12 @@ export async function PATCH(request: NextRequest) {
       : 'active';
 
   try {
-    const userId = await ensureUserId(body.address);
-    const result = await query<SubscriptionRow>(
+    const userId = await runWithDbUserAddressContext(authResult.user.address, () => findUserId(userAddress));
+    if (!userId) {
+      return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
+    }
+
+    const result = await runWithDbUserAddressContext(authResult.user.address, () => query<SubscriptionRow>(
       `UPDATE subscriptions
           SET status = $1,
               next_payment = CASE WHEN $1 = 'cancelled' THEN NULL ELSE next_payment END,
@@ -282,14 +334,14 @@ export async function PATCH(request: NextRequest) {
                   COALESCE(source, 'local') AS source,
                   COALESCE(note, '') AS note`,
       [nextStatus, Number(body.id), userId],
-    );
+    ));
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
     const updated = result.rows[0]!;
 
-    const subscriptions = await listSubscriptions(body.address);
+    const subscriptions = await runWithDbUserAddressContext(authResult.user.address, () => listSubscriptions(userAddress));
 
     return NextResponse.json({
       record: toRecord(updated),

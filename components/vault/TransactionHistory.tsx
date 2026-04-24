@@ -12,6 +12,8 @@ import {
   Search
 } from 'lucide-react';
 import { VirtualizedList } from '@/lib/ux/performanceUtils';
+import { useChainId } from 'wagmi';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 interface Transaction {
   id: string;
@@ -31,6 +33,7 @@ interface TransactionHistoryProps {
 }
 
 export function TransactionHistory({ transactions = [], loading = false }: TransactionHistoryProps) {
+  const chainId = useChainId();
   const [filter, setFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFullHistory, setShowFullHistory] = useState(false);
@@ -148,7 +151,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
             {tx.status}
           </div>
           <a 
-            href={`https://sepolia.basescan.org/tx/${tx.txHash}`}
+            href={getExplorerLink(chainId, tx.txHash, 'tx')}
             target="_blank"
             rel="noopener noreferrer"
             className="text-cyan-400 hover:text-cyan-400 transition-colors flex items-center gap-1 text-xs"

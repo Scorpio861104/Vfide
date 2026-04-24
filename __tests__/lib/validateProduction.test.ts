@@ -41,11 +41,27 @@ describe('lib/validateProduction strict production chain checks', () => {
   });
 
   it('passes strict production when chain IDs are paired', async () => {
+    process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example';
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'token-example';
+
     const { validateProductionEnvironment } = await import('../../lib/validateProduction');
     const result = validateProductionEnvironment();
 
     expect(result.errors).toHaveLength(0);
     expect(result.valid).toBe(true);
+  });
+
+  it('fails strict production when Redis is missing', async () => {
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
+    const { validateProductionEnvironment } = await import('../../lib/validateProduction');
+    const result = validateProductionEnvironment();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      '❌ Redis is required in strict production - distributed rate limiting and token revocation cannot run safely without it'
+    );
   });
 
   it('fails strict production when runtime and deployment chain IDs mismatch', async () => {

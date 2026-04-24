@@ -85,9 +85,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     });
   } catch (error) {
     logger.error('[Rewards GET] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch rewards';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to fetch rewards' },
       { status: 500 }
     );
   }

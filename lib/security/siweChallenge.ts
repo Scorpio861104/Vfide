@@ -14,6 +14,59 @@ interface ChallengeRecord {
   userAgent: string;
 }
 
+function normalizeHost(value: string | null | undefined): string | null {
+  if (!value) return null;
+
+  const trimmed = value.trim().toLowerCase();
+  if (!trimmed) return null;
+
+  try {
+    return new URL(trimmed.includes('://') ? trimmed : `https://${trimmed}`).hostname.toLowerCase();
+  } catch {
+    return trimmed.split(':')[0] || null;
+  }
+}
+
+function getConfiguredAuthHosts(): string[] {
+  const hosts = [
+    normalizeHost(process.env.APP_ORIGIN),
+    normalizeHost(process.env.NEXT_PUBLIC_APP_URL),
+  ].filter((host): host is string => Boolean(host));
+
+  return Array.from(new Set(hosts));
+}
+
+export function resolveTrustedAuthDomain(headers: Headers): string | null {
+  const requestHost = normalizeHost(headers.get('host'));
+  const configuredHosts = getConfiguredAuthHosts();
+
+  if (configuredHosts.length > 0) {
+    if (requestHost && configuredHosts.includes(requestHost)) {
+      return requestHost;
+    }
+
+    if (process.env.NODE_ENV !== 'production' && requestHost) {
+      const isLocalHost = requestHost === 'localhost' || requestHost === '127.0.0.1';
+      const isPreviewHost = requestHost.endsWith('.vercel.app');
+      if (isLocalHost || isPreviewHost) {
+        return requestHost;
+      }
+    }
+
+    return null;
+  }
+
+  if (!requestHost) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return null;
+  }
+
+  return requestHost;
+}
+
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CHALLENGE_TTL_SECONDS = Math.floor(CHALLENGE_TTL_MS / 1000);
 const CHALLENGE_PREFIX = 'auth:siwe:challenge:';

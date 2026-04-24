@@ -88,7 +88,20 @@ async function fetchPortfolioData(address?: string): Promise<PortfolioDataPoint[
     const res = await fetch(`/api/analytics/portfolio/${address}`);
     if (res.ok) {
       const data = await res.json();
-      return data.portfolio || [];
+      const portfolio = data?.portfolio;
+      if (Array.isArray(portfolio)) return portfolio;
+      if (portfolio && typeof portfolio === 'object') {
+        const now = Date.now();
+        const total = Number((portfolio as { total_balance?: unknown }).total_balance ?? 0) || 0;
+        return [{
+          timestamp: now,
+          date: new Date(now).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          value: total,
+          eth: 0,
+          btc: 0,
+          usdc: total,
+        }];
+      }
     }
   } catch {
     // API not available

@@ -1,4 +1,4 @@
-import { useAccount, useReadContract, useWriteContract, useChainId } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useChainId, usePublicClient } from 'wagmi';
 import { isAddress } from 'viem';
 import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts';
 import { CURRENT_CHAIN_ID } from '../lib/testnet';
@@ -89,6 +89,7 @@ function parseContractError(error: unknown): string {
 export function useVaultHub() {
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
+  const publicClient = usePublicClient({ chainId: EXPECTED_CHAIN_ID });
   const { writeContractAsync, isPending: isCreatingVault } = useWriteContract();
 
   // Check if on correct chain
@@ -134,7 +135,7 @@ export function useVaultHub() {
     }
 
     try {
-      const result = await writeContractAsync({
+      const hash = await writeContractAsync({
         address: VAULT_HUB_ADDRESS,
         abi: PARSED_VAULT_HUB_ABI,
         // VaultInfrastructure uses ensureVault() which creates if doesn't exist
@@ -142,7 +143,19 @@ export function useVaultHub() {
         args: [userAddress],
         chainId: EXPECTED_CHAIN_ID,
       });
-      return result;
+
+      if (!publicClient) {
+        throw new Error('Network client unavailable. Please try again.');
+      }
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+
+      await refetchVault();
+
+      return receipt;
     } catch (error) {
       devLog.error('Vault creation error:', error);
       // Re-throw with user-friendly message
@@ -150,11 +163,7 @@ export function useVaultHub() {
     }
   };
 
-  const currentChainConfig = getChainByChainId(chainId);
-  const isTestnet = isTestnetChainId(chainId);
-  const chainName = currentChainConfig
-    ? (isTestnet ? currentChainConfig.testnet.name : currentChainConfig.mainnet.name)
-    : 'Base';
+  const expectedChainName = expectedChainLabel();
 
   return {
     vaultAddress: hasVault ? vaultAddressHex : undefined,
@@ -167,6 +176,6 @@ export function useVaultHub() {
     isContractConfigured,
     isOnCorrectChain,
     expectedChainId: EXPECTED_CHAIN_ID,
-    expectedChainName: chainName,
+    expectedChainName,
   };
 }

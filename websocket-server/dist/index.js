@@ -251,8 +251,8 @@ function isAuthorizedForTopic(client, topic) {
     }
     return false;
 }
-function authenticateClient(client, token) {
-    const payload = (0, auth_1.verifyJWT)(token);
+async function authenticateClient(client, token) {
+    const payload = await (0, auth_1.verifyJWT)(token);
     client.vfideAddress = payload.address.toLowerCase();
     client.isAuthenticated = true;
     if (client.authTimeoutTimer) {
@@ -353,29 +353,35 @@ server.on('upgrade', (req, socket, head) => {
         token = authHeader.slice(7);
     }
     // 4. If provided, verify JWT during upgrade for fast-fail clients.
-    let payload;
-    if (token) {
-        try {
-            payload = (0, auth_1.verifyJWT)(token);
-        }
-        catch (err) {
-            console.warn(`[ws] Invalid JWT from IP ${ip}: ${err.message}`);
+    const proceed = (payload) => {
+        // 5. Complete the WebSocket handshake. Message-level auth is still required.
+        wss.handleUpgrade(req, socket, head, (ws) => {
+            const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const client = ws;
+            client.vfideAddress = payload?.address?.toLowerCase();
+            client.isAuthenticated = Boolean(payload);
+            client.sessionId = sessionId;
+            client.remoteIp = ip;
+            client.connectedAt = Date.now();
+            client.subscribedTopics = new Set();
+            wss.emit('connection', client, req);
+        });
+    };
+    if (!token) {
+        proceed();
+        return;
+    }
+    (0, auth_1.verifyJWT)(token)
+        .then((payload) => {
+        if (!socket.destroyed)
+            proceed(payload);
+    })
+        .catch((err) => {
+        console.warn(`[ws] Invalid JWT from IP ${ip}: ${err.message}`);
+        if (!socket.destroyed) {
             socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
             socket.destroy();
-            return;
         }
-    }
-    // 5. Complete the WebSocket handshake. Message-level auth is still required.
-    wss.handleUpgrade(req, socket, head, (ws) => {
-        const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        const client = ws;
-        client.vfideAddress = payload?.address?.toLowerCase();
-        client.isAuthenticated = Boolean(payload);
-        client.sessionId = sessionId;
-        client.remoteIp = ip;
-        client.connectedAt = Date.now();
-        client.subscribedTopics = new Set();
-        wss.emit('connection', client, req);
     });
 });
 // ─── Connection Handler ─────────────────────────────────────────────────────
@@ -418,7 +424,7 @@ wss.on('connection', (ws, _req) => {
         },
     }));
     // ── Message handler ───────────────────────────────────────────────────────
-    ws.on('message', (raw) => {
+    ws.on('message', async (raw) => {
         // Per-IP message rate limiting
         if (!messageRateLimiter.allow(client.remoteIp)) {
             sendError(ws, 'RATE_LIMIT', 'Message rate limit exceeded');
@@ -463,7 +469,7 @@ wss.on('connection', (ws, _req) => {
                     return;
                 }
                 try {
-                    authenticateClient(client, msg.payload.token);
+                    await authenticateClient(client, msg.payload.token);
                     ws.send(JSON.stringify({
                         type: 'authenticated',
                         payload: {

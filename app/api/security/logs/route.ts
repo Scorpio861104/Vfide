@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, createHmac } from 'node:crypto';
+import { lookup } from 'dns/promises';
+import { isIP } from 'node:net';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
@@ -117,6 +119,75 @@ function resolveAlertTimeoutMs(): number {
     return DEFAULT_ALERT_TIMEOUT_MS;
   }
   return Math.min(configured, 30000);
+}
+
+function isBlockedIpAddress(ip: string): boolean {
+  const version = isIP(ip);
+  if (version === 4) {
+    const parts = ip.split('.').map((part) => Number.parseInt(part, 10));
+    if (parts.length !== 4 || parts.some((part) => Number.isNaN(part) || part < 0 || part > 255)) {
+      return true;
+    }
+
+    const [a, b] = parts;
+    if (a === undefined || b === undefined) return true;
+    if (a === 10 || a === 127 || a === 0) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+    return false;
+  }
+
+  if (version === 6) {
+    const normalized = ip.toLowerCase();
+    if (normalized === '::1' || normalized === '::') return true;
+    if (normalized.startsWith('fe80:')) return true;
+    if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
+    if (normalized.startsWith('::ffff:127.') || normalized.startsWith('::ffff:10.')) return true;
+    return false;
+  }
+
+  return true;
+}
+
+async function validateWebhookTarget(url: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { ok: false, error: 'Invalid webhook URL' };
+  }
+
+  if (parsed.protocol !== 'https:') {
+    return { ok: false, error: 'Webhook URL must use HTTPS' };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname.endsWith('.local')) {
+    return { ok: false, error: 'Webhook URL targets blocked host' };
+  }
+
+  if (process.env.NODE_ENV === 'test') {
+    return { ok: true };
+  }
+
+  try {
+    const records = await lookup(hostname, { all: true, verbatim: true });
+    if (records.length === 0) {
+      return { ok: false, error: 'Webhook hostname did not resolve' };
+    }
+
+    for (const record of records) {
+      if (isBlockedIpAddress(record.address)) {
+        return { ok: false, error: 'Webhook hostname resolves to blocked private or loopback address' };
+      }
+    }
+  } catch {
+    return { ok: false, error: 'Webhook hostname resolution failed' };
+  }
+
+  return { ok: true };
 }
 
 function resolveAlertDedupWindowSeconds(): number {
@@ -268,22 +339,9 @@ async function notifyCriticalSecurityLog(params: {
     return;
   }
 
-  // Validate webhook URL to prevent SSRF
-  let parsedWebhookUrl: URL;
-  try {
-    parsedWebhookUrl = new URL(webhookUrl);
-  } catch (error) {
-    logger.debug('[Security Logs Alert] Invalid webhook URL', error);
-    logger.error('[Security Logs Alert] Invalid webhook URL in environment');
-    return;
-  }
-  if (parsedWebhookUrl.protocol !== 'https:') {
-    logger.error('[Security Logs Alert] Webhook URL must use HTTPS');
-    return;
-  }
-  const webhookHostname = parsedWebhookUrl.hostname.toLowerCase();
-  if (webhookHostname === 'localhost' || webhookHostname === '127.0.0.1' || webhookHostname === '::1' || webhookHostname.endsWith('.local')) {
-    logger.error('[Security Logs Alert] Webhook URL targets blocked host');
+  const targetValidation = await validateWebhookTarget(webhookUrl);
+  if (!targetValidation.ok) {
+    logger.error('[Security Logs Alert] Invalid webhook target:', targetValidation.error);
     return;
   }
 

@@ -20,6 +20,9 @@ import path from "node:path";
 import hre from "hardhat";
 
 const ethers = (hre as any).ethers;
+const EMERGENCY_CONTROLLER_IFACE = new ethers.Interface([
+  "function emergencyController() view returns (address)",
+]);
 
 type Book = Record<string, string>;
 
@@ -39,6 +42,17 @@ const EXEMPT_SCHEDULE = [
   "FeeDistributor",   // proposed in deploy-full.ts; confirmed in run 1
   "FraudRegistry",    // proposed in run 1;           confirmed in run 2
   "VFIDEFlashLoan",   // proposed in run 2;           confirmed in run 3
+  "EcosystemVault",   // proposed in run 3;           confirmed in run 4
+] as const;
+
+const EMERGENCY_CONTROLLER_MONITOR = [
+  "VFIDEToken",
+  "Seer",
+  "VaultHub",
+  "FraudRegistry",
+  "FeeDistributor",
+  "EcosystemVault",
+  "VFIDEFlashLoan",
 ] as const;
 
 async function main() {
@@ -58,6 +72,29 @@ async function main() {
 
   const token = await ethers.getContractAt("VFIDEToken", tokenAddr);
 
+  async function assertEmergencyControllerUnset(name: string, addr?: string) {
+    if (!addr || addr === ethers.ZeroAddress) return;
+
+    try {
+      const calldata = EMERGENCY_CONTROLLER_IFACE.encodeFunctionData("emergencyController");
+      const raw = await ethers.provider.call({ to: addr, data: calldata });
+      const [controller] = EMERGENCY_CONTROLLER_IFACE.decodeFunctionResult("emergencyController", raw);
+
+      if (controller !== ethers.ZeroAddress) {
+        throw new Error(`${name}.emergencyController is set to ${controller}; expected zero address`);
+      }
+
+      console.log(`  ✅ ${name}.emergencyController is zero`);
+    } catch (e: any) {
+      const msg = String(e?.reason ?? e?.message ?? e);
+      if (msg.includes("execution reverted") || msg.includes("CALL_EXCEPTION") || msg.includes("could not decode")) {
+        console.log(`  ⏭  ${name}: no emergencyController() view; skipped`);
+        return;
+      }
+      throw e;
+    }
+  }
+
   async function call(label: string, fn: () => Promise<unknown>) {
     try {
       await fn();
@@ -73,6 +110,16 @@ async function main() {
   console.log("\n═══ Token Module Timelocks ═══");
   for (const fn of ["applyVaultHub", "applyBurnRouter", "applyLedger", "applyFraudRegistry"]) {
     await call(fn, () => (token as any)[fn]());
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  Emergency ownership path must stay dormant (no emergency controllers)
+  // ══════════════════════════════════════════════════════════════════════════
+  console.log("\n═══ Emergency Controller Safety ═══");
+  for (const contractName of EMERGENCY_CONTROLLER_MONITOR) {
+    const envKey = `NEXT_PUBLIC_${contractName.toUpperCase().replace(/VFIDE/g, "VFIDE_")}_ADDRESS`;
+    const addr = book[contractName] ?? process.env[envKey];
+    await assertEmergencyControllerUnset(contractName, addr);
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -115,14 +162,17 @@ async function main() {
   const nextIndex = confirmedIndex + 1;
   if (nextIndex < EXEMPT_SCHEDULE.length) {
     const nextName = EXEMPT_SCHEDULE[nextIndex];
-    const nextAddr = book[nextName] ?? process.env[`NEXT_PUBLIC_${nextName.toUpperCase().replace(/VFIDE/g, "VFIDE_")}_ADDRESS`];
-    if (nextAddr) {
-      await call(`Token.proposeSystemExempt(${nextName}) — round ${nextIndex + 1}`, () =>
-        token.proposeSystemExempt(nextAddr, true),
-      );
-      console.log(`  ⏳ Wait 48h, then re-run apply-full.ts to confirm ${nextName}`);
-    } else {
-      console.log(`  ⚠  Address for ${nextName} not in deployment book — set it and re-run`);
+    if (nextName) {
+      const nextEnvKey = `NEXT_PUBLIC_${nextName.toUpperCase().replace(/VFIDE/g, "VFIDE_")}_ADDRESS`;
+      const nextAddr = book[nextName] ?? process.env[nextEnvKey];
+      if (nextAddr) {
+        await call(`Token.proposeSystemExempt(${nextName}) — round ${nextIndex + 1}`, () =>
+          token.proposeSystemExempt(nextAddr, true),
+        );
+        console.log(`  ⏳ Wait 48h, then re-run apply-full.ts to confirm ${nextName}`);
+      } else {
+        console.log(`  ⚠  Address for ${nextName} not in deployment book — set it and re-run`);
+      }
     }
   }
 
@@ -149,6 +199,7 @@ async function main() {
     console.log("║                                                              ║");
     console.log("║  System exempt status:                                       ║");
     console.log("║    FeeDistributor ✅  FraudRegistry ✅  FlashLoan ✅          ║");
+    console.log("║    EcosystemVault ✅                                          ║");
     console.log("║                                                              ║");
     console.log("║  Next steps:                                                 ║");
     console.log("║    1. Transfer all contract ownership to multisig            ║");

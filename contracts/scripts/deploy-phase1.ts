@@ -7,6 +7,7 @@ import hre from 'hardhat';
 import { Contract } from 'ethers';
 
 const ethers = (hre as any).ethers;
+const withdrawalQueueStubAllowed = process.env.ALLOW_WITHDRAWAL_QUEUE_STUB === 'true';
 
 interface DeploymentConfig {
   network: string;
@@ -172,8 +173,14 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   await circuitBreaker.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await circuitBreaker.getAddress()}`);
 
-  // 5. Deploy WithdrawalQueue (use WithdrawalQueueStub — base contract is abstract)
-  console.log('5️⃣  Deploying WithdrawalQueueStub...');
+  if (!withdrawalQueueStubAllowed) {
+    throw new Error(
+      'WithdrawalQueueStub is disabled for deploy-phase1. Set ALLOW_WITHDRAWAL_QUEUE_STUB=true only for local test-only flows.'
+    );
+  }
+
+  // 5. Deploy WithdrawalQueueStub only in explicitly test-only flows.
+  console.log('5️⃣  Deploying WithdrawalQueueStub (test-only opt-in)...');
   const WithdrawalQueue = await ethers.getContractFactory('WithdrawalQueueStub');
   const minimumDelayAmount = ethers.parseEther('1000000'); // 1M tokens
   const withdrawalQueue = await WithdrawalQueue.deploy(config.admin, minimumDelayAmount);

@@ -22,7 +22,7 @@ This document maps every production Solidity contract to its deployment mechanis
 | ProofLedger | (vfide, seer) | Scoring engine |
 | SecurityHub | (vfide) | Security coordinator |
 | VaultHub | (vfide, proofLedger, securityHub) | Vault registry |
-| DevReserveVestingVault | (vfide, beneficiary) | 5yr vesting, 60-day cliff |
+| DevReserveVestingVault | (vfide, beneficiary) | 5yr vesting, 60-day cliff; DAO may only emergency-freeze claims, not redirect vested funds |
 | Seer | (vfide) | Oracle coordinator |
 | ProofScoreBurnRouter | (vfide, proofLedger) | Conditional deploy |
 | OwnerControlPanel | (all deployed addresses) | Admin dashboard |

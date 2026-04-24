@@ -60,12 +60,14 @@ async function generateQRDataUrl(text: string, size: number, fgColor: string, bg
 
 function buildPaymentUrl(data: QRPaymentData): string {
   const base = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io';
-  const url = new URL(`${base}/pay/${data.merchantSlug}`);
+  const url = new URL(`${base}/pay`);
+
+  url.searchParams.set('merchant', data.merchantAddress);
+  url.searchParams.set('source', 'checkout');
+  url.searchParams.set('settlement', 'escrow');
 
   if (data.amount) url.searchParams.set('amount', data.amount.toFixed(2));
-  if (data.description) url.searchParams.set('desc', data.description);
-  if (data.currency) url.searchParams.set('cur', data.currency);
-  if (data.reference) url.searchParams.set('ref', data.reference);
+  if (data.reference) url.searchParams.set('orderId', data.reference);
 
   return url.toString();
 }
@@ -127,25 +129,53 @@ export function SmartQR({
   };
 
   const printQR = () => {
-    const printWindow = window.open('', '_blank');
+    if (!qrDataUrl.startsWith('data:image/')) return;
+
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer');
     if (!printWindow) return;
-    printWindow.document.write(`
-      <html><head><title>VFIDE QR - ${data.merchantName}</title>
-      <style>
-        body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui; margin: 0; }
-        img { width: 300px; height: 300px; }
-        h2 { margin: 20px 0 5px; font-size: 24px; }
-        p { color: #666; margin: 5px 0; font-size: 14px; }
-        .amount { font-size: 32px; font-weight: bold; margin: 10px 0; }
-      </style></head><body>
-        <img src="${qrDataUrl}" alt="QR Code" />
-        <h2>${data.merchantName}</h2>
-        ${data.amount ? `<div class="amount">$${data.amount.toFixed(2)}</div>` : ''}
-        ${data.description ? `<p>${data.description}</p>` : ''}
-        <p style="font-size: 12px; color: #999; margin-top: 20px;">Scan to pay with VFIDE</p>
-      </body></html>
-    `);
-    printWindow.document.close();
+    // Defensive: ensure opener is not retained in browsers that ignore window features.
+    printWindow.opener = null;
+    const doc = printWindow.document;
+    doc.title = `VFIDE QR - ${data.merchantName}`;
+
+    const style = doc.createElement('style');
+    style.textContent = `
+      body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui; margin: 0; }
+      img { width: 300px; height: 300px; }
+      h2 { margin: 20px 0 5px; font-size: 24px; }
+      p { color: #666; margin: 5px 0; font-size: 14px; }
+      .amount { font-size: 32px; font-weight: bold; margin: 10px 0; }
+      .meta { font-size: 12px; color: #999; margin-top: 20px; }
+    `;
+    doc.head.appendChild(style);
+
+    const qrImage = doc.createElement('img');
+    qrImage.src = qrDataUrl;
+    qrImage.alt = 'QR Code';
+    doc.body.appendChild(qrImage);
+
+    const merchantHeading = doc.createElement('h2');
+    merchantHeading.textContent = data.merchantName;
+    doc.body.appendChild(merchantHeading);
+
+    if (data.amount) {
+      const amountEl = doc.createElement('div');
+      amountEl.className = 'amount';
+      amountEl.textContent = `$${data.amount.toFixed(2)}`;
+      doc.body.appendChild(amountEl);
+    }
+
+    if (data.description) {
+      const descriptionEl = doc.createElement('p');
+      descriptionEl.textContent = data.description;
+      doc.body.appendChild(descriptionEl);
+    }
+
+    const meta = doc.createElement('p');
+    meta.className = 'meta';
+    meta.textContent = 'Scan to pay with VFIDE';
+    doc.body.appendChild(meta);
+
     printWindow.print();
   };
 

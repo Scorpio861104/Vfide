@@ -28,6 +28,7 @@ error EC_Cooldown();
 error EC_PendingFoundationChange();
 error EC_NoPendingFoundationChange();
 error EC_FoundationChangeLocked();
+error EC_CommitteeCapExceeded();
 
 contract EmergencyControl is ReentrancyGuard {
     event ModulesSet(address dao, address breaker, address ledger);
@@ -61,6 +62,7 @@ contract EmergencyControl is ReentrancyGuard {
     address[] public currentMembers;
     uint8 public memberCount;
     uint8 public threshold; // M-of-N
+    uint8 public constant MAX_COMMITTEE_MEMBERS = 21;
 
     // Per-stance voting (separate counters for halt=true vs halt=false)
     uint256 public epoch;
@@ -162,6 +164,7 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     function resetCommittee(uint8 _threshold, address[] calldata members) external onlyDAO nonReentrant {
+        if (members.length > MAX_COMMITTEE_MEMBERS) revert EC_CommitteeCapExceeded();
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
         
         // Clear old members
@@ -266,6 +269,7 @@ contract EmergencyControl is ReentrancyGuard {
     // ─── Internal member mutation helpers ───────────────────────────────────
 
     function _applyAddMember(address m) internal {
+        if (memberCount >= MAX_COMMITTEE_MEMBERS) revert EC_CommitteeCapExceeded();
         isMember[m] = true;
         memberCount += 1;
         currentMembers.push(m);
@@ -458,12 +462,16 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     mapping(bytes32 => RecoveryProposal) public recoveryProposals;
+    mapping(bytes32 => bool) public recoveryCancelled;
     mapping(bytes32 => mapping(address => bool)) public recoveryVoted;
+    mapping(bytes32 => mapping(address => bool)) public recoveryCancelVoted;
+    mapping(bytes32 => uint8) public recoveryCancelApprovals;
 
     uint64 public constant RECOVERY_TIMELOCK = 14 days;
 
     event RecoveryProposed(bytes32 indexed id, address target, address newOwner);
     event RecoveryApproved(bytes32 indexed id, address member, uint8 approvals);
+    event RecoveryCancelApproved(bytes32 indexed id, address member, uint8 approvals);
     event RecoveryExecuted(bytes32 indexed id, address target, address newOwner);
     event RecoveryCancelled(bytes32 indexed id);
 
@@ -501,6 +509,7 @@ contract EmergencyControl is ReentrancyGuard {
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0), "EC: no proposal");
         require(!p.executed, "EC: already executed");
+        require(!recoveryCancelled[id], "EC: cancelled");
         require(p.epoch == epoch, "EC: stale proposal");
         require(!recoveryVoted[id][msg.sender], "EC: already voted");
         require(breaker.halted(), "EC: system must be halted");
@@ -522,6 +531,7 @@ contract EmergencyControl is ReentrancyGuard {
         require(isMember[msg.sender], "EC: not member");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0) && !p.executed, "EC: invalid");
+        require(!recoveryCancelled[id], "EC: cancelled");
         require(p.epoch == epoch, "EC: stale proposal");
         require(p.unlockTime > 0, "EC: not approved");
         require(block.timestamp >= p.unlockTime, "EC: timelock active");
@@ -537,11 +547,33 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     function cancelRecovery(bytes32 id) external nonReentrant {
-        require(msg.sender == dao || isMember[msg.sender], "EC: not authorized");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0) && !p.executed, "EC: invalid");
+        require(!recoveryCancelled[id], "EC: cancelled");
 
-        p.executed = true; // Prevent re-use
+        if (msg.sender == dao) {
+            recoveryCancelled[id] = true;
+            emit RecoveryCancelled(id);
+            _log("recovery_cancelled");
+            return;
+        }
+
+        require(isMember[msg.sender], "EC: not authorized");
+        require(p.epoch == epoch, "EC: stale proposal");
+        require(!recoveryCancelVoted[id][msg.sender], "EC: already voted");
+
+        recoveryCancelVoted[id][msg.sender] = true;
+        uint8 approvals = recoveryCancelApprovals[id] + 1;
+        recoveryCancelApprovals[id] = approvals;
+        emit RecoveryCancelApproved(id, msg.sender, approvals);
+
+        uint8 required = memberCount > 1 ? memberCount - 1 : 1;
+        if (approvals < required) {
+            _log("recovery_cancel_vote");
+            return;
+        }
+
+        recoveryCancelled[id] = true;
         emit RecoveryCancelled(id);
         _log("recovery_cancelled");
     }
@@ -552,6 +584,7 @@ contract EmergencyControl is ReentrancyGuard {
         require(msg.sender == dao, "EC: not DAO");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0) && !p.executed, "EC: invalid");
+        require(!recoveryCancelled[id], "EC: cancelled");
         require(p.epoch != epoch, "EC: already current");
         require(breaker.halted(), "EC: system must be halted");
 

@@ -1,16 +1,27 @@
 'use client';
 
 // Extracted from page.tsx — verify imports
-import { GlassCard } from '@/components/ui/GlassCard';
-import { motion } from 'framer-motion';
+
+const DEFAULT_CHAIN_ID = 8453;
+const TX_EXPLORER_BY_CHAIN: Record<number, string> = {
+  1: 'https://etherscan.io',
+  8453: 'https://basescan.org',
+  11155111: 'https://sepolia.etherscan.io',
+  84532: 'https://sepolia.basescan.org',
+};
+
+function getTxExplorerUrl(txHash: string, chainId: number = DEFAULT_CHAIN_ID): string {
+  const explorerBase = TX_EXPLORER_BY_CHAIN[chainId] ?? TX_EXPLORER_BY_CHAIN[DEFAULT_CHAIN_ID];
+  return `${explorerBase}/tx/${txHash}`;
+}
 
 export function HistoryTab() {
   const history = [
-    { type: 'disbursement', charity: 'Save the Children', amount: 5000, date: '2025-12-15', txHash: '0x1234...5678' },
-    { type: 'donation', donor: '0xABC...123', amount: 1000, date: '2025-12-14', txHash: '0x2345...6789' },
-    { type: 'fee_deposit', source: 'Transaction Fees', amount: 2500, date: '2025-12-13', txHash: '0x3456...7890' },
-    { type: 'disbursement', charity: 'Ocean Cleanup', amount: 4000, date: '2025-12-10', txHash: '0x4567...8901' },
-    { type: 'donation', donor: '0xDEF...456', amount: 500, date: '2025-12-08', txHash: '0x5678...9012' },
+    { type: 'disbursement', charity: 'Save the Children', amount: 5000, date: '2025-12-15', txHash: '0x1234...5678', chainId: 8453 },
+    { type: 'donation', donor: '0xABC...123', amount: 1000, date: '2025-12-14', txHash: '0x2345...6789', chainId: 8453 },
+    { type: 'fee_deposit', source: 'Transaction Fees', amount: 2500, date: '2025-12-13', txHash: '0x3456...7890', chainId: 8453 },
+    { type: 'disbursement', charity: 'Ocean Cleanup', amount: 4000, date: '2025-12-10', txHash: '0x4567...8901', chainId: 8453 },
+    { type: 'donation', donor: '0xDEF...456', amount: 500, date: '2025-12-08', txHash: '0x5678...9012', chainId: 8453 },
   ];
 
   return (
@@ -54,7 +65,7 @@ export function HistoryTab() {
                   <td className="px-6 py-4 text-zinc-400">{tx.date}</td>
                   <td className="px-6 py-4">
                     <a 
-                      href={`https://basescan.org/tx/${tx.txHash}`}
+                      href={getTxExplorerUrl(tx.txHash, tx.chainId)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-cyan-400 hover:underline text-sm"

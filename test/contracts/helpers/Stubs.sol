@@ -4,6 +4,13 @@ pragma solidity 0.8.30;
 /// @dev Minimal placeholder contract — satisfies extcodesize > 0 checks.
 contract Placeholder {}
 
+/// @dev Helper contract that always reverts with a stable string reason.
+contract AlwaysRevertStub {
+    function fail() external pure {
+        revert("stub revert reason");
+    }
+}
+
 /// @dev Minimal emergency controller stub for CircuitBreaker tests.
 contract EmergencyControllerStub {
     bool public paused;
@@ -72,6 +79,15 @@ contract MintableTokenStub {
     }
 }
 
+/// @dev Mintable token stub with systemExempt registry used by flash-loan initialization tests.
+contract ExemptableMintableTokenStub is MintableTokenStub {
+    mapping(address => bool) public systemExempt;
+
+    function setSystemExempt(address account, bool exempt) external {
+        systemExempt[account] = exempt;
+    }
+}
+
 /// @dev Minimal contract stub — satisfies extcodesize > 0 + IPresaleStart interface.
 contract SaleStartStub {
     uint256 public saleStartTime;
@@ -81,9 +97,19 @@ contract SaleStartStub {
 /// @dev Minimal IVaultHub stub — returns a fixed vault address for any owner.
 contract VaultHubStub {
     mapping(address => address) public vaults;
+    mapping(address => address) public vaultOwners;
+    mapping(address => bool) public isVault;
 
     function setVault(address owner, address vault) external {
+        address existingVault = vaults[owner];
+        if (existingVault != address(0)) {
+            delete vaultOwners[existingVault];
+            delete isVault[existingVault];
+        }
+
         vaults[owner] = vault;
+        vaultOwners[vault] = owner;
+        isVault[vault] = true;
     }
 
     // VaultHub.vaultOf() signature used by PanicGuard
@@ -91,22 +117,107 @@ contract VaultHubStub {
         return vaults[owner];
     }
 
+    function ownerOfVault(address vault) external view returns (address) {
+        return vaultOwners[vault];
+    }
+
     function ensureVault(address owner) external returns (address) {
         address vault = vaults[owner];
         if (vault == address(0)) {
             vault = owner;
             vaults[owner] = vault;
+            vaultOwners[vault] = owner;
+            isVault[vault] = true;
         }
         return vault;
+    }
+
+    function executeRecoveryRotation(address vault, address newOwner) external {
+        address oldOwner = vaultOwners[vault];
+        if (oldOwner != address(0) && vaults[oldOwner] == vault) {
+            delete vaults[oldOwner];
+        }
+
+        vaultOwners[vault] = newOwner;
+        vaults[newOwner] = vault;
+        isVault[vault] = true;
+    }
+}
+
+contract GuardianSetupHubStub {
+    mapping(address => bool) public guardianSetupComplete;
+
+    function setGuardianSetupComplete(address vault, bool complete) external {
+        guardianSetupComplete[vault] = complete;
+    }
+}
+
+/// @dev Minimal guardian-aware vault stub for lending and recovery tests.
+contract GuardianVaultStub {
+    mapping(address => bool) public guardians;
+    uint8 public guardianCount;
+
+    function setGuardian(address guardian, bool active) external {
+        bool current = guardians[guardian];
+        if (current == active) return;
+
+        guardians[guardian] = active;
+        if (active) {
+            guardianCount += 1;
+        } else {
+            guardianCount -= 1;
+        }
+    }
+
+    function isGuardian(address guardian) external view returns (bool) {
+        return guardians[guardian];
+    }
+
+    function approve(address token, address spender, uint256 amount) external {
+        MintableTokenStub(token).approve(spender, amount);
+    }
+}
+
+/// @dev Minimal vault spend-limit stub used by MerchantPortal permit-cap tests.
+contract VaultSpendLimitStub {
+    uint256 public dailyTransferLimit;
+
+    constructor(uint256 _dailyTransferLimit) {
+        dailyTransferLimit = _dailyTransferLimit;
+    }
+
+    function setDailyTransferLimit(uint256 _dailyTransferLimit) external {
+        dailyTransferLimit = _dailyTransferLimit;
     }
 }
 
 /// @dev Minimal ICouncilElection stub — controller can mark addresses as council.
 contract CouncilStub {
     mapping(address => bool) public councilMembers;
+    address[] private members;
 
     function addCouncilMember(address member) external {
-        councilMembers[member] = true;
+        if (!councilMembers[member]) {
+            councilMembers[member] = true;
+            members.push(member);
+        }
+    }
+
+    function setCouncilMembers(address[] calldata newMembers) external {
+        uint256 oldLength = members.length;
+        for (uint256 i = 0; i < oldLength; i++) {
+            councilMembers[members[i]] = false;
+        }
+        delete members;
+
+        uint256 newLength = newMembers.length;
+        for (uint256 i = 0; i < newLength; i++) {
+            address member = newMembers[i];
+            if (!councilMembers[member]) {
+                councilMembers[member] = true;
+                members.push(member);
+            }
+        }
     }
 
     function isCouncil(address account) external view returns (bool) {
@@ -114,9 +225,30 @@ contract CouncilStub {
     }
 
     // Satisfy full ICouncilElection interface
-    function getCouncilMember(uint256) external pure returns (address) { return address(0); }
-    function getActualCouncilSize() external pure returns (uint256) { return 0; }
-    function removeCouncilMember(address, string calldata) external {}
+    function getCouncilMember(uint256 index) external view returns (address) {
+        if (index >= members.length) {
+            return address(0);
+        }
+        return members[index];
+    }
+
+    function getActualCouncilSize() external view returns (uint256) { return members.length; }
+
+    function removeCouncilMember(address member, string calldata) external {
+        if (!councilMembers[member]) {
+            return;
+        }
+
+        councilMembers[member] = false;
+        uint256 length = members.length;
+        for (uint256 i = 0; i < length; i++) {
+            if (members[i] == member) {
+                members[i] = members[length - 1];
+                members.pop();
+                break;
+            }
+        }
+    }
 }
 
 /// @dev ISeerAutonomous stub that tries to call back into Seer to trigger circular delta guard.

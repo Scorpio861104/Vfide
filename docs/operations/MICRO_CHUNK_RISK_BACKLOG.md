@@ -351,7 +351,7 @@ All critical findings in scope were cross-checked against current code.
 ### New Infrastructure Confirmed Safe
 
 - `migrations/20260329_120000_sync_state.sql`: Adds sync_state table for offline-first sync; idiomatic UP/DOWN pattern.
-- `scripts/backup-db.sh` / `scripts/migrate.ts`: DB ops tooling; review on deploy prep but not a security blocker.
+- `scripts/backup-db.sh` / `npm run migrate:up`: DB ops tooling; review on deploy prep but not a security blocker.
 - `test/hardhat/FeeDistributorGuardrails.test.ts`: 3/3 pass (burns, destination-timelock, cancel).
 - `test/hardhat/VFIDEBridgeGuardrails.test.ts`: Ready for Chunk 7 execution.
 

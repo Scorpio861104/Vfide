@@ -69,6 +69,14 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     address public pendingUniswapPool;
     uint64  public pendingUniswapPoolAt;
 
+    /// @notice Pending manual price (timelocked) used as last-resort fallback.
+    uint256 public pendingManualPrice;
+    uint64  public pendingManualPriceAt;
+
+    /// @notice Active manual fallback price and status.
+    uint256 public manualPrice;
+    bool public manualPriceActive;
+
     /// @notice Historical prices
     mapping(uint256 => PricePoint) public historicalPrices;
     uint256 public pricePointCount;
@@ -101,6 +109,9 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     event ChainlinkFeedScheduled(address indexed pendingFeed, uint64 effectiveAt);
     event UniswapPoolUpdated(address indexed oldPool, address indexed newPool);
     event UniswapPoolScheduled(address indexed pendingPool, uint64 effectiveAt);
+    event ManualPriceScheduled(uint256 indexed pendingPrice, uint64 effectiveAt);
+    event ManualPriceApplied(uint256 indexed price);
+    event ManualPriceDisabled();
 
     error PriceStale();
     error InvalidPrice();
@@ -159,6 +170,12 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         // Fallback to Uniswap TWAP if Chainlink fails
         if (price == 0) {
             (price, source) = _getUniswapPrice();
+        }
+
+        // Last-resort fallback to a timelocked owner-set manual price.
+        if (price == 0 && manualPriceActive && manualPrice > 0) {
+            price = manualPrice;
+            source = PriceSource.MANUAL;
         }
 
         if (price == 0) revert InvalidPrice();
@@ -347,6 +364,39 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         emit UniswapPoolUpdated(oldPool, pendingUniswapPool);
         delete pendingUniswapPool;
         delete pendingUniswapPoolAt;
+    }
+
+    /**
+     * @notice Schedule a manual fallback price (takes effect after 48h timelock)
+     * @param _manualPrice New manual price (18 decimals)
+     */
+    function setManualPrice(uint256 _manualPrice) external onlyOwner {
+        require(_manualPrice > 0, "VFIDEPriceOracle: invalid manual price");
+        uint64 effectiveAt = uint64(block.timestamp) + ORACLE_CONFIG_DELAY;
+        pendingManualPrice = _manualPrice;
+        pendingManualPriceAt = effectiveAt;
+        emit ManualPriceScheduled(_manualPrice, effectiveAt);
+    }
+
+    /**
+     * @notice Apply scheduled manual fallback price after timelock
+     */
+    function applyManualPrice() external onlyOwner {
+        require(pendingManualPriceAt != 0, "VFIDEPriceOracle: no pending manual price");
+        require(block.timestamp >= pendingManualPriceAt, "VFIDEPriceOracle: timelock not elapsed");
+        manualPrice = pendingManualPrice;
+        manualPriceActive = true;
+        emit ManualPriceApplied(manualPrice);
+        delete pendingManualPrice;
+        delete pendingManualPriceAt;
+    }
+
+    /**
+     * @notice Disable manual fallback price
+     */
+    function disableManualPrice() external onlyOwner {
+        manualPriceActive = false;
+        emit ManualPriceDisabled();
     }
 
     /**

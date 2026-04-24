@@ -65,8 +65,6 @@ export {
 export {
   EmbeddedWalletProvider,
   useEmbeddedWallet,
-  useEmailLogin,
-  useSocialLogin,
   type EmbeddedUser,
   type AuthMethod,
-} from '@/lib/embeddedWallet/embeddedWalletService';
+} from '@/lib/wallet/EmbeddedWalletAdapter';

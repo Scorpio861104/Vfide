@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { parseEther, formatEther } from 'viem';
 // Crypto validation types - ValidationError used in type definitions
 import type { ValidationError as _ValidationError } from './cryptoValidation';
 import { getEthereumProvider, assertCorrectChain, assertNonZeroAddress, waitForTransactionReceiptSuccess } from './cryptoApprovals';
@@ -107,13 +108,14 @@ export async function connectWallet(): Promise<Wallet> {
       params: [address, 'latest'],
     }), 'balance');
 
-    // Convert wei to ETH
-    const balanceWei = parseInt(balance, 16);
-    if (isNaN(balanceWei) || !isFinite(balanceWei)) {
+    // Convert wei to ETH using BigInt to avoid float64 precision loss above 0.009 ETH
+    let balanceWeiBig: bigint;
+    try {
+      balanceWeiBig = BigInt(balance);
+    } catch {
       throw new Error('Invalid balance format from provider');
     }
-    
-    const ethBalance = balanceWei / 1e18;
+    const ethBalance = Number(formatEther(balanceWeiBig));
 
     // Get VFIDE token balance
     const tokenBalance = await getTokenBalance(address);
@@ -181,11 +183,16 @@ async function resolveEns(address: string): Promise<string | undefined> {
 
 /**
  * Disconnect wallet
+ *
+ * NOTE: Wallet connection state is managed by wagmi. Use wagmi's `useDisconnect`
+ * hook to disconnect. This function is intentionally a no-op to avoid conflicting
+ * with wagmi's persister and leaving stale localStorage state.
+ * See F-L-02 audit finding.
  */
 export function disconnectWallet(): void {
-  // Clear stored wallet data
-  localStorage.removeItem('wallet_address');
-  localStorage.removeItem('wallet_connected');
+  // Intentionally empty — rely on wagmi's useDisconnect() for all wallet
+  // disconnection and storage cleanup. Manual localStorage manipulation here
+  // was found to use inconsistent key names, conflicting with wagmi's persister.
 }
 
 // ============================================================================
@@ -211,7 +218,8 @@ export async function sendPayment(
 
     // Create transaction
     const transaction: Transaction = {
-      id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `tx_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`,
+
       type: 'send',
       from,
       to,
@@ -252,12 +260,17 @@ async function sendEthTransaction(to: string, amount: string): Promise<string> {
   assertNonZeroAddress(to, 'recipient');
   await assertCorrectChain();
 
-  const amountFloat = parseFloat(amount);
-  if (isNaN(amountFloat) || !isFinite(amountFloat) || amountFloat <= 0) {
+  // Use viem's parseEther for exact BigInt-based conversion (avoids float64 precision loss)
+  let amountWeiBig: bigint;
+  try {
+    amountWeiBig = parseEther(amount);
+  } catch {
     throw new Error('Invalid transaction amount');
   }
-
-  const amountWei = '0x' + (amountFloat * 1e18).toString(16);
+  if (amountWeiBig <= 0n) {
+    throw new Error('Invalid transaction amount');
+  }
+  const amountWei = `0x${amountWeiBig.toString(16)}`;
 
   const txHash = asString(await provider.request({
     method: 'eth_sendTransaction',
@@ -332,7 +345,7 @@ export async function createPaymentRequest(
   const from = await getCurrentWalletAddress();
 
   const request: PaymentRequest = {
-    id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `req_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`,
     from,
     to,
     amount,

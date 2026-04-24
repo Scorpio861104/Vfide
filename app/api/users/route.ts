@@ -298,7 +298,7 @@ export async function POST(request: NextRequest) {
   } catch (error: unknown) {
     logger.error('Error creating/updating user:', error);
     return NextResponse.json(
-      { error: 'Failed to create/update user', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to create or update user' },
       { status: 500 }
     );
   }

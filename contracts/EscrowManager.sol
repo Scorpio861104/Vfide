@@ -58,6 +58,9 @@ contract EscrowManager is ReentrancyGuard {
     event TokenWhitelistChangeProposed(address indexed token, bool status, uint64 effectiveAt);
     event TokenWhitelistSet(address indexed token, bool status);
     event TokenWhitelistChangeCancelled(address indexed token);
+    event DAOChangeProposed(address indexed newDAO, uint256 effectiveAt);
+    event DAOChanged(address indexed oldDAO, address indexed newDAO);
+    event DAOChangeCancelled();
 
     enum State { CREATED, RELEASED, REFUNDED, DISPUTED }
 
@@ -79,6 +82,9 @@ contract EscrowManager is ReentrancyGuard {
     ISeer public seer;
     ISeerAutonomous_ESC public seerAutonomous;
     address public dao; // For high-value disputes
+    address public pendingDAO;
+    uint256 public pendingDAOAt;
+    uint256 public constant DAO_TIMELOCK = 48 hours;
     /// @notice Threshold above which disputes require DAO approval (10,000 VFIDE)
     uint256 public constant HIGH_VALUE_THRESHOLD = 10_000 * 1e18;
     address public pendingArbiter;
@@ -283,7 +289,28 @@ contract EscrowManager is ReentrancyGuard {
     function setDAO(address newDAO) external {
         require(msg.sender == dao, "only DAO");
         require(newDAO != address(0), "zero address");
-        dao = newDAO;
+        pendingDAO = newDAO;
+        pendingDAOAt = block.timestamp + DAO_TIMELOCK;
+        emit DAOChangeProposed(newDAO, pendingDAOAt);
+    }
+
+    function applyDAO() external {
+        require(msg.sender == dao, "only DAO");
+        require(pendingDAO != address(0), "no pending DAO");
+        require(block.timestamp >= pendingDAOAt, "timelock active");
+        address oldDAO = dao;
+        dao = pendingDAO;
+        pendingDAO = address(0);
+        pendingDAOAt = 0;
+        emit DAOChanged(oldDAO, dao);
+    }
+
+    function cancelDAO() external {
+        require(msg.sender == dao, "only DAO");
+        require(pendingDAO != address(0), "no pending DAO");
+        pendingDAO = address(0);
+        pendingDAOAt = 0;
+        emit DAOChangeCancelled();
     }
 
     function setSeerAutonomous(address _seerAutonomous) external {

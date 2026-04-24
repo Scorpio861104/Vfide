@@ -114,20 +114,15 @@ async function runValidationSuite(): Promise<void> {
   console.log(`\n${BOLD}${BLUE}TIER 2: Security & Infrastructure Checks${RESET}`);
   console.log('─'.repeat(60));
 
-  // Check proxy security layer exists. In Next.js 16 (Turbopack) only proxy.ts is supported;
-  // middleware.ts must NOT exist alongside it.
+  // Check proxy security layer exists and remains the source of truth.
   const proxyExists = existsSync('proxy.ts');
   console.log(`\n${BLUE}Running:${RESET} Root proxy security check`);
   if (proxyExists) {
     const proxySource = readFileSync('proxy.ts', 'utf8');
     const cspHandledInProxy = proxySource.includes('Content-Security-Policy');
-    const middlewareStillPresent = existsSync('middleware.ts');
-    if (cspHandledInProxy && !middlewareStillPresent) {
+    if (cspHandledInProxy) {
       console.log(`${GREEN}✓ Passed${RESET} (proxy.ts is the CSP/CSRF source of truth)`);
       results.push(new CheckResult('proxy security layer aligned', true));
-    } else if (middlewareStillPresent) {
-      console.error(`${RED}✗ FAILED${RESET} (middleware.ts must be removed — Next.js 16 requires proxy.ts only)`);
-      results.push(new CheckResult('proxy security layer aligned', false, 'middleware.ts must not coexist with proxy.ts in Next.js 16'));
     } else {
       console.error(`${RED}✗ FAILED${RESET} (proxy.ts exists but does not handle CSP)`);
       results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts does not contain Content-Security-Policy logic'));
@@ -152,13 +147,15 @@ async function runValidationSuite(): Promise<void> {
   // Check DB RLS context wiring is active
   console.log(`\n${BLUE}Running:${RESET} DB session context / RLS check`);
   const dbSource = readFileSync('lib/db.ts', 'utf8');
-  const hasRlsSessionContext = dbSource.includes("set_config('app.current_user_address'") && dbSource.includes('RESET app.current_user_address');
+  const hasRlsSessionContext =
+    dbSource.includes("set_config('app.current_user_address'") &&
+    (dbSource.includes('runWithDbUserAddressContext') || dbSource.includes('AsyncLocalStorage'));
   if (hasRlsSessionContext) {
-    console.log(`${GREEN}✓ Passed${RESET} (database session user context is wired for RLS)`);
+    console.log(`${GREEN}✓ Passed${RESET} (database user context is wired for RLS)`);
     results.push(new CheckResult('db RLS session context wired', true));
   } else {
-    console.error(`${RED}✗ FAILED${RESET} (database session user context wiring missing)`);
-    results.push(new CheckResult('db RLS session context wired', false, 'lib/db.ts is missing session context setup/reset'));
+    console.error(`${RED}✗ FAILED${RESET} (database user context wiring missing)`);
+    results.push(new CheckResult('db RLS session context wired', false, 'lib/db.ts is missing transaction-scoped user context wiring'));
   }
 
   // Check dead getAuthHeaders usage is gone

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAddress } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { createSiweChallenge, getRequestIp } from '@/lib/security/siweChallenge';
+import { createSiweChallenge, getRequestIp, resolveTrustedAuthDomain } from '@/lib/security/siweChallenge';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -30,11 +30,17 @@ export async function POST(request: NextRequest) {
   }
 
   const rawAddress = body.address;
-  const chainId = body.chainId ?? 8453;
-  const hostHeader = request.headers.get('host') || 'vfide.io';
-  const domain = hostHeader.split(':')[0] || 'vfide.io';
+  // Use frontend's default chain ID (Base Sepolia testnet) if not provided
+  // Frontend default: process.env.NEXT_PUBLIC_CHAIN_ID = 84532 (Base Sepolia)
+  // Ensures consistency between client and server auth flows
+  const chainId = body.chainId ?? (Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10) || 84532);
+  const domain = resolveTrustedAuthDomain(request.headers);
   const ip = getRequestIp(request.headers);
   const userAgent = request.headers.get('user-agent') || 'unknown';
+
+  if (!domain) {
+    return NextResponse.json({ error: 'Untrusted auth domain' }, { status: 400 });
+  }
 
   try {
     const challenge = await createSiweChallenge({

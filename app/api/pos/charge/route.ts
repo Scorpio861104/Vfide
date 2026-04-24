@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -30,6 +31,9 @@ export async function POST(request: NextRequest) {
   const rateLimited = await withRateLimit(request, 'write');
   if (rateLimited) return rateLimited;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const rawBody = await request.json();
     const parsed = createPosChargeSchema.safeParse(rawBody);
@@ -43,19 +47,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'amount must be a positive number' }, { status: 400 });
     }
 
+    if (parsed.data.merchantAddress.toLowerCase() !== authResult.user.address.toLowerCase()) {
+      return NextResponse.json({ error: 'merchantAddress must match authenticated wallet' }, { status: 403 });
+    }
+
     const now = Date.now();
     const chargeId = parsed.data.offlineId ?? `pos_${now}`;
 
-    // Lightweight acceptance endpoint for queued POS charge intents.
-    // Live payment confirmation is handled by merchant payment confirmation routes.
+    // Queue the intent only. Settlement is confirmed by the merchant payment confirmation flow.
     return NextResponse.json({
       ok: true,
       chargeId,
-      status: 'accepted',
+      status: 'pending',
       amount,
       currency: parsed.data.currency.toUpperCase(),
       merchantAddress: parsed.data.merchantAddress.toLowerCase(),
       acceptedAt: new Date(now).toISOString(),
+      settlementReference: chargeId,
     });
   } catch (error) {
     logger.error('[POS Charge API] Failed to process charge request', error);

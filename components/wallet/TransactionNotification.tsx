@@ -7,6 +7,8 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { useChainId } from 'wagmi'
+import { getExplorerLink } from '@/components/ui/EtherscanLink'
 // Note: install with: npm install react-confetti
 // import Confetti from 'react-confetti'
 
@@ -50,6 +52,7 @@ const notificationConfig = {
 }
 
 export function TransactionNotification({ notification, onClose }: TransactionNotificationProps) {
+  const chainId = useChainId()
   // Confetti functionality - uncomment when react-confetti is installed
   // const [showConfetti, setShowConfetti] = useState(false)
   // const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
@@ -164,7 +167,7 @@ export function TransactionNotification({ notification, onClose }: TransactionNo
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    href={`https://sepolia.basescan.org/tx/${notification.txHash}`}
+                    href={getExplorerLink(chainId, notification.txHash, 'tx')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"

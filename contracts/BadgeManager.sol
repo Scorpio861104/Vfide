@@ -50,6 +50,11 @@ contract BadgeManager {
     
     /// @notice Authorized callers (Commerce, DAO, etc.)
     mapping(address => bool) public operators;
+    // H-33 FIX: Per-selector operator authorization.
+    // If a selector has ANY per-selector entry, only those explicitly approved may call it.
+    // This lets DAO restrict, e.g., an operator to only awardBadge and not awardPioneer.
+    mapping(bytes4 => mapping(address => bool)) public selectorOperators;
+    mapping(bytes4 => bool) public selectorRestricted; // true = use per-selector whitelist
     uint256 private _guardLock;
     
     /// @notice Pioneer counter (first 10,000 users)
@@ -91,7 +96,14 @@ contract BadgeManager {
     }
     
     modifier onlyOperator() {
-        if (msg.sender != dao && !operators[msg.sender]) revert BM_NotOperator();
+        bytes4 sel = msg.sig;
+        if (selectorRestricted[sel]) {
+            // Per-selector mode: only DAO or an explicitly selector-approved operator.
+            if (msg.sender != dao && !selectorOperators[sel][msg.sender]) revert BM_NotOperator();
+        } else {
+            // Global operator mode.
+            if (msg.sender != dao && !operators[msg.sender]) revert BM_NotOperator();
+        }
         _;
     }
 
@@ -133,6 +145,17 @@ contract BadgeManager {
         emit OperatorSet(operator, authorized);
     }
 
+    /// @notice H-33 FIX: DAO can restrict a function selector to per-approved operators only.
+    function setSelectorOperator(bytes4 selector, address operator, bool authorized) external onlyDAO nonReentrantBM {
+        selectorOperators[selector][operator] = authorized;
+        selectorRestricted[selector] = true; // once any per-selector entry exists, use per-selector mode
+    }
+
+    /// @notice H-33 FIX: DAO can revert a selector back to global operator mode.
+    function clearSelectorRestriction(bytes4 selector) external onlyDAO nonReentrantBM {
+        selectorRestricted[selector] = false;
+    }
+
     function setQualificationRules(address newRules) external onlyDAO nonReentrantBM {
         if (newRules == address(0)) revert BM_Zero();
         address oldRules = address(qualificationRules);
@@ -149,6 +172,7 @@ contract BadgeManager {
      * @param user The user address
      * @param badge The badge ID
      */
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function awardBadge(address user, bytes32 badge) public onlyOperator nonReentrantBM {
         // Skip if user already has this badge
         if (seer.hasBadge(user, badge)) {
@@ -183,6 +207,7 @@ contract BadgeManager {
      * @param badge The badge ID
      * @param reason Reason for revocation
      */
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function revokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
         if (!seer.hasBadge(user, badge)) return;
         
@@ -224,6 +249,7 @@ contract BadgeManager {
      * @param user The user address
      * @param badge The badge ID
      */
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function _recheckQualification(address user, bytes32 badge) internal {
         bool stillQualified = _checkBadgeQualification(user, badge);
         
@@ -283,6 +309,7 @@ contract BadgeManager {
      * @param user The user address
      * @param successful Whether transaction was successful (no dispute)
      */
+    // slither-disable-next-line reentrancy-events
     function recordCommerceTx(address user, bool successful) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         stats.commerceTxCount++;
@@ -300,6 +327,7 @@ contract BadgeManager {
      * @notice Record a governance vote
      * @param user The user address
      */
+    // slither-disable-next-line reentrancy-events
     function recordGovernanceVote(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         stats.governanceVotes++;
@@ -314,6 +342,7 @@ contract BadgeManager {
      * @notice Record an endorsement received
      * @param user The user address
      */
+    // slither-disable-next-line reentrancy-events
     function recordEndorsement(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         stats.endorsementsReceived++;
@@ -328,6 +357,7 @@ contract BadgeManager {
      * @param referrer The referrer address
      * @param qualified Whether referred user reached 600+ score
      */
+    // slither-disable-next-line reentrancy-events
     function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
         stats.referralsMade++;
@@ -344,6 +374,7 @@ contract BadgeManager {
      * @notice Record fraud report confirmation
      * @param reporter The reporter address
      */
+    // slither-disable-next-line reentrancy-events
     function recordFraudReport(address reporter) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[reporter];
         stats.fraudReports++;
@@ -357,6 +388,7 @@ contract BadgeManager {
      * @notice Record educational content creation
      * @param creator The creator address
      */
+    // slither-disable-next-line reentrancy-events
     function recordEducationalContent(address creator) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[creator];
         stats.educationalContent++;

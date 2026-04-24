@@ -2,10 +2,17 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
 describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
-  it("owner cannot call updateScore directly", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [owner, user, sanctum, burn, ecosystem] = await ethers.getSigners();
+  async function burnRouterFixture() {
+    const { ethers } = (await getConnection()) as any;
+    const [owner, user, recipient, sanctum, burn, ecosystem] = await ethers.getSigners();
 
     const SeerStub = await ethers.getContractFactory("SeerScoreStub");
     const seer = await SeerStub.deploy();
@@ -19,6 +26,17 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
       ecosystem.address,
     );
     await router.waitForDeployment();
+
+    return { ethers, owner, user, recipient, sanctum, burn, ecosystem, seer, router };
+  }
+
+  async function deployBurnRouter() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(burnRouterFixture);
+  }
+
+  it("owner cannot call updateScore directly", async () => {
+    const { owner, user, router } = await deployBurnRouter();
 
     await assert.rejects(
       () => router.connect(owner).updateScore(user.address),
@@ -27,22 +45,8 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
   });
 
   it("configured Seer can push a score snapshot", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [, user, sanctum, burn, ecosystem] = await ethers.getSigners();
-
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
-    const seer = await SeerStub.deploy();
-    await seer.waitForDeployment();
+    const { ethers, user, seer, router } = await deployBurnRouter();
     await seer.setScore(user.address, 7777);
-
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
-    const router = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      burn.address,
-      ecosystem.address,
-    );
-    await router.waitForDeployment();
 
     const seerAddr = await seer.getAddress();
     await ethers.provider.send("hardhat_setBalance", [seerAddr, "0x3635C9ADC5DEA00000"]);
@@ -61,21 +65,7 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
   });
 
   it("keeps score snapshot history bounded with ring-buffer rollover", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [, user, sanctum, burn, ecosystem] = await ethers.getSigners();
-
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
-    const seer = await SeerStub.deploy();
-    await seer.waitForDeployment();
-
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
-    const router = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      burn.address,
-      ecosystem.address,
-    );
-    await router.waitForDeployment();
+    const { ethers, user, seer, router } = await deployBurnRouter();
 
     const cap = await router.MAX_SCORE_SNAPSHOTS();
     assert.equal(cap, 32n);
@@ -103,22 +93,8 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
   });
 
   it("uses cached weighted score in-window and falls back when history is stale", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [, user, sanctum, burn, ecosystem] = await ethers.getSigners();
-
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
-    const seer = await SeerStub.deploy();
-    await seer.waitForDeployment();
+    const { ethers, user, seer, router } = await deployBurnRouter();
     await seer.setScore(user.address, 6500);
-
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
-    const router = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      burn.address,
-      ecosystem.address,
-    );
-    await router.waitForDeployment();
 
     const seerAddr = await seer.getAddress();
     await ethers.provider.send("hardhat_setBalance", [seerAddr, "0x3635C9ADC5DEA00000"]);
@@ -143,22 +119,8 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
   });
 
   it("preview helpers expose the same time-weighted score used for live fee execution", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [, user, recipient, sanctum, burn, ecosystem] = await ethers.getSigners();
-
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
-    const seer = await SeerStub.deploy();
-    await seer.waitForDeployment();
+    const { ethers, user, recipient, seer, router } = await deployBurnRouter();
     await seer.setScore(user.address, 6800);
-
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
-    const router = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      burn.address,
-      ecosystem.address,
-    );
-    await router.waitForDeployment();
 
     const seerAddr = await seer.getAddress();
     await ethers.provider.send("hardhat_setBalance", [seerAddr, "0x3635C9ADC5DEA00000"]);
@@ -185,22 +147,8 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
   });
 
   it("computeFeesAndReserve matches computeFees for identical inputs", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [owner, user, sanctum, burn, ecosystem] = await ethers.getSigners();
-
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
-    const seer = await SeerStub.deploy();
-    await seer.waitForDeployment();
+    const { owner, user, seer, router } = await deployBurnRouter();
     await seer.setScore(owner.address, 6200);
-
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
-    const router = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      burn.address,
-      ecosystem.address,
-    );
-    await router.waitForDeployment();
 
     // Route computeFeesAndReserve authorization to owner for deterministic test calls.
     await router.connect(owner).setToken(owner.address);
@@ -216,22 +164,8 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
   });
 
   it("caps low-value transfer fees at micro transaction ceiling", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [owner, user, sanctum, burn, ecosystem] = await ethers.getSigners();
-
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
-    const seer = await SeerStub.deploy();
-    await seer.waitForDeployment();
+    const { ethers, owner, user, seer, router } = await deployBurnRouter();
     await seer.setScore(owner.address, 4000); // worst-tier score -> max base fee before cap
-
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
-    const router = await Router.deploy(
-      await seer.getAddress(),
-      sanctum.address,
-      burn.address,
-      ecosystem.address,
-    );
-    await router.waitForDeployment();
 
     await router.connect(owner).setToken(owner.address);
     await router.connect(owner).setSustainability(0n, 0n, 5);
@@ -251,84 +185,8 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
 });
 
 describe("VaultHub (F-20: SecurityHub timelock)", () => {
-  it("setProofLedger schedules without immediate effect", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [owner] = await ethers.getSigners();
-
-    const TokenStub = await ethers.getContractFactory("TokenStub");
-    const token = await TokenStub.deploy();
-    await token.waitForDeployment();
-
-    const Placeholder = await ethers.getContractFactory("Placeholder");
-    const oldLedger = await Placeholder.deploy();
-    const newLedger = await Placeholder.deploy();
-    await oldLedger.waitForDeployment();
-    await newLedger.waitForDeployment();
-
-    const VaultHub = await ethers.getContractFactory("VaultHub");
-    const hub = await VaultHub.deploy(
-      await token.getAddress(),
-      await oldLedger.getAddress(),
-      owner.address,
-    );
-    await hub.waitForDeployment();
-
-    await hub.connect(owner).setProofLedger(await oldLedger.getAddress());
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
-    await hub.connect(owner).applyProofLedger();
-
-    await hub.connect(owner).setProofLedger(await newLedger.getAddress());
-
-    assert.equal(await hub.pendingProofLedger_VH(), await newLedger.getAddress());
-    assert.ok((await hub.pendingProofLedgerAt_VH()) > 0n);
-  });
-
-  it("applyProofLedger reverts before delay and succeeds after 48h", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [owner] = await ethers.getSigners();
-
-    const TokenStub = await ethers.getContractFactory("TokenStub");
-    const token = await TokenStub.deploy();
-    await token.waitForDeployment();
-
-    const Placeholder = await ethers.getContractFactory("Placeholder");
-    const oldLedger = await Placeholder.deploy();
-    const newLedger = await Placeholder.deploy();
-    await oldLedger.waitForDeployment();
-    await newLedger.waitForDeployment();
-
-    const VaultHub = await ethers.getContractFactory("VaultHub");
-    const hub = await VaultHub.deploy(
-      await token.getAddress(),
-      await oldLedger.getAddress(),
-      owner.address,
-    );
-    await hub.waitForDeployment();
-
-    await hub.connect(owner).setProofLedger(await oldLedger.getAddress());
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
-    await hub.connect(owner).applyProofLedger();
-
-    await hub.connect(owner).setProofLedger(await newLedger.getAddress());
-
-    await assert.rejects(
-      () => hub.connect(owner).applyProofLedger(),
-      /VH: timelock|revert/
-    );
-
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
-
-    await hub.connect(owner).applyProofLedger();
-
-    assert.equal(await hub.pendingProofLedger_VH(), ethers.ZeroAddress);
-    assert.equal(await hub.pendingProofLedgerAt_VH(), 0n);
-  });
-
-  it("rejects legacy setModules and delays VFIDE, ledger, and DAO changes", async () => {
-    const { ethers } = (await network.connect()) as any;
+  async function vaultHubFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [owner] = await ethers.getSigners();
 
     const TokenStub = await ethers.getContractFactory("TokenStub");
@@ -354,6 +212,55 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
       await oldDao.getAddress(),
     );
     await hub.waitForDeployment();
+
+    return { ethers, owner, token, newToken, oldLedger, newLedger, oldDao, newDao, hub };
+  }
+
+  async function deployVaultHubHarness() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(vaultHubFixture);
+  }
+
+  it("setProofLedger schedules without immediate effect", async () => {
+    const { ethers, owner, oldLedger, newLedger, hub } = await deployVaultHubHarness();
+
+    await hub.connect(owner).setProofLedger(await oldLedger.getAddress());
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+    await hub.connect(owner).applyProofLedger();
+
+    await hub.connect(owner).setProofLedger(await newLedger.getAddress());
+
+    assert.equal(await hub.pendingProofLedger_VH(), await newLedger.getAddress());
+    assert.ok((await hub.pendingProofLedgerAt_VH()) > 0n);
+  });
+
+  it("applyProofLedger reverts before delay and succeeds after 48h", async () => {
+    const { ethers, owner, oldLedger, newLedger, hub } = await deployVaultHubHarness();
+
+    await hub.connect(owner).setProofLedger(await oldLedger.getAddress());
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+    await hub.connect(owner).applyProofLedger();
+
+    await hub.connect(owner).setProofLedger(await newLedger.getAddress());
+
+    await assert.rejects(
+      () => hub.connect(owner).applyProofLedger(),
+      /VH: timelock|revert/
+    );
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+
+    await hub.connect(owner).applyProofLedger();
+
+    assert.equal(await hub.pendingProofLedger_VH(), ethers.ZeroAddress);
+    assert.equal(await hub.pendingProofLedgerAt_VH(), 0n);
+  });
+
+  it("rejects legacy setModules and delays VFIDE, ledger, and DAO changes", async () => {
+    const { ethers, owner, token, newToken, newLedger, newDao, hub } = await deployVaultHubHarness();
 
     const newTokenAddress = await newToken.getAddress();
     const newLedgerAddress = await newLedger.getAddress();
@@ -396,8 +303,8 @@ describe("VaultHub (F-20: SecurityHub timelock)", () => {
 });
 
 describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
-  it("allows merchants to enable auto-convert only after the swap path is configured", async () => {
-    const { ethers } = (await network.connect()) as any;
+  async function merchantPortalFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao, merchant] = await ethers.getSigners();
 
     const SeerStub = await ethers.getContractFactory("SeerScoreStub");
@@ -429,6 +336,17 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
 
     await portal.connect(merchant).registerMerchant("Merchant", "retail");
 
+    return { ethers, dao, merchant, router, stablecoin, portal };
+  }
+
+  async function deployMerchantPortal() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(merchantPortalFixture);
+  }
+
+  it("allows merchants to enable auto-convert only after the swap path is configured", async () => {
+    const { dao, merchant, router, stablecoin, portal } = await deployMerchantPortal();
+
     await assert.rejects(
       () => portal.connect(merchant).setAutoConvert(true),
       /revert/
@@ -446,13 +364,24 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
 });
 
 describe("SeerPolicyGuard (BATCH-06: schedule/cancel flow)", () => {
-  it("allows Seer consume only after policy delay", async () => {
-    const { ethers } = (await network.connect()) as any;
+  async function seerPolicyGuardFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao, seer] = await ethers.getSigners();
 
     const Guard = await ethers.getContractFactory("SeerPolicyGuard");
     const guard = await Guard.deploy(dao.address, seer.address);
     await guard.waitForDeployment();
+
+    return { ethers, dao, seer, guard };
+  }
+
+  async function deploySeerPolicyGuard() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(seerPolicyGuardFixture);
+  }
+
+  it("allows Seer consume only after policy delay", async () => {
+    const { ethers, dao, seer, guard } = await deploySeerPolicyGuard();
 
     const selector = "0x12345678";
     const policyClass = 2; // operational => 24h
@@ -474,12 +403,7 @@ describe("SeerPolicyGuard (BATCH-06: schedule/cancel flow)", () => {
   });
 
   it("lets DAO cancel a pending policy change", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [dao, seer] = await ethers.getSigners();
-
-    const Guard = await ethers.getContractFactory("SeerPolicyGuard");
-    const guard = await Guard.deploy(dao.address, seer.address);
-    await guard.waitForDeployment();
+    const { dao, seer, guard } = await deploySeerPolicyGuard();
 
     const selector = "0x90abcdef";
     const policyClass = 1; // important
@@ -499,13 +423,24 @@ describe("SeerPolicyGuard (BATCH-06: schedule/cancel flow)", () => {
 });
 
 describe("DAOTimelock (delay hardening)", () => {
-  it("blocks repeated admin emergency delay reductions until the reset window elapses", async () => {
-    const { ethers } = (await network.connect()) as any;
+  async function daoTimelockFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [admin] = await ethers.getSigners();
 
     const Timelock = await ethers.getContractFactory("DAOTimelock");
     const tl = await Timelock.deploy(admin.address);
     await tl.waitForDeployment();
+
+    return { ethers, admin, tl };
+  }
+
+  async function deployTimelock() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(daoTimelockFixture);
+  }
+
+  it("blocks repeated admin emergency delay reductions until the reset window elapses", async () => {
+    const { ethers, admin, tl } = await deployTimelock();
 
     // First emergency reduction succeeds (48h -> 36h)
     await tl.connect(admin).emergencyReduceDelay(36 * 60 * 60);
@@ -522,5 +457,120 @@ describe("DAOTimelock (delay hardening)", () => {
 
     await tl.connect(admin).emergencyReduceDelay(30 * 60 * 60);
     assert.equal(await tl.delay(), 30n * 60n * 60n);
+  });
+
+  it("removes executed tx ids from queued tracking", async () => {
+    const { ethers, admin, tl } = await deployTimelock();
+
+    const setDelayData = tl.interface.encodeFunctionData("setDelay", [13 * 60 * 60]);
+    const queueTx = await tl.connect(admin).queueTx(await tl.getAddress(), 0, setDelayData);
+    const queueReceipt = await queueTx.wait();
+    const queueLog = queueReceipt?.logs.find((log: any) => {
+      try {
+        return tl.interface.parseLog(log)?.name === "Queued";
+      } catch {
+        return false;
+      }
+    });
+    assert.ok(queueLog, "expected Queued event");
+    const parsedQueued = tl.interface.parseLog(queueLog!);
+    const txId = parsedQueued?.args.id;
+    assert.ok(txId, "expected queued tx id");
+
+    let queued = await tl.getQueuedTransactions();
+    assert.equal(queued[0].length, 1);
+    assert.equal(queued[0][0], txId);
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await tl.connect(admin).execute(txId);
+
+    queued = await tl.getQueuedTransactions();
+    assert.equal(queued[0].length, 0);
+  });
+
+  it("removes secondary-executed tx ids from queued tracking", async () => {
+    const { ethers, admin, tl } = await deployTimelock();
+    const [, secondary] = await ethers.getSigners();
+
+    const setSecondaryData = tl.interface.encodeFunctionData("setSecondaryExecutor", [secondary.address]);
+    const queueSecondaryTx = await tl.connect(admin).queueTx(await tl.getAddress(), 0, setSecondaryData);
+    const queueSecondaryReceipt = await queueSecondaryTx.wait();
+    const queueSecondaryLog = queueSecondaryReceipt?.logs.find((log: any) => {
+      try {
+        return tl.interface.parseLog(log)?.name === "Queued";
+      } catch {
+        return false;
+      }
+    });
+    assert.ok(queueSecondaryLog, "expected Queued event for secondary executor setup");
+    const parsedSecondaryQueue = tl.interface.parseLog(queueSecondaryLog!);
+    const setSecondaryId = parsedSecondaryQueue?.args.id;
+    assert.ok(setSecondaryId, "expected queued tx id for secondary setup");
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await tl.connect(admin).execute(setSecondaryId);
+    assert.equal(await tl.secondaryExecutor(), secondary.address);
+
+    const setDelayData = tl.interface.encodeFunctionData("setDelay", [14 * 60 * 60]);
+    const queueTx = await tl.connect(admin).queueTx(await tl.getAddress(), 0, setDelayData);
+    const queueReceipt = await queueTx.wait();
+    const queueLog = queueReceipt?.logs.find((log: any) => {
+      try {
+        return tl.interface.parseLog(log)?.name === "Queued";
+      } catch {
+        return false;
+      }
+    });
+    assert.ok(queueLog, "expected Queued event for secondary execution path");
+    const parsedQueued = tl.interface.parseLog(queueLog!);
+    const txId = parsedQueued?.args.id;
+    assert.ok(txId, "expected queued tx id");
+
+    let queued = await tl.getQueuedTransactions();
+    assert.equal(queued[0].length, 1);
+    assert.equal(queued[0][0], txId);
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 3 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await tl.connect(secondary).executeBySecondary(txId);
+
+    queued = await tl.getQueuedTransactions();
+    assert.equal(queued[0].length, 0);
+  });
+
+  it("bubbles target revert reason on execute", async () => {
+    const { ethers, admin, tl } = await deployTimelock();
+
+    const Reverter = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:AlwaysRevertStub");
+    const reverter = await Reverter.deploy();
+    await reverter.waitForDeployment();
+
+    const data = reverter.interface.encodeFunctionData("fail", []);
+    const queueTx = await tl.connect(admin).queueTx(await reverter.getAddress(), 0, data);
+    const queueReceipt = await queueTx.wait();
+    const queueLog = queueReceipt?.logs.find((log: any) => {
+      try {
+        return tl.interface.parseLog(log)?.name === "Queued";
+      } catch {
+        return false;
+      }
+    });
+    assert.ok(queueLog, "expected Queued event");
+    const parsedQueued = tl.interface.parseLog(queueLog!);
+    const txId = parsedQueued?.args.id;
+    assert.ok(txId, "expected queued tx id");
+
+    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await assert.rejects(
+      () => tl.connect(admin).execute(txId),
+      /stub revert reason/
+    );
   });
 });

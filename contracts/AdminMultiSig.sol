@@ -62,10 +62,20 @@ contract AdminMultiSig is ReentrancyGuard {
     ISeer public seer;        // M-6 FIX: ProofScore oracle — primary veto eligibility gate
     uint16 public vetoMinScore = 5000; // M-6 FIX: minimum ProofScore (50/100) to cast a veto vote
     mapping(uint256 => mapping(address => bool)) public communityVetos;
+    mapping(ProposalType => mapping(address => bool)) public proposalTypeTargetAllowed;
+    mapping(ProposalType => mapping(bytes4 => bool)) public proposalTypeSelectorAllowed;
 
     uint256 private constant NO_ACTIVE_PROPOSAL = type(uint256).max;
     uint256 private executingProposalId = NO_ACTIVE_PROPOSAL;
     uint256 public executionGasLimit = 500_000;
+    bytes4 private constant SELECTOR_SET_VFIDE_TOKEN = bytes4(keccak256("setVFIDEToken(address)"));
+    bytes4 private constant SELECTOR_SET_SEER = bytes4(keccak256("setSeer(address)"));
+    bytes4 private constant SELECTOR_SET_VETO_MIN_SCORE = bytes4(keccak256("setVetoMinScore(uint16)"));
+    bytes4 private constant SELECTOR_SET_VETO_MIN_STAKE = bytes4(keccak256("setVetoMinStake(uint256)"));
+    bytes4 private constant SELECTOR_SET_EXECUTION_GAS_LIMIT = bytes4(keccak256("setExecutionGasLimit(uint256)"));
+    bytes4 private constant SELECTOR_UPDATE_COUNCIL_MEMBER = bytes4(keccak256("updateCouncilMember(uint256,address)"));
+    bytes4 private constant SELECTOR_SET_TARGET_ALLOW = bytes4(keccak256("setProposalTypeTargetAllowed(uint8,address,bool)"));
+    bytes4 private constant SELECTOR_SET_SELECTOR_ALLOW = bytes4(keccak256("setProposalTypeSelectorAllowed(uint8,bytes4,bool)"));
     event ProposalCreated(
         uint256 indexed proposalId,
         address indexed proposer,
@@ -84,6 +94,8 @@ contract AdminMultiSig is ReentrancyGuard {
     event SeerSet(address indexed seer);
     event VetoMinScoreSet(uint16 minScore);
     event ExecutionGasLimitSet(uint256 newGasLimit);
+    event ProposalTypeTargetAllowSet(ProposalType indexed proposalType, address indexed target, bool allowed);
+    event ProposalTypeSelectorAllowSet(ProposalType indexed proposalType, bytes4 indexed selector, bool allowed);
 
     modifier onlyCouncil() {
         require(isCouncilMember[msg.sender], "AdminMultiSig: caller not council member");
@@ -105,6 +117,12 @@ contract AdminMultiSig is ReentrancyGuard {
         _;
     }
 
+    modifier onlyProposalExecutionContext() {
+        require(msg.sender == address(this), "AdminMultiSig: only via proposal");
+        require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: no active execution");
+        _;
+    }
+
     /**
      * @notice Initialize council with 5 members
      * @param _council Array of 5 council member addresses
@@ -120,32 +138,83 @@ contract AdminMultiSig is ReentrancyGuard {
         if (_vfideToken != address(0)) {
             vfideToken = IERC20(_vfideToken);
         }
+
+        // Sensible defaults: proposals may target this contract only,
+        // and only vetted governance selectors are initially enabled.
+        for (uint8 t = 0; t <= uint8(ProposalType.EMERGENCY); t++) {
+            ProposalType pt = ProposalType(t);
+            proposalTypeTargetAllowed[pt][address(this)] = true;
+            emit ProposalTypeTargetAllowSet(pt, address(this), true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_VFIDE_TOKEN] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_VFIDE_TOKEN, true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_SEER] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_SEER, true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_VETO_MIN_SCORE] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_VETO_MIN_SCORE, true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_VETO_MIN_STAKE] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_VETO_MIN_STAKE, true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_EXECUTION_GAS_LIMIT] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_EXECUTION_GAS_LIMIT, true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_UPDATE_COUNCIL_MEMBER] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_UPDATE_COUNCIL_MEMBER, true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_TARGET_ALLOW] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_TARGET_ALLOW, true);
+
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_SELECTOR_ALLOW] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_SELECTOR_ALLOW, true);
+        }
     }
 
     /// @notice Set the VFIDE token address used for fallback stake checks on community veto
-    function setVFIDEToken(address _token) external onlyCouncil {
+    function setVFIDEToken(address _token) external onlyProposalExecutionContext {
         require(_token != address(0), "AdminMultiSig: zero address");
         vfideToken = IERC20(_token);
         emit VFIDETokenSet(_token);
     }
 
     /// @notice Set the ProofScore oracle used as the primary veto eligibility gate (M-6 FIX)
-    function setSeer(address _seer) external onlyCouncil {
+    function setSeer(address _seer) external onlyProposalExecutionContext {
         require(_seer != address(0), "AdminMultiSig: zero address");
         seer = ISeer(_seer);
         emit SeerSet(_seer);
     }
 
     /// @notice Set the minimum ProofScore required to cast a community veto (M-6 FIX)
-    function setVetoMinScore(uint16 _minScore) external onlyCouncil {
+    function setVetoMinScore(uint16 _minScore) external onlyProposalExecutionContext {
         vetoMinScore = _minScore;
         emit VetoMinScoreSet(_minScore);
     }
 
     /// @notice Update the minimum VFIDE stake required to cast a community veto
-    function setVetoMinStake(uint256 _minStake) external onlyCouncil {
+    function setVetoMinStake(uint256 _minStake) external onlyProposalExecutionContext {
         vetoMinStake = _minStake;
         emit VetoMinStakeSet(_minStake);
+    }
+
+    /// @notice Governance-managed target allowlist by proposal type.
+    function setProposalTypeTargetAllowed(ProposalType _proposalType, address _target, bool _allowed)
+        external
+        onlyEmergencyProposalExecutionContext
+    {
+        require(_target != address(0), "AdminMultiSig: zero target");
+        proposalTypeTargetAllowed[_proposalType][_target] = _allowed;
+        emit ProposalTypeTargetAllowSet(_proposalType, _target, _allowed);
+    }
+
+    /// @notice Governance-managed selector allowlist by proposal type.
+    function setProposalTypeSelectorAllowed(ProposalType _proposalType, bytes4 _selector, bool _allowed)
+        external
+        onlyEmergencyProposalExecutionContext
+    {
+        proposalTypeSelectorAllowed[_proposalType][_selector] = _allowed;
+        emit ProposalTypeSelectorAllowSet(_proposalType, _selector, _allowed);
     }
 
     /**
@@ -165,6 +234,13 @@ contract AdminMultiSig is ReentrancyGuard {
         require(_target != address(0), "AdminMultiSig: target is zero address");
         require(_data.length > 0, "AdminMultiSig: empty data");
         require(bytes(_description).length > 0, "AdminMultiSig: empty description");
+        require(proposalTypeTargetAllowed[_proposalType][_target], "AdminMultiSig: target not allowed");
+
+        bytes4 selector;
+        assembly {
+            selector := calldataload(_data.offset)
+        }
+        require(proposalTypeSelectorAllowed[_proposalType][selector], "AdminMultiSig: selector not allowed");
 
         proposalId = proposalCount++;
         Proposal storage proposal = proposals[proposalId];
@@ -222,6 +298,7 @@ contract AdminMultiSig is ReentrancyGuard {
      * @notice Execute a proposal
      * @param _proposalId ID of the proposal to execute
      */
+    // slither-disable-next-line reentrancy-benign
     function executeProposal(uint256 _proposalId) 
         external 
         onlyCouncil 
@@ -253,8 +330,15 @@ contract AdminMultiSig is ReentrancyGuard {
         // Can be increased via governance if needed for complex operations
         // Intentional: emergency proposal execution may target this contract,
         // while `nonReentrant` prevents nested `executeProposal` entry.
-        (bool success, ) = proposal.target.call{gas: executionGasLimit}(proposal.data);
+        // H-09 FIX: Capture return data. If the target returns a single bool (e.g. ERC-20 transfer),
+        // verify it is `true` so a soft-fail token transfer cannot pass silently.
+        (bool success, bytes memory returnData) = proposal.target.call{gas: executionGasLimit}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
+        if (returnData.length == 32) {
+            // Decode as bool; if the low-level call returned a single word, treat it as a bool return.
+            bool innerOk = abi.decode(returnData, (bool));
+            require(innerOk, "AdminMultiSig: inner call returned false");
+        }
         executingProposalId = NO_ACTIVE_PROPOSAL;
     }
 

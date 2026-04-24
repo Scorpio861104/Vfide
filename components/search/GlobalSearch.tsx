@@ -35,9 +35,11 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId } from 'wagmi';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { safeLocalStorage } from '@/lib/utils';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
@@ -134,6 +136,7 @@ function shortenAddress(address: string): string {
 
 export function GlobalSearch() {
   const { address } = useAccount();
+  const chainId = useChainId();
   const router = useRouter();
   const { play: playSound } = useTransactionSounds();
   
@@ -315,7 +318,9 @@ export function GlobalSearch() {
         title: shortenAddress(searchQuery),
         subtitle: 'View address on explorer',
         icon: <Wallet className="w-5 h-5" />,
-        action: () => window.open(`https://basescan.org/address/${searchQuery}`, '_blank'),
+        action: () => {
+          safeWindowOpen(getExplorerLink(chainId, searchQuery, 'address'), { allowRelative: false });
+        },
         category: 'transactions',
       });
       searchResults.push({
@@ -337,7 +342,9 @@ export function GlobalSearch() {
         title: `Transaction ${shortenAddress(searchQuery)}`,
         subtitle: 'View on block explorer',
         icon: <Hash className="w-5 h-5" />,
-        action: () => window.open(`https://basescan.org/tx/${searchQuery}`, '_blank'),
+        action: () => {
+          safeWindowOpen(getExplorerLink(chainId, searchQuery, 'tx'), { allowRelative: false });
+        },
         category: 'transactions',
       });
     }
@@ -449,7 +456,7 @@ export function GlobalSearch() {
 
     setResults(filtered.slice(0, 10));
     setSelectedIndex(0);
-  }, [address, router, activeCategory]);
+  }, [address, router, activeCategory, chainId]);
 
   // Debounced search
   useEffect(() => {

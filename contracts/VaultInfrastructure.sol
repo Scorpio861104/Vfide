@@ -195,34 +195,8 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     // ——— Governance hooks (only hub may force operations)
     function __forceSetOwner(address newOwner) external {
-        require(msg.sender == hub, "UV:onlyHub");
-        if (newOwner == address(0)) revert UV_Zero();
-        owner = newOwner;
-        
-        // VI-04 FIX: Reset ALL security state when owner is forced (prevent recovery/inheritance exploits after transfer)
-        
-        // Reset any active inheritance to prevent nextOfKin from draining after recovery
-        if (_inheritance.active) {
-            _inheritance.active = false;
-            _inheritance.approvals = 0;
-            _inheritance.readyTime = 0;
-            _inheritance.expiryTime = 0;
-            _inheritance.guardianCountSnapshot = 0;
-            _inheritance.ownerDenied = false;
-        }
-        
-        // Reset any active recovery to prevent old claimants from finalizing after ownership transfer
-        if (_recovery.proposedOwner != address(0)) {
-            _recovery.proposedOwner = address(0);
-            _recovery.approvals = 0;
-            _recovery.readyTime = 0;
-            _recovery.expiryTime = 0;
-            _recovery.guardianCountSnapshot = 0;
-            _recovery.nonce++;
-        }
-        
-        _logSys("vault_force_owner");
-        emit OwnerSet(newOwner);
+        newOwner;
+        revert("VI: force recovery disabled - legacy vault migration required");
     }
 
     // ——— Owner controls
@@ -276,8 +250,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (kin == address(0)) revert UV_Zero();
         if (_inheritance.active) revert UV_InheritanceActive();
         nextOfKin = kin;
-        _logEv(kin, "next_of_kin_set", 0, "");
         emit NextOfKinSet(kin);
+        _logEv(kin, "next_of_kin_set", 0, "");
     }
 
     event WithdrawalCooldownSet(uint64 cooldown);
@@ -474,8 +448,8 @@ contract UserVaultLegacy is ReentrancyGuard {
             _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
             _recovery.guardianCountSnapshot = 0;
             
-            _logEv(proposedOwner, "recovery_requested_kin", 0, "7-day wait required");
             emit RecoveryRequested(proposedOwner);
+            _logEv(proposedOwner, "recovery_requested_kin", 0, "7-day wait required");
             return;
         }
 
@@ -492,8 +466,8 @@ contract UserVaultLegacy is ReentrancyGuard {
             _recovery.approvals = 1;
         }
         
-        _logEv(proposedOwner, "recovery_requested", 0, "");
         emit RecoveryRequested(proposedOwner);
+        _logEv(proposedOwner, "recovery_requested", 0, "");
     }
 
     function guardianApproveRecovery() external notLocked {
@@ -504,8 +478,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (_recovery.voted[msg.sender][_recovery.nonce]) revert UV_AlreadyVoted();
         _recovery.voted[msg.sender][_recovery.nonce] = true;
         _recovery.approvals += 1;
-        _logEv(msg.sender, "recovery_approval", _recovery.approvals, "");
         emit RecoveryApproved(msg.sender, _recovery.proposedOwner, _recovery.approvals);
+        _logEv(msg.sender, "recovery_approval", _recovery.approvals, "");
     }
 
     function finalizeRecovery() external notLocked {
@@ -529,8 +503,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         // Note: Individual voted mappings cannot be cleared efficiently in a loop
         // They will be overwritten on next recovery request
 
-        _logSys("recovery_finalized");
         emit RecoveryFinalized(newOwner);
+        _logSys("recovery_finalized");
     }
 
     function cancelRecovery() external onlyOwner notLocked {
@@ -544,8 +518,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         _recovery.expiryTime = 0;
         _recovery.guardianCountSnapshot = 0;
         
-        _logEv(cancelled, "recovery_cancelled", 0, "");
         emit RecoveryCancelled(msg.sender);
+        _logEv(cancelled, "recovery_cancelled", 0, "");
     }
 
     // ——— Inheritance (Next of Kin fund transfer with guardian approval)
@@ -570,8 +544,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         _inheritance.guardianCountSnapshot = guardianCount;
         _inheritance.ownerDenied = false;
         
-        _logEv(msg.sender, "inheritance_requested", 0, "");
         emit InheritanceRequested(msg.sender);
+        _logEv(msg.sender, "inheritance_requested", 0, "");
     }
     
     /**
@@ -591,8 +565,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         _inheritance.voted[msg.sender][_inheritance.nonce] = true;
         _inheritance.approvals++;
         
-        _logEv(msg.sender, "inheritance_approved", _inheritance.approvals, "");
         emit InheritanceApproved(msg.sender, _inheritance.approvals);
+        _logEv(msg.sender, "inheritance_approved", _inheritance.approvals, "");
     }
     
     /**
@@ -609,8 +583,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         _inheritance.expiryTime = 0;
         _inheritance.guardianCountSnapshot = 0;
         
-        _logEv(msg.sender, "inheritance_denied", 0, "");
         emit InheritanceDenied(msg.sender);
+        _logEv(msg.sender, "inheritance_denied", 0, "");
     }
     
     // Guardian cancellation tracking for inheritance
@@ -651,10 +625,10 @@ contract UserVaultLegacy is ReentrancyGuard {
             _inheritanceCancellationNonce++;
             _inheritanceCancellationApprovals = 0;
             
-            _logEv(msg.sender, "inheritance_cancelled_by_guardians", threshold, "");
             // forge-lint: disable-next-line(unsafe-typecast)
             // Safe: threshold is bounded by guardian count (max 255) fits in uint8
             emit InheritanceCancelledByGuardians(msg.sender, uint8(threshold));
+            _logEv(msg.sender, "inheritance_cancelled_by_guardians", threshold, "");
         } else {
             _logEv(msg.sender, "inheritance_cancel_vote", _inheritanceCancellationApprovals, "");
         }
@@ -713,6 +687,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     // Return value for transfers that require approval
     event TransferPendingApproval(uint256 indexed txId, address indexed toVault, uint256 amount);
     
+    // slither-disable-next-line reentrancy-benign
     function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bool) {
         if (toVault == address(0)) revert UV_Zero();
         require(amount > 0, "UV: zero amount");
@@ -765,6 +740,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         return true;
     }
 
+    // slither-disable-next-line reentrancy-events
     function approveVFIDE(address spender, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims returns (bool) {
         if (spender == address(0)) revert UV_Zero();
         
@@ -783,8 +759,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         
         bool ok = IERC20(vfideToken).approve(spender, amount);
         require(ok, "UV:approve-failed");
-        _logEv(spender, "vault_approve", amount, "");
         emit VaultApprove(spender, amount);
+        _logEv(spender, "vault_approve", amount, "");
         return ok;
     }
 
@@ -1310,9 +1286,11 @@ contract VaultInfrastructure is Ownable {
         );
     }
 
+    // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
+    // slither-disable-next-line reentrancy-events
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }

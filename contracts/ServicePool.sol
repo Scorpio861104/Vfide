@@ -299,7 +299,11 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
 
     function emergencyWithdraw(address to) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (to == address(0)) revert ZeroAddress();
-        vfideToken.safeTransfer(to, vfideToken.balanceOf(address(this)));
+        // H-28 FIX: Only withdraw tokens not already committed to finalized periods.
+        uint256 total = vfideToken.balanceOf(address(this));
+        uint256 withdrawable = total > totalCommitted ? total - totalCommitted : 0;
+        if (withdrawable == 0) revert("SP: nothing to withdraw above committed");
+        vfideToken.safeTransfer(to, withdrawable);
     }
 
     // ═══════════════════════════════════════════════════════════

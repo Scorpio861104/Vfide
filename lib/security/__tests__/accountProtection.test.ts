@@ -14,7 +14,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 describe('accountProtection durability behavior', () => {
-  it('falls back to in-memory counters and locks after repeated auth failures when DB is unavailable', async () => {
+  it('falls back to in-memory counters and locks after repeated key rotations when DB is unavailable', async () => {
     jest.resetModules();
     const { query } = require('@/lib/db');
     query.mockRejectedValue(new Error('db unavailable'));
@@ -23,16 +23,16 @@ describe('accountProtection durability behavior', () => {
     const address = '0x1111111111111111111111111111111111111111';
 
     let result = { locked: false as boolean, reason: undefined as string | undefined };
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       result = await recordSecurityEvent(address, {
         ts: Date.now(),
         ip: '203.0.113.10',
-        type: 'auth_fail',
+        type: 'key_rotate',
       });
     }
 
     expect(result.locked).toBe(true);
-    expect(result.reason).toMatch(/failed authentication/i);
+    expect(result.reason).toMatch(/key rotation/i);
 
     const lock = await getAccountLock(address);
     expect(lock).not.toBeNull();
@@ -54,7 +54,7 @@ describe('accountProtection durability behavior', () => {
     expect(lock?.reason).toContain('failed authentication');
   });
 
-  it('returns critical severity for extreme auth-failure lock triggers', async () => {
+  it('returns critical severity for extreme key rotation triggers when DB is unavailable', async () => {
     jest.resetModules();
     const { query } = require('@/lib/db');
     query.mockRejectedValue(new Error('db unavailable'));
@@ -67,12 +67,12 @@ describe('accountProtection durability behavior', () => {
       result = await recordSecurityEvent(address, {
         ts: Date.now(),
         ip: '203.0.113.10',
-        type: 'auth_fail',
+        type: 'key_rotate',
       });
     }
 
     expect(result.locked).toBe(true);
-    expect(result.reason).toMatch(/failed authentication/i);
+    expect(result.reason).toMatch(/key rotation/i);
     expect(result.severity).toBe('critical');
   });
 });

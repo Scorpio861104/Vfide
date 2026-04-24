@@ -59,6 +59,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     // WHITEPAPER: Low Trust ≤40% (4000), High Trust ≥80% (8000)
     uint16 public constant LOW_SCORE_THRESHOLD = 4000;  // ≤4000 pays max fee (40%)
     uint16 public constant HIGH_SCORE_THRESHOLD = 8000; // ≥8000 pays min fee (80%)
+    uint16 public constant MIN_TOTAL_FEE_FLOOR_BPS = 10; // 0.10% hard floor
     uint16 public minTotalBps = 25;   // 0.25% minimum fee for score ≥8000
     uint16 public maxTotalBps = 500;  // 5% maximum fee for score ≤4000
     uint16 public microTxFeeCeilingBps = 100; // 1.00% max fee for small payments
@@ -130,6 +131,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         return (timestamp / 1 days) * 1 days;
     }
 
+    // slither-disable-next-line missing-zero-check
     constructor(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) {
         _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         seer = ISeer(_seer);
@@ -460,11 +462,12 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         // BR-05 FIX: Enforce per-day rate limit on fee policy changes
         require(block.timestamp >= lastFeePolicyChange + FEE_POLICY_COOLDOWN, "BR: fee policy cooldown active");
         require(_minTotalBps <= _maxTotalBps, "min > max");
+        require(_minTotalBps >= MIN_TOTAL_FEE_FLOOR_BPS, "BURN: min fee below floor");
         require(_maxTotalBps <= 1000, "max cannot exceed 10%");
         // F-27 FIX: Limit rate of change to prevent instantly multiplying fees for value extraction attacks
         if (maxTotalBps > 0) { // Not first-time setup
             require(_maxTotalBps <= maxTotalBps * 2, "BURN: max increase >2x");
-            require(_minTotalBps >= minTotalBps / 2 || _minTotalBps == 0, "BURN: min decrease >50%");
+            require(_minTotalBps >= minTotalBps / 2, "BURN: min decrease >50%");
         }
 
         minTotalBps = _minTotalBps;
@@ -481,6 +484,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         emit MicroTxFeeCeilingSet(_maxBps, _maxAmount);
     }
 
+    // slither-disable-next-line missing-zero-check
     function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner nonReentrant {
         microTxPriceOracle = _priceOracle;
         microTxMaxUsd6 = _maxUsd6;

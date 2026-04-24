@@ -16,6 +16,8 @@ import {
 import { safeLocalStorage } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
+type ThreatDetails = Record<string, unknown>;
+
 export interface UseThreatDetectionResult {
   threatLevel: ThreatLevel;
   riskScore: number;
@@ -26,7 +28,7 @@ export interface UseThreatDetectionResult {
   // Detection methods
   detectAnomalies: () => Promise<ThreatDetectionResult>;
   checkRateLimit: (action: string) => boolean;
-  reportSuspiciousActivity: (type: ThreatType, details: Record<string, any>) => void;
+  reportSuspiciousActivity: (type: ThreatType, details: ThreatDetails) => void;
   
   // Management
   resolveThread: (threatId: string) => void;
@@ -124,7 +126,7 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
     type: ThreatType,
     severity: ThreatLevel,
     message: string,
-    details: Record<string, any> = {}
+    details: ThreatDetails = {}
   ) => {
     const newThreat: ThreatAlert = {
       id: generateThreatId(),
@@ -290,7 +292,7 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
 
   const reportSuspiciousActivity = useCallback((
     type: ThreatType,
-    details: Record<string, any>
+    details: ThreatDetails
   ) => {
     const severityMap: Record<ThreatType, ThreatLevel> = {
       brute_force: 'high',

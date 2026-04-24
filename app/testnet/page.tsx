@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { useAccount, useChainId } from 'wagmi'
 import { FAUCET_URLS } from '@/lib/testnet'
-import { isTestnetChainId } from '@/lib/chains'
+import { getExplorerUrlForChainId, isTestnetChainId } from '@/lib/chains'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
 
 export default function TestnetPage() {
@@ -15,6 +15,7 @@ export default function TestnetPage() {
   const { copied, copy } = useCopyToClipboard()
   const { address } = useAccount()
   const chainId = useChainId()
+  const explorerBase = getExplorerUrlForChainId(chainId || 84532)
 
   const [isClaiming, setIsClaiming] = useState(false)
   const [claimSuccess, setClaimSuccess] = useState(false)
@@ -139,7 +140,7 @@ export default function TestnetPage() {
               </p>
               {claimTxHash && (
                 <a
-                  href={`https://sepolia.basescan.org/tx/${claimTxHash}`}
+                  href={`${explorerBase}/tx/${claimTxHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-emerald-300 text-sm underline mt-1 inline-block"

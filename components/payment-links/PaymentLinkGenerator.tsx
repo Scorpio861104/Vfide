@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { Link2, Copy, Check, Send, MessageCircle, QrCode } from 'lucide-react';
+import { Link2, Copy, Check, MessageCircle } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 export function PaymentLinkGenerator({ merchantSlug, merchantName }: { merchantSlug: string; merchantName: string; }) {
   const { formatCurrency } = useLocale();
@@ -11,7 +12,10 @@ export function PaymentLinkGenerator({ merchantSlug, merchantName }: { merchantS
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io';
   const link = amount ? `${baseUrl}/pay/${merchantSlug}?amount=${amount}${description ? `&desc=${encodeURIComponent(description)}` : ''}` : '';
   const copy = () => { navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  const whatsapp = () => window.open(`https://wa.me/?text=${encodeURIComponent(`Pay ${merchantName} ${formatCurrency(parseFloat(amount))}: ${link}`)}`, '_blank');
+  const whatsapp = () => safeWindowOpen(`https://wa.me/?text=${encodeURIComponent(`Pay ${merchantName} ${formatCurrency(parseFloat(amount))}: ${link}`)}`, {
+    allowRelative: false,
+    allowedHosts: ['wa.me'],
+  });
   return (<div className="space-y-4">
     <h2 className="text-xl font-bold text-white flex items-center gap-2"><Link2 className="text-cyan-400"/>Payment Links</h2>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

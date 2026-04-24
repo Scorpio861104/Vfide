@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 const SDK_CODE_SNIPPET = `// Example checkout widget
 
@@ -33,31 +34,47 @@ const stream = await VFIDE.createStream({
 // 4. Verify payment
 const verified = await VFIDE.verifyPayment(txHash);`;
 
-const WEBHOOK_CODE = `// Webhook endpoint example (Node.js)
+const WEBHOOK_CODE = `import crypto from 'node:crypto';
+import express from 'express';
+
+const app = express();
+app.use('/webhooks/vfide', express.raw({ type: '*/*' }));
+
+function verifyWebhook(body, signature, timestampHeader, secret) {
+  const timestamp = Number(timestampHeader);
+  if (!Number.isFinite(timestamp)) return false;
+
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - timestamp) > 300) return false;
+
+  const expected = 'v1=' + crypto.createHmac('sha256', secret).update(timestamp + '.' + body).digest('hex');
+  if (signature.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+}
+
 app.post('/webhooks/vfide', (req, res) => {
-  const { event, data, signature } = req.body;
-  
-  // Verify webhook signature
-  if (!VFIDE.verifyWebhook(signature, req.body)) {
+  const signature = req.header('X-Webhook-Signature');
+  const timestamp = req.header('X-Webhook-Timestamp');
+
+  if (!signature || !timestamp || !verifyWebhook(req.body, signature, timestamp, process.env.VFIDE_WEBHOOK_SECRET)) {
     return res.status(401).json({ error: 'Invalid signature' });
   }
-  
-  switch (event) {
+
+  const payload = JSON.parse(req.body.toString('utf8'));
+
+  switch (payload.event) {
     case 'payment.completed':
-      // Handle successful payment
-      fulfillOrder(data.metadata.orderId);
+      fulfillOrder(payload.data.order_number);
       break;
-    case 'stream.started':
-      // Handle stream creation
-      activateSubscription(data.streamId);
+    case 'refund.completed':
+      updateRefundState(payload.data);
       break;
-    case 'stream.depleted':
-      // Handle stream ending
-      pauseSubscription(data.streamId);
+    case 'subscription.renewed':
+      extendSubscription(payload.data);
       break;
   }
-  
-  res.json({ received: true });
+
+  return res.json({ received: true });
 });`;
 
 export default function DeveloperPage() {
@@ -150,19 +167,32 @@ export default function DeveloperPage() {
       {activeTab === 'webhooks' && (
         <div className="space-y-4">
           <div className="bg-card rounded-xl p-4 border">
-            <h3 className="font-medium mb-3">Webhook URL</h3>
-            <input
-              type="text"
-             
-              className="w-full p-3 bg-muted border border-border rounded-lg font-mono text-xs sm:text-sm"
-             aria-label="https://yourapp.com/webhooks/vfide" />
-            <button className="mt-3 w-full sm:w-auto px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm">
-              Save Webhook
-            </button>
+            <h3 className="font-medium mb-3">Merchant Webhook Setup</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Register and rotate webhook endpoints in Merchant Portal. VFIDE delivers signed HTTPS POST requests to your server for the events you subscribe to.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link href="/merchant" className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground">
+                Open Merchant Portal
+              </Link>
+              <Link href="/security-center" className="inline-flex items-center justify-center rounded-lg bg-muted px-4 py-2 text-sm">
+                Review Replay Protection
+              </Link>
+            </div>
+            <div className="mt-4 rounded-lg border bg-muted p-3 text-xs sm:text-sm">
+              <div className="font-medium mb-2">Management API</div>
+              <code className="block break-all">GET /api/merchant/webhooks</code>
+              <code className="block break-all">POST /api/merchant/webhooks</code>
+              <code className="block break-all">PATCH /api/merchant/webhooks</code>
+              <code className="block break-all">DELETE /api/merchant/webhooks?id=&lt;endpointId&gt;</code>
+            </div>
           </div>
 
           <div className="bg-card rounded-xl p-4 border">
             <h3 className="font-medium mb-2">Example Handler</h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Verify the raw request body using the signing secret created in Merchant Portal. Current deliveries include the <code>X-Webhook-Signature</code> and <code>X-Webhook-Timestamp</code> headers.
+            </p>
             <pre className="bg-muted p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm font-mono">
               <code>{WEBHOOK_CODE}</code>
             </pre>
@@ -174,10 +204,10 @@ export default function DeveloperPage() {
               {[
                 { event: 'payment.completed', desc: 'A payment was confirmed on-chain' },
                 { event: 'payment.failed', desc: 'A payment transaction failed' },
-                { event: 'stream.started', desc: 'A new streaming payment began' },
-                { event: 'stream.depleted', desc: 'A stream ran out of funds' },
+                { event: 'refund.completed', desc: 'A refund finished successfully' },
                 { event: 'escrow.released', desc: 'Escrow funds were released' },
-                { event: 'escrow.refunded', desc: 'Escrow was refunded to sender' },
+                { event: 'subscription.renewed', desc: 'A subscription cycle renewed' },
+                { event: 'subscription.payment_failed', desc: 'A subscription renewal payment failed' },
               ].map((item) => (
                 <div key={item.event} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 p-2 bg-muted rounded-lg">
                   <code className="text-xs sm:text-sm font-mono text-primary break-all">{item.event}</code>
@@ -204,7 +234,7 @@ export default function DeveloperPage() {
                 { method: 'POST', path: '/v1/escrow', desc: 'Create conditional escrow' },
                 { method: 'POST', path: '/v1/escrow/:id/release', desc: 'Release escrow funds' },
               ].map((endpoint) => (
-                <div key={endpoint.path} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 bg-muted rounded-lg min-w-0">
+                <div key={`${endpoint.method}-${endpoint.path}`} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 bg-muted rounded-lg min-w-0">
                   <span className={`px-2 py-0.5 rounded text-xs font-mono ${
                     endpoint.method === 'POST'
                       ? 'bg-green-500/20 text-green-500'

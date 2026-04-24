@@ -1182,12 +1182,13 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
   const [newDescription, setNewDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [shownSecret, setShownSecret] = useState<string | null>(null);
+  const [copiedSecret, setCopiedSecret] = useState(false);
 
   const allEventTypes = [
     'payment.completed', 'payment.failed', 'refund.initiated', 'refund.completed',
-    'escrow.created', 'escrow.funded', 'escrow.released', 'escrow.disputed',
+    'escrow.created', 'escrow.funded', 'escrow.released', 'escrow.disputed', 'escrow.resolved',
     'invoice.created', 'invoice.paid', 'invoice.overdue',
-    'subscription.created', 'subscription.renewed', 'subscription.cancelled',
+    'subscription.created', 'subscription.renewed', 'subscription.cancelled', 'subscription.payment_failed',
     'merchant.suspended', 'merchant.reinstated',
   ];
 
@@ -1206,6 +1207,17 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
     })();
   }, [merchantAddress]);
 
+  useEffect(() => {
+    if (!shownSecret) return;
+
+    const timer = window.setTimeout(() => {
+      setShownSecret(null);
+      setCopiedSecret(false);
+    }, 60_000);
+
+    return () => window.clearTimeout(timer);
+  }, [shownSecret]);
+
   const handleCreate = async () => {
     if (!newUrl || newEvents.length === 0) return;
     setSubmitting(true);
@@ -1218,6 +1230,7 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
       if (res.ok) {
         const data = await res.json();
         setShownSecret(data.secret);
+        setCopiedSecret(false);
         setEndpoints(prev => [data.endpoint, ...prev]);
         setNewUrl('');
         setNewDescription('');
@@ -1228,10 +1241,8 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch('/api/merchant/webhooks', {
+      const res = await fetch(`/api/merchant/webhooks?id=${id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
       });
       if (res.ok) {
         setEndpoints(prev => prev.filter(e => e.id !== id));
@@ -1243,6 +1254,27 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
     setNewEvents(prev =>
       prev.includes(event) ? prev.filter(e => e !== event) : [...prev, event]
     );
+  };
+
+  const copyAndDismissSecret = async () => {
+    if (!shownSecret) return;
+
+    try {
+      await navigator.clipboard.writeText(shownSecret);
+      setCopiedSecret(true);
+
+      // Best effort: clear clipboard shortly after copy to limit exposure on shared devices.
+      window.setTimeout(() => {
+        void navigator.clipboard.writeText('').catch(() => undefined);
+      }, 30_000);
+    } catch {
+      setCopiedSecret(false);
+    } finally {
+      window.setTimeout(() => {
+        setShownSecret(null);
+        setCopiedSecret(false);
+      }, 1200);
+    }
   };
 
   return (
@@ -1295,18 +1327,20 @@ function WebhooksSection({ merchantAddress }: { merchantAddress: string }) {
           <p className="text-sm font-bold text-yellow-800 dark:text-yellow-300 mb-2">
             Webhook Signing Secret (shown once — copy now!)
           </p>
+          <p className="text-xs text-yellow-800 dark:text-yellow-200 mb-2">
+            For security, this secret auto-clears after 60 seconds and should be stored in a secure backend secret manager.
+          </p>
           <code className="text-sm font-mono break-all text-yellow-900 dark:text-yellow-200">
             {shownSecret}
           </code>
           <div className="mt-2">
             <button
               onClick={() => {
-                navigator.clipboard.writeText(shownSecret);
-                setShownSecret(null);
+                void copyAndDismissSecret();
               }}
               className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
             >
-              Copy & Dismiss
+              {copiedSecret ? 'Copied. Clearing…' : 'Copy & Dismiss'}
             </button>
           </div>
         </div>

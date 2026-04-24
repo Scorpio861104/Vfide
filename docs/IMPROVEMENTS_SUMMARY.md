@@ -78,7 +78,7 @@ This document summarizes all improvements made to enhance code quality, security
 **Security Impact:** Prevents DoS attacks and API abuse
 
 ### 1.6 Request Size Validation
-**Status:** ✅ Already implemented in `middleware.ts`
+**Status:** ✅ Already implemented in `proxy.ts` and exposed through `middleware.ts` for compatibility
 
 **Verified Features:**
 - Size limits by endpoint type (10KB - 1MB)
@@ -364,7 +364,8 @@ export DATABASE_URL="postgresql://..."
 - `lib/security/csrf.ts` - CSRF protection utility
 - `lib/auth/jwt.ts` - JWT authentication
 - `lib/auth/rateLimit.ts` - Rate limiting
-- `middleware.ts` - Request validation
+- `proxy.ts` - Request validation, CSP, CSRF, and body-size enforcement
+- `middleware.ts` - Compatibility shim that re-exports `proxy.ts`
 - `types/browser-apis.d.ts` - Browser API types
 
 ### Environment Variables

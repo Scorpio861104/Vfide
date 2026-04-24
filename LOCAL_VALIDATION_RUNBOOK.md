@@ -7,12 +7,15 @@ This runbook defines the minimum local validation lane before opening or merging
 Run the following commands from the repository root:
 
 1. npm run test:security:all
-2. npm run test:ci
-3. npm run validate:production
+2. npm run typecheck
+3. npm run lint
+4. npm run test:ci
+5. npm run test:stubs:generate
+6. npm run test:onchain:generated
+7. npm run validate:production
 
 ## Recommended Additional Checks
-- npm run lint
-- npm run type-check
+- npm run build
 - npm run build
 
 ## Sign-off Notes

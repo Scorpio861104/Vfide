@@ -16,6 +16,7 @@
  */
 
 // ── Client-side: wa.me deep links (no API key needed) ────────────────────
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 export interface ReceiptData {
   merchantName: string;
@@ -54,7 +55,7 @@ export function shareReceipt(receipt: ReceiptData, phoneNumber?: string): void {
   const url = phoneNumber
     ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`
     : `https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(url, '_blank');
+  safeWindowOpen(url, { allowRelative: false, allowedHosts: ['wa.me'] });
 }
 
 // ── Product sharing ──────────────────────────────────────────────────────
@@ -83,7 +84,7 @@ export function formatProductShare(product: ProductShareData): string {
 
 export function shareProduct(product: ProductShareData): void {
   const text = formatProductShare(product);
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  safeWindowOpen(`https://wa.me/?text=${encodeURIComponent(text)}`, { allowRelative: false, allowedHosts: ['wa.me'] });
 }
 
 // ── Payment request link ─────────────────────────────────────────────────
@@ -116,7 +117,7 @@ export function sharePaymentRequest(link: PaymentLinkData, phoneNumber?: string)
   const url = phoneNumber
     ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`
     : `https://wa.me/?text=${encodeURIComponent(text)}`;
-  window.open(url, '_blank');
+  safeWindowOpen(url, { allowRelative: false, allowedHosts: ['wa.me'] });
 }
 
 // ── Store catalog sharing ────────────────────────────────────────────────
@@ -152,7 +153,7 @@ export function formatStoreCatalog(store: StoreCatalogData): string {
 
 export function shareStoreCatalog(store: StoreCatalogData): void {
   const text = formatStoreCatalog(store);
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  safeWindowOpen(`https://wa.me/?text=${encodeURIComponent(text)}`, { allowRelative: false, allowedHosts: ['wa.me'] });
 }
 
 // ── Loan reminder ────────────────────────────────────────────────────────
@@ -186,7 +187,7 @@ export function formatLoanReminder(reminder: LoanReminderData): string {
 
 export function sendLoanReminder(reminder: LoanReminderData, phoneNumber: string): void {
   const text = formatLoanReminder(reminder);
-  window.open(`https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+  safeWindowOpen(`https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`, { allowRelative: false, allowedHosts: ['wa.me'] });
 }
 
 // ── Server-side: WhatsApp Business API (for automated messages) ──────────

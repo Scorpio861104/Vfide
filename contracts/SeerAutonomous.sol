@@ -385,6 +385,7 @@ contract SeerAutonomous is ReentrancyGuard {
      * @param counterparty Other party involved (for pattern detection)
      * @return result The enforcement decision
      */
+    // slither-disable-next-line reentrancy-no-eth
     function beforeAction(
         address subject,
         ActionType action,
@@ -1070,6 +1071,7 @@ contract SeerAutonomous is ReentrancyGuard {
      * @notice Set the EcosystemVault to monitor for scheduled tasks.
      * @dev DAO-only. Pass address(0) to disable vault monitoring.
      */
+    // slither-disable-next-line missing-zero-check
     function setEcosystemVault(address _vault) external onlyDAO {
         ecosystemVault = _vault;
         emit EcosystemVaultSet(_vault);

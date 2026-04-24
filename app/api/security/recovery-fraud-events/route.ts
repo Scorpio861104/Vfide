@@ -18,6 +18,7 @@ type RecoveryFraudEvent = {
   threshold: number;
   active: boolean;
   watcher: string;
+  reporter: string;
   userAgent: string;
   ts: string;
 };
@@ -82,6 +83,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid vault address' }, { status: 400 });
   }
 
+  const reporter = authResult.user.address?.trim().toLowerCase() ?? 'unknown';
+
   const event: RecoveryFraudEvent = {
     vault,
     label: normalizeText(payload.label, 60),
@@ -91,6 +94,7 @@ export async function POST(request: NextRequest) {
     threshold: normalizeNumber(payload.threshold),
     active: !!payload.active,
     watcher: normalizeAddress(payload.watcher),
+    reporter,
     userAgent: request.headers.get('user-agent') || 'unknown',
     ts: new Date().toISOString(),
   };
@@ -116,6 +120,10 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const caller = authResult.user.address.toLowerCase();
+
   const searchParams = request.nextUrl.searchParams;
   const sinceMinutes = parsePositiveInteger(searchParams.get('sinceMinutes'), 1440);
   const limit = parsePositiveInteger(searchParams.get('limit'), 100);
@@ -124,7 +132,15 @@ export async function GET(request: NextRequest) {
   const cutoff = Date.now() - sinceMinutes * 60 * 1000;
   const filtered = recoveryFraudStore.filter((event) => {
     const ts = Date.parse(event.ts);
-    return Number.isFinite(ts) && ts >= cutoff;
+    if (!Number.isFinite(ts) || ts < cutoff) return false;
+
+    // Minimize intelligence leakage: return only events reported by caller
+    // or events explicitly linked to caller as watcher/proposed owner.
+    return (
+      event.reporter === caller ||
+      event.watcher === caller ||
+      event.proposedOwner === caller
+    );
   });
 
   const events = filtered.slice(-effectiveLimit).reverse();

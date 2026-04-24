@@ -75,6 +75,8 @@ export function VaultStatusModal() {
       setIsCreating(true);
       await createVault();
       showToast("Vault created successfully!", "success");
+      setShowModal(false);
+      setIsCreating(false);
     } catch (error) {
       devLog.error('Failed to create vault:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

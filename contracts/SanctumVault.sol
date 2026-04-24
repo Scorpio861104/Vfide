@@ -34,6 +34,9 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     
     /// Events
     event DAOSet(address dao);
+    event DAORotationProposed(address indexed newDAO, uint64 effectiveAt);
+    event DAORotationCancelled();
+    event ApproverRevoked(address indexed approver);
     event LedgerSet(address ledger);
     event CharityApproved(address indexed charity, string name, string category);
     event CharityRemoved(address indexed charity, string reason);
@@ -47,11 +50,16 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     /// DAO control (can be DAO contract or multisig)
     address public dao;
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
+    uint64 public constant DAO_CHANGE_DELAY = 48 hours;
     IProofLedger public ledger;
     ISeer_Sanct public seer;
     
     // ProofScore rewards for charitable actions
     uint16 public constant DONATION_REWARD = 10;  // +1.0 per donation
+    uint256 public constant MIN_REWARDABLE_DEPOSIT = 1_000_000; // Ignore dust donations (1 unit at 6 decimals)
+    mapping(address => uint256) public lastDonationRewardDay;
 
     /// Charity registry
     struct CharityInfo {
@@ -121,11 +129,21 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert SANCT_Zero();
-        address oldDAO = dao;
-        dao = _dao;
+        pendingDAO = _dao;
+        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit DAORotationProposed(_dao, pendingDAOAt);
+    }
 
-        if (oldDAO != _dao) {
-            // Revoke stale approver privilege from prior DAO
+    /// @notice Apply a previously proposed DAO rotation after the 48-hour timelock.
+    function applyDAO() external onlyDAO nonReentrant {
+        require(pendingDAOAt != 0 && block.timestamp >= pendingDAOAt, "SANCT: timelock");
+        address oldDAO = dao;
+        address newDAO = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+
+        // Revoke stale approver privilege from prior DAO
+        if (oldDAO != newDAO) {
             if (isApprover[oldDAO]) {
                 isApprover[oldDAO] = false;
 
@@ -138,18 +156,28 @@ contract SanctumVault is Ownable, ReentrancyGuard {
                 }
                 approvers.pop();
                 delete approverIndex[oldDAO];
+                emit ApproverRevoked(oldDAO);
             }
 
             // Ensure the new DAO has approver permissions
-            if (!isApprover[_dao]) {
-                isApprover[_dao] = true;
-                approverIndex[_dao] = approvers.length;
-                approvers.push(_dao);
+            if (!isApprover[newDAO]) {
+                isApprover[newDAO] = true;
+                approverIndex[newDAO] = approvers.length;
+                approvers.push(newDAO);
             }
         }
 
-        emit DAOSet(_dao);
+        dao = newDAO;
+        emit DAOSet(newDAO);
         _log("sanctum_dao_set");
+    }
+
+    /// @notice Cancel a pending DAO rotation.
+    function cancelDAO() external onlyDAO {
+        require(pendingDAOAt != 0, "SANCT: no pending");
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAORotationCancelled();
     }
 
     function setLedger(address _ledger) external onlyDAO {
@@ -260,7 +288,9 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         
         // Reward donor with ProofScore boost
-        if (address(seer) != address(0)) {
+        uint256 today = block.timestamp / 1 days;
+        if (address(seer) != address(0) && amount >= MIN_REWARDABLE_DEPOSIT && lastDonationRewardDay[msg.sender] < today) {
+            lastDonationRewardDay[msg.sender] = today;
             try seer.reward(msg.sender, DONATION_REWARD, "charity_donation") {} catch {}
         }
         
@@ -439,12 +469,14 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Internal helpers
 
+    // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
             try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
         }
     }
 
+    // slither-disable-next-line reentrancy-events
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
             try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); }

@@ -21,6 +21,10 @@ interface IVFIDETokenBurnRouterView {
     function burnRouter() external view returns (address);
 }
 
+interface ICardBoundVaultPermitView {
+    function dailyTransferLimit() external view returns (uint256);
+}
+
 error MERCH_Zero();
 error MERCH_NotDAO();
 error MERCH_NotMerchant();
@@ -64,8 +68,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     uint256 public constant MIN_SWAP_OUTPUT_BPS = 9000;
     uint256 public constant MAX_SWAP_OUTPUT_BPS = 10000;
-    uint256 public constant MAX_SWAP_PATH_LENGTH = 5;
+    uint256 public constant MAX_SWAP_PATH_LENGTH = 3;
     uint256 public constant REFUND_COMPLETION_WINDOW = 30 days;
+    uint64 public constant MAX_PULL_PERMIT_DURATION = 90 days;
     
     /// Events
     event ModulesSet(address vaultHub, address seer, address ledger);
@@ -100,6 +105,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     event AutoConvertSet(address indexed merchant, bool enabled);
     event PayoutAddressSet(address indexed merchant, address payoutAddress);
     event AutoConvertFallback(address indexed merchant, address indexed tokenIn, uint256 amountIn, string reason);
+    event DAORotationProposed(address indexed nextDAO, uint64 effectiveAt);
+    event DAORotationCancelled();
+    event DAOSet(address indexed oldDAO, address indexed newDAO);
 
     /// External modules
     IVaultHub public vaultHub;
@@ -108,6 +116,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// DAO control
     address public dao;
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
+    uint64 public constant DAO_CHANGE_DELAY = 48 hours;
     address public fraudRegistry;
 
     /// Protocol fee (in basis points, e.g., 50 = 0.5%)
@@ -138,8 +149,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     mapping(address => mapping(address => bool)) public merchantPullApproved; // customer => merchant => approved
     mapping(address => mapping(address => uint256)) public merchantPullRemaining; // customer => merchant => remaining pull amount
     mapping(address => mapping(address => uint64)) public merchantPullExpiry; // customer => merchant => expiry timestamp (0 = no expiry)
+    mapping(address => mapping(address => address)) public merchantPullToken; // customer => merchant => token (0 = any accepted token)
     event MerchantPullApprovalSet(address indexed customer, address indexed merchant, bool approved);
     event MerchantPullPermitSet(address indexed customer, address indexed merchant, uint256 maxAmount, uint64 expiresAt);
+    event MerchantPullPermitTokenSet(address indexed customer, address indexed merchant, address indexed token, uint256 maxAmount, uint64 expiresAt);
 
     ISwapRouter public swapRouter;
     address public stablecoin; // Target stablecoin (e.g. USDC)
@@ -200,12 +213,35 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log("merchant_modules_set");
     }
 
-    /// @notice F-5 FIX: Transfer DAO control to a new address (for DAO migration)
-    /// @dev Required because MerchantPortal is deployed before DAO contract.
+    /// @notice Propose DAO control transfer to a new address.
+    /// @dev Enforced with a timelock to reduce instant key-compromise blast radius.
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert MERCH_Zero();
-        dao = _dao;
+        pendingDAO = _dao;
+        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit DAORotationProposed(_dao, pendingDAOAt);
+        _log("merchant_dao_set_pending");
+    }
+
+    /// @notice Apply a pending DAO transfer after timelock.
+    function applyDAO() external onlyDAO {
+        if (pendingDAOAt == 0) revert MERCH_NotConfigured();
+        if (block.timestamp < pendingDAOAt) revert MERCH_NotConfigured();
+        address oldDAO = dao;
+        dao = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOSet(oldDAO, dao);
         _log("merchant_dao_set");
+    }
+
+    /// @notice Cancel a pending DAO transfer.
+    function cancelDAO() external onlyDAO {
+        if (pendingDAOAt == 0) revert MERCH_NotConfigured();
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAORotationCancelled();
+        _log("merchant_dao_cancelled");
     }
 
     function setProtocolFee(uint256 _feeBps) external onlyDAO {
@@ -229,7 +265,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log("min_merchant_score_set");
     }
 
-    function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
+    function setFraudRegistry(address _fr) external onlyDAO {
+        if (_fr == address(0)) revert MERCH_Zero();
+        fraudRegistry = _fr;
+    }
     function setAcceptedToken(address token, bool accepted) external onlyDAO {
         if (token == address(0)) revert MERCH_Zero();
         acceptedTokens[token] = accepted;
@@ -282,6 +321,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (score < minScore) revert MERCH_LowTrust();
     }
 
+    function _checkFraudStatus(address subject) internal view {
+        if (fraudRegistry == address(0)) return;
+
+        (bool ok, bytes memory data) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, subject));
+        if (ok && data.length >= 32 && abi.decode(data, (bool))) revert MERCH_Forbidden();
+    }
+
     // ─────────────────────────── Merchant Management
 
     /**
@@ -291,7 +337,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         string calldata businessName,
         string calldata category
     ) external {
-        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert MERCH_Forbidden(); }
+        _checkFraudStatus(msg.sender);
         if (merchants[msg.sender].registered) revert MERCH_AlreadyRegistered();
         
         // Check ProofScore requirement
@@ -534,21 +580,25 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (!merchantPullApproved[customer][msg.sender]) revert MERCH_NotApproved();
         uint64 permitExpiry = merchantPullExpiry[customer][msg.sender];
         if (!(permitExpiry == 0 || block.timestamp <= permitExpiry)) revert MERCH_ApprovalExpired();
+        address scopedToken = merchantPullToken[customer][msg.sender];
+        if (scopedToken != address(0) && scopedToken != token) revert MERCH_NotApproved();
         uint256 remainingPull = merchantPullRemaining[customer][msg.sender];
         if (remainingPull < amount) revert MERCH_LimitExceeded();
         unchecked { merchantPullRemaining[customer][msg.sender] = remainingPull - amount; }
         
         // SecurityHub lock check removed — non-custodial, no third-party locks
         
-        // Get merchant's vault (auto-create if needed)
-        address merchantVault = vaultHub.ensureVault(msg.sender);
-        
         // Calculate fee
         uint256 fee = (amount * protocolFeeBps) / 10000;
         netAmount = amount - fee;
         
-        merchant.totalVolume += amount;
-        merchant.txCount += 1;
+        _recordMerchantStats(msg.sender, amount);
+
+        // Get merchant's vault (auto-create if needed)
+        // H-32 FIX: Do not auto-create a vault; require the merchant to have pre-registered one.
+        // This prevents unexpected vault creation as a side-effect of a payment.
+        address merchantVault = vaultHub.vaultOf(msg.sender);
+        if (merchantVault == address(0)) revert MERCH_NotRegistered();
         
         // Transfer fee first to fee sink (if fee > 0)
         if (fee > 0 && feeSink != address(0)) {
@@ -587,6 +637,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         merchantPullApproved[msg.sender][merchant] = false;
         merchantPullRemaining[msg.sender][merchant] = 0;
         merchantPullExpiry[msg.sender][merchant] = 0;
+        merchantPullToken[msg.sender][merchant] = address(0);
         emit MerchantPullApprovalSet(msg.sender, merchant, false);
     }
 
@@ -595,14 +646,59 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @param maxAmount Maximum cumulative amount merchant can pull via processPayment.
     /// @param expiresAt Unix timestamp when permit expires (0 = no expiry).
     function setMerchantPullPermit(address merchant, uint256 maxAmount, uint64 expiresAt) external {
+        _setMerchantPullPermit(merchant, address(0), maxAmount, expiresAt, false);
+    }
+
+    /// @notice Set a token-scoped permit and enforce that the customer's vault already approved this portal.
+    /// @dev Helps wallets/UIs steer users to a single explicit spender+token target and avoid blind double approvals.
+    function setMerchantPullPermitForToken(address merchant, address token, uint256 maxAmount, uint64 expiresAt) external {
+        _setMerchantPullPermit(merchant, token, maxAmount, expiresAt, true);
+    }
+
+    function _setMerchantPullPermit(
+        address merchant,
+        address token,
+        uint256 maxAmount,
+        uint64 expiresAt,
+        bool requireVaultAllowance
+    ) internal {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
         if (maxAmount == 0) revert MERCH_InvalidConfig();
-        if (!(expiresAt == 0 || expiresAt > block.timestamp)) revert MERCH_InvalidConfig();
+
+        if (token != address(0) && !acceptedTokens[token]) revert MERCH_TokenNotAccepted();
+
+        address customerVault = vaultHub.vaultOf(msg.sender);
+        if (customerVault == address(0)) revert MERCH_NoVault();
+
+        if (requireVaultAllowance) {
+            uint256 allowance = IERC20(token).allowance(customerVault, address(this));
+            if (allowance < maxAmount) revert MERCH_NotApproved();
+        }
+
+        uint256 vaultDailyLimit;
+        try ICardBoundVaultPermitView(customerVault).dailyTransferLimit() returns (uint256 limit) {
+            vaultDailyLimit = limit;
+        } catch {
+            revert MERCH_NotConfigured();
+        }
+
+        if (vaultDailyLimit == 0 || maxAmount > vaultDailyLimit) {
+            revert MERCH_CapExceeded();
+        }
+
+        if (expiresAt != 0) {
+            if (expiresAt <= block.timestamp || expiresAt > block.timestamp + MAX_PULL_PERMIT_DURATION) {
+                revert MERCH_InvalidConfig();
+            }
+        }
+
         merchantPullApproved[msg.sender][merchant] = true;
         merchantPullRemaining[msg.sender][merchant] = maxAmount;
         merchantPullExpiry[msg.sender][merchant] = expiresAt;
+        merchantPullToken[msg.sender][merchant] = token;
         emit MerchantPullApprovalSet(msg.sender, merchant, true);
         emit MerchantPullPermitSet(msg.sender, merchant, maxAmount, expiresAt);
+        emit MerchantPullPermitTokenSet(msg.sender, merchant, token, maxAmount, expiresAt);
     }
 
     /**
@@ -632,6 +728,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     ) internal returns (uint256 netAmount) {
         if (token == address(0) || amount == 0) revert MERCH_InvalidPayment();
         if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
+        _checkFraudStatus(customer);
+        _checkFraudStatus(merchant);
         
         // Capture customer score at payment start for accurate logging
         uint16 customerScore = address(seer) != address(0) ? seer.getScore(customer) : 500;
@@ -639,6 +737,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Get vaults
         address customerVault = vaultHub.vaultOf(customer);
         if (customerVault == address(0)) revert MERCH_NoVault();
+
+        // Update merchant stats before any external calls so a reentrant recipient
+        // cannot observe partially-applied accounting.
+        _recordMerchantStats(merchant, amount);
         
         // SecurityHub lock check removed — non-custodial, no third-party locks
         
@@ -651,11 +753,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Calculate fee
         uint256 fee = (amount * protocolFeeBps) / 10000;
         netAmount = amount - fee;
-        
-        // C-3 FIX: Update merchant stats BEFORE external calls (CEI pattern)
-        MerchantInfo storage m = merchants[merchant];
-        m.totalVolume += amount;
-        m.txCount += 1;
         
         // Transfer fee FIRST (before net amount)
         if (fee > 0 && feeSink != address(0)) {
@@ -804,8 +901,12 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     ) internal returns (uint256 netAmount) {
         if (token == address(0) || amount == 0) revert MERCH_InvalidPayment();
         if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
+        _checkFraudStatus(customer);
+        _checkFraudStatus(merchant);
         
         uint16 customerScore = address(seer) != address(0) ? seer.getScore(customer) : 500;
+
+        _recordMerchantStats(merchant, amount);
         
         // Get customer vault
         address customerVault = vaultHub.vaultOf(customer);
@@ -824,11 +925,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             // Calculate fee
             uint256 fee = (amount * protocolFeeBps) / 10000;
             netAmount = amount - fee;
-            
-            // Update stats before external calls
-            MerchantInfo storage m = merchants[merchant];
-            m.totalVolume += amount;
-            m.txCount += 1;
             
             // Fee transfer FIRST
             if (fee > 0 && feeSink != address(0)) {
@@ -869,63 +965,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         uint256 netAmount,
         address merchant
     ) internal {
-        if (autoConvert[merchant] && token != stablecoin && address(swapRouter) != address(0) && stablecoin != address(0)) {
-            // 1. Pull to Portal
-            IERC20(token).safeTransferFrom(customerVault, address(this), netAmount);
-            
-            // 2. Approve Router
-            if (!IERC20(token).approve(address(swapRouter), netAmount)) revert MERCH_ApproveFailed();
-            
-            // 3. Get swap path (multi-hop if configured, otherwise direct)
-            address[] memory path;
-            if (tokenSwapPaths[token].length >= 2) {
-                path = tokenSwapPaths[token];
-            } else {
-                path = new address[](2);
-                path[0] = token;
-                path[1] = stablecoin;
-            }
-            
-            // 4. Calculate minimum output from router quote (token-price aware)
-            uint256 minOut = 0;
-            bool quoteAvailable = false;
-            try swapRouter.getAmountsOut(netAmount, path) returns (uint256[] memory quoteOut) {
-                if (quoteOut.length > 0) {
-                    uint256 expectedOut = quoteOut[quoteOut.length - 1];
-                    minOut = (expectedOut * minSwapOutputBps) / 10000;
-                    quoteAvailable = minOut > 0;
-                }
-            } catch {}
-
-            // 5. Swap with slippage protection, or fallback if quote unavailable
-            if (quoteAvailable) {
-                try swapRouter.swapExactTokensForTokens(
-                    netAmount,
-                    minOut,
-                    path,
-                    recipient,
-                    block.timestamp + 300
-                ) returns (uint256[] memory amountsOut) {
-                    if (amountsOut.length > 0) {} // converted
-                    // Revoke approval after successful swap
-                    if (!IERC20(token).approve(address(swapRouter), 0)) revert MERCH_RevokeFailed();
-                } catch {
-                    // Revoke approval after failed swap to prevent lingering approvals
-                    if (!IERC20(token).approve(address(swapRouter), 0)) revert MERCH_RevokeFailed();
-                    // Fallback: Send original token if swap fails
-                    emit AutoConvertFallback(merchant, token, netAmount, "swap_failed");
-                    IERC20(token).safeTransfer(recipient, netAmount);
-                }
-            } else {
-                // No safe quote available; fallback to direct token settlement.
-                if (!IERC20(token).approve(address(swapRouter), 0)) revert MERCH_RevokeFailed();
-                emit AutoConvertFallback(merchant, token, netAmount, "quote_unavailable");
-                IERC20(token).safeTransfer(recipient, netAmount);
-            }
-        } else {
-            // Normal Transfer
-            IERC20(token).safeTransferFrom(customerVault, recipient, netAmount);
+        if (autoConvert[merchant] && token != stablecoin) {
+            emit AutoConvertFallback(merchant, token, netAmount, "auto_convert_disabled_pending_safe_pricing");
         }
+
+        IERC20(token).safeTransferFrom(customerVault, recipient, netAmount);
     }
 
     /**
@@ -1116,11 +1160,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         try seer.reward(customer, 1, "customer_payment") {} catch {}
     }
 
+    function _recordMerchantStats(address merchant, uint256 amount) internal {
+        MerchantInfo storage info = merchants[merchant];
+        info.totalVolume += amount;
+        info.txCount += 1;
+    }
+
     function _estimateNetworkFee(address customer, address merchant, address token, uint256 amount) internal view returns (uint256) {
         // Non-VFIDE tokens do not pass through VFIDE burn router fee mechanics.
         if (!acceptedTokens[token]) return 0;
 
-        address router;
+        address router = address(0);
         try IVFIDETokenBurnRouterView(token).burnRouter() returns (address r) {
             router = r;
         } catch {
@@ -1145,12 +1195,14 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Internal Helpers
 
+    // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
             try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
         }
     }
 
+    // slither-disable-next-line reentrancy-events
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
             try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); }

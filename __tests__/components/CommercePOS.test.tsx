@@ -19,6 +19,10 @@ jest.mock('wagmi', () => ({
     address: '0x1234567890123456789012345678901234567890',
     isConnected: true,
   }),
+  useSignMessage: () => ({
+    signMessageAsync: jest.fn(),
+    isPending: false,
+  }),
   useWatchContractEvent: () => undefined,
 }));
 

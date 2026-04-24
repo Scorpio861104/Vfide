@@ -32,6 +32,10 @@ interface ISeer_FR {
     function punish(address subject, uint16 delta, string calldata reason) external;
 }
 
+interface IVaultHub_FR {
+    function isVault(address account) external view returns (bool);
+}
+
 error FR_Zero();
 error FR_AlreadyComplained();
 error FR_InsufficientScore();
@@ -42,12 +46,15 @@ error FR_SelfComplaint();
 error FR_EscrowNotReady();
 error FR_EscrowAlreadyProcessed();
 error FR_EscrowInvalidIndex();
+error FR_ReviewActive();
+error FR_InvalidTarget();
 
 contract FraudRegistry is ReentrancyGuard {
 
     // ── Configuration ────────────────────────────────────────
     uint8 public constant COMPLAINTS_TO_FLAG = 3;
     uint256 public constant ESCROW_DURATION = 30 days;
+    uint256 public constant ESCROW_RESCUE_DELAY = 90 days;
     /// @notice H-4 FIX: Timelock for permanent ban — gives subject time to appeal before irreversible action
     uint256 public constant PERMANENT_BAN_DELAY = 7 days;
     uint16 public constant MIN_REPORTER_SCORE = 5000;
@@ -56,6 +63,15 @@ contract FraudRegistry is ReentrancyGuard {
     address public dao;
     ISeer_FR public seer;
     IERC20 public vfideToken; // Token contract reference for escrow releases
+    IVaultHub_FR public vaultHub;
+
+    // H-4 FIX: Timelocked dao/vaultHub rotation
+    address public pendingDAO_FR;
+    uint64 public pendingDAOAt_FR;
+    address public pendingVaultHub_FR;
+    uint64 public pendingVaultHubAt_FR;
+    uint64 public constant DAO_CHANGE_DELAY_FR = 48 hours;
+    uint64 public constant VAULT_HUB_CHANGE_DELAY_FR = 48 hours;
 
     // ── Complaint tracking ───────────────────────────────────
     struct Complaint {
@@ -77,6 +93,7 @@ contract FraudRegistry is ReentrancyGuard {
     mapping(address => bool) public isPermanentlyBanned; // DAO escalation
     mapping(address => uint64) public flaggedAt;
     mapping(address => uint64) public pendingReviewAt;  // When review was triggered
+    mapping(address => uint256) public dismissedComplaintPenaltyCursor; // Number of dismissed complaints already penalized
     // H-4 FIX: Pending permanent ban state (7-day timelock)
     mapping(address => uint64) public pendingPermanentBanAt; // 0 = no pending ban
 
@@ -106,8 +123,15 @@ contract FraudRegistry is ReentrancyGuard {
     event PermanentBanCancelled(address indexed target);
     event TransferEscrowed(uint256 indexed escrowIndex, address indexed from, address indexed to, uint256 amount, uint64 releaseAt);
     event EscrowReleased(uint256 indexed escrowIndex, address indexed to, uint256 amount);
+    event EscrowRescued(uint256 indexed escrowIndex, address indexed recipient, uint256 amount);
     event EscrowCancelledOnClear(uint256 indexed escrowIndex, address indexed from, uint256 amount);
     event DAOSet(address indexed oldDAO, address indexed newDAO);
+    event DAOProposed(address indexed newDAO, uint64 effectiveAt);
+    event DAOChangeCancelled();
+    event VaultHubSet(address indexed oldVaultHub, address indexed newVaultHub);
+    event VaultHubProposed(address indexed newVaultHub, uint64 effectiveAt);
+    event VaultHubChangeCancelled();
+    event DismissedComplaintPenaltyProcessed(address indexed target, uint256 processedCount, uint256 nextCursor);
 
     modifier onlyDAO() {
         if (msg.sender != dao) revert FR_NotDAO();
@@ -132,7 +156,9 @@ contract FraudRegistry is ReentrancyGuard {
     function fileComplaint(address target, string calldata reason) external nonReentrant {
         if (target == address(0)) revert FR_Zero();
         if (target == msg.sender) revert FR_SelfComplaint();
+        if (address(vaultHub) != address(0) && vaultHub.isVault(target)) revert FR_InvalidTarget();
         if (hasComplained[target][msg.sender]) revert FR_AlreadyComplained();
+        if (isPendingReview[target] || isFlagged[target] || isPermanentlyBanned[target]) revert FR_ReviewActive();
 
         // Reporter must have minimum trust
         uint16 reporterScore = seer.getScore(msg.sender);
@@ -219,6 +245,21 @@ contract FraudRegistry is ReentrancyGuard {
         emit EscrowReleased(escrowIndex, e.to, e.amount);
     }
 
+    function rescueStuckEscrow(uint256 escrowIndex, address recipient) external onlyDAO nonReentrant {
+        if (recipient == address(0)) revert FR_Zero();
+        if (escrowIndex >= escrowedTransfers.length) revert FR_EscrowInvalidIndex();
+
+        EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
+        if (e.released || e.cancelled) revert FR_EscrowAlreadyProcessed();
+        require(block.timestamp >= e.releaseAt + ESCROW_RESCUE_DELAY, "FR: rescue timelock active");
+
+        e.cancelled = true;
+        totalActiveEscrowed -= e.amount;
+        SafeERC20.safeTransfer(vfideToken, recipient, e.amount);
+
+        emit EscrowRescued(escrowIndex, recipient, e.amount);
+    }
+
     // ═══════════════════════════════════════════════════════════
     //  SERVICE BAN CHECK — Called by all protocol services
     // ═══════════════════════════════════════════════════════════
@@ -264,8 +305,8 @@ contract FraudRegistry is ReentrancyGuard {
     /// @param target Address whose complaints are dismissed
     /// @dev Clears pending review. Complaint history stays on-chain.
     ///      No consequences were ever applied (review was pending, not active).
-    ///      L-4 FIX: Applies COMPLAINT_REPORTER_PENALTY to all reporters whose complaints
-    ///      are dismissed, discouraging coordinated false reports.
+    ///      Reporter penalties are processed separately in bounded chunks so the DAO action
+    ///      itself cannot gas out on large complaint sets.
     function dismissComplaints(address target) external onlyDAO nonReentrant {
         require(isPendingReview[target], "FR: not pending review");
 
@@ -274,13 +315,34 @@ contract FraudRegistry is ReentrancyGuard {
         // Complaint count and history stay — on-chain record is permanent
         // But no consequences are applied
 
-        // L-4 FIX: Penalize all reporters for filing dismissed (false/unfounded) complaints
-        Complaint[] storage filed = complaints[target];
-        for (uint256 i = 0; i < filed.length; i++) {
-            try seer.punish(filed[i].reporter, COMPLAINT_REPORTER_PENALTY, "false_complaint_dismissed") {} catch {}
+        emit ComplaintsDismissedByDAO(target, msg.sender);
+    }
+
+    /// @notice Process reporter penalties for previously dismissed complaints in bounded chunks.
+    /// @param target Address whose dismissed complaints are being processed.
+    /// @param maxCount Maximum number of complaints to process in this call. Zero means 20.
+    function processDismissedComplaintPenalties(address target, uint256 maxCount) external nonReentrant returns (uint256 processed) {
+        uint256 end = complaints[target].length;
+        uint256 cursor = dismissedComplaintPenaltyCursor[target];
+        if (cursor >= end) {
+            return 0;
         }
 
-        emit ComplaintsDismissedByDAO(target, msg.sender);
+        uint256 limit = maxCount == 0 ? 20 : maxCount;
+        uint256 stop = cursor + limit;
+        if (stop > end) {
+            stop = end;
+        }
+
+        Complaint[] storage filed = complaints[target];
+        dismissedComplaintPenaltyCursor[target] = stop;
+
+        for (uint256 i = cursor; i < stop; i++) {
+            try seer.punish(filed[i].reporter, COMPLAINT_REPORTER_PENALTY, "false_complaint_dismissed") {} catch {}
+            processed++;
+        }
+
+        emit DismissedComplaintPenaltyProcessed(target, processed, stop);
     }
 
     /// @notice DAO clears a previously confirmed fraud flag (rehabilitation)
@@ -331,11 +393,54 @@ contract FraudRegistry is ReentrancyGuard {
         emit PermanentBanCancelled(target);
     }
 
-    /// @notice Update DAO address
+    /// @notice Propose a new DAO address (takes effect after 48h)
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert FR_Zero();
-        emit DAOSet(dao, _dao);
-        dao = _dao;
+        require(pendingDAO_FR == address(0), "FR: pending dao");
+        pendingDAO_FR = _dao;
+        pendingDAOAt_FR = uint64(block.timestamp) + DAO_CHANGE_DELAY_FR;
+        emit DAOProposed(_dao, pendingDAOAt_FR);
+    }
+
+    function applyDAO_FR() external onlyDAO {
+        require(pendingDAO_FR != address(0) && block.timestamp >= pendingDAOAt_FR, "FR: timelock");
+        address old = dao;
+        dao = pendingDAO_FR;
+        pendingDAO_FR = address(0);
+        pendingDAOAt_FR = 0;
+        emit DAOSet(old, dao);
+    }
+
+    function cancelDAO_FR() external onlyDAO {
+        require(pendingDAO_FR != address(0), "FR: no pending");
+        pendingDAO_FR = address(0);
+        pendingDAOAt_FR = 0;
+        emit DAOChangeCancelled();
+    }
+
+    /// @notice Propose a new VaultHub address (takes effect after 48h)
+    function setVaultHub(address _vaultHub) external onlyDAO {
+        if (_vaultHub == address(0)) revert FR_Zero();
+        require(pendingVaultHub_FR == address(0), "FR: pending vaultHub");
+        pendingVaultHub_FR = _vaultHub;
+        pendingVaultHubAt_FR = uint64(block.timestamp) + VAULT_HUB_CHANGE_DELAY_FR;
+        emit VaultHubProposed(_vaultHub, pendingVaultHubAt_FR);
+    }
+
+    function applyVaultHub_FR() external onlyDAO {
+        require(pendingVaultHub_FR != address(0) && block.timestamp >= pendingVaultHubAt_FR, "FR: timelock");
+        address old = address(vaultHub);
+        vaultHub = IVaultHub_FR(pendingVaultHub_FR);
+        pendingVaultHub_FR = address(0);
+        pendingVaultHubAt_FR = 0;
+        emit VaultHubSet(old, address(vaultHub));
+    }
+
+    function cancelVaultHub_FR() external onlyDAO {
+        require(pendingVaultHub_FR != address(0), "FR: no pending");
+        pendingVaultHub_FR = address(0);
+        pendingVaultHubAt_FR = 0;
+        emit VaultHubChangeCancelled();
     }
 
     // ═══════════════════════════════════════════════════════════

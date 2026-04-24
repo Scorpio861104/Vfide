@@ -17,7 +17,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ShoppingCart, MessageCircle, ChevronUp, ChevronDown, MapPin, Star, X, ExternalLink } from 'lucide-react';
+import { Shield, ShoppingCart, MessageCircle, ChevronUp, ChevronDown, MapPin } from 'lucide-react';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 interface StoryProduct {
   id: string;
@@ -70,7 +71,10 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
   const handleWhatsApp = () => {
     const productList = story.products.map(p => `${p.name} — ${p.currency}${p.price}`).join('\n');
     const msg = `${story.merchant.name}'s market today:\n\n${productList}\n\n${story.caption}\n\nBuy on VFIDE!`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    safeWindowOpen(`https://wa.me/?text=${encodeURIComponent(msg)}`, {
+      allowRelative: false,
+      allowedHosts: ['wa.me'],
+    });
     onWhatsApp?.(story);
   };
 

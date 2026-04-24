@@ -52,7 +52,7 @@ describeLive("Authentication (SIWE)", () => {
   it("should reject revoked tokens", async () => {
     // After logout, the token hash should be in the revocation list
     const res = await request(BASE_URL)
-      .get("/api/users/profile")
+      .get("/api/users")
       .set("Cookie", "auth=revoked-token-hash");
     expect(res.status).toBe(401);
   });
@@ -75,7 +75,7 @@ describeLive("Authentication (SIWE)", () => {
 describeLive("CSRF (Double-Submit Cookie)", () => {
   it("should reject POST without CSRF header", async () => {
     const res = await request(BASE_URL)
-      .post("/api/users/profile")
+      .post("/api/users")
       .set("Cookie", `auth=${authToken}`)
       .send({ name: "test" });
     expect(res.status).toBe(403);
@@ -83,7 +83,7 @@ describeLive("CSRF (Double-Submit Cookie)", () => {
 
   it("should reject mismatched CSRF token", async () => {
     const res = await request(BASE_URL)
-      .post("/api/users/profile")
+      .post("/api/users")
       .set("Cookie", `auth=${authToken}; csrf=tokenA`)
       .set("X-CSRF-Token", "tokenB")
       .send({ name: "test" });
@@ -133,9 +133,9 @@ describeLive("[M-03] Input Validation", () => {
   const routesNeedingValidation = [
     { method: "post", path: "/api/crypto/balance" },
     { method: "post", path: "/api/merchants/register" },
-    { method: "put", path: "/api/users/profile" },
-    { method: "post", path: "/api/governance/proposals" },
-    { method: "post", path: "/api/staking/stake" },
+    { method: "post", path: "/api/users" },
+    { method: "post", path: "/api/proposals" },
+    { method: "post", path: "/api/activities" },
     { method: "post", path: "/api/bridge/initiate" },
   ];
 
@@ -158,7 +158,7 @@ describeLive("[M-03] Input Validation", () => {
 
   it("should reject prototype pollution", async () => {
     const res = await request(BASE_URL)
-      .post("/api/users/profile")
+      .post("/api/users")
       .set("Cookie", `auth=${authToken}`)
       .send(JSON.parse('{"__proto__":{"admin":true}}'));
     expect(res.status).not.toBe(200);
@@ -267,10 +267,10 @@ describeLive("Authorization Matrix", () => {
   const publicRoutes = ["/api/auth/challenge", "/api/health"];
 
   const authenticatedRoutes = [
-    "/api/users/profile",
+    "/api/users",
     "/api/crypto/balance",
-    "/api/staking/positions",
-    "/api/governance/proposals",
+    "/api/activities",
+    "/api/proposals",
   ];
 
   const adminRoutes = ["/api/admin/users", "/api/admin/analytics"];

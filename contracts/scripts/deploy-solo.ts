@@ -179,7 +179,7 @@ async function deployContracts(config: SoloConfig): Promise<{
   // Pre-computed token address satisfies the non-zero check; vfideToken is
   // mutable (setVFIDEToken() exists) so this will auto-resolve once VFIDEToken
   // is deployed at the same address.
-  constructorArgs.VaultHub = [precomputedToken, securityHubAddr, ledgerAddr, config.owner];
+  constructorArgs.VaultHub = [precomputedToken, ledgerAddr, config.owner];
   const Hub = await ethers.getContractFactory('VaultHub');
   const vaultHub: Contract = await Hub.deploy(...constructorArgs.VaultHub);
   await vaultHub.waitForDeployment();
@@ -195,7 +195,6 @@ async function deployContracts(config: SoloConfig): Promise<{
     precomputedToken,       // VFIDE (immutable)
     config.beneficiary,     // BENEFICIARY
     vaultHubAddr,           // VAULT_HUB
-    securityHubAddr,        // SECURITY_HUB (optional but wired now)
     ledgerAddr,             // LEDGER (optional but wired now)
     DEV_RESERVE_ALLOCATION, // ALLOCATION — must equal EXPECTED_ALLOCATION (50M)
     config.owner,           // DAO bootstrap authority (update via governance later)

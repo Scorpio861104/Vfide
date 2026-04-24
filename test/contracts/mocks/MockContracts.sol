@@ -72,6 +72,51 @@ contract MockNonStandardERC20 {
     }
 }
 
+/// @title MockZeroFirstApproveERC20 - Requires approve(0) before any non-zero allowance update
+/// @dev Includes a test-only allowance seeding helper to emulate stale non-zero allowance state.
+contract MockZeroFirstApproveERC20 {
+    string public name;
+    string public symbol;
+    uint8 public decimals = 18;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    constructor(string memory _name, string memory _symbol, uint256 initialSupply) {
+        name = _name;
+        symbol = _symbol;
+        balanceOf[msg.sender] = initialSupply;
+    }
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "Insufficient");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(allowance[from][msg.sender] >= amount, "Allowance");
+        require(balanceOf[from] >= amount, "Insufficient");
+        allowance[from][msg.sender] -= amount;
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        uint256 current = allowance[msg.sender][spender];
+        if (current != 0 && amount != 0) {
+            return false;
+        }
+        allowance[msg.sender][spender] = amount;
+        return true;
+    }
+
+    function seedAllowance(address owner, address spender, uint256 amount) external {
+        allowance[owner][spender] = amount;
+    }
+}
+
 /// @title MockReentrantAttacker - Attempts reentrancy on VaultHub.ensureVault()
 contract MockReentrantAttacker {
     address public target;

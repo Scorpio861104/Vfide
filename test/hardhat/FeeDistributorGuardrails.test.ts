@@ -2,9 +2,16 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
 describe("FeeDistributor (audit guardrails)", () => {
-  async function deployDistributor() {
-    const { ethers } = (await network.connect()) as any;
+  async function distributorFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [admin, burn, sanctum, dao, merchants, headhunters, replacement] = await ethers.getSigners();
 
     const MockERC20 = await ethers.getContractFactory("test/contracts/mocks/MockContracts.sol:MockERC20");
@@ -29,6 +36,11 @@ describe("FeeDistributor (audit guardrails)", () => {
     return { ethers, distributor, token, fee, burn, sanctum, dao, merchants, headhunters, replacement, admin };
   }
 
+  async function deployDistributor() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(distributorFixture);
+  }
+
   it("burns the burn allocation instead of transferring it to the burn sink", async () => {
     const { distributor, token, fee, burn } = await deployDistributor();
 
@@ -51,7 +63,7 @@ describe("FeeDistributor (audit guardrails)", () => {
   });
 
   it("falls back to the burn sink when token burn reverts", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [admin, burn, sanctum, dao, merchants, headhunters] = await ethers.getSigners();
 
     const MockToken = await ethers.getContractFactory("test/contracts/mocks/MockContracts.sol:MockRevertingBurnERC20");

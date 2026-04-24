@@ -9,6 +9,7 @@ jest.mock('@/lib/security/webhookConsumerGuard', () => ({
 }));
 
 jest.mock('@/lib/security/requestContext', () => ({
+  getRequestIp: jest.fn(() => ({ ip: '127.0.0.1', source: 'fallback' })),
   getRequestCorrelationContext: jest.fn(() => ({
     ipSource: 'forwarded',
     ipHash: 'abc123',

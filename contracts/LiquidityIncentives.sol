@@ -107,11 +107,11 @@ contract LiquidityIncentives is ReentrancyGuard {
         });
         
         poolList.push(lpToken);
+
+        emit PoolAdded(lpToken, name);
         
         // Mark LP token as whale-exempt in VFIDE token
         try vfideToken.setWhaleLimitExempt(lpToken, true) {} catch {}
-
-        emit PoolAdded(lpToken, name);
     }
     
     /**

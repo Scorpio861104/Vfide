@@ -7,8 +7,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/middleware';
+import { withRateLimit } from '@/lib/auth/rateLimit';
 
-export const POST = withAuth(async (_request: NextRequest) => {
+export const POST = withAuth(async (request: NextRequest) => {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
   return NextResponse.json(
     {
       error:

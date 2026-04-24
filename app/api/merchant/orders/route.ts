@@ -11,7 +11,6 @@ import { randomBytes } from 'crypto';
 import { query, getClient } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -298,15 +297,8 @@ export async function POST(request: NextRequest) {
 
       await client.query('COMMIT');
 
-      // Dispatch webhook (outside transaction — fire-and-forget)
-      dispatchWebhook(merchant_address, 'payment.completed', {
-        order_number: orderNumber,
-        total,
-        token: token || 'VFIDE',
-        tx_hash: validTxHash,
-        customer_address: authAddress,
-        items_count: validatedItems.length,
-      });
+      // payment.completed must only be emitted from the verified confirmation flow.
+      // See app/api/merchant/payments/confirm/route.ts for on-chain event verification.
 
       return NextResponse.json({ order }, { status: 201 });
     } catch (txError) {

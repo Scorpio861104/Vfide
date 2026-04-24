@@ -64,13 +64,15 @@ contract RevenueSplitter is ReentrancyGuard {
             }
             
             if (amount > 0) {
-                distributed += amount;
+                // H-29 FIX: Compute amount for last payee BEFORE updating distributed.
+                // Only increment distributed after a successful transfer.
                 // M-2 FIX: Low-level call for non-standard ERC20s (USDT)
                 (bool callOk, bytes memory returnData) = token.call(
                     abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount)
                 );
                 bool success = callOk && (returnData.length == 0 || abi.decode(returnData, (bool)));
                 if (success) {
+                    distributed += amount;
                     payeesSucceeded++;
                     emit PayeeDistribution(payees[i].account, token, amount, true);
                 } else {
@@ -87,22 +89,65 @@ contract RevenueSplitter is ReentrancyGuard {
         return payees;
     }
 
-    /// @notice Allow owner to update payees (e.g., compromised address, org change)
+    // H-30 FIX: Two-step payee update with 48h timelock to prevent instant redirect on owner compromise.
+    struct PendingPayeesUpdate {
+        address[] accounts;
+        uint256[] shares;
+        uint256 validFrom;
+    }
+    PendingPayeesUpdate private _pendingPayeesUpdate;
+    bool public hasPendingPayeesUpdate;
+    uint256 public constant PAYEES_UPDATE_DELAY = 48 hours;
+
+    event PayeesUpdateProposed(uint256 validFrom);
+    event PayeesUpdateApplied();
+    event PayeesUpdateCancelled();
+
+    /// @notice Propose a new payee configuration; takes effect 48h later.
     function updatePayees(address[] calldata _accounts, uint256[] calldata _shares) external {
         require(msg.sender == owner, "RS: not owner");
         require(_accounts.length == _shares.length, "length mismatch");
         require(_accounts.length > 0, "RS: no payees");
-
-        // Clear existing
-        delete payees;
-        totalShares = 0;
-
+        uint256 totalBps = 0;
         for (uint256 i = 0; i < _accounts.length; i++) {
             require(_accounts[i] != address(0), "zero address");
             require(_shares[i] > 0, "zero share");
-            payees.push(Payee({account: _accounts[i], shareBps: _shares[i]}));
-            totalShares += _shares[i];
+            totalBps += _shares[i];
         }
-        require(totalShares == 10000, "must equal 100%");
+        require(totalBps == 10000, "must equal 100%");
+
+        _pendingPayeesUpdate = PendingPayeesUpdate({
+            accounts: _accounts,
+            shares: _shares,
+            validFrom: block.timestamp + PAYEES_UPDATE_DELAY
+        });
+        hasPendingPayeesUpdate = true;
+        emit PayeesUpdateProposed(block.timestamp + PAYEES_UPDATE_DELAY);
     }
+
+    /// @notice Apply the pending payee update after the 48h delay.
+    function applyPayeesUpdate() external {
+        require(msg.sender == owner, "RS: not owner");
+        require(hasPendingPayeesUpdate, "RS: nothing pending");
+        require(block.timestamp >= _pendingPayeesUpdate.validFrom, "RS: timelock pending");
+
+        delete payees;
+        totalShares = 0;
+        for (uint256 i = 0; i < _pendingPayeesUpdate.accounts.length; i++) {
+            payees.push(Payee({account: _pendingPayeesUpdate.accounts[i], shareBps: _pendingPayeesUpdate.shares[i]}));
+            totalShares += _pendingPayeesUpdate.shares[i];
+        }
+        hasPendingPayeesUpdate = false;
+        delete _pendingPayeesUpdate;
+        emit PayeesUpdateApplied();
+    }
+
+    /// @notice Cancel a pending payees update.
+    function cancelPayeesUpdate() external {
+        require(msg.sender == owner, "RS: not owner");
+        hasPendingPayeesUpdate = false;
+        delete _pendingPayeesUpdate;
+        emit PayeesUpdateCancelled();
+    }
+
 }

@@ -65,6 +65,7 @@ contract Seer is ReentrancyGuard {
     event DAOChangeProposed(address indexed newDAO, uint64 effectiveAt);
     event DAOChangeCancelled();
     event ScoreCacheTTLSet(uint64 oldTTL, uint64 newTTL);
+    event ScoreCacheRefreshed(address indexed subject, uint16 score, address indexed caller);
 
     address public dao;
     address public pendingDAO;
@@ -287,6 +288,8 @@ contract Seer is ReentrancyGuard {
 
     /// @notice Set ProofScoreBurnRouter for score snapshot synchronization
     function setBurnRouter(address _burnRouter) external onlyDAO nonReentrant {
+        // Intentional: zero address disables best-effort burn-router score synchronization.
+        // slither-disable-next-line missing-zero-check
         burnRouter = _burnRouter;
         emit BurnRouterSet(_burnRouter);
     }
@@ -387,6 +390,14 @@ contract Seer is ReentrancyGuard {
     
     uint256 public constant MAX_SCORE_SOURCES = 50; // I-11: Cap to prevent gas amplification in transfer path
 
+    function _activeScoreSourceWeight() internal view returns (uint256 totalWeight) {
+        for (uint256 i = 0; i < scoreSources.length; i++) {
+            if (scoreSources[i].active) {
+                totalWeight += scoreSources[i].weight;
+            }
+        }
+    }
+
     /**
      * @notice Add an on-chain score source
      * @param source Address of contract implementing IScoreSource
@@ -398,6 +409,7 @@ contract Seer is ReentrancyGuard {
         if (weight > 100) revert TRUST_Bounds();
         if (scoreSourceIndex[source] != 0) revert TRUST_AlreadySet();
         if (scoreSources.length >= MAX_SCORE_SOURCES) revert TRUST_Limit();
+        if (_activeScoreSourceWeight() + weight > 100) revert TRUST_Bounds();
         
         scoreSources.push(ScoreSourceInfo({
             source: source,
@@ -417,10 +429,17 @@ contract Seer is ReentrancyGuard {
     function removeScoreSource(address source) external onlyDAO nonReentrant {
         uint256 idx = scoreSourceIndex[source];
         if (idx == 0) revert TRUST_NotSet();
-        
-        scoreSources[idx - 1].active = false;
+
+        // M-6 FIX: swap-and-pop to prevent ghost slots and O(n) iteration on inactive entries
+        uint256 lastIdx = scoreSources.length; // 1-indexed last
+        if (idx != lastIdx) {
+            ScoreSourceInfo memory last = scoreSources[lastIdx - 1];
+            scoreSources[idx - 1] = last;
+            scoreSourceIndex[last.source] = idx;
+        }
+        scoreSources.pop();
         scoreSourceIndex[source] = 0;
-        
+
         emit ScoreSourceRemoved(source);
         _logSystem();
     }
@@ -505,11 +524,13 @@ contract Seer is ReentrancyGuard {
         return getScore(subject);
     }
 
-    /// @notice Refresh the score cache for a user (callable by anyone, pays gas)
+    /// @notice Refresh the score cache for a subject (H-7 FIX: only callable by the subject itself)
     function refreshScoreCache(address subject) external nonReentrant {
+        require(msg.sender == subject, "SEER: only subject can refresh own cache");
         uint16 score = getScore(subject);
         cachedScore[subject] = score;
         cachedScoreTimestamp[subject] = uint64(block.timestamp);
+        emit ScoreCacheRefreshed(subject, score, msg.sender);
     }
 
     /// Returns current ProofScore combining DAO-set and on-chain sources
@@ -550,7 +571,13 @@ contract Seer is ReentrancyGuard {
         }
 
         uint8 head = scoreHistoryHead[subject];
-        ScoreChange memory oldest;
+        uint16 currentScore = _score[subject];
+        ScoreChange memory oldest = ScoreChange({
+            oldScore: currentScore,
+            newScore: currentScore,
+            timestamp: 0,
+            reasonHash: bytes32(0)
+        });
 
         for (uint8 i = 0; i < count; i++) {
             uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - i) % MAX_HISTORY_PER_USER);
@@ -593,6 +620,9 @@ contract Seer is ReentrancyGuard {
         
         // Add automated score as a source
         uint16 automatedScore = calculateAutomatedScore(subject);
+        if (totalWeight > 100) {
+            totalWeight = 100;
+        }
         uint256 automatedWeight = 100 - totalWeight; // Remaining weight goes to automated
         if (automatedWeight > 0) {
             weightedScore += uint256(automatedScore) * automatedWeight;
@@ -806,13 +836,14 @@ contract Seer is ReentrancyGuard {
         // Safe: next is clamped between MIN_SCORE (10) and MAX_SCORE (10000)
         uint16 newScore = uint16(uint256(next));
         _score[subject] = newScore;
-        _syncBurnRouterScore(subject);
-        
+
         // Record in history (capped to prevent unbounded growth)
         _recordHistory(subject, cur, newScore, reason);
-        
+
         // Update last activity timestamp
         lastActivity[subject] = uint64(block.timestamp);
+
+        _syncBurnRouterScore(subject);
         
         emit ScoreSet(subject, cur, newScore, reason);
         emit ScoreReasonCode(subject, reasonCode, int16(newScore) - int16(cur), msg.sender);
@@ -968,6 +999,7 @@ contract Seer is ReentrancyGuard {
      * @param approved Whether the dispute is approved
      * @param adjustment Score adjustment (positive or negative)
      */
+    // slither-disable-next-line reentrancy-benign
     function resolveScoreDispute(address subject, bool approved, int16 adjustment) external onlyDAO nonReentrant {
         ScoreDispute storage dispute = scoreDisputes[subject];
         if (dispute.timestamp == 0) revert TRUST_NotSet();
@@ -1103,8 +1135,8 @@ contract Seer is ReentrancyGuard {
         if (decayAmount > 0) {
             uint16 oldScore = _score[subject];
             _score[subject] = adjustedScore;
-            _syncBurnRouterScore(subject);
             lastActivity[subject] = uint64(block.timestamp);  // Reset decay timer
+            _syncBurnRouterScore(subject);
             
             emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);
             _logEv(subject, decayAmount, "ina");
@@ -1115,6 +1147,7 @@ contract Seer is ReentrancyGuard {
      * @notice Batch apply decay to multiple users (keeper function)
      * @param subjects Array of users to apply decay to
      */
+    // slither-disable-next-line reentrancy-no-eth
     function applyDecayBatch(address[] calldata subjects) external onlyNotPaused nonReentrant {
         if (!decayEnabled) revert TRUST_Disabled();
         if (subjects.length == 0 || subjects.length > 50) revert TRUST_Bounds();

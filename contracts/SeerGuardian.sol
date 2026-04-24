@@ -238,6 +238,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @dev Anyone can call this to trigger automatic enforcement
      * @param subject The address to check
      */
+    // slither-disable-next-line reentrancy-no-eth
     function checkAndEnforce(address subject) external nonReentrant {
         if (daoOverridden[subject]) return; // DAO has overridden, skip auto-enforcement
         require(block.timestamp >= lastEnforceCheck[subject] + 1 hours, "SG: cooldown");
@@ -252,8 +253,14 @@ contract SeerGuardian is ReentrancyGuard {
         if (score < 1000 && currentRestriction < RestrictionType.FullFreeze) {
             _applyAutoRestriction(subject, RestrictionType.FullFreeze, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
         }
-        // More severe restriction for very low scores (< 2000) — only if not already FullFreeze
-        else if (score < 2000 && currentRestriction < RestrictionType.TransferLimit) {
+        // More severe restriction for very low scores (< 2000).
+        // Do not rely on enum ordering here: GovernanceBan has a larger enum value than
+        // TransferLimit, but TransferLimit is stricter for transfer permissions.
+        else if (
+            score < 2000 &&
+            currentRestriction != RestrictionType.FullFreeze &&
+            currentRestriction != RestrictionType.TransferLimit
+        ) {
             _applyAutoRestriction(subject, RestrictionType.TransferLimit, "auto_very_low_score", RC_AUTO_VERY_LOW_SCORE);
         }
         // Base governance ban for generally low scores
@@ -265,7 +272,7 @@ contract SeerGuardian is ReentrancyGuard {
         if (score >= autoLiftThreshold && currentRestriction != RestrictionType.None) {
             // Only lift if restriction has expired or score is high enough
             if (block.timestamp >= restrictionExpiry[subject] || score >= seer.highTrustThreshold()) {
-                _liftRestriction(subject, "auto_score_recovered");
+                _liftRestriction(subject, "auto_score_recovered", true);
             }
         }
     }
@@ -294,26 +301,32 @@ contract SeerGuardian is ReentrancyGuard {
         uint8 penaltyIndex = count > 5 ? 4 : count - 1;
         uint16 penalty = penaltyScale[penaltyIndex];
         
-        // Auto-punish via Seer
-        try seer.punish(subject, penalty, reason) {
-            emit PenaltyApplied(subject, penalty, reason);
-            emit PenaltyAppliedCode(subject, penalty, _violationReasonCode(vtype), reason);
-        } catch {}
-        
         // Apply time-based restriction for repeat offenders
         if (count >= 3) {
             RestrictionType rtype = count >= 5 ? RestrictionType.FullFreeze : RestrictionType.GovernanceBan;
             uint64 duration = restrictionDurations[penaltyIndex];
-            restrictionExpiry[subject] = uint64(block.timestamp) + duration;
+            // H-23 FIX: Never shorten an existing restriction — take the max of remaining and new duration.
+            uint64 newExpiry = uint64(block.timestamp) + duration;
+            if (newExpiry > restrictionExpiry[subject]) {
+                restrictionExpiry[subject] = newExpiry;
+            }
             _applyAutoRestriction(subject, rtype, reason, _violationReasonCode(vtype));
         }
+
+        // Auto-punish via Seer after local restriction state is finalized.
+        try seer.punish(subject, penalty, reason) {
+            emit PenaltyApplied(subject, penalty, reason);
+            emit PenaltyAppliedCode(subject, penalty, _violationReasonCode(vtype), reason);
+        } catch {}
         
         _log("violation_recorded");
     }
     
     function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason, uint16 reasonCode) internal {
         activeRestriction[subject] = rtype;
-        if (restrictionExpiry[subject] < 1) {
+        // H-22 FIX: Use <= block.timestamp so expired restrictions are treated the same as never-set.
+        // Previously used < 1, which left stale (past) expiry values in place.
+        if (restrictionExpiry[subject] <= block.timestamp) {
             restrictionExpiry[subject] = uint64(block.timestamp) + maxRestrictionDuration;
         }
         emit AutoRestrictionApplied(subject, rtype, reason);
@@ -321,10 +334,12 @@ contract SeerGuardian is ReentrancyGuard {
         _log("auto_restriction_applied");
     }
     
-    function _liftRestriction(address subject, string memory reason) internal {
+    function _liftRestriction(address subject, string memory reason, bool clearDaoOverride) internal {
         activeRestriction[subject] = RestrictionType.None;
         restrictionExpiry[subject] = 0;
-        daoOverridden[subject] = false;
+        if (clearDaoOverride) {
+            daoOverridden[subject] = false;
+        }
         emit AutoRestrictionLifted(subject, RestrictionType.None, reason);
         _log("restriction_lifted");
     }
@@ -342,12 +357,10 @@ contract SeerGuardian is ReentrancyGuard {
         if (activeRestriction[subject] == RestrictionType.None) revert SG_NoViolation();
         
         bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
+        daoOverridden[subject] = true;
         
         // Lift the restriction
-        _liftRestriction(subject, reason);
-        
-        // Mark as DAO overridden so auto-enforcement won't re-trigger immediately
-        daoOverridden[subject] = true;
+        _liftRestriction(subject, reason, false);
         
         emit DAOOverride(subject, actionId, reason);
         emit SeerActionOverridden(actionId, reason);
@@ -363,14 +376,14 @@ contract SeerGuardian is ReentrancyGuard {
      */
     function daoAdjustScore(address subject, uint16 newDelta, bool isPositive, string calldata reason) external onlyDAO nonReentrant {
         bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
+        actionOverridden[actionId] = true;
         
         if (isPositive) {
             try seer.reward(subject, newDelta, reason) {} catch {}
         } else {
             try seer.punish(subject, newDelta, reason) {} catch {}
         }
-        
-        actionOverridden[actionId] = true;
+
         emit SeerActionOverridden(actionId, reason);
         _log("dao_adjust_score");
     }
@@ -380,6 +393,8 @@ contract SeerGuardian is ReentrancyGuard {
      * @param subject The address to rehabilitate
      */
     function daoRehabilitateUser(address subject) external onlyDAO nonReentrant {
+        daoOverridden[subject] = true;
+
         // Clear all violation types
         violationCount[subject][ViolationType.SuspiciousTransfer] = 0;
         violationCount[subject][ViolationType.RapidScoreDrop] = 0;
@@ -389,10 +404,9 @@ contract SeerGuardian is ReentrancyGuard {
         
         // Lift any restrictions
         if (activeRestriction[subject] != RestrictionType.None) {
-            _liftRestriction(subject, "dao_rehabilitation");
+            _liftRestriction(subject, "dao_rehabilitation", false);
         }
-        
-        daoOverridden[subject] = true;
+
         _log("dao_rehabilitation");
     }
     

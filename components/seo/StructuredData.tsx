@@ -6,6 +6,20 @@ import Script from 'next/script';
 function safeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
+
+/**
+ * Strip characters and keywords that could be used to inject misleading
+ * schema.org structured data into JSON-LD (e.g. fake ratings, @type overrides).
+ * This is applied to all merchant/product-supplied strings before serialisation.
+ */
+function sanitizeJsonLdString(value: string): string {
+  // Remove JSON-LD control characters and schema injection keywords
+  return value
+    .replace(/@context|@type|@id|aggregateRating|offers|priceRange/gi, '')
+    .replace(/[<>"\\]/g, '')
+    .trim()
+    .slice(0, 512); // hard cap length for schema fields
+}
 // Organization structured data
 const organizationSchema = {
   '@context': 'https://schema.org',
@@ -178,11 +192,11 @@ export function MerchantStructuredData({
   const merchantSchema = {
     '@context': 'https://schema.org',
     '@type': 'Service',
-    name,
-    description,
-    url,
-    areaServed: serviceArea,
-    category,
+    name: sanitizeJsonLdString(name),
+    description: sanitizeJsonLdString(description),
+    url: sanitizeJsonLdString(url),
+    areaServed: sanitizeJsonLdString(serviceArea),
+    category: sanitizeJsonLdString(category),
     provider: {
       '@type': 'Organization',
       name: 'VFIDE',
@@ -213,15 +227,15 @@ export function ProductStructuredData({
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name,
-    description,
+    name: sanitizeJsonLdString(name),
+    description: sanitizeJsonLdString(description),
     brand: {
       '@type': 'Brand',
-      name: brand,
+      name: sanitizeJsonLdString(brand),
     },
     offers: {
       '@type': 'Offer',
-      url,
+      url: sanitizeJsonLdString(url),
       price: typeof price === 'number' ? price.toFixed(2) : undefined,
       priceCurrency,
       availability,

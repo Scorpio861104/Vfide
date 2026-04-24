@@ -39,8 +39,8 @@ export function VaultHeader({
           </h1>
           <p className="text-xl text-white/60 mb-6">
             {cardBoundMode
-              ? 'Non-custodial storage with guardian-backed wallet rotation and queued transfer protection'
-              : 'Non-custodial storage with dual protection: recovery + inheritance'}
+              ? 'Self-custody with guardian-backed wallet rotation, recovery, and queued transfer protection'
+              : 'Self-custody with dual protection: recovery + inheritance'}
           </p>
         </motion.div>
 
@@ -65,7 +65,7 @@ export function VaultHeader({
                     try {
                       await createVault();
                       showToast('Vault created successfully!', 'success');
-                      setTimeout(() => refetchVault(), 2000);
+                      void refetchVault();
                     } catch (error) {
                       devLog.error('Vault creation error:', error);
                       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

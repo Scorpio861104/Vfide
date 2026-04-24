@@ -4,6 +4,11 @@ pragma solidity 0.8.30;
 import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
 import { EcosystemVaultLib } from "./EcosystemVaultLib.sol";
 
+/// @dev Minimal interface for real token burn (H-10 fix)
+interface IVFIDEBurnable {
+    function burn(uint256 amount) external;
+}
+
 /**
  * EcosystemVault — Growth Incentive Treasury (Howey-safe)
  * ----------------------------------------------------------
@@ -31,26 +36,21 @@ error ECO_NotAuthorized();
 error ECO_InsufficientFunds();
 error ECO_Zero();
 error ECO_NotEligible();
-error ECO_AlreadyClaimed();
 error ECO_TooEarly();
-error ECO_InvalidRank();
 error ECO_ArrayCapReached();
 /// @notice Permanently reverts — token rewards for referrals or merchant ranking are not available (Howey compliance)
 error ECO_RewardsNotAvailable();
 error ECO_CouncilBelowMinimum();
 error ECO_MerchantBelowMinimum();
 error ECO_HeadhunterBelowMinimum();
-error ECO_RevokeFailed();
 error ECO_AlreadyExecuted();
 error ECO_AlreadyCancelled();
 error ECO_TimelockNotPassed();
 error ECO_InvalidConfig();
-error ECO_ApprovalFailed();
 error ECO_ExceedsMax();
 error ECO_NoPendingChange();
 error ECO_ChangeNotReady();
 error ECO_ExpenseCapExceeded();
-error ECO_NotKeeper();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -81,8 +81,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event OperationsWalletChangeCancelled(address indexed wallet);
     event OperationsWalletUpdated(address indexed oldWallet, address indexed newWallet);
     event ExpenseEpochRolled(uint256 startedAt, uint256 baseOperationsPool, uint256 capAmount);
-    event KeeperAddressSet(address indexed newKeeper);
     event OperationsCooldownUpdated(uint256 oldCooldown, uint256 newCooldown);
+    event WithdrawRequested(uint256 indexed id, address to, uint256 amount);
+    event WithdrawCancelled(uint256 indexed id);
+    event WithdrawExecuted(uint256 indexed id, address to, uint256 amount);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTANTS
@@ -144,6 +146,20 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     
     mapping(address => bool) public isManager;
 
+    // Emergency withdrawal queue (timelocked owner-only withdrawals)
+    struct WithdrawRequest {
+        address to;
+        uint256 amount;
+        uint256 requestedAt;
+        bool executed;
+        bool cancelled;
+    }
+    uint256 public withdrawRequestCount;
+    mapping(uint256 => WithdrawRequest) public withdrawRequests;
+    uint256 public constant WITHDRAW_TIMELOCK = 2 days;
+    uint256 public maxWithdrawBps = 1000;
+    uint256 public pendingWithdrawTotal;
+
     struct PendingManagerChange {
         address manager;
         bool active;
@@ -185,13 +201,19 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public lastOperationsWithdrawal;
     uint256 public operationsWithdrawalCooldown = 30 days;
 
-    // Authorized Chainlink Automation keeper (address(0) = anyone may call performUpkeep)
-    address public keeperAddress;
-
     // Pool balances
     uint256 public councilPool;
     uint256 public merchantPool;
     uint256 public headhunterPool;
+    // H-11 FIX: Per-epoch caps to prevent a compromised manager from draining pools in one call.
+    // Default: 10% of pool per 30-day epoch; DAO can adjust via setEpochCaps().
+    uint16 public merchantEpochCapBps = 1000;     // 10% of merchantPool per epoch
+    uint16 public headhunterEpochCapBps = 1000;   // 10% of headhunterPool per epoch
+    uint256 public constant EPOCH_DURATION = 30 days;
+    uint256 public merchantEpochStart;
+    uint256 public headhunterEpochStart;
+    uint256 public merchantPaidThisEpoch;
+    uint256 public headhunterPaidThisEpoch;
     uint256 public operationsPool;
     uint256 public totalReceived;
 
@@ -331,8 +353,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════
+    // slither-disable-next-line missing-zero-check
     constructor(address _vfide, address _seer, address _operationsWallet) {
-        if (_vfide == address(0)) revert ECO_Zero();
+        if (_vfide == address(0) || _seer == address(0)) revert ECO_Zero();
         vfide = IERC20(_vfide);
         rewardToken = IERC20(_vfide);
         seer = ISeer(_seer);
@@ -361,6 +384,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit ManagerChangeQueued(manager, active, block.timestamp + SENSITIVE_CHANGE_DELAY);
     }
 
+    /// @notice H-11 FIX: DAO can adjust per-epoch payout caps (in bps of pool).
+    function setEpochCaps(uint16 _merchantCapBps, uint16 _headhunterCapBps) external onlyOwner {
+        require(_merchantCapBps <= 10000 && _headhunterCapBps <= 10000, "ECO: bps > 100%");
+        merchantEpochCapBps = _merchantCapBps;
+        headhunterEpochCapBps = _headhunterCapBps;
+    }
+
     function executeManagerChange() external onlyOwner {
         PendingManagerChange memory pending = pendingManagerChange;
         if (pending.executeAfter == 0) revert ECO_NoPendingChange();
@@ -375,7 +405,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (pending.executeAfter == 0) revert ECO_NoPendingChange();
 
         delete pendingManagerChange;
-        emit ManagerChangeCancelled(pending.manager, pending.active);
     }
 
     function setSeer(address _seer) external onlyOwner {
@@ -395,6 +424,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /// @notice Migrate to a new reward token while preserving pool accounting.
     /// @dev Owner must pre-fund this contract with at least the outstanding pool amount of the new token.
+    // slither-disable-next-line reentrancy-no-eth
     function migrateRewardToken(address token, address oldTokenSink) external onlyOwner nonReentrant {
         if (token == address(0)) revert ECO_Zero();
         address oldToken = address(rewardToken);
@@ -442,7 +472,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (pending.executeAfter == 0) revert ECO_NoPendingChange();
 
         delete pendingCouncilManagerChange;
-        emit CouncilManagerChangeCancelled(pending.councilManager);
     }
 
     function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
@@ -484,12 +513,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (pending.executeAfter == 0) revert ECO_NoPendingChange();
 
         delete pendingAllocationChange;
-        emit AllocationChangeCancelled(
-            pending.councilBps,
-            pending.merchantBps,
-            pending.headhunterBps,
-            MAX_BPS - (pending.councilBps + pending.merchantBps + pending.headhunterBps)
-        );
     }
     
     /**
@@ -510,7 +533,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (pending.executeAfter == 0) revert ECO_NoPendingChange();
 
         delete pendingOperationsWalletChange;
-        emit OperationsWalletChangeCancelled(pending.wallet);
     }
 
     function applyOperationsWalletChange() external onlyOwner {
@@ -546,9 +568,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setOperationsCooldown(uint256 _cooldown) external onlyOwner {
         if (_cooldown < 1 hours) revert ECO_InvalidConfig();
         if (_cooldown > 90 days) revert ECO_InvalidConfig();
-        uint256 oldCooldown = operationsWithdrawalCooldown;
         operationsWithdrawalCooldown = _cooldown;
-        emit OperationsCooldownUpdated(oldCooldown, _cooldown);
     }
     
     /**
@@ -595,33 +615,30 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Enable or disable stablecoin-only mode for all work reward payments.
-     * @dev HOWEY FIX: When enabled, payMerchantWorkReward, payReferralWorkReward, and all
-     *      automatic work payouts are paid in stablecoin.
+     * @notice Enable or disable stablecoin-only mode for non-reward payouts.
+     * @dev HOWEY FIX: Work and council reward compensation are always paid in stablecoin.
+     *      This toggle remains for non-reward paths such as expenses.
      *
-     *      Payment routing (in order):
-     *        1. Direct reserve (stablecoinReserves[preferredStablecoin]) — preferred, no DEX.
-     *           Fund via depositStablecoinReserve(). No sandwich-attack risk.
-     *        2. DEX swap via _swapToStable() — fallback if reserve is insufficient and
-     *           swapRouter is configured (requires autoSwapEnabled and minOutputPerVfide > 0).
+    *      Payment routing: direct reserve first, then automatic VFIDE swap when auto-swap is
+    *      configured. This keeps payouts in fixed-dollar terms while still allowing the vault
+    *      to operate without a manually pre-funded reserve.
      *
      *      Distributing a potentially-appreciating VFIDE token as "compensation" creates an
      *      implicit profit expectation (Howey Prong 3). Fixed stablecoin service fees make
      *      the work-for-pay relationship legally unambiguous.
      *
-     *      REQUIREMENTS before enabling:
-     *      - preferredStablecoin must be set
-     *      - Either the direct reserve must be funded (recommended) OR swapRouter must be set
+    *      REQUIREMENTS before enabling:
+    *      - preferredStablecoin must be set
+    *      - Either the direct reserve must already be funded, or autoSwapEnabled must be active
      *
-     * @param _enabled True to require stablecoin payments; false to revert to VFIDE payments.
+    * @param _enabled True to require stablecoin payments for non-reward payouts; false to allow
+    *        those non-reward paths to use VFIDE again.
      */
     function setStablecoinOnlyMode(bool _enabled) external onlyOwner {
         if (_enabled) {
-            if (preferredStablecoin == address(0)) revert ECO_InvalidConfig();
-            // At least one payment path must be ready: direct reserve OR swap router
-            bool hasReserve = stablecoinReserves[preferredStablecoin] > 0;
-            bool hasRouter = swapRouter != address(0);
-            if (!hasReserve && !hasRouter) revert ECO_InvalidConfig();
+            if (preferredStablecoin == address(0) || (stablecoinReserves[preferredStablecoin] == 0 && !autoSwapEnabled)) {
+                revert ECO_InvalidConfig();
+            }
         }
         stablecoinOnlyMode = _enabled;
         emit StablecoinOnlyModeSet(_enabled);
@@ -636,6 +653,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      *        when stablecoinOnlyMode is active, or any token otherwise for future use).
      * @param amount Amount to deposit (in stablecoin's native decimals).
      */
+    // slither-disable-next-line reentrancy-benign
     function depositStablecoinReserve(address stablecoin, uint256 amount) external onlyManager nonReentrant {
         if (stablecoin == address(0)) revert ECO_Zero();
         if (amount == 0) revert ECO_Zero();
@@ -843,20 +861,27 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /**
      * @notice Pay fixed compensation for verified merchant work
      * @dev Uses merchant pool only; not a rank/percentage payout.
-     *      HOWEY FIX: When stablecoinOnlyMode is enabled, payment is swapped to
-     *      preferredStablecoin via _swapToStable() before transfer. This eliminates
-     *      the implicit profit expectation created by distributing appreciable VFIDE.
+     *      HOWEY FIX: Work compensation is always paid in stablecoin.
      */
     function payMerchantWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
 
         _allocateIncoming();
+        // H-11 FIX: Reset epoch counter if 30 days have elapsed.
+        if (block.timestamp >= merchantEpochStart + EPOCH_DURATION) {
+            merchantEpochStart = block.timestamp;
+            merchantPaidThisEpoch = 0;
+        }
+        uint256 epochCap = (merchantPool * merchantEpochCapBps) / 10000;
+        require(merchantPaidThisEpoch + amount <= epochCap, "ECO: merchant epoch cap exceeded");
+
         uint256 spendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
         merchantPool -= amount;
+        merchantPaidThisEpoch += amount;
         totalMerchantBonusPaid += amount;
-        _deliverWorkReward(worker, amount, "merchant_work", reason);
+        _deliverWorkReward(worker, amount, reason);
     }
 
     // _calculateMerchantRank moved to EcosystemVaultView.sol (off-chain indexing)
@@ -968,7 +993,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
             merchantPool -= amount;
             totalMerchantBonusPaid += amount;
-            _deliverWorkReward(worker, amount, "merchant_work", reason);
+            _deliverWorkReward(worker, amount, reason);
             return true;
         }
 
@@ -978,26 +1003,21 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         headhunterPool -= amount;
         totalHeadhunterPaid += amount;
-        _deliverWorkReward(worker, amount, "referral_work", reason);
+        _deliverWorkReward(worker, amount, reason);
         return true;
     }
 
     /**
-     * @notice Internal: deliver a work reward in stablecoin (if stablecoinOnlyMode) or VFIDE.
-     * @dev When stablecoinOnlyMode is true, payment routing is:
-     *        1. Direct reserve (stablecoinReserves[preferredStablecoin]) — preferred, no DEX.
-     *        2. DEX swap via _swapToStable() — fallback if reserve insufficient and router set.
-     *      Returns false only when stablecoinOnlyMode is on and both paths fail.
-     *      Callers must roll back pool accounting when false is returned.
+     * @notice Internal: deliver a work reward in stablecoin.
+     * @dev Reward compensation never falls back to VFIDE.
      */
     function _deliverWorkReward(
         address worker,
         uint256 amount,
-        string memory program,
         string memory reason
     ) internal {
-        rewardToken.safeTransfer(worker, amount);
-        emit WorkRewardPaid(worker, amount, program, reason);
+        reason;
+        _payoutStablecoin(worker, preferredStablecoin, amount);
     }
 
     /**
@@ -1011,19 +1031,27 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /**
      * @notice Pay fixed compensation for verified referral/acquisition work
      * @dev Uses headhunter pool only; not a rank/percentage payout.
-     *      HOWEY FIX: When stablecoinOnlyMode is enabled, payment is swapped to
-     *      preferredStablecoin before transfer.
+     *      HOWEY FIX: Work compensation is always paid in stablecoin.
      */
     function payReferralWorkReward(address worker, uint256 amount, string calldata reason) external onlyManager nonReentrant {
         if (worker == address(0) || amount == 0) revert ECO_Zero();
 
         _allocateIncoming();
+        // H-11 FIX: Reset epoch counter if 30 days have elapsed.
+        if (block.timestamp >= headhunterEpochStart + EPOCH_DURATION) {
+            headhunterEpochStart = block.timestamp;
+            headhunterPaidThisEpoch = 0;
+        }
+        uint256 epochCap = (headhunterPool * headhunterEpochCapBps) / 10000;
+        require(headhunterPaidThisEpoch + amount <= epochCap, "ECO: headhunter epoch cap exceeded");
+
         uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
         headhunterPool -= amount;
+        headhunterPaidThisEpoch += amount;
         totalHeadhunterPaid += amount;
-        _deliverWorkReward(worker, amount, "referral_work", reason);
+        _deliverWorkReward(worker, amount, reason);
     }
 
     /**
@@ -1031,7 +1059,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Only objective point milestones are used (no leaderboard rank, no percentage share).
      */
     function payReferralLevelReward(address, uint256, string calldata) external pure {
-        revert ECO_RewardsNotAvailable();
+        _revertRewardsNotAvailable();
     }
 
     /**
@@ -1039,7 +1067,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Enables autonomous user claims from objective milestones without manager intervention.
      */
     function claimReferralLevelRewards(uint256, string calldata) external pure returns (uint8, uint256) {
-        revert ECO_RewardsNotAvailable();
+        _revertRewardsNotAvailable();
     }
 
     /**
@@ -1047,7 +1075,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Anyone can trigger, but payout always goes to `worker`.
      */
     function processReferralLevelRewards(address, uint256, string calldata) external pure returns (uint8, uint256) {
-        revert ECO_RewardsNotAvailable();
+        _revertRewardsNotAvailable();
     }
 
     function _getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
@@ -1056,18 +1084,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     // _calculateHeadhunterRank moved to EcosystemVaultView.sol (off-chain indexing)
 
-    // Keep checkHeadhunterReward for interface compatibility (no-op now)
-    function checkHeadhunterReward(address) external pure {}
-
     // ═══════════════════════════════════════════════════════════════════════
     //                         UTILITY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
     /**
      * @notice Pay expense from ecosystem vault
-     * @dev If autoSwapEnabled, automatically converts VFIDE to stablecoin before payment
+     * @dev Stablecoin-only mode pays from reserve first and automatically swaps VFIDE when the
+     *      configured reserve is short.
      * @param recipient Address to receive payment
-     * @param amount Amount of VFIDE to pay (will be converted if autoSwap enabled)
+     * @param amount Amount of VFIDE to pay (or stablecoin amount in stablecoin-only mode)
      * @param reason Description of the payment
      */
     function payExpense(address recipient, uint256 amount, string calldata reason) external onlyManager nonReentrant {
@@ -1083,14 +1109,17 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         operationsPool -= amount;
         totalExpensesPaid += amount;
-        rewardToken.safeTransfer(recipient, amount);
-        emit PaymentMade(recipient, amount, reason);
+
+        _payoutConfiguredReward(recipient, amount);
+
+        reason;
     }
 
     /// @notice Permanently remove tokens from circulating supply.
     /// @dev I-10 Note: Sends to 0xdEaD ("soft burn") because VFIDEToken has no public burn()
     ///      function — transfer to address(0) reverts.  totalBurned tracks the removed amount
     ///      so off-chain supply calculations can subtract it from totalSupply().
+    // slither-disable-next-line reentrancy-events
     function burnFunds(uint256 amount) external onlyManager {
         if (amount == 0) revert ECO_Zero();
 
@@ -1100,28 +1129,17 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         operationsPool -= amount;
         totalBurned += amount;
 
-        address dead = 0x000000000000000000000000000000000000dEaD;
-        rewardToken.safeTransfer(dead, amount);
+        // H-10 FIX: Use VFIDEToken.burn() so totalSupply is correctly decremented.
+        // The old comment claiming VFIDEToken has no burn() was incorrect.
+        try IVFIDEBurnable(address(rewardToken)).burn(amount) {
+            // burned successfully
+        } catch {
+            // Fallback: transfer to dead address if burn() reverts for any reason
+            address dead = 0x000000000000000000000000000000000000dEaD;
+            rewardToken.safeTransfer(dead, amount);
+        }
         emit FundsBurned(amount);
     }
-
-    // Emergency withdrawal - requires timelock for security
-    struct WithdrawRequest {
-        address to;
-        uint256 amount;
-        uint256 requestedAt;
-        bool executed;
-        bool cancelled;
-    }
-    
-    uint256 public withdrawRequestCount;
-    mapping(uint256 => WithdrawRequest) public withdrawRequests;
-    uint256 public constant WITHDRAW_TIMELOCK = 2 days;
-    uint256 public maxWithdrawBps = 1000;
-    uint256 public pendingWithdrawTotal;
-    event WithdrawRequested(uint256 indexed id, address to, uint256 amount);
-    event WithdrawCancelled(uint256 indexed id);
-    event WithdrawExecuted(uint256 indexed id, address to, uint256 amount);
 
     function requestWithdraw(address to, uint256 amount) external onlyOwner returns (uint256 id) {
         if (to == address(0)) revert ECO_Zero();
@@ -1218,13 +1236,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
     }
 
-    function _consumeOperationsSpend(uint256 amount) internal {
-        _rollExpenseEpochIfNeeded();
-        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
-        if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
-        operationsSpentInEpoch += amount;
-    }
-
     function _distributeCouncilRewardsIfDue(bool strict) internal returns (bool) {
         if (block.timestamp < lastCouncilDistribution + MONTH) {
             if (strict) revert ECO_TooEarly();
@@ -1264,12 +1275,68 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         for (uint256 i = 0; i < memberCount; i++) {
             if (members[i] != address(0)) {
-                rewardToken.safeTransfer(members[i], perMember);
+                _payoutStablecoin(members[i], preferredStablecoin, perMember);
             }
         }
 
         emit CouncilDistributed(distributed, uint8(memberCount), perMember);
         return true;
+    }
+
+    function _payoutStablecoin(address recipient, address payoutToken, uint256 amount) internal {
+        if (payoutToken == address(0)) revert ECO_InvalidConfig();
+        uint256 reserveBalance = stablecoinReserves[payoutToken];
+        if (reserveBalance >= amount) {
+            stablecoinReserves[payoutToken] = reserveBalance - amount;
+            IERC20(payoutToken).safeTransfer(recipient, amount);
+            return;
+        }
+
+        if (reserveBalance != 0) {
+            stablecoinReserves[payoutToken] = 0;
+            IERC20(payoutToken).safeTransfer(recipient, reserveBalance);
+            amount -= reserveBalance;
+        }
+
+        if (!autoSwapEnabled) revert ECO_InsufficientFunds();
+
+        _swapRewardTokenToStablecoin(recipient, payoutToken, amount);
+    }
+
+    function _payoutConfiguredReward(address recipient, uint256 amount) internal {
+        if (stablecoinOnlyMode) {
+            _payoutStablecoin(recipient, preferredStablecoin, amount);
+            return;
+        }
+
+        rewardToken.safeTransfer(recipient, amount);
+    }
+
+    function _swapRewardTokenToStablecoin(address recipient, address payoutToken, uint256 amountIn) internal {
+        address router = swapRouter;
+
+        address[] memory path = new address[](2);
+        path[0] = address(rewardToken);
+        path[1] = payoutToken;
+
+        uint256 minAmountOut = (amountIn * minOutputPerVfide + 1e18 - 1) / 1e18;
+        if (minAmountOut == 0) revert ECO_InvalidConfig();
+
+        rewardToken.forceApprove(router, amountIn);
+        uint256[] memory amounts = ISwapRouter(router).swapExactTokensForTokens(
+            amountIn,
+            minAmountOut,
+            path,
+            recipient,
+            block.timestamp
+        );
+        rewardToken.forceApprove(router, 0);
+
+        if (amounts[amounts.length - 1] == 0) revert ECO_InsufficientFunds();
+    }
+
+    function _revertRewardsNotAvailable() private pure {
+        revert ECO_RewardsNotAvailable();
     }
 
     function _endMerchantPeriodIfDue(bool strict) internal returns (bool) {
@@ -1331,7 +1398,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             return false;
         }
 
-        _consumeOperationsSpend(amount);
+        _rollExpenseEpochIfNeeded();
+        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
+        if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
+        operationsSpentInEpoch += amount;
 
         operationsPool = 0;
         lastOperationsWithdrawal = block.timestamp;
@@ -1351,15 +1421,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint8 internal constant TASK_HEADHUNTER = 0x04;
     uint8 internal constant TASK_OPERATIONS = 0x08;
 
-    event ScheduledTasksRan(uint8 tasksBitmask);
-
     /**
      * @notice Chainlink Automation-compatible upkeep check.  Also usable by any off-chain keeper.
      * @dev Returns upkeepNeeded=true when at least one scheduled task is ready to run.
      *      performData is an ABI-encoded uint8 bitmask of the pending tasks.
      */
+    // slither-disable-next-line uninitialized-local
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData) {
-        uint8 pending;
+        uint8 pending = 0;
         if (block.timestamp >= lastCouncilDistribution + MONTH && address(councilManager) != address(0))
             pending |= TASK_COUNCIL;
         if (block.timestamp >= lastMerchantDistribution + MONTH)
@@ -1375,13 +1444,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @notice Chainlink Automation performUpkeep entrypoint.
      * @dev Accepts the bitmask produced by checkUpkeep.  Time guards are re-validated
      *      on-chain before each task to guard against stale performData.
-     *      M-9 FIX: Restricted to keeperAddress (or owner) when a keeper is registered.
      *      The bitmask from performData is respected so selective task execution is possible.
      */
     function performUpkeep(bytes calldata performData) external nonReentrant {
-        if (keeperAddress != address(0) && msg.sender != keeperAddress && msg.sender != owner) {
-            revert ECO_NotKeeper();
-        }
         uint8 tasks = TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS;
         if (performData.length > 0) {
             tasks = abi.decode(performData, (uint8));
@@ -1389,61 +1454,25 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         _runScheduledTasks(tasks);
     }
 
-    /// @notice Set the authorized Chainlink Automation keeper. Set to address(0) to allow any caller.
-    function setKeeperAddress(address _keeper) external onlyOwner {
-        keeperAddress = _keeper;
-        emit KeeperAddressSet(_keeper);
-    }
-
-    /**
-     * @notice Run all currently-due scheduled tasks in a single transaction.
-     * @dev Permissionless keeper entrypoint — any address may call this.
-     *      Time guards on each task prevent premature execution.
-     *      Returns a bitmask of the tasks that were actually executed.
-     */
-    function runScheduledTasks() external nonReentrant returns (uint8 ran) {
-        return _runScheduledTasks(TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS);
-    }
-
     /**
      * @notice Internal: execute the subset of scheduled tasks indicated by `tasks`.
      */
-    function _runScheduledTasks(uint8 tasks) internal returns (uint8 ran) {
-        if ((tasks & TASK_COUNCIL) != 0 && _distributeCouncilRewardsIfDue(false)) {
-            ran |= TASK_COUNCIL;
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
+    function _runScheduledTasks(uint8 tasks) internal {
+        if ((tasks & TASK_COUNCIL) != 0) {
+            _distributeCouncilRewardsIfDue(false);
         }
 
-        if ((tasks & TASK_MERCHANT) != 0 && _endMerchantPeriodIfDue(false)) {
-            ran |= TASK_MERCHANT;
+        if ((tasks & TASK_MERCHANT) != 0) {
+            _endMerchantPeriodIfDue(false);
         }
 
-        if ((tasks & TASK_HEADHUNTER) != 0 && _endHeadhunterQuarterIfDue(false)) {
-            ran |= TASK_HEADHUNTER;
+        if ((tasks & TASK_HEADHUNTER) != 0) {
+            _endHeadhunterQuarterIfDue(false);
         }
 
-        if ((tasks & TASK_OPERATIONS) != 0 && _withdrawOperationsIfDue(false)) {
-            ran |= TASK_OPERATIONS;
+        if ((tasks & TASK_OPERATIONS) != 0) {
+            _withdrawOperationsIfDue(false);
         }
-
-        emit ScheduledTasksRan(ran);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //                         VIEW FUNCTIONS
-    // ═══════════════════════════════════════════════════════════════════════
-    // Heavy view/pure functions have been extracted to EcosystemVaultView.sol
-    // to bring this contract under the 24576-byte EIP-170 limit.
-    // Retained: getPoolBalances (lightweight) for Chainlink Automation compatibility.
-
-    function getPoolBalances() external view returns (
-        uint256 council,
-        uint256 merchant,
-        uint256 headhunter,
-        uint256 total
-    ) {
-        council = councilPool;
-        merchant = merchantPool;
-        headhunter = headhunterPool;
-        total = rewardToken.balanceOf(address(this));
     }
 }

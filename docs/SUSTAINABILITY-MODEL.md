@@ -305,7 +305,7 @@ const annualServicePaymentBudget = dailyFees * 0.05 * 365;
 - No manual payment processing or delays - all automated on-chain
 
 **Structure:**
-- 21 council seats
+- 12 initial council seats, governed expansion up to 21 seats
 - Quarterly stipends
 - Performance-based bonuses
 - Travel and conference budgets

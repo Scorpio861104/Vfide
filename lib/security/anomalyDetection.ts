@@ -10,6 +10,7 @@
 
 import { Redis } from '@upstash/redis';
 import { logger } from '@/lib/logger';
+import { getRequestIp } from '@/lib/security/requestContext';
 
 // Initialize Redis client
 let redis: Redis | null = null;
@@ -124,15 +125,15 @@ export async function analyzeActivity(
   }
 
   // Check for location changes
-  const locationAlert = checkLocationAnomaly(activities, currentActivity);
+  const locationAlert = checkLocationAnomaly(activities, currentActivity, userAddress);
   if (locationAlert) return locationAlert;
 
   // Check for device changes
-  const deviceAlert = checkDeviceAnomaly(activities, currentActivity);
+  const deviceAlert = checkDeviceAnomaly(activities, currentActivity, userAddress);
   if (deviceAlert) return deviceAlert;
 
   // Check for rapid requests
-  const rapidAlert = checkRapidRequests(activities, currentActivity);
+  const rapidAlert = checkRapidRequests(activities, currentActivity, userAddress);
   if (rapidAlert) return rapidAlert;
 
   return null;
@@ -161,7 +162,8 @@ async function getRecentActivities(userAddress: string): Promise<TokenActivity[]
  */
 function checkLocationAnomaly(
   activities: TokenActivity[],
-  current: TokenActivity
+  current: TokenActivity,
+  userAddress: string
 ): AnomalyAlert | null {
   const uniqueIPs = new Set(activities.map(a => a.ipAddress));
   uniqueIPs.add(current.ipAddress);
@@ -176,7 +178,7 @@ function checkLocationAnomaly(
       type: 'location_change',
       message: `Access from ${uniqueIPs.size} different IP addresses detected within ${ACTIVITY_WINDOW / 60000} minutes`,
       timestamp: Date.now(),
-      userAddress: activities[0]?.endpoint || 'unknown',
+      userAddress,
       currentActivity: current,
       suspiciousActivities,
     };
@@ -190,7 +192,8 @@ function checkLocationAnomaly(
  */
 function checkDeviceAnomaly(
   activities: TokenActivity[],
-  current: TokenActivity
+  current: TokenActivity,
+  userAddress: string
 ): AnomalyAlert | null {
   const uniqueDevices = new Set(activities.map(a => a.userAgent));
   uniqueDevices.add(current.userAgent);
@@ -205,7 +208,7 @@ function checkDeviceAnomaly(
       type: 'device_change',
       message: `Access from ${uniqueDevices.size} different devices detected`,
       timestamp: Date.now(),
-      userAddress: activities[0]?.endpoint || 'unknown',
+      userAddress,
       currentActivity: current,
       suspiciousActivities,
     };
@@ -219,7 +222,8 @@ function checkDeviceAnomaly(
  */
 function checkRapidRequests(
   activities: TokenActivity[],
-  current: TokenActivity
+  current: TokenActivity,
+  userAddress: string
 ): AnomalyAlert | null {
   // Count requests in last minute
   const oneMinuteAgo = Date.now() - 60000;
@@ -231,7 +235,7 @@ function checkRapidRequests(
       type: 'rapid_requests',
       message: `${recentRequests.length} requests in 1 minute - possible automated attack`,
       timestamp: Date.now(),
-      userAddress: activities[0]?.endpoint || 'unknown',
+      userAddress,
       currentActivity: current,
       suspiciousActivities: recentRequests.slice(-10), // Last 10 requests
     };
@@ -287,15 +291,8 @@ export async function clearActivityHistory(userAddress: string): Promise<void> {
  * Extract IP address from request
  */
 export function getClientIP(request: Request): string {
-  // Check various headers for real IP
-  const headers = request.headers;
-  
-  return (
-    headers.get('x-forwarded-for')?.split(',')[0] ||
-    headers.get('x-real-ip') ||
-    headers.get('cf-connecting-ip') ||
-    'unknown'
-  );
+  const { ip } = getRequestIp(request.headers);
+  return ip;
 }
 
 /**

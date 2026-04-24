@@ -20,6 +20,8 @@ import {
     Users
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { useChainId } from 'wagmi';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
@@ -116,6 +118,7 @@ export function UnifiedActivityFeed({
   limit = 20,
   className = '',
 }: Omit<UnifiedActivityFeedProps, 'userAddress'>) {
+  const chainId = useChainId();
   const [activities, setActivities] = useState<UnifiedActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -293,7 +296,7 @@ export function UnifiedActivityFeed({
               {/* Transaction Hash */}
               {activity.metadata?.txHash && (
                 <a
-                  href={`https://etherscan.io/tx/${activity.metadata.txHash}`}
+                  href={getExplorerLink(chainId, activity.metadata.txHash, 'tx')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity mt-1 inline-block"

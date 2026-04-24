@@ -232,7 +232,6 @@ interface IEcosystemVault {
     function processReferralLevelRewards(address worker, uint256 year, string calldata reason) external returns (uint8 levelsPaid, uint256 totalAmount);
     function burnFunds(uint256 amount) external;
     function recordMerchantTransaction(address merchant) external;
-    function checkHeadhunterReward(address merchant) external;
     function registerMerchantReferral(address merchant, address referrer) external;
     function registerUserReferral(address referrer, address user) external;
     function creditMerchantReferral(address merchant) external;
@@ -358,13 +357,32 @@ abstract contract Ownable {
     }
 
     /// @notice Emergency-only ownership recovery path for a registered controller.
+    /// @dev H-14 FIX: Add a 24h timelock + pending-transfer pattern to prevent instant
+    ///      ownership bypass. The emergency controller must call and the new owner must accept.
+    address public pendingEmergencyOwner;
+    uint64 public emergencyTransferValidFrom;
+    uint256 public constant EMERGENCY_OWNERSHIP_DELAY = 24 hours;
+
+    event EmergencyOwnershipProposed(address indexed newOwner, uint64 validFrom);
+
     function emergencyTransferOwnership(address newOwner) external {
         require(msg.sender == emergencyController, "OWN: not emergency controller");
         require(newOwner != address(0), "OWN: zero");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
-        pendingOwner = address(0);
-        ownershipTransferDeadline = 0;
+        // H-14 FIX: Queue the transfer; new owner must accept after 24h.
+        pendingEmergencyOwner = newOwner;
+        emergencyTransferValidFrom = uint64(block.timestamp + EMERGENCY_OWNERSHIP_DELAY);
+        emit EmergencyOwnershipProposed(newOwner, emergencyTransferValidFrom);
+    }
+
+    /// @notice New owner accepts an emergency transfer after the 24h delay.
+    function acceptEmergencyOwnership() external {
+        require(msg.sender == pendingEmergencyOwner, "OWN: not pending emergency owner");
+        require(block.timestamp >= emergencyTransferValidFrom, "OWN: timelock pending");
+        address old = owner;
+        owner = msg.sender;
+        pendingEmergencyOwner = address(0);
+        emergencyTransferValidFrom = 0;
+        emit OwnershipTransferred(old, msg.sender);
     }
 
     /// @notice Complete ownership transfer (must be called by pending owner)
@@ -381,6 +399,11 @@ abstract contract Ownable {
     function cancelOwnershipTransfer() external onlyOwner {
         pendingOwner = address(0);
         ownershipTransferDeadline = 0;
+    }
+
+    /// @notice Ownership renounce is disabled across the protocol to avoid permanently orphaning contracts.
+    function renounceOwnership() public view virtual onlyOwner {
+        revert("OWN: renounce disabled");
     }
 }
 

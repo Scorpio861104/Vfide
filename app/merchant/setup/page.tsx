@@ -17,6 +17,10 @@ import { motion } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+export default function MerchantSetupPage() {
+  const router = useRouter();
+  const { isConnected } = useAccount();
+
   if (!isConnected) {
     return (
       <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center relative overflow-hidden">
@@ -55,7 +59,7 @@ import { useRouter } from 'next/navigation';
           </motion.div>
 
           <MerchantQuickSetup onComplete={(slug) => {
-            // Store is live — could redirect or show in-place
+            router.push(`/store/${slug}`);
           }} />
         </div>
       </div>

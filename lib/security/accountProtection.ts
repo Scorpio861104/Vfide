@@ -184,7 +184,7 @@ export async function recordSecurityEvent(address: string, event: SecurityEvent)
   let failedAuth = existing.filter((e) => e.type === 'auth_fail').length;
   let keyRotations = existing.filter((e) => e.type === 'key_rotate').length;
   let highRiskPayments = existing.filter((e) => e.type === 'payment_high_risk').length;
-  let distinctIps = new Set(existing.map((e) => e.ip)).size;
+  let distinctIps = new Set(existing.filter((e) => e.type !== 'auth_fail').map((e) => e.ip)).size;
 
   try {
     await maybeRunSecurityDataCleanup(now);
@@ -205,7 +205,7 @@ export async function recordSecurityEvent(address: string, event: SecurityEvent)
          COUNT(*) FILTER (WHERE type = 'auth_fail')::text AS failed_auth,
          COUNT(*) FILTER (WHERE type = 'key_rotate')::text AS key_rotations,
          COUNT(*) FILTER (WHERE type = 'payment_high_risk')::text AS high_risk_payments,
-         COUNT(DISTINCT ip)::text AS distinct_ips
+         COUNT(DISTINCT ip) FILTER (WHERE type != 'auth_fail')::text AS distinct_ips
        FROM security_account_events
        WHERE address = $1
          AND ts >= NOW() - INTERVAL '10 minutes'`,
@@ -224,17 +224,9 @@ export async function recordSecurityEvent(address: string, event: SecurityEvent)
     // Fall back to in-memory counters when DB persistence is unavailable.
   }
 
-  if (failedAuth >= 5) {
-    return lockWithEscalation({
-      address,
-      reason: 'Too many failed authentication attempts',
-      signal: 'auth_fail',
-      failedAuth,
-      keyRotations,
-      highRiskPayments,
-      distinctIps,
-    });
-  }
+  // Do not lock accounts based solely on unauthenticated auth-failure events.
+  // This prevents target-address lockout abuse.
+  if (event.type === 'auth_fail') return { locked: false };
 
   if (keyRotations >= 4) {
     return lockWithEscalation({

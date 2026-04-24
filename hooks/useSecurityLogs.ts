@@ -7,15 +7,17 @@ import {
 } from '@/config/security-advanced';
 import { logger } from '@/lib/logger';
 
+type SecurityLogDetails = Record<string, unknown>;
+
 export interface UseSecurityLogsResult {
   logs: SecurityLogEntry[];
   filteredLogs: SecurityLogEntry[];
   
   // Logging
-  log: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
-  logSuccess: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
-  logWarning: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
-  logCritical: (type: SecurityEventType, message: string, details?: Record<string, any>) => void;
+  log: (type: SecurityEventType, message: string, details?: SecurityLogDetails) => void;
+  logSuccess: (type: SecurityEventType, message: string, details?: SecurityLogDetails) => void;
+  logWarning: (type: SecurityEventType, message: string, details?: SecurityLogDetails) => void;
+  logCritical: (type: SecurityEventType, message: string, details?: SecurityLogDetails) => void;
   
   // Filtering
   filterByType: (type: SecurityEventType | null) => void;
@@ -38,7 +40,7 @@ interface SecurityLogApiRecord {
   type: SecurityEventType;
   severity: 'info' | 'warning' | 'critical';
   message: string;
-  details: Record<string, any> | null;
+  details: SecurityLogDetails | null;
   user_agent?: string | null;
   location?: string | null;
   device_id?: string | null;
@@ -204,7 +206,7 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
     type: SecurityEventType,
     message: string,
     severity: 'info' | 'warning' | 'critical',
-    details: Record<string, any> = {}
+    details: SecurityLogDetails = {}
   ) => {
     const clientInfo = getClientInfo();
     
@@ -225,19 +227,19 @@ export const useSecurityLogs = (): UseSecurityLogsResult => {
     });
   }, []);
 
-  const log = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const log = useCallback((type: SecurityEventType, message: string, details?: SecurityLogDetails) => {
     addLog(type, message, 'info', details);
   }, [addLog]);
 
-  const logSuccess = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const logSuccess = useCallback((type: SecurityEventType, message: string, details?: SecurityLogDetails) => {
     addLog(type, message, 'info', details);
   }, [addLog]);
 
-  const logWarning = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const logWarning = useCallback((type: SecurityEventType, message: string, details?: SecurityLogDetails) => {
     addLog(type, message, 'warning', details);
   }, [addLog]);
 
-  const logCritical = useCallback((type: SecurityEventType, message: string, details?: Record<string, any>) => {
+  const logCritical = useCallback((type: SecurityEventType, message: string, details?: SecurityLogDetails) => {
     addLog(type, message, 'critical', details);
   }, [addLog]);
 

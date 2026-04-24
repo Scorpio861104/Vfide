@@ -34,6 +34,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     uint64 public constant MIN_ROTATION_DELAY = 10 minutes;
     uint64 public constant MAX_ROTATION_DELAY = 7 days;
+    uint64 public constant SENSITIVE_ADMIN_DELAY = 1 days;
     uint8 public constant MAX_GUARDIANS = 20;
 
     address public immutable hub;
@@ -50,8 +51,11 @@ contract CardBoundVault is ReentrancyGuard {
     bool public paused;
 
     mapping(address => bool) public isGuardian;
+    mapping(address => uint64) public guardianAddedAt;
     uint8 public guardianCount;
     uint8 public guardianThreshold;
+
+    uint64 public constant GUARDIAN_MATURITY_PERIOD = 7 days;
 
     uint256 public maxPerTransfer;
     uint256 public dailyTransferLimit;
@@ -95,6 +99,43 @@ contract CardBoundVault is ReentrancyGuard {
     }
     PendingGuardianChange public pendingGuardianChange;
 
+    struct PendingSpendLimitChange {
+        uint256 maxPerTransfer;
+        uint256 dailyTransferLimit;
+        uint64 executeAfter;
+    }
+
+    struct PendingLargeTransferThresholdChange {
+        uint256 threshold;
+        uint64 executeAfter;
+    }
+
+    struct PendingERC20Rescue {
+        address token;
+        address to;
+        uint256 amount;
+        uint64 executeAfter;
+    }
+
+    struct PendingNativeRescue {
+        address payable to;
+        uint256 amount;
+        uint64 executeAfter;
+    }
+
+    struct PendingTokenApproval {
+        address token;
+        address spender;
+        uint256 amount;
+        uint64 executeAfter;
+    }
+
+    PendingSpendLimitChange public pendingSpendLimitChange;
+    PendingLargeTransferThresholdChange public pendingLargeTransferThresholdChange;
+    PendingERC20Rescue public pendingERC20Rescue;
+    PendingNativeRescue public pendingNativeRescue;
+    PendingTokenApproval public pendingTokenApproval;
+
     struct TransferIntent {
         address vault;
         address toVault;
@@ -111,7 +152,17 @@ contract CardBoundVault is ReentrancyGuard {
     event GuardianSet(address indexed guardian, bool active);
     event GuardianThresholdSet(uint8 threshold);
     event GuardianChangeProposed(address indexed guardian, bool active, uint64 effectiveAt);
-    event GuardianChangeCancelled(address indexed guardian);
+    event GuardianChangeCancelled(address indexed guardian, bool active);
+    event SpendLimitsChangeProposed(uint256 maxPerTransfer, uint256 dailyTransferLimit, uint64 executeAfter);
+    event SpendLimitsChangeCancelled();
+    event LargeTransferThresholdChangeProposed(uint256 threshold, uint64 executeAfter);
+    event LargeTransferThresholdChangeCancelled();
+    event ERC20RescueProposed(address indexed token, address indexed to, uint256 amount, uint64 executeAfter);
+    event ERC20RescueCancelled(address indexed token, address indexed to, uint256 amount);
+    event NativeRescueProposed(address indexed to, uint256 amount, uint64 executeAfter);
+    event NativeRescueCancelled(address indexed to, uint256 amount);
+    event TokenApprovalProposed(address indexed token, address indexed spender, uint256 amount, uint64 executeAfter);
+    event TokenApprovalCancelled(address indexed token, address indexed spender, uint256 amount);
 
     event WalletRotationProposed(
         address indexed oldWallet,
@@ -134,6 +185,7 @@ contract CardBoundVault is ReentrancyGuard {
     event SpendLimitsSet(uint256 maxPerTransfer, uint256 dailyTransferLimit);
     event VaultApprove(address indexed spender, uint256 amount);
     event NativeRescue(address indexed to, uint256 amount);
+    event NativeReceived(address indexed sender, uint256 amount);
 
     // Withdrawal queue events
     event WithdrawalQueued(uint256 indexed queueIndex, address indexed toVault, uint256 amount, uint64 executeAfter);
@@ -227,6 +279,7 @@ contract CardBoundVault is ReentrancyGuard {
             if (guardian == address(0)) revert CBV_Zero();
             if (!isGuardian[guardian]) {
                 isGuardian[guardian] = true;
+                guardianAddedAt[guardian] = uint64(block.timestamp);
                 guardianCount++;
                 emit GuardianSet(guardian, true);
             }
@@ -265,6 +318,8 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Propose a guardian change with 24-hour timelock (CBV-03)
     function proposeGuardianChange(address guardian, bool active) external onlyAdmin {
         if (guardian == address(0)) revert CBV_Zero();
+        // M-7 FIX: Prevent silently clobbering an existing pending change
+        require(pendingGuardianChange.effectiveAt == 0, "CBV: pending change exists");
         pendingGuardianChange = PendingGuardianChange(guardian, active, uint64(block.timestamp) + 1 days);
         emit GuardianChangeProposed(guardian, active, uint64(block.timestamp) + 1 days);
     }
@@ -279,9 +334,9 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Cancel a pending guardian change (CBV-03)
     function cancelGuardianChange() external onlyAdmin {
-        address g = pendingGuardianChange.guardian;
+        PendingGuardianChange memory p = pendingGuardianChange;
         delete pendingGuardianChange;
-        emit GuardianChangeCancelled(g);
+        emit GuardianChangeCancelled(p.guardian, p.active);
     }
 
     function _applyGuardianChange(address guardian, bool active) internal {
@@ -290,8 +345,10 @@ contract CardBoundVault is ReentrancyGuard {
         isGuardian[guardian] = active;
         if (active) {
             if (guardianCount >= MAX_GUARDIANS) revert CBV_InvalidThreshold();
+            guardianAddedAt[guardian] = uint64(block.timestamp);
             guardianCount++;
         } else {
+            delete guardianAddedAt[guardian];
             guardianCount--;
             if (guardianThreshold > guardianCount) {
                 guardianThreshold = guardianCount;
@@ -301,6 +358,18 @@ contract CardBoundVault is ReentrancyGuard {
 
         if (guardianCount == 0 || guardianThreshold == 0) revert CBV_InvalidThreshold();
         emit GuardianSet(guardian, active);
+    }
+
+    function _guardianSetupComplete() internal view returns (bool) {
+        if (hub.code.length == 0) {
+            return false;
+        }
+
+        try IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this)) returns (bool complete) {
+            return complete;
+        } catch {
+            return false;
+        }
     }
 
     /// @notice Legacy guardian mutator — ONLY usable during bootstrap (before guardianSetupComplete).
@@ -338,15 +407,54 @@ contract CardBoundVault is ReentrancyGuard {
         if (_maxPerTransfer == 0 || _dailyTransferLimit == 0 || _maxPerTransfer > _dailyTransferLimit) {
             revert CBV_TransferLimit();
         }
+
+        if (_guardianSetupComplete()) {
+            uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
+            pendingSpendLimitChange = PendingSpendLimitChange({
+                maxPerTransfer: _maxPerTransfer,
+                dailyTransferLimit: _dailyTransferLimit,
+                executeAfter: executeAfter
+            });
+            emit SpendLimitsChangeProposed(_maxPerTransfer, _dailyTransferLimit, executeAfter);
+            return;
+        }
+
         maxPerTransfer = _maxPerTransfer;
         dailyTransferLimit = _dailyTransferLimit;
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
 
+    function applySpendLimits() external onlyAdmin {
+        PendingSpendLimitChange memory pending = pendingSpendLimitChange;
+        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
+        delete pendingSpendLimitChange;
+        maxPerTransfer = pending.maxPerTransfer;
+        dailyTransferLimit = pending.dailyTransferLimit;
+        emit SpendLimitsSet(pending.maxPerTransfer, pending.dailyTransferLimit);
+    }
+
+    function cancelSpendLimitsChange() external onlyAdmin {
+        delete pendingSpendLimitChange;
+        emit SpendLimitsChangeCancelled();
+    }
+
+    function isGuardianMature(address guardian) external view returns (bool) {
+        uint64 addedAt = guardianAddedAt[guardian];
+        return addedAt != 0 && block.timestamp >= addedAt + GUARDIAN_MATURITY_PERIOD;
+    }
+
     /// @notice Approve a spender to pull VFIDE from this vault (e.g., MerchantPortal).
+    // slither-disable-next-line reentrancy-events
     function approveVFIDE(address spender, uint256 amount) external onlyAdmin whenNotPaused {
         require(spender != address(0), "CBV: zero spender");
-        IERC20(vfideToken).approve(spender, amount);
+        _validateApprovalAmount(amount);
+
+        if (_guardianSetupComplete()) {
+            _queueTokenApproval(vfideToken, spender, amount);
+            return;
+        }
+
+        IERC20(vfideToken).forceApprove(spender, amount);
         emit VaultApprove(spender, amount);
     }
 
@@ -355,12 +463,43 @@ contract CardBoundVault is ReentrancyGuard {
     ///      Cannot approve VFIDE — use approveVFIDE for that.
     event ERC20Approve(address indexed token, address indexed spender, uint256 amount);
 
+    // slither-disable-next-line reentrancy-events
     function approveERC20(address token, address spender, uint256 amount) external onlyAdmin whenNotPaused {
         require(token != vfideToken, "CBV: use approveVFIDE for VFIDE");
         require(spender != address(0), "CBV: zero spender");
         require(token != address(0), "CBV: zero token");
-        IERC20(token).approve(spender, amount);
+        _validateApprovalAmount(amount);
+
+        if (_guardianSetupComplete()) {
+            _queueTokenApproval(token, spender, amount);
+            return;
+        }
+
+        IERC20(token).forceApprove(spender, amount);
         emit ERC20Approve(token, spender, amount);
+    }
+
+    // slither-disable-next-line reentrancy-events
+    function applyTokenApproval() external onlyAdmin whenNotPaused {
+        PendingTokenApproval memory pending = pendingTokenApproval;
+        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
+
+        _validateApprovalAmount(pending.amount);
+
+        delete pendingTokenApproval;
+        IERC20(pending.token).forceApprove(pending.spender, pending.amount);
+
+        if (pending.token == vfideToken) {
+            emit VaultApprove(pending.spender, pending.amount);
+        } else {
+            emit ERC20Approve(pending.token, pending.spender, pending.amount);
+        }
+    }
+
+    function cancelTokenApproval() external onlyAdmin {
+        PendingTokenApproval memory pending = pendingTokenApproval;
+        delete pendingTokenApproval;
+        emit TokenApprovalCancelled(pending.token, pending.spender, pending.amount);
     }
 
     /// @notice Pause vault operations (admin or guardian emergency control).
@@ -508,8 +647,31 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param _threshold Amount in VFIDE (with decimals). Set to 0 to disable queueing.
     /// @dev Example: 1000e18 = transfers of 1000+ VFIDE require a 7-day wait.
     function setLargeTransferThreshold(uint256 _threshold) external onlyAdmin {
+        if (_guardianSetupComplete()) {
+            uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
+            pendingLargeTransferThresholdChange = PendingLargeTransferThresholdChange({
+                threshold: _threshold,
+                executeAfter: executeAfter
+            });
+            emit LargeTransferThresholdChangeProposed(_threshold, executeAfter);
+            return;
+        }
+
         largeTransferThreshold = _threshold;
         emit LargeTransferThresholdSet(_threshold);
+    }
+
+    function applyLargeTransferThresholdChange() external onlyAdmin {
+        PendingLargeTransferThresholdChange memory pending = pendingLargeTransferThresholdChange;
+        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
+        delete pendingLargeTransferThresholdChange;
+        largeTransferThreshold = pending.threshold;
+        emit LargeTransferThresholdSet(pending.threshold);
+    }
+
+    function cancelLargeTransferThresholdChange() external onlyAdmin {
+        delete pendingLargeTransferThresholdChange;
+        emit LargeTransferThresholdChangeCancelled();
     }
 
     /// @notice Execute a previously queued large withdrawal after the delay period.
@@ -574,6 +736,12 @@ contract CardBoundVault is ReentrancyGuard {
         w.cancelled = true;
         if (activeQueuedWithdrawals > 0) {
             activeQueuedWithdrawals -= 1;
+        }
+
+        // H-02 FIX: Refund spentToday if the cancellation is within the same daily window
+        // as the queue time, so the owner is not rate-limited for a transfer that never occurred.
+        if (w.requestTime >= dayStart && spentToday >= w.amount) {
+            spentToday -= w.amount;
         }
 
         emit WithdrawalCancelled(queueIndex, msg.sender);
@@ -671,6 +839,22 @@ contract CardBoundVault is ReentrancyGuard {
         emit WithdrawalQueued(withdrawalQueue.length - 1, toVault, amount, executeAfter);
     }
 
+    function _queueTokenApproval(address token, address spender, uint256 amount) internal {
+        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
+        pendingTokenApproval = PendingTokenApproval({
+            token: token,
+            spender: spender,
+            amount: amount,
+            executeAfter: executeAfter
+        });
+
+        emit TokenApprovalProposed(token, spender, amount, executeAfter);
+    }
+
+    function _validateApprovalAmount(uint256 amount) internal view {
+        if (amount > dailyTransferLimit) revert CBV_TransferLimit();
+    }
+
     /// @notice Return EIP-712 domain separator used for transfer intent signing.
     function domainSeparator() public view returns (bytes32) {
         return keccak256(
@@ -760,9 +944,31 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Rescue accidentally sent native token; vault custody remains token-based.
     function rescueNative(address payable to, uint256 amount) external onlyAdmin nonReentrant {
         if (to == address(0)) revert CBV_Zero();
-        (bool ok, ) = to.call{value: amount, gas: 10_000}("");
+
+        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
+        pendingNativeRescue = PendingNativeRescue({
+            to: to,
+            amount: amount,
+            executeAfter: executeAfter
+        });
+        emit NativeRescueProposed(to, amount, executeAfter);
+    }
+
+    function applyRescueNative() external onlyAdmin nonReentrant {
+        PendingNativeRescue memory pending = pendingNativeRescue;
+        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
+
+        delete pendingNativeRescue;
+
+        (bool ok, ) = pending.to.call{value: pending.amount, gas: 10_000}("");
         if (!ok) revert CBV_TransferFailed();
-        emit NativeRescue(to, amount);
+        emit NativeRescue(pending.to, pending.amount);
+    }
+
+    function cancelRescueNative() external onlyAdmin {
+        PendingNativeRescue memory pending = pendingNativeRescue;
+        delete pendingNativeRescue;
+        emit NativeRescueCancelled(pending.to, pending.amount);
     }
 
     /// @notice CBV-05 FIX: Rescue accidentally sent non-VFIDE ERC20 tokens.
@@ -771,7 +977,28 @@ contract CardBoundVault is ReentrancyGuard {
     function rescueERC20(address token, address to, uint256 amount) external onlyAdmin nonReentrant {
         if (to == address(0)) revert CBV_Zero();
         require(token != vfideToken, "CBV: cannot rescue VFIDE via rescueERC20");
-        IERC20(token).safeTransfer(to, amount);
+
+        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
+        pendingERC20Rescue = PendingERC20Rescue({
+            token: token,
+            to: to,
+            amount: amount,
+            executeAfter: executeAfter
+        });
+        emit ERC20RescueProposed(token, to, amount, executeAfter);
+    }
+
+    function applyRescueERC20() external onlyAdmin nonReentrant {
+        PendingERC20Rescue memory pending = pendingERC20Rescue;
+        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
+        delete pendingERC20Rescue;
+        IERC20(pending.token).safeTransfer(pending.to, pending.amount);
+    }
+
+    function cancelRescueERC20() external onlyAdmin {
+        PendingERC20Rescue memory pending = pendingERC20Rescue;
+        delete pendingERC20Rescue;
+        emit ERC20RescueCancelled(pending.token, pending.to, pending.amount);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -800,5 +1027,7 @@ contract CardBoundVault is ReentrancyGuard {
         emit PauseSet(true, msg.sender);
     }
 
-    receive() external payable {}
+    receive() external payable {
+        emit NativeReceived(msg.sender, msg.value);
+    }
 }

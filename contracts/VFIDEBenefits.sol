@@ -145,6 +145,7 @@ contract VFIDEBenefits {
      * @param merchant Merchant address  
      * @param amount Transaction amount (for logging)
      */
+    // slither-disable-next-line reentrancy-events
     function rewardTransaction(
         address buyer,
         address merchant,
@@ -173,7 +174,6 @@ contract VFIDEBenefits {
         // Trigger EcosystemVault activity tracking (merchant ranking rewards are permanently disabled)
         if (address(ecosystemVault) != address(0)) {
             try ecosystemVault.recordMerchantTransaction(merchant) {} catch {}
-            try ecosystemVault.checkHeadhunterReward(merchant) {} catch {}
         }
         
         // Log the event

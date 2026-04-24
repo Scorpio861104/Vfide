@@ -51,6 +51,7 @@ contract PayrollManager is ReentrancyGuard {
     event PayeeUpdated(uint256 indexed streamId, address indexed oldPayee, address indexed newPayee);
     event EmergencyWithdraw(uint256 indexed streamId, address indexed to, uint256 amount);
     event StreamExpired(uint256 indexed streamId, address indexed reclaimedBy, uint256 amount);
+    event DAOSet(address indexed dao);
 
     struct Stream {
         address payer;
@@ -70,6 +71,14 @@ contract PayrollManager is ReentrancyGuard {
     mapping(uint256 => Stream) public streams;
     uint256 public nextStreamId = 1;
     
+    // H-27 FIX: Two-step payee update with 48h timelock to prevent instant address hijack on key compromise.
+    struct PendingPayeeUpdate {
+        address newPayee;
+        uint256 validFrom; // block.timestamp at proposal + PAYEE_UPDATE_DELAY
+    }
+    mapping(uint256 => PendingPayeeUpdate) public pendingPayeeUpdates;
+    uint256 public constant PAYEE_UPDATE_DELAY = 48 hours;
+    
     // NEW: DAO for emergency controls
     address public dao;
     
@@ -82,6 +91,13 @@ contract PayrollManager is ReentrancyGuard {
     // NEW: Track streams by payer and payee
     mapping(address => uint256[]) private payerStreams;
     mapping(address => uint256[]) private payeeStreams;
+
+    // H-2 FIX: Timelocked DAO rotation
+    address public pendingDAO_PM;
+    uint64 public pendingDAOAt_PM;
+    uint64 public constant DAO_CHANGE_DELAY_PM = 48 hours;
+    event DAOChangeProposed(address indexed newDAO, uint64 effectiveAt);
+    event DAOChangeCancelled();
     
     modifier onlyDAO() {
         require(msg.sender == dao, "PM: not DAO");
@@ -96,7 +112,24 @@ contract PayrollManager is ReentrancyGuard {
     
     function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "PM: zero DAO");
-        dao = _dao;
+        pendingDAO_PM = _dao;
+        pendingDAOAt_PM = uint64(block.timestamp) + DAO_CHANGE_DELAY_PM;
+        emit DAOChangeProposed(_dao, pendingDAOAt_PM);
+    }
+
+    function applyDAO() external onlyDAO {
+        require(pendingDAOAt_PM != 0 && block.timestamp >= pendingDAOAt_PM, "PM: timelock");
+        dao = pendingDAO_PM;
+        delete pendingDAO_PM;
+        delete pendingDAOAt_PM;
+        emit DAOSet(dao);
+    }
+
+    function cancelDAOChange() external onlyDAO {
+        require(pendingDAOAt_PM != 0, "PM: no pending");
+        delete pendingDAO_PM;
+        delete pendingDAOAt_PM;
+        emit DAOChangeCancelled();
     }
     
     function setSeer(address _seer) external onlyDAO {
@@ -144,10 +177,15 @@ contract PayrollManager is ReentrancyGuard {
         require(payeeStreams[payee].length < 200, "PM: payee stream cap");
         payeeStreams[payee].push(id);
 
-        // Transfer tokens in
-        IERC20(token).safeTransferFrom(msg.sender, address(this), initialDeposit);
-
         emit StreamCreated(id, msg.sender, payee, rate);
+
+        // M-4 FIX: Account for fee-on-transfer tokens by measuring actual received amount
+        uint256 balBefore = IERC20(token).balanceOf(address(this));
+        IERC20(token).safeTransferFrom(msg.sender, address(this), initialDeposit);
+        uint256 actualDeposit = IERC20(token).balanceOf(address(this)) - balBefore;
+        if (actualDeposit < initialDeposit) {
+            streams[id].depositBalance = actualDeposit;
+        }
         
         // Reward payer for creating payroll stream
         if (address(seer) != address(0)) {
@@ -222,6 +260,7 @@ contract PayrollManager is ReentrancyGuard {
         
         // Settle current accrued first
         uint256 due = claimable(streamId);
+        s.ratePerSecond = newRate;
         if (due > 0 && !s.paused) {
             if (due > s.depositBalance) {
                 due = s.depositBalance;
@@ -231,8 +270,6 @@ contract PayrollManager is ReentrancyGuard {
             emit Withdraw(streamId, s.payee, due);
             _safeTransferPay(s.token, s.payee, due);
         }
-
-        s.ratePerSecond = newRate;
         
         emit RateModified(streamId, oldRate, newRate);
     }
@@ -247,10 +284,34 @@ contract PayrollManager is ReentrancyGuard {
         if (msg.sender != s.payee) revert PM_NotPayee();
         if (newPayee == address(0)) revert PM_InvalidPayee();
         
+        // H-27 FIX: Propose with 48h timelock; apply separately.
+        pendingPayeeUpdates[streamId] = PendingPayeeUpdate({
+            newPayee: newPayee,
+            validFrom: block.timestamp + PAYEE_UPDATE_DELAY
+        });
+        emit PayeeUpdated(streamId, s.payee, newPayee); // emitted at proposal not apply
+    }
+
+    /// @notice Apply a previously-proposed payee update after the 48h lock has elapsed.
+    function applyPayeeUpdate(uint256 streamId) external {
+        Stream storage s = streams[streamId];
+        if (!s.active) revert PM_StreamInactive();
+        PendingPayeeUpdate storage p = pendingPayeeUpdates[streamId];
+        require(p.validFrom != 0, "PM: no pending update");
+        require(block.timestamp >= p.validFrom, "PM: timelock pending");
+        require(msg.sender == s.payee || msg.sender == p.newPayee, "PM: not payee");
+
         address oldPayee = s.payee;
-        s.payee = newPayee;
-        
-        emit PayeeUpdated(streamId, oldPayee, newPayee);
+        s.payee = p.newPayee;
+        delete pendingPayeeUpdates[streamId];
+        emit PayeeUpdated(streamId, oldPayee, s.payee);
+    }
+
+    /// @notice Cancel a pending payee update (callable by current payee or payer).
+    function cancelPayeeUpdate(uint256 streamId) external {
+        Stream storage s = streams[streamId];
+        require(msg.sender == s.payee || msg.sender == s.payer, "PM: not authorized");
+        delete pendingPayeeUpdates[streamId];
     }
     
     /**
@@ -375,10 +436,12 @@ contract PayrollManager is ReentrancyGuard {
     }
 
     /// @notice Reclaim remaining stream balance after hard expiry.
+    /// @dev L-3 FIX: Restricted to payer or payee to prevent permissionless griefing.
     function claimExpiredStream(uint256 streamId) external nonReentrant {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (block.timestamp < s.expiryTime) revert PM_StreamNotExpired();
+        require(msg.sender == s.payer || msg.sender == s.payee, "PM: not authorized");
 
         // Calculate payee's accrued wages (capped at expiry)
         uint256 payeeClaimable = claimable(streamId);

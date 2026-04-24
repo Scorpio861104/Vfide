@@ -11,6 +11,7 @@ import {
     AttachmentType,
     formatFileSize
 } from '@/lib/attachments';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     Download,
@@ -121,7 +122,7 @@ function ImageAttachment({ attachment, compact, onClick }: ImageAttachmentProps)
         <button
           onClick={(e) => {
             e.stopPropagation();
-            window.open(attachment.url, '_blank');
+            safeWindowOpen(attachment.url, { allowRelative: false });
           }}
           className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
         >

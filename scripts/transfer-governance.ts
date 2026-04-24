@@ -32,16 +32,73 @@ async function main() {
     merchantPortal: process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS!,
     flashLoan: process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS!,
     hooks: process.env.NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS!,
+    councilElection: process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || "",
+    systemHandover:
+      process.env.NEXT_PUBLIC_SYSTEM_HANDOVER_ADDRESS ||
+      process.env.SYSTEM_HANDOVER_ADDRESS ||
+      "",
     // Set these after deploying the remaining contracts:
     ocp: process.env.NEXT_PUBLIC_OCP_ADDRESS || "",
     sanctumVault: process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS || "",
     ecosystemVault: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || "",
+    daoPayrollPool: process.env.NEXT_PUBLIC_DAO_PAYROLL_POOL_ADDRESS || "",
+    merchantPool: process.env.NEXT_PUBLIC_MERCHANT_POOL_ADDRESS || "",
+    headhunterPool: process.env.NEXT_PUBLIC_HEADHUNTER_POOL_ADDRESS || "",
     termLoan: process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS || "",
   };
 
+  const allowCommingledFeeDestinations =
+    process.env.ALLOW_COMMINGLED_FEE_DESTINATIONS === "true";
+  const requireSystemHandover = process.env.REQUIRE_SYSTEM_HANDOVER !== "false";
+
   for (const [name, addr] of Object.entries(addrs)) {
-    if (!addr && !["ocp", "sanctumVault", "ecosystemVault", "termLoan"].includes(name)) {
+    if (!addr && ![
+      "ocp",
+      "sanctumVault",
+      "ecosystemVault",
+      "daoPayrollPool",
+      "merchantPool",
+      "headhunterPool",
+      "systemHandover",
+      "termLoan",
+    ].includes(name)) {
       throw new Error(`Missing env var for ${name}`);
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  //  0. SYSTEM HANDOVER ARMING ENFORCEMENT
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 0. SystemHandover Arming ═══");
+
+  if (!addrs.systemHandover) {
+    if (requireSystemHandover) {
+      throw new Error(
+        "Missing SystemHandover address. Set NEXT_PUBLIC_SYSTEM_HANDOVER_ADDRESS or SYSTEM_HANDOVER_ADDRESS, " +
+        "or set REQUIRE_SYSTEM_HANDOVER=false only for explicit local exceptions."
+      );
+    }
+    console.log("  ⚠️  SystemHandover address not set; arming check skipped by REQUIRE_SYSTEM_HANDOVER=false");
+  } else {
+    const handover = await ethers.getContractAt("SystemHandover", addrs.systemHandover);
+    const currentStart = await handover.start();
+
+    if (currentStart === 0n) {
+      let armTimestamp: bigint;
+      if (process.env.HANDOVER_START_TIMESTAMP) {
+        armTimestamp = BigInt(process.env.HANDOVER_START_TIMESTAMP);
+        if (armTimestamp === 0n) {
+          throw new Error("HANDOVER_START_TIMESTAMP must not be zero");
+        }
+      } else {
+        const latestBlock = await ethers.provider.getBlock("latest");
+        armTimestamp = BigInt(latestBlock!.timestamp);
+      }
+
+      await handover.arm(armTimestamp);
+      console.log(`  ✅ SystemHandover.arm(${armTimestamp})`);
+    } else {
+      console.log(`  ✅ SystemHandover already armed at start=${currentStart}`);
     }
   }
 
@@ -143,12 +200,43 @@ async function main() {
   }
 
   // ══════════════════════════════════════════════
-  //  4. DAOTIMELOCK ADMIN TRANSFER
-  //     (self-referencing tx: timelock changes its own admin to DAO)
+  //  4. DAO TIMELOCKED GOVERNANCE BOOTSTRAP
+  //     (queue DAO-only calls while the deployer still controls timelock admin)
   // ══════════════════════════════════════════════
-  console.log("\n═══ 4. DAOTimelock Admin → DAO ═══");
+  console.log("\n═══ 4. DAO Timelock Bootstrap ═══");
 
   const timelock = await ethers.getContractAt("DAOTimelock", addrs.timelock);
+  const dao = await ethers.getContractAt("DAO", addrs.dao);
+
+  if (addrs.councilElection) {
+    const setCouncilData = dao.interface.encodeFunctionData("setCouncilElection", [addrs.councilElection]);
+    const syncQuorumData = dao.interface.encodeFunctionData("syncQuorumToCouncil", []);
+
+    try {
+      const setCouncilTxId = await timelock.queueTx(addrs.dao, 0, setCouncilData);
+      console.log("  ✅ DAO.setCouncilElection(CouncilElection) queued");
+      console.log(`     Execute after delay: timelock.execute(${setCouncilTxId})`);
+    } catch (e: any) {
+      console.log("  ⏭️  queueTx(setCouncilElection):", e.reason || e.message);
+    }
+
+    try {
+      const syncQuorumTxId = await timelock.queueTx(addrs.dao, 0, syncQuorumData);
+      console.log("  ✅ DAO.syncQuorumToCouncil() queued");
+      console.log(`     Execute after delay: timelock.execute(${syncQuorumTxId})`);
+    } catch (e: any) {
+      console.log("  ⏭️  queueTx(syncQuorumToCouncil):", e.reason || e.message);
+    }
+  } else {
+    console.log("  ⚠️  CouncilElection not provided — DAO council/quorum sync not queued");
+  }
+
+  // ══════════════════════════════════════════════
+  //  5. DAOTIMELOCK ADMIN TRANSFER
+  //     (self-referencing tx: timelock changes its own admin to DAO)
+  // ══════════════════════════════════════════════
+  console.log("\n═══ 5. DAOTimelock Admin → DAO ═══");
+
   const setAdminData = timelock.interface.encodeFunctionData("setAdmin", [addrs.dao]);
   try {
     const _txId = await timelock.queueTx(addrs.timelock, 0, setAdminData);
@@ -159,9 +247,9 @@ async function main() {
   }
 
   // ══════════════════════════════════════════════
-  //  5. TOKEN OWNERSHIP → OCP (when deployed)
+  //  6. TOKEN OWNERSHIP → OCP (when deployed)
   // ══════════════════════════════════════════════
-  console.log("\n═══ 5. Token Ownership ═══");
+  console.log("\n═══ 6. Token Ownership ═══");
 
   if (addrs.ocp) {
     try {
@@ -176,16 +264,36 @@ async function main() {
   }
 
   // ══════════════════════════════════════════════
-  //  6. FEEDISTRIBUTOR DESTINATIONS
+  //  7. FEEDISTRIBUTOR DESTINATIONS
   // ══════════════════════════════════════════════
-  console.log("\n═══ 6. FeeDistributor Destinations ═══");
+  console.log("\n═══ 7. FeeDistributor Destinations ═══");
 
   const feeDist = await ethers.getContractAt("FeeDistributor", addrs.feeDistributor);
+
+  const daoPayrollDestination = addrs.daoPayrollPool || addrs.ecosystemVault || deployer.address;
+  const merchantPoolDestination = addrs.merchantPool || addrs.ecosystemVault || deployer.address;
+  const headhunterPoolDestination = addrs.headhunterPool || addrs.ecosystemVault || deployer.address;
+
+  const payoutPools = [
+    ["daoPayroll", daoPayrollDestination],
+    ["merchantPool", merchantPoolDestination],
+    ["headhunterPool", headhunterPoolDestination],
+  ] as const;
+
+  const uniquePayoutPoolDestinations = new Set(payoutPools.map(([, addr]) => addr));
+  if (!allowCommingledFeeDestinations && uniquePayoutPoolDestinations.size < payoutPools.length) {
+    throw new Error(
+      "Refusing to commingle FeeDistributor payout pools. Set NEXT_PUBLIC_DAO_PAYROLL_POOL_ADDRESS, " +
+      "NEXT_PUBLIC_MERCHANT_POOL_ADDRESS, and NEXT_PUBLIC_HEADHUNTER_POOL_ADDRESS to distinct addresses, " +
+      "or set ALLOW_COMMINGLED_FEE_DESTINATIONS=true for intentional temporary commingling."
+    );
+  }
+
   const destinations = [
     ["sanctum", addrs.sanctumVault || deployer.address],
-    ["daoPayroll", addrs.ecosystemVault || deployer.address],
-    ["merchantPool", addrs.ecosystemVault || deployer.address],
-    ["headhunterPool", addrs.ecosystemVault || deployer.address],
+    ["daoPayroll", daoPayrollDestination],
+    ["merchantPool", merchantPoolDestination],
+    ["headhunterPool", headhunterPoolDestination],
   ];
 
   for (const [name, addr] of destinations) {
@@ -203,6 +311,10 @@ async function main() {
   console.log("  - token.applySanctumSink()");
   console.log("  - burnRouter.applyModules()");
   console.log("  - seer.applyDAOChange()");
+  if (addrs.councilElection) {
+    console.log("  - timelock.execute(setCouncilElection txId)");
+    console.log("  - timelock.execute(syncQuorumToCouncil txId)");
+  }
   console.log("  - timelock.execute(setAdmin txId)");
   console.log("");
   console.log("⚠️  BEFORE MAINNET:");

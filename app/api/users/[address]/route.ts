@@ -173,9 +173,8 @@ export async function GET(
       });
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to fetch user' },
       { status: 500 }
     );
   }
@@ -321,9 +320,8 @@ export async function PUT(
     });
   } catch (error) {
     logger.error('[User PUT API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update user';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to update user' },
       { status: 500 }
     );
   }
@@ -410,9 +408,8 @@ export async function POST(
     );
   } catch (error) {
     logger.error('[Avatar Upload API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to upload avatar';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to upload avatar' },
       { status: 500 }
     );
   }

@@ -167,8 +167,8 @@ export default function () {
       "Content-Type": "application/json",
     };
 
-    // User profile
-    let res = http.get(`${BASE_URL}/api/users/profile`, { headers });
+    // User list/profile access
+    let res = http.get(`${BASE_URL}/api/users`, { headers });
     if (res.status === 429) {
       rateLimitHits.add(1);
     }
@@ -185,12 +185,12 @@ export default function () {
     });
     apiLatency.add(res.timings.duration);
 
-    // Staking positions
-    res = http.get(`${BASE_URL}/api/staking/positions`, { headers });
+    // Activities
+    res = http.get(`${BASE_URL}/api/activities`, { headers });
     apiLatency.add(res.timings.duration);
 
     // Governance proposals
-    res = http.get(`${BASE_URL}/api/governance/proposals?page=1&limit=10`, { headers });
+    res = http.get(`${BASE_URL}/api/proposals?page=1&limit=10`, { headers });
     apiLatency.add(res.timings.duration);
 
     // Merchant listings

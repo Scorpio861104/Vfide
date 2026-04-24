@@ -10,6 +10,7 @@ import {
   X,
   Briefcase,
 } from 'lucide-react';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 // ==================== TYPES ====================
 
@@ -79,7 +80,10 @@ export function ShareSystem({ userId: _userId = 'current_user', onShare }: Share
     };
 
     if (shareUrls[platform]) {
-      window.open(shareUrls[platform], '_blank');
+      safeWindowOpen(shareUrls[platform], {
+        allowRelative: false,
+        allowedHosts: ['twitter.com', 'x.com', 'linkedin.com', 'wa.me', 't.me', 'discord.com'],
+      });
       onShare?.(platform, content);
     }
   };

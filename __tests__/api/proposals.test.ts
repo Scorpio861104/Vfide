@@ -14,20 +14,25 @@ jest.mock('@/lib/auth/middleware', () => ({
   checkOwnership: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/validation', () => ({
-  createProposalSchema: {
-    safeParse: jest.fn(),
-  },
-}));
+jest.mock('viem', () => {
+  const actual = jest.requireActual('viem');
+  return {
+    ...actual,
+    createPublicClient: jest.fn(),
+    http: jest.fn((url: string) => url),
+  };
+});
 
 describe('/api/proposals', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth, checkOwnership } = require('@/lib/auth/middleware');
-  const { createProposalSchema } = require('@/lib/auth/validation');
+  const { createPublicClient } = require('viem');
 
   beforeEach(() => {
     jest.clearAllMocks();
+    delete process.env.NEXT_PUBLIC_SEER_ADDRESS;
+    delete process.env.NEXT_PUBLIC_RPC_URL;
   });
 
   describe('GET', () => {
@@ -162,14 +167,15 @@ describe('/api/proposals', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       checkOwnership.mockReturnValue(true);
-      createProposalSchema.safeParse.mockReturnValue({
-        success: true,
-        data: {
-          proposerAddress: '0x1111111111111111111111111111111111111123',
-          title: 'New Proposal',
-          description: 'Description',
-        },
+      process.env.NEXT_PUBLIC_SEER_ADDRESS = '0x1111111111111111111111111111111111111111';
+      process.env.NEXT_PUBLIC_RPC_URL = 'http://127.0.0.1:8545';
+
+      const readContract = jest.fn().mockImplementation(async ({ functionName }: { functionName: string }) => {
+        if (functionName === 'minForGovernance') return 5000n;
+        if (functionName === 'getScore') return 6000n;
+        throw new Error('Unexpected function call');
       });
+      createPublicClient.mockReturnValue({ readContract });
 
       query.mockResolvedValueOnce({ rows: [{ id: 1, is_council_member: false, proof_score: 100 }] });
       query.mockResolvedValueOnce({
@@ -193,6 +199,31 @@ describe('/api/proposals', () => {
 
       expect(response.status).toBe(201);
       expect(data.proposal).toBeDefined();
+      expect(readContract).toHaveBeenCalledTimes(2);
+    });
+
+    it('should reject non-council proposers below strict DB fallback threshold when on-chain verification is unavailable', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+      checkOwnership.mockReturnValue(true);
+
+      query.mockResolvedValueOnce({ rows: [{ id: 1, is_council_member: false, proof_score: 100 }] });
+
+      const request = new NextRequest('http://localhost:3000/api/proposals', {
+        method: 'POST',
+        body: JSON.stringify({
+          proposerAddress: '0x1111111111111111111111111111111111111123',
+          title: 'New Proposal',
+          description: 'Description',
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(403);
+      expect(data.error).toContain('Insufficient governance eligibility');
+      expect(query).toHaveBeenCalledTimes(1);
     });
 
     it('should return 401 for unauthorized users', async () => {
@@ -226,7 +257,7 @@ describe('/api/proposals', () => {
 
       expect(response.status).toBe(401);
       expect(data.error).toBe('Unauthorized');
-      expect(createProposalSchema.safeParse).not.toHaveBeenCalled();
+      expect(query).not.toHaveBeenCalled();
     });
   });
 });

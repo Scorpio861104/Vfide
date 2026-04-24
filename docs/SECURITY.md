@@ -200,7 +200,7 @@ All POST/PUT/PATCH requests must have a valid `Content-Type` header:
 - `multipart/form-data` for file uploads
 - `application/x-www-form-urlencoded` for form data
 
-**Middleware:** Automatically validates in `middleware.ts`
+**Runtime enforcement:** Automatically validated in `proxy.ts` and re-exported through `middleware.ts` for compatibility.
 
 #### Input Sanitization
 - **React XSS Protection:** React automatically escapes content rendered in JSX
@@ -214,7 +214,7 @@ All POST/PUT/PATCH requests must have a valid `Content-Type` header:
 
 ### Body Size Enforcement
 
-**Location:** `middleware.ts`
+**Location:** `proxy.ts` (`middleware.ts` re-exports the same handler)
 
 #### Size Limits by Endpoint
 
@@ -237,12 +237,13 @@ All POST/PUT/PATCH requests must have a valid `Content-Type` header:
 
 ### Content Security Policy (CSP)
 
-**Location:** `middleware.ts`
+**Location:** `proxy.ts` (`middleware.ts` re-exports the same handler)
 
 #### Features
 - **Nonce-based CSP:** Unique nonce per request for inline scripts/styles
 - **Stored in header:** `x-nonce` header contains the nonce value
-- **Dynamic injection:** CSP headers modified to include nonce
+- **Dynamic injection:** CSP headers modified per request to include the nonce
+- **Single enforcement path:** CSP, CSRF, and body-size checks are enforced in `proxy.ts`
 
 ### XSS Prevention
 1. **React's built-in escaping:** Default for all JSX content

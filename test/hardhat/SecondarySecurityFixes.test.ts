@@ -10,18 +10,30 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // BSM-01: BridgeSecurityModule — flagged users must be rejected
 // ─────────────────────────────────────────────────────────────────────────────
 describe("BridgeSecurityModule (BSM-01: flagged-user bypass closed)", { concurrency: 1 }, () => {
-  async function deployBSM() {
-    const { ethers } = (await network.connect()) as any;
+  async function bridgeSecurityModuleFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [owner, bridge, user] = await ethers.getSigners();
 
     const BSM = await ethers.getContractFactory("BridgeSecurityModule");
     const bsm = await BSM.deploy(owner.address, bridge.address);
     await bsm.waitForDeployment();
     return { ethers, bsm, owner, bridge, user };
+  }
+
+  async function deployBSM() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(bridgeSecurityModuleFixture);
   }
 
   it("first 7 calls pass and flag the user on the 7th", async () => {
@@ -82,8 +94,8 @@ describe("BridgeSecurityModule (BSM-01: flagged-user bypass closed)", { concurre
 // SG-01: SeerGuardian — checkAndEnforce must apply most-severe restriction
 // ─────────────────────────────────────────────────────────────────────────────
 describe("SeerGuardian (SG-01: severity-first restriction escalation)", { concurrency: 1 }, () => {
-  async function deploySG() {
-    const { ethers } = (await network.connect()) as any;
+  async function seerGuardianFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao, subject] = await ethers.getSigners();
 
     const SeerStub = await ethers.getContractFactory("SeerScoreStub");
@@ -104,6 +116,11 @@ describe("SeerGuardian (SG-01: severity-first restriction escalation)", { concur
     const RestrictionType = { None: 0n, TransferLimit: 1n, GovernanceBan: 2n, FullFreeze: 4n };
 
     return { ethers, sg, seer, dao, subject, RestrictionType };
+  }
+
+  async function deploySG() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(seerGuardianFixture);
   }
 
   it("score 500 (critical) → FullFreeze applied in one call (SG-01 fix)", async () => {
@@ -133,6 +150,28 @@ describe("SeerGuardian (SG-01: severity-first restriction escalation)", { concur
     const restriction = await sg.activeRestriction(subjectAddr);
     assert.equal(restriction, RestrictionType.TransferLimit,
       "Expected TransferLimit (1) for very-low score 1500, got: " + restriction);
+  });
+
+  it("score 1500 with existing GovernanceBan → escalates to TransferLimit", async () => {
+    const { sg, seer, subject, ethers, RestrictionType } = await deploySG();
+    const subjectAddr = subject.address;
+
+    await seer.setScore(subjectAddr, 2500);
+    await sg.checkAndEnforce(subjectAddr);
+    assert.equal(await sg.activeRestriction(subjectAddr), RestrictionType.GovernanceBan, "setup check");
+
+    await seer.setScore(subjectAddr, 1500);
+    await ethers.provider.send("evm_increaseTime", [3601]);
+    await ethers.provider.send("evm_mine", []);
+
+    await sg.checkAndEnforce(subjectAddr);
+
+    const restriction = await sg.activeRestriction(subjectAddr);
+    assert.equal(
+      restriction,
+      RestrictionType.TransferLimit,
+      "GovernanceBan → TransferLimit escalation must work on score drop to 1500"
+    );
   });
 
   it("score 2500 (low, below autoRestrictThreshold=3000) → GovernanceBan applied", async () => {

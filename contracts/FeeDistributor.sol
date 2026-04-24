@@ -25,7 +25,7 @@ interface IVFIDEBurnable is IERC20 {
 /// @dev Default split (basis points, 10000 = 100%):
 ///   35% → Burned forever (deflationary)
 ///   20% → Sanctum Fund (charity)
-///   15% → DAO payroll (12 governance members)
+///   15% → DAO payroll (initial 12 governance members, scalable to 21)
 ///   20% → Merchant competition (volume-based)
 ///   10% → Headhunter competition (referral-based)
 contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
@@ -96,6 +96,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     event DestinationChangeCancelled(bytes32 indexed nameHash);
     event DestinationUpdated(string name, address indexed addr);
     event MinDistributionAmountSet(uint256 oldAmount, uint256 newAmount);
+    event DistributionTransferFailed(string channel, address indexed recipient, uint256 amount);
 
     error ZeroAddress();
     error InvalidSplit();
@@ -152,6 +153,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     uint256 public lastDistributionTime;
 
     /// @notice Distribute accumulated fees. Callable by anyone.
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function distribute() external nonReentrant whenNotPaused {
         // M-6 FIX: Rate-limit to prevent repeated spam calls before fees accumulate
         require(block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL, "FD: too soon");
@@ -165,23 +167,57 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 toHeadhunters = balance - toBurn - toSanctum - toDAO - toMerchants;
 
         uint256 burnedThisRun = 0;
+        uint256 distributedThisRun = 0;
         if (toBurn > 0) {
             try vfideToken.burn(toBurn) {
                 totalBurned += toBurn;
                 burnedThisRun = toBurn;
+                distributedThisRun += toBurn;
             } catch {
-                IERC20(address(vfideToken)).safeTransfer(burnAddress, toBurn);
-                emit BurnFallbackTransfer(toBurn, burnAddress);
+                if (_safeTransferOut(burnAddress, toBurn)) {
+                    distributedThisRun += toBurn;
+                    emit BurnFallbackTransfer(toBurn, burnAddress);
+                } else {
+                    emit DistributionTransferFailed("burn", burnAddress, toBurn);
+                }
             }
         }
-        if (toSanctum > 0) { IERC20(address(vfideToken)).safeTransfer(sanctumFund, toSanctum); totalToSanctum += toSanctum; }
-        if (toDAO > 0) { IERC20(address(vfideToken)).safeTransfer(daoPayrollPool, toDAO); totalToDAO += toDAO; }
-        if (toMerchants > 0) { IERC20(address(vfideToken)).safeTransfer(merchantPool, toMerchants); totalToMerchants += toMerchants; }
-        if (toHeadhunters > 0) { IERC20(address(vfideToken)).safeTransfer(headhunterPool, toHeadhunters); totalToHeadhunters += toHeadhunters; }
+        if (toSanctum > 0) {
+            if (_safeTransferOut(sanctumFund, toSanctum)) {
+                totalToSanctum += toSanctum;
+                distributedThisRun += toSanctum;
+            } else {
+                emit DistributionTransferFailed("sanctum", sanctumFund, toSanctum);
+            }
+        }
+        if (toDAO > 0) {
+            if (_safeTransferOut(daoPayrollPool, toDAO)) {
+                totalToDAO += toDAO;
+                distributedThisRun += toDAO;
+            } else {
+                emit DistributionTransferFailed("dao", daoPayrollPool, toDAO);
+            }
+        }
+        if (toMerchants > 0) {
+            if (_safeTransferOut(merchantPool, toMerchants)) {
+                totalToMerchants += toMerchants;
+                distributedThisRun += toMerchants;
+            } else {
+                emit DistributionTransferFailed("merchants", merchantPool, toMerchants);
+            }
+        }
+        if (toHeadhunters > 0) {
+            if (_safeTransferOut(headhunterPool, toHeadhunters)) {
+                totalToHeadhunters += toHeadhunters;
+                distributedThisRun += toHeadhunters;
+            } else {
+                emit DistributionTransferFailed("headhunters", headhunterPool, toHeadhunters);
+            }
+        }
 
-        totalDistributed += balance;
+        totalDistributed += distributedThisRun;
         lastDistributionTime = block.timestamp;
-        emit FeeDistributed(balance, burnedThisRun, toSanctum, toDAO, toMerchants, toHeadhunters);
+        emit FeeDistributed(distributedThisRun, burnedThisRun, totalToSanctum, totalToDAO, totalToMerchants, totalToHeadhunters);
     }
 
     /// @notice Propose a new fee split subject to timelock.
@@ -228,6 +264,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         if (addr == address(0)) revert ZeroAddress();
         bytes32 h = keccak256(bytes(name));
         _requireKnownDestination(h);
+        require(h != keccak256("burn"), "FD: burn destination immutable");
         pendingDestinationChange = PendingDestinationChange({
             nameHash: h,
             addr: addr,
@@ -305,6 +342,22 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
             h != keccak256("merchants") &&
             h != keccak256("headhunters")
         ) revert("Unknown destination");
+    }
+
+    function _safeTransferOut(address recipient, uint256 amount) private returns (bool) {
+        (bool success, bytes memory returnData) = address(vfideToken).call(
+            abi.encodeCall(IERC20.transfer, (recipient, amount))
+        );
+
+        if (!success) {
+            return false;
+        }
+
+        if (returnData.length == 0) {
+            return true;
+        }
+
+        return abi.decode(returnData, (bool));
     }
 
     function _applyDestination(bytes32 h, address addr) private returns (string memory name) {

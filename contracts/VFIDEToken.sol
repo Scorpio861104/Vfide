@@ -5,7 +5,6 @@ import "./SharedInterfaces.sol";
 
 /// @dev Fraud registry interface for community-driven fraud flagging
 interface IFraudRegistry {
-    function isServiceBanned(address user) external view returns (bool);
     function requiresEscrow(address user) external view returns (bool);
     function escrowTransfer(address from, address to, uint256 amount) external returns (uint256);
 }
@@ -241,7 +240,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 size;
         assembly { size := extcodesize(devReserveVestingVault) }
         if (size == 0) revert VF_NotContract();
-        // Treasury can be EOA or contract (for multisig/DAO)
+
+        // Harden treasury custody: require a contract (multisig/DAO), not an EOA.
+        assembly { size := extcodesize(treasury) }
+        if (size == 0) revert VF_NotContract();
 
         // Optional modules (can be set later)
         if (_vaultHub != address(0)) {
@@ -279,13 +281,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // 50M to Dev Reserve Vesting Vault (locked)
         _balances[devReserveVestingVault] = DEV_RESERVE_SUPPLY;
         emit Transfer(address(0), devReserveVestingVault, DEV_RESERVE_SUPPLY);
-        _logEv(devReserveVestingVault, "premint_dev_reserve", DEV_RESERVE_SUPPLY, "50M locked");
+        _logEv(devReserveVestingVault, "pmd", DEV_RESERVE_SUPPLY, "");
         
         // 150M to Treasury (operations, liquidity, DEX seeding, CEX, ecosystem: 200M - 50M dev)
         uint256 treasuryAmount = MAX_SUPPLY - DEV_RESERVE_SUPPLY;
         _balances[treasury] = treasuryAmount;
         emit Transfer(address(0), treasury, treasuryAmount);
-        _logEv(treasury, "premint_treasury", treasuryAmount, "150M for operations");
+        _logEv(treasury, "pmt", treasuryAmount, "");
     }
 
     // ─────────────────────────── ERC20 standard
@@ -374,7 +376,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingVaultHub = hub;
         pendingVaultHubAt = effectiveAt;
         emit VaultHubScheduled(hub, effectiveAt);
-        _log("vault_hub_scheduled");
+        _log("vhs");
     }
 
     function applyVaultHub() external onlyOwner {
@@ -384,14 +386,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit VaultHubSet(pendingVaultHub);
         delete pendingVaultHub;
         delete pendingVaultHubAt;
-        _log("vault_hub_set");
+        _log("vh=");
     }
 
     function cancelVaultHub() external onlyOwner {
         if (pendingVaultHubAt == 0) revert VF_NoPending();
         delete pendingVaultHub;
         delete pendingVaultHubAt;
-        _log("vault_hub_cancelled");
+        _log("vhx");
     }
 
     // ── SecurityHub functions REMOVED — non-custodial, no third-party locks ──
@@ -404,7 +406,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingLedger = _ledger;
         pendingLedgerAt = effectiveAt;
         emit LedgerScheduled(_ledger, effectiveAt);
-        _log("ledger_scheduled");
+        _log("lds");
     }
 
     function applyLedger() external onlyOwner {
@@ -414,14 +416,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit LedgerSet(pendingLedger);
         delete pendingLedger;
         delete pendingLedgerAt;
-        _log("ledger_set");
+        _log("ld=");
     }
 
     function cancelLedger() external onlyOwner {
         if (pendingLedgerAt == 0) revert VF_NoPending();
         delete pendingLedger;
         delete pendingLedgerAt;
-        _log("ledger_cancelled");
+        _log("ldx");
     }
 
     function setBurnRouter(address router) external onlyOwner {
@@ -431,7 +433,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingBurnRouter = router;
         pendingBurnRouterAt = effectiveAt;
         emit BurnRouterScheduled(router, effectiveAt);
-        _log("burn_router_scheduled");
+        _log("brs");
     }
 
     function applyBurnRouter() external onlyOwner {
@@ -441,14 +443,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit BurnRouterSet(pendingBurnRouter);
         delete pendingBurnRouter;
         delete pendingBurnRouterAt;
-        _log("burn_router_set");
+        _log("br=");
     }
 
     function cancelBurnRouter() external onlyOwner {
         if (pendingBurnRouterAt == 0) revert VF_NoPending();
         delete pendingBurnRouter;
         delete pendingBurnRouterAt;
-        _log("burn_router_cancelled");
+        _log("brx");
     }
 
     function setTreasurySink(address sink) external onlyOwner {
@@ -458,7 +460,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingTreasurySink = sink;
         pendingTreasurySinkAt = effectiveAt;
         emit TreasurySinkScheduled(sink, effectiveAt);
-        _log("treasury_sink_scheduled");
+        _log("tss");
     }
 
     function applyTreasurySink() external onlyOwner {
@@ -468,14 +470,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit TreasurySinkSet(pendingTreasurySink);
         delete pendingTreasurySink;
         delete pendingTreasurySinkAt;
-        _log("treasury_sink_set");
+        _log("ts=");
     }
 
     function cancelTreasurySink() external onlyOwner {
         if (pendingTreasurySinkAt == 0) revert VF_NoPending();
         delete pendingTreasurySink;
         delete pendingTreasurySinkAt;
-        _log("treasury_sink_cancelled");
+        _log("tsx");
     }
 
     function setSanctumSink(address _sanctum) external onlyOwner {
@@ -485,7 +487,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingSanctumSink = _sanctum;
         pendingSanctumSinkAt = effectiveAt;
         emit SanctumSinkScheduled(_sanctum, effectiveAt);
-        _log("sanctum_sink_scheduled");
+        _log("sss");
     }
 
     function applySanctumSink() external onlyOwner {
@@ -495,24 +497,25 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit SanctumSinkSet(pendingSanctumSink);
         delete pendingSanctumSink;
         delete pendingSanctumSinkAt;
-        _log("sanctum_sink_set");
+        _log("ss=");
     }
 
     function cancelSanctumSink() external onlyOwner {
         if (pendingSanctumSinkAt == 0) revert VF_NoPending();
         delete pendingSanctumSink;
         delete pendingSanctumSinkAt;
-        _log("sanctum_sink_cancelled");
+        _log("ssx");
     }
 
     // C-1 FIX: Timelocked setter for FeeDistributor wiring
     function setEcosystemDistributor(address distributor) external onlyOwner {
+        if (distributor == address(0)) revert VF_ZeroAddress();
         if (pendingEcosystemDistributorAt != 0) revert VF_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         pendingEcosystemDistributor = distributor;
         pendingEcosystemDistributorAt = effectiveAt;
         emit EcosystemDistributorScheduled(distributor, effectiveAt);
-        _log("ecosystem_distributor_scheduled");
+        _log("eds");
     }
 
     function applyEcosystemDistributor() external onlyOwner {
@@ -522,23 +525,24 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit EcosystemDistributorSet(pendingEcosystemDistributor);
         delete pendingEcosystemDistributor;
         delete pendingEcosystemDistributorAt;
-        _log("ecosystem_distributor_set");
+        _log("ed=");
     }
 
     function cancelEcosystemDistributor() external onlyOwner {
         if (pendingEcosystemDistributorAt == 0) revert VF_NoPending();
         delete pendingEcosystemDistributor;
         delete pendingEcosystemDistributorAt;
-        _log("ecosystem_distributor_cancelled");
+        _log("edx");
     }
 
     function setFraudRegistry(address _registry) external onlyOwner {
+        if (_registry == address(0)) revert VF_ZeroAddress();
         if (pendingFraudRegistryAt != 0) revert VF_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         pendingFraudRegistry = _registry;
         pendingFraudRegistryAt = effectiveAt;
         emit FraudRegistryScheduled(_registry, effectiveAt);
-        _log("fraud_registry_scheduled");
+        _log("frs");
     }
 
     function applyFraudRegistry() external onlyOwner {
@@ -548,14 +552,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit FraudRegistrySet(pendingFraudRegistry);
         delete pendingFraudRegistry;
         delete pendingFraudRegistryAt;
-        _log("fraud_registry_set");
+        _log("fr=");
     }
 
     function cancelFraudRegistry() external onlyOwner {
         if (pendingFraudRegistryAt == 0) revert VF_NoPending();
         delete pendingFraudRegistry;
         delete pendingFraudRegistryAt;
-        _log("fraud_registry_cancelled");
+        _log("frx");
     }
 
     /// @notice Propose system exemption with 48-hour timelock (grants bypass of ALL fees and vault rules)
@@ -567,7 +571,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingExemptStatus = isExempt;
         pendingExemptAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         emit SystemExemptProposed(who, isExempt, pendingExemptAt);
-        _logEv(who, "exempt_proposed", 0, "");
+        _logEv(who, "exp", 0, "");
     }
 
     /// @notice Cancel a pending system exempt proposal (F-06 FIX added)
@@ -586,10 +590,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         bool status = pendingExemptStatus;
         systemExempt[who] = status;
         emit SystemExemptSet(who, status);
-        _logEv(who, status ? "exempt_on" : "exempt_off", 0, "");
         delete pendingExemptAddr;
         delete pendingExemptStatus;
         delete pendingExemptAt;
+        _logEv(who, status ? "ex+" : "ex-", 0, "");
     }
 
     /// @notice Propose whitelist entry with 48-hour timelock (grants bypass of vault-only)
@@ -600,7 +604,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingWhitelistStatus = status;
         pendingWhitelistAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         emit WhitelistProposed(addr, status, pendingWhitelistAt);
-        _logEv(addr, "whitelist_proposed", 0, "");
+        _logEv(addr, "wlp", 0, "");
     }
 
     /// @notice Cancel a pending whitelist proposal
@@ -619,10 +623,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         bool status = pendingWhitelistStatus;
         whitelisted[addr] = status;
         emit Whitelisted(addr, status);
-        _logEv(addr, status ? "whitelist_add" : "whitelist_remove", 0, "");
         delete pendingWhitelistAddr;
         delete pendingWhitelistStatus;
         delete pendingWhitelistAt;
+        _logEv(addr, status ? "wl+" : "wl-", 0, "");
     }
 
     function setVaultOnly(bool enabled) external onlyOwner {
@@ -632,14 +636,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             vaultOnly = true;
             pendingVaultOnlyDisableAt = 0;
             emit VaultOnlySet(true);
-            _log("vault_only_on");
+            _log("vo+");
         } else {
             // H-2 FIX: Disabling vault-only requires a 48-hour timelock so that token holders
             // have time to react before unrestricted transfers are permitted.
             if (pendingVaultOnlyDisableAt != 0) revert VF_PendingExists();
             pendingVaultOnlyDisableAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
             emit VaultOnlyDisableProposed(pendingVaultOnlyDisableAt);
-            _log("vault_only_disable_proposed");
+            _log("vop");
         }
     }
 
@@ -650,7 +654,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingVaultOnlyDisableAt = 0;
         vaultOnly = false;
         emit VaultOnlySet(false);
-        _log("vault_only_off");
+        _log("vo-");
     }
 
     /// @notice Cancel a pending vault-only disable.
@@ -658,14 +662,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (pendingVaultOnlyDisableAt == 0) revert VF_NoPending();
         pendingVaultOnlyDisableAt = 0;
         emit VaultOnlyDisableCancelled();
-        _log("vault_only_disable_cancelled");
+        _log("vox");
     }
 
     /// One-way switch that makes policy non-optional post-launch.
     function lockPolicy() external onlyOwner {
         policyLocked = true;
         emit PolicyLocked();
-        _log("policy_locked");
+        _log("plk");
     }
 
     /// Emergency switch to bypass external calls (SecurityHub/BurnRouter) if they fail.
@@ -684,7 +688,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             circuitBreakerExpiry = 0;
             pendingCircuitBreakerAt = 0;
             emit CircuitBreakerSet(false, 0);
-            _log("circuit_breaker_off");
+            _log("cb-");
         } else {
             // Activation requires a 48-hour timelock
             if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
@@ -692,7 +696,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             pendingCircuitBreakerDuration = _duration;
             pendingCircuitBreakerAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
             emit CircuitBreakerProposed(true, _duration, pendingCircuitBreakerAt);
-            _log("circuit_breaker_proposed");
+            _log("cbp");
         }
     }
 
@@ -705,7 +709,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         circuitBreakerExpiry = block.timestamp + pendingCircuitBreakerDuration;
         pendingCircuitBreakerAt = 0;
         emit CircuitBreakerSet(true, circuitBreakerExpiry);
-        _log("circuit_breaker_on");
+        _log("cb+");
     }
 
     // ── setSecurityBypass REMOVED — no SecurityHub lock checks to bypass ──
@@ -722,14 +726,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             pendingFeeBypassDuration = _duration;
             pendingFeeBypassAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
             emit FeeBypassProposed(true, _duration, pendingFeeBypassAt);
-            _log("fee_bypass_proposed");
+            _log("fbp");
         } else {
             // Immediate deactivation always allowed
             feeBypass = false;
             feeBypassExpiry = 0;
             pendingFeeBypassAt = 0;
             emit FeeBypassSet(false, 0);
-            _log("fee_bypass_off");
+            _log("fb-");
         }
     }
 
@@ -743,7 +747,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         feeBypassExpiry = block.timestamp + pendingFeeBypassDuration;
         pendingFeeBypassAt = 0;
         emit FeeBypassSet(true, feeBypassExpiry);
-        _log("fee_bypass_on");
+        _log("fb+");
     }
     
     /**
@@ -810,7 +814,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingAntiWhaleAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
 
         emit AntiWhaleProposed(_maxTransfer, _maxWallet, _dailyLimit, _cooldown, pendingAntiWhaleAt);
-        _log("anti_whale_proposed");
+        _log("awp");
     }
 
     function applyAntiWhale() external onlyOwner {
@@ -828,7 +832,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         delete pendingDailyLimit;
         delete pendingCooldown;
         delete pendingAntiWhaleAt;
-        _log("anti_whale_applied");
+        _log("awa");
     }
 
     function cancelAntiWhale() external onlyOwner {
@@ -838,7 +842,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         delete pendingDailyLimit;
         delete pendingCooldown;
         delete pendingAntiWhaleAt;
-        _log("anti_whale_cancelled");
+        _log("awx");
     }
     
     /**
@@ -870,6 +874,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Internal core
 
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function _transfer(address from, address to, uint256 amount) internal {
         _syncEmergencyFlags();
         if (from == address(0) || to == address(0)) revert VF_ZERO();
@@ -884,7 +889,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             if (!_isContract(logicalTo) && !systemExempt[logicalTo] && !whitelisted[logicalTo]) {
                 if (!_hasVault(logicalTo)) {
                     try vaultHub.ensureVault(logicalTo) returns (address vault) {
-                        _logEv(vault, "vault_auto_created", 0, "");
+                        _logEv(vault, "vac", 0, "");
                     } catch {
                         revert Token_NotVault();
                     }
@@ -899,8 +904,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // EE-1 GAS FIX: _checkWhaleProtection now returns the daily window state it read from
         // storage so _recordActualDailyTransfer (called after fees) can reuse the cached values
         // and avoid re-reading the same slots (~2 100–4 200 gas saved per non-exempt transfer).
-        uint256 _cachedWindowStart;
-        uint256 _cachedStoredUsed;
+        uint256 _cachedWindowStart = 0;
+        uint256 _cachedStoredUsed = 0;
         bool    _dailyExempt = whaleLimitExempt[from] || whaleLimitExempt[custodyTo] ||
                                 systemExempt[from] || systemExempt[logicalTo];
         if (!_dailyExempt) {
@@ -960,8 +965,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     if (_ecoSink != treasurySink && _ecoSink != sanctumSink && _ecoSink != ecosystemDistributor) revert VF_InvalidFeeSink();
                 }
                 if (_burnSink != address(0)) {
-                    // L-1 FIX: Also accept ecosystemDistributor as a valid burn sink
-                    if (_burnSink != treasurySink && _burnSink != sanctumSink && _burnSink != ecosystemDistributor) revert VF_InvalidFeeSink();
+                    // H-8 FIX: ecosystemDistributor must NOT be a valid burn sink; only treasurySink/sanctumSink are valid burn destinations
+                    if (_burnSink != treasurySink && _burnSink != sanctumSink) revert VF_InvalidFeeSink();
                 }
 
                 if (_burnAmt > 0) {
@@ -985,7 +990,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     // C-1 FIX: Notify FeeDistributor so it can track incoming revenue
                     if (sink3 == ecosystemDistributor) {
                         try IEcosystemDistributor(sink3).receiveFee(_ecoAmt) {} catch (bytes memory reason) {
-                            emit ExternalCallFailed("receiveFee", reason);
+                            emit ExternalCallFailed("rf", reason);
                         }
                     }
                 }
@@ -995,9 +1000,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 }
 
                 // Record volume for adaptive fee tracking (sustainability)
-                try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("recordVolume", reason); }
+                try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("rv", reason); }
             } catch (bytes memory reason) {
-                emit ExternalCallFailed("computeFeesAndReserve", reason);
+                emit ExternalCallFailed("cfr", reason);
                 // C-2 FIX: When policy is locked and the router reverts, the transfer must also
                 // revert rather than silently proceeding zero-fee. This closes the DoS/bypass gap.
                 if (policyLocked && !isFeeBypassed()) revert VF_RouterRequired();
@@ -1297,9 +1302,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         return unlockTime - block.timestamp;
     }
 
+    // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
+    // slither-disable-next-line reentrancy-events
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
@@ -1386,7 +1393,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice T-14 FIX: Prevent accidental renounceOwnership which would permanently lock the contract
-    function renounceOwnership() external onlyOwner {
+    function renounceOwnership() public view override onlyOwner {
         revert("VFIDEToken: renounce disabled");
     }
 }

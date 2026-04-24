@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useCopyToClipboard } from '@/lib/hooks/useCopyToClipboard'
+import { safeWindowOpen } from '@/lib/security/urlValidation'
 
 export default function InviteFriendsPage() {
   const { address } = useAccount()
@@ -38,21 +39,27 @@ export default function InviteFriendsPage() {
     const body = encodeURIComponent(
       `I'm using VFIDE for trust-based payments. Join me using my invite link: ${referralLink}`
     )
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank')
+    safeWindowOpen(`mailto:?subject=${subject}&body=${body}`, { allowRelative: false })
   }
 
   const shareViaTwitter = () => {
     const text = encodeURIComponent(
       `Join me on VFIDE - the future of trust-based payments! ${referralLink}`
     )
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank')
+    safeWindowOpen(`https://twitter.com/intent/tweet?text=${text}`, {
+      allowRelative: false,
+      allowedHosts: ['twitter.com', 'x.com'],
+    })
   }
 
   const shareViaWhatsApp = () => {
     const text = encodeURIComponent(
       `Join me on VFIDE - the future of trust-based payments! ${referralLink}`
     )
-    window.open(`https://wa.me/?text=${text}`, '_blank')
+    safeWindowOpen(`https://wa.me/?text=${text}`, {
+      allowRelative: false,
+      allowedHosts: ['wa.me'],
+    })
   }
 
   const rewards = [

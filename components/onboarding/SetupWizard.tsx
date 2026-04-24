@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { CURRENT_CHAIN_ID } from '@/lib/testnet'
-import { getChainByChainId } from '@/lib/chains'
+import { getChainByChainId, isTestnetChainId } from '@/lib/chains'
 import { getEthereumProvider, getProviderErrorCode, requestEthereum } from '@/lib/ethereumProvider'
 import { safeLocalStorage } from '@/lib/utils'
 import { baseSepolia } from 'wagmi/chains'
@@ -33,6 +33,8 @@ const NETWORK_CONFIG = {
   rpcUrls: [targetNetwork.rpcUrls?.default?.http?.[0] || 'https://sepolia.base.org'],
   blockExplorerUrls: [targetNetwork.blockExplorers?.default?.url || 'https://sepolia.basescan.org'],
 }
+
+const TARGET_IS_TESTNET = isTestnetChainId(CURRENT_CHAIN_ID)
 
 type Step = 'wallet' | 'network' | 'tokens' | 'guardians' | 'complete'
 
@@ -76,7 +78,7 @@ export function SetupWizard({ onComplete, referrer }: SetupWizardProps) {
       setCurrentStep('network')
     }
     if (isConnected && isCorrectNetwork && currentStep === 'network') {
-      setCurrentStep('tokens')
+      setCurrentStep(TARGET_IS_TESTNET ? 'tokens' : 'guardians')
     }
   }, [isConnected, isCorrectNetwork, currentStep])
 
@@ -88,6 +90,10 @@ export function SetupWizard({ onComplete, referrer }: SetupWizardProps) {
 
   // Auto-claim tokens via faucet API
   const claimTokens = useCallback(async () => {
+    if (!TARGET_IS_TESTNET) {
+      setClaimError('Token claiming is only available on testnet.')
+      return
+    }
     if (!address || isClaiming) return
     setIsClaiming(true)
     setClaimError(null)
@@ -172,7 +178,7 @@ export function SetupWizard({ onComplete, referrer }: SetupWizardProps) {
   const steps = [
     { id: 'wallet', label: 'Connect', icon: Wallet, complete: isConnected },
     { id: 'network', label: 'Network', icon: Globe, complete: isConnected && isCorrectNetwork },
-    { id: 'tokens', label: 'Tokens', icon: Droplets, complete: claimSuccess || alreadyClaimed },
+    ...(TARGET_IS_TESTNET ? [{ id: 'tokens', label: 'Tokens', icon: Droplets, complete: claimSuccess || alreadyClaimed }] : []),
     { id: 'guardians', label: 'Protect', icon: Shield, complete: guardiansComplete },
     { id: 'complete', label: 'Ready!', icon: Sparkles, complete: false },
   ]
@@ -222,7 +228,7 @@ export function SetupWizard({ onComplete, referrer }: SetupWizardProps) {
               <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-white">Get Started with VFIDE</h2>
-                  <p className="text-sm text-zinc-400">4 steps to your protected account</p>
+                  <p className="text-sm text-zinc-400">{steps.length - 1} steps to your protected account</p>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
@@ -450,7 +456,9 @@ export function SetupWizard({ onComplete, referrer }: SetupWizardProps) {
                       </motion.div>
                       <h3 className="text-2xl font-bold text-white mb-2">You&apos;re Protected! 🎉</h3>
                       <p className="text-zinc-400">
-                        Your vault is funded, your guardians are set, you&apos;re ready to go
+                        {TARGET_IS_TESTNET
+                          ? 'Your vault is funded, your guardians are set, you\'re ready to go'
+                          : 'Your wallet is connected, your guardians are set, you\'re ready to go'}
                       </p>
                     </div>
 

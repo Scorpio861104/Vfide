@@ -3,11 +3,12 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 import "./CardBoundVault.sol";
+import "./CardBoundVaultDeployer.sol";
 
 /**
  * @title VaultHub
  * @notice Factory and registry for non-custodial VFIDE vaults
- * @dev Deploys CardBoundVault contracts via CREATE2 for deterministic addresses
+ * @dev Deploys CardBoundVault contracts via a dedicated CREATE2 helper for deterministic addresses
  *      Vault custody remains contract-side; wallet acts as authorization-only key.
  */
 contract VaultHub is Ownable, Pausable, ReentrancyGuard {
@@ -44,6 +45,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint256) public recoveryNonce;    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
         uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
+    uint64 public constant RECOVERY_CHALLENGE_DELAY = 72 hours;
+    uint8 public constant ROTATION_APPROVALS_REQUIRED = 2;
     mapping(address => bool) public isRecoveryApprover;
 
     /// @dev Creation counter only — increments on vault creation, never decremented (vaults are never destroyed).
@@ -52,6 +55,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint256) public vaultCreatedAt;
 
     address public council;
+    CardBoundVaultDeployer private immutable vaultDeployer;
 
     // 48-hour timelock for module changes
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
@@ -91,6 +95,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     event GuardianSetupCompleted(address indexed owner, address indexed vault);
     /// @notice Emitted when a vault is within GUARDIAN_SETUP_WARNING of its guardian setup deadline.
     event GuardianSetupExpiring(address indexed vault, address indexed owner, uint256 deadline);
+    event RecoveryRotationProposed(address indexed vault, address indexed newWallet, uint64 executeAfter, uint256 nonce);
+    event RecoveryRotationApproved(address indexed vault, address indexed approver, address indexed newWallet, uint8 approvals, uint256 nonce);
 
     /// Errors
     error VH_Zero();
@@ -109,12 +115,15 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_GuardianSetupRequired(); // M-3 FIX: grace period expired, setup must be completed first
     error VH_InvalidLimits();
     error VH_PendingExists();
+    error VH_RecoveryCandidateMismatch();
+    error VH_InsufficientRecoveryApprovals();
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
         vfideToken = _vfideToken;
         ledger = IProofLedger(_ledger);
         dao = _dao;
+        vaultDeployer = new CardBoundVaultDeployer();
     }
 
     // ——— Module wiring
@@ -166,6 +175,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // IVaultHub compatibility wrapper
     /// @notice Schedule ProofLedger update with timelock.
     /// @param proofLedger New ProofLedger address.
+    // slither-disable-next-line missing-zero-check
     function setProofLedger(address proofLedger) external onlyOwner {
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingProofLedger_VH = proofLedger;
@@ -300,15 +310,15 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param owner_ Owner whose vault address is queried.
     function predictVault(address owner_) public view returns (address predicted) {
         if (owner_ == address(0)) return address(0);
-        bytes32 salt = _salt(owner_);
-        bytes memory bytecode = _creationCode(owner_);
-        bytes32 codeHash = keccak256(bytecode);
-        predicted = address(uint160(uint256(keccak256(abi.encodePacked(
-            bytes1(0xff),
+        predicted = vaultDeployer.predict(
             address(this),
-            salt,
-            codeHash
-        )))));
+            vfideToken,
+            owner_,
+            CARD_GUARDIAN_THRESHOLD,
+            cardDefaultMaxPerTransfer,
+            cardDefaultDailyLimit,
+            address(ledger)
+        );
     }
 
     // ——— Legacy function for compatibility
@@ -321,17 +331,22 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice Ensure a deterministic CardBoundVault exists for an owner.
     /// @param owner_ Wallet owner for whom the vault is created or fetched.
     /// @return vault Existing or newly created vault address.
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function ensureVault(address owner_) public whenNotPaused nonReentrant returns (address vault) {
         if (owner_ == address(0)) revert VH_Zero();
         if (vfideToken == address(0)) revert VH_Zero(); // Ensure token is set
         vault = vaultOf[owner_];
         if (vault != address(0)) return vault;
 
-        // Deploy via CREATE2 for deterministic address
-        bytes32 salt = _salt(owner_);
-        bytes memory bytecode = _creationCode(owner_);
-        assembly { vault := create2(0, add(bytecode, 0x20), mload(bytecode), salt) }
-        if (vault == address(0)) revert VH_Create2Failed();
+        vault = vaultDeployer.deploy(
+            address(this),
+            vfideToken,
+            owner_,
+            CARD_GUARDIAN_THRESHOLD,
+            cardDefaultMaxPerTransfer,
+            cardDefaultDailyLimit,
+            address(ledger)
+        );
 
         vaultOf[owner_] = vault;
         ownerOfVault[vault] = owner_;
@@ -466,6 +481,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         emit GuardianSetupExpiring(vault, ownerOfVault[vault], deadline);
     }
 
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function executeRecoveryRotation(address vault, address newWallet) external nonReentrant {
         if (!isRecoveryApprover[msg.sender]) revert VH_NotRecoveryContract();
         // M-3 FIX: Block recovery if guardian setup grace period has expired without completion.
@@ -474,6 +490,32 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         if (vault == address(0) || newWallet == address(0)) revert VH_Zero();
         if (ownerOfVault[vault] == address(0)) revert VH_UnknownVault();
 
+        uint256 nonce = recoveryNonce[vault];
+        if (recoveryUnlockTime[vault] == 0) {
+            recoveryProposedOwner[vault] = newWallet;
+            recoveryCandidateForNonce[vault][nonce] = newWallet;
+            recoveryUnlockTime[vault] = uint64(block.timestamp) + RECOVERY_CHALLENGE_DELAY;
+            recoveryApprovalCount[vault] = 0;
+            emit RecoveryRotationProposed(vault, newWallet, recoveryUnlockTime[vault], nonce);
+        } else {
+            if (recoveryProposedOwner[vault] != newWallet || recoveryCandidateForNonce[vault][nonce] != newWallet) {
+                revert VH_RecoveryCandidateMismatch();
+            }
+        }
+
+        if (!recoveryApprovals[vault][msg.sender][nonce]) {
+            recoveryApprovals[vault][msg.sender][nonce] = true;
+            recoveryApprovalCount[vault]++;
+            emit RecoveryRotationApproved(vault, msg.sender, newWallet, recoveryApprovalCount[vault], nonce);
+        }
+
+        if (recoveryApprovalCount[vault] < ROTATION_APPROVALS_REQUIRED) {
+            return;
+        }
+        if (block.timestamp < recoveryUnlockTime[vault]) {
+            return;
+        }
+
         CardBoundVault(payable(vault)).executeRecoveryRotation(newWallet);
 
         address oldOwner = ownerOfVault[vault];
@@ -481,35 +523,16 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         ownerOfVault[vault] = newWallet;
         vaultOf[newWallet] = vault;
 
+        delete recoveryUnlockTime[vault];
+        delete recoveryProposedOwner[vault];
+        delete recoveryApprovalCount[vault];
+        recoveryNonce[vault] = nonce + 1;
+
         emit RecoveryRotationRequested(vault, newWallet, msg.sender);
         _logEv(vault, "recovery_rotation", 0, "");
     }
 
     // ——— Internals
-    function _salt(address owner_) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(owner_));
-    }
-
-    function _creationCode(address owner_) internal view returns (bytes memory) {
-        address[] memory guardians = new address[](1);
-        guardians[0] = owner_;
-
-        return abi.encodePacked(
-            type(CardBoundVault).creationCode,
-            abi.encode(
-                address(this),
-                vfideToken,
-                owner_,
-                owner_,
-                guardians,
-                CARD_GUARDIAN_THRESHOLD,
-                cardDefaultMaxPerTransfer,
-                cardDefaultDailyLimit,
-                address(ledger)
-            )
-        );
-    }
-
     function _hasIndependentGuardian(CardBoundVault vault, address owner_) internal view returns (bool) {
         return !(vault.guardianCount() == 2 && vault.isGuardian(owner_) && vault.isGuardian(dao));
     }
@@ -552,9 +575,11 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         delete pendingCardLimitsAt;
     }
 
+    // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
+    // slither-disable-next-line reentrancy-events
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }

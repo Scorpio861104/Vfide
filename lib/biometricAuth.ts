@@ -12,12 +12,13 @@ import { logger } from '@/lib/logger';
 const PASSKEY_CREDENTIAL_KEY = 'vfide-passkey-credential';
 const PASSKEY_ENABLED_KEY = 'vfide-passkey-enabled';
 const LINKED_WALLETS_KEY = 'vfide-linked-wallets';
+const PASSKEY_CREDENTIAL_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
 
 interface StoredCredential {
   credentialId: string;
   walletAddress: string;
-  createdAt: number;
   lastUsed: number;
+  expiresAt: number;
 }
 
 interface LinkedWallet {
@@ -67,7 +68,27 @@ export function getStoredCredential(): StoredCredential | null {
   if (!stored) return null;
   
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored) as Partial<StoredCredential>;
+    const now = Date.now();
+    const expiresAt = typeof parsed.expiresAt === 'number' ? parsed.expiresAt : now + PASSKEY_CREDENTIAL_MAX_AGE_MS;
+    if (expiresAt <= now) {
+      removePasskey();
+      return null;
+    }
+
+    if (typeof parsed.credentialId !== 'string' || typeof parsed.walletAddress !== 'string') {
+      removePasskey();
+      return null;
+    }
+
+    const normalized: StoredCredential = {
+      credentialId: parsed.credentialId,
+      walletAddress: parsed.walletAddress,
+      lastUsed: typeof parsed.lastUsed === 'number' ? parsed.lastUsed : now,
+      expiresAt,
+    };
+
+    return normalized;
   } catch {
     return null;
   }
@@ -159,8 +180,8 @@ export async function registerPasskey(walletAddress: string): Promise<boolean> {
     const storedCredential: StoredCredential = {
       credentialId: bufferToBase64(credential.rawId),
       walletAddress,
-      createdAt: Date.now(),
       lastUsed: Date.now(),
+      expiresAt: Date.now() + PASSKEY_CREDENTIAL_MAX_AGE_MS,
     };
 
     safeLocalStorage.setItem(PASSKEY_CREDENTIAL_KEY, JSON.stringify(storedCredential));
@@ -209,6 +230,7 @@ export async function authenticateWithPasskey(): Promise<string | null> {
 
     // Update last used timestamp
     storedCredential.lastUsed = Date.now();
+    storedCredential.expiresAt = Date.now() + PASSKEY_CREDENTIAL_MAX_AGE_MS;
     safeLocalStorage.setItem(PASSKEY_CREDENTIAL_KEY, JSON.stringify(storedCredential));
 
     return storedCredential.walletAddress;

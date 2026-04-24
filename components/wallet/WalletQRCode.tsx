@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useAccount, useChainId } from 'wagmi';
 import { QrCode, Copy, Check, Download, Share2, X } from 'lucide-react';
-import { IS_TESTNET } from '@/lib/chains';
+import QRCode from 'qrcode';
+import { getChainByChainId, getExplorerUrlForChainId, isTestnetChainId } from '@/lib/chains';
 import { logger } from '@/lib/logger';
 
 /**
@@ -31,6 +32,11 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const copiedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const shouldReduceMotion = useReducedMotion();
+  const currentChainConfig = getChainByChainId(chainId);
+  const chainName = currentChainConfig
+    ? (isTestnetChainId(chainId) ? currentChainConfig.testnet.name : currentChainConfig.mainnet.name)
+    : 'Unknown network';
+  const explorerUrl = getExplorerUrlForChainId(chainId);
 
   // Generate QR code using canvas
   useEffect(() => {
@@ -113,7 +119,7 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
         await navigator.share({
           title: 'My VFIDE Wallet',
           text: `Send crypto to my wallet: ${address}`,
-          url: `https://${IS_TESTNET ? 'sepolia.' : ''}basescan.org/address/${address}`,
+          url: `${explorerUrl}/address/${address}`,
         });
       } catch (_err) {
         // User cancelled or share failed - this is expected behavior, not an error
@@ -123,19 +129,6 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
       // Fallback to copy
       handleCopy();
     }
-  };
-
-  // Get chain name
-  const getChainName = () => {
-    const chains: Record<number, string> = {
-      1: 'Ethereum',
-      8453: 'Base',
-      84532: 'Base Sepolia',
-      42161: 'Arbitrum',
-      137: 'Polygon',
-      10: 'Optimism',
-    };
-    return chains[chainId] || 'Unknown';
   };
 
   if (!address) return null;
@@ -165,7 +158,7 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">Receive Funds</h3>
-                  <p className="text-xs text-zinc-500">{getChainName()}</p>
+                  <p className="text-xs text-zinc-500">{chainName}</p>
                 </div>
               </div>
               <button
@@ -236,7 +229,7 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
 
             {/* Warning */}
             <p className="text-xs text-zinc-500 text-center mt-4">
-              Only send {getChainName()} compatible tokens to this address
+              Only send {chainName} compatible tokens to this address
             </p>
           </motion.div>
         </motion.div>
@@ -250,85 +243,15 @@ export function WalletQRCode({ isOpen, onClose }: WalletQRCodeProps) {
  * Uses a simple canvas-based QR generation
  */
 async function generateQRCode(data: string): Promise<string> {
-  // Create a simple QR-like pattern until a full QR encoder is integrated.
-  const size = 256;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-
-  // White background
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size, size);
-
-  // Generate a deterministic pattern from the address
-  const moduleSize = 8;
-  const modules = Math.floor(size / moduleSize);
-  const quietZone = 4;
-  
-  ctx.fillStyle = '#000000';
-  
-  // Position patterns (corners)
-  drawPositionPattern(ctx, quietZone * moduleSize, quietZone * moduleSize, moduleSize);
-  drawPositionPattern(ctx, (modules - quietZone - 7) * moduleSize, quietZone * moduleSize, moduleSize);
-  drawPositionPattern(ctx, quietZone * moduleSize, (modules - quietZone - 7) * moduleSize, moduleSize);
-
-  // Data modules (simplified - create pattern from address hash)
-  const hash = simpleHash(data);
-  for (let i = 0; i < 200; i++) {
-    const x = ((hash * (i + 1)) % (modules - 16)) + 8;
-    const y = ((hash * (i + 7)) % (modules - 16)) + 8;
-    
-    // Avoid position patterns
-    if (isInPositionPattern(x, y, modules, quietZone)) continue;
-    
-    if ((hash * (i + 3)) % 2 === 0) {
-      ctx.fillRect(x * moduleSize, y * moduleSize, moduleSize, moduleSize);
-    }
-  }
-
-  // Add address text at bottom
-  ctx.fillStyle = '#000000';
-  ctx.font = '10px monospace';
-  ctx.textAlign = 'center';
-  ctx.fillText(data.slice(0, 21), size / 2, size - 20);
-  ctx.fillText(data.slice(21), size / 2, size - 8);
-
-  return canvas.toDataURL('image/png');
-}
-
-function drawPositionPattern(ctx: CanvasRenderingContext2D, x: number, y: number, moduleSize: number) {
-  // Outer black
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(x, y, 7 * moduleSize, 7 * moduleSize);
-  
-  // Inner white
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(x + moduleSize, y + moduleSize, 5 * moduleSize, 5 * moduleSize);
-  
-  // Center black
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(x + 2 * moduleSize, y + 2 * moduleSize, 3 * moduleSize, 3 * moduleSize);
-}
-
-function isInPositionPattern(x: number, y: number, modules: number, quietZone: number): boolean {
-  // Top-left
-  if (x < quietZone + 8 && y < quietZone + 8) return true;
-  // Top-right
-  if (x >= modules - quietZone - 8 && y < quietZone + 8) return true;
-  // Bottom-left
-  if (x < quietZone + 8 && y >= modules - quietZone - 8) return true;
-  return false;
-}
-
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash);
+  return QRCode.toDataURL(data, {
+    width: 256,
+    margin: 2,
+    errorCorrectionLevel: 'M',
+    color: {
+      dark: '#000000',
+      light: '#FFFFFF',
+    },
+  });
 }
 
 /**

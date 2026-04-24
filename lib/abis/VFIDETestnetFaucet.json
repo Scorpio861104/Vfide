@@ -42,13 +42,75 @@
   },
   {
     "inputs": [],
+    "name": "Faucet_NoPendingWithdraw",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "Faucet_NotOperator",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Faucet_OperatorDailyCapReached",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Faucet_ReferrerNotEligible",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Faucet_UnsupportedChain",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Faucet_WithdrawTimelockActive",
     "type": "error"
   },
   {
     "inputs": [],
     "name": "Faucet_Zero",
     "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "vfideAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "ethAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "ethTransferFailed",
+        "type": "bool"
+      }
+    ],
+    "name": "BatchClaimProcessed",
+    "type": "event"
   },
   {
     "anonymous": false,
@@ -125,17 +187,37 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "vfide",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "eth",
+        "name": "amount",
         "type": "uint256"
       }
     ],
-    "name": "FundsDeposited",
+    "name": "ETHDeposited",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "ecosystemVault",
+        "type": "address"
+      }
+    ],
+    "name": "EcosystemVaultSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "cap",
+        "type": "uint256"
+      }
+    ],
+    "name": "OperatorDailyCapSet",
     "type": "event"
   },
   {
@@ -158,6 +240,76 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "WithdrawCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "vfideAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "ethAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "WithdrawExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "name": "WithdrawScheduled",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "WITHDRAW_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address[]",
@@ -171,6 +323,13 @@
       }
     ],
     "name": "batchClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelWithdraw",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -253,6 +412,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ecosystemVault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -346,6 +518,57 @@
         "type": "address"
       }
     ],
+    "name": "operatorClaimsToday",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "operatorDailyClaimCap",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "operatorDayStart",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "operators",
     "outputs": [
       {
@@ -360,6 +583,32 @@
   {
     "inputs": [],
     "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingWithdrawAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingWithdrawRecipient",
     "outputs": [
       {
         "internalType": "address",
@@ -387,6 +636,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      }
+    ],
+    "name": "scheduleWithdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -424,6 +686,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_ecosystemVault",
+        "type": "address"
+      }
+    ],
+    "name": "setEcosystemVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "operator",
         "type": "address"
       },
@@ -434,6 +709,19 @@
       }
     ],
     "name": "setOperator",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_cap",
+        "type": "uint256"
+      }
+    ],
+    "name": "setOperatorDailyCap",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -478,13 +766,7 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      }
-    ],
+    "inputs": [],
     "name": "withdraw",
     "outputs": [],
     "stateMutability": "nonpayable",

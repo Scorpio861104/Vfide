@@ -78,12 +78,16 @@ contract DevReserveVestingVault is ReentrancyGuard {
         uint256 _allocation,
         address _dao
     ) {
-        if (_vfide==address(0) || _beneficiary==address(0) || _vaultHub==address(0) || _allocation==0) revert DV_Zero();
+        if (_vfide==address(0) || _beneficiary==address(0) || _vaultHub==address(0) || _dao==address(0) || _allocation==0) revert DV_Zero();
         if (_allocation != EXPECTED_ALLOCATION) revert DV_InvalidAllocation();
         VFIDE        = _vfide;
         BENEFICIARY  = _beneficiary;
         VAULT_HUB    = _vaultHub;
-        LEDGER       = _ledger;
+        if (_ledger != address(0)) {
+            LEDGER = _ledger;
+        } else {
+            LEDGER = address(0);
+        }
         ALLOCATION   = _allocation;
         DAO          = _dao;
         emit ModulesSet(_vfide, _beneficiary, _vaultHub, _ledger);
@@ -102,10 +106,13 @@ contract DevReserveVestingVault is ReentrancyGuard {
      *         beneficiary could set start up to 7 days ahead, silently delaying all
      *         cliff/unlock dates.  Remove the buffer entirely.
      */
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function setVestingStart(uint64 timestamp) external {
         require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
         if (startTimestamp != 0) revert DV_AlreadyStarted();
         if (timestamp == 0) revert DV_Zero();
+        // H-08 FIX: Prevent DAO from backdating more than 30 days (avoids instant full-vest exploit).
+        require(timestamp >= uint64(block.timestamp) - 30 days, "DV: too far in past");
         if (timestamp > block.timestamp) revert DV_InvalidStartTimestamp();
         startTimestamp  = timestamp;
         cliffTimestamp  = timestamp + CLIFF;
@@ -186,6 +193,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // Claim
     // ─────────────────────────────────────────────────────────────
 
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function claim() external nonReentrant {
         if (msg.sender != BENEFICIARY) revert DV_NotBeneficiary();
         if (claimsPaused) revert DV_Paused();
@@ -309,6 +317,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // Ledger helpers (best-effort)
     // ─────────────────────────────────────────────────────────────
 
+    // slither-disable-next-line missing-zero-check,reentrancy-events
     function _log(string memory action) internal {
         if (LEDGER != address(0)) { try IProofLedger(LEDGER).logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }

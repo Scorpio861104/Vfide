@@ -8,6 +8,8 @@ Reference for handing ownership and DAO roles from the deployer EOA to a Gnosis 
 
 All `setDAO(...)` role holders (`FraudRegistry`, `Seer`, `GovernanceHooks`, `MerchantPortal`, `VFIDETermLoan`) are set to a single **DAO address**. If that address is an EOA, member rotation requires a contract upgrade. If that address is a **Gnosis Safe**, member join/leave becomes a Safe signer swap — zero on-chain contract interaction required.
 
+If `CouncilElection` is deployed, queue `DAO.setCouncilElection(...)` and `DAO.syncQuorumToCouncil()` through the timelock before handing timelock admin to the DAO. This keeps quorum thresholds aligned with the live council size from the start.
+
 ---
 
 ## Setup: Point All DAO Roles at a Gnosis Safe
@@ -54,6 +56,13 @@ After `transfer-governance.ts` runs, `DAOTimelock.setAdmin(dao)` is scheduled bu
 
 ```bash
 timelock.execute(setAdminTxId)
+```
+
+If `CouncilElection` is live, execute these queued DAO bootstrap calls before or alongside the admin handoff:
+
+```bash
+timelock.execute(setCouncilElectionTxId)
+timelock.execute(syncQuorumToCouncilTxId)
 ```
 
 Once executed, the `DAO` contract (or Safe acting as DAO proposer) becomes the sole timelock admin. The deployer EOA can no longer queue or cancel timelock transactions.

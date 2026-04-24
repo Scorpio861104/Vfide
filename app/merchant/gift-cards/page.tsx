@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 interface GiftCardRecord {
   id: string;
@@ -101,7 +102,10 @@ export default function MerchantGiftCardsPage() {
 
   const shareGiftCard = useCallback((card: GiftCardRecord) => {
     const giftMessage = `${card.recipientName ? `Hi ${card.recipientName}! ` : ''}You received a ${formatCurrency(card.originalAmount, card.currency)} VFIDE gift card. Code: ${card.code}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(giftMessage)}`, '_blank');
+    safeWindowOpen(`https://wa.me/?text=${encodeURIComponent(giftMessage)}`, {
+      allowRelative: false,
+      allowedHosts: ['wa.me'],
+    });
   }, [formatCurrency]);
 
   return (

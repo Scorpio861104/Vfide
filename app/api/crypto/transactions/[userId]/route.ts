@@ -50,22 +50,42 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const requestedUserId = parsePositiveInteger(userIdParam);
-    if (!requestedUserId) {
-      return NextResponse.json(
-        { error: 'Invalid userId parameter' },
-        { status: 400 }
-      );
+    // Validate format before any DB lookup: accept positive integer OR own wallet address.
+    let requestedUserId = parsePositiveInteger(userIdParam);
+
+    if (requestedUserId === null) {
+      const normalizedRequestedAddress = userIdParam.trim().toLowerCase();
+      if (!ADDRESS_LIKE_REGEX.test(normalizedRequestedAddress)) {
+        return NextResponse.json(
+          { error: 'Invalid userId parameter' },
+          { status: 400 }
+        );
+      }
+
+      if (normalizedRequestedAddress !== authAddress) {
+        return NextResponse.json(
+          { error: 'You can only view your own transactions' },
+          { status: 403 }
+        );
+      }
     }
 
-    // Verify authenticated user matches requested userId
+    // Resolve authenticated user once.
     const userResult = await query(
       'SELECT id FROM users WHERE wallet_address = $1',
       [authAddress]
     );
 
-    const userId = userResult.rows[0]?.id;
-    if (userResult.rows.length === 0 || !userId || userId.toString() !== requestedUserId.toString()) {
+    const authenticatedUserId = userResult.rows[0]?.id;
+    if (userResult.rows.length === 0 || !authenticatedUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (requestedUserId === null) {
+      requestedUserId = Number(authenticatedUserId);
+    }
+
+    if (authenticatedUserId.toString() !== requestedUserId.toString()) {
       return NextResponse.json(
         { error: 'You can only view your own transactions' },
         { status: 403 }
@@ -94,7 +114,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
        WHERE t.user_id = $1
        ORDER BY t.timestamp DESC
        LIMIT $2 OFFSET $3`,
-      [userId, limit, offset]
+      [requestedUserId, limit, offset]
     );
 
     return NextResponse.json({ transactions: result.rows, total: result.rows.length });

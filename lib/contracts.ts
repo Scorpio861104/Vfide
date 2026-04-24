@@ -131,7 +131,6 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isBrowserRuntime = typeof window !== 'undefined';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
   const missingServerSecrets = !process.env.DATABASE_URL || !process.env.JWT_SECRET;
   const autoFrontendOnly =
@@ -142,20 +141,19 @@ function validateContractAddress(address: string | undefined, name: string): `0x
 
   if (!address) {
     const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
-    if (strictProduction && !isBrowserRuntime) {
+    if (strictProduction) {
       logContractAddressIssue('error', `[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
       throw new Error(`[VFIDE] Missing required contract address in production: ${name}`)
     } else {
-      const modeHint = frontendOnly ? 'frontend-only mode' : 'non-production runtime';
-      const runtimeHint = isBrowserRuntime ? 'browser runtime' : modeHint;
-      const level = frontendOnly || isBrowserRuntime ? 'info' : 'warn';
+      const runtimeHint = frontendOnly ? 'frontend-only mode' : 'non-production runtime';
+      const level = frontendOnly ? 'info' : 'warn';
       logContractAddressIssue(level, `[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS in ${runtimeHint}. Set ${envVarName} in environment.`)
     }
     return ZERO_ADDRESS
   }
   if (!isAddress(address)) {
     logContractAddressIssue('error', `[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
-    if (isProduction && !isBrowserRuntime) {
+    if (strictProduction) {
       throw new Error(`[VFIDE] Invalid contract address in production for ${name}`)
     }
     return ZERO_ADDRESS

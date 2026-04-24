@@ -16,7 +16,7 @@
     },
     {
       "id": "governanceProposals",
-      "path": "/api/governance/proposals?page=1&limit=10",
+      "path": "/api/proposals?page=1&limit=10",
       "method": "GET",
       "criticality": "high",
       "auth": "session",

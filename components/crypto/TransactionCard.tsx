@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { Check, Clock, ExternalLink, FileText, XCircle } from 'lucide-react';
 import { shortAddress as formatAddress } from '@/lib/format';
 import { renderIconForType, getTransactionLabel, getStatusColor } from './transaction-helpers';
+import { useChainId } from 'wagmi';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -15,6 +17,7 @@ interface TransactionCardProps {
 
 // Memoized for list performance
 export const TransactionCard = React.memo(function TransactionCard({ transaction, userId, index = 0 }: TransactionCardProps) {
+  const chainId = useChainId();
   const isSent = transaction.from.toLowerCase() === userId.toLowerCase();
   const statusColor = getStatusColor(transaction.status);
 
@@ -123,7 +126,7 @@ export const TransactionCard = React.memo(function TransactionCard({ transaction
           {transaction.txHash && (
             <motion.a
               whileHover={{ scale: 1.05 }}
-              href={`https://etherscan.io/tx/${transaction.txHash}`}
+              href={getExplorerLink(chainId, transaction.txHash, 'tx')}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 mt-1 transition-colors"

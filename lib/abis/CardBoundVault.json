@@ -244,8 +244,70 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ERC20RescueCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "name": "ERC20RescueProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "guardian",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "active",
+        "type": "bool"
       }
     ],
     "name": "GuardianChangeCancelled",
@@ -310,6 +372,31 @@
   },
   {
     "anonymous": false,
+    "inputs": [],
+    "name": "LargeTransferThresholdChangeCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "threshold",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "name": "LargeTransferThresholdChangeProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
     "inputs": [
       {
         "indexed": false,
@@ -338,6 +425,25 @@
       }
     ],
     "name": "LedgerLogFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "NativeReceived",
     "type": "event"
   },
   {
@@ -407,6 +513,37 @@
       }
     ],
     "name": "RecoveryRotationExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "SpendLimitsChangeCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxPerTransfer",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "dailyTransferLimit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "name": "SpendLimitsChangeProposed",
     "type": "event"
   },
   {
@@ -707,6 +844,19 @@
   },
   {
     "inputs": [],
+    "name": "SENSITIVE_ADMIN_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "VERSION",
     "outputs": [
       {
@@ -785,6 +935,27 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "applyLargeTransferThresholdChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyRescueERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applySpendLimits",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -840,6 +1011,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "cancelLargeTransferThresholdChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -848,6 +1026,20 @@
       }
     ],
     "name": "cancelQueuedWithdrawal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelRescueERC20",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelSpendLimitsChange",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1181,6 +1373,34 @@
   },
   {
     "inputs": [],
+    "name": "pendingERC20Rescue",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "pendingGuardianChange",
     "outputs": [
       {
@@ -1196,6 +1416,24 @@
       {
         "internalType": "uint64",
         "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingLargeTransferThresholdChange",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "threshold",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "executeAfter",
         "type": "uint64"
       }
     ],
@@ -1225,6 +1463,29 @@
         "internalType": "uint256",
         "name": "proposalNonce",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingSpendLimitChange",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxPerTransfer",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyTransferLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",

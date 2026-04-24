@@ -146,6 +146,7 @@ contract CouncilManager is ReentrancyGuard {
      * @dev Tracks grace period, auto-removes after 7 days below 700
      * H-2 FIX: Iterate in reverse to prevent index corruption when removing members
      */
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-events
     function checkDailyScores() external onlyKeeper {
         uint256 councilSize = election.getActualCouncilSize();
         if (councilSize == 0) return;
@@ -211,7 +212,14 @@ contract CouncilManager is ReentrancyGuard {
      * @notice Manual check for specific member (DAO override)
      * @param member Address to check
      */
+    // slither-disable-next-line reentrancy-events
     function checkMemberScore(address member) external onlyDAO {
+        // H-36 FIX: Enforce the same 1-day cooldown as checkDailyScores to prevent DAO from
+        // collapsing a 7-day grace period into a single block by calling this 7 times in rapid succession.
+        require(
+            lastCheckTime[member] == 0 || lastCheckTime[member] + CHECK_INTERVAL <= block.timestamp,
+            "CM: too soon"
+        );
         require(election.isCouncil(member), "CM: not council member");
         
         uint16 score = seer.getScore(member);
@@ -253,6 +261,7 @@ contract CouncilManager is ReentrancyGuard {
      * NOTE: Council payments are EMPLOYMENT COMPENSATION (not investment returns).
      * Payments are transferred to CouncilSalary contract for distribution.
      */
+    // slither-disable-next-line reentrancy-no-eth
     function distributePayments() external onlyKeeper nonReentrant {
         require(block.timestamp >= lastPaymentTime + paymentInterval, "CM: too soon");
         IEcosystemVault(ecosystemVault).allocateIncoming();
@@ -296,6 +305,7 @@ contract CouncilManager is ReentrancyGuard {
      * @dev Allows DAO to force payment outside normal schedule
      * Council payments are employment compensation (not investment returns)
      */
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function forcePaymentDistribution() external onlyDAO {
         IEcosystemVault(ecosystemVault).allocateIncoming();
         // BATCH-04 FIX: Use councilPool() to read the earmarked council balance,

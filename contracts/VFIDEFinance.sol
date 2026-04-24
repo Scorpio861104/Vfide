@@ -32,6 +32,8 @@ contract EcoTreasuryVault is ReentrancyGuard {
     event ModulesSet(address dao, address ledger, address vfideToken);
     event ReceivedVFIDE(uint256 amount, address from);
     event Sent(address indexed token, address to, uint256 amount, string reason);
+    event NotifierChangeQueued(address indexed notifier, bool authorized, uint64 effectiveAt);
+    event NotifierChangeCancelled(address indexed notifier, bool authorized);
 
     address public dao;
     address public pendingDAO;
@@ -70,13 +72,48 @@ contract EcoTreasuryVault is ReentrancyGuard {
     }
 
     mapping(address => bool) public authorizedNotifiers;
+    uint64 public constant NOTIFIER_CHANGE_DELAY = 48 hours;
+
+    struct PendingNotifierChange {
+        address notifier;
+        bool authorized;
+        uint64 effectiveAt;
+    }
+    PendingNotifierChange public pendingNotifierChange;
     
     event NotifierAuthorized(address indexed notifier, bool authorized);
     
     function setNotifier(address notifier, bool authorized) external onlyDAO {
         if (notifier == address(0)) revert FI_Zero();
-        authorizedNotifiers[notifier] = authorized;
-        emit NotifierAuthorized(notifier, authorized);
+        require(pendingNotifierChange.effectiveAt == 0, "FI: pending notifier");
+        uint64 effectiveAt = uint64(block.timestamp) + NOTIFIER_CHANGE_DELAY;
+        pendingNotifierChange = PendingNotifierChange({
+            notifier: notifier,
+            authorized: authorized,
+            effectiveAt: effectiveAt
+        });
+        emit NotifierChangeQueued(notifier, authorized, effectiveAt);
+        _log("treasury_notifier_queued");
+    }
+
+    function applyNotifier() external onlyDAO {
+        PendingNotifierChange memory p = pendingNotifierChange;
+        require(p.effectiveAt != 0, "FI: no pending notifier");
+        require(block.timestamp >= p.effectiveAt, "FI: notifier timelock");
+
+        authorizedNotifiers[p.notifier] = p.authorized;
+        delete pendingNotifierChange;
+
+        emit NotifierAuthorized(p.notifier, p.authorized);
+        _log("treasury_notifier_applied");
+    }
+
+    function cancelNotifier() external onlyDAO {
+        PendingNotifierChange memory p = pendingNotifierChange;
+        require(p.effectiveAt != 0, "FI: no pending notifier");
+        delete pendingNotifierChange;
+        emit NotifierChangeCancelled(p.notifier, p.authorized);
+        _log("treasury_notifier_cancelled");
     }
 
     /**
@@ -109,6 +146,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
      */
     function rescueToken(address token, address to, uint256 amount) external onlyDAO nonReentrant {
         if (token == address(0) || to == address(0) || amount == 0) revert FI_Zero();
+        require(token != address(vfideToken), "FI: use sendVFIDE");
         IERC20(token).safeTransfer(to, amount);
         emit Sent(token, to, amount, "rescue");
         _logEv(to, "treasury_rescue", amount, "");

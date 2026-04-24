@@ -22,6 +22,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import Image from 'next/image';
 import * as LucideIcons from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 const {
   Share2, Copy, Check, QrCode, ChevronLeft, ChevronRight,
@@ -371,7 +372,10 @@ function ShareProfileModal({ profile, onClose }: { profile: UserProfile; onClose
 
   const shareToTwitter = () => {
     const text = `Check out ${profile.displayName}'s profile on VFIDE!`;
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(profileUrl)}`, '_blank');
+    safeWindowOpen(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(profileUrl)}`, {
+      allowRelative: false,
+      allowedHosts: ['twitter.com', 'x.com'],
+    });
   };
 
   return (

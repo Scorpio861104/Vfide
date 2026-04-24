@@ -86,12 +86,16 @@ export function CheckoutPanel({
     PAYMENT_TOKENS.map(t => t.symbol === 'VFIDE' ? { ...t, rate: tokenPrice } : t),
     [tokenPrice]
   );
+  const supportedTokens = useMemo(
+    () => tokens.filter((token) => token.symbol === 'VFIDE'),
+    [tokens]
+  );
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
   const feeAmount = subtotal * (buyerFeeBps / 10000);
   const total = subtotal + feeAmount;
 
-  const activeToken = tokens.find(t => t.symbol === selectedToken) ?? tokens[0] ?? PAYMENT_TOKENS[0]!;
+  const activeToken = supportedTokens.find(t => t.symbol === selectedToken) ?? supportedTokens[0] ?? PAYMENT_TOKENS[0]!;
   const tokenAmount = total / activeToken.rate;
 
   const feeSavedVsSquare = subtotal * 0.029 + 0.30; // Square's 2.9% + $0.30
@@ -211,7 +215,7 @@ export function CheckoutPanel({
             <div className="mb-4">
               <div className="text-xs text-gray-500 uppercase tracking-wider mb-2 px-1">Pay with</div>
               <div className="grid grid-cols-2 gap-2">
-                {tokens.map(token => (
+                {supportedTokens.map(token => (
                   <button
                     key={token.symbol}
                     onClick={() => setSelectedToken(token.symbol)}
@@ -230,6 +234,9 @@ export function CheckoutPanel({
                     </div>
                   </button>
                 ))}
+              </div>
+              <div className="mt-3 text-xs text-amber-300">
+                Stablecoin checkout is not live on this route yet. VFIDE is the only supported payment token here.
               </div>
             </div>
 

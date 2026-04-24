@@ -33,6 +33,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
 
     bytes32 public constant SEER_CORE_ROLE = keccak256("SEER_CORE_ROLE");
     bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
+    uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
 
     // ═══════════════════════════════════════════════════════════
     // STRUCTS
@@ -69,6 +70,17 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     address public panicGuard;
     address public workPaymentManager;
 
+    struct PendingProtocolContracts {
+        address dao;
+        address merchant;
+        address bridge;
+        address social;
+        address panic;
+        address workPayment;
+        uint64 effectiveAt;
+    }
+    PendingProtocolContracts public pendingProtocolContracts;
+
     // Counters
     uint256 public totalTasksVerified;
     mapping(uint8 => uint256) public categoryTaskCount;
@@ -89,6 +101,16 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         bytes32 indexed taskId
     );
     event ProtocolContractUpdated(string name, address newAddress);
+    event ProtocolContractsChangeProposed(
+        address dao,
+        address merchant,
+        address bridge,
+        address social,
+        address panic,
+        address workPayment,
+        uint64 effectiveAt
+    );
+    event ProtocolContractsChangeCancelled();
 
     // ═══════════════════════════════════════════════════════════
     // ERRORS
@@ -100,6 +122,9 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     error TaskAlreadyAttested();
     error InvalidCategory();
     error InvalidEvidence();
+    error PendingChangeExists();
+    error NoPendingChange();
+    error ChangeNotReady();
 
     // ═══════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -275,12 +300,39 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         address _panic,
         address _workPayment
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (_dao != address(0)) { daoContract = _dao; emit ProtocolContractUpdated("DAO", _dao); }
-        if (_merchant != address(0)) { merchantPortal = _merchant; emit ProtocolContractUpdated("MerchantPortal", _merchant); }
-        if (_bridge != address(0)) { bridgeModule = _bridge; emit ProtocolContractUpdated("BridgeModule", _bridge); }
-        if (_social != address(0)) { seerSocial = _social; emit ProtocolContractUpdated("SeerSocial", _social); }
-        if (_panic != address(0)) { panicGuard = _panic; emit ProtocolContractUpdated("PanicGuard", _panic); }
-        if (_workPayment != address(0)) { workPaymentManager = _workPayment; emit ProtocolContractUpdated("WorkPaymentManager", _workPayment); }
+        if (pendingProtocolContracts.effectiveAt != 0) revert PendingChangeExists();
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingProtocolContracts = PendingProtocolContracts({
+            dao: _dao,
+            merchant: _merchant,
+            bridge: _bridge,
+            social: _social,
+            panic: _panic,
+            workPayment: _workPayment,
+            effectiveAt: effectiveAt
+        });
+        emit ProtocolContractsChangeProposed(_dao, _merchant, _bridge, _social, _panic, _workPayment, effectiveAt);
+    }
+
+    function applyProtocolContracts() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        PendingProtocolContracts memory p = pendingProtocolContracts;
+        if (p.effectiveAt == 0) revert NoPendingChange();
+        if (block.timestamp < p.effectiveAt) revert ChangeNotReady();
+
+        if (p.dao != address(0)) { daoContract = p.dao; emit ProtocolContractUpdated("DAO", p.dao); }
+        if (p.merchant != address(0)) { merchantPortal = p.merchant; emit ProtocolContractUpdated("MerchantPortal", p.merchant); }
+        if (p.bridge != address(0)) { bridgeModule = p.bridge; emit ProtocolContractUpdated("BridgeModule", p.bridge); }
+        if (p.social != address(0)) { seerSocial = p.social; emit ProtocolContractUpdated("SeerSocial", p.social); }
+        if (p.panic != address(0)) { panicGuard = p.panic; emit ProtocolContractUpdated("PanicGuard", p.panic); }
+        if (p.workPayment != address(0)) { workPaymentManager = p.workPayment; emit ProtocolContractUpdated("WorkPaymentManager", p.workPayment); }
+
+        delete pendingProtocolContracts;
+    }
+
+    function cancelProtocolContractsChange() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (pendingProtocolContracts.effectiveAt == 0) revert NoPendingChange();
+        delete pendingProtocolContracts;
+        emit ProtocolContractsChangeCancelled();
     }
 
     function addVerifier(address verifier) external onlyRole(DEFAULT_ADMIN_ROLE) {

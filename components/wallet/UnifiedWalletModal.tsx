@@ -14,11 +14,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId } from 'wagmi';
 import {
   X,
   Wallet,
-  Mail,
   ArrowLeft,
   Sparkles,
   Key,
@@ -29,11 +28,10 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { WalletCapabilities } from './WalletCapabilities';
-import { EmbeddedLogin } from './EmbeddedLogin';
 import { GaslessStatus } from './GaslessTransaction';
 import { SessionKeyManager } from './SessionKeyManager';
 import { useSmartWallet } from '@/hooks/useSmartWallet';
-import { useEmbeddedWallet } from '@/lib/embeddedWallet/embeddedWalletService';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
@@ -84,12 +82,12 @@ export function UnifiedWalletModal({
   defaultToEmbedded = false,
 }: UnifiedWalletModalProps) {
   const { isConnected, address } = useAccount();
+  const chainId = useChainId();
   const { capabilities } = useSmartWallet();
-  const { state: embeddedState } = useEmbeddedWallet();
-  const [view, setView] = useState<WalletView>(defaultToEmbedded ? 'embedded' : 'main');
+  const [view, setView] = useState<WalletView>(defaultToEmbedded ? 'main' : 'main');
 
-  const isAuthenticated = isConnected || embeddedState.isAuthenticated;
-  const walletAddress = address || embeddedState.walletAddress;
+  const isAuthenticated = isConnected;
+  const walletAddress = address;
 
   if (!isOpen) return null;
 
@@ -105,11 +103,9 @@ export function UnifiedWalletModal({
               <ArrowLeft className="w-4 h-4" />
               Back
             </button>
-            <EmbeddedLogin
-              onSuccess={() => setView('main')}
-              showSocial
-              showEmail
-            />
+            <div className="rounded-xl border border-amber-300/30 bg-amber-50/60 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+              Email and social embedded wallet login is temporarily unavailable in this build. Use wallet connection for now.
+            </div>
           </div>
         );
 
@@ -170,7 +166,7 @@ export function UnifiedWalletModal({
             <h2 className="text-xl font-bold mb-4">Wallet Settings</h2>
             <div className="space-y-4">
               <a
-                href={`https://basescan.org/address/${walletAddress}`}
+                href={walletAddress ? getExplorerLink(chainId, walletAddress, 'address') : '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -291,20 +287,9 @@ export function UnifiedWalletModal({
                     </div>
                   </div>
 
-                  {/* Embedded Wallet */}
-                  <button
-                    onClick={() => setView('embedded')}
-                    className="w-full p-4 bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-6 h-6 text-purple-500" />
-                      <div className="flex-1">
-                        <p className="font-semibold">Sign in with Email</p>
-                        <p className="text-xs text-gray-500">No wallet needed - we create one for you</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    </div>
-                  </button>
+                  <div className="rounded-xl border border-amber-300/30 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                    Email/social embedded wallet login is disabled until the provider integration is fully wired and audited.
+                  </div>
                 </div>
               </>
             )}

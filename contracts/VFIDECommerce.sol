@@ -70,6 +70,7 @@ contract MerchantRegistry {
         emit ModulesSet(_dao, _token, _hub, _seer, _ledger);
     }
 
+    // slither-disable-next-line reentrancy-events
     function addMerchant(bytes32 metaHash) external {
         if (merchants[msg.sender].status != Status.NONE) revert COM_AlreadyMerchant();
         address v = vaultHub.vaultOf(msg.sender);

@@ -6,12 +6,14 @@ import { setAuthCookie, getAuthCookie } from '@/lib/auth/cookieAuth';
 import {
   consumeAndValidateSiweChallenge,
   getRequestIp,
+  resolveTrustedAuthDomain,
 } from '@/lib/security/siweChallenge';
 import {
   clearAuthFailureSignals,
   getAccountLock,
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
+import { recordActivity, analyzeActivity } from '@/lib/security/anomalyDetection';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -110,7 +112,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const domain = (request.headers.get('host') || 'vfide.io').split(':')[0] || 'vfide.io';
+    const domain = resolveTrustedAuthDomain(request.headers);
+    if (!domain) {
+      await recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_fail' });
+      return NextResponse.json({ error: 'Untrusted auth domain' }, { status: 400 });
+    }
     const challengeValidation = await consumeAndValidateSiweChallenge({
       address: normalizedAddress,
       message,
@@ -163,22 +169,44 @@ export async function POST(request: NextRequest) {
     await recordSecurityEvent(normalizedAddress, { ts: Date.now(), ip, type: 'auth_success' });
     await clearAuthFailureSignals(normalizedAddress);
 
+    // Run anomaly detection after successful authentication
+    const ua = request.headers.get('user-agent') ?? 'unknown';
+    const activityRecord = {
+      ipAddress: ip,
+      userAgent: ua,
+      action: 'login' as const,
+      endpoint: '/api/auth',
+      timestamp: Date.now(),
+    };
+    await recordActivity(normalizedAddress, activityRecord).catch(() => { /* non-blocking */ });
+    analyzeActivity(normalizedAddress, activityRecord).then((alert) => {
+      if (alert) {
+        logger.warn('security.anomaly_detected', { userAddress: normalizedAddress, alert });
+      }
+    }).catch(() => { /* non-blocking */ });
+
     // Generate secure JWT token
     const tokenResponse = generateToken(normalizedAddress, chainId);
 
     // Create response with HTTPOnly cookie for enhanced security
+    // IMPORTANT: Include token in JSON for client-side API compatibility
+    // The HTTPOnly cookie provides XSS protection; the JSON token enables
+    // fetch() requests that can read the response body (unlike XML-over-HTTP pattern)
     const response = NextResponse.json({
       success: true,
+      token: tokenResponse.token,
       address: tokenResponse.address,
       expiresIn: tokenResponse.expiresIn,
     });
 
-    // Set HTTPOnly cookie (XSS protection)
+    // Set HTTPOnly cookie (XSS protection) - acts as backup authentication method
     await setAuthCookie(tokenResponse.token, response);
 
     return response;
   } catch (error) {
-    logger.error('[Auth API] Error:', error);
+    logger.error('[Auth API] Authentication failed', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 500 }

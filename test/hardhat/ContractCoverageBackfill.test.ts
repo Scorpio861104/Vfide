@@ -3,9 +3,16 @@ import assert from "node:assert/strict";
 import { network } from "hardhat";
 import { expectHardhatRevert } from "./utils/expectHardhatRevert";
 
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
 describe("SessionKeyManager coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function sessionKeyManagerFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao, customer, recorder, attacker] = await ethers.getSigners();
 
     const VaultHubStub = await ethers.getContractFactory("VaultHubStub");
@@ -18,6 +25,11 @@ describe("SessionKeyManager coverage backfill", { concurrency: 1 }, () => {
     await skm.waitForDeployment();
 
     return { ethers, dao, customer, recorder, attacker, skm };
+  }
+
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(sessionKeyManagerFixture);
   }
 
   it("rejects recordSpend from unauthorized recorders", async () => {
@@ -64,8 +76,8 @@ describe("SessionKeyManager coverage backfill", { concurrency: 1 }, () => {
 });
 
 describe("CircuitBreaker coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function circuitBreakerFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [admin, configManager, pauser, oracle, attacker] = await ethers.getSigners();
 
     const EmergencyControllerStub = await ethers.getContractFactory("EmergencyControllerStub");
@@ -84,6 +96,11 @@ describe("CircuitBreaker coverage backfill", { concurrency: 1 }, () => {
     await breaker.connect(admin).grantRole(recorderRole, attacker.address);
 
     return { ethers, admin, configManager, pauser, oracle, attacker, breaker, controller };
+  }
+
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(circuitBreakerFixture);
   }
 
   it("restricts TVL updates to config managers", async () => {
@@ -127,8 +144,8 @@ describe("CircuitBreaker coverage backfill", { concurrency: 1 }, () => {
 });
 
 describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function proofLedgerFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao, logger, user] = await ethers.getSigners();
 
     const ProofLedger = await ethers.getContractFactory("ProofLedger");
@@ -136,6 +153,11 @@ describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
     await ledger.waitForDeployment();
 
     return { dao, logger, user, ledger };
+  }
+
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(proofLedgerFixture);
   }
 
   it("rejects unauthorized loggers", async () => {
@@ -159,8 +181,8 @@ describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
 });
 
 describe("VFIDEAccessControl coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function accessControlFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [admin, newAdmin, member] = await ethers.getSigners();
 
     const Access = await ethers.getContractFactory("VFIDEAccessControl");
@@ -168,6 +190,11 @@ describe("VFIDEAccessControl coverage backfill", { concurrency: 1 }, () => {
     await access.waitForDeployment();
 
     return { admin, newAdmin, member, access };
+  }
+
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(accessControlFixture);
   }
 
   it("transfers DEFAULT_ADMIN_ROLE atomically", async () => {
@@ -193,8 +220,8 @@ describe("VFIDEAccessControl coverage backfill", { concurrency: 1 }, () => {
 });
 
 describe("EcoTreasuryVault coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function ecoTreasuryFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao, recipient, attacker] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory("MintableTokenStub");
@@ -208,6 +235,11 @@ describe("EcoTreasuryVault coverage backfill", { concurrency: 1 }, () => {
     await token.mint(await treasury.getAddress(), ethers.parseEther("1000"));
 
     return { ethers, dao, recipient, attacker, token, treasury };
+  }
+
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(ecoTreasuryFixture);
   }
 
   it("restricts VFIDE disbursement to DAO", async () => {
@@ -230,8 +262,8 @@ describe("EcoTreasuryVault coverage backfill", { concurrency: 1 }, () => {
 });
 
 describe("MerchantRegistry coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function merchantRegistryFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao, merchant, other] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory("TokenStub");
@@ -263,6 +295,11 @@ describe("MerchantRegistry coverage backfill", { concurrency: 1 }, () => {
     return { dao, merchant, other, vaultHub, seer, ledger, registry };
   }
 
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(merchantRegistryFixture);
+  }
+
   it("rejects merchant registration without a vault", async () => {
     const { merchant, registry } = await deployFixture();
 
@@ -287,8 +324,8 @@ describe("MerchantRegistry coverage backfill", { concurrency: 1 }, () => {
 });
 
 describe("EmergencyBreaker coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function emergencyBreakerFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [dao] = await ethers.getSigners();
 
     const EmergencyBreaker = await ethers.getContractFactory("EmergencyBreaker");
@@ -296,6 +333,11 @@ describe("EmergencyBreaker coverage backfill", { concurrency: 1 }, () => {
     await breaker.waitForDeployment();
 
     return { dao, breaker };
+  }
+
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(emergencyBreakerFixture);
   }
 
   it("reports the halted state when the emergency breaker is toggled", async () => {
@@ -308,8 +350,8 @@ describe("EmergencyBreaker coverage backfill", { concurrency: 1 }, () => {
 });
 
 describe("BadgeQualificationRules coverage backfill", { concurrency: 1 }, () => {
-  async function deployFixture() {
-    const { ethers } = (await network.connect()) as any;
+  async function badgeQualificationRulesFixture() {
+    const { ethers } = (await getConnection()) as any;
 
     const BadgeRegistry = await ethers.getContractFactory("BadgeRegistry");
     const badgeRegistry = await BadgeRegistry.deploy();
@@ -320,6 +362,11 @@ describe("BadgeQualificationRules coverage backfill", { concurrency: 1 }, () => 
     await rules.waitForDeployment();
 
     return { badgeRegistry, rules };
+  }
+
+  async function deployFixture() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(badgeQualificationRulesFixture);
   }
 
   it("qualifies ACTIVE_TRADER at 50 commerce transactions", async () => {
@@ -372,7 +419,7 @@ describe("BadgeQualificationRules coverage backfill", { concurrency: 1 }, () => 
 
 describe("Deploy helper coverage backfill", { concurrency: 1 }, () => {
   it("DeployPhase3Peripherals deploys both BSM and oracle", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [owner, vfideToken, quoteToken] = await ethers.getSigners();
 
     const Deployer = await ethers.getContractFactory("DeployPhase3Peripherals");
@@ -392,7 +439,7 @@ describe("Deploy helper coverage backfill", { concurrency: 1 }, () => {
   });
 
   it("DeployPhase1 rejects zero governance deployer and orchestrates valid stubs", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [admin, council1, council2, council3, council4, council5, oracle] = await ethers.getSigners();
 
     const Phase1 = await ethers.getContractFactory("Phase1Deployer");

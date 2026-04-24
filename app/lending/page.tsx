@@ -4,11 +4,12 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { useAccount, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Banknote, Plus, Search, AlertTriangle, Users, Zap, ArrowRight, HandCoins } from 'lucide-react';
+import { Banknote, Clock, Plus, Search, AlertTriangle, Users, Zap, ArrowRight, HandCoins } from 'lucide-react';
 import { formatEther } from 'viem';
 import { Footer } from '@/components/layout/Footer';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 type Tab = 'borrow' | 'lend' | 'my-loans' | 'flash';
 type LoanState = 'OPEN' | 'COSIGNING' | 'ACTIVE' | 'GRACE' | 'RESTRUCTURED' | 'REPAID' | 'DEFAULTED' | 'CANCELLED';
@@ -375,7 +376,7 @@ export default function LendingPage() {
                 <div className="p-5 bg-white/3 border border-white/10 rounded-2xl text-center">
                   <h3 className="text-sm text-gray-400 mb-2">Flash Borrow</h3>
                   <p className="text-gray-500 text-xs mb-4">For developers: borrow via smart contract callback. See docs for IERC3156FlashBorrower implementation.</p>
-                  <button onClick={() => window.open('/developer', '_blank')} className="w-full py-2.5 bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold rounded-xl text-sm">Developer Docs</button>
+                  <button onClick={() => safeWindowOpen('/developer')} className="w-full py-2.5 bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold rounded-xl text-sm">Developer Docs</button>
                 </div>
               </div>
 

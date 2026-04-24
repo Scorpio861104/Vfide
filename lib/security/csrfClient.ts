@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
  * Fetches a CSRF token from the server and builds headers
  * that include the token for state-changing requests.
  *
- * The server sets the token in an httpOnly cookie (automatic on fetch
+ * The server sets the token in a same-site cookie (automatic on fetch
  * with credentials: 'include') and also returns it in the JSON body
  * so the client can send it back via the x-csrf-token header.
  */

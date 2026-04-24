@@ -4,7 +4,6 @@ import { useState, ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { Wallet, Smartphone, Link, Building2, PartyPopper } from "lucide-react";
-import { EmbeddedLogin } from "@/components/wallet/EmbeddedLogin";
 
 interface Step {
   id: number;
@@ -33,20 +32,11 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
       id: 2,
       icon: <Smartphone className={iconClass} />,
       title: "Choose the easiest wallet setup",
-      description: "New to crypto? Start with email or social login. If you already use a browser wallet, you can still connect MetaMask or Coinbase Wallet below.",
+      description: "Use an existing wallet app like MetaMask or Coinbase Wallet. Embedded email/social wallet onboarding is temporarily disabled while security hardening is completed.",
       action: (
         <div className="mt-4 w-full max-w-xl space-y-4">
-          {!isConnected && (
-            <div className="rounded-2xl border border-cyan-400/30 bg-zinc-900/80 p-2">
-              <EmbeddedLogin
-                className="rounded-xl bg-white/95 text-left shadow-sm dark:bg-zinc-950"
-                onSuccess={() => setCurrentStep(2)}
-              />
-            </div>
-          )}
-
-          <div className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
-            Or connect an existing wallet
+          <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+            Security note: create/import wallets only through trusted wallet apps. Never paste private keys or seed phrases into websites.
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">

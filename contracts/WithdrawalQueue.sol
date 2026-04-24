@@ -52,6 +52,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
     
     event DailyCapUpdated(uint256 newCap);
     event MinimumDelayAmountUpdated(uint256 newAmount);
+    event GovernanceCancelDisabled();
 
     /**
      * @notice Constructor
@@ -129,6 +130,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         dailyWithdrawn[today] += request.amount;
 
         _executeWithdrawal(request.user, request.amount);
+        _syncVaultBalanceAfterWithdrawal(request.amount);
 
         emit WithdrawalExecuted(request.user, _queueIndex, request.amount);
     }
@@ -165,6 +167,7 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
             WithdrawalRequest storage request = withdrawalQueue[_indices[i]];
             request.executed = true;
             _executeWithdrawal(request.user, request.amount);
+            _syncVaultBalanceAfterWithdrawal(request.amount);
             emit WithdrawalExecuted(request.user, _indices[i], request.amount);
         }
 
@@ -180,17 +183,10 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
         external 
         onlyRole(DEFAULT_ADMIN_ROLE) 
     {
-        require(_queueIndex < withdrawalQueue.length, "WithdrawalQueue: invalid index");
-        require(bytes(_reason).length > 0, "WithdrawalQueue: reason required");
-        
-        WithdrawalRequest storage request = withdrawalQueue[_queueIndex];
-        
-        require(!request.executed, "WithdrawalQueue: already executed");
-        require(!request.cancelled, "WithdrawalQueue: already cancelled");
-
-        request.cancelled = true;
-
-        emit WithdrawalCancelled(_queueIndex, request.user, _reason);
+        _queueIndex;
+        _reason;
+        emit GovernanceCancelDisabled();
+        revert("WithdrawalQueue: governance cancel disabled");
     }
 
     /**
@@ -228,6 +224,15 @@ abstract contract WithdrawalQueue is VFIDEAccessControl, VFIDEReentrancyGuard {
      */
     function _updateVaultBalance(uint256 _balance) internal {
         totalVaultBalance = _balance;
+    }
+
+    function _syncVaultBalanceAfterWithdrawal(uint256 amount) internal {
+        uint256 effectiveBalance = _effectiveVaultBalance();
+        if (effectiveBalance <= amount) {
+            _updateVaultBalance(0);
+            return;
+        }
+        _updateVaultBalance(effectiveBalance - amount);
     }
 
     /**

@@ -175,9 +175,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
   } catch (error) {
     logger.error('[Rewards Claim] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to claim rewards';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to claim rewards' },
       { status: 500 }
     );
   }

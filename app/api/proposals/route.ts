@@ -2,12 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { isAddress } from 'viem';
+import { createPublicClient, http, isAddress } from 'viem';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
 const MAX_PROPOSALS_LIMIT = 100;
 const MAX_PROPOSALS_OFFSET = 10000;
+const DB_GOVERNANCE_SCORE_FALLBACK_MIN = 5000;
+
+const SEER_GOVERNANCE_ABI = [
+  {
+    type: 'function',
+    name: 'minForGovernance',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint16' }],
+  },
+  {
+    type: 'function',
+    name: 'getScore',
+    stateMutability: 'view',
+    inputs: [{ name: 'subject', type: 'address' }],
+    outputs: [{ name: '', type: 'uint16' }],
+  },
+] as const;
 
 const createProposalRequestSchema = z.object({
   proposerAddress: z.string().trim().refine((value) => isAddress(value), {
@@ -87,6 +105,47 @@ interface Proposal {
   proposer_address?: string;
   proposer_username?: string;
   proposer_avatar?: string;
+}
+
+function getGovernanceRpcUrl(): string | null {
+  const url = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || process.env.NEXT_PUBLIC_RPC_URL || process.env.RPC_URL;
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+async function verifyOnChainGovernanceEligibility(address: string): Promise<{ verified: boolean; eligible: boolean }> {
+  const seerAddress = process.env.NEXT_PUBLIC_SEER_ADDRESS?.trim();
+  const rpcUrl = getGovernanceRpcUrl();
+
+  if (!seerAddress || !isAddress(seerAddress) || !rpcUrl) {
+    return { verified: false, eligible: false };
+  }
+
+  try {
+    const client = createPublicClient({ transport: http(rpcUrl) });
+    const [minForGovernance, score] = await Promise.all([
+      client.readContract({
+        address: seerAddress,
+        abi: SEER_GOVERNANCE_ABI,
+        functionName: 'minForGovernance',
+      }),
+      client.readContract({
+        address: seerAddress,
+        abi: SEER_GOVERNANCE_ABI,
+        functionName: 'getScore',
+        args: [address],
+      }),
+    ]);
+
+    return {
+      verified: true,
+      eligible: Number(score) >= Number(minForGovernance),
+    };
+  } catch (error) {
+    logger.warn('[Proposals POST] On-chain governance eligibility verification failed', error);
+    return { verified: false, eligible: false };
+  }
 }
 
 /**
@@ -303,9 +362,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check eligibility: must be council member or have sufficient proof score
+    // Check eligibility: council members are allowed; otherwise prefer on-chain Seer verification.
+    // If chain verification is unavailable, fall back to a strict DB threshold aligned with governance scale.
     const proofScore = Number(proposer.proof_score ?? 0);
-    const canPropose = proposer.is_council_member || proofScore >= 50;
+    const onChainEligibility = await verifyOnChainGovernanceEligibility(proposerAddress.toLowerCase());
+    const dbFallbackEligible = proofScore >= DB_GOVERNANCE_SCORE_FALLBACK_MIN;
+    const canPropose = proposer.is_council_member || (onChainEligibility.verified ? onChainEligibility.eligible : dbFallbackEligible);
 
     if (!canPropose) {
       return NextResponse.json(

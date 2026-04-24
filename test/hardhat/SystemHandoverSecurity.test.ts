@@ -2,9 +2,23 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
 
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
+async function queueTxAndGetId(timelock: any, signer: any, target: string, data: string) {
+  const tx = await timelock.connect(signer).queueTx(target, 0n, data);
+  const receipt = await tx.wait();
+  const queuedEvent = (receipt?.logs as any[]).find((log) => log.fragment?.name === 'Queued');
+  return queuedEvent.args[0];
+}
+
 describe('SystemHandover security hardening', () => {
   it('allows only dev to set dao/timelock/council before arm', async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dev, nonDev, councilMember] = await ethers.getSigners();
 
     const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
@@ -59,7 +73,7 @@ describe('SystemHandover security hardening', () => {
   });
 
   it('blocks dao/timelock/council setters after arm', async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dev, councilMember] = await ethers.getSigners();
 
     const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
@@ -103,8 +117,59 @@ describe('SystemHandover security hardening', () => {
     );
   });
 
+  it('blocks setLedger after arm while allowing it before arm', async () => {
+    const { ethers } = (await getConnection()) as any;
+    const [dev, councilMember] = await ethers.getSigners();
+
+    const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
+    const dao = await DaoStub.deploy();
+    await dao.waitForDeployment();
+
+    const TimelockStub = await ethers.getContractFactory('SHTimelockAdminStub');
+    const timelock = await TimelockStub.deploy();
+    await timelock.waitForDeployment();
+
+    const SeerStub = await ethers.getContractFactory('SHSeerStub');
+    const seer = await SeerStub.deploy();
+    await seer.waitForDeployment();
+
+    const CouncilStub = await ethers.getContractFactory('SHCouncilElectionStub');
+    const council = await CouncilStub.deploy();
+    await council.waitForDeployment();
+    await council.setMembers([councilMember.address]);
+
+    const ledgerA = await DaoStub.deploy();
+    await ledgerA.waitForDeployment();
+    const ledgerB = await DaoStub.deploy();
+    await ledgerB.waitForDeployment();
+
+    const SystemHandover = await ethers.getContractFactory('SystemHandover');
+    const handover = await SystemHandover.deploy(
+      dev.address,
+      await dao.getAddress(),
+      await timelock.getAddress(),
+      await seer.getAddress(),
+      await council.getAddress(),
+      ethers.ZeroAddress
+    );
+    await handover.waitForDeployment();
+
+    await handover.connect(dev).setLedger(await ledgerA.getAddress());
+    assert.equal(await handover.ledger(), await ledgerA.getAddress());
+
+    await handover.connect(dev).arm(1);
+
+    await assert.rejects(
+      async () => {
+        await handover.connect(dev).setLedger(await ledgerB.getAddress());
+      },
+      /revert/
+    );
+    assert.equal(await handover.ledger(), await ledgerA.getAddress());
+  });
+
   it('requires arm() before executeHandover()', async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dev, nonDev, councilMember] = await ethers.getSigners();
 
     const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
@@ -151,7 +216,7 @@ describe('SystemHandover security hardening', () => {
   });
 
   it('is one-time and burns dev control after execution', async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dev, councilMember, newAdmin] = await ethers.getSigners();
 
     const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
@@ -200,7 +265,7 @@ describe('SystemHandover security hardening', () => {
   });
 
   it('supports strict DAO/timelock controls when governance links are preconfigured', async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dev, councilMember, newAdmin] = await ethers.getSigners();
 
     const TimelockStrict = await ethers.getContractFactory('SHTimelockOnlySelfStub');
@@ -243,7 +308,7 @@ describe('SystemHandover security hardening', () => {
   });
 
   it('fails closed when strict governance links are not ready', async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dev, councilMember, newAdmin] = await ethers.getSigners();
 
     const TimelockStrict = await ethers.getContractFactory('SHTimelockOnlySelfStub');
@@ -284,9 +349,12 @@ describe('SystemHandover security hardening', () => {
     );
   });
 
-  it('integrates with real DAO and DAOTimelock admin controls', async () => {
-    const { ethers } = (await network.connect()) as any;
-    const [dev, newAdmin, councilMember] = await ethers.getSigners();
+  it('integrates real DAO council bootstrap before timelock admin handoff', async () => {
+    const { ethers } = (await getConnection()) as any;
+    const [dev, newAdmin, ...councilSigners] = await ethers.getSigners();
+    const councilMembers = councilSigners.slice(0, 15).map((signer: any) => signer.address);
+
+    assert.equal(councilMembers.length, 15);
 
     const Timelock = await ethers.getContractFactory('DAOTimelock');
     const timelock = await Timelock.deploy(dev.address);
@@ -310,34 +378,38 @@ describe('SystemHandover security hardening', () => {
     );
     await dao.waitForDeployment();
 
+    const CouncilStub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:CouncilStub');
+    const council = await CouncilStub.deploy();
+    await council.waitForDeployment();
+    await council.setCouncilMembers(councilMembers);
+
+    const setCouncilData = dao.interface.encodeFunctionData('setCouncilElection', [await council.getAddress()]);
+    const syncQuorumData = dao.interface.encodeFunctionData('syncQuorumToCouncil', []);
+    const setCouncilOpId = await queueTxAndGetId(timelock, dev, await dao.getAddress(), setCouncilData);
+    const syncQuorumOpId = await queueTxAndGetId(timelock, dev, await dao.getAddress(), syncQuorumData);
+
     // Queue DAO admin change through real timelock (onlyTimelock in DAO).
     const setDaoAdminData = dao.interface.encodeFunctionData('setAdmin', [newAdmin.address]);
-    const queueDaoTx = await timelock.connect(dev).queueTx(await dao.getAddress(), 0n, setDaoAdminData);
-    const queueDaoReceipt = await queueDaoTx.wait();
-    const daoQueuedEvent = (queueDaoReceipt?.logs as any[]).find((l) => l.fragment?.name === 'Queued');
-    const daoAdminOpId = daoQueuedEvent.args[0];
+    const daoAdminOpId = await queueTxAndGetId(timelock, dev, await dao.getAddress(), setDaoAdminData);
 
     // Queue timelock self-admin change (onlyTimelockSelf in DAOTimelock).
     const setTimelockAdminData = timelock.interface.encodeFunctionData('setAdmin', [await dao.getAddress()]);
-    const queueTimelockTx = await timelock.connect(dev).queueTx(await timelock.getAddress(), 0n, setTimelockAdminData);
-    const queueTimelockReceipt = await queueTimelockTx.wait();
-    const timelockQueuedEvent = (queueTimelockReceipt?.logs as any[]).find((l) => l.fragment?.name === 'Queued');
-    const timelockAdminOpId = timelockQueuedEvent.args[0];
+    const timelockAdminOpId = await queueTxAndGetId(timelock, dev, await timelock.getAddress(), setTimelockAdminData);
 
     await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
     await ethers.provider.send('evm_mine', []);
 
-    // Execute in order: DAO first, then timelock self-admin migration.
+    // Execute the DAO bootstrap while the deployer still controls the timelock.
+    await timelock.connect(dev).execute(setCouncilOpId);
+    await timelock.connect(dev).execute(syncQuorumOpId);
     await timelock.connect(dev).execute(daoAdminOpId);
     await timelock.connect(dev).execute(timelockAdminOpId);
 
+    assert.equal(await dao.councilElection(), await council.getAddress());
+    assert.equal(await dao.minVotesRequired(), 6000n);
+    assert.equal(await dao.minParticipation(), 12n);
     assert.equal(await dao.admin(), newAdmin.address);
     assert.equal(await timelock.admin(), await dao.getAddress());
-
-    const CouncilStub = await ethers.getContractFactory('SHCouncilElectionStub');
-    const council = await CouncilStub.deploy();
-    await council.waitForDeployment();
-    await council.setMembers([councilMember.address]);
 
     const SystemHandover = await ethers.getContractFactory('SystemHandover');
     const handover = await SystemHandover.deploy(

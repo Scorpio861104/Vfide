@@ -22,6 +22,7 @@ const ALLOWED_DOMAINS = [
  * List of allowed protocols for URLs
  */
 const ALLOWED_PROTOCOLS = ['http:', 'https:'];
+const ALLOWED_EXTERNAL_PROTOCOLS = ['http:', 'https:', 'mailto:'];
 
 /**
  * Validate if a URL is safe for redirect
@@ -134,18 +135,80 @@ export function getAllowedDomains(): readonly string[] {
 }
 
 /**
- * Add a domain to the allowed list (runtime configuration)
- * Use with caution - only for trusted domains
- * @param domain - Domain to add
+ * Validate if a URL is safe for opening in a new tab/window.
+ * Allows external domains by default but enforces protocol constraints.
  */
-export function addAllowedDomain(domain: string): void {
-  if (!domain || domain.includes('*') || domain.includes('..')) {
-    logger.error('[URL Validation] Invalid domain format:', new Error(domain));
-    return;
+export function isExternalUrlSafe(
+  url: string,
+  options: { allowRelative?: boolean; allowedHosts?: readonly string[] } = {}
+): boolean {
+  if (!url) return false;
+
+  const { allowRelative = true, allowedHosts } = options;
+
+  try {
+    if (allowRelative && (url.startsWith('/') && !url.startsWith('//'))) {
+      return true;
+    }
+
+    const parsed = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io');
+    if (!ALLOWED_EXTERNAL_PROTOCOLS.includes(parsed.protocol)) {
+      logger.warn(`[URL Validation] Blocked external URL with unsafe protocol: ${parsed.protocol}`);
+      return false;
+    }
+
+    if (allowedHosts && allowedHosts.length > 0) {
+      const host = parsed.hostname.toLowerCase();
+      const allowed = allowedHosts.some((allowedHost) => {
+        const normalized = allowedHost.toLowerCase();
+        return host === normalized || host.endsWith(`.${normalized}`);
+      });
+
+      if (!allowed) {
+        logger.warn(`[URL Validation] Blocked external URL host: ${host}`);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    logger.error('[URL Validation] Invalid external URL format:', error);
+    return false;
+  }
+}
+
+/**
+ * Open a URL in a new window with noopener/noreferrer defaults.
+ */
+export function safeWindowOpen(
+  url: string,
+  options: {
+    target?: string;
+    features?: string;
+    allowRelative?: boolean;
+    allowedHosts?: readonly string[];
+  } = {}
+): Window | null {
+  if (typeof window === 'undefined') {
+    logger.warn('[URL Validation] Cannot open window on server side');
+    return null;
   }
 
-  if (!ALLOWED_DOMAINS.includes(domain)) {
-    ALLOWED_DOMAINS.push(domain);
-    logger.info('[URL Validation] Added allowed domain:', { domain });
+  const {
+    target = '_blank',
+    features = 'noopener,noreferrer',
+    allowRelative = true,
+    allowedHosts,
+  } = options;
+
+  if (!isExternalUrlSafe(url, { allowRelative, allowedHosts })) {
+    logger.warn('[URL Validation] Blocked unsafe external open:', { url });
+    return null;
   }
+
+  const opened = window.open(url, target, features);
+  if (opened) {
+    opened.opener = null;
+  }
+  return opened;
 }

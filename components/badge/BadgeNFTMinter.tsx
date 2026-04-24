@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useChainId } from 'wagmi'
 import { BadgeDisplay } from './BadgeDisplay'
 import { useMintBadge, useCanMintBadge, useBadgeNFTs } from '@/lib/vfide-hooks'
 import { getBadgeById } from '@/lib/badge-registry'
@@ -10,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { devLog } from '@/lib/utils'
+import { getExplorerLink } from '@/components/ui/EtherscanLink'
 
 export interface BadgeNFTMinterProps {
   badgeId: `0x${string}`
@@ -21,6 +23,7 @@ export function BadgeNFTMinter({ badgeId, onSuccess }: BadgeNFTMinterProps) {
   const { canMint, reason, isLoading: checkingEligibility } = useCanMintBadge(badgeId)
   const { mintBadge, isMinting, isSuccess, txHash } = useMintBadge()
   const { refetch: refetchNFTs } = useBadgeNFTs()
+  const chainId = useChainId()
   const { showToast } = useToast()
   
   const [showSuccess, setShowSuccess] = useState(false)
@@ -64,7 +67,7 @@ export function BadgeNFTMinter({ badgeId, onSuccess }: BadgeNFTMinterProps) {
           
           {txHash && (
             <a
-              href={`https://sepolia.basescan.org/tx/${txHash}`}
+              href={getExplorerLink(chainId, txHash, 'tx')}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 text-sm text-primary hover:underline"

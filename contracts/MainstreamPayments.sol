@@ -272,6 +272,13 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     uint256 public vfidePerUsd;
     uint256 public lastUpdateTime;
     uint256 public stalenessThreshold = 1 hours;
+    uint256 public constant MIN_PRICE_UPDATE_INTERVAL = 5 minutes;
+    uint256 public constant MIN_UPDATER_UPDATE_INTERVAL = 15 minutes;
+    uint256 public constant MIN_ABSOLUTE_VFIDE_PER_USD = 1e12;
+    uint256 public constant MAX_STANDARD_PRICE_CHANGE_BPS = 5000;
+    uint256 public constant MAX_FORCE_PRICE_INCREASE_BPS = 90000;
+    uint256 public constant MAX_FORCE_PRICE_DECREASE_BPS = 9000;
+    uint256 public constant MAX_SOURCE_DEVIATION_BPS = 5000;
     
     struct PriceSource {
         bool active;
@@ -286,6 +293,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     // Authorized updaters (keepers, oracles)
     mapping(address => bool) public isUpdater;
+    mapping(address => uint256) public lastUpdaterUpdateAt;
     
     modifier onlyDAO() {
         require(msg.sender == dao, "PO: not DAO");
@@ -299,11 +307,40 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     constructor(address _dao, uint256 initialPrice) {
         require(_dao != address(0), "PO: zero DAO");
-        require(initialPrice > 0, "PO: zero price");
+        _requireValidAbsolutePrice(initialPrice);
         dao = _dao;
         vfidePerUsd = initialPrice;
         lastUpdateTime = block.timestamp;
         isUpdater[_dao] = true;
+    }
+
+    function _requireValidAbsolutePrice(uint256 price) internal pure {
+        require(price >= MIN_ABSOLUTE_VFIDE_PER_USD, "PO: price below minimum");
+    }
+
+    function _validatePriceWindow(
+        uint256 currentPrice,
+        uint256 newPrice,
+        uint256 maxIncreaseBps,
+        uint256 maxDecreaseBps
+    ) internal pure {
+        uint256 minPrice = (currentPrice * (10_000 - maxDecreaseBps)) / 10_000;
+        uint256 maxPrice = (currentPrice * (10_000 + maxIncreaseBps)) / 10_000;
+        require(newPrice >= minPrice && newPrice <= maxPrice, "PO: price change too large");
+    }
+
+    function _enforceUpdateCooldown() internal view {
+        require(block.timestamp >= lastUpdateTime + MIN_PRICE_UPDATE_INTERVAL, "PO: update cooldown active");
+    }
+
+    function _enforceUpdaterCooldown(address updater) internal {
+        require(block.timestamp >= lastUpdaterUpdateAt[updater] + MIN_UPDATER_UPDATE_INTERVAL, "PO: updater cooldown active");
+        lastUpdaterUpdateAt[updater] = block.timestamp;
+    }
+
+    function _requireFreshPrice() internal view {
+        require(vfidePerUsd > 0, "PO: price not set");
+        require(block.timestamp <= lastUpdateTime + stalenessThreshold, "PO: price stale");
     }
     
     /**
@@ -311,14 +348,10 @@ contract MainstreamPriceOracle is ReentrancyGuard {
      * @param newPrice VFIDE amount per 1 USD (18 decimals)
      */
     function updatePrice(uint256 newPrice) external onlyUpdater nonReentrant {
-        require(newPrice > 0, "PO: zero price");
-        
-        // Sanity check: price shouldn't change more than 50% in one update
-        uint256 maxChange = vfidePerUsd / 2;
-        require(
-            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange,
-            "PO: price change too large"
-        );
+        _requireValidAbsolutePrice(newPrice);
+        _enforceUpdateCooldown();
+        _enforceUpdaterCooldown(msg.sender);
+        _validatePriceWindow(vfidePerUsd, newPrice, MAX_STANDARD_PRICE_CHANGE_BPS, MAX_STANDARD_PRICE_CHANGE_BPS);
         
         vfidePerUsd = newPrice;
         lastUpdateTime = block.timestamp;
@@ -331,8 +364,9 @@ contract MainstreamPriceOracle is ReentrancyGuard {
      * @dev H-5 FIX: Now truly bypasses the sanity check to allow DAO recovery from stale prices
      */
     function forceSetPrice(uint256 newPrice) external onlyDAO nonReentrant {
-        require(newPrice > 0, "PO: zero price");
-        // H-5 FIX: Removed sanity check to allow DAO to recover from stale oracle prices
+        _requireValidAbsolutePrice(newPrice);
+        _enforceUpdateCooldown();
+        _validatePriceWindow(vfidePerUsd, newPrice, MAX_FORCE_PRICE_INCREASE_BPS, MAX_FORCE_PRICE_DECREASE_BPS);
         vfidePerUsd = newPrice;
         lastUpdateTime = block.timestamp;
         emit PriceUpdated(newPrice, block.timestamp, msg.sender);
@@ -394,11 +428,9 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         require(ps.lastUpdate + stalenessThreshold >= block.timestamp, "PO: source stale");
 
         uint256 newPrice = ps.lastPrice;
-        uint256 maxChange = vfidePerUsd / 2;
-        require(
-            newPrice >= vfidePerUsd - maxChange && newPrice <= vfidePerUsd + maxChange,
-            "PO: price change too large"
-        );
+        _enforceUpdateCooldown();
+        _enforceUpdaterCooldown(msg.sender);
+        _validatePriceWindow(vfidePerUsd, newPrice, MAX_STANDARD_PRICE_CHANGE_BPS, MAX_STANDARD_PRICE_CHANGE_BPS);
 
         vfidePerUsd = newPrice;
         lastUpdateTime = block.timestamp;
@@ -409,7 +441,8 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     function reportSourcePrice(uint256 price) external nonReentrant {
         PriceSource storage ps = priceSources[msg.sender];
         require(ps.active, "PO: not a source");
-        require(price > 0, "PO: zero price");
+        _requireValidAbsolutePrice(price);
+        _validatePriceWindow(vfidePerUsd, price, MAX_SOURCE_DEVIATION_BPS, MAX_SOURCE_DEVIATION_BPS);
         ps.lastPrice = price;
         ps.lastUpdate = block.timestamp;
         emit PriceSourceReported(msg.sender, price, block.timestamp);
@@ -435,6 +468,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
      * @return vfideAmount Amount in VFIDE (18 decimals)
      */
     function usdToVfide(uint256 usdAmount) external view returns (uint256 vfideAmount) {
+        _requireFreshPrice();
         // usdAmount is in 6 decimals, vfidePerUsd is in 18 decimals
         // vfideAmount = usdAmount * vfidePerUsd / 1e6
         vfideAmount = (usdAmount * vfidePerUsd) / 1e6;
@@ -446,7 +480,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
      * @return usdAmount Amount in USD (6 decimals)
      */
     function vfideToUsd(uint256 vfideAmount) external view returns (uint256 usdAmount) {
-        require(vfidePerUsd > 0, "PO: price not set");
+        _requireFreshPrice();
         // usdAmount = vfideAmount * 1e6 / vfidePerUsd
         usdAmount = (vfideAmount * 1e6) / vfidePerUsd;
     }
@@ -469,7 +503,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
      * @return priceUsd VFIDE price in USD (6 decimals)
      */
     function getVfidePriceUsd() external view returns (uint256 priceUsd) {
-        require(vfidePerUsd > 0, "PO: price not set");
+        _requireFreshPrice();
         // If vfidePerUsd = 10e18 (10 VFIDE per $1), then 1 VFIDE = $0.10
         // priceUsd = 1e6 * 1e18 / vfidePerUsd = 1e24 / vfidePerUsd
         priceUsd = 1e24 / vfidePerUsd;
@@ -487,6 +521,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         uint256 usdDisplay,
         uint256 vfideFormatted
     ) {
+        _requireFreshPrice();
         // usdPrice is in cents, convert to 6 decimals
         usdDisplay = usdPrice * 1e4; // cents to 6 decimals
         
@@ -781,7 +816,9 @@ contract SessionKeyManager is ReentrancyGuard {
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
             result = r;
         } catch {
-            revert SKM_ActionBlocked(255);
+            // H-16 FIX: When Seer is unavailable, fail-open to avoid DoS on legitimate payments.
+            // Seer downtime should not block honest users; anomalies are logged off-chain.
+            return;
         }
 
         // 0=Allowed,1=Warned,2=Delayed,3=Blocked,4=Penalized

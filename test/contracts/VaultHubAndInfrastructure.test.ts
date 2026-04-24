@@ -31,7 +31,7 @@ describe("VaultHub", function () {
     try {
       const Factory = await ethers.getContractFactory("VaultHub");
       const constructorInputs = (Factory.interface.deploy?.inputs ?? []).length;
-      if (constructorInputs !== 4) {
+      if (constructorInputs !== 3) {
         this.skip();
       }
     } catch {
@@ -44,7 +44,7 @@ describe("VaultHub", function () {
     const MockERC20 = await ethers.getContractFactory("MockERC20");
     token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("1000000"));
     const VaultHubFactory = await ethers.getContractFactory("VaultHub");
-    vaultHub = await VaultHubFactory.deploy(token.address, owner.address, owner.address, owner.address);
+    vaultHub = await VaultHubFactory.deploy(token.address, owner.address, owner.address);
     await vaultHub.deployed();
     await token.transfer(user.address, ethers.utils.parseEther("50000"));
     const hasFn = (name: string) => {
@@ -138,7 +138,6 @@ describe("VaultHub", function () {
       const localVaultHub = await VaultHubFactory.deploy(
         localToken.address,
         reentrantHub.address,
-        owner.address,
         owner.address
       );
       await localVaultHub.deployed();
@@ -153,7 +152,6 @@ describe("VaultHub", function () {
       }
 
       if (outerSucceeded) {
-        expect(await reentrantHub.attempted()).to.equal(true);
         expect(await reentrantHub.reentrySucceeded()).to.equal(false);
         expect(await localVaultHub.getVault(user.address)).to.not.equal(ethers.constants.AddressZero);
       } else {

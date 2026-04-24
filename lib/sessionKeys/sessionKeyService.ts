@@ -228,12 +228,15 @@ export class SessionKeyService {
       throw new Error(`Session duration exceeds maximum of ${maxAllowedDuration} seconds`);
     }
     
-    // Generate session ID
+    // Generate session ID using CSPRNG (not Math.random — fixes P2-H-13)
     const sessionId = keccak256(
-      toBytes(`${owner}-${chainId}-${now}-${Math.random()}`)
+      toBytes(`${owner}-${chainId}-${now}-${crypto.randomUUID()}`)
     ).slice(0, 18); // Short ID
 
-    // Generate a session key address (in production, use proper key derivation)
+    // NOTE: keyAddress is a deterministic hash — it has no private key.
+    // It serves as a stable display identifier for this permission record only.
+    // It MUST NOT be used as a transaction signer or receive funds.
+    // Real session-key signing requires ERC-4337 or EIP-7702 smart accounts.
     const keyAddress = keccak256(toBytes(`${sessionId}-key`)).slice(0, 42) as Address;
 
     const session: SessionKey = {

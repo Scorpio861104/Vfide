@@ -38,6 +38,7 @@ error SM_SubscriptionPaused();
 error SM_PaymentTooEarly();
 error SM_GracePeriodActive();
 error SM_GracePeriodExpired();
+error SM_EmergencyNotActive();
 
 contract SubscriptionManager is ReentrancyGuard {
     event SubscriptionCreated(uint256 indexed subId, address indexed subscriber, address indexed merchant, uint256 amount, uint256 interval);
@@ -47,8 +48,12 @@ contract SubscriptionManager is ReentrancyGuard {
     event SubscriptionModified(uint256 indexed subId, uint256 oldAmount, uint256 newAmount, uint256 oldInterval, uint256 newInterval);
     event PaymentProcessed(uint256 indexed subId, uint256 timestamp);
     event PaymentFailed(uint256 indexed subId, uint256 timestamp, string reason);
+    event SeerRewardFailed(uint256 indexed subId, address indexed subject, string reason);
     event GracePeriodStarted(uint256 indexed subId, uint256 graceEndTime);
     event EmergencyCancelled(uint256 indexed subId, address indexed cancelledBy);
+    event EmergencyBreakerChangeQueued(address indexed breaker, uint64 effectiveAt);
+    event EmergencyBreakerChangeApplied(address indexed breaker);
+    event EmergencyBreakerChangeCancelled(address indexed breaker);
 
     struct Subscription {
         address subscriber;
@@ -78,6 +83,10 @@ contract SubscriptionManager is ReentrancyGuard {
     
     // NEW: DAO for emergency controls
     address public dao;
+    IEmergencyBreaker public emergencyBreaker;
+    address public pendingEmergencyBreaker;
+    uint64 public pendingEmergencyBreakerAt;
+    uint64 public constant BREAKER_CHANGE_DELAY = 48 hours;
     
     IVaultHub public vaultHub;
     
@@ -112,6 +121,33 @@ contract SubscriptionManager is ReentrancyGuard {
     function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "SM: zero DAO");
         dao = _dao;
+    }
+
+    function setEmergencyBreaker(address _breaker) external onlyDAO {
+        require(_breaker != address(0), "SM: zero breaker");
+        require(pendingEmergencyBreakerAt == 0, "SM: pending breaker");
+
+        pendingEmergencyBreaker = _breaker;
+        pendingEmergencyBreakerAt = uint64(block.timestamp) + BREAKER_CHANGE_DELAY;
+        emit EmergencyBreakerChangeQueued(_breaker, pendingEmergencyBreakerAt);
+    }
+
+    function applyEmergencyBreaker() external onlyDAO {
+        require(pendingEmergencyBreakerAt != 0, "SM: no pending breaker");
+        require(block.timestamp >= pendingEmergencyBreakerAt, "SM: breaker timelock");
+
+        emergencyBreaker = IEmergencyBreaker(pendingEmergencyBreaker);
+        emit EmergencyBreakerChangeApplied(pendingEmergencyBreaker);
+
+        delete pendingEmergencyBreaker;
+        delete pendingEmergencyBreakerAt;
+    }
+
+    function cancelEmergencyBreakerChange() external onlyDAO {
+        require(pendingEmergencyBreakerAt != 0, "SM: no pending breaker");
+        emit EmergencyBreakerChangeCancelled(pendingEmergencyBreaker);
+        delete pendingEmergencyBreaker;
+        delete pendingEmergencyBreakerAt;
     }
 
     // 1. User creates a subscription
@@ -213,6 +249,10 @@ contract SubscriptionManager is ReentrancyGuard {
     function emergencyCancel(uint256 subId) external onlyDAO {
         Subscription storage sub = subscriptions[subId];
         require(sub.active, "SM: already inactive");
+
+        if (address(emergencyBreaker) == address(0) || !emergencyBreaker.halted()) {
+            revert SM_EmergencyNotActive();
+        }
         
         sub.active = false;
         emit EmergencyCancelled(subId, msg.sender);
@@ -290,8 +330,12 @@ contract SubscriptionManager is ReentrancyGuard {
         
         // Reward ProofScore for successful subscription payment
         if (address(seer) != address(0)) {
-            try seer.reward(sub.subscriber, SUBSCRIPTION_PAYER_REWARD, "subscription_payment") {} catch {}
-            try seer.reward(sub.merchant, SUBSCRIPTION_MERCHANT_REWARD, "subscription_received") {} catch {}
+            try seer.reward(sub.subscriber, SUBSCRIPTION_PAYER_REWARD, "subscription_payment") {} catch {
+                emit SeerRewardFailed(subId, sub.subscriber, "subscription_payment");
+            }
+            try seer.reward(sub.merchant, SUBSCRIPTION_MERCHANT_REWARD, "subscription_received") {} catch {
+                emit SeerRewardFailed(subId, sub.merchant, "subscription_received");
+            }
         }
 
         emit PaymentProcessed(subId, block.timestamp);

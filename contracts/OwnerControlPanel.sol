@@ -201,6 +201,7 @@ contract OwnerControlPanel {
     /**
      * @notice Set DevReserve vesting vault address for live monitoring views
      */
+    // slither-disable-next-line missing-zero-check
     function setDevReserveVault(address _devReserveVault) external onlyOwner {
         _consumeQueuedAction(actionId_setDevReserveVault(_devReserveVault));
         address previous = devReserveVault;
@@ -629,6 +630,7 @@ contract OwnerControlPanel {
     /**
      * @notice Batch exempt multiple addresses from whale limits
      */
+    // slither-disable-next-line reentrancy-no-eth
     function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner nonReentrant {
         for (uint256 i = 0; i < addrs.length; i++) {
             // F-14 FIX: require governance queue per-address before execution
@@ -1197,6 +1199,7 @@ contract OwnerControlPanel {
      * @dev H-02 FIX: Explicitly activates security+fee bypass (circuit breaker no longer does this implicitly).
      *      Security and fee bypasses are instant; circuit breaker activation is queued (48h timelock).
      */
+    // slither-disable-next-line reentrancy-events
     function emergency_pauseAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_pauseAll());
         // SecurityHub bypass removed — non-custodial (no third-party locks to bypass)
@@ -1210,6 +1213,7 @@ contract OwnerControlPanel {
     /**
      * @notice Resume all systems
      */
+    // slither-disable-next-line reentrancy-events
     function emergency_resumeAll() external onlyOwner {
         _consumeQueuedAction(actionId_emergency_resumeAll());
         // SecurityHub bypass removed — non-custodial

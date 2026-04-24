@@ -12,7 +12,8 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageCircle, Copy, Check, ExternalLink } from 'lucide-react';
+import { MessageCircle, Copy, Check } from 'lucide-react';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 export interface ReceiptData {
   merchantName: string;
@@ -104,5 +105,5 @@ export function sendReceiptViaWhatsApp(receipt: ReceiptData, phoneNumber?: strin
   const url = phoneNumber
     ? `https://wa.me/${phoneNumber.replace(/\D/g, '')}?text=${encoded}`
     : `https://wa.me/?text=${encoded}`;
-  window.open(url, '_blank');
+  safeWindowOpen(url, { allowRelative: false, allowedHosts: ['wa.me'] });
 }

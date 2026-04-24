@@ -3,25 +3,59 @@
 
 import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { headers } from 'next/headers';
 import { logger } from './logger';
+import { extractToken, verifyToken } from './auth/jwt';
+import { getAuthCookie } from './auth/cookieAuth';
 
 // Lazy initialization to avoid build-time errors
 let _pool: Pool | null = null;
 const dbUserContext = new AsyncLocalStorage<{ userAddress: string | null }>();
 
 export function setDbUserAddressContext(userAddress: string | null | undefined) {
+  if (userAddress) {
+    logger.warn('setDbUserAddressContext is deprecated; use runWithDbUserAddressContext instead');
+  }
+}
+
+export function runWithDbUserAddressContext<T>(
+  userAddress: string | null | undefined,
+  operation: () => T,
+): T {
   const normalized = userAddress ? userAddress.toLowerCase() : null;
-  dbUserContext.enterWith({ userAddress: normalized });
+  return dbUserContext.run({ userAddress: normalized }, operation);
 }
 
 async function applyDbUserAddressContext(client: PoolClient, userAddress: string | null) {
   if (!userAddress) return;
-  await client.query("SELECT set_config('app.current_user_address', $1, false)", [userAddress]);
+  await client.query("SELECT set_config('app.current_user_address', $1, true)", [userAddress]);
 }
 
-async function clearDbUserAddressContext(client: PoolClient, userAddress: string | null) {
-  if (!userAddress) return;
-  await client.query("RESET app.current_user_address");
+async function resolveRequestDbUserAddress(): Promise<string | null> {
+  try {
+    const requestHeaders = await headers();
+    const headerToken = extractToken(requestHeaders.get('authorization'))?.trim() ?? '';
+    const cookieToken = (await getAuthCookie())?.trim() ?? '';
+    const token = headerToken || cookieToken;
+
+    if (!token) {
+      return null;
+    }
+
+    const payload = await verifyToken(token);
+    return payload?.address?.toLowerCase() ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveActiveDbUserAddress(): Promise<string | null> {
+  const store = dbUserContext.getStore();
+  if (store) {
+    return store.userAddress;
+  }
+
+  return resolveRequestDbUserAddress();
 }
 
 function getPool(): Pool {
@@ -76,19 +110,30 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
 ): Promise<QueryResult<T>> {
   const pool = getPool();
   const start = Date.now();
-  const userAddress = dbUserContext.getStore()?.userAddress ?? null;
+  const userAddress = await resolveActiveDbUserAddress();
 
   try {
     let res: QueryResult<T>;
     if (userAddress) {
       const client = await pool.connect();
       try {
-        await applyDbUserAddressContext(client, userAddress);
+        await client.query('BEGIN');
         try {
+          await applyDbUserAddressContext(client, userAddress);
           res = await client.query<T>(text, params);
+          await client.query('COMMIT');
         } finally {
-          await clearDbUserAddressContext(client, userAddress);
+          if ((client as unknown as { _ending?: boolean })._ending !== true) {
+            // No-op path after COMMIT. Rollback is handled in catch.
+          }
         }
+      } catch (error) {
+        try {
+          await client.query('ROLLBACK');
+        } catch {
+          // Ignore rollback errors and rethrow original failure.
+        }
+        throw error;
       } finally {
         client.release();
       }
@@ -141,25 +186,55 @@ export async function safeQuery<T extends QueryResultRow = QueryResultRow>(
 
 export async function getClient(): Promise<PoolClient> {
   const client = await getPool().connect();
-  const userAddress = dbUserContext.getStore()?.userAddress ?? null;
-
-  try {
-    await applyDbUserAddressContext(client, userAddress);
-  } catch (error) {
-    client.release();
-    throw error;
-  }
+  const userAddress = await resolveActiveDbUserAddress();
 
   if (userAddress) {
     const originalRelease = client.release.bind(client);
+    const originalQuery = client.query.bind(client);
+    let manualTransactionActive = false;
+
+    client.query = (async (...args: Parameters<PoolClient['query']>) => {
+      const firstArg = args[0];
+      const sql = typeof firstArg === 'string' ? firstArg.trim().toUpperCase() : '';
+
+      if (sql === 'BEGIN') {
+        const result = await originalQuery(...args);
+        await applyDbUserAddressContext(client, userAddress);
+        manualTransactionActive = true;
+        return result;
+      }
+
+      if (sql === 'COMMIT' || sql === 'ROLLBACK') {
+        try {
+          return await originalQuery(...args);
+        } finally {
+          manualTransactionActive = false;
+        }
+      }
+
+      if (manualTransactionActive) {
+        return originalQuery(...args);
+      }
+
+      await originalQuery('BEGIN');
+      try {
+        await applyDbUserAddressContext(client, userAddress);
+        const result = await originalQuery(...args);
+        await originalQuery('COMMIT');
+        return result;
+      } catch (error) {
+        try {
+          await originalQuery('ROLLBACK');
+        } catch {
+          // Ignore rollback errors and preserve the triggering error.
+        }
+        throw error;
+      }
+    }) as PoolClient['query'];
+
     client.release = ((err?: Error | boolean) => {
-      void clearDbUserAddressContext(client, userAddress)
-        .catch((resetError) => {
-          logger.warn('Failed to reset DB session user context', {
-            error: resetError instanceof Error ? resetError.message : String(resetError),
-          });
-        })
-        .finally(() => originalRelease(err));
+      client.query = originalQuery;
+      originalRelease(err);
     }) as PoolClient['release'];
   }
 

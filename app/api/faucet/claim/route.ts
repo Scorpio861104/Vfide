@@ -39,7 +39,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
     }
 
-    const referrerAddr = referrer && isAddress(referrer) ? referrer : ZERO_ADDRESS;
+    if (referrer && referrer.toLowerCase() === address.toLowerCase()) {
+      return NextResponse.json({ error: 'Referrer cannot be the claiming wallet' }, { status: 400 });
+    }
+
+    let referrerAddr: `0x${string}` = ZERO_ADDRESS;
 
     const faucetAddress = CONTRACT_ADDRESSES.VFIDETestnetFaucet;
     const operatorKey = process.env.FAUCET_OPERATOR_PRIVATE_KEY;
@@ -60,6 +64,21 @@ export async function POST(request: NextRequest) {
 
     if (Number(remaining) === 0) {
       return NextResponse.json({ error: 'Daily limit reached. Try again tomorrow.' }, { status: 429 });
+    }
+
+    if (referrer && isAddress(referrer)) {
+      const referrerHasClaimed = await publicClient.readContract({
+        address: faucetAddress,
+        abi: VFIDETestnetFaucetABI,
+        functionName: 'hasClaimed',
+        args: [referrer as `0x${string}`],
+      });
+
+      if (!referrerHasClaimed) {
+        return NextResponse.json({ error: 'Referrer must have a prior successful claim' }, { status: 400 });
+      }
+
+      referrerAddr = referrer as `0x${string}`;
     }
 
     const hash = await walletClient.writeContract({

@@ -8,6 +8,8 @@
 import { useActivityFeed, ActivityItem } from '@/lib/vfide-hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
+import { useChainId } from 'wagmi'
+import { getExplorerLink } from '@/components/ui/EtherscanLink'
 
 const activityConfig = {
   transfer: {
@@ -115,6 +117,7 @@ export function LiveActivityFeed() {
 }
 
 function ActivityCard({ activity }: { activity: ActivityItem }) {
+  const chainId = useChainId()
   const config = activityConfig[activity.type]
   const prefersReducedMotion = usePrefersReducedMotion()
   const [isHovered, setIsHovered] = useState(false)
@@ -197,7 +200,7 @@ function ActivityCard({ activity }: { activity: ActivityItem }) {
               <motion.a
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
-                href={`https://sepolia.basescan.org/tx/${activity.txHash}`}
+                href={getExplorerLink(chainId, activity.txHash, 'tx')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-cyan-400 hover:text-cyan-400 mt-2 inline-flex items-center gap-1 transition-colors"

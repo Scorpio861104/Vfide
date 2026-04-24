@@ -230,7 +230,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 {parseFloat(amount).toLocaleString()} VFIDE
               </div>
               <div className="text-zinc-400 text-sm">
-                ≈ ${parseFloat(usdValue).toLocaleString()} USD
+                ≈ {usdValue === 'N/A' ? 'N/A' : `$${usdValue} USD`}
               </div>
             </div>
           )}

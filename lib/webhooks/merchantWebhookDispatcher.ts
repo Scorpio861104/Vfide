@@ -128,8 +128,8 @@ async function validateWebhookDeliveryTarget(url: string): Promise<{ ok: true } 
 
 // ─────────────────────────── Signature
 
-function signPayload(payload: string, secret: string): string {
-  return `v1=${createHmac('sha256', secret).update(payload).digest('hex')}`;
+function signPayload(payload: string, secret: string, timestamp: string): string {
+  return `v1=${createHmac('sha256', secret).update(`${timestamp}.${payload}`).digest('hex')}`;
 }
 
 function deriveWebhookCryptoKey(): Buffer {
@@ -242,33 +242,34 @@ async function deliverWithRetries(
   endpoint: WebhookEndpoint,
   payload: WebhookPayload
 ): Promise<void> {
-  const targetValidation = await validateWebhookDeliveryTarget(endpoint.url);
-  if (!targetValidation.ok) {
-    await logDelivery(endpoint.id, payload.event, payload, null, null, 1, false, targetValidation.error);
-    await query(
-      `UPDATE merchant_webhook_endpoints
-       SET failure_count = failure_count + 1,
-           status = 'disabled',
-           last_failure_at = NOW(),
-           updated_at = NOW()
-       WHERE id = $1`,
-      [endpoint.id]
-    );
-    return;
-  }
-
   await encryptAndPersistSecretIfNeeded(endpoint);
   const endpointSecret = decryptSecretFromEndpoint(endpoint);
 
   const body = JSON.stringify(payload);
-  const signature = signPayload(body, endpointSecret);
-  const timestamp = Math.floor(Date.now() / 1000).toString();
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), DELIVERY_TIMEOUT_MS);
+    const targetValidation = await validateWebhookDeliveryTarget(endpoint.url);
+    if (!targetValidation.ok) {
+      await logDelivery(endpoint.id, payload.event, payload, null, null, attempt, false, targetValidation.error);
+      await query(
+        `UPDATE merchant_webhook_endpoints
+         SET failure_count = failure_count + 1,
+             status = 'disabled',
+             last_failure_at = NOW(),
+             updated_at = NOW()
+         WHERE id = $1`,
+        [endpoint.id]
+      );
+      return;
+    }
 
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const signature = signPayload(body, endpointSecret, timestamp);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), DELIVERY_TIMEOUT_MS);
+
+    try {
       const response = await fetch(endpoint.url, {
         method: 'POST',
         redirect: 'manual',
@@ -283,8 +284,6 @@ async function deliverWithRetries(
         body,
         signal: controller.signal,
       });
-
-      clearTimeout(timeout);
 
       const responseBody = await response.text().catch(() => '');
 
@@ -314,6 +313,8 @@ async function deliverWithRetries(
       if (attempt < MAX_RETRIES) {
         await sleep(RETRY_DELAYS_MS[attempt - 1] ?? 1000);
       }
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

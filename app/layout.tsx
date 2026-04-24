@@ -6,7 +6,7 @@ import { CoreProviders } from '@/lib/providers/CoreProviders';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://vfide.app'),
   title: 'VFIDE — Trust-Scored Payment Protocol',
-  description: 'Zero merchant fees. Non-custodial vaults. Trust earned through real transactions.',
+  description: 'Zero merchant fees. Guardian-protected self-custody. Trust earned through real transactions.',
   openGraph: { title: 'VFIDE — Keep What You Earn', description: 'Decentralized payment protocol with zero merchant fees.', type: 'website' },
 };
 

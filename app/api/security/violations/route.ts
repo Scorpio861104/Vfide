@@ -3,21 +3,22 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
+import { getRequestIp } from '@/lib/security/requestContext';
 import { z } from 'zod4';
 
 const DEFAULT_VIOLATIONS_LIMIT = 100;
 const MAX_VIOLATIONS_LIMIT = 500;
 const MAX_VIOLATION_TYPE_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 2000;
-const MAX_IP_LENGTH = 64;
 const VALID_SEVERITIES = ['low', 'medium', 'high', 'critical'] as const;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 
+// User-submitted reports are always low severity; only internal service tokens may log higher
 const securityViolationSchema = z.object({
   violationType: z.string().trim().min(1).max(MAX_VIOLATION_TYPE_LENGTH),
-  severity: z.enum(VALID_SEVERITIES),
   description: z.string().trim().min(1).max(MAX_DESCRIPTION_LENGTH),
-  ipAddress: z.string().trim().max(MAX_IP_LENGTH).optional(),
+  // severity is accepted for schema compat but clamped to 'low' for user submissions
+  severity: z.enum(VALID_SEVERITIES).optional(),
 });
 
 function normalizeAddress(value: string): string {
@@ -44,7 +45,7 @@ function parsePositiveInteger(value: string): number | null {
 
 export async function GET(request: NextRequest) {
   // Rate limiting
-  const rateLimit = await withRateLimit(request, 'api');
+  const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   const authResult = await requireAuth(request);
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // Rate limiting
-  const rateLimit = await withRateLimit(request, 'api');
+  const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   const authResult = await requireAuth(request);
@@ -112,7 +113,10 @@ export async function POST(request: NextRequest) {
     if (!parsedBody.success) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
-    const { violationType, description, severity, ipAddress } = parsedBody.data;
+    const { violationType, description } = parsedBody.data;
+    // User-submitted reports are always 'low' severity; IP is always server-derived
+    const severity = 'low';
+    const ipAddress = getRequestIp(request.headers).ip;
 
     const userResult = await query<{ id: number }>(
       'SELECT id FROM users WHERE wallet_address = $1',
@@ -128,7 +132,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO security_violations (user_id, violation_type, severity, description, ip_address, detected_at)
        VALUES ($1, $2, $3, $4, $5, NOW())
        RETURNING *`,
-      [userId, violationType, severity, description, ipAddress ?? null]
+      [userId, violationType, severity, description, ipAddress]
     );
 
     return NextResponse.json({ success: true, violation: result.rows[0] });

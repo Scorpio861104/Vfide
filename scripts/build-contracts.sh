@@ -28,6 +28,7 @@ contracts=(
   CouncilManager BadgeRegistry BadgeManager GuardianRegistry EmergencyControl
   CircuitBreaker SanctumVault SubscriptionManager PayrollManager StablecoinRegistry
   VFIDEFlashLoan VFIDETermLoan AdminMultiSig SystemHandover VaultInfrastructure VaultRecovery
+  FeeDistributor VFIDETestnetFaucet VaultRegistry
 )
 
 for contract in "${contracts[@]}"; do

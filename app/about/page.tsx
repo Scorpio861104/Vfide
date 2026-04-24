@@ -62,10 +62,10 @@ export default function AboutPage() {
                 <div className="w-12 h-12 bg-cyan-400/20 rounded-lg flex items-center justify-center mb-4">
                   <Shield className="w-6 h-6 text-cyan-400" />
                 </div>
-                <h3 className="text-xl font-bold text-zinc-100 mb-2">Non-Custodial</h3>
+                <h3 className="text-xl font-bold text-zinc-100 mb-2">Guardian-Protected Self-Custody</h3>
                 <p className="text-zinc-400">
-                  Your funds live in YOUR vault. VFIDE never holds, controls, or has access to your assets.
-                  True financial sovereignty.
+                  Your funds live in your vault and your wallet remains the primary control surface.
+                  Recovery, fraud review, and guardian protections add safety rails that users should understand before transacting.
                 </p>
               </motion.div>
 

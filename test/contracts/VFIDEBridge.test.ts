@@ -120,6 +120,8 @@ describe("VFIDEBridge", function () {
       await bridge.connect(owner).applyDailyBridgeLimit();
 
       await bridge.connect(owner).setExemptCheckBypass(true, 3600);
+      await time.increase(24 * 60 * 60 + 1);
+      await bridge.connect(owner).applyExemptCheckBypass();
 
       await bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("100"), "0x");
       await expectRevert(
@@ -128,6 +130,8 @@ describe("VFIDEBridge", function () {
 
       await time.increase(24 * 60 * 60 + 1);
       await bridge.connect(owner).setExemptCheckBypass(true, 3600);
+      await time.increase(24 * 60 * 60 + 1);
+      await bridge.connect(owner).applyExemptCheckBypass();
       await bridge.connect(user).bridge(REMOTE_CHAIN_ID, user.address, ethers.utils.parseEther("100"), "0x");
     });
   });
@@ -160,6 +164,10 @@ describe("VFIDEBridge", function () {
   describe("Exempt bypass and refunds", function () {
     it("sets temporary bypass with expiry", async function () {
       await bridge.connect(owner).setExemptCheckBypass(true, 3600);
+      expect(await bridge.isExemptCheckBypassActive()).to.equal(false);
+
+      await time.increase(24 * 60 * 60 + 1);
+      await bridge.connect(owner).applyExemptCheckBypass();
       expect(await bridge.isExemptCheckBypassActive()).to.equal(true);
 
       await time.increase(3600 + 1);

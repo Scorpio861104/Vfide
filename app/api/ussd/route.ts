@@ -1,6 +1,25 @@
 import { NextRequest } from 'next/server';
+import { timingSafeEqual } from 'node:crypto';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+
+const ALLOW_MOCK_USSD = process.env.ALLOW_MOCK_USSD === 'true';
+
+function isTrustedGateway(request: NextRequest): boolean {
+  const configuredToken = process.env.USSD_GATEWAY_TOKEN;
+  if (!configuredToken) {
+    return process.env.NODE_ENV !== 'production';
+  }
+
+  const presentedToken = request.headers.get('x-ussd-gateway-token') || '';
+  if (!presentedToken) return false;
+
+  const configuredBuffer = Buffer.from(configuredToken);
+  const presentedBuffer = Buffer.from(presentedToken);
+  if (configuredBuffer.length !== presentedBuffer.length) return false;
+
+  return timingSafeEqual(configuredBuffer, presentedBuffer);
+}
 
 async function readUSSDFields(request: NextRequest): Promise<{ sessionId: string; phoneNumber: string; text: string }> {
   const rawBody = await request.clone().text().catch(() => '');
@@ -45,7 +64,7 @@ function buildMenu(text: string): string {
   }
 
   if (parts[0] === '1' && level === 4 && lastInput === '1') {
-    return `END Payment of ${parts[2]} VFIDE to ${parts[1]} submitted.\nYou will receive an SMS confirmation.`;
+    return 'END VFIDE USSD payments are coming soon. No payment was submitted.';
   }
 
   if (parts[0] === '1' && level === 4 && lastInput === '2') {
@@ -68,8 +87,22 @@ function buildMenu(text: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isTrustedGateway(request)) {
+    return new Response('END Unauthorized gateway.', {
+      status: 401,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
+
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
+
+  if (!ALLOW_MOCK_USSD) {
+    return new Response('END USSD mock is disabled in this environment.', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
 
   try {
     const { sessionId, phoneNumber, text } = await readUSSDFields(request);

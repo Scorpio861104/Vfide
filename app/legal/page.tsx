@@ -132,7 +132,7 @@ function PrivacyPolicyTab() {
           <li>✓ <strong>No Email Collection:</strong> We don&apos;t require email addresses for protocol use</li>
           <li>✓ <strong>Wallet-Based:</strong> Only your public wallet address is used for interactions</li>
           <li>✓ <strong>On-Chain Transparency:</strong> All transactions are public on the blockchain</li>
-          <li>✓ <strong>Non-Custodial:</strong> We never have access to your funds or private keys</li>
+          <li>✓ <strong>Self-Custody First:</strong> We do not hold your private keys, but protocol safeguards and governance controls can affect how some flows execute</li>
         </ul>
       </div>
 
@@ -207,10 +207,11 @@ function TermsOfServiceTab() {
       </div>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold text-cyan-400 mb-4">4. Non-Custodial Nature</h2>
+        <h2 className="text-2xl font-bold text-cyan-400 mb-4">4. Self-Custody And Protocol Controls</h2>
         <p className="text-zinc-400 leading-relaxed">
-          VFIDE operates as a non-custodial protocol. You maintain full control of your funds and 
-          private keys at all times. VFIDE cannot freeze, seize, or access your funds.
+          VFIDE is designed around user-controlled wallets and vaults, and VFIDE does not hold your private keys.
+          Some protocol actions, including fraud review, queued withdrawals, guardian recovery, and governance-mediated safety controls,
+          can delay, reroute, or constrain specific protocol flows. You should review the active contract rules before relying on any absolute custody claim.
         </p>
       </div>
 

@@ -308,10 +308,10 @@ interface GovernanceStats {
 
 ### Required API Endpoints
 ```
-GET    /api/governance/proposals
-GET    /api/governance/proposals/:id
-GET    /api/governance/proposals?status=active
-GET    /api/governance/proposals?category=treasury
+GET    /api/proposals
+GET    /api/proposals/:id
+GET    /api/proposals?status=active
+GET    /api/proposals?category=treasury
 
 POST   /api/governance/votes
 GET    /api/governance/votes
@@ -458,7 +458,7 @@ const loadProposals = async (filters?: { status?: string; category?: string }) =
   if (filters?.status) params.append('status', filters.status);
   if (filters?.category) params.append('category', filters.category);
   
-  const response = await fetch(`/api/governance/proposals?${params}`);
+  const response = await fetch(`/api/proposals?${params}`);
   const proposals = await response.json();
   return proposals;
 };

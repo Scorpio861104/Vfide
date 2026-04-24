@@ -23,14 +23,15 @@ describe('Developer page pathways', () => {
     expect(screen.getByRole('link', { name: /Review Security Center/i }).getAttribute('href')).toBe('/security-center');
   });
 
-  it('switches to webhooks tab and shows handler controls', () => {
+  it('switches to webhooks tab and shows merchant webhook guidance', () => {
     renderDeveloperPage();
 
     fireEvent.click(screen.getByRole('button', { name: /webhooks/i }));
 
-    expect(screen.getByRole('heading', { name: /Webhook URL/i })).toBeTruthy();
-    expect(screen.getByRole('textbox')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Save Webhook/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Merchant Webhook Setup/i })).toBeTruthy();
+    expect(screen.getAllByRole('link', { name: /Open Merchant Portal/i })[1]?.getAttribute('href')).toBe('/merchant');
+    expect(screen.getByText(/GET \/api\/merchant\/webhooks/i)).toBeTruthy();
+    expect(screen.getAllByText(/X-Webhook-Signature/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/A payment was confirmed on-chain/i)).toBeTruthy();
   });
 

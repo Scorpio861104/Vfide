@@ -53,8 +53,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     uint64 public constant CHALLENGE_PERIOD = 7 days;      // Time for original owner to cancel
+    uint64 public constant FINALIZATION_GRACE_PERIOD = 1 days;
     uint64 public constant GUARDIAN_VOTE_WINDOW = 14 days; // Time for guardians to vote
     uint64 public constant CLAIM_EXPIRY = 30 days;         // Max time for claim process
+    uint64 public constant VERIFIER_CHANGE_DELAY = 1 days;
+    uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
     uint8 public constant MIN_GUARDIAN_APPROVALS = 2;      // Minimum guardian approvals needed
     uint8 public constant MIN_VERIFIER_VOTES = 3;          // Minimum trusted verifier votes
     
@@ -108,6 +111,21 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     
     // Trusted identity verifiers (oracles)
     mapping(address => bool) public trustedVerifier;
+
+    struct PendingVerifierChange {
+        address verifier;
+        bool trusted;
+        uint64 executeAfter;
+    }
+
+    struct PendingModuleChange {
+        address newAddress;
+        uint64 executeAfter;
+    }
+
+    PendingVerifierChange public pendingVerifierChange;
+    PendingModuleChange public pendingVaultHubChange;
+    PendingModuleChange public pendingVaultRegistryChange;
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
@@ -166,6 +184,14 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     );
     
     event VerifierSet(address indexed verifier, bool trusted);
+    event VerifierChangeQueued(address indexed verifier, bool trusted, uint64 executeAfter);
+    event VerifierChangeCancelled(address indexed verifier, bool trusted);
+    event VaultHubChangeQueued(address indexed newVaultHub, uint64 executeAfter);
+    event VaultHubChangeApplied(address indexed oldVaultHub, address indexed newVaultHub);
+    event VaultHubChangeCancelled(address indexed pendingVaultHub);
+    event VaultRegistryChangeQueued(address indexed newVaultRegistry, uint64 executeAfter);
+    event VaultRegistryChangeApplied(address indexed oldVaultRegistry, address indexed newVaultRegistry);
+    event VaultRegistryChangeCancelled(address indexed pendingVaultRegistry);
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // ERRORS
@@ -179,6 +205,8 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error NotTrustedVerifier();
     error AlreadyVoted();
     error ClaimNotPending();
+    error NoPendingVerifierChange();
+    error VerifierChangeNotReady();
     error ChallengePeriodActive();
     error ChallengePeriodEnded();
     error ClaimHasExpired();
@@ -187,6 +215,9 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error VaultHasNoClaim();
     error ClaimantAlreadyHasVault();
     error ZeroAddress();
+    error ModuleChangePending();
+    error ModuleChangeNotReady();
+    error NoPendingModuleChange();
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -379,12 +410,15 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         
         emit VerifierVoteCast(claimId, msg.sender, approve, claim.verifierVotes);
         
-        // If vault has no guardians, verifier votes can approve directly
         IUserVaultRecovery userVault = IUserVaultRecovery(claim.vault);
-        if (userVault.guardianCount() == 0 && claim.verifierVotes >= MIN_VERIFIER_VOTES) {
+        if (_verifierFallbackAvailable(userVault) && claim.verifierVotes >= MIN_VERIFIER_VOTES) {
             claim.status = ClaimStatus.GuardianApproved;
             claim.challengeEndsAt = uint64(block.timestamp + CHALLENGE_PERIOD);
         }
+    }
+
+    function _verifierFallbackAvailable(IUserVaultRecovery userVault) internal view returns (bool) {
+        return userVault.guardianCount() < MIN_GUARDIAN_APPROVALS;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -409,6 +443,10 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         
         // Only original owner can challenge
         if (msg.sender != claim.originalOwner) revert NotOriginalOwner();
+
+        if (claim.challengeEndsAt != 0 && block.timestamp > claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD) {
+            revert ChallengePeriodEnded();
+        }
         
         claim.status = ClaimStatus.Rejected;
         activeClaimForVault[claim.vault] = 0;
@@ -442,8 +480,8 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             revert ClaimHasExpired();
         }
         
-        // Check challenge period has ended
-        if (block.timestamp < claim.challengeEndsAt) {
+        // Give the original owner an additional grace window to challenge without a mempool race.
+        if (block.timestamp < claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD) {
             revert ChallengePeriodActive();
         }
         
@@ -565,18 +603,93 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ADMIN FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════════════
     
+    /// @notice Propose updating vaultHub after a 48h timelock.
     function setVaultHub(address _vaultHub) external onlyOwner {
         if (_vaultHub == address(0)) revert ZeroAddress();
-        vaultHub = IVaultHubRecovery(_vaultHub);
+        if (pendingVaultHubChange.executeAfter != 0) revert ModuleChangePending();
+        uint64 executeAfter = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingVaultHubChange = PendingModuleChange({
+            newAddress: _vaultHub,
+            executeAfter: executeAfter
+        });
+        emit VaultHubChangeQueued(_vaultHub, executeAfter);
     }
-    
+
+    function applyVaultHub() external onlyOwner {
+        PendingModuleChange memory pending = pendingVaultHubChange;
+        if (pending.executeAfter == 0) revert NoPendingModuleChange();
+        if (block.timestamp < pending.executeAfter) revert ModuleChangeNotReady();
+
+        address oldVaultHub = address(vaultHub);
+        vaultHub = IVaultHubRecovery(pending.newAddress);
+        delete pendingVaultHubChange;
+        emit VaultHubChangeApplied(oldVaultHub, pending.newAddress);
+    }
+
+    function cancelVaultHubChange() external onlyOwner {
+        PendingModuleChange memory pending = pendingVaultHubChange;
+        if (pending.executeAfter == 0) revert NoPendingModuleChange();
+        delete pendingVaultHubChange;
+        emit VaultHubChangeCancelled(pending.newAddress);
+    }
+
+    /// @notice Propose updating vaultRegistry after a 48h timelock.
     function setVaultRegistry(address _vaultRegistry) external onlyOwner {
-        vaultRegistry = IVaultRegistry(_vaultRegistry);
+        if (_vaultRegistry == address(0)) revert ZeroAddress();
+        if (pendingVaultRegistryChange.executeAfter != 0) revert ModuleChangePending();
+        uint64 executeAfter = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingVaultRegistryChange = PendingModuleChange({
+            newAddress: _vaultRegistry,
+            executeAfter: executeAfter
+        });
+        emit VaultRegistryChangeQueued(_vaultRegistry, executeAfter);
+    }
+
+    function applyVaultRegistry() external onlyOwner {
+        PendingModuleChange memory pending = pendingVaultRegistryChange;
+        if (pending.executeAfter == 0) revert NoPendingModuleChange();
+        if (block.timestamp < pending.executeAfter) revert ModuleChangeNotReady();
+
+        address oldVaultRegistry = address(vaultRegistry);
+        vaultRegistry = IVaultRegistry(pending.newAddress);
+        delete pendingVaultRegistryChange;
+        emit VaultRegistryChangeApplied(oldVaultRegistry, pending.newAddress);
+    }
+
+    function cancelVaultRegistryChange() external onlyOwner {
+        PendingModuleChange memory pending = pendingVaultRegistryChange;
+        if (pending.executeAfter == 0) revert NoPendingModuleChange();
+        delete pendingVaultRegistryChange;
+        emit VaultRegistryChangeCancelled(pending.newAddress);
     }
     
     function setTrustedVerifier(address verifier, bool trusted) external onlyOwner {
-        trustedVerifier[verifier] = trusted;
-        emit VerifierSet(verifier, trusted);
+        if (verifier == address(0)) revert ZeroAddress();
+
+        uint64 executeAfter = uint64(block.timestamp) + VERIFIER_CHANGE_DELAY;
+        pendingVerifierChange = PendingVerifierChange({
+            verifier: verifier,
+            trusted: trusted,
+            executeAfter: executeAfter
+        });
+        emit VerifierChangeQueued(verifier, trusted, executeAfter);
+    }
+
+    function applyTrustedVerifierChange() external onlyOwner {
+        PendingVerifierChange memory pending = pendingVerifierChange;
+        if (pending.executeAfter == 0) revert NoPendingVerifierChange();
+        if (block.timestamp < pending.executeAfter) revert VerifierChangeNotReady();
+
+        delete pendingVerifierChange;
+        trustedVerifier[pending.verifier] = pending.trusted;
+        emit VerifierSet(pending.verifier, pending.trusted);
+    }
+
+    function cancelTrustedVerifierChange() external onlyOwner {
+        PendingVerifierChange memory pending = pendingVerifierChange;
+        if (pending.executeAfter == 0) revert NoPendingVerifierChange();
+        delete pendingVerifierChange;
+        emit VerifierChangeCancelled(pending.verifier, pending.trusted);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

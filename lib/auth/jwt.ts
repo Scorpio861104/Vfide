@@ -13,7 +13,7 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { isTokenRevoked, hashToken } from './tokenRevocation';
+import { isTokenRevoked, hashToken, isUserRevoked } from './tokenRevocation';
 import { logger } from '@/lib/logger';
 
 // JWT Configuration
@@ -149,6 +149,17 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     if (revoked) {
       logger.warn('[JWT] Token has been revoked');
       return null;
+    }
+
+    // Enforce account-level revocation ("logout all sessions").
+    const userRevocation = await isUserRevoked(decoded.address);
+    if (userRevocation?.revoked) {
+      const revokedAt = userRevocation.revokedAt ?? 0;
+      const issuedAt = decoded.iat ?? 0;
+      if (revokedAt > issuedAt) {
+        logger.warn('[JWT] User-level token revocation is newer than token iat');
+        return null;
+      }
     }
   } catch (error) {
     if (process.env.NODE_ENV !== 'test') {

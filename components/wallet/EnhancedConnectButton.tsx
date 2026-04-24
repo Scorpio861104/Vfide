@@ -29,6 +29,7 @@ import {
 import { WalletCapabilities } from './WalletCapabilities';
 import { useSmartWallet, useWalletTypeLabel } from '@/hooks/useSmartWallet';
 import { useToast } from '@/components/ui/toast';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
@@ -297,7 +298,7 @@ function AccountDropdown({
                 <div className="flex items-center gap-1">
                   <AddressCopyButton address={address} />
                   <a
-                    href={`https://basescan.org/address/${address}`}
+                    href={getExplorerLink(chainId, address, 'address')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"

@@ -49,7 +49,6 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - StablecoinRegistry.sol
 - SubscriptionManager.sol
 - SystemHandover.sol
-- TempVault.sol
 - VFIDEAccessControl.sol
 - VFIDEBadgeNFT.sol
 - VFIDEBenefits.sol
@@ -115,5 +114,6 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - mocks/**
 - security/**
 - scripts/**
+- TempVault.sol (developer testing utility only; do not route production funds)
 - package.json
 - package-lock.json

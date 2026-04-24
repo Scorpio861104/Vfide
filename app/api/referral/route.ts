@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const rateLimitResponse = await withRateLimit(request, 'read');
+  const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
   const rawBody = await request.json().catch(() => null);

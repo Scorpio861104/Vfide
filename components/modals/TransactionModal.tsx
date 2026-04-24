@@ -3,6 +3,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { useChainId } from 'wagmi';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export default function TransactionModal({
   onClose, 
   transaction 
 }: TransactionModalProps) {
+  const chainId = useChainId();
   if (!isOpen) return null;
 
   const getStatusIcon = () => {
@@ -114,7 +117,7 @@ export default function TransactionModal({
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400">Hash</span>
                     <a
-                      href={`https://etherscan.io/tx/${transaction.hash}`}
+                      href={getExplorerLink(chainId, transaction.hash, 'tx')}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-cyan-400 hover:text-cyan-400 flex items-center gap-1 text-sm"

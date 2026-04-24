@@ -7,13 +7,16 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useAccount, useWatchContractEvent } from 'wagmi'
+import { useAccount, useWatchContractEvent, useSignMessage } from 'wagmi'
 import { QRCodeSVG } from 'qrcode.react'
 import { formatEther } from 'viem'
 import { useIsMerchant, useFeeCalculator } from '@/lib/vfide-hooks'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
 import { MerchantPortalABI } from '@/lib/abis'
 import { safeParseFloat } from '@/lib/validation'
+import { buildQrSignatureMessage } from '@/lib/payments/qrSignature'
+import { useVfidePrice } from '@/hooks/usePriceHooks'
+import { safeWindowOpen } from '@/lib/security/urlValidation'
 
 interface Product {
   id: string
@@ -30,6 +33,7 @@ interface CartItem extends Product {
 
 export function MerchantPOS() {
   const { address } = useAccount()
+  const { signMessageAsync, isPending: isSigningQr } = useSignMessage()
   const isMerchantPortalAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   const { isMerchant, businessName } = useIsMerchant(address)
   
@@ -71,6 +75,10 @@ export function MerchantPOS() {
   // UI State
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [showQRPayment, setShowQRPayment] = useState(false)
+  const [qrOrderId, setQrOrderId] = useState('')
+  const [qrSignature, setQrSignature] = useState<`0x${string}` | null>(null)
+  const [qrExpiresAt, setQrExpiresAt] = useState<number | null>(null)
+  const [qrSignatureError, setQrSignatureError] = useState<string | null>(null)
   const [showReceipt, setShowReceipt] = useState(false)
   const [showEmailPrompt, setShowEmailPrompt] = useState(false)
   const [customerEmail, setCustomerEmail] = useState('')
@@ -103,7 +111,12 @@ export function MerchantPOS() {
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const calculator = useFeeCalculator(subtotal.toString())
-  const vfideAmount = 'N/A' // requires live price feed
+  const { priceUsd, isLoading: isPriceLoading, error: priceError } = useVfidePrice()
+  const vfideAmount = priceUsd > 0
+    ? (subtotal / priceUsd).toFixed(6)
+    : 'N/A'
+  const vfideAmountValue = safeParseFloat(vfideAmount, 0)
+  const hasQuotedVfideAmount = vfideAmountValue > 0
   
   // Multi-processor comparison
   const calculateProcessorFees = (amount: number) => {
@@ -147,6 +160,21 @@ export function MerchantPOS() {
       pendingPaymentRef.current = null
     }
   }, [showQRPayment, cart, vfideAmount])
+
+  useEffect(() => {
+    if (!showQRPayment) {
+      setQrOrderId('')
+      setQrSignature(null)
+      setQrExpiresAt(null)
+      setQrSignatureError(null)
+      return
+    }
+
+    setQrOrderId(`POS-${Date.now()}`)
+    setQrSignature(null)
+    setQrExpiresAt(null)
+    setQrSignatureError(null)
+  }, [showQRPayment, cart, address, vfideAmount])
   
   // Listen for PaymentProcessed events on MerchantPortal
   useWatchContractEvent({
@@ -345,7 +373,10 @@ export function MerchantPOS() {
     ].filter(Boolean)
 
     const body = encodeURIComponent(lines.join('\n'))
-    window.open(`mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`, '_blank', 'noopener,noreferrer')
+    safeWindowOpen(`mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`, {
+      allowRelative: false,
+      features: 'noopener,noreferrer',
+    })
   }
   
   // Sales analytics - Single-pass aggregation instead of multiple reduces (O(n) instead of O(n×3))
@@ -369,12 +400,40 @@ export function MerchantPOS() {
   const generatePaymentURL = () => {
     const params = new URLSearchParams({
       merchant: address || '',
-      amount: vfideAmount,
+      amount: vfideAmountValue.toString(),
       source: 'qr',
       settlement: 'instant',
     })
-    if (cart.length > 0) params.set('orderId', `POS-${Date.now()}`)
+    if (qrOrderId) params.set('orderId', qrOrderId)
+    if (qrExpiresAt) params.set('exp', String(qrExpiresAt))
+    if (qrSignature) params.set('sig', qrSignature)
     return `${window.location.origin}/pay?${params.toString()}`
+  }
+
+  const signPaymentQR = async () => {
+    if (!address || !qrOrderId || !hasQuotedVfideAmount) {
+      return
+    }
+
+    setQrSignatureError(null)
+
+    try {
+      const expiresAt = Math.floor(Date.now() / 1000) + (15 * 60)
+      const message = buildQrSignatureMessage({
+        merchant: address,
+        amount: vfideAmountValue.toString(),
+        orderId: qrOrderId,
+        source: 'qr',
+        settlement: 'instant',
+        expiresAt,
+      })
+
+      const signature = await signMessageAsync({ message })
+      setQrExpiresAt(expiresAt)
+      setQrSignature(signature as `0x${string}`)
+    } catch (error) {
+      setQrSignatureError(error instanceof Error ? error.message : 'Signature rejected')
+    }
   }
   
   if (!isMerchant) {
@@ -548,6 +607,13 @@ export function MerchantPOS() {
                       <div className="text-right">
                         <div className="text-emerald-400">{vfideAmount} VFIDE</div>
                         <div className="text-sm text-zinc-100/60">${subtotal.toFixed(2)} USD</div>
+                        {isPriceLoading ? (
+                          <div className="text-xs text-zinc-100/40">Refreshing VFIDE quote...</div>
+                        ) : priceError ? (
+                          <div className="text-xs text-red-300">VFIDE quote unavailable</div>
+                        ) : (
+                          <div className="text-xs text-zinc-100/40">1 VFIDE = ${priceUsd.toFixed(4)}</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -594,11 +660,20 @@ export function MerchantPOS() {
                   
                   {/* Generate QR Button */}
                   <button
-                    onClick={() => setShowQRPayment(true)}
-                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform"
+                    onClick={() => {
+                      if (!hasQuotedVfideAmount) return
+                      setShowQRPayment(true)
+                    }}
+                    disabled={!hasQuotedVfideAmount}
+                    className="w-full bg-gradient-to-r from-emerald-400 to-cyan-400 text-zinc-950 font-bold py-4 rounded-xl hover:scale-105 transition-transform disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                   >
-                    Generate QR Payment
+                    {hasQuotedVfideAmount ? 'Generate QR Payment' : 'QR Payment Requires VFIDE Quote'}
                   </button>
+                  {!hasQuotedVfideAmount && (
+                    <p className="text-xs text-amber-300 text-center mt-2">
+                      {priceError ? 'Unable to fetch a live VFIDE quote right now.' : 'Waiting for a live VFIDE quote before enabling QR checkout.'}
+                    </p>
+                  )}
                 </motion.div>
               )}
             </div>
@@ -824,13 +899,38 @@ export function MerchantPOS() {
               
               {/* QR Code */}
               <div className="bg-white p-6 rounded-xl inline-block mb-6">
-                <QRCodeSVG
-                  value={generatePaymentURL()}
-                  size={256}
-                  level="H"
-                  includeMargin
-                />
+                {hasQuotedVfideAmount && qrSignature && qrExpiresAt ? (
+                  <QRCodeSVG
+                    value={generatePaymentURL()}
+                    size={256}
+                    level="H"
+                    includeMargin
+                  />
+                ) : (
+                  <div className="w-[256px] h-[256px] flex flex-col items-center justify-center text-center text-sm text-zinc-600 gap-3">
+                    <div className="text-4xl">🔒</div>
+                    <div>
+                      {hasQuotedVfideAmount
+                        ? 'Merchant must sign this QR before customers can pay.'
+                        : 'Live VFIDE quote unavailable. Signed QR checkout is disabled until a valid quote is available.'}
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {qrSignatureError && (
+                <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                  Signature failed: {qrSignatureError}
+                </div>
+              )}
+
+              <button
+                onClick={signPaymentQR}
+                disabled={!hasQuotedVfideAmount || isSigningQr}
+                className="mb-4 w-full rounded-xl bg-emerald-500 py-3 font-bold text-white transition-colors hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSigningQr ? 'Signing QR...' : qrSignature ? 'Re-sign QR' : 'Sign & Lock QR'}
+              </button>
               
               {/* Payment Details */}
               <div className="bg-zinc-950 rounded-xl p-6 mb-6 space-y-3">
@@ -841,6 +941,16 @@ export function MerchantPOS() {
                 <div className="flex justify-between text-zinc-100/60">
                   <span>In VFIDE</span>
                   <span className="font-bold text-emerald-400">{vfideAmount} VFIDE</span>
+                </div>
+                {qrOrderId && (
+                  <div className="flex justify-between text-zinc-100/60">
+                    <span>Order ID</span>
+                    <span className="font-bold text-zinc-100">{qrOrderId}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-zinc-100/60">
+                  <span>QR Status</span>
+                  <span className="font-bold text-zinc-100">{qrSignature && qrExpiresAt ? 'Signed' : 'Not signed'}</span>
                 </div>
                 <div className="flex justify-between text-zinc-100/60">
                   <span>VFIDE Fee</span>
@@ -881,17 +991,27 @@ export function MerchantPOS() {
               
               {/* Waiting for payment indicator */}
               <div className="mb-4">
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="flex items-center justify-center gap-2 text-cyan-400"
-                >
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  <span className="text-sm">Waiting for blockchain confirmation...</span>
-                </motion.div>
-                <p className="text-xs text-center text-zinc-100/40 mt-2">
-                  Payment will auto-confirm when detected on-chain
-                </p>
+                {qrSignature && qrExpiresAt ? (
+                  <>
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="flex items-center justify-center gap-2 text-cyan-400"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                      <span className="text-sm">Waiting for blockchain confirmation...</span>
+                    </motion.div>
+                    <p className="text-xs text-center text-zinc-100/40 mt-2">
+                      Payment will auto-confirm when detected on-chain
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-center text-zinc-100/50">
+                    {hasQuotedVfideAmount
+                      ? 'Sign this QR to allow checkout.'
+                      : 'QR checkout is unavailable until a valid VFIDE quote is available.'}
+                  </p>
+                )}
               </div>
               
               <div className="space-y-3">

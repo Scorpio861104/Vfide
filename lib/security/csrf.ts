@@ -3,7 +3,7 @@
  * 
  * Implements the Double Submit Cookie pattern:
  * 1. Generate a random CSRF token
- * 2. Store it in a secure, httpOnly cookie
+ * 2. Store it in a secure cookie
  * 3. Require the token to be sent in a custom header for state-changing requests
  * 4. Verify both match before processing the request
  */
@@ -31,7 +31,7 @@ export function generateCSRFToken(): string {
  */
 export function setCSRFTokenCookie(response: NextResponse, token: string): void {
   response.cookies.set(CSRF_COOKIE_NAME, token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     maxAge: CSRF_TOKEN_MAX_AGE,

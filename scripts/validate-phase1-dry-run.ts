@@ -315,15 +315,16 @@ function printDeploymentPlan(): void {
 function printTimelockWarning(): void {
   console.log("\n⏱️  IMPORTANT: Timelock Pattern");
   console.log("═".repeat(80));
-  console.log(`After Phase 1 deployment, module wiring happens via 48-hour timelocks.`);
+  console.log(`After the solo deploy, delayed module wiring still happens via 48-hour timelocks.`);
   console.log(`This means:`);
-  console.log(`  1. Deploy Phase 1 (all contracts above)`);
-  console.log(`  2. Call setters to propose module changes (via DAOTimelock)`);
-  console.log(`  3. Wait 48 hours`);
-  console.log(`  4. Call applyXyz() to execute wiring`);
-  console.log(`  5. Then deploy Phase 2 (governance layer)`);
-  console.log(`\nNext execution: npx hardhat run scripts/deploy-all.ts --network baseSepolia`);
-  console.log(`Then wait 48h before: npx hardhat run scripts/apply-all.ts --network baseSepolia`);
+  console.log(`  1. Run the solo core deployment`);
+  console.log(`  2. Save the generated deployments-solo-<network>-<timestamp>.json manifest`);
+  console.log(`  3. Wait 48 hours for queued wiring to mature`);
+  console.log(`  4. Run apply-wiring.ts against that manifest`);
+  console.log(`  5. Arm governance handover once the deployment manifest is finalized`);
+  console.log(`\nNext execution: npx hardhat run contracts/scripts/deploy-solo.ts --network baseSepolia`);
+  console.log(`Then wait 48h before: DEPLOYMENT_FILE=deployments-solo-baseSepolia-<timestamp>.json npx hardhat run contracts/scripts/apply-wiring.ts --network baseSepolia`);
+  console.log(`Optional governance handover: DEPLOYMENT_FILE=deployments-solo-baseSepolia-<timestamp>.json npx hardhat run contracts/scripts/arm-handover.ts --network baseSepolia`);
 }
 
 async function main() {
@@ -346,11 +347,11 @@ async function main() {
 
     console.log("\n📝 Next Steps:");
     console.log("  1. Export PRIVATE_KEY=<your-deployer-key>");
-    console.log("  2. Run: npm run deploy:all -- --network baseSepolia");
-    console.log("  3. Save the .deployments/baseSepolia.json address book");
+    console.log("  2. Run: npx hardhat run contracts/scripts/deploy-solo.ts --network baseSepolia");
+    console.log("  3. Save the generated deployments-solo-baseSepolia-<timestamp>.json manifest");
     console.log("  4. Wait 48h for timelocks");
-    console.log("  5. Run: npm run apply:all -- --network baseSepolia");
-    console.log("  6. Proceed to Phase 2 deployment");
+    console.log("  5. Run: DEPLOYMENT_FILE=<manifest> npx hardhat run contracts/scripts/apply-wiring.ts --network baseSepolia");
+    console.log("  6. If needed, run: DEPLOYMENT_FILE=<manifest> npx hardhat run contracts/scripts/arm-handover.ts --network baseSepolia");
   } else {
     console.log("\n✗ Validation failed. Fix errors above before deploying.");
     process.exit(1);

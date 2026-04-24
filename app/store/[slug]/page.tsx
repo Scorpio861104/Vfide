@@ -1,45 +1,106 @@
-'use client';
+/**
+ * Store/[slug] — Public merchant storefront
+ *
+ * Server component shell for SEO + fast first paint.
+ * Client islands for cart/buy interactions only.
+ */
 
-import { Footer } from '@/components/layout/Footer';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ProductsTab } from './components/ProductsTab';
-import { ReviewsTab } from './components/ReviewsTab';
-import { AboutTab } from './components/AboutTab';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { StoreClient } from '@/app/(commerce)/store/[slug]/components/StoreClient';
 
-type TabId = 'products' | 'reviews' | 'about';
+interface StorePageProps {
+  params: Promise<{ slug: string }>;
+}
 
-const TAB_LABELS: Record<TabId, string> = { 'products': 'Products', 'reviews': 'Reviews', 'about': 'About' };
-const TAB_IDS: TabId[] = ['products', 'reviews', 'about'];
+async function fetchMerchant(slug: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const res = await fetch(`${baseUrl}/api/merchant/directory?slug=${slug}`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.merchant ?? null;
+}
 
-export default function StorefrontPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('products');
+async function fetchProducts(slug: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const res = await fetch(`${baseUrl}/api/merchant/products?merchant_slug=${slug}&status=active`, {
+    next: { revalidate: 60 },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.products ?? [];
+}
+
+export async function generateMetadata({ params }: StorePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const merchant = await fetchMerchant(slug);
+  if (!merchant) return { title: 'Store Not Found — VFIDE' };
+
+  return {
+    title: `${merchant.display_name} — VFIDE Store`,
+    description: merchant.tagline || `Shop at ${merchant.display_name} on VFIDE. Trust-scored payments. Zero merchant fees.`,
+    openGraph: {
+      title: merchant.display_name,
+      description: merchant.tagline || 'Shop on VFIDE',
+      images: merchant.logo_url ? [{ url: merchant.logo_url }] : [],
+    },
+  };
+}
+
+export default async function StorePage({ params }: StorePageProps) {
+  const { slug } = await params;
+  const [merchant, products] = await Promise.all([
+    fetchMerchant(slug),
+    fetchProducts(slug),
+  ]);
+
+  if (!merchant) notFound();
 
   return (
-    <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
-        <div className="container mx-auto px-4 max-w-6xl py-8">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-white mb-2">Store</motion.h1>
-          <p className="text-white/60 mb-8">Browse products</p>
-
-          <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-            {TAB_IDS.map(id => (
-              <button key={id} onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
-                  activeTab === id ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
-                }`}>
-                {TAB_LABELS[id]}
-              </button>
-            ))}
+    <div className="min-h-screen bg-zinc-950">
+      <header className="border-b border-white/5">
+        <div className="container mx-auto px-4 max-w-6xl py-8 pt-24">
+          <div className="flex items-center gap-5">
+            {merchant.logo_url ? (
+              <img
+                src={merchant.logo_url}
+                alt={merchant.display_name}
+                className="w-20 h-20 rounded-2xl object-cover border border-white/10"
+              />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold text-white border border-white/10"
+                style={{ backgroundColor: merchant.theme_color || '#3B82F6' }}
+              >
+                {merchant.display_name[0]?.toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-white">{merchant.display_name}</h1>
+              {merchant.tagline && (
+                <p className="text-gray-400 mt-1">{merchant.tagline}</p>
+              )}
+              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                {(merchant.city || merchant.country) && (
+                  <span>{[merchant.city, merchant.country].filter(Boolean).join(', ')}</span>
+                )}
+                <span>{products.length} products</span>
+                {merchant.avg_rating && (
+                  <span className="text-amber-400">★ {merchant.avg_rating}</span>
+                )}
+              </div>
+            </div>
           </div>
-
-          {activeTab === 'products' && <ProductsTab />}
-          {activeTab === 'reviews' && <ReviewsTab />}
-          {activeTab === 'about' && <AboutTab />}
         </div>
-      </div>
-      <Footer />
-    </>
+      </header>
+
+      <StoreClient
+        merchant={merchant}
+        initialProducts={products}
+        slug={slug}
+      />
+    </div>
   );
 }

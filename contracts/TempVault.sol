@@ -8,8 +8,14 @@ import "./SharedInterfaces.sol";
  * @notice Temporary holding vault for tokens with proper security controls
  * @dev Includes reentrancy protection, events, and owner transfer capability
  * 
- * WARNING: This is a simple vault intended for temporary holding only.
- * For production use, consider SanctumVault or EcosystemVault with multi-sig.
+ * ⚠️  H-38 FIX / AUDIT FINDING: This contract is NOT for production use.
+ *     Only the `owner` can withdraw. Any user who sends tokens here cannot
+ *     retrieve them independently — this is a honey-pot pattern if deployed
+ *     in a public-facing flow. This contract MUST NOT be referenced in any
+ *     user-facing deposit flow, merchant integration, or dApp UI.
+ *     Use SanctumVault, EcosystemVault, or CardBoundVault for production.
+ * 
+ * @custom:security-contact security@vfide.io
  */
 contract TempVault is ReentrancyGuard {
     using SafeERC20 for IERC20;

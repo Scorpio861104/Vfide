@@ -38,7 +38,7 @@ import "./SharedInterfaces.sol";
  *
  *   BORROWER SIDE:
  *     1. Borrower picks a lender with enough liquidity (findBestLender)
- *     2. Borrower calls flashLoan(lender, receiver, amount, data)
+ *     2. Borrower calls flashLoan(lender, receiver, amount, maxFeeBps, data)
  *     3. Contract sends `amount` to receiver
  *     4. Receiver.onFlashLoan() executes borrower's strategy
  *     5. Contract pulls `amount + fee` back from receiver
@@ -60,6 +60,11 @@ interface IERC3156FlashBorrower {
     ) external returns (bytes32);
 }
 
+/// @dev External query interface for system exemption checks.
+interface ISystemExemptQuery {
+    function systemExempt(address) external view returns (bool);
+}
+
 interface ISeerFL {
     function getScore(address subject) external view returns (uint16);
     function reward(address subject, uint16 delta, string calldata reason) external;
@@ -78,6 +83,9 @@ error FL_FeeTooHigh();
 error FL_CooldownActive();
 error FL_NotLender();
 error FL_InsufficientBalance();
+error FL_ExceedsOrphanBalance();
+error FL_MinInitialDeposit();
+error FL_FeeExceeded();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
@@ -100,14 +108,19 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @notice Default fee if lender hasn't set one (0.09% = 9 bps)
     uint256 public constant DEFAULT_FEE_BPS = 9;
 
-    /// @notice Cooldown between flash loans per borrower (anti-spam)
-    uint256 public constant BORROWER_COOLDOWN = 12;
+    /// @notice Minimum seconds between flash loans per borrower address (anti-spam).
+    /// @dev 60 seconds matches typical block times on zkSync Era and mainnet chains.
+    uint256 public constant BORROWER_COOLDOWN = 60;
 
     /// @notice ProofScore reward for lenders per loan facilitated (+0.1)
     uint16 public constant LENDER_REWARD = 1;
 
     /// @notice Cap on registered lenders for gas-safe iteration
     uint256 public constant MAX_LENDERS = 500;
+
+    /// @notice Minimum first deposit required to register as a lender.
+    /// @dev Prevents dust-amount sybil registrations from exhausting MAX_LENDERS.
+    uint256 public constant MIN_INITIAL_LENDER_DEPOSIT = 1 ether;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              TYPES
@@ -135,10 +148,22 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     bool public paused;
 
+    // C-2 FIX: Timelocked DAO rotation
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
+    uint64 public constant DAO_CHANGE_DELAY = 48 hours;
+
+    // L-2 FIX: Timelocked fraud registry change
+    address public pendingFraudRegistry;
+    uint64 public pendingFraudRegistryAt;
+    uint64 public constant FRAUD_REGISTRY_DELAY = 24 hours;
+
     mapping(address => LenderInfo) public lenders;
     address[] public lenderList;
+    mapping(address => uint256) private lenderListIndex;
     mapping(address => uint256) public lastFlashLoan;
 
+    uint256 public totalTrackedBalance;
     uint256 public totalProtocolFees;
     uint256 public totalVolume;
     uint256 public totalLoans;
@@ -157,8 +182,14 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     );
     event Paused(bool isPaused);
     event DAOSet(address indexed newDao);
+    event DAOProposed(address indexed newDao, uint64 effectiveAt);
+    event DAOChangeCancelled();
     event SeerSet(address indexed newSeer);
     event FeeDistributorSet(address indexed newFeeDistributor);
+    event FraudRegistryProposed(address indexed registry, uint64 effectiveAt);
+    event FraudRegistrySet(address indexed registry);
+    event FraudRegistryCancelled();
+    event OrphanTokensSwept(address indexed recipient, uint256 amount);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
@@ -167,9 +198,22 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     modifier onlyDAO() { if (msg.sender != dao) revert FL_NotDAO(); _; }
     modifier whenNotPaused() { if (paused) revert FL_Paused(); _; }
 
+    function _checkFraudStatus(address subject) internal view {
+        if (fraudRegistry == address(0)) return;
+
+        (bool ok, bytes memory data) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, subject));
+        if (ok && data.length >= 32 && abi.decode(data, (bool))) revert FL_Paused();
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════
+
+    // H-18 FIX: Track whether the VFIDEToken has been told to systemExempt this contract.
+    // flashLoan() and deposit() are gated on `systemExemptConfirmed` to close the deploy-time race.
+    bool public systemExemptConfirmed;
+
+    event SystemExemptConfirmed();
 
     constructor(address _vfideToken, address _dao, address _seer, address _feeDistributor) {
         if (_vfideToken == address(0) || _dao == address(0)) revert FL_Zero();
@@ -179,25 +223,39 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         feeDistributor = _feeDistributor;
     }
 
+    /// @notice Call once after the VFIDEToken has granted systemExempt to this contract.
+    ///         Only the DAO can call; prevents the window between deploy and exemption grant.
+    function confirmSystemExempt() external {
+        require(msg.sender == dao, "FL: not DAO");
+        require(!systemExemptConfirmed, "FL: already confirmed");
+        require(ISystemExemptQuery(address(vfideToken)).systemExempt(address(this)), "FL: not yet exempt");
+        systemExemptConfirmed = true;
+        emit SystemExemptConfirmed();
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     //                          LENDER FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice Deposit VFIDE to offer for flash loans
-    function deposit(uint256 amount) external nonReentrant {
-        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); } // 0x38603ddd = isServiceBanned(address)
+    function deposit(uint256 amount) external nonReentrant whenNotPaused {
+        // H-18 FIX: Block deposits until DAO confirms systemExempt is set on VFIDEToken.
+        require(systemExemptConfirmed, "FL: not initialized");
+        _checkFraudStatus(msg.sender);
         if (amount == 0) revert FL_Zero();
-        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); }
 
         LenderInfo storage info = lenders[msg.sender];
         if (!info.registered) {
+            if (amount < MIN_INITIAL_LENDER_DEPOSIT) revert FL_MinInitialDeposit();
             require(lenderList.length < MAX_LENDERS, "FL: lender cap");
             info.registered = true;
             info.feeBps = DEFAULT_FEE_BPS;
             lenderList.push(msg.sender);
+            lenderListIndex[msg.sender] = lenderList.length; // 1-indexed
         }
 
         info.balance += amount;
+        totalTrackedBalance += amount;
         vfideToken.safeTransferFrom(msg.sender, address(this), amount);
         emit LenderDeposited(msg.sender, amount, info.balance);
     }
@@ -205,11 +263,17 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @notice Withdraw VFIDE — available anytime, no lockup
     function withdraw(uint256 amount) external nonReentrant {
         if (amount == 0) revert FL_Zero();
-        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); }
+        _checkFraudStatus(msg.sender);
         LenderInfo storage info = lenders[msg.sender];
         if (amount > info.balance) revert FL_InsufficientBalance();
 
         info.balance -= amount;
+        totalTrackedBalance -= amount;
+
+        if (info.balance == 0 && info.registered) {
+            _deregisterLender(msg.sender);
+        }
+
         vfideToken.safeTransfer(msg.sender, amount);
         emit LenderWithdrawn(msg.sender, amount, info.balance);
     }
@@ -236,6 +300,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
      * @param lender Address of the lender to borrow from
      * @param receiver Contract implementing IERC3156FlashBorrower
      * @param amount Amount to borrow
+    * @param maxFeeBps Maximum lender fee (bps) borrower is willing to pay
      * @param data Passed through to receiver.onFlashLoan()
      *
      * If receiver doesn't repay amount + fee, the entire tx reverts.
@@ -245,15 +310,19 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         address lender,
         IERC3156FlashBorrower receiver,
         uint256 amount,
+        uint256 maxFeeBps,
         bytes calldata data
     ) external nonReentrant whenNotPaused returns (bool) {
+        // H-18 FIX: Block flash loans until systemExempt is confirmed.
+        require(systemExemptConfirmed, "FL: not initialized");
         if (amount == 0) revert FL_Zero();
-        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert FL_Paused(); }
+        _checkFraudStatus(msg.sender);
 
         LenderInfo storage info = lenders[lender];
         if (!info.registered) revert FL_NotLender();
         if (info.paused) revert FL_LenderPaused();
         if (amount > info.balance) revert FL_ExceedsAvailable();
+        if (info.feeBps > maxFeeBps) revert FL_FeeExceeded();
 
         // Anti-spam cooldown
         if (block.timestamp < lastFlashLoan[msg.sender] + BORROWER_COOLDOWN) revert FL_CooldownActive();
@@ -285,6 +354,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
         // Credit lender: principal returned + their fee share
         info.balance += amount + lenderFee;
+        totalTrackedBalance += lenderFee;
 
         // Protocol fee → FeeDistributor → 5-way community split
         if (protocolFee > 0 && feeDistributor != address(0)) {
@@ -306,6 +376,19 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
         emit FlashLoanExecuted(lender, msg.sender, address(receiver), amount, lenderFee, protocolFee);
         return true;
+    }
+
+    function getOrphanBalance() public view returns (uint256) {
+        uint256 contractBalance = vfideToken.balanceOf(address(this));
+        return contractBalance > totalTrackedBalance ? contractBalance - totalTrackedBalance : 0;
+    }
+
+    function sweepOrphanBalance(address recipient, uint256 amount) external onlyDAO nonReentrant {
+        if (recipient == address(0)) revert FL_Zero();
+        if (amount == 0 || amount > getOrphanBalance()) revert FL_ExceedsOrphanBalance();
+
+        vfideToken.safeTransfer(recipient, amount);
+        emit OrphanTokensSwept(recipient, amount);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -349,6 +432,25 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         }
     }
 
+    function _deregisterLender(address lender) internal {
+        uint256 idx = lenderListIndex[lender];
+        if (idx == 0) return;
+
+        uint256 arrayIdx = idx - 1;
+        uint256 lastIdx = lenderList.length - 1;
+
+        if (arrayIdx != lastIdx) {
+            address lastLender = lenderList[lastIdx];
+            lenderList[arrayIdx] = lastLender;
+            lenderListIndex[lastLender] = idx;
+        }
+
+        lenderList.pop();
+        delete lenderListIndex[lender];
+        lenders[lender].registered = false;
+        lenders[lender].paused = false;
+    }
+
     /// @notice Find cheapest lender with enough liquidity
     function findBestLender(uint256 amount) external view returns (address best, uint256 bestFee) {
         bestFee = type(uint256).max;
@@ -367,8 +469,63 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     function setPaused(bool _paused) external onlyDAO { paused = _paused; emit Paused(_paused); }
-    function setDAO(address _dao) external onlyDAO { if (_dao == address(0)) revert FL_Zero(); dao = _dao; emit DAOSet(_dao); }
-    function setSeer(address _seer) external onlyDAO { seer = ISeerFL(_seer); emit SeerSet(_seer); }
-    function setFeeDistributor(address _fd) external onlyDAO { feeDistributor = _fd; emit FeeDistributorSet(_fd); }
-    function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
+
+    /// @notice Propose a DAO rotation with 48-hour timelock (C-2 FIX)
+    function setDAO(address _dao) external onlyDAO {
+        if (_dao == address(0)) revert FL_Zero();
+        pendingDAO = _dao;
+        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit DAOProposed(_dao, pendingDAOAt);
+    }
+
+    function applyDAO() external onlyDAO {
+        require(pendingDAOAt != 0 && block.timestamp >= pendingDAOAt, "FL: timelock");
+        dao = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOSet(dao);
+    }
+
+    function cancelDAO() external onlyDAO {
+        require(pendingDAOAt != 0, "FL: no pending");
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOChangeCancelled();
+    }
+
+    /// @notice L-1 FIX: zero address check added
+    function setSeer(address _seer) external onlyDAO {
+        if (_seer == address(0)) revert FL_Zero();
+        seer = ISeerFL(_seer);
+        emit SeerSet(_seer);
+    }
+
+    /// @notice L-1 FIX: zero address check added
+    function setFeeDistributor(address _fd) external onlyDAO {
+        if (_fd == address(0)) revert FL_Zero();
+        feeDistributor = _fd;
+        emit FeeDistributorSet(_fd);
+    }
+
+    /// @notice Propose a fraud registry change with 24-hour timelock (L-2 FIX)
+    function setFraudRegistry(address _fr) external onlyDAO {
+        pendingFraudRegistry = _fr;
+        pendingFraudRegistryAt = uint64(block.timestamp) + FRAUD_REGISTRY_DELAY;
+        emit FraudRegistryProposed(_fr, pendingFraudRegistryAt);
+    }
+
+    function applyFraudRegistry() external onlyDAO {
+        require(pendingFraudRegistryAt != 0 && block.timestamp >= pendingFraudRegistryAt, "FL: timelock");
+        fraudRegistry = pendingFraudRegistry;
+        delete pendingFraudRegistry;
+        delete pendingFraudRegistryAt;
+        emit FraudRegistrySet(fraudRegistry);
+    }
+
+    function cancelFraudRegistry() external onlyDAO {
+        require(pendingFraudRegistryAt != 0, "FL: no pending");
+        delete pendingFraudRegistry;
+        delete pendingFraudRegistryAt;
+        emit FraudRegistryCancelled();
+    }
 }

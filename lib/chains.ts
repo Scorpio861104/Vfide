@@ -95,14 +95,14 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
     testnet: polygonAmoy,
     contracts: {
       mainnet: {
-        vfideToken: '', // Deploy pending
-        vaultHub: '',
-        seer: '',
+        vfideToken: process.env.NEXT_PUBLIC_POLYGON_VFIDE_TOKEN_ADDRESS || '', // Deploy pending
+        vaultHub: process.env.NEXT_PUBLIC_POLYGON_VAULT_HUB_ADDRESS || '',
+        seer: process.env.NEXT_PUBLIC_POLYGON_SEER_ADDRESS || '',
       },
       testnet: {
-        vfideToken: '', // Deploy pending
-        vaultHub: '',
-        seer: '',
+        vfideToken: process.env.NEXT_PUBLIC_POLYGON_AMOY_VFIDE_TOKEN_ADDRESS || '', // Deploy pending
+        vaultHub: process.env.NEXT_PUBLIC_POLYGON_AMOY_VAULT_HUB_ADDRESS || '',
+        seer: process.env.NEXT_PUBLIC_POLYGON_AMOY_SEER_ADDRESS || '',
       },
     },
     faucetUrl: 'https://faucet.polygon.technology/',

@@ -34,11 +34,11 @@ describe("VFIDEFlashLoan", function () {
   async function deployFixture() {
     const [owner, lender1, lender2, borrower, feeCollector] = await ethers.getSigners();
 
-    // Deploy mock VFIDE token from the concrete OpenZeppelin-backed test contract.
+    // Deploy flash-loan compatible token stub with systemExempt support.
     let token: any;
     try {
-      const ERC20Mock = await ethers.getContractFactory("test/contracts/mocks/MockContracts.sol:MockERC20");
-      token = await ERC20Mock.deploy("VFIDE", "VFIDE", ethers.parseEther("1000000"));
+      const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:ExemptableMintableTokenStub");
+      token = await Token.deploy();
     } catch {
       // If the mock token artifact is unavailable, skip deployment-dependent tests.
       return null;
@@ -58,10 +58,13 @@ describe("VFIDEFlashLoan", function () {
     );
     await flashLoan.waitForDeployment();
 
+    await token.setSystemExempt(await flashLoan.getAddress(), true);
+    await flashLoan.connect(owner).confirmSystemExempt();
+
     // Fund lenders
-    await token.transfer(lender1.address, ethers.parseEther("10000"));
-    await token.transfer(lender2.address, ethers.parseEther("5000"));
-    await token.transfer(borrower.address, ethers.parseEther("100")); // For fees
+    await token.mint(lender1.address, ethers.parseEther("10000"));
+    await token.mint(lender2.address, ethers.parseEther("5000"));
+    await token.mint(borrower.address, ethers.parseEther("100")); // For fees
 
     return { token, flashLoan, owner, lender1, lender2, borrower, feeCollector };
   }
@@ -138,6 +141,7 @@ describe("VFIDEFlashLoan", function () {
           lender1.address,
           borrower.address, // receiver
           ethers.parseEther("100"),
+          100,
           "0x"
         )
       ).to.be.revertedWithCustomError(flashLoan, "FL_NotLender");
@@ -156,6 +160,7 @@ describe("VFIDEFlashLoan", function () {
           lender1.address,
           borrower.address,
           ethers.parseEther("200"),
+          100,
           "0x"
         )
       ).to.be.revertedWithCustomError(flashLoan, "FL_ExceedsAvailable");
@@ -175,9 +180,30 @@ describe("VFIDEFlashLoan", function () {
           lender1.address,
           borrower.address,
           ethers.parseEther("50"),
+          100,
           "0x"
         )
       ).to.be.revertedWithCustomError(flashLoan, "FL_Paused");
+    });
+
+    it("should reject flash loan when lender fee exceeds borrower maxFeeBps", async function () {
+      const fixture = await loadFixture(deployFixture);
+      if (!fixture) return this.skip();
+      const { token, flashLoan, lender1, borrower } = fixture;
+
+      await token.connect(lender1).approve(await flashLoan.getAddress(), ethers.parseEther("100"));
+      await flashLoan.connect(lender1).deposit(ethers.parseEther("100"));
+      await flashLoan.connect(lender1).setFeeRate(25);
+
+      await expect(
+        flashLoan.connect(borrower).flashLoan(
+          lender1.address,
+          borrower.address,
+          ethers.parseEther("10"),
+          10,
+          "0x"
+        )
+      ).to.be.revertedWithCustomError(flashLoan, "FL_FeeExceeded");
     });
   });
 

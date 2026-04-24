@@ -17,8 +17,8 @@ export function ProtocolDisclaimer({ className = '' }: { className?: string }) {
       <p>
         VFIDE is a decentralized payment protocol operating on public blockchain infrastructure.
         VFIDE is not a bank, money services business, payment processor, or financial institution.
-        VFIDE does not custody, control, or transmit user funds. All transactions occur directly
-        between user-controlled smart contracts on the blockchain.
+        VFIDE does not hold user private keys or operate omnibus custody. Transactions occur through
+        user-controlled smart contracts, subject to the protocol&apos;s on-chain safety, recovery, and dispute-resolution rules.
       </p>
       <p>
         Users are solely responsible for their own wallets, private keys, and transaction decisions.
@@ -33,8 +33,8 @@ export function NonCustodialNotice({ className = '' }: { className?: string }) {
     <div className={`flex items-start gap-2 p-3 bg-cyan-500/5 border border-cyan-500/15 rounded-xl ${className}`}>
       <Shield size={14} className="text-cyan-400 mt-0.5 flex-shrink-0" />
       <p className="text-xs text-gray-400">
-        <span className="text-cyan-400 font-bold">Non-custodial.</span> Your vault is controlled
-        by your wallet. VFIDE cannot access, freeze, or move your funds. You hold the keys.
+        <span className="text-cyan-400 font-bold">Self-custody with safeguards.</span> Your wallet remains the
+        primary control surface, while queued withdrawals, guardian recovery, and fraud-review controls may affect how funds move through the protocol.
       </p>
     </div>
   );

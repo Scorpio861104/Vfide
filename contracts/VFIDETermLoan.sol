@@ -92,6 +92,7 @@ error TL_PlanNotAccepted();
 error TL_PlanExists();
 error TL_NothingDue();
 error TL_DebtOutstanding();
+error TL_NoVault();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
@@ -114,7 +115,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     // Guarantor financial liability
     uint256 public constant GUARANTOR_LIABILITY_PCT = 100; // Guarantors collectively cover 100% of principal
-    uint64  public constant EXTRACTION_INTERVAL = 7 days;  // Weekly extractions after default
+    uint64  public constant EXTRACTION_INTERVAL = 1 days;  // Daily extractions after default
     uint256 public constant EXTRACTION_RATE_PCT = 10;      // 10% of their liability per extraction
 
     // ProofScore thresholds → max loan amount (in token units, 18 decimals)
@@ -191,15 +192,22 @@ contract VFIDETermLoan is ReentrancyGuard {
     mapping(uint256 => address[]) public guarantors;          // Loan → guarantor addresses
     mapping(uint256 => mapping(address => bool)) public hasSigned; // Loan → guarantor → signed
     mapping(uint256 => mapping(address => address)) public guarantorVault; // Loan → guarantor → approval source
+    mapping(uint256 => mapping(address => uint256)) public guarantorCommittedLiability; // Loan → guarantor → committed liability
     mapping(uint256 => uint8) public signatureCount;          // Loan → number of guarantor signatures
     mapping(uint256 => uint256) public guarantorLiabilityEach; // Loan → liability per guarantor
     mapping(uint256 => mapping(address => uint256)) public guarantorExtracted; // How much pulled from each
+    mapping(address => uint256) public committedLiability; // Guarantor address → aggregate active liability
+    mapping(address => uint256) public committedLiabilityBySource; // Approval source (vault/wallet) → aggregate active liability
     mapping(uint256 => uint64) public lastExtractionTime;     // When last extraction happened
     mapping(uint256 => uint256) public totalExtracted;        // Total extracted across all guarantors
     uint256 public nextLoanId = 1;
 
     mapping(address => uint256) public activeLoanCount;
     mapping(address => uint256) public unresolvedDefaults;
+
+    /// @notice H-25 FIX: Revenue routers authorized to call payFromRevenue on behalf of borrowers.
+    /// Only governance can add/remove entries (e.g., MerchantPortal is pre-approved).
+    mapping(address => bool) public isAuthorizedRevenueRouter;
 
     // ProofScore → max loan tiers (configurable by DAO)
     uint256 public tier1Limit = 100e18;     // Score 5000+: 100 VFIDE
@@ -228,6 +236,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     event PaymentPlanCompleted(uint256 indexed id);
     event LoanDefaulted(uint256 indexed id, bool planFailed);
     event GuarantorExtracted(uint256 indexed id, address indexed guarantor, uint256 amount, uint256 totalFromGuarantor);
+    event GuarantorExtractionSkipped(uint256 indexed id, address indexed guarantor, uint256 attemptedAmount);
     event GuarantorRelieved(uint256 indexed id, address indexed guarantor, uint256 remainingLiability);
     event LoanCancelled(uint256 indexed id);
     event RevenueAssignmentSet(uint256 indexed id, bool enabled);
@@ -244,6 +253,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     //                              CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════
 
+    // slither-disable-next-line missing-zero-check
     constructor(address _token, address _dao, address _seer, address _vaultHub, address _feeDist) {
         if (_token == address(0) || _dao == address(0)) revert TL_Zero();
         vfideToken = IERC20(_token);
@@ -265,6 +275,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (interestBps > MAX_INTEREST_BPS) revert TL_InvalidTerms();
         if (duration < MIN_DURATION || duration > MAX_DURATION) revert TL_InvalidTerms();
         if (activeLoanCount[msg.sender] >= MAX_ACTIVE_LOANS) revert TL_LoanCap();
+        _requireVaultParticipant(msg.sender);
 
         id = nextLoanId++;
         loans[id] = Loan({
@@ -276,7 +287,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         });
         activeLoanCount[msg.sender]++;
 
-        vfideToken.safeTransferFrom(msg.sender, address(this), principal);
+        vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), principal);
         emit LoanCreated(id, msg.sender, principal, interestBps, duration);
     }
 
@@ -287,7 +298,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.state != LoanState.OPEN) revert TL_WrongState();
         l.state = LoanState.CANCELLED;
         activeLoanCount[msg.sender]--;
-        vfideToken.safeTransfer(msg.sender, l.principal);
+        vfideToken.safeTransfer(_settlementRecipient(msg.sender), l.principal);
         emit LoanCancelled(id);
     }
 
@@ -303,6 +314,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (msg.sender == l.lender) revert TL_SelfLoan();
         if (activeLoanCount[msg.sender] >= MAX_ACTIVE_LOANS) revert TL_LoanCap();
         if (unresolvedDefaults[msg.sender] > 0) revert TL_DebtOutstanding();
+        _requireVaultParticipant(msg.sender);
 
         // ProofScore check: can borrower handle this amount?
         uint256 limit = _maxBorrowable(msg.sender);
@@ -354,12 +366,16 @@ contract VFIDETermLoan is ReentrancyGuard {
             }
         }
 
+        uint256 totalCommittedForSource = committedLiabilityBySource[approvalSource] + liabilityPerGuarantor;
         uint256 approved = vfideToken.allowance(approvalSource, address(this));
-        require(approved >= liabilityPerGuarantor, "TL: guarantor must approve liability first");
+        require(approved >= totalCommittedForSource, "TL: guarantor must approve liability first");
 
         hasSigned[id][msg.sender] = true;
         guarantors[id].push(msg.sender);
         guarantorVault[id][msg.sender] = approvalSource;
+        guarantorCommittedLiability[id][msg.sender] = liabilityPerGuarantor;
+        committedLiability[msg.sender] += liabilityPerGuarantor;
+        committedLiabilityBySource[approvalSource] += liabilityPerGuarantor;
         signatureCount[id]++;
 
         // Recalculate per-guarantor liability (split evenly)
@@ -373,6 +389,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         }
     }
 
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function _activateLoan(uint256 id) internal {
         Loan storage l = loans[id];
         l.startTime = uint64(block.timestamp);
@@ -380,7 +397,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         l.state = LoanState.ACTIVE;
 
         // Send principal to borrower
-        vfideToken.safeTransfer(l.borrower, l.principal);
+        vfideToken.safeTransfer(_settlementRecipient(l.borrower), l.principal);
         emit LoanActivated(id, l.deadline);
     }
 
@@ -389,6 +406,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice Repay the loan — full principal + interest
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function repay(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -410,9 +428,10 @@ contract VFIDETermLoan is ReentrancyGuard {
         l.amountRepaid = l.principal + interest;
         l.state = LoanState.REPAID;
         _closeLoan(l);
+        _releaseAllGuarantorCommitments(id);
 
-        vfideToken.safeTransferFrom(msg.sender, address(this), totalOwed);
-        vfideToken.safeTransfer(l.lender, lenderReceives);
+        vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), totalOwed);
+        vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderReceives);
         if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
         }
@@ -448,7 +467,7 @@ contract VFIDETermLoan is ReentrancyGuard {
      *  protocol recognizes the difference between can't-pay and won't-pay.
      */
     function proposePaymentPlan(uint256 id, uint8 installments, uint64 intervalDays)
-        external
+        external nonReentrant
     {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -497,6 +516,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
 
     /// @notice Make an installment payment on a restructured loan
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function payInstallment(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -519,8 +539,8 @@ contract VFIDETermLoan is ReentrancyGuard {
         p.nextDue = uint64(block.timestamp) + (p.intervalDays * 1 days);
         l.amountRepaid += amount;
 
-        vfideToken.safeTransferFrom(msg.sender, address(this), amount);
-        vfideToken.safeTransfer(l.lender, lenderReceives);
+        vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), amount);
+        vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderReceives);
         if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
         }
@@ -532,6 +552,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (p.paidInstallments >= p.totalInstallments) {
             l.state = LoanState.REPAID;
             _closeLoan(l);
+            _releaseAllGuarantorCommitments(id);
             totalLoans++;
             totalVolume += l.principal;
 
@@ -638,14 +659,15 @@ contract VFIDETermLoan is ReentrancyGuard {
      * @notice Extract payment from a guarantor after default
      * @param id Loan ID (must be in DEFAULTED state)
      *
-     * Can only be called once per EXTRACTION_INTERVAL (7 days).
+    * Can only be called once per EXTRACTION_INTERVAL (1 day).
      * Extracts EXTRACTION_RATE_PCT (10%) of each guarantor's liability per call.
      * Lender calls this periodically. Guarantor's pre-approved allowance is used.
      *
-     * This creates slow pressure: the guarantor has a week between extractions
+    * This creates steady pressure: the guarantor has a day between extractions
      * to find the borrower and make them pay. If the borrower shows up and
      * repays via repayDefaultedLoan(), extraction stops immediately.
      */
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function extractFromGuarantors(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
@@ -661,6 +683,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 liabilityPer = guarantorLiabilityEach[id];
         address[] storage g = guarantors[id];
         uint256 totalThisRound = 0;
+        address recipient = _settlementRecipient(l.lender);
 
         for (uint256 i = 0; i < g.length; i++) {
             uint256 alreadyTaken = guarantorExtracted[id][g[i]];
@@ -674,13 +697,30 @@ contract VFIDETermLoan is ReentrancyGuard {
             // Try to pull from the guarantor's chosen approval source (vault first, wallet fallback)
             address source = guarantorVault[id][g[i]];
             if (source == address(0)) source = g[i];
-            try vfideToken.transferFrom(source, l.lender, extractAmount) {
-                guarantorExtracted[id][g[i]] += extractAmount;
-                totalThisRound += extractAmount;
-                emit GuarantorExtracted(id, g[i], extractAmount, guarantorExtracted[id][g[i]]);
+            uint256 balBefore = vfideToken.balanceOf(recipient);
+            try vfideToken.transferFrom(source, recipient, extractAmount) {
+                uint256 received = vfideToken.balanceOf(recipient) - balBefore;
+                if (received == 0) {
+                    emit GuarantorExtractionSkipped(id, g[i], extractAmount);
+                    continue;
+                }
+
+                uint256 nextExtracted = guarantorExtracted[id][g[i]] + received;
+                if (nextExtracted > liabilityPer) {
+                    received = liabilityPer - guarantorExtracted[id][g[i]];
+                    nextExtracted = liabilityPer;
+                }
+
+                guarantorExtracted[id][g[i]] = nextExtracted;
+                _releaseGuarantorCommitment(id, g[i], source, received);
+                totalThisRound += received;
+                // H-25 FIX: if guarantor has now paid their full share, clear their unresolved default.
+                if (nextExtracted >= liabilityPer && unresolvedDefaults[g[i]] > 0) {
+                    unresolvedDefaults[g[i]]--;
+                }
+                emit GuarantorExtracted(id, g[i], received, guarantorExtracted[id][g[i]]);
             } catch {
-                // Guarantor doesn't have funds or revoked approval
-                // Score penalty still applies — they can't escape accountability
+                emit GuarantorExtractionSkipped(id, g[i], extractAmount);
             }
         }
 
@@ -697,6 +737,7 @@ contract VFIDETermLoan is ReentrancyGuard {
      * Score penalty is reduced from -20.0 to -10.0 (still significant,
      * but acknowledges they eventually did the right thing).
      */
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function repayDefaultedLoan(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -711,8 +752,8 @@ contract VFIDETermLoan is ReentrancyGuard {
             uint256 protocolFee = (remaining * PROTOCOL_CUT_PCT) / 100;
             uint256 lenderGets = remaining - protocolFee;
 
-            vfideToken.safeTransferFrom(msg.sender, address(this), remaining);
-            vfideToken.safeTransfer(l.lender, lenderGets);
+            vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), remaining);
+            vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderGets);
             if (protocolFee > 0 && feeDistributor != address(0)) {
                 vfideToken.safeTransfer(feeDistributor, protocolFee);
             }
@@ -742,6 +783,9 @@ contract VFIDETermLoan is ReentrancyGuard {
             for (uint256 i = 0; i < g.length; i++) {
                 try seer.reward(g[i], 50, "guarantor_relieved") {} catch {}
                 uint256 liabilityLeft = guarantorLiabilityEach[id] - guarantorExtracted[id][g[i]];
+                address source = guarantorVault[id][g[i]];
+                if (source == address(0)) source = g[i];
+                _releaseGuarantorCommitment(id, g[i], source, liabilityLeft);
                 emit GuarantorRelieved(id, g[i], liabilityLeft);
             }
         }
@@ -764,8 +808,15 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
 
     /// @notice Called by MerchantPortal (or authorized contract) to make a payment from revenue
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function payFromRevenue(uint256 id, uint256 amount) external nonReentrant {
         Loan storage l = loans[id];
+        // H-25 FIX: Restrict callers to the borrower themselves or an allowlisted revenue router
+        // (e.g., MerchantPortal). This prevents ProofScore manipulation via third-party repayment.
+        require(
+            msg.sender == l.borrower || isAuthorizedRevenueRouter[msg.sender],
+            "TL: not authorized"
+        );
         if (l.state != LoanState.ACTIVE && l.state != LoanState.RESTRUCTURED) revert TL_WrongState();
         if (!l.revenueAssignment) revert TL_WrongState();
         if (amount == 0) revert TL_Zero();
@@ -781,8 +832,8 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 protocolFee = (amount * PROTOCOL_CUT_PCT) / 100;
         uint256 lenderGets = amount - protocolFee;
 
-        vfideToken.safeTransferFrom(msg.sender, address(this), amount);
-        vfideToken.safeTransfer(l.lender, lenderGets);
+        vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), amount);
+        vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderGets);
         if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
         }
@@ -808,6 +859,49 @@ contract VFIDETermLoan is ReentrancyGuard {
     function _closeLoan(Loan storage l) internal {
         if (l.borrower != address(0)) activeLoanCount[l.borrower]--;
         activeLoanCount[l.lender]--;
+    }
+
+    function _releaseAllGuarantorCommitments(uint256 id) internal {
+        address[] storage g = guarantors[id];
+        for (uint256 i = 0; i < g.length; i++) {
+            address guarantor = g[i];
+            uint256 remaining = guarantorCommittedLiability[id][guarantor];
+            if (remaining == 0) continue;
+            address source = guarantorVault[id][guarantor];
+            if (source == address(0)) source = guarantor;
+            _releaseGuarantorCommitment(id, guarantor, source, remaining);
+        }
+    }
+
+    function _releaseGuarantorCommitment(uint256 id, address guarantor, address source, uint256 amount) internal {
+        if (amount == 0) return;
+
+        uint256 committedForLoan = guarantorCommittedLiability[id][guarantor];
+        if (amount > committedForLoan) {
+            amount = committedForLoan;
+        }
+        if (amount == 0) return;
+
+        guarantorCommittedLiability[id][guarantor] = committedForLoan - amount;
+        committedLiability[guarantor] -= amount;
+        committedLiabilityBySource[source] -= amount;
+    }
+
+    function _requireVaultParticipant(address participant) internal view {
+        if (address(vaultHub) == address(0)) return;
+        if (vaultHub.vaultOf(participant) == address(0)) revert TL_NoVault();
+    }
+
+    function _settlementSource(address participant) internal view returns (address) {
+        if (address(vaultHub) == address(0)) return participant;
+
+        address vault = vaultHub.vaultOf(participant);
+        if (vault == address(0)) revert TL_NoVault();
+        return vault;
+    }
+
+    function _settlementRecipient(address participant) internal view returns (address) {
+        return _settlementSource(participant);
     }
 
     function _maxBorrowable(address borrower) internal view returns (uint256) {
@@ -855,9 +949,43 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
 
     function setPaused(bool _p) external onlyDAO { paused = _p; }
-    function setDAO(address _d) external onlyDAO { if (_d == address(0)) revert TL_Zero(); dao = _d; }
+
+    // H-6 FIX: Timelocked DAO rotation to prevent instant governance capture on key compromise
+    address public pendingDAO_TL;
+    uint64 public pendingDAOAt_TL;
+    uint64 public constant DAO_CHANGE_DELAY_TL = 48 hours;
+    event DAOChangeProposed_TL(address indexed newDAO, uint64 effectiveAt);
+    event DAOChangeCancelled_TL();
+
+    function setDAO(address _d) external onlyDAO {
+        if (_d == address(0)) revert TL_Zero();
+        pendingDAO_TL = _d;
+        pendingDAOAt_TL = uint64(block.timestamp) + DAO_CHANGE_DELAY_TL;
+        emit DAOChangeProposed_TL(_d, pendingDAOAt_TL);
+    }
+
+    function applyDAO() external onlyDAO {
+        require(pendingDAOAt_TL != 0 && block.timestamp >= pendingDAOAt_TL, "TL: timelock");
+        dao = pendingDAO_TL;
+        delete pendingDAO_TL;
+        delete pendingDAOAt_TL;
+    }
+
+    function cancelDAOChange() external onlyDAO {
+        require(pendingDAOAt_TL != 0, "TL: no pending");
+        delete pendingDAO_TL;
+        delete pendingDAOAt_TL;
+        emit DAOChangeCancelled_TL();
+    }
     function setSeer(address _s) external onlyDAO { seer = ISeerTL(_s); }
     function setVaultHub(address _v) external onlyDAO { vaultHub = IVaultHubTL(_v); }
+    // slither-disable-next-line missing-zero-check
     function setFeeDistributor(address _f) external onlyDAO { feeDistributor = _f; }
+    /// @notice H-25 FIX: authorize/deauthorize a revenue router that may call payFromRevenue.
+    function setAuthorizedRevenueRouter(address router, bool allowed) external onlyDAO {
+        if (router == address(0)) revert TL_Zero();
+        isAuthorizedRevenueRouter[router] = allowed;
+    }
+    // slither-disable-next-line missing-zero-check
     function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
 }

@@ -46,19 +46,19 @@ if [ -f .env.local ]; then
   if [ -d "migrations" ] && [ "$(ls -A migrations)" ]; then
     echo "Running database migrations..."
     if command -v node &> /dev/null; then
-      # Run migration script using Node/tsx (handles TypeScript)
-      npx tsx scripts/migrate.ts || {
-        echo "⚠️  Migration via tsx failed. Ensure scripts/migrate.ts exists and NODE_ENV is set."
-        echo "Fallback: Apply migrations manually via psql or migration tool."
+      # Run canonical migration CLI
+      npm run -s migrate:up || {
+        echo "⚠️  Migration command failed (npm run migrate:up)."
+        echo "Fallback: apply migrations manually via psql or migration tool."
       }
       echo "✅ Database migrations applied!"
     else
       echo "⚠️  Node not found. Please install Node.js or apply migrations manually:"
-      echo "npx tsx scripts/migrate.ts"
+      echo "npm run migrate:up"
     fi
   else
     echo "⚠️  No migrations found in migrations/"
-    echo "Please ensure the migration system is set up in scripts/migrate.ts"
+    echo "Please ensure the migration system is configured via lib/migrations/cli.ts"
     echo "See documentation: docs/DATABASE_SETUP.md"
   fi
 else

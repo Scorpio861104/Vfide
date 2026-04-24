@@ -14,6 +14,8 @@ import {
   Copy,
   Check
 } from 'lucide-react';
+import { useChainId } from 'wagmi';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
@@ -117,6 +119,7 @@ interface ToastItemProps {
 function ToastItem({ toast, onRemove }: ToastItemProps) {
   const [progress, setProgress] = useState(100);
   const [copied, setCopied] = useState(false);
+  const chainId = useChainId();
 
   useEffect(() => {
     if (!toast.progress || toast.type === 'loading' || toast.type === 'promise') return;
@@ -203,7 +206,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
                   )}
                 </button>
                 <a
-                  href={`https://basescan.org/tx/${toast.txHash}`}
+                  href={getExplorerLink(chainId, toast.txHash, 'tx')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1 hover:bg-zinc-800 rounded transition-colors"

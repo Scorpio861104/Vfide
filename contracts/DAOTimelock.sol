@@ -125,23 +125,13 @@ contract DAOTimelock is ReentrancyGuard {
 
         op.done=true;
         (bool ok, bytes memory r) = op.target.call{value:op.value}(op.data);
-        require(ok, "exec failed");
-        
-        // Only validate bool return for transfer/transferFrom/approve selectors
-        if (r.length == 32 && op.data.length >= 4) {
-            bytes4 selector;
-            bytes memory data = op.data;
-            assembly {
-                selector := mload(add(data, 32))
-            }
-            // ERC20: transfer(address,uint256), transferFrom(address,address,uint256), approve(address,uint256)
-            if (selector == bytes4(0xa9059cbb) ||  // transfer
-                selector == bytes4(0x23b872dd) ||  // transferFrom  
-                selector == bytes4(0x095ea7b3)) {  // approve
-                bool returnValue = abi.decode(r, (bool));
-                require(returnValue, "TL: ERC20 call returned false");
-            }
+        if (!ok) {
+            _revertWithReason(r, "TL: execute failed");
         }
+
+        _validateERC20BoolReturn(op.data, r);
+
+        _removeFromQueuedIds(id);
 
         emit Executed(id); _log("tl_executed");
         return r;
@@ -171,11 +161,46 @@ contract DAOTimelock is ReentrancyGuard {
 
         op.done = true;
         (bool ok, bytes memory r) = op.target.call{value: op.value}(op.data);
-        require(ok, "TL: secondary exec failed");
+        if (!ok) {
+            _revertWithReason(r, "TL: secondary execute failed");
+        }
+
+        // Keep parity with primary execution path for ERC20 bool-returning calls.
+        _validateERC20BoolReturn(op.data, r);
+
+        _removeFromQueuedIds(id);
 
         emit ExecutedBySecondary(id);
         _log("tl_executed_by_secondary");
         return r;
+    }
+
+    function _validateERC20BoolReturn(bytes memory callData, bytes memory returnData) internal pure {
+        // Only validate bool return for transfer/transferFrom/approve selectors.
+        if (returnData.length == 32 && callData.length >= 4) {
+            bytes4 selector;
+            assembly {
+                selector := mload(add(callData, 32))
+            }
+            if (
+                selector == bytes4(0xa9059cbb) || // transfer
+                selector == bytes4(0x23b872dd) || // transferFrom
+                selector == bytes4(0x095ea7b3)    // approve
+            ) {
+                bool returnValue = abi.decode(returnData, (bool));
+                require(returnValue, "TL: ERC20 call returned false");
+            }
+        }
+    }
+
+    function _revertWithReason(bytes memory returndata, string memory fallbackMessage) internal pure {
+        if (returndata.length > 0) {
+            assembly {
+                revert(add(returndata, 0x20), mload(returndata))
+            }
+        }
+
+        revert(fallbackMessage);
     }
 
     function _log(string memory action) internal {

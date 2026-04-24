@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { createPublicClient, http } from 'viem';
 import { z } from 'zod4';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -16,6 +17,35 @@ const checkoutActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('view') }),
   z.object({ action: z.literal('pay'), tx_hash: z.string().regex(TX_HASH_REGEX) }),
 ]);
+
+function getCheckoutRpcUrl(): string | null {
+  const url = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || process.env.NEXT_PUBLIC_RPC_URL || process.env.RPC_URL;
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+async function verifySubmittedTransaction(hash: string): Promise<{ verified: boolean; confirmed: boolean }> {
+  const rpcUrl = getCheckoutRpcUrl();
+  if (!rpcUrl) return { verified: false, confirmed: false };
+
+  try {
+    const client = createPublicClient({ transport: http(rpcUrl) });
+    const receipt = await client.getTransactionReceipt({ hash });
+    return {
+      verified: true,
+      confirmed: receipt.status === 'success',
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+    if (message.includes('not found') || message.includes('unknown') || message.includes('missing')) {
+      return { verified: true, confirmed: false };
+    }
+
+    logger.warn('[Checkout PATCH] Transaction verification RPC failure', error);
+    return { verified: false, confirmed: false };
+  }
+}
 
 // ─────────────────────────── GET: Public invoice view
 export async function GET(
@@ -117,17 +147,33 @@ export async function PATCH(
       if (invoice.status === 'cancelled') {
         return NextResponse.json({ error: 'Invoice cancelled' }, { status: 400 });
       }
+      if (invoice.status === 'pending_confirmation') {
+        return NextResponse.json({ error: 'Payment already pending confirmation' }, { status: 409 });
+      }
 
       // Require a valid transaction hash — payment confirmation should be verified on-chain
       const txHash = parsedBody.data.tx_hash;
 
-      // Mark as pending_confirmation, not paid — merchant or backend job verifies on-chain
-      await query(
+      const txVerification = await verifySubmittedTransaction(txHash);
+      if (!txVerification.verified) {
+        return NextResponse.json({ error: 'Payment verification temporarily unavailable' }, { status: 503 });
+      }
+      if (!txVerification.confirmed) {
+        return NextResponse.json({ error: 'Transaction hash not confirmed on-chain' }, { status: 400 });
+      }
+
+      // Mark as pending_confirmation, not paid — merchant or backend job verifies on-chain.
+      // Restrict transition to sent/viewed to prevent tx_hash mutation once payment is pending.
+      const updateResult = await query(
         `UPDATE merchant_invoices
          SET status = 'pending_confirmation', tx_hash = $1, updated_at = NOW()
-         WHERE id = $2 AND status NOT IN ('paid', 'cancelled')`,
+         WHERE id = $2 AND status IN ('sent', 'viewed')`,
         [txHash, invoice.id]
       );
+
+      if ((updateResult.rowCount ?? 0) === 0) {
+        return NextResponse.json({ error: 'Invoice status no longer allows payment update' }, { status: 409 });
+      }
 
       // Do not emit payment.completed here.
       // Confirmation flow dispatches webhooks after on-chain event verification.

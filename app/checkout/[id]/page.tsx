@@ -18,7 +18,7 @@ import { useAccount } from 'wagmi';
 import { usePayMerchant } from '@/hooks/useMerchantHooks';
 import { useOptionalPreferences } from '@/lib/preferences/userPreferences';
 import { logger } from '@/lib/logger';
-import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink } from 'lucide-react';
+import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink, Copy } from 'lucide-react';
 
 interface InvoiceItem {
   description: string;
@@ -51,6 +51,9 @@ interface InvoiceData {
 
 type CheckoutStatus = 'loading' | 'ready' | 'paying' | 'confirming' | 'paid' | 'error' | 'not_found' | 'already_paid';
 
+const CHECKOUT_KNOWN_MERCHANTS_KEY = 'vfide_known_checkout_merchants';
+const HIGH_VALUE_CONFIRM_THRESHOLD = 100;
+
 const LOCAL_CURRENCY_LOCALES: Record<string, string> = {
   USD: 'en-US',
   EUR: 'de-DE',
@@ -75,6 +78,23 @@ const ESTIMATED_USD_TO_LOCAL: Record<string, number> = {
   BRL: 5.7,
 };
 
+const EXPLORER_BASE_BY_CHAIN: Record<number, string> = {
+  1: 'https://etherscan.io',
+  10: 'https://optimistic.etherscan.io',
+  56: 'https://bscscan.com',
+  137: 'https://polygonscan.com',
+  324: 'https://explorer.zksync.io',
+  8453: 'https://basescan.org',
+  42161: 'https://arbiscan.io',
+  11155111: 'https://sepolia.etherscan.io',
+  84532: 'https://sepolia.basescan.org',
+};
+
+function getExplorerBase(chainId?: number): string {
+  if (!chainId || !EXPLORER_BASE_BY_CHAIN[chainId]) return 'https://basescan.org';
+  return EXPLORER_BASE_BY_CHAIN[chainId];
+}
+
 function isUsdAnchoredDisplay(code: string): boolean {
   return ['USD', 'USDC', 'USDT', 'DAI', 'USDS'].includes(code.toUpperCase());
 }
@@ -94,7 +114,7 @@ function formatEstimatedLocalCurrency(amount: number, currency: string): string 
 export default function CheckoutPage() {
   const params = useParams();
   const paymentLinkId = params?.id as string;
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chainId } = useAccount();
   const { payMerchant, isPaying } = usePayMerchant();
   const { preferences } = useOptionalPreferences();
 
@@ -102,6 +122,7 @@ export default function CheckoutPage() {
   const [status, setStatus] = useState<CheckoutStatus>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [txHash, setTxHash] = useState('');
+  const [isFirstTimeMerchant, setIsFirstTimeMerchant] = useState(false);
 
   // Fetch invoice data
   useEffect(() => {
@@ -125,6 +146,13 @@ export default function CheckoutPage() {
         const data = await res.json();
         const inv = data.invoice as InvoiceData;
         setInvoice(inv);
+
+        if (typeof window !== 'undefined' && inv.merchant_address) {
+          const normalized = inv.merchant_address.toLowerCase();
+          const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
+          const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+          setIsFirstTimeMerchant(!knownMerchants.includes(normalized));
+        }
 
         if (inv.status === 'paid') {
           setStatus('already_paid');
@@ -159,6 +187,16 @@ export default function CheckoutPage() {
   const handlePay = useCallback(async () => {
     if (!invoice || !address || !isConnected) return;
 
+    const total = Number(invoice.total);
+    if (Number.isFinite(total) && total >= HIGH_VALUE_CONFIRM_THRESHOLD) {
+      const confirmed = window.confirm(
+        `You are about to pay ${total.toFixed(4)} ${invoice.currency_display} to ${invoice.merchant_name || 'merchant'} at ${invoice.merchant_address}. This payment cannot be reversed.`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setStatus('paying');
 
     try {
@@ -181,6 +219,16 @@ export default function CheckoutPage() {
         body: JSON.stringify({ action: 'pay', tx_hash: hash }),
       });
 
+      if (typeof window !== 'undefined' && invoice.merchant_address) {
+        const normalized = invoice.merchant_address.toLowerCase();
+        const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
+        const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+        if (!knownMerchants.includes(normalized)) {
+          knownMerchants.push(normalized);
+          window.localStorage.setItem(CHECKOUT_KNOWN_MERCHANTS_KEY, JSON.stringify(knownMerchants));
+        }
+      }
+
       setStatus('paid');
     } catch (err) {
       setStatus('ready');
@@ -192,6 +240,15 @@ export default function CheckoutPage() {
   const estimatedLocalTotal = invoice && isUsdAnchoredDisplay(invoice.currency_display)
     ? formatEstimatedLocalCurrency(Number(invoice.total), preferredCurrency)
     : null;
+  const explorerBase = getExplorerBase(chainId);
+
+  const copyToClipboard = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch (error) {
+      logger.warn(`[checkout] failed to copy ${label}:`, error);
+    }
+  };
 
   // ─────────────────────────── Render
 
@@ -222,7 +279,7 @@ export default function CheckoutPage() {
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 mb-2">
             <Shield className="w-4 h-4" />
-            <span>Secured by VFIDE</span>
+            <span>Payment via VFIDE merchant portal</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
             {status === 'paid' || status === 'already_paid' ? 'Payment Complete' : 'Checkout'}
@@ -250,6 +307,43 @@ export default function CheckoutPage() {
                   <span>Due {new Date(invoice.due_date).toLocaleDateString()}</span>
                 </div>
               )}
+
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-900/40 dark:bg-amber-900/10">
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Merchant identity</p>
+                <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
+                  {invoice.merchant_name || 'Unverified merchant name'}
+                </p>
+                <p className="mt-1 break-all font-mono text-xs text-amber-800/90 dark:text-amber-200/90">
+                  {invoice.merchant_address}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-3 text-xs">
+                  <button
+                    onClick={() => void copyToClipboard(invoice.merchant_address, 'merchant address')}
+                    className="inline-flex items-center gap-1 text-amber-800 hover:underline dark:text-amber-200"
+                  >
+                    <Copy className="h-3 w-3" /> Copy address
+                  </button>
+                  <a
+                    href={`${explorerBase}/address/${invoice.merchant_address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-amber-800 hover:underline dark:text-amber-200"
+                  >
+                    Verify on explorer <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                {isFirstTimeMerchant && status === 'ready' && (
+                  <p className="mt-2 text-xs text-amber-900/90 dark:text-amber-200/90">
+                    First-time merchant warning: confirm this address with the merchant using an out-of-band channel before paying.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-gray-700 dark:bg-gray-700/20">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Token details</p>
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">Symbol: {invoice.currency_display}</p>
+                <p className="mt-1 break-all font-mono text-xs text-gray-600 dark:text-gray-300">Contract: {invoice.token}</p>
+              </div>
             </div>
 
             {/* Line Items */}
@@ -328,7 +422,7 @@ export default function CheckoutPage() {
                   <p className="text-green-600 dark:text-green-400 font-semibold mb-2">Payment Successful</p>
                   {txHash && (
                     <a
-                      href={`https://explorer.zksync.io/tx/${txHash}`}
+                      href={`${explorerBase}/tx/${txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"

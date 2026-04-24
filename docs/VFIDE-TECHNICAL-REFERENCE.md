@@ -945,7 +945,7 @@ useCouncilMembers(): {
     votingPower: number
     active: boolean
   }>
-  seats: number  // Total council seats (7)
+  seats: number  // Governed council seats (initial 12, scalable to 21)
 }
 
 // Apply for council

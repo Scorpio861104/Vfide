@@ -2,16 +2,23 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
 describe("VFIDEBridge (delivery confirmation)", () => {
   const SOURCE_EID = 30101;
   const DEST_EID = 30102;
 
-  async function deployBridgePair() {
-    const { ethers } = (await network.connect()) as any;
+  async function bridgePairFixture() {
+    const { ethers } = (await getConnection()) as any;
     const [owner, user, receiver] = await ethers.getSigners();
 
-    const MockERC20 = await ethers.getContractFactory("test/contracts/mocks/MockContracts.sol:MockERC20");
-    const token = await MockERC20.deploy("VFIDE", "VFD", ethers.parseEther("200000000"));
+    const Token = await ethers.getContractFactory("TestMintableToken");
+    const token = await Token.deploy();
     await token.waitForDeployment();
 
     const Endpoint = await ethers.getContractFactory("contracts/mocks/BridgeGovernanceVerifierMocks.sol:MockLzEndpointForBridge");
@@ -41,11 +48,17 @@ describe("VFIDEBridge (delivery confirmation)", () => {
 
     await sourceBridge.connect(owner).setExemptCheckBypass(true, 3600);
 
+    await token.mint(owner.address, ethers.parseEther("200000000"));
     await token.transfer(user.address, ethers.parseEther("1000"));
     await token.transfer(await destinationBridge.getAddress(), ethers.parseEther("5000"));
     await token.connect(user).approve(await sourceBridge.getAddress(), ethers.MaxUint256);
 
     return { ethers, token, endpoint, sourceBridge, destinationBridge, owner, user, receiver };
+  }
+
+  async function deployBridgePair() {
+    const { networkHelpers } = (await getConnection()) as any;
+    return networkHelpers.loadFixture(bridgePairFixture);
   }
 
   it("syncs LayerZero peers when a trusted remote is applied", async () => {
@@ -55,7 +68,7 @@ describe("VFIDEBridge (delivery confirmation)", () => {
   });
 
   it("closes the refund window after destination delivery confirmation", async () => {
-    const { ethers, endpoint, sourceBridge, token, user, receiver } = await deployBridgePair();
+    const { ethers, endpoint, sourceBridge, token, owner, user, receiver } = await deployBridgePair();
 
     const amount = ethers.parseEther("100");
     const bridgedAmount = amount - ((amount * 10n) / 10000n);
@@ -73,6 +86,9 @@ describe("VFIDEBridge (delivery confirmation)", () => {
 
     const txId = sentLog?.args?.txId;
     assert.ok(txId);
+
+    assert.equal(await sourceBridge.bridgeRefundableAfter(txId), 0n);
+    await sourceBridge.connect(owner).openBridgeRefundWindow(txId);
     assert.ok((await sourceBridge.bridgeRefundableAfter(txId)) > 0n);
     assert.equal(await endpoint.pendingCount(), 1n);
 
@@ -96,6 +112,44 @@ describe("VFIDEBridge (delivery confirmation)", () => {
   });
 
   it("still allows refunds for undelivered bridge messages after the delay", async () => {
+    const { ethers, sourceBridge, token, owner, user, receiver } = await deployBridgePair();
+
+    const amount = ethers.parseEther("100");
+    const refundedAmount = amount - ((amount * 10n) / 10000n);
+    const tx = await sourceBridge.connect(user).bridge(DEST_EID, receiver.address, amount, "0x");
+    const receipt = await tx.wait();
+    const sentLog = receipt.logs
+      .map((log: any) => {
+        try {
+          return sourceBridge.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed: any) => parsed?.name === "BridgeSent");
+
+    const txId = sentLog?.args?.txId;
+    const balanceBeforeRefund = await token.balanceOf(user.address);
+
+    assert.equal(await sourceBridge.bridgeRefundableAfter(txId), 0n);
+    await assert.rejects(
+      () => sourceBridge.connect(user).claimBridgeRefund(txId),
+      /not refundable|revert/
+    );
+
+    await sourceBridge.connect(owner).openBridgeRefundWindow(txId);
+
+    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await sourceBridge.connect(user).claimBridgeRefund(txId);
+
+    assert.equal(await sourceBridge.bridgeRefundableAfter(txId), 0n);
+    assert.equal((await sourceBridge.bridgeTransactions(txId)).executed, true);
+    assert.equal(await token.balanceOf(user.address), balanceBeforeRefund + refundedAmount);
+  });
+
+  it("allows anyone to open and finalize stale refunds when confirmations never arrive", async () => {
     const { ethers, sourceBridge, token, user, receiver } = await deployBridgePair();
 
     const amount = ethers.parseEther("100");
@@ -115,10 +169,26 @@ describe("VFIDEBridge (delivery confirmation)", () => {
     const txId = sentLog?.args?.txId;
     const balanceBeforeRefund = await token.balanceOf(user.address);
 
-    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
+    await assert.rejects(
+      () => sourceBridge.connect(receiver).openStaleBridgeRefundWindow(txId),
+      /tx not stale|revert/
+    );
+
+    await ethers.provider.send("evm_increaseTime", [30 * 24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
-    await sourceBridge.connect(user).claimBridgeRefund(txId);
+    await sourceBridge.connect(receiver).openStaleBridgeRefundWindow(txId);
+    assert.ok((await sourceBridge.bridgeRefundableAfter(txId)) > 0n);
+
+    await assert.rejects(
+      () => sourceBridge.connect(receiver).finalizeStaleBridgeRefund(txId),
+      /sender claim grace active|revert/
+    );
+
+    await ethers.provider.send("evm_increaseTime", [14 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await sourceBridge.connect(receiver).finalizeStaleBridgeRefund(txId);
 
     assert.equal(await sourceBridge.bridgeRefundableAfter(txId), 0n);
     assert.equal((await sourceBridge.bridgeTransactions(txId)).executed, true);

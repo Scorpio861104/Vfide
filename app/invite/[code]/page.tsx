@@ -22,8 +22,13 @@ export default function InvitePage() {
   return (
     <>
       <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
-          {status === 'loading' && <Loader2 size={48} className="text-cyan-400 animate-spin mx-auto" />}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm" aria-live="polite" aria-busy={status === 'loading'}>
+          {status === 'loading' && (
+            <>
+              <Loader2 size={48} className="text-cyan-400 animate-spin mx-auto mb-6" />
+              <p className="text-gray-300">Validating your invite link...</p>
+            </>
+          )}
           {status === 'valid' && (
             <>
               <Gift size={48} className="text-cyan-400 mx-auto mb-6" />
@@ -38,7 +43,11 @@ export default function InvitePage() {
             <>
               <Shield size={48} className="text-red-400 mx-auto mb-6" />
               <h1 className="text-2xl font-bold text-white mb-4">Invalid Invite</h1>
-              <p className="text-gray-400">This invite link is expired or invalid.</p>
+              <p className="text-gray-400 mb-6">This invite link is expired or invalid.</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="/invite" className="px-5 py-3 rounded-xl border border-white/20 text-gray-200 hover:bg-white/10 transition-colors">Try another code</a>
+                <a href="/" className="px-5 py-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">Back to home</a>
+              </div>
             </>
           )}
         </motion.div>

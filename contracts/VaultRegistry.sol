@@ -29,6 +29,11 @@ interface IProofScoreManager {
     function getProofScore(address user) external view returns (uint256);
 }
 
+/// @dev H-21 FIX: Query whether an address is a recognized guardian on the vault contract.
+interface IVaultGuardianQuery {
+    function isGuardian(address guardian) external view returns (bool);
+}
+
 contract VaultRegistry is Ownable, ReentrancyGuard {
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -50,9 +55,11 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     // Email hash => vault (optional, if user wants email recovery)
     mapping(bytes32 => address) public vaultByEmailHash;
+    mapping(bytes32 => address[]) public vaultsByEmailHash;
     
     // Phone hash => vault (optional, if user wants phone recovery)
     mapping(bytes32 => address) public vaultByPhoneHash;
+    mapping(bytes32 => address[]) public vaultsByPhoneHash;
     
     // Username hash => vault (human-readable identifier)
     mapping(bytes32 => address) public vaultByUsernameHash;
@@ -176,11 +183,17 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * Example: User sets recoveryId = "mygrandma'sbirthdayplus1234"
      * When wallet lost: User enters same phrase → finds vault → initiates recovery
      */
+    /// @notice Set recovery ID for a vault.
+    /// @dev H-19/H-20 FIX: Accepts a pre-computed salted hash instead of plaintext.
+    ///      Client must hash as: keccak256(abi.encode(block.chainid, vaultRegistry address, recoveryId))
+    ///      This prevents plaintext calldata exposure and rainbow-table attacks.
+    /// @param vault   The vault address
+    /// @param saltedHash  keccak256(abi.encode(chainId, address(this), recoveryId))
     function setRecoveryId(
-        address vault, 
-        string calldata recoveryId
+        address vault,
+        bytes32 saltedHash
     ) external onlyVaultOwner(vault) validVault(vault) {
-        bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
+        bytes32 hashedId = saltedHash;
         
         // Clear old recovery ID if exists
         bytes32 oldId = recoveryIdOfVault[vault];
@@ -204,17 +217,13 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address vault,
         bytes32 emailHash
     ) external onlyVaultOwner(vault) validVault(vault) {
-        if (vaultByEmailHash[emailHash] != address(0) && vaultByEmailHash[emailHash] != vault) {
-            revert EmailAlreadyTaken();
-        }
-
         // Clear old email if exists
         bytes32 oldEmail = _getStoredEmailHash(vault);
         if (oldEmail != bytes32(0) && oldEmail != emailHash) {
-            delete vaultByEmailHash[oldEmail];
+            _removeEmailVault(oldEmail, vault);
         }
-        
-        vaultByEmailHash[emailHash] = vault;
+
+        _addEmailVault(emailHash, vault);
         _setStoredEmailHash(vault, emailHash);
         
         emit EmailRecoverySet(vault, emailHash);
@@ -229,16 +238,12 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address vault,
         bytes32 phoneHash
     ) external onlyVaultOwner(vault) validVault(vault) {
-        if (vaultByPhoneHash[phoneHash] != address(0) && vaultByPhoneHash[phoneHash] != vault) {
-            revert PhoneAlreadyTaken();
-        }
-
         bytes32 oldPhone = _phoneHashStorage[vault];
         if (oldPhone != bytes32(0) && oldPhone != phoneHash) {
-            delete vaultByPhoneHash[oldPhone];
+            _removePhoneVault(oldPhone, vault);
         }
 
-        vaultByPhoneHash[phoneHash] = vault;
+        _addPhoneVault(phoneHash, vault);
         _phoneHashStorage[vault] = phoneHash;
         emit PhoneRecoverySet(vault, phoneHash);
     }
@@ -249,11 +254,17 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @param vault The vault address
      * @param username Desired username (will be lowercased and hashed)
      */
+    /// @notice Set username for a vault.
+    /// @dev H-19/H-20 FIX: Accepts a pre-computed salted hash instead of plaintext.
+    ///      Client must hash as: keccak256(abi.encode(block.chainid, vaultRegistry address, username.toLowerCase()))
+    ///      This prevents plaintext calldata exposure and rainbow-table attacks.
+    /// @param vault        The vault address
+    /// @param saltedHash   keccak256(abi.encode(chainId, address(this), toLowerCase(username)))
     function setUsername(
         address vault,
-        string calldata username
+        bytes32 saltedHash
     ) external onlyVaultOwner(vault) validVault(vault) {
-        bytes32 hashedUsername = keccak256(abi.encodePacked(_toLower(username)));
+        bytes32 hashedUsername = saltedHash;
         
         if (usernameTaken[hashedUsername] && vaultByUsernameHash[hashedUsername] != vault) {
             revert UsernameAlreadyTaken();
@@ -280,6 +291,9 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address vault,
         address guardian
     ) external onlyVaultOwner(vault) validVault(vault) {
+        // H-21 FIX: Verify the guardian is recognized on the vault contract to prevent
+        //           registering arbitrary addresses as guardians.
+        require(IVaultGuardianQuery(vault).isGuardian(guardian), "VR: guardian not set on vault");
         if (!_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = true;
             require(vaultsGuardedBy[guardian].length < 100, "VR: guardian cap"); // I-11
@@ -361,11 +375,13 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     /**
      * @notice Search vault by recovery ID
+     * @dev H-48 FIX: Uses a scoped hash to avoid raw unsalted identifiers.
+     *      Hash derivation: keccak256(abi.encode(block.chainid, address(this), recoveryId))
      * @param recoveryId The plaintext recovery ID the user remembers
      * @return vault The vault address if found, address(0) if not
      */
     function searchByRecoveryId(string calldata recoveryId) external view returns (address vault) {
-        bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
+        bytes32 hashedId = _deriveScopedHash(recoveryId);
         address[] storage matches = vaultsByRecoveryId[hashedId];
         if (matches.length == 0) return address(0);
         return matches[0];
@@ -375,35 +391,51 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @notice FINAL-06: Return all vault matches for a recovery ID hash (collision-safe lookup)
      */
     function searchByRecoveryIdAll(string calldata recoveryId) external view returns (address[] memory vaults) {
-        bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
+        bytes32 hashedId = _deriveScopedHash(recoveryId);
         return vaultsByRecoveryId[hashedId];
     }
     
     /**
      * @notice Search vault by email hash
-     * @param emailHash keccak256(lowercase(email))
+     * @dev H-48 FIX: emailHash should be a scoped hash:
+     *      keccak256(abi.encode(block.chainid, address(this), lowercase(email)))
+     * @param emailHash Scoped hash of lowercase email.
      * @return vault The vault address if found
      */
     function searchByEmail(bytes32 emailHash) external view returns (address vault) {
         return vaultByEmailHash[emailHash];
     }
+
+    /// @notice Return all vault matches for an email hash (collision-safe lookup)
+    function searchByEmailAll(bytes32 emailHash) external view returns (address[] memory vaults) {
+        return vaultsByEmailHash[emailHash];
+    }
     
     /**
      * @notice Search vault by phone hash
-     * @param phoneHash keccak256(normalized phone)
+     * @dev H-48 FIX: phoneHash should be a scoped hash:
+     *      keccak256(abi.encode(block.chainid, address(this), normalizedPhone))
+     * @param phoneHash Scoped hash of normalized phone.
      * @return vault The vault address if found
      */
     function searchByPhone(bytes32 phoneHash) external view returns (address vault) {
         return vaultByPhoneHash[phoneHash];
     }
+
+    /// @notice Return all vault matches for a phone hash (collision-safe lookup)
+    function searchByPhoneAll(bytes32 phoneHash) external view returns (address[] memory vaults) {
+        return vaultsByPhoneHash[phoneHash];
+    }
     
     /**
      * @notice Search vault by username
+     * @dev H-48 FIX: Uses scoped hash derivation:
+     *      keccak256(abi.encode(block.chainid, address(this), toLowerCase(username)))
      * @param username The username to search for
      * @return vault The vault address if found
      */
     function searchByUsername(string calldata username) external view returns (address vault) {
-        bytes32 hashedUsername = keccak256(abi.encodePacked(_toLower(username)));
+        bytes32 hashedUsername = _deriveScopedHash(_toLower(username));
         return vaultByUsernameHash[hashedUsername];
     }
     
@@ -615,7 +647,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @notice Check if a recovery ID is available
      */
     function isRecoveryIdAvailable(string calldata recoveryId) external view returns (bool) {
-        bytes32 hashedId = keccak256(abi.encodePacked(recoveryId));
+        bytes32 hashedId = _deriveScopedHash(recoveryId);
         return vaultsByRecoveryId[hashedId].length == 0;
     }
 
@@ -658,13 +690,98 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             vaultByRecoveryId[hashedId] = matches[0];
         }
     }
+
+    function _addEmailVault(bytes32 emailHash, address vault) internal {
+        address[] storage matches = vaultsByEmailHash[emailHash];
+        for (uint256 i = 0; i < matches.length; i++) {
+            if (matches[i] == vault) {
+                if (vaultByEmailHash[emailHash] == address(0)) {
+                    vaultByEmailHash[emailHash] = vault;
+                }
+                return;
+            }
+        }
+
+        matches.push(vault);
+        if (vaultByEmailHash[emailHash] == address(0)) {
+            vaultByEmailHash[emailHash] = vault;
+        }
+    }
+
+    function _removeEmailVault(bytes32 emailHash, address vault) internal {
+        address[] storage matches = vaultsByEmailHash[emailHash];
+        uint256 len = matches.length;
+        if (len == 0) {
+            if (vaultByEmailHash[emailHash] == vault) delete vaultByEmailHash[emailHash];
+            return;
+        }
+
+        for (uint256 i = 0; i < len; i++) {
+            if (matches[i] == vault) {
+                matches[i] = matches[len - 1];
+                matches.pop();
+                break;
+            }
+        }
+
+        if (matches.length == 0) {
+            delete vaultByEmailHash[emailHash];
+        } else {
+            vaultByEmailHash[emailHash] = matches[0];
+        }
+    }
+
+    function _addPhoneVault(bytes32 phoneHash, address vault) internal {
+        address[] storage matches = vaultsByPhoneHash[phoneHash];
+        for (uint256 i = 0; i < matches.length; i++) {
+            if (matches[i] == vault) {
+                if (vaultByPhoneHash[phoneHash] == address(0)) {
+                    vaultByPhoneHash[phoneHash] = vault;
+                }
+                return;
+            }
+        }
+
+        matches.push(vault);
+        if (vaultByPhoneHash[phoneHash] == address(0)) {
+            vaultByPhoneHash[phoneHash] = vault;
+        }
+    }
+
+    function _removePhoneVault(bytes32 phoneHash, address vault) internal {
+        address[] storage matches = vaultsByPhoneHash[phoneHash];
+        uint256 len = matches.length;
+        if (len == 0) {
+            if (vaultByPhoneHash[phoneHash] == vault) delete vaultByPhoneHash[phoneHash];
+            return;
+        }
+
+        for (uint256 i = 0; i < len; i++) {
+            if (matches[i] == vault) {
+                matches[i] = matches[len - 1];
+                matches.pop();
+                break;
+            }
+        }
+
+        if (matches.length == 0) {
+            delete vaultByPhoneHash[phoneHash];
+        } else {
+            vaultByPhoneHash[phoneHash] = matches[0];
+        }
+    }
     
     /**
      * @notice Check if a username is available
      */
     function isUsernameAvailable(string calldata username) external view returns (bool) {
-        bytes32 hashedUsername = keccak256(abi.encodePacked(_toLower(username)));
+        bytes32 hashedUsername = _deriveScopedHash(_toLower(username));
         return !usernameTaken[hashedUsername];
+    }
+
+    /// @notice Helper for clients to derive the scoped hash used by registry lookups.
+    function deriveScopedHash(string calldata value) external view returns (bytes32) {
+        return _deriveScopedHash(value);
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -708,6 +825,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         }
         
         return string(bLower);
+    }
+
+    function _deriveScopedHash(string memory value) internal view returns (bytes32) {
+        return keccak256(abi.encode(block.chainid, address(this), value));
     }
     
     // Email hash storage (using a slot mapping pattern)

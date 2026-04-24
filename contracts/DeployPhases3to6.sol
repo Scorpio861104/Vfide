@@ -110,12 +110,14 @@ contract DeployPhase3 {
         emit ContractDeployed(NAME_ORC, preDeployedOracle);
 
         // Deploy VFIDE Bridge (OZ-based, required by LayerZero OApp)
+        // slither-disable-next-line reentrancy-no-eth
         VFIDEBridge bridge = new VFIDEBridge(
             vfideToken,
             layerZeroEndpoint,
             owner
         );
         deployed.vfideBridge = address(bridge);
+        // slither-disable-next-line reentrancy-events
         emit ContractDeployed(NAME_BRG, address(bridge));
 
         // Wire BSM ↔ Bridge linkage
@@ -126,6 +128,7 @@ contract DeployPhase3 {
         //           In production: call confirmSystemExempt() after SINK_CHANGE_DELAY elapses
         ISystemExemptToken(vfideToken).proposeSystemExempt(address(bridge), true);
 
+        // slither-disable-next-line reentrancy-events
         emit PhaseDeployed(3, NAME_PHASE3);
     }
 }

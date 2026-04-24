@@ -8,7 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { randomBytes } from 'crypto';
+import { createCipheriv, createHash, randomBytes } from 'crypto';
 import { isIP } from 'node:net';
 import { query } from '@/lib/db';
 import { requireAuth } from '@/lib/auth/middleware';
@@ -52,6 +52,31 @@ const webhookPatchSchema = z.object({
   description: z.string().max(200).optional(),
   status: z.enum(['active', 'paused']).optional(),
 });
+
+function deriveWebhookCryptoKey(): Buffer | null {
+  const keyMaterial = process.env.WEBHOOK_SECRET_ENCRYPTION_KEY;
+  if (!keyMaterial || keyMaterial.trim().length < 32) {
+    return null;
+  }
+
+  return createHash('sha256').update(keyMaterial).digest();
+}
+
+function encryptWebhookSecret(secret: string): { encrypted: string; iv: string } | null {
+  const key = deriveWebhookCryptoKey();
+  if (!key) return null;
+
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  const payload = Buffer.concat([encrypted, authTag]).toString('base64');
+
+  return {
+    encrypted: payload,
+    iv: iv.toString('base64'),
+  };
+}
 
 function isValidUrl(url: string): boolean {
   try {
@@ -178,13 +203,18 @@ export async function POST(request: NextRequest) {
 
     // Generate signing secret
     const secret = randomBytes(32).toString('hex');
+    const encryptedSecret = encryptWebhookSecret(secret);
+    if (!encryptedSecret) {
+      logger.error('[Webhooks POST] Missing WEBHOOK_SECRET_ENCRYPTION_KEY for secure secret storage');
+      return NextResponse.json({ error: 'Webhook subsystem is not configured securely' }, { status: 503 });
+    }
 
     const result = await query(
       `INSERT INTO merchant_webhook_endpoints
-       (merchant_address, url, secret, events, description)
-       VALUES ($1, $2, $3, $4, $5)
+       (merchant_address, url, secret, secret_encrypted, secret_iv, events, description)
+       VALUES ($1, $2, NULL, $3, $4, $5, $6)
        RETURNING id, url, events, status, description, created_at`,
-      [authAddress, url, secret, events, description ?? null]
+      [authAddress, url, encryptedSecret.encrypted, encryptedSecret.iv, events, description ?? null]
     );
 
     return NextResponse.json({
@@ -274,7 +304,22 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    let id = searchParams.get('id');
+
+    if (!id) {
+      const requestBody = await request.text();
+      if (requestBody.trim().length > 0) {
+        try {
+          const parsed = JSON.parse(requestBody) as { id?: unknown };
+          if (typeof parsed.id === 'number' || typeof parsed.id === 'string') {
+            id = String(parsed.id);
+          }
+        } catch {
+          return NextResponse.json({ error: 'Valid endpoint ID required' }, { status: 400 });
+        }
+      }
+    }
+
     if (!id || !/^\d+$/.test(id)) {
       return NextResponse.json({ error: 'Valid endpoint ID required' }, { status: 400 });
     }

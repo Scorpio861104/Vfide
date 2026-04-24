@@ -97,6 +97,50 @@
         "type": "uint64"
       }
     ],
+    "name": "CouncilApplied",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "CouncilProposalCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "members",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "validFrom",
+        "type": "uint64"
+      }
+    ],
+    "name": "CouncilProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address[]",
+        "name": "members",
+        "type": "address[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "termEnd",
+        "type": "uint64"
+      }
+    ],
     "name": "CouncilSet",
     "type": "event"
   },
@@ -199,6 +243,19 @@
     ],
     "name": "TermLimitsSet",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "COUNCIL_APPOINT_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [],
@@ -331,6 +388,13 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "applyCouncil",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -396,6 +460,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelCouncilProposal",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -572,6 +643,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "hasPendingCouncil",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -671,6 +755,19 @@
     "inputs": [
       {
         "internalType": "address[]",
+        "name": "members",
+        "type": "address[]"
+      }
+    ],
+    "name": "proposeCouncil",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address[]",
         "name": "current",
         "type": "address[]"
       }
@@ -729,19 +826,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address[]",
-        "name": "members",
-        "type": "address[]"
-      }
-    ],
-    "name": "setCouncil",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -1,5 +1,5 @@
 // Auto-generated contract ABIs
-// Run: ./scripts/generate-abis.sh to regenerate
+// Run: ./scripts/build-contracts.sh to regenerate
 
 import VFIDETokenRaw from './VFIDEToken.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'

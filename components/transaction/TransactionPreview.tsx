@@ -23,6 +23,7 @@ import { useAccount, useBalance, useEstimateFeesPerGas } from 'wagmi';
 import { useChainId } from 'wagmi';
 import { useOptionalPreferences } from '@/lib/preferences/userPreferences';
 import { formatConvertedUsd } from '@/lib/price-utils';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
@@ -380,15 +381,6 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
   const hasBlockingWarnings = warnings.some(w => w.level === 'critical');
   const requiresManualIntentConfirmation = warnings.some((w) => w.level === 'high' || w.level === 'critical');
 
-  const getExplorerUrl = (address: string) => {
-    const explorers: Record<number, string> = {
-      1: 'https://etherscan.io/address/',
-      11155111: 'https://sepolia.etherscan.io/address/',
-      137: 'https://polygonscan.com/address/',
-      42161: 'https://arbiscan.io/address/',
-    };
-    return `${explorers[chainId] || explorers[1]}${address}`;
-  };
 
   return (
     <motion.div
@@ -449,7 +441,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
                 </p>
               </div>
               <a
-                href={getExplorerUrl(transaction.to)}
+                href={getExplorerLink(chainId, transaction.to, 'address')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 hover:bg-gray-700 rounded-lg transition-colors"

@@ -86,3 +86,18 @@ contract QuoteMockSwapRouter {
         amounts[1] = amountIn;
     }
 }
+
+contract MockCouncilManager {
+    address[] private activeMembers;
+
+    function setActiveMembers(address[] calldata members) external {
+        delete activeMembers;
+        for (uint256 i = 0; i < members.length; i++) {
+            activeMembers.push(members[i]);
+        }
+    }
+
+    function getActiveMembers() external view returns (address[] memory) {
+        return activeMembers;
+    }
+}

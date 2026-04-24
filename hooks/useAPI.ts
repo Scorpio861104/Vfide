@@ -6,49 +6,101 @@ import { useChainId } from 'wagmi';
 import { apiClient, APIError } from '@/lib/api-client';
 
 /**
- * User profile type
+ * User profile type (normalized to camelCase)
  */
 export interface UserProfile {
   address: string;
   alias?: string;
+  displayName?: string;
   bio?: string;
   email?: string;
   location?: string;
   website?: string;
   avatar?: string;
   proofScore?: number;
+  reputationScore?: number;
+  isCouncilMember?: boolean;
+  isVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
+/**
+ * Backend API response format (snake_case from database)
+ */
 type ApiUser = {
-  address: string;
+  wallet_address?: string;
+  address?: string;
   username?: string;
+  alias?: string;
+  display_name?: string;
+  displayName?: string;
+  avatar_url?: string;
   avatar?: string;
   bio?: string;
   email?: string;
   location?: string;
   website?: string;
+  proof_score?: number;
   proofScore?: number;
+  reputation_score?: number;
+  reputationScore?: number;
+  is_council_member?: boolean;
+  isCouncilMember?: boolean;
+  is_verified?: boolean;
+  isVerified?: boolean;
+  created_at?: number | string;
   createdAt?: number | string;
+  updated_at?: number | string;
   updatedAt?: number | string;
 };
 
+type MessageRecord = {
+  id: string;
+  conversationId: string;
+  from: string;
+  to: string;
+  encryptedContent: string;
+  timestamp: number;
+  read: boolean;
+  signature?: string;
+  reactions?: Record<string, unknown>;
+};
+
+type ProgressRecord = {
+  address: string;
+  xp: number;
+  level: number;
+  achievements: string[];
+  badges: string[];
+};
+
+type LeaderboardRecord = {
+  address: string;
+  score: number;
+  rank: number;
+};
+
 const normalizeUserProfile = (user: ApiUser): UserProfile => {
+  const apiUser = user;
   const toIso = (value?: number | string) =>
     typeof value === 'number' ? new Date(value).toISOString() : value;
 
   return {
-    address: user.address,
-    alias: user.username,
-    bio: user.bio,
-    email: user.email,
-    location: user.location,
-    website: user.website,
-    avatar: user.avatar,
-    proofScore: user.proofScore,
-    createdAt: toIso(user.createdAt),
-    updatedAt: toIso(user.updatedAt),
+    address: apiUser.wallet_address || apiUser.address || '',
+    alias: apiUser.username || apiUser.alias,
+    displayName: apiUser.display_name || apiUser.displayName,
+    bio: apiUser.bio,
+    email: apiUser.email,
+    location: apiUser.location,
+    website: apiUser.website,
+    avatar: apiUser.avatar_url || apiUser.avatar,
+    proofScore: apiUser.proof_score ?? apiUser.proofScore,
+    reputationScore: apiUser.reputation_score ?? apiUser.reputationScore,
+    isCouncilMember: apiUser.is_council_member ?? apiUser.isCouncilMember,
+    isVerified: apiUser.is_verified ?? apiUser.isVerified,
+    createdAt: toIso(apiUser.created_at ?? apiUser.createdAt),
+    updatedAt: toIso(apiUser.updated_at ?? apiUser.updatedAt),
   };
 };
 
@@ -73,7 +125,7 @@ export function useAuth() {
     setError(null);
 
     try {
-      const challenge = await apiClient.getAuthChallenge(address, chainId || 8453);
+      const challenge = await apiClient.getAuthChallenge(address, chainId || 84532);
       const message = challenge.message;
       const signature = await signMessageAsync({ message });
 
@@ -124,7 +176,7 @@ export function useAuth() {
  * Hook for fetching messages
  */
 export function useMessages(conversationId: string, enabled = true) {
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -319,7 +371,7 @@ export function useFriends(address?: string) {
  * Hook for gamification data
  */
 export function useGamification(address?: string) {
-  const [progress, setProgress] = useState<any>(null);
+  const [progress, setProgress] = useState<ProgressRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -373,7 +425,7 @@ export function useGamification(address?: string) {
  * Hook for leaderboard
  */
 export function useLeaderboard(category: 'xp' | 'level' | 'achievements' = 'xp', limit = 50) {
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cached, setCached] = useState(false);

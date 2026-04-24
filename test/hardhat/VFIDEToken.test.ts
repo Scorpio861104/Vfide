@@ -13,16 +13,21 @@ import { network } from "hardhat";
 
 const H48 = 48 * 60 * 60; // 48 hours in seconds
 
-// ─── Deploy helper (call this inside tests) ──────────────────────────────
-async function deployToken() {
-  const { ethers } = await network.connect({
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect({
     override: {
       allowUnlimitedContractSize: true,
     },
   });
+  return connectionPromise;
+}
+
+async function deployTokenFixture() {
+  const { ethers } = await getConnection();
   const [owner, user1] = await ethers.getSigners();
 
-  // DevReserveVestingVault must be a contract (extcodesize > 0)
   const Placeholder = await ethers.getContractFactory("Placeholder");
   const devVault = await Placeholder.deploy();
   await devVault.waitForDeployment();
@@ -30,13 +35,19 @@ async function deployToken() {
   const Token = await ethers.getContractFactory("VFIDEToken");
   const token = await Token.deploy(
     await devVault.getAddress(),
-    owner.address,  // treasury (EOA ok)
-    ethers.ZeroAddress, // vaultHub — optional
-    ethers.ZeroAddress, // ledger   — optional
-    ethers.ZeroAddress  // treasurySink — optional
+    owner.address,
+    ethers.ZeroAddress,
+    ethers.ZeroAddress,
+    ethers.ZeroAddress,
   );
   await token.waitForDeployment();
   return { token, owner, user1, devVault, ethers };
+}
+
+// ─── Deploy helper (call this inside tests) ──────────────────────────────
+async function deployToken() {
+  const { networkHelpers } = await getConnection();
+  return networkHelpers.loadFixture(deployTokenFixture);
 }
 
 describe("VFIDEToken", () => {
@@ -53,11 +64,7 @@ describe("VFIDEToken", () => {
     });
 
     it("reverts if devVault is zero address", async () => {
-      const { ethers } = await network.connect({
-        override: {
-          allowUnlimitedContractSize: true,
-        },
-      });
+      const { ethers } = await getConnection();
       const [owner] = await ethers.getSigners();
       const Placeholder = await ethers.getContractFactory("Placeholder");
       const real = await Placeholder.deploy();
@@ -318,7 +325,7 @@ describe("VFIDEToken", () => {
   });
 
   describe("anti-whale accounting", () => {
-    it("tracks dailyTransferred using net amount when fees are active", async () => {
+    it("tracks dailyTransferred using gross amount when fees are active", async () => {
       const { token, owner, user1, ethers } = await deployToken();
       const [, , sanctumSink, burnSink, ecoSink] = await ethers.getSigners();
 
@@ -355,15 +362,16 @@ describe("VFIDEToken", () => {
 
       const amount = 1_000n * 10n ** 18n;
       const expectedNet = await token.getExpectedNetAmount(owner.address, user1.address, amount);
+      assert.ok(expectedNet < amount);
 
       await token.connect(owner).transfer(user1.address, amount);
 
       const tracked = await token.dailyTransferred(owner.address);
-      assert.equal(tracked, expectedNet);
-      assert.notEqual(tracked, amount);
+      assert.equal(tracked, amount);
+      assert.notEqual(tracked, expectedNet);
     });
 
-    it("canTransfer daily-limit preview uses net estimate when fees are active", async () => {
+    it("canTransfer preview uses net estimate while stored daily usage remains gross", async () => {
       const { token, owner, user1, ethers } = await deployToken();
       const [, , sanctumSink, burnSink, ecoSink] = await ethers.getSigners();
 
@@ -412,7 +420,7 @@ describe("VFIDEToken", () => {
       assert.equal(can[1], "");
 
       await token.connect(owner).transfer(user1.address, amount);
-      assert.equal(await token.dailyTransferred(owner.address), expectedNet);
+      assert.equal(await token.dailyTransferred(owner.address), amount);
     });
 
     it("enforces the daily limit across UTC boundaries until 24 hours have elapsed", async () => {

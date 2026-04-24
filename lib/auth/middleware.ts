@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractToken, JWTPayload } from './jwt';
 import { getAuthCookie } from './cookieAuth';
-import { setDbUserAddressContext } from '@/lib/db';
+import { runWithDbUserAddressContext } from '@/lib/db';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: JWTPayload;
@@ -70,14 +70,12 @@ export async function requireAuth(request: NextRequest): Promise<{ user: JWTPayl
   const result = await verifyAuth(request);
 
   if (!result.authenticated || !result.user) {
-    setDbUserAddressContext(null);
     return NextResponse.json(
       { error: result.error || 'Authentication required' },
       { status: 401 }
     );
   }
 
-  setDbUserAddressContext(result.user.address);
   return { user: result.user };
 }
 
@@ -203,7 +201,6 @@ export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPay
  */
 export async function optionalAuth(request: NextRequest): Promise<JWTPayload | null> {
   const result = await verifyAuth(request);
-  setDbUserAddressContext(result.user?.address ?? null);
   return result.user;
 }
 
@@ -218,6 +215,6 @@ export function withAuth(handler: AuthenticatedHandler) {
     if (authResult instanceof NextResponse) {
       return authResult;
     }
-    return handler(request, authResult.user);
+    return runWithDbUserAddressContext(authResult.user.address, () => handler(request, authResult.user));
   };
 }

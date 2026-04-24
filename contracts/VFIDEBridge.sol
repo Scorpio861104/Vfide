@@ -147,6 +147,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Emergency bypass for token exemption probe failures (fail-closed by default)
     bool public exemptCheckBypass;
     uint256 public exemptCheckBypassExpiry;
+    uint64 public constant EXEMPT_CHECK_BYPASS_DELAY = 24 hours;
+    bool public pendingExemptCheckBypassActive;
+    uint256 public pendingExemptCheckBypassDuration;
+    uint64 public pendingExemptCheckBypassAt;
     uint256 public constant MAX_EXEMPT_CHECK_BYPASS_DURATION = 7 days;
 
     // Events
@@ -192,8 +196,14 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event BridgeRefundWindowCosigned(bytes32 indexed txId, uint256 refundableAfter);
     /// @notice Emitted when the refund window cosigner address is updated.
     event RefundWindowCosignerSet(address indexed cosigner);
+    /// @notice Emitted when anyone opens a stale refund window after the bridge tx ages out.
+    event StaleBridgeRefundWindowOpened(bytes32 indexed txId, uint256 refundableAfter);
+    /// @notice Emitted when anyone finalizes a stale refund to the original sender after the claim grace window.
+    event StaleBridgeRefundFinalized(bytes32 indexed txId, address indexed sender, uint256 amount);
         /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
         uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
+        uint256 public constant STALE_BRIDGE_REFUND_DELAY = 30 days;
+        uint256 public constant BRIDGE_REFUND_CLAIM_GRACE = 7 days;
         mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
 
     /// H-1 FIX: Timelocked VFIDE emergency recovery — allows owner to rescue locked VFIDE after 30 days
@@ -211,6 +221,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event EmergencyWithdrawExecuted(address indexed token, uint256 amount);
     event EmergencyWithdrawCancelled();
     event ExemptCheckBypassSet(bool active, uint256 expiry);
+    event ExemptCheckBypassScheduled(uint256 duration, uint64 effectiveAt);
+    event ExemptCheckBypassScheduleCancelled();
 
     error InvalidAmount();
     error InvalidDestination();
@@ -342,18 +354,44 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /// @notice Enable/disable temporary bypass when token exemption probe fails.
-    /// @dev Default is fail-closed. Bypass is for emergency liveness only and auto-expires.
+    /// @dev Enabling is timelocked; disabling is immediate for fail-closed recovery.
     function setExemptCheckBypass(bool active, uint256 duration) external onlyOwner {
         if (active) {
             require(duration > 0 && duration <= MAX_EXEMPT_CHECK_BYPASS_DURATION, "VFIDEBridge: invalid duration");
-            exemptCheckBypass = true;
-            exemptCheckBypassExpiry = block.timestamp + duration;
+            pendingExemptCheckBypassActive = true;
+            pendingExemptCheckBypassDuration = duration;
+            pendingExemptCheckBypassAt = uint64(block.timestamp) + EXEMPT_CHECK_BYPASS_DELAY;
+            emit ExemptCheckBypassScheduled(duration, pendingExemptCheckBypassAt);
         } else {
             exemptCheckBypass = false;
             exemptCheckBypassExpiry = 0;
+            delete pendingExemptCheckBypassActive;
+            delete pendingExemptCheckBypassDuration;
+            delete pendingExemptCheckBypassAt;
+            emit ExemptCheckBypassSet(false, 0);
+            return;
         }
+    }
 
-        emit ExemptCheckBypassSet(active, exemptCheckBypassExpiry);
+    /// @notice Apply a scheduled exempt check bypass activation after timelock.
+    function applyExemptCheckBypass() external onlyOwner {
+        require(pendingExemptCheckBypassAt != 0 && pendingExemptCheckBypassActive, "VFIDEBridge: no pending bypass");
+        require(block.timestamp >= pendingExemptCheckBypassAt, "VFIDEBridge: bypass timelock active");
+        exemptCheckBypass = true;
+        exemptCheckBypassExpiry = block.timestamp + pendingExemptCheckBypassDuration;
+        delete pendingExemptCheckBypassActive;
+        delete pendingExemptCheckBypassDuration;
+        delete pendingExemptCheckBypassAt;
+        emit ExemptCheckBypassSet(true, exemptCheckBypassExpiry);
+    }
+
+    /// @notice Cancel a scheduled exempt check bypass activation.
+    function cancelExemptCheckBypass() external onlyOwner {
+        require(pendingExemptCheckBypassAt != 0, "VFIDEBridge: no pending bypass");
+        delete pendingExemptCheckBypassActive;
+        delete pendingExemptCheckBypassDuration;
+        delete pendingExemptCheckBypassAt;
+        emit ExemptCheckBypassScheduleCancelled();
     }
 
     /// @notice Returns true only while bypass is enabled and not expired.
@@ -423,6 +461,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         _sendDeliveryConfirmation(_origin.srcEid, _guid);
 
+        // slither-disable-next-line reentrancy-events
         emit BridgeReceived(receiver, _origin.srcEid, amount, txId);
     }
 
@@ -534,6 +573,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     function setSecurityModule(address _securityModule) external onlyOwner {
         // Intentional: zero address is allowed to disable module checks after timelock.
         uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
+        // slither-disable-next-line missing-zero-check
         pendingSecurityModule = _securityModule;
         pendingSecurityModuleAt = effectiveAt;
         emit SecurityModuleScheduled(_securityModule, effectiveAt);
@@ -896,6 +936,24 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice Permissionless liveness path for bridge transactions whose confirmation never arrived.
+     * @dev After a long stale period, anyone can open the standard refund window so the sender is
+     *      no longer dependent on owner intervention to recover locked funds.
+     */
+    function openStaleBridgeRefundWindow(bytes32 txId) external {
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        require(btx.sender != address(0), "VFIDEBridge: unknown tx");
+        require(!btx.executed, "VFIDEBridge: already executed");
+        require(bridgeRefundableAfter[txId] == 0, "VFIDEBridge: window already open");
+        require(!pendingRefundWindowProposal[txId], "VFIDEBridge: proposal already pending");
+        require(block.timestamp >= btx.timestamp + STALE_BRIDGE_REFUND_DELAY, "VFIDEBridge: tx not stale");
+
+        bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
+        emit StaleBridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
+        emit BridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
+    }
+
+    /**
      * @notice Cosigner approves a pending refund window proposal, activating the user refund path.
      * @dev Only callable by refundWindowCosigner. Validates the transaction is still unexecuted and
      *      the window has not already been opened by another path.
@@ -916,12 +974,41 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
+     * @notice Anyone can finalize a stale refund to the original sender if the sender never claims it.
+     * @dev This clears stranded outbound accounting even when the original sender is inactive.
+     */
+    function finalizeStaleBridgeRefund(bytes32 txId) external nonReentrant whenNotPaused {
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        require(btx.sender != address(0), "VFIDEBridge: unknown tx");
+        require(!btx.executed, "VFIDEBridge: already executed");
+
+        uint256 refundableAfter = bridgeRefundableAfter[txId];
+        require(refundableAfter > 0, "VFIDEBridge: not refundable");
+        require(block.timestamp >= refundableAfter + BRIDGE_REFUND_CLAIM_GRACE, "VFIDEBridge: sender claim grace active");
+
+        btx.executed = true;
+        uint256 amount = btx.amount;
+        totalBridgedOut -= amount;
+        if (pendingOutboundAmount >= amount) {
+            pendingOutboundAmount -= amount;
+        }
+        userStats[btx.sender].totalSent -= amount;
+        delete pendingRefundWindowProposal[txId];
+        delete bridgeRefundableAfter[txId];
+
+        vfideToken.safeTransfer(btx.sender, amount);
+        emit StaleBridgeRefundFinalized(txId, btx.sender, amount);
+        emit BridgeRefunded(btx.sender, txId, amount);
+    }
+
+    /**
      * @notice Set or clear the refund window cosigner address.
      * @dev Setting to address(0) reverts to owner-only single-approver mode.
      *      Only callable by owner. No timelock — cosigner is a security enhancement, not a
      *      privileged role that can steal funds.
      */
     function setRefundWindowCosigner(address cosigner) external onlyOwner {
+        // slither-disable-next-line missing-zero-check
         refundWindowCosigner = cosigner;
         emit RefundWindowCosignerSet(cosigner);
     }
@@ -959,6 +1046,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         try this.__sendDeliveryConfirmation(_dstChainId, payload, options, fee.nativeFee) {
         } catch {
+            // slither-disable-next-line reentrancy-events
             emit DeliveryConfirmationSkipped(_dstChainId, txId, "send failed");
         }
     }

@@ -21,6 +21,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { triggerHaptic, useCopyToClipboard, usePrefersReducedMotion } from '@/lib/ux/uxUtils';
+import { useChainId } from 'wagmi';
+import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
@@ -605,7 +607,7 @@ export function SearchInput({
         type="text"
         value={value}
         onChange={(e) =>  onChange(e.target.value)}
-       
+        placeholder={placeholder}
         autoFocus={autoFocus}
         className="
           w-full h-11 pl-10 pr-10 bg-gray-900 border border-gray-700 rounded-xl
@@ -644,6 +646,7 @@ export function AddressInput({
   ...props
 }: AddressInputProps) {
   const id = useId();
+  const chainId = useChainId();
   const { copy, copied } = useCopyToClipboard();
   const [isResolving, setIsResolving] = useState(false);
 
@@ -718,11 +721,11 @@ export function AddressInput({
                 {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
               </button>
               <a
-                href={`https://etherscan.io/address/${value}`}
+                href={getExplorerLink(chainId, value, 'address')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1.5 text-gray-400 hover:text-white transition-colors"
-                aria-label="View on Etherscan"
+                aria-label="View on explorer"
               >
                 <ExternalLink className="w-4 h-4" />
               </a>

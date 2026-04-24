@@ -14,17 +14,11 @@ jest.mock('@/lib/auth/middleware', () => ({
   isAdmin: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/validation', () => ({
-  validateBody: jest.fn(),
-  activitySchema: {},
-}));
-
 describe('/api/activities', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { requireAuth } = require('@/lib/auth/middleware');
   const { isAdmin } = require('@/lib/auth/middleware');
-  const { validateBody } = require('@/lib/auth/validation');
 
   beforeEach(() => {
     jest.clearAllMocks();

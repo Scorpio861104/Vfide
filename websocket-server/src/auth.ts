@@ -7,6 +7,7 @@
  */
 
 import jwt from 'jsonwebtoken';
+import { createHash } from 'crypto';
 
 export interface JWTPayload {
   address: string;
@@ -24,13 +25,72 @@ function requireSecret(name: string): string {
   return val;
 }
 
+const BLACKLIST_PREFIX = 'token:blacklist:';
+
+type UpstashGetResponse = { result?: string | null };
+
+async function upstashGet(key: string): Promise<string | null> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Token revocation requires Upstash Redis in production');
+    }
+    return null;
+  }
+
+  const endpoint = `${url.replace(/\/$/, '')}/get/${encodeURIComponent(key)}`;
+  const response = await fetch(endpoint, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upstash get failed: HTTP ${response.status}`);
+  }
+
+  const data = (await response.json()) as UpstashGetResponse;
+  const result = data.result;
+  return typeof result === 'string' ? result : null;
+}
+
+async function ensureNotRevoked(token: string, payload: JWTPayload): Promise<void> {
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  const tokenKey = `${BLACKLIST_PREFIX}${tokenHash}`;
+  const tokenRevoked = await upstashGet(tokenKey);
+  if (tokenRevoked !== null) {
+    throw new Error('Token revoked');
+  }
+
+  const userKey = `${BLACKLIST_PREFIX}user:${payload.address.toLowerCase()}`;
+  const userRevokedRaw = await upstashGet(userKey);
+  if (!userRevokedRaw) {
+    return;
+  }
+
+  let revokedAt = 0;
+  try {
+    const parsed = JSON.parse(userRevokedRaw) as { revokedAt?: number };
+    revokedAt = Number(parsed.revokedAt ?? 0);
+  } catch {
+    throw new Error('Invalid user revocation payload');
+  }
+
+  const issuedAt = Number(payload.iat ?? 0);
+  if (revokedAt > issuedAt) {
+    throw new Error('User tokens revoked after this token was issued');
+  }
+}
+
 /**
  * Verify a JWT string.  Accepts tokens signed with either JWT_SECRET or
  * PREV_JWT_SECRET (rotation window support).
  *
  * @throws {Error} if the token is invalid, expired, or uses an unknown secret.
  */
-export function verifyJWT(token: string): JWTPayload {
+export async function verifyJWT(token: string): Promise<JWTPayload> {
   const secret = requireSecret('JWT_SECRET');
 
   const tryVerify = (s: string): JWTPayload => {
@@ -45,12 +105,16 @@ export function verifyJWT(token: string): JWTPayload {
   };
 
   try {
-    return tryVerify(secret);
+    const payload = tryVerify(secret);
+    await ensureNotRevoked(token, payload);
+    return payload;
   } catch (primaryErr) {
     const prevSecret = process.env.PREV_JWT_SECRET;
     if (prevSecret) {
       try {
-        return tryVerify(prevSecret);
+        const payload = tryVerify(prevSecret);
+        await ensureNotRevoked(token, payload);
+        return payload;
       } catch {
         // Both secrets failed — fall through to throw the primary error
       }

@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAccount, useConnect, useDisconnect, useBalance, useChainId, useSwitchChain } from 'wagmi';
 import { formatUnits } from 'viem';
 import { Wallet, ChevronDown, Check, Copy, ExternalLink, LogOut, RefreshCw, Zap, Keyboard, Clock, WifiOff, QrCode } from 'lucide-react';
-import { baseSepolia, base } from 'wagmi/chains';
-import { IS_TESTNET } from '@/lib/chains';
+import { getChainByChainId, getExplorerUrlForChainId, isTestnetChainId } from '@/lib/chains';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import Link from 'next/link';
 import { WalletQRCode } from './WalletQRCode';
 import { PendingTransactionsList, usePendingTransactions } from './PendingTransactions';
@@ -84,8 +84,16 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
   const primaryConnector = selectPrimaryConnector(connectors, isMobile);
 
   // Expected chain
-  const expectedChain = IS_TESTNET ? baseSepolia : base;
-  const isWrongNetwork = isConnected && chainId !== expectedChain.id;
+  const expectedChainConfig = getChainByChainId(CURRENT_CHAIN_ID);
+  const expectedChain = expectedChainConfig
+    ? (isTestnetChainId(CURRENT_CHAIN_ID) ? expectedChainConfig.testnet : expectedChainConfig.mainnet)
+    : undefined;
+  const connectedChainConfig = getChainByChainId(chainId);
+  const connectedChainName = connectedChainConfig
+    ? (isTestnetChainId(chainId) ? connectedChainConfig.testnet.name : connectedChainConfig.mainnet.name)
+    : 'Unknown network';
+  const explorerBaseUrl = getExplorerUrlForChainId(chainId || CURRENT_CHAIN_ID);
+  const isWrongNetwork = isConnected && !!expectedChain && chainId !== expectedChain.id;
 
   // One-click connect
   const handleQuickConnect = useCallback(() => {
@@ -297,9 +305,9 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
       
       <div className="relative wallet-dropdown">
       {/* Wrong network warning */}
-      {isWrongNetwork && (
+      {isWrongNetwork && expectedChain && (
         <motion.button
-          onClick={() => switchChain({ chainId: expectedChain.id })}
+          onClick={() => switchChain({ chainId: expectedChain.id as 84532 | 8453 | 300 | 80002 | 137 | 324 })}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="absolute -top-12 right-0 flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 text-orange-400 text-xs rounded-lg border border-orange-500/30 hover:bg-orange-500/30 transition-colors"
@@ -374,7 +382,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
                 </div>
                 <span className="flex items-center gap-1 text-xs text-green-400">
                   <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                  {IS_TESTNET ? 'Base Sepolia' : 'Base'}
+                  {connectedChainName}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -441,7 +449,7 @@ export function QuickWalletConnect({ size = 'md' }: QuickWalletConnectProps) {
               </button>
 
               <a
-                href={`https://${IS_TESTNET ? 'sepolia.' : ''}basescan.org/address/${address}`}
+                href={`${explorerBaseUrl}/address/${address}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 rounded-lg transition-colors"

@@ -79,6 +79,8 @@ contract SystemHandover {
     function disarm() external onlyDev {
         if (handoverExecuted) revert SH_AlreadyExecuted();
         if (start == 0) revert SH_NotArmed();
+        // H-03 FIX: Block disarm within 30 days of scheduled handover to prevent indefinite deferral.
+        require(block.timestamp < handoverAt - 30 days, "SH: too close to handover");
         uint64 previousStart = start;
         uint64 previousHandoverAt = handoverAt;
         start = 0;
@@ -127,7 +129,7 @@ contract SystemHandover {
         require(extensionsUsed < maxExtensions, "no_ext_left");
         uint256 size = councilElection.getActualCouncilSize();
         require(size > 0, "SH: no council");
-        uint256 total;
+        uint256 total = 0;
         for (uint256 i = 0; i < size; i++) {
             address member = councilElection.getCouncilMember(i);
             if (member != address(0)) {
@@ -143,11 +145,17 @@ contract SystemHandover {
     }
 
     /// Transfer control to DAO (DAO becomes its own admin; timelock admin = DAO).
+    // slither-disable-next-line reentrancy-events
     function executeHandover(address newAdmin) external onlyDev {
         if (start == 0) revert SH_NotArmed();
         if (handoverExecuted) revert SH_AlreadyExecuted();
         if (block.timestamp < handoverAt) revert SH_TooEarly();
         if (newAdmin == address(0)) newAdmin = address(dao);
+
+        // Burn dev control before crossing external admin-update boundaries.
+        // A revert later in this function restores the pre-handover state.
+        handoverExecuted = true;
+        devMultisig = address(0);
 
         // Best-effort direct updates for permissive bootstrap deployments.
         // In production, these may revert due to onlyTimelock / onlyTimelockSelf gates.
@@ -159,14 +167,13 @@ contract SystemHandover {
             revert SH_GovernanceNotReady();
         }
 
-        handoverExecuted = true;
-        devMultisig = address(0);
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
     }
 
-    function setLedger(address _ledger) external onlyDev { ledger=IProofLedger_SH(_ledger); emit LedgerSet(_ledger); }
+    function setLedger(address _ledger) external onlyDev notArmed { ledger=IProofLedger_SH(_ledger); emit LedgerSet(_ledger); }
 
+    // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
