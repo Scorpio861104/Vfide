@@ -42,6 +42,10 @@ contract CircuitBreaker is VFIDEAccessControl {
 
     TriggerConfig public config;
     MonitoringData public monitoring;
+    // F-31 FIX: Keep a bounded rolling sample window to avoid single-tick trigger risk.
+    uint256[10] public priceSamples;
+    uint8 public priceSampleCount;
+    uint8 public priceSampleIndex;
     
     address public priceOracle;
     address public emergencyController;
@@ -181,21 +185,34 @@ contract CircuitBreaker is VFIDEAccessControl {
         uint256 lastPrice = monitoring.lastPrice;
         uint256 lastPriceUpdate = monitoring.lastPriceUpdate;
 
+        // Update rolling sample window first so downstream checks can use a smoother reference.
+        priceSamples[priceSampleIndex] = _newPrice;
+        if (priceSampleCount < 10) {
+            priceSampleCount++;
+        }
+        priceSampleIndex = (priceSampleIndex + 1) % 10;
+
         // Persist the latest oracle sample before any potential external trigger path.
         monitoring.lastPrice = _newPrice;
         monitoring.lastPriceUpdate = block.timestamp;
 
         if (lastPrice > 0 && 
             block.timestamp <= lastPriceUpdate + config.monitoringWindow) {
-            
-            // Calculate price drop percentage
-            if (_newPrice < lastPrice) {
-                uint256 drop = lastPrice - _newPrice;
-                uint256 dropPercent = (drop * 100) / lastPrice;
+
+            // F-31 FIX: Use rolling median when available to damp single bad ticks.
+            uint256 referencePrice = _rollingMedianPrice();
+            if (referencePrice == 0) {
+                referencePrice = lastPrice;
+            }
+
+            // Calculate price drop percentage against smoothed reference.
+            if (_newPrice < referencePrice) {
+                uint256 drop = referencePrice - _newPrice;
+                uint256 dropPercent = (drop * 100) / referencePrice;
 
                 if (dropPercent >= config.priceDropThreshold) {
                     _trigger(
-                        "Price drop exceeded threshold",
+                        "Price drop exceeded threshold (rolling median)",
                         dropPercent
                     );
                 }
@@ -434,5 +451,34 @@ contract CircuitBreaker is VFIDEAccessControl {
                 // Circuit breaker should still trigger
             }
         }
+    }
+
+    /// @dev Compute median from the current rolling price samples.
+    function _rollingMedianPrice() internal view returns (uint256) {
+        uint8 count = priceSampleCount;
+        if (count == 0) return 0;
+
+        uint256[10] memory tmp;
+        for (uint8 i = 0; i < count; i++) {
+            tmp[i] = priceSamples[i];
+        }
+
+        // Insertion sort is fine for max N=10.
+        for (uint8 i = 1; i < count; i++) {
+            uint256 key = tmp[i];
+            uint8 j = i;
+            while (j > 0 && tmp[j - 1] > key) {
+                tmp[j] = tmp[j - 1];
+                j--;
+            }
+            tmp[j] = key;
+        }
+
+        if (count % 2 == 1) {
+            return tmp[count / 2];
+        }
+        uint8 upper = count / 2;
+        uint8 lower = upper - 1;
+        return (tmp[lower] + tmp[upper]) / 2;
     }
 }
