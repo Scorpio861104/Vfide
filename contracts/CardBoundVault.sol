@@ -5,6 +5,7 @@ import "./SharedInterfaces.sol";
 
 interface IVaultHubGuardianSetup {
     function guardianSetupComplete(address vault) external view returns (bool);
+    function invalidateGuardianSetup(address vault) external;
 }
 
 /// @dev C-7 FIX: Minimal interface for checking if a peer vault can accept an incoming transfer.
@@ -374,6 +375,15 @@ contract CardBoundVault is ReentrancyGuard {
         }
 
         if (guardianCount == 0 || guardianThreshold == 0) revert CBV_InvalidThreshold();
+
+        if (_guardianSetupComplete() && (guardianCount < 2 || guardianThreshold < 2)) {
+            try IVaultHubGuardianSetup(hub).invalidateGuardianSetup(address(this)) {
+                // keep hub guardian setup status aligned with the live vault invariants
+            } catch {
+                // tolerate older or misconfigured hubs rather than blocking guardian application
+            }
+        }
+
         emit GuardianSet(guardian, active);
     }
 
@@ -1052,6 +1062,7 @@ contract CardBoundVault is ReentrancyGuard {
         pendingAdmin = address(0);
         paused = true;
         delete pendingRotation;
+        delete pendingGuardianChange;
 
         emit RecoveryRotationExecuted(oldWallet, newWallet, oldAdmin, newWallet);
         emit WalletRotated(oldWallet, newWallet, walletEpoch);

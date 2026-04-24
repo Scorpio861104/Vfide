@@ -118,6 +118,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_RecoveryCandidateMismatch();
     error VH_InsufficientRecoveryApprovals();
     error VH_AlreadyOwnsVault();
+    error VH_NotVault();
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
@@ -442,6 +443,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════
 
     event RecoveryRotationRequested(address indexed vault, address indexed newWallet, address indexed recoveryContract);
+    event GuardianSetupInvalidated(address indexed vault);
 
     /// @notice Check whether a vault's guardian setup deadline has passed without completion.
     /// @dev M-3 FIX: Returns true if vault is older than GUARDIAN_SETUP_GRACE and setup is incomplete.
@@ -534,9 +536,20 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         _logEv(vault, "recovery_rotation", 0, "");
     }
 
+    function invalidateGuardianSetup(address vault) external {
+        if (msg.sender != vault) revert VH_NotVault();
+        if (!guardianSetupComplete[vault]) return;
+
+        guardianSetupComplete[vault] = false;
+        emit GuardianSetupInvalidated(vault);
+    }
+
     // ——— Internals
     function _hasIndependentGuardian(CardBoundVault vault, address owner_) internal view returns (bool) {
-        return !(vault.guardianCount() == 2 && vault.isGuardian(owner_) && vault.isGuardian(dao));
+        uint256 reservedGuardians = 0;
+        if (vault.isGuardian(owner_)) reservedGuardians++;
+        if (vault.isGuardian(dao)) reservedGuardians++;
+        return vault.guardianCount() > reservedGuardians;
     }
 
     // ——— Card vault default limit management (timelocked)
