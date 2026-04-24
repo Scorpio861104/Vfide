@@ -248,6 +248,13 @@ contract DAO is ReentrancyGuard {
         emit MinParticipationSet(_minParticipation); // Emit event for minParticipation
     }
 
+    /// @notice F-56 FIX: Effective participation floor scales with active voter population.
+    /// @dev Returns max(configured minimum, 1% of active voters).
+    function effectiveMinParticipation() public view returns (uint256) {
+        uint256 dynamicFloor = totalActiveVoters / 100;
+        return dynamicFloor > minParticipation ? dynamicFloor : minParticipation;
+    }
+
     /// @notice Recommend quorum thresholds for the current governance scale.
     /// @dev Uses council-size bands as a governance participation proxy. Raw user counts are too sybil-prone.
     function recommendedQuorumForCouncilSize(uint256 _councilSize) public pure returns (uint256 recommendedMinVotes, uint256 recommendedMinParticipation) {
@@ -596,6 +603,11 @@ contract DAO is ReentrancyGuard {
         
         p.hasVoted[voter] = true;
         p.voterCount++; // FLOW-2 FIX: Track unique voter count
+
+        if (!hasVotedAnyProposal[voter]) {
+            hasVotedAnyProposal[voter] = true;
+            totalActiveVoters += 1;
+        }
         
         // Track voter history (I-11: capped to prevent unbounded storage growth)
         if (voterProposals[voter].length >= VOTER_HISTORY_SOFT_CAP) {
@@ -690,7 +702,7 @@ contract DAO is ReentrancyGuard {
         uint256 total = p.forVotes + p.againstVotes;
         // Quorum is interpreted as absolute number of vote-points required
         // FLOW-2 FIX: Also require minimum number of unique voters
-        bool qmet = total >= minVotesRequired && p.voterCount >= minParticipation; 
+        bool qmet = total >= minVotesRequired && p.voterCount >= effectiveMinParticipation(); 
         bool passed = qmet && p.forVotes > p.againstVotes;
 
         if (activeProposalCount > 0) {
@@ -938,7 +950,7 @@ contract DAO is ReentrancyGuard {
         }
         
         uint256 total = p.forVotes + p.againstVotes;
-        quorumMet = total >= minVotesRequired && p.voterCount >= minParticipation;
+        quorumMet = total >= minVotesRequired && p.voterCount >= effectiveMinParticipation();
         passing = quorumMet && p.forVotes > p.againstVotes;
         timeRemaining = block.timestamp < p.end ? p.end - block.timestamp : 0;
     }
@@ -949,6 +961,8 @@ contract DAO is ReentrancyGuard {
     
     // Track proposals voted on by each voter
     mapping(address => uint256[]) private voterProposals;
+    mapping(address => bool) public hasVotedAnyProposal;
+    uint256 public totalActiveVoters;
     
     /**
      * @notice Get paginated proposal IDs a voter has voted on
