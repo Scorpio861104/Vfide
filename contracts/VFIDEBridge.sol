@@ -885,6 +885,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param txId The transaction ID returned by bridge()
      */
     function claimBridgeRefund(bytes32 txId) external nonReentrant whenNotPaused {
+        // F-65 FIX: Refund path must preserve whole-amount semantics. Enforce bridge
+        // systemExempt invariant here as well so refunds cannot be fee-debited.
+        require(_bridgeIsSystemExempt(), "VFIDEBridge: configure token systemExempt for bridge");
         BridgeTransaction storage btx = bridgeTransactions[txId];
         require(btx.sender == msg.sender, "VFIDEBridge: not sender");
         require(!btx.executed, "VFIDEBridge: already executed");
