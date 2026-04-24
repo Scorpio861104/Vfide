@@ -99,4 +99,46 @@ contract SeerPolicyGuard {
         if (pclass == POLICY_CLASS_IMPORTANT) return POLICY_DELAY_CLASS_B;
         return POLICY_DELAY_CLASS_C;
     }
+
+        /// @notice F-34 FIX: Generate change ID with parameter hash
+        /// @dev Caller must hash all policy parameters: keccak256(abi.encode(param1, param2, ...))
+        function getPolicyChangeIdWithHash(bytes4 selector, uint8 pclass, bytes32 paramHash)
+            public pure returns (bytes32)
+        {
+            return keccak256(abi.encode(selector, pclass, paramHash));
+        }
+
+        /// @notice F-34 FIX: Schedule policy change with parameter binding
+        function schedulePolicyChangeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash)
+            external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt)
+        {
+            if (selector == bytes4(0) || pclass > POLICY_CLASS_OPERATIONAL) revert SPG_InvalidState();
+            if (paramHash == bytes32(0)) revert SPG_InvalidState();
+            changeId = getPolicyChangeIdWithHash(selector, pclass, paramHash);
+            if (policyChangeReadyAt[changeId] != 0) revert SPG_InvalidState();
+            readyAt = uint64(block.timestamp + _policyDelay(pclass));
+            policyChangeReadyAt[changeId] = readyAt;
+            emit PolicyChangeScheduled(changeId, selector, pclass, readyAt);
+        }
+
+        /// @notice F-34 FIX: Consume policy change with parameter validation
+        function consumeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash)
+            external onlySeer nonReentrantSPG
+        {
+            bytes32 changeId = getPolicyChangeIdWithHash(selector, pclass, paramHash);
+            uint64 readyAt = policyChangeReadyAt[changeId];
+            if (readyAt == 0 || block.timestamp < readyAt) revert SPG_InvalidState();
+            delete policyChangeReadyAt[changeId];
+            emit PolicyChangeConsumed(changeId, selector, pclass);
+        }
+
+        /// @notice F-34 FIX: Cancel a policy change with parameter binding
+        function cancelPolicyChangeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash)
+            external onlyDAO nonReentrantSPG
+        {
+            bytes32 changeId = getPolicyChangeIdWithHash(selector, pclass, paramHash);
+            if (policyChangeReadyAt[changeId] == 0) revert SPG_InvalidState();
+            delete policyChangeReadyAt[changeId];
+            emit PolicyChangeCancelled(changeId, selector, pclass);
+        }
 }
