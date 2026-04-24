@@ -100,13 +100,13 @@ The "rescue" functions bypass the withdrawal queue for all non-VFIDE tokens. Sta
 
 ### C-7 — Single-guardian default + 30-day grace = permanent lockout on lost phone
 
-**Status:** Open
+**Status:** Fixed
 **File:** `contracts/VaultHub.sol` L494-495 (creation code), `GUARDIAN_SETUP_GRACE = 30 days`
 **Impact:** Breaks the core "recovery without seed phrases" promise.
 
 The default `_creationCode` sets single-guardian mode with a 30-day `GUARDIAN_SETUP_GRACE` period. A user who loses their wallet in month 1 (before guardian setup is complete) cannot recover. This is the inverse of the intended design: for the African market-seller demographic VFIDE targets, lost-phone scenarios are the primary risk.
 
-**Fix:** Make guardian onboarding non-optional during vault setup, OR shorten the grace period, OR require at least 2 guardians to be active before the vault can hold > N VFIDE.
+**Fix implemented:** `CardBoundVault` now enforces `MAX_VFIDE_WITHOUT_GUARDIAN = 50_000e18` until guardian setup is complete. `canReceiveTransfer(amount)` checks whether an incoming transfer would breach the cap, and both `executeVaultToVaultTransfer` and `executeQueuedWithdrawal` reject transfers into an unguarded destination vault once the cap would be exceeded.
 
 ---
 
@@ -435,7 +435,7 @@ Stage 7 red-flag scan flagged StablecoinRegistry (6 hits), PayrollManager (4), p
 - **M-35** — `VFIDEFlashLoan.deposit` duplicate `fraudRegistry` staticcall (L188, L190). Gas waste.
 - **M-36** — `MainstreamPayments.updatePrice` no per-updater rate-limit (L313).
 - **M-37** — `EmergencyControl.addMember` via foundation has no MAX_MEMBERS cap (L199-216).
-- **M-38** — `CouncilElection.candidateList` capped at 200 (L105). First-come-first-served locks out later qualified candidates.
+- **M-38** — `CouncilElection.candidateList` capped at 200 (L105). First-come-first-served locks out later qualified candidates. Fixed: `MAX_CANDIDATES = 500` added and `register()` now reverts with `CE_TooManyCandidates` once the cap is reached.
 - **M-39** — `CouncilElection._eligible` uses live `seer.getScore` not snapshot (L253). Council members can be booted mid-term by Seer operator punish. Political pressure vector.
 - **M-40** — `VFIDEFinance.setNotifier` is immediate single-step DAO (L76-80). Notifier can call `noteVFIDE` with any amount to inflate `totalReceived`.
 - **M-41** — `SubscriptionManager.processPayment` silently swallows Seer reward calls (L293-294). Emit event on catch.
