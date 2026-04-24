@@ -28,6 +28,7 @@ contract SystemHandover {
     event DAOSet(address dao);
     event TimelockSet(address timelock);
     event CouncilElectionSet(address councilElection);
+    event OwnershipAuditMarked(address indexed auditor);
 
     address public devMultisig;
     IDAO_SH public dao;
@@ -44,6 +45,10 @@ contract SystemHandover {
     uint8  public extensionsUsed;
     uint64 public extensionSpan = 60 days;    // extra time if network trust too low
     bool public handoverExecuted;
+    
+    // F-22 FIX: Ownership audit flag — verification that all Ownable contracts have been transferred to DAO/timelock
+    bool public ownershipAudited;
+    address public ownershipAuditor;
 
     modifier onlyDev() {
         _checkDev();
@@ -85,6 +90,7 @@ contract SystemHandover {
         uint64 previousHandoverAt = handoverAt;
         start = 0;
         handoverAt = 0;
+        ownershipAudited = false;  // Reset audit flag on disarm
         emit Disarmed(previousStart, previousHandoverAt);
         _log("handover_disarmed");
     }
@@ -144,12 +150,35 @@ contract SystemHandover {
         }
     }
 
+    /// @notice Mark that ownership of all Ownable contracts has been audited and transferred to DAO/timelock
+    /// @dev Called by the designated auditor after verifying all Ownable contracts have been transferred
+    /// @param auditor_ The address of the ownership auditor (must be set by dev team)
+    function setOwnershipAuditor(address auditor_) external onlyDev notArmed {
+        if (auditor_ == address(0)) revert SH_Zero();
+        ownershipAuditor = auditor_;
+    }
+
+    /// @notice Confirm that ownership of all Ownable contracts has been transferred to DAO/timelock
+    /// @dev Can only be called by the designated auditor after verification script runs
+    function markOwnershipAudited() external {
+        require(msg.sender == ownershipAuditor, "SH: not auditor");
+        require(ownershipAuditor != address(0), "SH: auditor not set");
+        ownershipAudited = true;
+        emit OwnershipAuditMarked(msg.sender);
+        _log("ownership_audited");
+    }
+
     /// Transfer control to DAO (DAO becomes its own admin; timelock admin = DAO).
     // slither-disable-next-line reentrancy-events
     function executeHandover(address newAdmin) external onlyDev {
         if (start == 0) revert SH_NotArmed();
         if (handoverExecuted) revert SH_AlreadyExecuted();
         if (block.timestamp < handoverAt) revert SH_TooEarly();
+        
+        // F-22 FIX: Require ownership audit before handover to ensure all Ownable contracts
+        // have transferred ownership to DAO/timelock
+        require(ownershipAudited, "SH: ownership audit required");
+        
         if (newAdmin == address(0)) newAdmin = address(dao);
 
         // Burn dev control before crossing external admin-update boundaries.
