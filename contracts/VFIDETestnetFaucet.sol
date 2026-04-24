@@ -177,8 +177,10 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
             
             vfideToken.safeTransfer(user, claimAmountVFIDE);
             (bool sent, ) = user.call{value: claimAmountETH}("");
-            // Don't revert on ETH failure in batch — record the outcome and continue.
-            emit BatchClaimProcessed(user, referrers[i], claimAmountVFIDE, claimAmountETH, !sent);
+            // F-50 FIX: Keep batch claim atomic per call.
+            // If ETH transfer fails, revert so user is not marked claimed without gas top-up.
+            if (!sent) revert Faucet_ETHTransferFailed();
+            emit BatchClaimProcessed(user, referrers[i], claimAmountVFIDE, claimAmountETH, false);
         }
     }
     
