@@ -564,10 +564,11 @@ contract Seer is ReentrancyGuard {
     function getScoreAt(address subject, uint64 timestamp) external view returns (uint16) {
         uint8 count = scoreHistoryCount[subject];
         if (count == 0) {
-            // C-3 FIX: Return deterministic automated score instead of live getScore() which
-            // can include DAO operator overrides, allowing vote-weight manipulation for
-            // users with no score history.
-            return calculateAutomatedScore(subject);
+            // F-26 FIX: Historical query with no history must not use live automated score,
+            // because live state (vault creation, badges, endorsements) can be pumped after
+            // proposal creation and before vote casting.
+            // Use conservative deterministic baseline for missing history.
+            return NEUTRAL;
         }
 
         uint8 head = scoreHistoryHead[subject];
