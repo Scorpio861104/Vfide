@@ -14,6 +14,9 @@ error SH_NotArmed();
 error SH_Armed();
 error SH_AlreadyExecuted();
 error SH_GovernanceNotReady();
+// F-58 FIX: Named mismatch errors so operators can diagnose which admin failed to be pre-configured.
+error SH_DAOAdminMismatch(address expected, address actual);
+error SH_TimelockAdminMismatch(address expected, address actual);
 
 /// @dev Fallback event when ledger logging fails
 event LedgerLogFailed(address indexed source, string action);
@@ -186,15 +189,13 @@ contract SystemHandover {
         handoverExecuted = true;
         devMultisig = address(0);
 
-        // Best-effort direct updates for permissive bootstrap deployments.
-        // In production, these may revert due to onlyTimelock / onlyTimelockSelf gates.
-        try dao.setAdmin(newAdmin) {} catch {}
-        try timelock.setAdmin(address(dao)) {} catch {}
-
-        // Final state must still be correct before dev key burn.
-        if (dao.admin() != newAdmin || timelock.admin() != address(dao)) {
-            revert SH_GovernanceNotReady();
-        }
+        // F-58 FIX: Remove best-effort silent try/catch. DAO admin and timelock admin must be
+        // pre-configured via governance before executeHandover is called. If they are not
+        // set correctly, emit a descriptive mismatch error that names the specific config failure.
+        address actualDAOAdmin = dao.admin();
+        address actualTimelockAdmin = timelock.admin();
+        if (actualDAOAdmin != newAdmin) revert SH_DAOAdminMismatch(newAdmin, actualDAOAdmin);
+        if (actualTimelockAdmin != address(dao)) revert SH_TimelockAdminMismatch(address(dao), actualTimelockAdmin);
 
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");

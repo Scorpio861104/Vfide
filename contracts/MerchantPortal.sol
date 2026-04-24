@@ -686,10 +686,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             revert MERCH_CapExceeded();
         }
 
-        if (expiresAt != 0) {
-            if (expiresAt <= block.timestamp || expiresAt > block.timestamp + MAX_PULL_PERMIT_DURATION) {
-                revert MERCH_InvalidConfig();
-            }
+        // F-60 FIX: Require a non-zero expiry. A zero (never-expires) permit is a security
+        // liability; compromised merchant keys could drain forgotten permits indefinitely.
+        if (expiresAt == 0) revert MERCH_InvalidConfig();
+        if (expiresAt <= block.timestamp || expiresAt > block.timestamp + MAX_PULL_PERMIT_DURATION) {
+            revert MERCH_InvalidConfig();
         }
 
         merchantPullApproved[msg.sender][merchant] = true;
