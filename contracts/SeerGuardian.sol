@@ -91,8 +91,8 @@ contract SeerGuardian is ReentrancyGuard {
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     
     // Automatic enforcement events
-    event AutoRestrictionApplied(address indexed subject, RestrictionType rtype, string reason);
-    event AutoRestrictionAppliedCode(address indexed subject, RestrictionType rtype, uint16 indexed reasonCode, string reason);
+    // F-87: consolidated event (single emission with both reason code and reason text).
+    event AutoRestrictionApplied(address indexed subject, RestrictionType rtype, uint16 indexed reasonCode, string reason);
     event AutoRestrictionLifted(address indexed subject, RestrictionType rtype, string reason);
     event ViolationRecorded(address indexed subject, ViolationType vtype, uint8 count);
     event PenaltyApplied(address indexed subject, uint16 scorePenalty, string reason);
@@ -345,8 +345,7 @@ contract SeerGuardian is ReentrancyGuard {
         if (rtype > old || restrictionExpiry[subject] < block.timestamp + maxRestrictionDuration) {
             restrictionExpiry[subject] = uint64(block.timestamp) + maxRestrictionDuration;
         }
-        emit AutoRestrictionApplied(subject, rtype, reason);
-        emit AutoRestrictionAppliedCode(subject, rtype, reasonCode, reason);
+        emit AutoRestrictionApplied(subject, rtype, reasonCode, reason);
         _log("auto_restriction_applied");
     }
     

@@ -231,6 +231,7 @@ contract SeerAutonomous is ReentrancyGuard {
     }
     
     mapping(address => ActivityWindow) public activityWindows;
+    mapping(address => uint8) public recentCounterpartyRingIndex;
     uint64 public constant WINDOW_DURATION = 1 hours;
     
     // ─────────────────────────────────────────────────────────────────
@@ -561,6 +562,7 @@ contract SeerAutonomous is ReentrancyGuard {
             window.endorseCount = 0;
             window.transferVolume = 0;
             delete window.recentCounterparties;
+            recentCounterpartyRingIndex[subject] = 0;
         }
         
         // Update counters
@@ -573,9 +575,16 @@ contract SeerAutonomous is ReentrancyGuard {
             window.endorseCount++;
         }
         
-        // Track counterparties (limit to 20 for gas)
-        if (counterparty != address(0) && window.recentCounterparties.length < 20) {
-            window.recentCounterparties.push(counterparty);
+        // F-88 FIX: Track counterparties with ring-buffer eviction (max 20),
+        // so newest entries are retained instead of being silently dropped.
+        if (counterparty != address(0)) {
+            if (window.recentCounterparties.length < 20) {
+                window.recentCounterparties.push(counterparty);
+            } else {
+                uint8 idx = recentCounterpartyRingIndex[subject];
+                window.recentCounterparties[idx] = counterparty;
+                recentCounterpartyRingIndex[subject] = uint8((uint256(idx) + 1) % 20);
+            }
         }
     }
     

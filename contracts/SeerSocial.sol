@@ -105,6 +105,7 @@ contract SeerSocial {
     mapping(address => uint64) public lastEndorseTime;                      // cooldown tracker per endorser
     mapping(address => uint64) public lastActivity;                         // For decay tracking
     mapping(address => address[]) private endorsedSubjects;                 // subjects each endorser has endorsed (for cleanup)
+    mapping(address => mapping(address => bool)) public hasEndorsed;       // endorser => subject => tracked in endorsedSubjects
 
     uint16 public endorsementBaseValue = 40;        // 0.40% boost per endorsement (10x scale)
     uint16 public endorsementMaxPerEndorser = 80;   // clamp per endorsement
@@ -296,8 +297,11 @@ contract SeerSocial {
             cachedEndorsementExpiry[subject] = expiry;
         }
         
-        // L-9 FIX: Track subjects endorsed by this user for later cleanup
-        endorsedSubjects[msg.sender].push(subject);
+        // F-86 FIX: Track each (endorser, subject) once to prevent duplicate growth.
+        if (!hasEndorsed[msg.sender][subject]) {
+            endorsedSubjects[msg.sender].push(subject);
+            hasEndorsed[msg.sender][subject] = true;
+        }
         
         lastEndorseTime[msg.sender] = uint64(block.timestamp);
         lastActivity[subject] = uint64(block.timestamp);
@@ -347,9 +351,9 @@ contract SeerSocial {
     function pruneOwnEndorsements() external returns (uint256 cleaned) {
         cleaned = 0;
         address[] storage subjects = endorsedSubjects[msg.sender];
-        uint256 i = 0;
-        
-        while (i < subjects.length) {
+        uint256 len = subjects.length;
+
+        for (uint256 i = 0; i < len; i++) {
             address subject = subjects[i];
             Endorsement storage e = endorsements[subject][msg.sender];
             
@@ -370,13 +374,7 @@ contract SeerSocial {
                     cachedEndorsementExpiry[subject] = 0;
                 }
                 cleaned++;
-                
-                // Remove subject from list
-                subjects[i] = subjects[subjects.length - 1];
-                subjects.pop();
-                continue;
             }
-            i++;
         }
         
         if (cleaned > 0) {
