@@ -97,8 +97,8 @@ contract SeerGuardian is ReentrancyGuard {
     event ViolationRecorded(address indexed subject, ViolationType vtype, uint8 count);
     event PenaltyApplied(address indexed subject, uint16 scorePenalty, string reason);
     event PenaltyAppliedCode(address indexed subject, uint16 scorePenalty, uint16 indexed reasonCode, string reason);
-        // F-68: Emitted when seer.punish() fails so off-chain tooling can detect state drift.
-        event PenaltyApplicationFailed(address indexed subject, uint16 scorePenalty, bytes revertReason);
+    // F-68: Emitted when seer.punish() fails so off-chain tooling can detect state drift.
+    event PenaltyApplicationFailed(address indexed subject, uint16 scorePenalty, bytes revertReason);
     
     // Override events  
     event DAOOverride(address indexed subject, bytes32 indexed actionId, string reason);
@@ -143,6 +143,7 @@ contract SeerGuardian is ReentrancyGuard {
     // Automatic restriction tracking
     mapping(address => RestrictionType) public activeRestriction;
     mapping(address => uint64) public restrictionExpiry;
+    mapping(address => uint64) public restrictionAppliedAt;
     mapping(address => bool) public daoOverridden;  // DAO has overridden automatic action
     
     // Violation tracking for escalating penalties
@@ -163,6 +164,8 @@ contract SeerGuardian is ReentrancyGuard {
     uint16 public autoLiftThreshold = 4500;       // Score above 45% lifts restriction
     uint64 public violationCooldown = 1 hours;    // Minimum time between violations
     uint64 public maxRestrictionDuration = 30 days;
+    // F-69: Restriction must age before DAO can override it.
+    uint64 public constant DAO_OVERRIDE_MIN_AGE = 24 hours;
     uint64 public proposalFlagDelay = 2 days;     // Extra delay for flagged proposals
     
     // Escalating penalties
@@ -335,6 +338,7 @@ contract SeerGuardian is ReentrancyGuard {
     function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason, uint16 reasonCode) internal {
         RestrictionType old = activeRestriction[subject];
         activeRestriction[subject] = rtype;
+        restrictionAppliedAt[subject] = uint64(block.timestamp);
         // F-70 FIX: Overwrite restrictionExpiry whenever a harsher restriction is applied.
         // Previously the expiry was only set when it was expired/zero; a harsher re-restriction
         // kept the earlier (shorter) expiry, making the protection weaker than intended.
@@ -349,6 +353,7 @@ contract SeerGuardian is ReentrancyGuard {
     function _liftRestriction(address subject, string memory reason, bool clearDaoOverride) internal {
         activeRestriction[subject] = RestrictionType.None;
         restrictionExpiry[subject] = 0;
+        restrictionAppliedAt[subject] = 0;
         if (clearDaoOverride) {
             daoOverridden[subject] = false;
         }
@@ -367,6 +372,12 @@ contract SeerGuardian is ReentrancyGuard {
      */
     function daoOverrideRestriction(address subject, string calldata reason) external onlyDAO nonReentrant {
         if (activeRestriction[subject] == RestrictionType.None) revert SG_NoViolation();
+        if (
+            restrictionAppliedAt[subject] != 0 &&
+            block.timestamp < uint256(restrictionAppliedAt[subject]) + DAO_OVERRIDE_MIN_AGE
+        ) {
+            revert SG_Cooldown();
+        }
         
         bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
         daoOverridden[subject] = true;
