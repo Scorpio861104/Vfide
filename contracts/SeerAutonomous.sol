@@ -132,6 +132,7 @@ contract SeerAutonomous is ReentrancyGuard {
     event ChallengeRequested(address indexed subject, string note);
     event ChallengeResolved(address indexed subject, bool upheld, string reason);
     event ChallengeResolvedCode(address indexed subject, bool upheld, uint16 indexed reasonCode, string reason);
+    event ExternalCallFailed(string indexed location, bytes reason);
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              ENUMS
@@ -423,16 +424,21 @@ contract SeerAutonomous is ReentrancyGuard {
             emit PatternDetected(subject, pattern, uint8(restrictionLevel[subject]));
         }
 
-        // Incorporate oracle risk score as an additional soft signal
+        // Incorporate oracle risk score as an additional soft signal (defensive wrapping)
         if (address(riskOracle) != address(0)) {
-            uint8 risk = riskOracle.getRiskScore(subject);
-            if (risk > 80) {
-                // High risk: escalate to at least Restricted for a short period
-                _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK, false);
-                result = EnforcementResult.Delayed;
-            } else if (risk > 50 && restrictionLevel[subject] < RestrictionLevel.Limited) {
-                _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk", RC_ORACLE_MEDIUM_RISK, false);
-                if (result == EnforcementResult.Allowed) result = EnforcementResult.Warned;
+            try riskOracle.getRiskScore(subject) returns (uint8 risk) {
+                if (risk > 80) {
+                    // High risk: escalate to at least Restricted for a short period
+                    _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK, false);
+                    result = EnforcementResult.Delayed;
+                } else if (risk > 50 && restrictionLevel[subject] < RestrictionLevel.Limited) {
+                    _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk", RC_ORACLE_MEDIUM_RISK, false);
+                    if (result == EnforcementResult.Allowed) result = EnforcementResult.Warned;
+                }
+            } catch (bytes memory reason) {
+                // Oracle failure: emit event and continue without blocking user actions
+                emit ExternalCallFailed("riskOracle.getRiskScore", reason);
+                // Fall through — do not block user actions on oracle failure
             }
         }
         
