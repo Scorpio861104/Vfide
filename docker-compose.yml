@@ -29,9 +29,9 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
-    environment:
-      DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
-    command: ["sh", "-c", "npm ci && npm run migrate:up"]
+    secrets:
+      - postgres_password
+    command: ["sh", "-c", "export DATABASE_URL=postgresql://vfide_user:$(cat /run/secrets/postgres_password)@postgres:5432/vfide_db && npm ci && npm run migrate:up"]
 
   websocket:
     build:
@@ -46,10 +46,10 @@ services:
         condition: service_completed_successfully
     environment:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
-      DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
     secrets:
       - jwt_secret
-    command: ["sh", "-c", "export JWT_SECRET=$(cat /run/secrets/jwt_secret) && node dist/index.js"]
+      - postgres_password
+    command: ["sh", "-c", "export JWT_SECRET=$(cat /run/secrets/jwt_secret) && export DATABASE_URL=postgresql://vfide_user:$(cat /run/secrets/postgres_password)@postgres:5432/vfide_db && node dist/index.js"]
     logging:
       driver: json-file
       options:
