@@ -13,14 +13,34 @@
  */
 
 import jwt from 'jsonwebtoken';
+import { readFileSync } from 'node:fs';
 import { isTokenRevoked, hashToken, isUserRevoked } from './tokenRevocation';
 import { logger } from '@/lib/logger';
+
+function readEnvOrFile(name: string): string | null {
+  const direct = process.env[name];
+  if (direct && direct.trim() !== '') {
+    return direct;
+  }
+
+  const filePath = process.env[`${name}_FILE`];
+  if (!filePath || filePath.trim() === '') {
+    return null;
+  }
+
+  try {
+    const fromFile = readFileSync(filePath, 'utf8').trim();
+    return fromFile || null;
+  } catch (error) {
+    throw new Error(`Failed to read ${name}_FILE (${filePath}): ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
 
 // JWT Configuration
 // No fallback secret - fail fast if not set
 function getJWTSecret(): string {
-  const jwtSecret = process.env.JWT_SECRET;
-  const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+  const jwtSecret = readEnvOrFile('JWT_SECRET');
+  const nextAuthSecret = readEnvOrFile('NEXTAUTH_SECRET');
 
   // F-10 FIX: Fail if both secrets are set with different values to prevent
   // signing/verification inconsistency depending on module initialization order.
@@ -45,7 +65,7 @@ function getJWTSecret(): string {
  * Only present during a rolling rotation window.
  */
 function getPrevSecret(): string | null {
-  return process.env.PREV_JWT_SECRET || null;
+  return readEnvOrFile('PREV_JWT_SECRET');
 }
 
 // Lazy-load JWT secret to avoid build-time errors

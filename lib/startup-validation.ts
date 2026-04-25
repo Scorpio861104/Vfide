@@ -1,12 +1,33 @@
 import { logger } from '@/lib/logger';
+import { readFileSync } from 'node:fs';
 /**
  * Startup validation for critical environment variables
  * This ensures the application fails fast if required configuration is missing
  */
 
+function readEnvOrFile(name: string): string | undefined {
+  const direct = process.env[name];
+  if (direct && direct.trim() !== '') {
+    return direct;
+  }
+
+  const filePath = process.env[`${name}_FILE`];
+  if (!filePath || filePath.trim() === '') {
+    return undefined;
+  }
+
+  try {
+    const fromFile = readFileSync(filePath, 'utf8').trim();
+    return fromFile || undefined;
+  } catch (error) {
+    logger.error(`Failed reading ${name}_FILE (${filePath}):`, error);
+    return undefined;
+  }
+}
+
 const REQUIRED_ENV_VARS = {
   // JWT Secret - critical for authentication security
-  JWT_SECRET: process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET,
+  JWT_SECRET: readEnvOrFile('JWT_SECRET') || readEnvOrFile('NEXTAUTH_SECRET'),
   // Database connection
   DATABASE_URL: process.env.DATABASE_URL,
 } as const;
@@ -34,7 +55,7 @@ export function validateEnvironment(): void {
 
   // Production-specific checks
   if (process.env.NODE_ENV === 'production') {
-    const jwtSecret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+    const jwtSecret = readEnvOrFile('JWT_SECRET') || readEnvOrFile('NEXTAUTH_SECRET');
     const defaultSecrets = [
       'vfide-dev-secret-change-in-production',
       'your-secret-here',
@@ -67,7 +88,7 @@ export function validateEnvironment(): void {
     }
 
     // Validate PREV_JWT_SECRET during rotation window — must not equal JWT_SECRET
-    const prevSecret = process.env.PREV_JWT_SECRET;
+    const prevSecret = readEnvOrFile('PREV_JWT_SECRET');
     if (prevSecret) {
       if (prevSecret === jwtSecret) {
         errors.push(
@@ -114,7 +135,7 @@ export function validateEnvironment(): void {
  * Throws if variable is not set
  */
 export function getRequiredEnv(name: string): string {
-  const value = process.env[name];
+  const value = readEnvOrFile(name) || process.env[name];
   if (!value) {
     throw new Error(`Required environment variable ${name} is not set`);
   }

@@ -105,6 +105,11 @@ function getEnvValue(name: string): string | undefined {
   const value = process.env[name];
   if (value && value.trim() !== '') return value;
 
+  const fileBacked = process.env[`${name}_FILE`];
+  if (fileBacked && fileBacked.trim() !== '') {
+    return `[from ${name}_FILE]`;
+  }
+
   const inferredAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
 
   const fallbacks: Record<string, string | undefined> = {
