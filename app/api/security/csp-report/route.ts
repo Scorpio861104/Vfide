@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -88,6 +89,19 @@ function parseCSPReport(body: unknown): CSPViolation | null {
   };
 }
 
+async function forwardToSentry(record: CSPViolation & { timestamp: number; userAgent: string }): Promise<void> {
+  Sentry.captureMessage('CSP Violation', {
+    level: 'warning',
+    tags: {
+      category: 'csp',
+      directive: record['violated-directive'] || record['effective-directive'] || 'unknown',
+    },
+    extra: {
+      ...record,
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   // Rate limiting — unauthenticated endpoint; use write-tier (30/min) to
   // prevent log-flood attacks while still accepting legitimate browser reports.
@@ -144,9 +158,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // In production, you would send to monitoring service:
-    // await sendToSentry(record);
-    // await sendToDatadog(record);
+    // Persist across instance restarts by forwarding to monitoring in non-dev environments.
+    if (process.env.NODE_ENV !== 'development') {
+      await forwardToSentry(record);
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
