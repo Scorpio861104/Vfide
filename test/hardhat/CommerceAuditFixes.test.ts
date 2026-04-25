@@ -364,12 +364,12 @@ describe("MerchantPortal (Fixes 3 and 5)", () => {
     const { ethers, portal, token, customer, merchant } = await deployPortalFixture();
 
     const itemAmount = ethers.parseEther("10");
-    const preview = await portal.previewCheckout(customer.address, merchant.address, await token.getAddress(), itemAmount);
-
-    const grossAmount = preview[0];
-    const totalFee = preview[1];
-    const protocolFee = preview[2];
-    const networkFee = preview[3];
+    const [grossAmount, totalFee, protocolFee, networkFee] = await portal.calculateGrossAmount(
+      customer.address,
+      merchant.address,
+      await token.getAddress(),
+      itemAmount
+    );
 
     assert.equal(networkFee, 0n);
     assert.equal(totalFee, protocolFee);

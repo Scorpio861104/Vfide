@@ -40,7 +40,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     uint64 public constant MIN_ROTATION_DELAY = 10 minutes;
     uint64 public constant MAX_ROTATION_DELAY = 7 days;
-    uint64 public constant SENSITIVE_ADMIN_DELAY = 1 days;
+    uint64 public constant SENSITIVE_ADMIN_DELAY = 7 days;
     uint8 public constant MAX_GUARDIANS = 20;
 
     address public immutable hub;

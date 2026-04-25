@@ -1001,36 +1001,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // SecurityHub lock check removed — non-custodial
     }
 
-    function getMerchantInfo(address merchant) external view returns (
-        bool registered,
-        bool suspended,
-        string memory businessName,
-        string memory category,
-        uint64 registeredAt,
-        uint256 totalVolume,
-        uint256 txCount
-    ) {
-        MerchantInfo storage m = merchants[merchant];
-        return (
-            m.registered,
-            m.suspended,
-            m.businessName,
-            m.category,
-            m.registeredAt,
-            m.totalVolume,
-            m.txCount
-        );
-    }
-
-    function getMerchantCount() external view returns (uint256) {
-        return merchantList.length;
-    }
-
-    function calculateFee(uint256 amount) external view returns (uint256 fee, uint256 netAmount) {
-        fee = (amount * protocolFeeBps) / 10000;
-        netAmount = amount - fee;
-    }
-
     /// @notice Reverse calculator to estimate gross amount needed for a target net merchant receipt.
     function calculateGrossAmount(
         address customer,
@@ -1061,25 +1031,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         totalFee = protocolFee + networkFee;
     }
 
-    /// @notice Preview checkout totals for UI display (item + network/protocol fees).
-    function previewCheckout(
-        address customer,
-        address merchant,
-        address token,
-        uint256 itemAmount
-    ) external view returns (
-        uint256 grossAmount,
-        uint256 totalFee,
-        uint256 protocolFee,
-        uint256 networkFee
-    ) {
-        return calculateGrossAmount(customer, merchant, token, itemAmount);
-    }
-
-    function isTokenAccepted(address token) external view returns (bool) {
-        return acceptedTokens[token];
-    }
-    
     // ═══════════════════════════════════════════════════════════════════════
     //                        REFUND TRACKING VIEWS
     // ═══════════════════════════════════════════════════════════════════════
@@ -1103,20 +1054,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     ) {
         RefundRequest storage r = refundRequests[refundId];
         return (r.customer, r.merchant, r.token, r.amount, r.orderId, r.requestTime, r.approved, r.completed);
-    }
-    
-    /**
-     * @notice Get all refund IDs for a customer
-     */
-    function getRefundsForCustomer(address customer) external view returns (bytes32[] memory) {
-        return customerRefunds[customer];
-    }
-    
-    /**
-     * @notice Get all refund IDs for a merchant
-     */
-    function getRefundsForMerchant(address merchant) external view returns (bytes32[] memory) {
-        return merchantRefunds[merchant];
     }
     
     /**

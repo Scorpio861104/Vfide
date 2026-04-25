@@ -51,6 +51,9 @@ error ECO_ExceedsMax();
 error ECO_NoPendingChange();
 error ECO_ChangeNotReady();
 error ECO_ExpenseCapExceeded();
+error ECO_BpsTooHigh();
+error ECO_MerchantEpochCapExceeded();
+error ECO_HeadhunterEpochCapExceeded();
 
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -386,7 +389,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /// @notice H-11 FIX: DAO can adjust per-epoch payout caps (in bps of pool).
     function setEpochCaps(uint16 _merchantCapBps, uint16 _headhunterCapBps) external onlyOwner {
-        require(_merchantCapBps <= 10000 && _headhunterCapBps <= 10000, "ECO: bps > 100%");
+        if (_merchantCapBps > MAX_BPS || _headhunterCapBps > MAX_BPS) revert ECO_BpsTooHigh();
         merchantEpochCapBps = _merchantCapBps;
         headhunterEpochCapBps = _headhunterCapBps;
     }
@@ -873,7 +876,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             merchantPaidThisEpoch = 0;
         }
         uint256 epochCap = (merchantPool * merchantEpochCapBps) / 10000;
-        require(merchantPaidThisEpoch + amount <= epochCap, "ECO: merchant epoch cap exceeded");
+        if (merchantPaidThisEpoch + amount > epochCap) revert ECO_MerchantEpochCapExceeded();
 
         uint256 spendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
@@ -1043,7 +1046,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             headhunterPaidThisEpoch = 0;
         }
         uint256 epochCap = (headhunterPool * headhunterEpochCapBps) / 10000;
-        require(headhunterPaidThisEpoch + amount <= epochCap, "ECO: headhunter epoch cap exceeded");
+        if (headhunterPaidThisEpoch + amount > epochCap) revert ECO_HeadhunterEpochCapExceeded();
 
         uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
@@ -1052,30 +1055,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         headhunterPaidThisEpoch += amount;
         totalHeadhunterPaid += amount;
         _deliverWorkReward(worker, amount, reason);
-    }
-
-    /**
-     * @notice Pay the next unlocked referral-work level reward for a referrer in a year.
-     * @dev Only objective point milestones are used (no leaderboard rank, no percentage share).
-     */
-    function payReferralLevelReward(address, uint256, string calldata) external pure {
-        _revertRewardsNotAvailable();
-    }
-
-    /**
-     * @notice Self-claim unlocked referral work levels for the caller.
-     * @dev Enables autonomous user claims from objective milestones without manager intervention.
-     */
-    function claimReferralLevelRewards(uint256, string calldata) external pure returns (uint8, uint256) {
-        _revertRewardsNotAvailable();
-    }
-
-    /**
-     * @notice Permissionless processor for objective referral level payouts.
-     * @dev Anyone can trigger, but payout always goes to `worker`.
-     */
-    function processReferralLevelRewards(address, uint256, string calldata) external pure returns (uint8, uint256) {
-        _revertRewardsNotAvailable();
     }
 
     function _getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) internal pure returns (uint256) {
@@ -1335,10 +1314,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (amounts[amounts.length - 1] == 0) revert ECO_InsufficientFunds();
     }
 
-    function _revertRewardsNotAvailable() private pure {
-        revert ECO_RewardsNotAvailable();
-    }
-
     function _endMerchantPeriodIfDue(bool strict) internal returns (bool) {
         if (block.timestamp < lastMerchantDistribution + MONTH) {
             if (strict) revert ECO_TooEarly();
@@ -1411,68 +1386,4 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         return true;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //             CHAINLINK AUTOMATION / KEEPER INTERFACE
-    // ═══════════════════════════════════════════════════════════════════════
-
-    /// @dev Bitmask values for scheduled tasks returned/consumed by checkUpkeep/performUpkeep.
-    uint8 internal constant TASK_COUNCIL    = 0x01;
-    uint8 internal constant TASK_MERCHANT   = 0x02;
-    uint8 internal constant TASK_HEADHUNTER = 0x04;
-    uint8 internal constant TASK_OPERATIONS = 0x08;
-
-    /**
-     * @notice Chainlink Automation-compatible upkeep check.  Also usable by any off-chain keeper.
-     * @dev Returns upkeepNeeded=true when at least one scheduled task is ready to run.
-     *      performData is an ABI-encoded uint8 bitmask of the pending tasks.
-     */
-    // slither-disable-next-line uninitialized-local
-    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData) {
-        uint8 pending = 0;
-        if (block.timestamp >= lastCouncilDistribution + MONTH && address(councilManager) != address(0))
-            pending |= TASK_COUNCIL;
-        if (block.timestamp >= lastMerchantDistribution + MONTH)
-            pending |= TASK_MERCHANT;
-        if (block.timestamp >= yearStartTime + (QUARTER * currentQuarter))
-            pending |= TASK_HEADHUNTER;
-        if (operationsWallet != address(0) && block.timestamp >= lastOperationsWithdrawal + operationsWithdrawalCooldown)
-            pending |= TASK_OPERATIONS;
-        return (pending != 0, abi.encode(pending));
-    }
-
-    /**
-     * @notice Chainlink Automation performUpkeep entrypoint.
-     * @dev Accepts the bitmask produced by checkUpkeep.  Time guards are re-validated
-     *      on-chain before each task to guard against stale performData.
-     *      The bitmask from performData is respected so selective task execution is possible.
-     */
-    function performUpkeep(bytes calldata performData) external nonReentrant {
-        uint8 tasks = TASK_COUNCIL | TASK_MERCHANT | TASK_HEADHUNTER | TASK_OPERATIONS;
-        if (performData.length > 0) {
-            tasks = abi.decode(performData, (uint8));
-        }
-        _runScheduledTasks(tasks);
-    }
-
-    /**
-     * @notice Internal: execute the subset of scheduled tasks indicated by `tasks`.
-     */
-    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
-    function _runScheduledTasks(uint8 tasks) internal {
-        if ((tasks & TASK_COUNCIL) != 0) {
-            _distributeCouncilRewardsIfDue(false);
-        }
-
-        if ((tasks & TASK_MERCHANT) != 0) {
-            _endMerchantPeriodIfDue(false);
-        }
-
-        if ((tasks & TASK_HEADHUNTER) != 0) {
-            _endHeadhunterQuarterIfDue(false);
-        }
-
-        if ((tasks & TASK_OPERATIONS) != 0) {
-            _withdrawOperationsIfDue(false);
-        }
-    }
 }
