@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
 /**
@@ -14,10 +13,6 @@ import { logger } from '@/lib/logger';
  * Returns basic application status and version information
  */
 export async function GET(request: NextRequest) {
-  // Rate limiting
-  const rateLimit = await withRateLimit(request, 'api');
-  if (rateLimit) return rateLimit;
-
   const envHealthy = checkEnvironmentVariables();
   const statusCode = envHealthy ? 200 : 503;
   const status = envHealthy ? 'ok' : 'degraded';

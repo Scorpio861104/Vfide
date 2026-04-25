@@ -1,6 +1,6 @@
 # VFIDE WebSocket Server — Production Dockerfile
 # Security hardening mirrors the main app container policy: pinned image digest + non-root runtime.
-FROM node:25-alpine@sha256:cf38e1f3c28ac9d81cdc0c51d8220320b3b618780e44ef96a39f76f7dbfef023 AS base
+FROM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS base
 
 FROM base AS deps
 WORKDIR /app
@@ -30,5 +30,8 @@ EXPOSE 8080
 # Disable npm update notifier and telemetry
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 ENV NODE_ENV=production
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD node -e "const p=process.env.WS_PORT||8080;require('http').get('http://localhost:'+p+'/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
 
 CMD ["node", "dist/index.js"]

@@ -42,21 +42,27 @@ const UnsubscribeSchema = z.object({
   }),
 });
 
+const JsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
+  z.union([
+    z.string().max(4096),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(JsonValueSchema).max(64),
+    z
+      .record(z.string().max(128), JsonValueSchema)
+      .refine((obj) => Object.keys(obj).length <= 64, 'Object exceeds maximum key count of 64'),
+  ])
+);
+
 const MessageSchema = z.object({
   v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
   type: z.literal('message'),
   payload: z.object({
-    event: z.string().min(1).max(64).optional(),
+    event: z.string().min(1).max(64),
     topic: TopicSchema.optional(),
-    data: z.union([
-      z.string(),
-      z.number(),
-      z.boolean(),
-      z.null(),
-      z.array(z.unknown()),
-      z.record(z.string(), z.unknown()),
-    ]).optional(),
-  }),
+    data: JsonValueSchema.optional(),
+  }).strict(),
 });
 
 const AuthSchema = z.object({

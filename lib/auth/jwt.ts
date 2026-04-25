@@ -178,13 +178,13 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
  */
 export function extractToken(authHeader: string | null): string | null {
   if (!authHeader) return null;
-  
-  // Support both "Bearer <token>" and just "<token>"
-  if (authHeader.startsWith('Bearer ')) {
-    return authHeader.slice(7);
-  }
-  
-  return authHeader;
+
+  // Enforce strict Bearer auth format to avoid ambiguity and downgrade paths.
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+
+  const token = match[1]?.trim();
+  return token ? token : null;
 }
 
 /**

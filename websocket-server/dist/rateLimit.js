@@ -11,6 +11,10 @@ exports.RateLimiter = void 0;
 class RateLimiter {
     constructor(options) {
         this.store = new Map();
+        if (process.env.NODE_ENV === 'production' && process.env.WS_ALLOW_INMEMORY_RATELIMIT !== 'true') {
+            throw new Error('In-memory WebSocket rate limiter is disabled in production. ' +
+                'Set WS_ALLOW_INMEMORY_RATELIMIT=true only as a temporary override.');
+        }
         this.maxRequests = options.maxRequests;
         this.windowMs = options.windowMs;
         // Periodic cleanup to prevent unbounded memory growth

@@ -114,6 +114,21 @@ const wss = new ws_1.WebSocketServer({
     // Disable per-message deflate to avoid zip-bomb style attacks
     perMessageDeflate: false,
 });
+// Lightweight health probe for container/runtime monitoring.
+server.on('request', (req, res) => {
+    if (req.method === 'GET' && req.url === '/health') {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok' }));
+        return;
+    }
+    if (req.method !== 'GET') {
+        res.writeHead(405, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Method not allowed' }));
+        return;
+    }
+    res.writeHead(404, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+});
 // ─── Per-IP Rate Limiter ────────────────────────────────────────────────────
 const connectionRateLimiter = new rateLimit_1.RateLimiter({
     maxRequests: 10, // max 10 new connections per window
@@ -356,7 +371,7 @@ server.on('upgrade', (req, socket, head) => {
     const proceed = (payload) => {
         // 5. Complete the WebSocket handshake. Message-level auth is still required.
         wss.handleUpgrade(req, socket, head, (ws) => {
-            const sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const sessionId = `session-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
             const client = ws;
             client.vfideAddress = payload?.address?.toLowerCase();
             client.isAuthenticated = Boolean(payload);
@@ -389,7 +404,7 @@ wss.on('connection', (ws, _req) => {
     const client = ws;
     // Defensive defaults in case upstream wiring changes.
     if (!client.sessionId) {
-        client.sessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        client.sessionId = `session-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
     }
     if (!client.remoteIp) {
         client.remoteIp = 'unknown';

@@ -40,7 +40,7 @@ services:
     container_name: vfide-websocket
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       migrator:
         condition: service_completed_successfully
@@ -50,6 +50,19 @@ services:
     secrets:
       - jwt_secret
     command: ["sh", "-c", "export JWT_SECRET=$(cat /run/secrets/jwt_secret) && node dist/index.js"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
 
 volumes:
   postgres_data:

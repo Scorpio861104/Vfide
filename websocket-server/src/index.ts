@@ -101,6 +101,24 @@ const wss = new WebSocketServer({
   perMessageDeflate: false,
 });
 
+// Lightweight health probe for container/runtime monitoring.
+server.on('request', (req, res) => {
+  if (req.method === 'GET' && req.url === '/health') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok' }));
+    return;
+  }
+
+  if (req.method !== 'GET') {
+    res.writeHead(405, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+
+  res.writeHead(404, { 'content-type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Not found' }));
+});
+
 // ─── Per-IP Rate Limiter ────────────────────────────────────────────────────
 
 const connectionRateLimiter = new RateLimiter({
