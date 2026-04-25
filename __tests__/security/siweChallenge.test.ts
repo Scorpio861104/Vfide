@@ -39,7 +39,7 @@ describe('siweChallenge', () => {
     })).resolves.toEqual({ ok: false, error: 'Challenge not found. Request a new challenge.' });
   });
 
-  it('rejects a challenge when the request IP changes', async () => {
+  it('accepts a challenge when the request IP changes', async () => {
     const siweChallenge = await import('@/lib/security/siweChallenge');
     const challenge = await siweChallenge.createSiweChallenge(baseInput);
 
@@ -47,10 +47,10 @@ describe('siweChallenge', () => {
       ...baseInput,
       ip: '198.51.100.77',
       message: challenge.message,
-    })).resolves.toEqual({ ok: false, error: 'Challenge IP mismatch' });
+    })).resolves.toEqual({ ok: true });
   });
 
-  it('rejects a challenge when the user agent changes', async () => {
+  it('accepts a challenge when the user agent changes', async () => {
     const siweChallenge = await import('@/lib/security/siweChallenge');
     const challenge = await siweChallenge.createSiweChallenge(baseInput);
 
@@ -58,6 +58,6 @@ describe('siweChallenge', () => {
       ...baseInput,
       userAgent: 'Different-Agent/2.0',
       message: challenge.message,
-    })).resolves.toEqual({ ok: false, error: 'Challenge user agent mismatch' });
+    })).resolves.toEqual({ ok: true });
   });
 });

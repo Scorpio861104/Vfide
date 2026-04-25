@@ -4,6 +4,5 @@
   "installCommand": "npm install",
   "devCommand": "npm run dev",
   "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD",
-  "headers": []
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD"
 }

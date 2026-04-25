@@ -10,8 +10,6 @@ interface ChallengeRecord {
   chainId: number;
   issuedAt: number;
   expiresAt: number;
-  ip: string;
-  userAgent: string;
 }
 
 function normalizeHost(value: string | null | undefined): string | null {
@@ -117,11 +115,6 @@ function getRedisClient(): Redis | null {
   return redisClient;
 }
 
-function normalizeFingerprintValue(value: string, fallback: string): string {
-  const normalized = value.trim().slice(0, 512);
-  return normalized || fallback;
-}
-
 async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
   const redis = getRedisClient();
   const key = challengeKey(record.address);
@@ -197,8 +190,6 @@ export async function createSiweChallenge(input: {
     chainId: input.chainId,
     issuedAt,
     expiresAt,
-    ip: normalizeFingerprintValue(input.ip, 'unknown'),
-    userAgent: normalizeFingerprintValue(input.userAgent, 'unknown'),
   };
 
   await storeChallengeRecord(record);
@@ -248,14 +239,6 @@ export async function consumeAndValidateSiweChallenge(input: {
 
   if (record.chainId !== input.chainId) {
     return { ok: false, error: 'Challenge chain mismatch' };
-  }
-
-  if (record.ip !== normalizeFingerprintValue(input.ip, 'unknown')) {
-    return { ok: false, error: 'Challenge IP mismatch' };
-  }
-
-  if (record.userAgent !== normalizeFingerprintValue(input.userAgent, 'unknown')) {
-    return { ok: false, error: 'Challenge user agent mismatch' };
   }
 
   const messageNonce = parseField(input.message, 'Nonce');
