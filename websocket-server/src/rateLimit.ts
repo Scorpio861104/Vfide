@@ -1,12 +1,14 @@
 /**
- * In-memory per-IP rate limiter for WebSocket connections and messages.
+ * WebSocket per-key rate limiter.
  *
- * Uses a fixed-window algorithm.  For production deployments with multiple
- * server replicas, replace this with a Redis-backed implementation using the
- * Upstash Ratelimit library (already used in lib/auth/rateLimit.ts).
+ * Uses Upstash Redis fixed windows when configured to enforce limits across
+ * replicas. Falls back to in-memory windows for local/dev unless explicitly
+ * overridden.
  */
 
 interface RateLimiterOptions {
+  /** Namespace used in rate limit keys (e.g. connection/message) */
+  name: string;
   /** Maximum number of requests allowed within the window */
   maxRequests: number;
   /** Window size in milliseconds */
@@ -19,15 +21,28 @@ interface WindowEntry {
 }
 
 export class RateLimiter {
+  private readonly name: string;
   private readonly maxRequests: number;
   private readonly windowMs: number;
+  private readonly redisUrl: string | null;
+  private readonly redisToken: string | null;
+  private readonly useRedis: boolean;
   private readonly store = new Map<string, WindowEntry>();
 
   constructor(options: RateLimiterOptions) {
-    if (process.env.NODE_ENV === 'production' && process.env.WS_ALLOW_INMEMORY_RATELIMIT !== 'true') {
+    this.name = options.name;
+    this.redisUrl = process.env.UPSTASH_REDIS_REST_URL || null;
+    this.redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || null;
+    this.useRedis = Boolean(this.redisUrl && this.redisToken);
+
+    if (
+      process.env.NODE_ENV === 'production' &&
+      !this.useRedis &&
+      process.env.WS_ALLOW_INMEMORY_RATELIMIT !== 'true'
+    ) {
       throw new Error(
-        'In-memory WebSocket rate limiter is disabled in production. ' +
-        'Set WS_ALLOW_INMEMORY_RATELIMIT=true only as a temporary override.'
+        'WebSocket rate limiter requires Upstash Redis in production. ' +
+        'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, or set WS_ALLOW_INMEMORY_RATELIMIT=true only as a temporary override.'
       );
     }
 
@@ -41,7 +56,15 @@ export class RateLimiter {
   /**
    * Returns true if the request from `key` is allowed, false if rate-limited.
    */
-  allow(key: string): boolean {
+  async allow(key: string): Promise<boolean> {
+    if (this.useRedis) {
+      return this.allowRedis(key);
+    }
+
+    return this.allowMemory(key);
+  }
+
+  private allowMemory(key: string): boolean {
     const now = Date.now();
     const entry = this.store.get(key);
 
@@ -57,6 +80,44 @@ export class RateLimiter {
 
     entry.count++;
     return true;
+  }
+
+  private async allowRedis(key: string): Promise<boolean> {
+    const now = Date.now();
+    const windowIndex = Math.floor(now / this.windowMs);
+    const redisKey = `ws:rl:${this.name}:${key}:${windowIndex}`;
+
+    const incrUrl = `${this.redisUrl!.replace(/\/$/, '')}/incr/${encodeURIComponent(redisKey)}`;
+    const incrResponse = await fetch(incrUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.redisToken}`,
+      },
+    });
+
+    if (!incrResponse.ok) {
+      throw new Error(`Upstash INCR failed: HTTP ${incrResponse.status}`);
+    }
+
+    const incrData = (await incrResponse.json()) as { result?: number };
+    const count = Number(incrData.result ?? 0);
+
+    if (count === 1) {
+      const ttlSeconds = Math.max(1, Math.ceil(this.windowMs / 1000) + 5);
+      const expireUrl = `${this.redisUrl!.replace(/\/$/, '')}/expire/${encodeURIComponent(redisKey)}/${ttlSeconds}`;
+      const expireResponse = await fetch(expireUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.redisToken}`,
+        },
+      });
+
+      if (!expireResponse.ok) {
+        throw new Error(`Upstash EXPIRE failed: HTTP ${expireResponse.status}`);
+      }
+    }
+
+    return count <= this.maxRequests;
   }
 
   private cleanup(): void {

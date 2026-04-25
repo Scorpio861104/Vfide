@@ -126,11 +126,13 @@ server.on('request', (req, res) => {
 // ─── Per-IP Rate Limiter ────────────────────────────────────────────────────
 
 const connectionRateLimiter = new RateLimiter({
+  name: 'connection',
   maxRequests: 10,   // max 10 new connections per window
   windowMs: 60_000,  // per minute
 });
 
 const messageRateLimiter = new RateLimiter({
+  name: 'message',
   maxRequests: 60,   // max 60 messages per window
   windowMs: 60_000,  // per minute
 });
@@ -420,51 +422,61 @@ server.on('upgrade', (req: http.IncomingMessage, socket, head) => {
     return;
   }
 
-  // 2. Per-IP connection rate limiting
-  if (!connectionRateLimiter.allow(ip)) {
-    console.warn(`[ws] Rate limit exceeded on upgrade from IP: ${ip}`);
-    socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n');
-    socket.destroy();
-    return;
-  }
+  connectionRateLimiter.allow(ip)
+    .then((allowed) => {
+      // 2. Per-IP connection rate limiting
+      if (!allowed) {
+        console.warn(`[ws] Rate limit exceeded on upgrade from IP: ${ip}`);
+        socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n');
+        socket.destroy();
+        return;
+      }
 
-  // 3. Extract optional JWT from Authorization header only
-  let token: string | undefined;
-  const authHeader = req.headers['authorization'];
-  if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-    token = authHeader.slice(7);
-  }
+      // 3. Extract optional JWT from Authorization header only
+      let token: string | undefined;
+      const authHeader = req.headers['authorization'];
+      if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+      }
 
-  // 4. If provided, verify JWT during upgrade for fast-fail clients.
-  const proceed = (payload?: JWTPayload): void => {
-    // 5. Complete the WebSocket handshake. Message-level auth is still required.
-    wss.handleUpgrade(req, socket, head, (ws) => {
-      const sessionId = `session-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
-      const client = ws as AuthenticatedSocket;
-      client.vfideAddress = payload?.address?.toLowerCase();
-      client.isAuthenticated = Boolean(payload);
-      client.sessionId = sessionId;
-      client.remoteIp = ip;
-      client.connectedAt = Date.now();
-      client.subscribedTopics = new Set<string>();
+      // 4. If provided, verify JWT during upgrade for fast-fail clients.
+      const proceed = (payload?: JWTPayload): void => {
+        // 5. Complete the WebSocket handshake. Message-level auth is still required.
+        wss.handleUpgrade(req, socket, head, (ws) => {
+          const sessionId = `session-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+          const client = ws as AuthenticatedSocket;
+          client.vfideAddress = payload?.address?.toLowerCase();
+          client.isAuthenticated = Boolean(payload);
+          client.sessionId = sessionId;
+          client.remoteIp = ip;
+          client.connectedAt = Date.now();
+          client.subscribedTopics = new Set<string>();
 
-      wss.emit('connection', client, req);
-    });
-  };
+          wss.emit('connection', client, req);
+        });
+      };
 
-  if (!token) {
-    proceed();
-    return;
-  }
+      if (!token) {
+        proceed();
+        return;
+      }
 
-  verifyJWT(token)
-    .then((payload) => {
-      if (!socket.destroyed) proceed(payload);
+      verifyJWT(token)
+        .then((payload) => {
+          if (!socket.destroyed) proceed(payload);
+        })
+        .catch((err) => {
+          console.warn(`[ws] Invalid JWT from IP ${ip}: ${(err as Error).message}`);
+          if (!socket.destroyed) {
+            socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+            socket.destroy();
+          }
+        });
     })
     .catch((err) => {
-      console.warn(`[ws] Invalid JWT from IP ${ip}: ${(err as Error).message}`);
+      console.error(`[ws] Connection rate limiter error for IP ${ip}: ${(err as Error).message}`);
       if (!socket.destroyed) {
-        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+        socket.write('HTTP/1.1 503 Service Unavailable\r\n\r\n');
         socket.destroy();
       }
     });
@@ -518,8 +530,14 @@ wss.on('connection', (ws: WebSocket, _req: http.IncomingMessage) => {
   // ── Message handler ───────────────────────────────────────────────────────
   ws.on('message', async (raw: RawData) => {
     // Per-IP message rate limiting
-    if (!messageRateLimiter.allow(client.remoteIp)) {
-      sendError(ws, 'RATE_LIMIT', 'Message rate limit exceeded');
+    try {
+      if (!(await messageRateLimiter.allow(client.remoteIp))) {
+        sendError(ws, 'RATE_LIMIT', 'Message rate limit exceeded');
+        return;
+      }
+    } catch (err) {
+      console.error(`[ws] Message rate limiter error for ${client.remoteIp}: ${(err as Error).message}`);
+      sendError(ws, 'RATE_LIMIT_UNAVAILABLE', 'Rate limiter unavailable');
       return;
     }
 
