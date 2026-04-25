@@ -119,7 +119,7 @@ contract SeerGuardian is ReentrancyGuard {
         TransferLimit,      // Can only transfer small amounts
         GovernanceBan,      // Cannot vote/propose
         MerchantSuspended,  // Removed from merchant listings
-        FullFreeze          // All activity frozen pending DAO review
+        GovernanceFullBan   // Highest-severity governance ban pending DAO review
     }
     
     enum ViolationType {
@@ -258,16 +258,16 @@ contract SeerGuardian is ReentrancyGuard {
         
         // SG-01 FIX: Check most-severe conditions first so a single call applies the
         // harshest applicable restriction immediately (no multi-call escalation needed).
-        // Critical: full freeze for dangerous scores (< 1000 — highest priority)
-        if (score < 1000 && currentRestriction < RestrictionType.FullFreeze) {
-            _applyAutoRestriction(subject, RestrictionType.FullFreeze, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
+        // Critical: highest-severity governance ban for dangerous scores (< 1000).
+        if (score < 1000 && currentRestriction < RestrictionType.GovernanceFullBan) {
+            _applyAutoRestriction(subject, RestrictionType.GovernanceFullBan, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
         }
         // More severe restriction for very low scores (< 2000).
         // Do not rely on enum ordering here: GovernanceBan has a larger enum value than
         // TransferLimit, but TransferLimit is stricter for transfer permissions.
         else if (
             score < 2000 &&
-            currentRestriction != RestrictionType.FullFreeze &&
+            currentRestriction != RestrictionType.GovernanceFullBan &&
             currentRestriction != RestrictionType.TransferLimit
         ) {
             _applyAutoRestriction(subject, RestrictionType.TransferLimit, "auto_very_low_score", RC_AUTO_VERY_LOW_SCORE);
@@ -312,7 +312,7 @@ contract SeerGuardian is ReentrancyGuard {
         
         // Apply time-based restriction for repeat offenders
         if (count >= 3) {
-            RestrictionType rtype = count >= 5 ? RestrictionType.FullFreeze : RestrictionType.GovernanceBan;
+            RestrictionType rtype = count >= 5 ? RestrictionType.GovernanceFullBan : RestrictionType.GovernanceBan;
             uint64 duration = restrictionDurations[penaltyIndex];
             // H-23 FIX: Never shorten an existing restriction — take the max of remaining and new duration.
             uint64 newExpiry = uint64(block.timestamp) + duration;
@@ -557,7 +557,7 @@ contract SeerGuardian is ReentrancyGuard {
      */
     function canParticipateInGovernance(address subject) external view returns (bool) {
         RestrictionType r = activeRestriction[subject];
-        if (r == RestrictionType.GovernanceBan || r == RestrictionType.FullFreeze) {
+        if (r == RestrictionType.GovernanceBan || r == RestrictionType.GovernanceFullBan) {
             // Check if restriction has expired
             if (block.timestamp < restrictionExpiry[subject]) {
                 return false;
@@ -567,12 +567,13 @@ contract SeerGuardian is ReentrancyGuard {
     }
     
     /**
-     * @notice Check if address can make transfers
+     * @notice Informational transfer status helper.
+     * @dev This contract does not enforce token/vault transfers directly.
      * @param subject The address to check
      */
     function canTransfer(address subject) external view returns (bool) {
         RestrictionType r = activeRestriction[subject];
-        if (r == RestrictionType.TransferLimit || r == RestrictionType.FullFreeze) {
+        if (r == RestrictionType.TransferLimit || r == RestrictionType.GovernanceFullBan) {
             if (block.timestamp < restrictionExpiry[subject]) {
                 return false;
             }

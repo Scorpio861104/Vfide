@@ -16,6 +16,33 @@ const createStreamSchema = z.object({
   ratePerSecond: z.number().positive(),
   startTime: z.string().datetime(),
   endTime: z.string().datetime(),
+}).superRefine((value, ctx) => {
+  const startMs = Date.parse(value.startTime);
+  const endMs = Date.parse(value.endTime);
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+    return;
+  }
+
+  if (endMs <= startMs) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['endTime'],
+      message: 'endTime must be after startTime',
+    });
+    return;
+  }
+
+  const durationSeconds = (endMs - startMs) / 1000;
+  const expectedTotal = value.ratePerSecond * durationSeconds;
+  const tolerance = Math.max(0.000001, expectedTotal * 0.01); // 1%
+
+  if (Math.abs(value.totalAmount - expectedTotal) > tolerance) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['totalAmount'],
+      message: 'totalAmount must approximately equal ratePerSecond × duration',
+    });
+  }
 });
 
 type StreamRow = {

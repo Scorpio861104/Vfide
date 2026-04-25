@@ -10,6 +10,7 @@ import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { createPublicClient, http } from 'viem';
+import type { Hash } from 'viem';
 import { z } from 'zod4';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -31,7 +32,7 @@ async function verifySubmittedTransaction(hash: string): Promise<{ verified: boo
 
   try {
     const client = createPublicClient({ transport: http(rpcUrl) });
-    const receipt = await client.getTransactionReceipt({ hash });
+    const receipt = await client.getTransactionReceipt({ hash: hash as Hash });
     return {
       verified: true,
       confirmed: receipt.status === 'success',

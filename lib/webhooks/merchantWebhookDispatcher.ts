@@ -11,6 +11,7 @@
 import { createCipheriv, createDecipheriv, createHmac, createHash, randomBytes, randomUUID } from 'crypto';
 import { lookup } from 'dns/promises';
 import { isIP } from 'node:net';
+import { Agent } from 'undici';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -91,7 +92,7 @@ function isBlockedIpAddress(ip: string): boolean {
   return true;
 }
 
-async function validateWebhookDeliveryTarget(url: string): Promise<{ ok: true } | { ok: false; error: string }> {
+async function validateWebhookDeliveryTarget(url: string): Promise<{ ok: true; resolvedIp: string; hostname: string } | { ok: false; error: string }> {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -119,11 +120,11 @@ async function validateWebhookDeliveryTarget(url: string): Promise<{ ok: true } 
         return { ok: false, error: 'Webhook hostname resolves to a blocked private or loopback address' };
       }
     }
+
+    return { ok: true, resolvedIp: records[0]!.address, hostname };
   } catch {
     return { ok: false, error: 'Failed to resolve webhook hostname' };
   }
-
-  return { ok: true };
 }
 
 // ─────────────────────────── Signature
@@ -164,6 +165,10 @@ function decryptSecretFromEndpoint(endpoint: WebhookEndpoint): string {
     }
 
     return decrypted;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(`Webhook endpoint ${endpoint.id} has no encrypted secret`);
   }
 
   return endpoint.secret;
@@ -265,16 +270,27 @@ async function deliverWithRetries(
 
     const timestamp = Math.floor(Date.now() / 1000).toString();
     const signature = signPayload(body, endpointSecret, timestamp);
+    const parsedEndpointUrl = new URL(endpoint.url);
+    parsedEndpointUrl.hostname = targetValidation.resolvedIp;
+
+    // Prevent DNS rebinding between validation and request by pinning the connection
+    // to the validated IP while preserving TLS servername + Host header.
+    const pinnedDispatcher = new Agent({
+      connect: {
+        servername: targetValidation.hostname,
+      },
+    });
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), DELIVERY_TIMEOUT_MS);
 
     try {
-      const response = await fetch(endpoint.url, {
+      const requestInit: RequestInit = {
         method: 'POST',
         redirect: 'manual',
         headers: {
           'Content-Type': 'application/json',
+          Host: targetValidation.hostname,
           'X-Webhook-Id': payload.id,
           'X-Webhook-Event': payload.event,
           'X-Webhook-Signature': signature,
@@ -283,7 +299,13 @@ async function deliverWithRetries(
         },
         body,
         signal: controller.signal,
-      });
+      };
+
+      // `dispatcher` is an Undici-specific extension used in Node runtimes.
+      const response = await fetch(
+        parsedEndpointUrl.toString(),
+        { ...requestInit, dispatcher: pinnedDispatcher } as RequestInit
+      );
 
       const responseBody = await response.text().catch(() => '');
 
@@ -315,6 +337,7 @@ async function deliverWithRetries(
       }
     } finally {
       clearTimeout(timeout);
+      void pinnedDispatcher.close();
     }
   }
 

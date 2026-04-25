@@ -48,6 +48,7 @@ error MERCH_CapExceeded();
 error MERCH_NotConfigured();
 error MERCH_ApproveFailed();
 error MERCH_RevokeFailed();
+error MERCH_VFIDESettlementDisabled();
 
 // Removed local Ownable to use SharedInterfaces.sol
 
@@ -572,7 +573,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Capture customer score at payment start for accurate logging
         uint16 customerScore = address(seer) != address(0) ? seer.getScore(customer) : 500;
         
-        if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
+        _validateSettlementToken(token);
         
         // Get customer's vault
         address customerVault = vaultHub.vaultOf(customer);
@@ -728,7 +729,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         string calldata orderId
     ) internal returns (uint256 netAmount) {
         if (token == address(0) || amount == 0) revert MERCH_InvalidPayment();
-        if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
+        _validateSettlementToken(token);
         _checkFraudStatus(customer);
         _checkFraudStatus(merchant);
         
@@ -901,7 +902,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         PaymentChannel channel
     ) internal returns (uint256 netAmount) {
         if (token == address(0) || amount == 0) revert MERCH_InvalidPayment();
-        if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
+        _validateSettlementToken(token);
         _checkFraudStatus(customer);
         _checkFraudStatus(merchant);
         
@@ -1165,6 +1166,19 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         MerchantInfo storage info = merchants[merchant];
         info.totalVolume += amount;
         info.txCount += 1;
+    }
+
+    function _validateSettlementToken(address token) internal view {
+        if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
+
+        // F-07 REMEDIATION: Settlement is stablecoin-only.
+        // Tokens with a VFIDE-style burn router underdeliver versus invoice amounts.
+        // Reject them at the contract layer to prevent accounting mismatch.
+        try IVFIDETokenBurnRouterView(token).burnRouter() returns (address r) {
+            if (r != address(0)) revert MERCH_VFIDESettlementDisabled();
+        } catch {
+            // Non-VFIDE tokens do not expose burnRouter(); allow them when accepted.
+        }
     }
 
     function _estimateNetworkFee(address customer, address merchant, address token, uint256 amount) internal view returns (uint256) {

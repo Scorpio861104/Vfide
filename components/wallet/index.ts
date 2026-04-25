@@ -7,7 +7,6 @@
  * - Enhanced connection UX
  * - Chain switching
  * - Account abstraction awareness
- * - Embedded wallet (email/social login)
  * - Gasless/sponsored transactions
  * - Session keys for pre-approved actions
  */
@@ -21,10 +20,6 @@ export { EnhancedNetworkBanner, NetworkSwitchWidget } from './EnhancedNetworkBan
 
 export { WalletCapabilities } from './WalletCapabilities';
 export type { WalletCapabilitiesProps } from './WalletCapabilities';
-
-
-export { EmbeddedLogin } from './EmbeddedLogin';
-export type { EmbeddedLoginProps } from './EmbeddedLogin';
 
 export { GaslessBanner, GaslessStatus, GaslessToggle } from './GaslessTransaction';
 export type { GaslessBannerProps, GaslessStatusProps, GaslessToggleProps } from './GaslessTransaction';
@@ -64,7 +59,6 @@ export {
 
 export {
   EmbeddedWalletProvider,
-  useEmbeddedWallet,
   type EmbeddedUser,
   type AuthMethod,
 } from '@/lib/wallet/EmbeddedWalletAdapter';

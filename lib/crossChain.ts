@@ -381,7 +381,7 @@ export async function executeTransfer(
     providers: [EVM({ getWalletClient: () => Promise.resolve(walletClient as never) })],
   });
 
-  const transferId = `transfer-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const transferId = `transfer-${Date.now()}-${crypto.randomUUID()}`;
   const status: TransferStatus = {
     id: transferId,
     status: 'pending',

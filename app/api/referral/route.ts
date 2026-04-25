@@ -7,12 +7,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { z } from 'zod4';
+import { requireAuth } from '@/lib/auth/middleware';
 import { isAddress } from 'viem';
-
-const referralSchema = z.object({
-  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-});
 
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -35,14 +31,16 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const rawBody = await request.json().catch(() => null);
-  const parsed = referralSchema.safeParse(rawBody);
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
 
-  if (!parsed.success || !isAddress(parsed.data.address)) {
+  const address = authResult.user.address?.trim().toLowerCase() ?? '';
+  if (!isAddress(address)) {
     return NextResponse.json({ error: 'Valid wallet address required' }, { status: 400 });
   }
 
-  const { address } = parsed.data;
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vfide.io';
   const link = `${baseUrl}/join?ref=${address}`;
 

@@ -11,6 +11,46 @@ interface LogContext {
   [key: string]: unknown;
 }
 
+const ETH_ADDRESS_RE = /\b0x[a-fA-F0-9]{40}\b/g;
+const TX_HASH_RE = /\b0x[a-fA-F0-9]{64}\b/g;
+const EMAIL_RE = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+const PHONE_RE = /\b\+?\d{7,15}\b/g;
+
+function scrubString(value: string): string {
+  return value
+    .replace(TX_HASH_RE, '0xTXHASH')
+    .replace(ETH_ADDRESS_RE, '0xADDR')
+    .replace(EMAIL_RE, '<EMAIL>')
+    .replace(PHONE_RE, '<PHONE>');
+}
+
+function scrubValue(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return scrubString(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => scrubValue(entry));
+  }
+
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = scrubValue(v);
+    }
+    return out;
+  }
+
+  return value;
+}
+
+function toSentryExtras(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+  return value as Record<string, unknown>;
+}
+
 /**
  * Log levels for different environments
  */
@@ -50,19 +90,23 @@ function normalizeContext(context: unknown): LogContext | undefined {
     return context as LogContext;
   }
   if (context instanceof Error) {
-    return { message: context.message, stack: context.stack };
+    return {
+      message: scrubString(context.message),
+      stack: context.stack ? scrubString(context.stack) : undefined,
+    };
   }
-  return { value: String(context) };
+  return { value: scrubString(String(context)) };
 }
 
 /**
  * Format log message with context
  */
 function formatMessage(message: string, context?: LogContext): string {
+  const safeMessage = scrubString(message);
   if (!context || Object.keys(context).length === 0) {
-    return message;
+    return safeMessage;
   }
-  return `${message} ${JSON.stringify(context)}`;
+  return `${safeMessage} ${JSON.stringify(scrubValue(context))}`;
 }
 
 /**
@@ -97,9 +141,10 @@ class Logger {
       // Send warnings to Sentry in production (if configured)
       if (process.env.NODE_ENV === 'production') {
         try {
+          const safeExtra = toSentryExtras(scrubValue(normalizeContext(context)));
           Sentry.captureMessage(message, {
             level: 'warning',
-            extra: normalizeContext(context),
+            extra: safeExtra,
           });
         } catch {
           // Sentry not configured - fail silently
@@ -118,14 +163,19 @@ class Logger {
 
       // Always report errors to Sentry (if configured)
       try {
+        const safeMessage = scrubString(message);
+        const safeContext = toSentryExtras(scrubValue(normalizeContext(context)));
         if (error instanceof Error) {
-          Sentry.captureException(error, {
-            extra: { message, ...normalizeContext(context) },
+          const safeError = new Error(scrubString(error.message));
+          safeError.name = error.name;
+          safeError.stack = error.stack ? scrubString(error.stack) : undefined;
+          Sentry.captureException(safeError, {
+            extra: { message: safeMessage, ...(safeContext || {}) },
           });
         } else {
           Sentry.captureMessage(message, {
             level: 'error',
-            extra: { error, ...normalizeContext(context) },
+            extra: { error: scrubValue(error), ...(safeContext || {}) },
           });
         }
       } catch {

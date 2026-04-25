@@ -295,8 +295,8 @@ export function validateProductionEnvironment(): ValidationResult {
       result.valid = false;
     }
   } else if (redisConfigured.length === 0) {
-    if (strictProduction) {
-      result.errors.push('❌ Redis is required in strict production - distributed rate limiting and token revocation cannot run safely without it');
+    if (isProduction && !frontendOnly) {
+      result.errors.push('❌ Redis is required in production - distributed rate limiting and token revocation cannot run safely without it');
       result.valid = false;
     } else {
       result.warnings.push('⚠️  Redis is not configured - rate limiting will run in degraded mode');

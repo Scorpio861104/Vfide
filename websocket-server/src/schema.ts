@@ -45,7 +45,18 @@ const UnsubscribeSchema = z.object({
 const MessageSchema = z.object({
   v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
   type: z.literal('message'),
-  payload: z.record(z.string(), z.unknown()).or(z.string()),
+  payload: z.object({
+    event: z.string().min(1).max(64).optional(),
+    topic: TopicSchema.optional(),
+    data: z.union([
+      z.string(),
+      z.number(),
+      z.boolean(),
+      z.null(),
+      z.array(z.unknown()),
+      z.record(z.string(), z.unknown()),
+    ]).optional(),
+  }),
 });
 
 const AuthSchema = z.object({

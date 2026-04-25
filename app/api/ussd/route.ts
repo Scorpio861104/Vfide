@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { createHash } from 'node:crypto';
 import { timingSafeEqual } from 'node:crypto';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
@@ -40,6 +41,10 @@ async function readUSSDFields(request: NextRequest): Promise<{ sessionId: string
       text: params.get('text') || fromMultipart('text'),
     };
   }
+}
+
+function hashPhone(phoneNumber: string): string {
+  return createHash('sha256').update(phoneNumber.trim()).digest('hex').slice(0, 16);
 }
 
 function buildMenu(text: string): string {
@@ -107,7 +112,7 @@ export async function POST(request: NextRequest) {
   try {
     const { sessionId, phoneNumber, text } = await readUSSDFields(request);
 
-    logger.info(`[USSD] Session ${sessionId} from ${phoneNumber.slice(0, 7)}*** with input: ${text}`);
+    logger.info(`[USSD] Session ${sessionId} from phone_hash:${hashPhone(phoneNumber)} with input: ${text}`);
 
     const responseText = buildMenu(text);
     return new Response(responseText, {

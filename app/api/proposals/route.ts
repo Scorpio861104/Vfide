@@ -31,8 +31,8 @@ const createProposalRequestSchema = z.object({
   proposerAddress: z.string().trim().refine((value) => isAddress(value), {
     message: 'Invalid proposer address format',
   }),
-  title: z.string().trim().min(1),
-  description: z.string().trim().min(1),
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().min(1).max(10000),
   endsAt: z.coerce.date().optional(),
 });
 
@@ -123,18 +123,20 @@ async function verifyOnChainGovernanceEligibility(address: string): Promise<{ ve
   }
 
   try {
+    const seer = seerAddress as `0x${string}`;
+    const subject = address as `0x${string}`;
     const client = createPublicClient({ transport: http(rpcUrl) });
     const [minForGovernance, score] = await Promise.all([
       client.readContract({
-        address: seerAddress,
+        address: seer,
         abi: SEER_GOVERNANCE_ABI,
         functionName: 'minForGovernance',
       }),
       client.readContract({
-        address: seerAddress,
+        address: seer,
         abi: SEER_GOVERNANCE_ABI,
         functionName: 'getScore',
-        args: [address],
+        args: [subject],
       }),
     ]);
 

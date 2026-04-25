@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
   const caller = authResult.user.address.toLowerCase();
+  const callerIsAdmin = isAdmin(authResult.user);
 
   const searchParams = request.nextUrl.searchParams;
   const sinceMinutes = parsePositiveInteger(searchParams.get('sinceMinutes'), 1440);
@@ -133,6 +134,8 @@ export async function GET(request: NextRequest) {
   const filtered = recoveryFraudStore.filter((event) => {
     const ts = Date.parse(event.ts);
     if (!Number.isFinite(ts) || ts < cutoff) return false;
+
+    if (callerIsAdmin) return true;
 
     // Minimize intelligence leakage: return only events reported by caller
     // or events explicitly linked to caller as watcher/proposed owner.

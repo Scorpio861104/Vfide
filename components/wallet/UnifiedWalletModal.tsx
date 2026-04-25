@@ -5,7 +5,6 @@
  * 
  * A complete wallet experience combining:
  * - Traditional wallet connection (MetaMask, etc.)
- * - Embedded wallet (email/social login)
  * - Smart wallet features display
  * - Gasless transaction status
  * - Session key management
@@ -35,13 +34,11 @@ import { getExplorerLink } from '@/components/ui/EtherscanLink';
 
 // ==================== TYPES ====================
 
-type WalletView = 'main' | 'embedded' | 'capabilities' | 'gasless' | 'sessions' | 'settings';
+type WalletView = 'main' | 'capabilities' | 'gasless' | 'sessions' | 'settings';
 
 export interface UnifiedWalletModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Default to embedded wallet for new users */
-  defaultToEmbedded?: boolean;
 }
 
 // ==================== TAB NAVIGATION ====================
@@ -79,12 +76,11 @@ function TabButton({ icon, label, active, onClick, badge }: TabButtonProps) {
 export function UnifiedWalletModal({
   isOpen,
   onClose,
-  defaultToEmbedded = false,
 }: UnifiedWalletModalProps) {
   const { isConnected, address } = useAccount();
   const chainId = useChainId();
   const { capabilities } = useSmartWallet();
-  const [view, setView] = useState<WalletView>(defaultToEmbedded ? 'main' : 'main');
+  const [view, setView] = useState<WalletView>('main');
 
   const isAuthenticated = isConnected;
   const walletAddress = address;
@@ -93,22 +89,6 @@ export function UnifiedWalletModal({
 
   const renderContent = () => {
     switch (view) {
-      case 'embedded':
-        return (
-          <div className="p-6">
-            <button
-              onClick={() => setView('main')}
-              className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </button>
-            <div className="rounded-xl border border-amber-300/30 bg-amber-50/60 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-              Email and social embedded wallet login is temporarily unavailable in this build. Use wallet connection for now.
-            </div>
-          </div>
-        );
-
       case 'capabilities':
         return (
           <div className="p-6">

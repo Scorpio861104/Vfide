@@ -15,6 +15,16 @@ import { z } from 'zod4';
 const MAX_ID_LENGTH = 128;
 const MAX_IMAGE_NAME_LENGTH = 120;
 const MAX_EMOJI_LENGTH = 16;
+const DEFAULT_IMAGE_HOST_ALLOWLIST = ['images.vfide.io', 'cdn.vfide.io'];
+
+function getAllowedImageHosts(): Set<string> {
+  const configured = process.env.REACTION_IMAGE_HOST_ALLOWLIST
+    ?.split(',')
+    .map((host) => host.trim().toLowerCase())
+    .filter(Boolean);
+
+  return new Set((configured && configured.length > 0 ? configured : DEFAULT_IMAGE_HOST_ALLOWLIST));
+}
 
 const messageReactionPostSchema = z.object({
   messageId: z.string().trim().min(1).max(MAX_ID_LENGTH),
@@ -158,8 +168,16 @@ export async function POST(request: NextRequest) {
       // Validate URL format
       try {
         const parsedUrl = new URL(normalizedImageUrl);
-        if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+        if (parsedUrl.protocol !== 'https:') {
           throw new Error('Invalid protocol');
+        }
+
+        const allowedHosts = getAllowedImageHosts();
+        if (!allowedHosts.has(parsedUrl.hostname.toLowerCase())) {
+          return NextResponse.json(
+            { error: 'Image host is not allowed' },
+            { status: 400 }
+          );
         }
       } catch (error) {
         logger.debug('[Message Reaction POST] Invalid image URL', error);

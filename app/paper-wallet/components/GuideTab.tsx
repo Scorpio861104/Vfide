@@ -1,13 +1,13 @@
 'use client';
 
-import { BookOpen, Shield, Printer, Lock, Archive, AlertTriangle } from 'lucide-react';
+import { BookOpen, Shield, Lock, Archive, AlertTriangle } from 'lucide-react';
 
 const STEPS = [
   { icon: <Shield size={15} className="text-cyan-400" />, title: 'Use an offline device', desc: 'Generate the wallet on a computer that is not connected to the internet. Disable Wi-Fi and Bluetooth before generating.' },
-  { icon: <Printer size={15} className="text-green-400" />, title: 'Print immediately', desc: 'Print the address and private key directly. Use a wired printer, not a networked one. Do not save to PDF or cloud storage.' },
+  { icon: <Archive size={15} className="text-green-400" />, title: 'Store offline backup', desc: 'Write the address and recovery material by hand or store it in an encrypted offline medium. Avoid networked printers and cloud-synced files.' },
   { icon: <AlertTriangle size={15} className="text-yellow-400" />, title: 'Never photograph the key', desc: 'Do not take a photo of your private key or seed phrase. Phone cameras upload to cloud services in the background.' },
   { icon: <Lock size={15} className="text-purple-400" />, title: 'Store securely', desc: 'Keep the paper in a waterproof envelope in a safe or safety deposit box. Consider laminating it. Make 2–3 copies stored in different locations.' },
-  { icon: <Archive size={15} className="text-blue-400" />, title: 'Test before funding', desc: 'Verify the address format on the Verify tab before sending any funds. Confirm you can derive the address from the private key.' },
+  { icon: <Archive size={15} className="text-blue-400" />, title: 'Test before funding', desc: 'Send a tiny test amount first and confirm you can restore in an offline environment before moving meaningful funds.' },
   { icon: <Shield size={15} className="text-red-400" />, title: 'Protect from threats', desc: 'Physical theft is the primary risk. Ensure trusted people know where backups are in case of emergency, but cannot access them without authorization.' },
 ];
 

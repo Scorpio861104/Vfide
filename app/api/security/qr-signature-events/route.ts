@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -133,6 +133,11 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const caller = authResult.user.address.toLowerCase();
+  const callerIsAdmin = isAdmin(authResult.user);
+
   const searchParams = request.nextUrl.searchParams;
   const sinceMinutes = parsePositiveInteger(searchParams.get('sinceMinutes'), 60);
   const limit = parsePositiveInteger(searchParams.get('limit'), 100);
@@ -141,7 +146,9 @@ export async function GET(request: NextRequest) {
   const cutoff = Date.now() - sinceMinutes * 60 * 1000;
   const filtered = qrSignatureEventStore.filter((event) => {
     const ts = Date.parse(event.ts);
-    return Number.isFinite(ts) && ts >= cutoff;
+    if (!Number.isFinite(ts) || ts < cutoff) return false;
+    if (callerIsAdmin) return true;
+    return event.merchant === caller;
   });
 
   const recentEvents = filtered.slice(-effectiveLimit).reverse();

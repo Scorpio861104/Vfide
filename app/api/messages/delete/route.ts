@@ -14,7 +14,6 @@ const deleteMessageSchema = z.object({
   userAddress: z.string().trim().refine((value) => isAddress(value), {
     message: 'Invalid Ethereum address format',
   }),
-  hardDelete: z.boolean().optional(),
 });
 
 function toNonEmptyString(value: unknown): string | null {
@@ -58,7 +57,6 @@ export async function DELETE(request: NextRequest) {
     const messageId = toNonEmptyString(body.messageId);
     const conversationId = toNonEmptyString(body.conversationId);
     const userAddress = toNonEmptyString(body.userAddress);
-    const hardDelete = body.hardDelete === true;
 
     if (!messageId || !conversationId || !userAddress) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -95,16 +93,11 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    if (hardDelete) {
-      await query(`DELETE FROM messages WHERE id = $1`, [messageId]);
-      return NextResponse.json({ success: true, permanent: true });
-    } else {
-      const result = await query(
-        `UPDATE messages SET is_deleted = true, deleted_at = NOW(), content = '[Message deleted]' WHERE id = $1 RETURNING *`,
-        [messageId]
-      );
-      return NextResponse.json({ success: true, data: result.rows[0] });
-    }
+    const result = await query(
+      `UPDATE messages SET is_deleted = true, deleted_at = NOW(), content = '[Message deleted]' WHERE id = $1 RETURNING *`,
+      [messageId]
+    );
+    return NextResponse.json({ success: true, data: result.rows[0] });
   } catch (error) {
     logger.error('[Message Delete] Error:', error);
     return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });

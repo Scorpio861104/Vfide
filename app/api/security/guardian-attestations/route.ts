@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth } from '@/lib/auth/middleware';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -185,6 +185,11 @@ export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+  const caller = authResult.user.address.toLowerCase();
+  const callerIsAdmin = isAdmin(authResult.user);
+
   const params = request.nextUrl.searchParams;
   const mode = params.get('mode');
 
@@ -201,7 +206,11 @@ export async function GET(request: NextRequest) {
       return Number.isFinite(createdAtMs) && createdAtMs >= windowStartMs;
     });
 
-    const activeWindowedRecords = windowedRecords.filter((item) => item.expiresAt >= nowSec);
+    const visibleRecords = callerIsAdmin
+      ? windowedRecords
+      : windowedRecords.filter((item) => item.owner === caller || item.guardian === caller);
+
+    const activeWindowedRecords = visibleRecords.filter((item) => item.expiresAt >= nowSec);
     const expiringSoon = activeWindowedRecords.filter((item) => item.expiresAt <= expiringSoonSec).length;
 
     const topOwners = getTopCounts(activeWindowedRecords.map((item) => item.owner), 5).map((entry) => ({
@@ -214,7 +223,7 @@ export async function GET(request: NextRequest) {
       count: entry.count,
     }));
 
-    const events: GuardianAttestationSummaryEvent[] = windowedRecords
+    const events: GuardianAttestationSummaryEvent[] = visibleRecords
       .slice(-limit)
       .reverse()
       .map((item) => ({
@@ -229,7 +238,7 @@ export async function GET(request: NextRequest) {
 
     const summary: GuardianAttestationSummary = {
       sinceMinutes,
-      total: windowedRecords.length,
+      total: visibleRecords.length,
       active: activeWindowedRecords.length,
       expiringSoon,
       topOwners,
@@ -245,6 +254,10 @@ export async function GET(request: NextRequest) {
   const guardian = normalizeAddress(params.get('guardian'));
   if (!guardian) {
     return NextResponse.json({ error: 'guardian query param is required' }, { status: 400 });
+  }
+
+  if (!callerIsAdmin && guardian !== caller) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const limit = Math.min(parsePositiveInt(params.get('limit'), 200), 500);

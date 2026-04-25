@@ -248,6 +248,7 @@ function AccountDropdown({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const chainId = useChainId();
   const { capabilities } = useSmartWallet();
   const walletTypeLabel = useWalletTypeLabel();
   

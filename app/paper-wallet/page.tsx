@@ -4,13 +4,12 @@ import { Footer } from '@/components/layout/Footer';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { GenerateTab } from './components/GenerateTab';
-import { VerifyTab } from './components/VerifyTab';
 import { GuideTab } from './components/GuideTab';
 
-type TabId = 'generate' | 'verify' | 'guide';
+type TabId = 'generate' | 'guide';
 
-const TAB_LABELS: Record<TabId, string> = { 'generate': 'Generate', 'verify': 'Verify', 'guide': 'Guide' };
-const TAB_IDS: TabId[] = ['generate', 'verify', 'guide'];
+const TAB_LABELS: Record<TabId, string> = { 'generate': 'Generate', 'guide': 'Guide' };
+const TAB_IDS: TabId[] = ['generate', 'guide'];
 
 export default function PaperWalletPage() {
   const [activeTab, setActiveTab] = useState<TabId>('generate');
@@ -22,6 +21,10 @@ export default function PaperWalletPage() {
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-bold text-white mb-2">Paper Wallet</motion.h1>
           <p className="text-white/60 mb-8">Generate cold storage backup</p>
+
+          <div className="mb-6 rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+            This page generates keys in your browser. If your browser, device, or this page&apos;s JavaScript is compromised, the keys are compromised. For real funds, use the offline paper-wallet bundle from a verified release and run it from local disk on an air-gapped machine.
+          </div>
 
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {TAB_IDS.map(id => (
@@ -35,7 +38,6 @@ export default function PaperWalletPage() {
           </div>
 
           {activeTab === 'generate' && <GenerateTab />}
-          {activeTab === 'verify' && <VerifyTab />}
           {activeTab === 'guide' && <GuideTab />}
         </div>
       </div>
