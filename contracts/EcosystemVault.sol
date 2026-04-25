@@ -1108,15 +1108,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         operationsPool -= amount;
         totalBurned += amount;
 
-        // H-10 FIX: Use VFIDEToken.burn() so totalSupply is correctly decremented.
-        // The old comment claiming VFIDEToken has no burn() was incorrect.
-        try IVFIDEBurnable(address(rewardToken)).burn(amount) {
-            // burned successfully
-        } catch {
-            // Fallback: transfer to dead address if burn() reverts for any reason
-            address dead = 0x000000000000000000000000000000000000dEaD;
-            rewardToken.safeTransfer(dead, amount);
-        }
+        // C-9 FIX: Call VFIDEToken.burn() so totalSupply is correctly decremented.
+        // The dead-address "soft burn" path is removed — it left totalSupply unchanged,
+        // making the deflationary narrative false.
+        IVFIDEBurnable(address(rewardToken)).burn(amount);
         emit FundsBurned(amount);
     }
 
