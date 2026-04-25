@@ -609,17 +609,6 @@ wss.on('connection', (ws: WebSocket, _req: http.IncomingMessage) => {
         ws.send(JSON.stringify({ type: 'unsubscribed', payload: { topic: msg.payload.topic } }));
         break;
 
-      case 'message':
-        ws.send(JSON.stringify({
-          type: 'message',
-          payload: {
-            from: getClientLabel(client),
-            data: msg.payload,
-            timestamp: Date.now(),
-          },
-        }));
-        break;
-
       default:
         sendError(ws, 'UNKNOWN_TYPE', 'Unknown message type');
     }

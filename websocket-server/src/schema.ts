@@ -55,16 +55,6 @@ const JsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
   ])
 );
 
-const MessageSchema = z.object({
-  v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
-  type: z.literal('message'),
-  payload: z.object({
-    event: z.string().min(1).max(64),
-    topic: TopicSchema.optional(),
-    data: JsonValueSchema.optional(),
-  }).strict(),
-});
-
 const AuthSchema = z.object({
   v: z.literal(CURRENT_PROTOCOL_VERSION).optional(),
   type: z.literal('auth'),
@@ -78,7 +68,6 @@ export const InboundMessageSchema = z.discriminatedUnion('type', [
   PingSchema,
   SubscribeSchema,
   UnsubscribeSchema,
-  MessageSchema,
 ]);
 
 export type InboundMessage = z.infer<typeof InboundMessageSchema>;
