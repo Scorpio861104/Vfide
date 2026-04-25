@@ -3,7 +3,7 @@ describe('lib/validateProduction strict production chain checks', () => {
 
   const baseStrictProductionEnv = {
     NODE_ENV: 'production',
-    CI: 'true',
+    CI: 'false',
     NEXT_PUBLIC_FRONTEND_ONLY: 'false',
     FRONTEND_SELF_CONTAINED: 'false',
     NEXT_PUBLIC_CHAIN_ID: '84532',
@@ -60,7 +60,7 @@ describe('lib/validateProduction strict production chain checks', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toContain(
-      '❌ Redis is required in strict production - distributed rate limiting and token revocation cannot run safely without it'
+      '❌ Redis is required in production - distributed rate limiting and token revocation cannot run safely without it'
     );
   });
 
