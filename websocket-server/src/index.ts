@@ -36,8 +36,12 @@ const AUTH_TIMEOUT_MS = Math.min(
 
 const TOPIC_ACL_PATH = process.env.WS_TOPIC_ACL_PATH;
 const TOPIC_ACL_REFRESH_MS = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '30000', 10);
-const TOPIC_ACL_ALLOW_MISSING = process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const TOPIC_ACL_ALLOW_MISSING = !IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
+
+if (IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true') {
+  console.warn('[ws] Ignoring WS_TOPIC_ACL_ALLOW_MISSING=true in production (topic ACL remains fail-closed).');
+}
 
 // WS-1 mitigation: Require explicit proxy configuration to use X-Forwarded-For
 // Defaults to false for security (direct address only) unless explicitly enabled
