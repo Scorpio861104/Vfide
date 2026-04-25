@@ -59,6 +59,26 @@ function resolveActorRole(authAddress: string, lane: {
   return null
 }
 
+function toUserSafeActionError(message: string): string {
+  if (message.toLowerCase().includes('requires evidence')) {
+    return 'Action requires evidence note.'
+  }
+
+  if (message.includes('expired')) {
+    return 'Action cannot be performed because the lane is expired.'
+  }
+
+  if (message.includes('Invalid simulation state')) {
+    return 'Action cannot be applied due to invalid lane state.'
+  }
+
+  if (message.includes('Action not allowed') || message.includes('requires')) {
+    return 'Action is not allowed in the current lane state.'
+  }
+
+  return 'Action failed validation.'
+}
+
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const rateLimited = await withRateLimit(request, 'write')
   if (rateLimited) return rateLimited
@@ -140,7 +160,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       message.includes('expired') ||
       message.includes('Invalid simulation state')
     ) {
-      return NextResponse.json({ error: message }, { status: 400 })
+      return NextResponse.json({ error: toUserSafeActionError(message) }, { status: 400 })
     }
 
     logger.error('[Flashloans POST action] Error:', error)
