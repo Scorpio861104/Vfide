@@ -30,13 +30,15 @@ export async function POST(request: NextRequest) {
   }
 
   const rawAddress = body.address;
-  // Use frontend's default chain ID (Base Sepolia testnet) if not provided
-  // Frontend default: process.env.NEXT_PUBLIC_CHAIN_ID = 84532 (Base Sepolia)
-  // Ensures consistency between client and server auth flows
-  const chainId = body.chainId ?? (Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10) || 84532);
+  const envChainId = Number.parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '', 10);
+  const chainId = body.chainId ?? envChainId;
   const domain = resolveTrustedAuthDomain(request.headers);
   const ip = getRequestIp(request.headers);
   const userAgent = request.headers.get('user-agent') || 'unknown';
+
+  if (!Number.isInteger(chainId) || chainId <= 0) {
+    return NextResponse.json({ error: 'Chain ID is required and must be configured' }, { status: 400 });
+  }
 
   if (!domain) {
     return NextResponse.json({ error: 'Untrusted auth domain' }, { status: 400 });

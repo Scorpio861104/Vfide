@@ -31,7 +31,7 @@ const keyDirectoryUpdateSchema = z.object({
   encryptionPublicKey: z.string().trim().min(1),
   signature: z.string().trim().min(1),
   timestamp: z.coerce.number().int().positive(),
-  algorithm: z.string().trim().min(1).optional(),
+  algorithm: z.literal(KEY_DIRECTORY_ALGORITHM).optional(),
 });
 
 export async function GET(request: NextRequest) {

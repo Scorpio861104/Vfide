@@ -142,12 +142,19 @@ export async function verifyOnChainAdmin(address: string): Promise<boolean> {
   const ocpAddress = process.env.OCP_ADDRESS;
   const rpcUrl = process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL;
   if (!ocpAddress || !rpcUrl) {
-    // On-chain verification not configured — fall back to env-var check only.
+    // In production, fail closed if required on-chain admin verification inputs are missing.
+    if (process.env.NODE_ENV === 'production') {
+      logger.error('[Auth] Missing OCP_ADDRESS or RPC_URL for on-chain admin verification');
+      return false;
+    }
+
+    // In non-production, allow env-based fallback to avoid blocking local development.
     return ADMIN_ADDRESSES.has(address.toLowerCase());
   }
   try {
     const response = await fetch(rpcUrl, {
       method: 'POST',
+      signal: AbortSignal.timeout(3000),
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         jsonrpc: '2.0',
@@ -156,6 +163,10 @@ export async function verifyOnChainAdmin(address: string): Promise<boolean> {
         id: 1,
       }),
     });
+    if (!response.ok) {
+      return false;
+    }
+
     const json = await response.json();
     if (json.result) {
       const onChainOwner = ('0x' + json.result.slice(-40)).toLowerCase();
