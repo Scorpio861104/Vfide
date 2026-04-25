@@ -115,6 +115,10 @@ const eslintConfig = defineConfig([
         {
           "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='get'][arguments.0.type='Literal'][arguments.0.value='x-real-ip']",
           "message": "Do not read x-real-ip directly. Use getRequestIp() from lib/security/requestContext.",
+        },
+        {
+          "selector": "CallExpression[callee.type='MemberExpression'][callee.object.name='NextResponse'][callee.property.name='json'] > ObjectExpression.arguments:first-child > Property[key.name='error'][value.type='MemberExpression'][value.property.name='message']",
+          "message": "Do not return raw error.message in API responses. Use a sanitized error string or apiError().",
         }
       ],
     },
