@@ -83,16 +83,16 @@ CREATE TABLE IF NOT EXISTS user_weekly_progress (
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Indexes
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_daily_quests_active
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_daily_quests_active
   ON daily_quests (is_active, difficulty, quest_key);
 
-CREATE INDEX IF NOT EXISTS idx_user_quest_progress_user_date
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_quest_progress_user_date
   ON user_quest_progress (user_id, quest_date);
 
-CREATE INDEX IF NOT EXISTS idx_weekly_challenges_active_week
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_weekly_challenges_active_week
   ON weekly_challenges (is_active, week_start, week_end);
 
-CREATE INDEX IF NOT EXISTS idx_user_weekly_progress_user_week
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_weekly_progress_user_week
   ON user_weekly_progress (user_id, week_start);
 
 COMMIT;

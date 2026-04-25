@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS security_alert_dispatches (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_security_alert_dispatches_last_sent_at
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_alert_dispatches_last_sent_at
   ON security_alert_dispatches(last_sent_at DESC);

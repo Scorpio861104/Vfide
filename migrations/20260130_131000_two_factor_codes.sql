@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS two_factor_codes (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_two_factor_codes_user_method ON two_factor_codes(user_id, method);
-CREATE INDEX IF NOT EXISTS idx_two_factor_codes_expires_at ON two_factor_codes(expires_at);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_two_factor_codes_user_method ON two_factor_codes(user_id, method);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_two_factor_codes_expires_at ON two_factor_codes(expires_at);
 
 COMMIT;

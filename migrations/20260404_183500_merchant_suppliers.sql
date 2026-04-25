@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_suppliers_merchant_name
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_suppliers_merchant_name
   ON merchant_suppliers (merchant_address, supplier_name);
 
-CREATE INDEX IF NOT EXISTS idx_purchase_orders_merchant_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_purchase_orders_merchant_created
   ON purchase_orders (merchant_address, created_at DESC);

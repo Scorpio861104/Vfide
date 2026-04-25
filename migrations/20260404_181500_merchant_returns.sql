@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS merchant_returns (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_returns_merchant_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_returns_merchant_created
   ON merchant_returns (merchant_address, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_merchant_returns_status
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_returns_status
   ON merchant_returns (status);

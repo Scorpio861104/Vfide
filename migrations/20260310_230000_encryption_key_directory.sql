@@ -11,9 +11,9 @@ CREATE TABLE IF NOT EXISTS encryption_key_directory (
   CHECK (address ~ '^0x[a-fA-F0-9]{40}$')
 );
 
-CREATE INDEX IF NOT EXISTS idx_encryption_key_directory_active
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_encryption_key_directory_active
   ON encryption_key_directory(address)
   WHERE revoked_at IS NULL;
 
-CREATE INDEX IF NOT EXISTS idx_encryption_key_directory_updated_at
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_encryption_key_directory_updated_at
   ON encryption_key_directory(updated_at DESC);

@@ -6,6 +6,6 @@ BEGIN;
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE;
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
-CREATE INDEX IF NOT EXISTS idx_notifications_archived ON notifications(archived);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_archived ON notifications(archived);
 
 COMMIT;

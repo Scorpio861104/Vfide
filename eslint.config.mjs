@@ -103,8 +103,26 @@ const eslintConfig = defineConfig([
         {
           "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='request'][callee.object.name='ethereum']",
           "message": "Use the typed requestEthereum() helper instead of calling ethereum.request() directly.",
+        },
+        {
+          "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='get'][arguments.0.type='Literal'][arguments.0.value='x-forwarded-for']",
+          "message": "Do not read x-forwarded-for directly. Use getRequestIp() from lib/security/requestContext.",
+        },
+        {
+          "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='get'][arguments.0.type='Literal'][arguments.0.value='cf-connecting-ip']",
+          "message": "Do not read cf-connecting-ip directly. Use getRequestIp() from lib/security/requestContext.",
+        },
+        {
+          "selector": "CallExpression[callee.type='MemberExpression'][callee.property.name='get'][arguments.0.type='Literal'][arguments.0.value='x-real-ip']",
+          "message": "Do not read x-real-ip directly. Use getRequestIp() from lib/security/requestContext.",
         }
       ],
+    },
+  },
+  {
+    files: ["lib/security/requestContext.ts"],
+    rules: {
+      "no-restricted-syntax": "off",
     },
   },
 ]);

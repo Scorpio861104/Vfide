@@ -92,10 +92,10 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Indexes
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_monthly_leaderboard_month_score
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_monthly_leaderboard_month_score
   ON monthly_leaderboard (month_year, activity_score DESC, updated_at ASC);
 
-CREATE INDEX IF NOT EXISTS idx_monthly_leaderboard_user_month
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_monthly_leaderboard_user_month
   ON monthly_leaderboard (user_id, month_year);
 
 COMMIT;

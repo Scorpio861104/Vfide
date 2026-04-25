@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS merchant_gift_cards (
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'depleted', 'expired', 'cancelled'))
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_gift_cards_merchant_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_gift_cards_merchant_created
   ON merchant_gift_cards (merchant_address, purchased_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_merchant_gift_cards_code
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_gift_cards_code
   ON merchant_gift_cards (code);

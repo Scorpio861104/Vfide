@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS merchant_webhook_endpoints (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_webhook_endpoints_merchant ON merchant_webhook_endpoints(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_webhook_endpoints_status ON merchant_webhook_endpoints(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_webhook_endpoints_merchant ON merchant_webhook_endpoints(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_webhook_endpoints_status ON merchant_webhook_endpoints(status);
 
 -- ════════════════════════════════════════════════════════
 -- WEBHOOK DELIVERIES: Track each webhook delivery attempt
@@ -42,9 +42,9 @@ CREATE TABLE IF NOT EXISTS merchant_webhook_deliveries (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_endpoint ON merchant_webhook_deliveries(endpoint_id);
-CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_event ON merchant_webhook_deliveries(event_type);
-CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_created ON merchant_webhook_deliveries(created_at DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_webhook_deliveries_endpoint ON merchant_webhook_deliveries(endpoint_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_webhook_deliveries_event ON merchant_webhook_deliveries(event_type);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_webhook_deliveries_created ON merchant_webhook_deliveries(created_at DESC);
 
 -- ════════════════════════════════════════════════════════
 -- INVOICES: Full invoice system with line items
@@ -73,11 +73,11 @@ CREATE TABLE IF NOT EXISTS merchant_invoices (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_invoices_merchant ON merchant_invoices(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_invoices_customer ON merchant_invoices(customer_address);
-CREATE INDEX IF NOT EXISTS idx_invoices_status ON merchant_invoices(status);
-CREATE INDEX IF NOT EXISTS idx_invoices_payment_link ON merchant_invoices(payment_link_id);
-CREATE INDEX IF NOT EXISTS idx_invoices_number ON merchant_invoices(invoice_number);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_merchant ON merchant_invoices(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_customer ON merchant_invoices(customer_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_status ON merchant_invoices(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_payment_link ON merchant_invoices(payment_link_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_number ON merchant_invoices(invoice_number);
 
 -- ════════════════════════════════════════════════════════
 -- INVOICE LINE ITEMS
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS merchant_invoice_items (
   sort_order INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON merchant_invoice_items(invoice_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoice_items_invoice ON merchant_invoice_items(invoice_id);
 
 -- ════════════════════════════════════════════════════════
 -- SUBSCRIPTION PLANS: Merchant-defined recurring billing plans
@@ -115,8 +115,8 @@ CREATE TABLE IF NOT EXISTS merchant_subscription_plans (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_sub_plans_merchant ON merchant_subscription_plans(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_sub_plans_status ON merchant_subscription_plans(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sub_plans_merchant ON merchant_subscription_plans(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sub_plans_status ON merchant_subscription_plans(status);
 
 -- Enhance existing subscriptions table with plan reference and trial support
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS plan_id INTEGER REFERENCES merchant_subscription_plans(id);

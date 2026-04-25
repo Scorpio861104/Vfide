@@ -7,7 +7,7 @@ ALTER TABLE subscriptions
 ALTER TABLE subscriptions
   ALTER COLUMN next_payment DROP NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_subscriptions_status_updated_at
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_subscriptions_status_updated_at
   ON subscriptions (status, updated_at DESC);
 
 COMMIT;

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS merchant_coupons (
   UNIQUE (merchant_address, code)
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_coupons_merchant_active
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_coupons_merchant_active
   ON merchant_coupons (merchant_address, active, valid_from DESC);
 
 CREATE TABLE IF NOT EXISTS coupon_redemptions (
@@ -29,5 +29,5 @@ CREATE TABLE IF NOT EXISTS coupon_redemptions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_coupon_customer
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coupon_redemptions_coupon_customer
   ON coupon_redemptions (coupon_id, customer_address, created_at DESC);

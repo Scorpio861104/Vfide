@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS merchant_locations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_locations_merchant_name
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_locations_merchant_name
   ON merchant_locations (merchant_address, name);

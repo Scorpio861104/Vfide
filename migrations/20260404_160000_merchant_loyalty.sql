@@ -22,5 +22,5 @@ CREATE TABLE IF NOT EXISTS customer_loyalty (
   PRIMARY KEY (merchant_address, customer_address)
 );
 
-CREATE INDEX IF NOT EXISTS idx_customer_loyalty_merchant_updated
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_customer_loyalty_merchant_updated
   ON customer_loyalty (merchant_address, updated_at DESC);

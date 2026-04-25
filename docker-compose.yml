@@ -7,19 +7,31 @@ services:
       - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_USER: vfide_user
-      # SECURITY: Do NOT use this default password in any non-local environment.
-      # Set POSTGRES_PASSWORD via Docker secrets or a secrets manager (e.g. AWS Secrets Manager).
-      # Generate a strong password: openssl rand -base64 32
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: vfide_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    secrets:
+      - postgres_password
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vfide_user"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  migrator:
+    image: node:25-alpine
+    container_name: vfide-migrator
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /app
+    volumes:
+      - ./:/app
+    environment:
+      DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
+    command: ["sh", "-c", "npm ci && npm run migrate:up"]
 
   websocket:
     build:
@@ -30,16 +42,24 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
     environment:
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
       DATABASE_URL: postgresql://vfide_user:${POSTGRES_PASSWORD}@postgres:5432/vfide_db
+    secrets:
+      - jwt_secret
+    command: ["sh", "-c", "export JWT_SECRET=$(cat /run/secrets/jwt_secret) && node dist/index.js"]
 
 volumes:
   postgres_data:
     driver: local
+
+secrets:
+  postgres_password:
+    file: ./.secrets/postgres_password
+  jwt_secret:
+    file: ./.secrets/jwt_secret
 
 networks:
   default:

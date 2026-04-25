@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS loans (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_loans_lender ON loans(lender_address);
-CREATE INDEX IF NOT EXISTS idx_loans_borrower ON loans(borrower_address);
-CREATE INDEX IF NOT EXISTS idx_loans_status ON loans(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_loans_lender ON loans(lender_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_loans_borrower ON loans(borrower_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_loans_status ON loans(status);
 
 -- Flash loan tracking
 CREATE TABLE IF NOT EXISTS flash_loans (
@@ -33,4 +33,4 @@ CREATE TABLE IF NOT EXISTS flash_loans (
     executed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_flash_loans_lender ON flash_loans(lender_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_flash_loans_lender ON flash_loans(lender_address);

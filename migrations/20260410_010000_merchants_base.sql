@@ -22,6 +22,6 @@ CREATE TABLE IF NOT EXISTS merchants (
     suspended_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchants_wallet ON merchants(wallet_address);
-CREATE INDEX IF NOT EXISTS idx_merchants_category ON merchants(category);
-CREATE INDEX IF NOT EXISTS idx_merchants_registered ON merchants(is_registered) WHERE is_registered = true;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchants_wallet ON merchants(wallet_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchants_category ON merchants(category);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchants_registered ON merchants(is_registered) WHERE is_registered = true;

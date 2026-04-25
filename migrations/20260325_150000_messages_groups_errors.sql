@@ -76,22 +76,22 @@ CREATE TABLE IF NOT EXISTS error_logs (
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Indexes
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_message_reactions_message
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_message_reactions_message
   ON message_reactions (message_id);
 
-CREATE INDEX IF NOT EXISTS idx_message_edits_message
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_message_edits_message
   ON message_edits (message_id);
 
 -- Compound index on group_messages referenced by the abuse-guard migration
 -- (that migration only adds the index if the table exists, so ensure it is
 -- created here to avoid a runtime race.)
-CREATE INDEX IF NOT EXISTS idx_group_messages_group_sender_created_at
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_group_messages_group_sender_created_at
   ON group_messages (group_id, sender_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_error_logs_severity_timestamp
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_error_logs_severity_timestamp
   ON error_logs (severity, timestamp DESC);
 
-CREATE INDEX IF NOT EXISTS idx_error_logs_user
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_error_logs_user
   ON error_logs (user_id, timestamp DESC);
 
 COMMIT;

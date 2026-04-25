@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS seer_analytics_daily_rollup (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_seer_analytics_daily_rollup_day ON seer_analytics_daily_rollup(day DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_seer_analytics_daily_rollup_day ON seer_analytics_daily_rollup(day DESC);
 
 CREATE TABLE IF NOT EXISTS seer_reason_code_daily_rollup (
   day DATE NOT NULL,
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS seer_reason_code_daily_rollup (
   PRIMARY KEY (day, reason_code)
 );
 
-CREATE INDEX IF NOT EXISTS idx_seer_reason_code_daily_rollup_day ON seer_reason_code_daily_rollup(day DESC);
-CREATE INDEX IF NOT EXISTS idx_seer_reason_code_daily_rollup_code ON seer_reason_code_daily_rollup(reason_code);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_seer_reason_code_daily_rollup_day ON seer_reason_code_daily_rollup(day DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_seer_reason_code_daily_rollup_code ON seer_reason_code_daily_rollup(reason_code);
 
 CREATE OR REPLACE FUNCTION refresh_seer_analytics_rollup(p_start_date DATE, p_end_date DATE)
 RETURNS VOID AS $$

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS time_locks (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_time_locks_user_id ON time_locks(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_time_locks_user_id ON time_locks(user_id);
 
 CREATE TABLE IF NOT EXISTS streams (
   id SERIAL PRIMARY KEY,
@@ -32,8 +32,8 @@ CREATE TABLE IF NOT EXISTS streams (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_streams_sender ON streams(sender_address);
-CREATE INDEX IF NOT EXISTS idx_streams_recipient ON streams(recipient_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_streams_sender ON streams(sender_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_streams_recipient ON streams(recipient_address);
 
 CREATE TABLE IF NOT EXISTS enterprise_orders (
   id SERIAL PRIMARY KEY,
@@ -45,6 +45,6 @@ CREATE TABLE IF NOT EXISTS enterprise_orders (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_enterprise_orders_user_id ON enterprise_orders(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_enterprise_orders_user_id ON enterprise_orders(user_id);
 
 COMMIT;

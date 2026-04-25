@@ -39,9 +39,9 @@ CREATE TABLE IF NOT EXISTS merchant_profiles (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_profiles_slug ON merchant_profiles(slug);
-CREATE INDEX IF NOT EXISTS idx_merchant_profiles_status ON merchant_profiles(status);
-CREATE INDEX IF NOT EXISTS idx_merchant_profiles_featured ON merchant_profiles(featured) WHERE featured = true;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_profiles_slug ON merchant_profiles(slug);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_profiles_status ON merchant_profiles(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_profiles_featured ON merchant_profiles(featured) WHERE featured = true;
 
 -- ════════════════════════════════════════════════════════
 -- PRODUCT CATEGORIES: Hierarchical category tree per merchant
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS merchant_categories (
   UNIQUE(merchant_address, slug)
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_categories_merchant ON merchant_categories(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_categories_merchant ON merchant_categories(merchant_address);
 
 -- ════════════════════════════════════════════════════════
 -- PRODUCTS: Persistent product catalog
@@ -95,12 +95,12 @@ CREATE TABLE IF NOT EXISTS merchant_products (
   UNIQUE(merchant_address, slug)
 );
 
-CREATE INDEX IF NOT EXISTS idx_products_merchant ON merchant_products(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_products_category ON merchant_products(category_id);
-CREATE INDEX IF NOT EXISTS idx_products_status ON merchant_products(status);
-CREATE INDEX IF NOT EXISTS idx_products_type ON merchant_products(product_type);
-CREATE INDEX IF NOT EXISTS idx_products_tags ON merchant_products USING GIN(tags);
-CREATE INDEX IF NOT EXISTS idx_products_search ON merchant_products USING GIN(
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_merchant ON merchant_products(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_category ON merchant_products(category_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_status ON merchant_products(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_type ON merchant_products(product_type);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_tags ON merchant_products USING GIN(tags);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_search ON merchant_products USING GIN(
   to_tsvector('english', coalesce(name, '') || ' ' || coalesce(description, '') || ' ' || coalesce(short_description, ''))
 );
 
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS merchant_product_variants (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_product_variants_product ON merchant_product_variants(product_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_product_variants_product ON merchant_product_variants(product_id);
 
 -- ════════════════════════════════════════════════════════
 -- ORDERS: Full order lifecycle management
@@ -163,11 +163,11 @@ CREATE TABLE IF NOT EXISTS merchant_orders (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_orders_merchant ON merchant_orders(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_orders_customer ON merchant_orders(customer_address);
-CREATE INDEX IF NOT EXISTS idx_orders_status ON merchant_orders(status);
-CREATE INDEX IF NOT EXISTS idx_orders_payment ON merchant_orders(payment_status);
-CREATE INDEX IF NOT EXISTS idx_orders_created ON merchant_orders(created_at DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_merchant ON merchant_orders(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_customer ON merchant_orders(customer_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_status ON merchant_orders(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_payment ON merchant_orders(payment_status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_created ON merchant_orders(created_at DESC);
 
 -- ════════════════════════════════════════════════════════
 -- ORDER ITEMS: Line items on each order
@@ -188,8 +188,8 @@ CREATE TABLE IF NOT EXISTS merchant_order_items (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_order_items_order ON merchant_order_items(order_id);
-CREATE INDEX IF NOT EXISTS idx_order_items_product ON merchant_order_items(product_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_order_items_order ON merchant_order_items(order_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_order_items_product ON merchant_order_items(product_id);
 
 -- ════════════════════════════════════════════════════════
 -- REVIEWS: Purchase-verified review system
@@ -214,10 +214,10 @@ CREATE TABLE IF NOT EXISTS merchant_reviews (
   UNIQUE(reviewer_address, product_id)  -- one review per product per customer
 );
 
-CREATE INDEX IF NOT EXISTS idx_reviews_merchant ON merchant_reviews(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_reviews_product ON merchant_reviews(product_id);
-CREATE INDEX IF NOT EXISTS idx_reviews_reviewer ON merchant_reviews(reviewer_address);
-CREATE INDEX IF NOT EXISTS idx_reviews_rating ON merchant_reviews(rating);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reviews_merchant ON merchant_reviews(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reviews_product ON merchant_reviews(product_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reviews_reviewer ON merchant_reviews(reviewer_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_reviews_rating ON merchant_reviews(rating);
 
 -- ════════════════════════════════════════════════════════
 -- SERVICE BOOKINGS: Appointment/booking slots for service merchants
@@ -237,8 +237,8 @@ CREATE TABLE IF NOT EXISTS merchant_service_slots (
   CHECK (day_of_week IS NOT NULL OR specific_date IS NOT NULL)
 );
 
-CREATE INDEX IF NOT EXISTS idx_service_slots_merchant ON merchant_service_slots(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_service_slots_product ON merchant_service_slots(product_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_slots_merchant ON merchant_service_slots(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_slots_product ON merchant_service_slots(product_id);
 
 CREATE TABLE IF NOT EXISTS merchant_bookings (
   id SERIAL PRIMARY KEY,
@@ -259,9 +259,9 @@ CREATE TABLE IF NOT EXISTS merchant_bookings (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_bookings_merchant ON merchant_bookings(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_bookings_date ON merchant_bookings(booking_date);
-CREATE INDEX IF NOT EXISTS idx_bookings_customer ON merchant_bookings(customer_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_merchant ON merchant_bookings(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_date ON merchant_bookings(booking_date);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_customer ON merchant_bookings(customer_address);
 
 -- ════════════════════════════════════════════════════════
 -- DIGITAL GOODS: File/key delivery after payment
@@ -280,7 +280,7 @@ CREATE TABLE IF NOT EXISTS merchant_digital_assets (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_digital_assets_product ON merchant_digital_assets(product_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_digital_assets_product ON merchant_digital_assets(product_id);
 
 CREATE TABLE IF NOT EXISTS merchant_digital_deliveries (
   id SERIAL PRIMARY KEY,
@@ -294,7 +294,7 @@ CREATE TABLE IF NOT EXISTS merchant_digital_deliveries (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_digital_deliveries_order ON merchant_digital_deliveries(order_id);
-CREATE INDEX IF NOT EXISTS idx_digital_deliveries_token ON merchant_digital_deliveries(download_token);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_digital_deliveries_order ON merchant_digital_deliveries(order_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_digital_deliveries_token ON merchant_digital_deliveries(download_token);
 
 COMMIT;

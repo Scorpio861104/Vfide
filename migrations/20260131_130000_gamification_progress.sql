@@ -19,6 +19,6 @@ CREATE TABLE IF NOT EXISTS onboarding_progress (
   PRIMARY KEY (user_id, item_id)
 );
 
-CREATE INDEX IF NOT EXISTS idx_onboarding_progress_user ON onboarding_progress(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_onboarding_progress_user ON onboarding_progress(user_id);
 
 COMMIT;

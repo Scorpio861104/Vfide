@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS merchant_withdrawals (
   completed_at TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_withdrawals_merchant_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_withdrawals_merchant_created
   ON merchant_withdrawals (merchant_address, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_merchant_withdrawals_status
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_withdrawals_status
   ON merchant_withdrawals (status);

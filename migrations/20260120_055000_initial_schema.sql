@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS monthly_leaderboard (
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_users_wallet ON users(wallet_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_wallet ON users(wallet_address);
 DO $$
 BEGIN
   IF EXISTS (
@@ -209,7 +209,7 @@ BEGIN
     FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'sender_id'
   ) THEN
-    CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_sender ON messages(sender_id);
   END IF;
 END $$;
 
@@ -220,13 +220,13 @@ BEGIN
     FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'recipient_id'
   ) THEN
-    CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_recipient ON messages(recipient_id);
   END IF;
 END $$;
-CREATE INDEX IF NOT EXISTS idx_friendships_user ON friendships(user_id);
-CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
-CREATE INDEX IF NOT EXISTS idx_group_members_group ON group_members(group_id);
-CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals(status);
-CREATE INDEX IF NOT EXISTS idx_transactions_user ON transactions(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_friendships_user ON friendships(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_group_members_group ON group_members(group_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_group_members_user ON group_members(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proposals_status ON proposals(status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transactions_user ON transactions(user_id);

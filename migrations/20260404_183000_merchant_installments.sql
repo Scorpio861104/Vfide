@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS installment_payments (
   paid_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_installment_plans_merchant_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_installment_plans_merchant_created
   ON merchant_installment_plans (merchant_address, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_installment_payments_plan
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_installment_payments_plan
   ON installment_payments (plan_id, paid_at DESC);

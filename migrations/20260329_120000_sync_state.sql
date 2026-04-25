@@ -17,6 +17,6 @@ CREATE TABLE IF NOT EXISTS sync_state (
   CONSTRAINT uq_sync_state_user_entity UNIQUE (user_id, entity)
 );
 
-CREATE INDEX IF NOT EXISTS idx_sync_state_user_id ON sync_state(user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sync_state_user_id ON sync_state(user_id);
 
 COMMIT;

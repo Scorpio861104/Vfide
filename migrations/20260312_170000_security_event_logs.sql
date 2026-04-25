@@ -13,5 +13,5 @@ CREATE TABLE IF NOT EXISTS security_event_logs (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_security_event_logs_address_ts
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_event_logs_address_ts
   ON security_event_logs(address, ts DESC);

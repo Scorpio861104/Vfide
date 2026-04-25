@@ -32,14 +32,14 @@ CREATE TABLE IF NOT EXISTS merchant_wholesale_group_buy_participants (
   PRIMARY KEY (group_buy_id, merchant_address)
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_wholesale_orders_buyer_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_wholesale_orders_buyer_created
   ON merchant_wholesale_orders (buyer_merchant_address, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_merchant_wholesale_orders_seller_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_wholesale_orders_seller_created
   ON merchant_wholesale_orders (seller_merchant_address, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_merchant_group_buys_status_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_group_buys_status_created
   ON merchant_wholesale_group_buys (status, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_merchant_group_buy_participants_merchant
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_group_buy_participants_merchant
   ON merchant_wholesale_group_buy_participants (merchant_address, created_at DESC);

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS merchant_staff (
   revoked_at TIMESTAMPTZ,
   active BOOLEAN DEFAULT true
 );
-CREATE INDEX IF NOT EXISTS idx_merchant_staff_merchant ON merchant_staff(merchant_address) WHERE active = true;
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_staff_merchant ON merchant_staff(merchant_address) WHERE active = true;
 
 CREATE TABLE IF NOT EXISTS staff_activity_log (
   id BIGSERIAL PRIMARY KEY,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS staff_activity_log (
   amount DECIMAL(36,18),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_staff_activity_merchant ON staff_activity_log(merchant_address, created_at DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_staff_activity_merchant ON staff_activity_log(merchant_address, created_at DESC);
 
 -- ═══════════════════════════════════════════════════════════════
 -- CUSTOMER NOTES / CRM
@@ -83,8 +83,8 @@ CREATE TABLE IF NOT EXISTS coupon_redemptions (
   discount_applied DECIMAL(10,2) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_coupon ON coupon_redemptions(coupon_id);
-CREATE INDEX IF NOT EXISTS idx_coupon_redemptions_customer ON coupon_redemptions(coupon_id, customer_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coupon_redemptions_coupon ON coupon_redemptions(coupon_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_coupon_redemptions_customer ON coupon_redemptions(coupon_id, customer_address);
 
 -- ═══════════════════════════════════════════════════════════════
 -- LOYALTY STAMP CARDS
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS merchant_expenses (
   location_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_merchant_expenses_merchant ON merchant_expenses(merchant_address, expense_date DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_expenses_merchant ON merchant_expenses(merchant_address, expense_date DESC);
 
 -- ═══════════════════════════════════════════════════════════════
 -- GIFT CARDS / STORE CREDIT
@@ -152,8 +152,8 @@ CREATE TABLE IF NOT EXISTS merchant_gift_cards (
   redeemed_at TIMESTAMPTZ,
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'depleted', 'expired', 'cancelled'))
 );
-CREATE INDEX IF NOT EXISTS idx_gift_cards_merchant ON merchant_gift_cards(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_gift_cards_code ON merchant_gift_cards(code);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_gift_cards_merchant ON merchant_gift_cards(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_gift_cards_code ON merchant_gift_cards(code);
 
 -- ═══════════════════════════════════════════════════════════════
 -- RETURNS / EXCHANGES
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS merchant_returns (
   resolved_at TIMESTAMPTZ,
   resolved_by TEXT
 );
-CREATE INDEX IF NOT EXISTS idx_merchant_returns_merchant ON merchant_returns(merchant_address, created_at DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_returns_merchant ON merchant_returns(merchant_address, created_at DESC);
 
 -- ═══════════════════════════════════════════════════════════════
 -- INSTALLMENT PAYMENTS
@@ -195,9 +195,9 @@ CREATE TABLE IF NOT EXISTS merchant_installment_plans (
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'completed', 'overdue', 'cancelled')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_installments_merchant ON merchant_installment_plans(merchant_address);
-CREATE INDEX IF NOT EXISTS idx_installments_customer ON merchant_installment_plans(customer_address);
-CREATE INDEX IF NOT EXISTS idx_installments_due ON merchant_installment_plans(next_payment_due) WHERE status = 'active';
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_installments_merchant ON merchant_installment_plans(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_installments_customer ON merchant_installment_plans(customer_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_installments_due ON merchant_installment_plans(next_payment_due) WHERE status = 'active';
 
 CREATE TABLE IF NOT EXISTS installment_payments (
   id BIGSERIAL PRIMARY KEY,
@@ -236,7 +236,7 @@ CREATE TABLE IF NOT EXISTS purchase_orders (
   expected_delivery DATE,
   delivered_at TIMESTAMPTZ
 );
-CREATE INDEX IF NOT EXISTS idx_purchase_orders_merchant ON purchase_orders(merchant_address, created_at DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_purchase_orders_merchant ON purchase_orders(merchant_address, created_at DESC);
 
 -- ═══════════════════════════════════════════════════════════════
 -- MULTI-LOCATION / FRANCHISE
@@ -254,7 +254,7 @@ CREATE TABLE IF NOT EXISTS merchant_locations (
   active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_merchant_locations_merchant ON merchant_locations(merchant_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_locations_merchant ON merchant_locations(merchant_address);
 
 -- Add location_id to existing tables (nullable, backward-compatible)
 DO $$ BEGIN
@@ -284,7 +284,7 @@ CREATE TABLE IF NOT EXISTS merchant_withdrawals (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   completed_at TIMESTAMPTZ
 );
-CREATE INDEX IF NOT EXISTS idx_withdrawals_merchant ON merchant_withdrawals(merchant_address, created_at DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_withdrawals_merchant ON merchant_withdrawals(merchant_address, created_at DESC);
 
 -- ═══════════════════════════════════════════════════════════════
 -- REMITTANCE BENEFICIARIES
@@ -303,7 +303,7 @@ CREATE TABLE IF NOT EXISTS remittance_beneficiaries (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_beneficiaries_sender ON remittance_beneficiaries(sender_address);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_beneficiaries_sender ON remittance_beneficiaries(sender_address);
 
 -- ═══════════════════════════════════════════════════════════════
 -- TIPS TRACKING
@@ -319,4 +319,4 @@ CREATE TABLE IF NOT EXISTS merchant_tips (
   tx_hash TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_tips_merchant ON merchant_tips(merchant_address, created_at DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_tips_merchant ON merchant_tips(merchant_address, created_at DESC);

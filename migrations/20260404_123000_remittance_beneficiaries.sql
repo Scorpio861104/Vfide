@@ -12,5 +12,5 @@ CREATE TABLE IF NOT EXISTS remittance_beneficiaries (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_remittance_beneficiaries_owner_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_remittance_beneficiaries_owner_created
   ON remittance_beneficiaries (owner_address, created_at DESC);

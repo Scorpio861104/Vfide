@@ -12,9 +12,9 @@ CREATE TABLE IF NOT EXISTS merchant_staff (
   active BOOLEAN NOT NULL DEFAULT true
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_staff_merchant_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_staff_merchant_created
   ON merchant_staff (merchant_address, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_merchant_staff_token_hash
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_staff_token_hash
   ON merchant_staff (session_token_hash);
 
 CREATE TABLE IF NOT EXISTS staff_activity_log (
@@ -25,5 +25,5 @@ CREATE TABLE IF NOT EXISTS staff_activity_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_staff_activity_log_staff_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_staff_activity_log_staff_created
   ON staff_activity_log (staff_id, created_at DESC);

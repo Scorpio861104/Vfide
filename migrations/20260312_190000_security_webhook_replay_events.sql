@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS security_webhook_replay_events (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_ts
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_webhook_replay_events_ts
   ON security_webhook_replay_events(ts DESC);
 
-CREATE INDEX IF NOT EXISTS idx_security_webhook_replay_events_status_ts
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_webhook_replay_events_status_ts
   ON security_webhook_replay_events(status, ts DESC);

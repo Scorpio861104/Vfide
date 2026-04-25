@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS merchant_expenses (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_expenses_merchant_date
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_expenses_merchant_date
   ON merchant_expenses (merchant_address, expense_date DESC, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_merchant_expenses_merchant_category
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_expenses_merchant_category
   ON merchant_expenses (merchant_address, LOWER(category));

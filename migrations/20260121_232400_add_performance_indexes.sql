@@ -14,22 +14,22 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'username'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_users_username_trigram ON users USING gin (username gin_trgm_ops)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_username_trigram ON users USING gin (username gin_trgm_ops)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'email'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_users_email_trigram ON users USING gin (email gin_trgm_ops)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email_trigram ON users USING gin (email gin_trgm_ops)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'wallet_address'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_users_wallet_address_lower ON users (LOWER(wallet_address))';
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_users_wallet_username_avatar ON users (wallet_address) INCLUDE (username, avatar_url)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_wallet_address_lower ON users (LOWER(wallet_address))';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_wallet_username_avatar ON users (wallet_address) INCLUDE (username, avatar_url)';
   END IF;
 
   -- proposals
@@ -37,28 +37,28 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'proposals' AND column_name = 'status'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals (status)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proposals_status ON proposals (status)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'proposals' AND column_name = 'created_at'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_proposals_created_at_desc ON proposals (created_at DESC)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proposals_created_at_desc ON proposals (created_at DESC)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'proposals' AND column_name = 'title'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_proposals_title_fts ON proposals USING gin (to_tsvector(''english'', title))';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proposals_title_fts ON proposals USING gin (to_tsvector(''english'', title))';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'proposals' AND column_name = 'description'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_proposals_description_fts ON proposals USING gin (to_tsvector(''english'', description))';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proposals_description_fts ON proposals USING gin (to_tsvector(''english'', description))';
   END IF;
 
   -- endorsements
@@ -66,28 +66,28 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'endorsements' AND column_name = 'from_user_id'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_endorsements_from_user_id ON endorsements (from_user_id)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_endorsements_from_user_id ON endorsements (from_user_id)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'endorsements' AND column_name = 'to_user_id'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_endorsements_to_user_id ON endorsements (to_user_id)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_endorsements_to_user_id ON endorsements (to_user_id)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'endorsements' AND column_name = 'proposal_id'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_endorsements_proposal_id ON endorsements (proposal_id) WHERE proposal_id IS NOT NULL';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_endorsements_proposal_id ON endorsements (proposal_id) WHERE proposal_id IS NOT NULL';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'endorsements' AND column_name = 'created_at'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_endorsements_created_at_desc ON endorsements (created_at DESC)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_endorsements_created_at_desc ON endorsements (created_at DESC)';
   END IF;
 
   -- messages
@@ -98,22 +98,22 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'recipient_id'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_messages_sender_recipient ON messages (sender_id, recipient_id)';
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_messages_recipient_sender ON messages (recipient_id, sender_id)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_sender_recipient ON messages (sender_id, recipient_id)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_recipient_sender ON messages (recipient_id, sender_id)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'group_id'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_messages_group_id ON messages (group_id) WHERE group_id IS NOT NULL';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_group_id ON messages (group_id) WHERE group_id IS NOT NULL';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'messages' AND column_name = 'created_at'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_messages_created_at_desc ON messages (created_at DESC)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_messages_created_at_desc ON messages (created_at DESC)';
   END IF;
 
   -- payment_requests
@@ -121,14 +121,14 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'payment_requests' AND column_name = 'status'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_payment_requests_status ON payment_requests (status)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_requests_status ON payment_requests (status)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'payment_requests' AND column_name = 'created_at'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_payment_requests_created_at_desc ON payment_requests (created_at DESC)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_requests_created_at_desc ON payment_requests (created_at DESC)';
   END IF;
 
   -- user_rewards
@@ -139,14 +139,14 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'user_rewards' AND column_name = 'status'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_user_rewards_user_status ON user_rewards (user_id, status)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_rewards_user_status ON user_rewards (user_id, status)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'user_rewards' AND column_name = 'earned_at'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_user_rewards_earned_at_desc ON user_rewards (earned_at DESC)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_rewards_earned_at_desc ON user_rewards (earned_at DESC)';
   END IF;
 
   -- user_badges
@@ -154,14 +154,14 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'user_badges' AND column_name = 'user_id'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_user_badges_user_id ON user_badges (user_id)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_badges_user_id ON user_badges (user_id)';
   END IF;
 
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'user_badges' AND column_name = 'badge_id'
   ) THEN
-    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_user_badges_badge_id ON user_badges (badge_id)';
+    EXECUTE 'CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_badges_badge_id ON user_badges (badge_id)';
   END IF;
 END
 $$;

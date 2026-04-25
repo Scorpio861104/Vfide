@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS merchant_customer_notes (
   PRIMARY KEY (merchant_address, customer_address)
 );
 
-CREATE INDEX IF NOT EXISTS idx_merchant_customer_notes_updated
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_merchant_customer_notes_updated
   ON merchant_customer_notes (merchant_address, updated_at DESC);

@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS privacy_deletion_requests (
   UNIQUE(wallet_address, status)
 );
 
-CREATE INDEX IF NOT EXISTS idx_privacy_deletion_requests_wallet_created
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_privacy_deletion_requests_wallet_created
   ON privacy_deletion_requests(wallet_address, created_at DESC);

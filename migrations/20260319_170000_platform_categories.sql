@@ -16,14 +16,14 @@ CREATE TABLE IF NOT EXISTS platform_categories (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_platform_cat_parent ON platform_categories(parent_id);
-CREATE INDEX IF NOT EXISTS idx_platform_cat_slug ON platform_categories(slug);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_platform_cat_parent ON platform_categories(parent_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_platform_cat_slug ON platform_categories(slug);
 
 -- Add platform_category_id to merchant_products
 ALTER TABLE merchant_products
   ADD COLUMN IF NOT EXISTS platform_category_id INTEGER REFERENCES platform_categories(id) ON DELETE SET NULL;
 
-CREATE INDEX IF NOT EXISTS idx_products_platform_cat ON merchant_products(platform_category_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_platform_cat ON merchant_products(platform_category_id);
 
 -- ════════════════════════════════════════════════════════
 -- SEED: Common top-level + second-level categories

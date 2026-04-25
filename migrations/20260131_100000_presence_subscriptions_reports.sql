@@ -20,6 +20,6 @@ CREATE TABLE IF NOT EXISTS message_reports (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_message_reports_message ON message_reports(message_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_message_reports_message ON message_reports(message_id);
 
 COMMIT;

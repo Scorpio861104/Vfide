@@ -8,8 +8,8 @@ ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS to_user_id INTEGER REFEREN
 ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS token VARCHAR(20) DEFAULT 'ETH';
 ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS memo TEXT;
 
-CREATE INDEX IF NOT EXISTS idx_payment_requests_from_user ON payment_requests (from_user_id);
-CREATE INDEX IF NOT EXISTS idx_payment_requests_to_user ON payment_requests (to_user_id);
-CREATE INDEX IF NOT EXISTS idx_payment_requests_status ON payment_requests (status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_requests_from_user ON payment_requests (from_user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_requests_to_user ON payment_requests (to_user_id);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_requests_status ON payment_requests (status);
 
 COMMIT;
