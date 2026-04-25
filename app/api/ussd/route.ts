@@ -44,7 +44,8 @@ async function readUSSDFields(request: NextRequest): Promise<{ sessionId: string
 }
 
 function hashPhone(phoneNumber: string): string {
-  return createHash('sha256').update(phoneNumber.trim()).digest('hex').slice(0, 16);
+  const salt = process.env.LOG_IP_HASH_SALT || 'vfide-local-log-salt';
+  return createHash('sha256').update(`${salt}:${phoneNumber.trim()}`).digest('hex').slice(0, 16);
 }
 
 function buildMenu(text: string): string {

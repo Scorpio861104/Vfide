@@ -43,6 +43,15 @@ const createStreamSchema = z.object({
       message: 'totalAmount must approximately equal ratePerSecond × duration',
     });
   }
+
+  const oneHourAgo = Date.now() - 3600_000;
+  if (startMs < oneHourAgo) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['startTime'],
+      message: 'startTime cannot be more than 1 hour in the past',
+    });
+  }
 });
 
 type StreamRow = {

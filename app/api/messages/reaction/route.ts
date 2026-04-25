@@ -15,6 +15,7 @@ import { z } from 'zod4';
 const MAX_ID_LENGTH = 128;
 const MAX_IMAGE_NAME_LENGTH = 120;
 const MAX_EMOJI_LENGTH = 16;
+const MAX_IMAGE_URL_LENGTH = 2048;
 const DEFAULT_IMAGE_HOST_ALLOWLIST = ['images.vfide.io', 'cdn.vfide.io'];
 
 function getAllowedImageHosts(): Set<string> {
@@ -31,7 +32,7 @@ const messageReactionPostSchema = z.object({
   conversationId: z.string().trim().min(1).max(MAX_ID_LENGTH),
   reactionType: z.enum(['emoji', 'custom_image']).optional(),
   emoji: z.string().trim().min(1).max(MAX_EMOJI_LENGTH).optional(),
-  imageUrl: z.string().trim().min(1).optional(),
+  imageUrl: z.string().trim().min(1).max(MAX_IMAGE_URL_LENGTH).optional(),
   imageName: z.string().trim().min(1).max(MAX_IMAGE_NAME_LENGTH).optional(),
   userAddress: z.string().trim().refine((value) => isAddress(value), {
     message: 'Invalid Ethereum address format',
