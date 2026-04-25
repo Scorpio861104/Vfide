@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -59,6 +60,50 @@ function normalizeNumber(value: unknown): number {
   return Math.max(0, Math.floor(value));
 }
 
+function getAllowedRecoveryFraudReporters(): Set<string> {
+  const raw = process.env.RECOVERY_FRAUD_ALLOWED_REPORTERS || '';
+  const values = raw
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => ADDRESS_REGEX.test(entry));
+  return new Set(values);
+}
+
+async function isVaultOwnerReporter(vault: string, reporter: string): Promise<boolean> {
+  try {
+    const directOwner = await query(
+      `SELECT 1
+       FROM merchants
+       WHERE LOWER(vault_address) = $1
+         AND LOWER(wallet_address) = $2
+       LIMIT 1`,
+      [vault.toLowerCase(), reporter.toLowerCase()]
+    );
+
+    if (directOwner.rows.length > 0) {
+      return true;
+    }
+  } catch (error) {
+    logger.debug('[Security][Recovery Fraud Event] merchants(wallet_address) standing check failed', error);
+  }
+
+  try {
+    const legacyOwner = await query(
+      `SELECT 1
+       FROM merchants
+       WHERE LOWER(vault_address) = $1
+         AND LOWER(owner_address) = $2
+       LIMIT 1`,
+      [vault.toLowerCase(), reporter.toLowerCase()]
+    );
+
+    return legacyOwner.rows.length > 0;
+  } catch (error) {
+    logger.debug('[Security][Recovery Fraud Event] merchants(owner_address) standing check failed', error);
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
@@ -84,6 +129,22 @@ export async function POST(request: NextRequest) {
   }
 
   const reporter = authResult.user.address?.trim().toLowerCase() ?? 'unknown';
+  if (!ADDRESS_REGEX.test(reporter)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const callerIsAdmin = isAdmin(authResult.user);
+  const allowedReporters = getAllowedRecoveryFraudReporters();
+  const reporterIsAllowed = allowedReporters.has(reporter);
+  const reporterIsVault = reporter === vault;
+  const reporterIsOwner = await isVaultOwnerReporter(vault, reporter);
+
+  if (!callerIsAdmin && !reporterIsAllowed && !reporterIsVault && !reporterIsOwner) {
+    return NextResponse.json(
+      { error: 'You are not authorized to report fraud events for this vault' },
+      { status: 403 }
+    );
+  }
 
   const event: RecoveryFraudEvent = {
     vault,
