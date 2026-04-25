@@ -8,6 +8,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { getRequestIp } from '@/lib/security/requestContext';
 
 interface RateLimitEntry {
   count: number;
@@ -86,18 +87,7 @@ export function checkRateLimit(
  * Get client identifier from request
  */
 export function getClientIdentifier(request: Request): string {
-  // Try various headers for real IP
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIp = request.headers.get('x-real-ip');
-  const cfIp = request.headers.get('cf-connecting-ip');
-  
-  // Use first forwarded IP if available
-  if (forwarded) {
-    const firstIp = forwarded.split(',')[0];
-    return firstIp?.trim() ?? 'unknown';
-  }
-  
-  return realIp || cfIp || 'unknown';
+  return getRequestIp(request.headers).ip;
 }
 
 /**
