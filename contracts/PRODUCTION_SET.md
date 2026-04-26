@@ -18,7 +18,6 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - DAOTimelock.sol
 - DeployPhase1.sol
 - DeployPhase1Governance.sol
-- DeployPhase1Infrastructure.sol
 - DeployPhase1Token.sol
 - DeployPhase3Peripherals.sol
 - DeployPhases3to6.sol
@@ -67,7 +66,6 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - VaultInfrastructure.sol
 - VaultRecoveryClaim.sol
 - VaultRegistry.sol
-- WithdrawalQueue.sol
 
 ## Support Libraries And Views
 
@@ -113,6 +111,8 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - mocks/**
 - security/**
 - scripts/**
+- DeployPhase1Infrastructure.sol (reverts intentionally; TS deploy path is used)
+- WithdrawalQueue.sol (abstract; only testnet stub implementation exists)
 - TempVault.sol (developer testing utility only; do not route production funds)
 - package.json
 - package-lock.json

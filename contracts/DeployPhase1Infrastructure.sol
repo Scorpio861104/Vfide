@@ -2,7 +2,6 @@
 pragma solidity 0.8.30;
 
 import "./CircuitBreaker.sol";
-import "./WithdrawalQueue.sol";
 
 contract Phase1InfrastructureDeployer {
     function deployInfrastructure(

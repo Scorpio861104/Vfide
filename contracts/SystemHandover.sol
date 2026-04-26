@@ -14,6 +14,7 @@ error SH_NotArmed();
 error SH_Armed();
 error SH_AlreadyExecuted();
 error SH_GovernanceNotReady();
+error SH_AuditorNotCouncil();
 // F-58 FIX: Named mismatch errors so operators can diagnose which admin failed to be pre-configured.
 error SH_DAOAdminMismatch(address expected, address actual);
 error SH_TimelockAdminMismatch(address expected, address actual);
@@ -158,6 +159,7 @@ contract SystemHandover {
     /// @param auditor_ The address of the ownership auditor (must be set by dev team)
     function setOwnershipAuditor(address auditor_) external onlyDev notArmed {
         if (auditor_ == address(0)) revert SH_Zero();
+        if (!_isCouncilMember(auditor_)) revert SH_AuditorNotCouncil();
         ownershipAuditor = auditor_;
     }
 
@@ -166,6 +168,7 @@ contract SystemHandover {
     function markOwnershipAudited() external {
         require(msg.sender == ownershipAuditor, "SH: not auditor");
         require(ownershipAuditor != address(0), "SH: auditor not set");
+        if (!_isCouncilMember(msg.sender)) revert SH_AuditorNotCouncil();
         ownershipAudited = true;
         emit OwnershipAuditMarked(msg.sender);
         _log("ownership_audited");
@@ -206,5 +209,15 @@ contract SystemHandover {
     // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+    }
+
+    function _isCouncilMember(address candidate) internal view returns (bool) {
+        uint256 size = councilElection.getActualCouncilSize();
+        for (uint256 i = 0; i < size; i++) {
+            if (councilElection.getCouncilMember(i) == candidate) {
+                return true;
+            }
+        }
+        return false;
     }
 }

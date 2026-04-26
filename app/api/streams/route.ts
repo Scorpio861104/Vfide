@@ -6,6 +6,13 @@ import { query } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
+function offchainStreamWritesEnabled(): boolean {
+  if (process.env.ENABLE_OFFCHAIN_STREAM_WRITES === 'true') {
+    return true;
+  }
+  return process.env.NODE_ENV !== 'production';
+}
+
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const DEFAULT_ALLOWED_STREAM_TOKENS = ['VFIDE', 'USDC', 'USDT', 'DAI', 'ETH', 'WETH'];
 
@@ -129,6 +136,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!offchainStreamWritesEnabled()) {
+    return NextResponse.json(
+      { error: 'Off-chain stream creation is disabled in production; use on-chain PayrollManager.createStream.' },
+      { status: 403 }
+    );
+  }
+
   const rl = await withRateLimit(request, 'write');
   if (rl) return rl;
 
@@ -155,7 +169,7 @@ export async function POST(request: NextRequest) {
   try {
     const result = await query<StreamRow>(
       `INSERT INTO streams (sender_address, recipient_address, token, total_amount, rate_per_second, start_time, end_time, withdrawn, is_paused, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, false, 'active')
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 0, false, 'planned')
        RETURNING *`,
       [normalized, recipientAddress.trim().toLowerCase(), token, totalAmount, ratePerSecond, startTime, endTime]
     );

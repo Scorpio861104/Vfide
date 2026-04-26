@@ -17,6 +17,52 @@ async function queueTxAndGetId(timelock: any, signer: any, target: string, data:
 }
 
 describe('SystemHandover security hardening', () => {
+  it('requires ownership auditor to be an active council member', async () => {
+    const { ethers } = (await getConnection()) as any;
+    const [dev, nonCouncilAuditor, councilAuditor] = await ethers.getSigners();
+
+    const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
+    const dao = await DaoStub.deploy();
+    await dao.waitForDeployment();
+
+    const TimelockStub = await ethers.getContractFactory('SHTimelockAdminStub');
+    const timelock = await TimelockStub.deploy();
+    await timelock.waitForDeployment();
+
+    const SeerStub = await ethers.getContractFactory('SHSeerStub');
+    const seer = await SeerStub.deploy();
+    await seer.waitForDeployment();
+
+    const CouncilStub = await ethers.getContractFactory('SHCouncilElectionStub');
+    const council = await CouncilStub.deploy();
+    await council.waitForDeployment();
+    await council.setMembers([councilAuditor.address]);
+
+    const SystemHandover = await ethers.getContractFactory('SystemHandover');
+    const handover = await SystemHandover.deploy(
+      dev.address,
+      await dao.getAddress(),
+      await timelock.getAddress(),
+      await seer.getAddress(),
+      await council.getAddress(),
+      ethers.ZeroAddress
+    );
+    await handover.waitForDeployment();
+
+    await assert.rejects(
+      async () => {
+        await handover.connect(dev).setOwnershipAuditor(nonCouncilAuditor.address);
+      },
+      /SH_AuditorNotCouncil|revert/
+    );
+
+    await handover.connect(dev).setOwnershipAuditor(councilAuditor.address);
+    assert.equal(await handover.ownershipAuditor(), councilAuditor.address);
+
+    await handover.connect(councilAuditor).markOwnershipAudited();
+    assert.equal(await handover.ownershipAudited(), true);
+  });
+
   it('allows only dev to set dao/timelock/council before arm', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dev, nonDev, councilMember] = await ethers.getSigners();
@@ -248,7 +294,9 @@ describe('SystemHandover security hardening', () => {
     await handover.waitForDeployment();
 
     // Use historical launch timestamp to represent already-mature handover window.
+    await handover.connect(dev).setOwnershipAuditor(councilMember.address);
     await handover.connect(dev).arm(1);
+    await handover.connect(councilMember).markOwnershipAudited();
     await handover.connect(dev).executeHandover(newAdmin.address);
 
     assert.equal(await handover.handoverExecuted(), true);
@@ -300,7 +348,9 @@ describe('SystemHandover security hardening', () => {
     );
     await handover.waitForDeployment();
 
+    await handover.connect(dev).setOwnershipAuditor(councilMember.address);
     await handover.connect(dev).arm(1);
+    await handover.connect(councilMember).markOwnershipAudited();
     await handover.connect(dev).executeHandover(newAdmin.address);
 
     assert.equal(await handover.handoverExecuted(), true);
@@ -352,6 +402,7 @@ describe('SystemHandover security hardening', () => {
   it('integrates real DAO council bootstrap before timelock admin handoff', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dev, newAdmin, ...councilSigners] = await ethers.getSigners();
+    const ownershipAuditor = councilSigners[0];
     const councilMembers = councilSigners.slice(0, 15).map((signer: any) => signer.address);
 
     assert.equal(councilMembers.length, 15);
@@ -422,7 +473,9 @@ describe('SystemHandover security hardening', () => {
     );
     await handover.waitForDeployment();
 
+    await handover.connect(dev).setOwnershipAuditor(ownershipAuditor.address);
     await handover.connect(dev).arm(1);
+    await handover.connect(ownershipAuditor).markOwnershipAudited();
     await handover.connect(dev).executeHandover(newAdmin.address);
 
     assert.equal(await handover.handoverExecuted(), true);
