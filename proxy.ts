@@ -122,29 +122,38 @@ export function proxy(request: NextRequest) {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
     const contentLength = request.headers.get('content-length');
 
-    if (contentLength) {
-      const bodySize = parseInt(contentLength, 10);
-      const maxSize = getBodySizeLimit(pathname);
+    // Fail closed when body length is unknown to prevent chunked-body limit bypass.
+    if (!contentLength) {
+      const response = NextResponse.json(
+        {
+          error: 'Content-Length header is required for state-changing requests',
+        },
+        { status: 411 }
+      );
+      return applySecurityHeaders(response, nonce, csp);
+    }
 
-      // Enforce size limit
-      if (!isNaN(bodySize) && bodySize > maxSize) {
-        const response = NextResponse.json(
-          {
-            error: 'Request payload too large',
-            message: `Request size ${formatBytes(bodySize)} exceeds maximum allowed size of ${formatBytes(maxSize)}`,
-            maxSize,
-            receivedSize: bodySize,
+    const bodySize = parseInt(contentLength, 10);
+    const maxSize = getBodySizeLimit(pathname);
+
+    // Enforce size limit
+    if (!isNaN(bodySize) && bodySize > maxSize) {
+      const response = NextResponse.json(
+        {
+          error: 'Request payload too large',
+          message: `Request size ${formatBytes(bodySize)} exceeds maximum allowed size of ${formatBytes(maxSize)}`,
+          maxSize,
+          receivedSize: bodySize,
+        },
+        {
+          status: 413, // 413 Payload Too Large
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': '60',
           },
-          {
-            status: 413, // 413 Payload Too Large
-            headers: {
-              'Content-Type': 'application/json',
-              'Retry-After': '60',
-            },
-          }
-        );
-        return applySecurityHeaders(response, nonce, csp);
-      }
+        }
+      );
+      return applySecurityHeaders(response, nonce, csp);
     }
 
     // Validate Content-Type for write operations

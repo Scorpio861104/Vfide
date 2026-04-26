@@ -364,13 +364,7 @@ export function broadcast(msg: OutboundMessage, except?: string): void {
     return;
   }
 
-  const raw = JSON.stringify(msg);
-  for (const [sessionId, client] of clients) {
-    if (sessionId === except) continue;
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(raw);
-    }
-  }
+  console.warn('[ws] Dropping outbound message with missing topic (fail-closed broadcast policy).');
 }
 
 function extractTopicFromOutbound(msg: OutboundMessage): string | null {

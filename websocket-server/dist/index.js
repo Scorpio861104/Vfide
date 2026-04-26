@@ -308,14 +308,7 @@ function broadcast(msg, except) {
         }
         return;
     }
-    const raw = JSON.stringify(msg);
-    for (const [sessionId, client] of clients) {
-        if (sessionId === except)
-            continue;
-        if (client.readyState === ws_1.WebSocket.OPEN) {
-            client.send(raw);
-        }
-    }
+    console.warn('[ws] Dropping outbound message with missing topic (fail-closed broadcast policy).');
 }
 function extractTopicFromOutbound(msg) {
     const topic = msg.payload?.topic;

@@ -14,7 +14,15 @@ const claimSchema = z.object({
   referrer: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
 });
 
+function isTestnetEnvironment(): boolean {
+  return process.env.NEXT_PUBLIC_IS_TESTNET === 'true';
+}
+
 export async function POST(request: NextRequest) {
+  if (!isTestnetEnvironment()) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -106,6 +114,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  if (!isTestnetEnvironment()) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   try {
     const faucetAddress = CONTRACT_ADDRESSES.VFIDETestnetFaucet;
     const rpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org';

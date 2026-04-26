@@ -61,7 +61,6 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - VFIDEReentrancyGuard.sol
 - VFIDESecurity.sol
 - VFIDETermLoan.sol
-- VFIDETestnetFaucet.sol
 - VFIDEToken.sol
 - VFIDETrust.sol
 - VaultHub.sol

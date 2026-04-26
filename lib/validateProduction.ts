@@ -51,6 +51,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_WAGMI_PROJECT_ID', required: false, category: 'blockchain' },
 
   // Application URLs
+  { name: 'APP_ORIGIN', required: true, category: 'api', production: true },
   { name: 'NEXT_PUBLIC_APP_URL', required: true, category: 'api', production: true },
   { name: 'NEXT_PUBLIC_API_URL', required: false, category: 'api' },
   { name: 'NEXT_PUBLIC_WEBSOCKET_URL', required: false, category: 'api' },
@@ -237,8 +238,14 @@ export function validateProductionEnvironment(): ValidationResult {
 
     // Check URL formats
     const appUrl = getEnvValue('NEXT_PUBLIC_APP_URL');
+    const appOrigin = getEnvValue('APP_ORIGIN');
     if (appUrl && !appUrl.startsWith('https://')) {
       result.errors.push('❌ NEXT_PUBLIC_APP_URL must use HTTPS in production');
+      result.valid = false;
+    }
+
+    if (appOrigin && !appOrigin.startsWith('https://')) {
+      result.errors.push('❌ APP_ORIGIN must use HTTPS in production');
       result.valid = false;
     }
 
@@ -246,6 +253,24 @@ export function validateProductionEnvironment(): ValidationResult {
     if (appUrl && appUrl.includes('localhost')) {
       result.errors.push('❌ NEXT_PUBLIC_APP_URL cannot be localhost in production');
       result.valid = false;
+    }
+
+    if (appOrigin && appOrigin.includes('localhost')) {
+      result.errors.push('❌ APP_ORIGIN cannot be localhost in production');
+      result.valid = false;
+    }
+
+    if (appUrl && appOrigin) {
+      try {
+        const appUrlOrigin = new URL(appUrl).origin;
+        if (appUrlOrigin !== appOrigin) {
+          result.errors.push(`❌ APP_ORIGIN (${appOrigin}) does not match NEXT_PUBLIC_APP_URL origin (${appUrlOrigin})`);
+          result.valid = false;
+        }
+      } catch {
+        result.errors.push('❌ NEXT_PUBLIC_APP_URL must be a valid absolute URL in production');
+        result.valid = false;
+      }
     }
 
     // Verify Sentry is configured for production error tracking
