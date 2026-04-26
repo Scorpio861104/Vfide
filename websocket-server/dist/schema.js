@@ -47,15 +47,6 @@ const JsonValueSchema = zod4_1.z.lazy(() => zod4_1.z.union([
         .record(zod4_1.z.string().max(128), JsonValueSchema)
         .refine((obj) => Object.keys(obj).length <= 64, 'Object exceeds maximum key count of 64'),
 ]));
-const MessageSchema = zod4_1.z.object({
-    v: zod4_1.z.literal(exports.CURRENT_PROTOCOL_VERSION).optional(),
-    type: zod4_1.z.literal('message'),
-    payload: zod4_1.z.object({
-        event: zod4_1.z.string().min(1).max(64),
-        topic: TopicSchema.optional(),
-        data: JsonValueSchema.optional(),
-    }).strict(),
-});
 const AuthSchema = zod4_1.z.object({
     v: zod4_1.z.literal(exports.CURRENT_PROTOCOL_VERSION).optional(),
     type: zod4_1.z.literal('auth'),
@@ -68,7 +59,6 @@ exports.InboundMessageSchema = zod4_1.z.discriminatedUnion('type', [
     PingSchema,
     SubscribeSchema,
     UnsubscribeSchema,
-    MessageSchema,
 ]);
 /**
  * Parse and validate an unknown value against InboundMessageSchema.

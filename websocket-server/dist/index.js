@@ -65,8 +65,11 @@ const AUTH_TIMEOUT_MS = Math.min(parseInt(process.env.WS_AUTH_TIMEOUT_MS || '500
 );
 const TOPIC_ACL_PATH = process.env.WS_TOPIC_ACL_PATH;
 const TOPIC_ACL_REFRESH_MS = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '30000', 10);
-const TOPIC_ACL_ALLOW_MISSING = process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const TOPIC_ACL_ALLOW_MISSING = !IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
+if (IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true') {
+    console.warn('[ws] Ignoring WS_TOPIC_ACL_ALLOW_MISSING=true in production (topic ACL remains fail-closed).');
+}
 // WS-1 mitigation: Require explicit proxy configuration to use X-Forwarded-For
 // Defaults to false for security (direct address only) unless explicitly enabled
 const TRUST_PROXY = process.env.WS_TRUST_PROXY === 'true';
@@ -131,10 +134,12 @@ server.on('request', (req, res) => {
 });
 // ─── Per-IP Rate Limiter ────────────────────────────────────────────────────
 const connectionRateLimiter = new rateLimit_1.RateLimiter({
+    name: 'connection',
     maxRequests: 10, // max 10 new connections per window
     windowMs: 60000, // per minute
 });
 const messageRateLimiter = new rateLimit_1.RateLimiter({
+    name: 'message',
     maxRequests: 60, // max 60 messages per window
     windowMs: 60000, // per minute
 });
@@ -354,47 +359,57 @@ server.on('upgrade', (req, socket, head) => {
         socket.destroy();
         return;
     }
-    // 2. Per-IP connection rate limiting
-    if (!connectionRateLimiter.allow(ip)) {
-        console.warn(`[ws] Rate limit exceeded on upgrade from IP: ${ip}`);
-        socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n');
-        socket.destroy();
-        return;
-    }
-    // 3. Extract optional JWT from Authorization header only
-    let token;
-    const authHeader = req.headers['authorization'];
-    if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-        token = authHeader.slice(7);
-    }
-    // 4. If provided, verify JWT during upgrade for fast-fail clients.
-    const proceed = (payload) => {
-        // 5. Complete the WebSocket handshake. Message-level auth is still required.
-        wss.handleUpgrade(req, socket, head, (ws) => {
-            const sessionId = `session-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
-            const client = ws;
-            client.vfideAddress = payload?.address?.toLowerCase();
-            client.isAuthenticated = Boolean(payload);
-            client.sessionId = sessionId;
-            client.remoteIp = ip;
-            client.connectedAt = Date.now();
-            client.subscribedTopics = new Set();
-            wss.emit('connection', client, req);
+    connectionRateLimiter.allow(ip)
+        .then((allowed) => {
+        // 2. Per-IP connection rate limiting
+        if (!allowed) {
+            console.warn(`[ws] Rate limit exceeded on upgrade from IP: ${ip}`);
+            socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n');
+            socket.destroy();
+            return;
+        }
+        // 3. Extract optional JWT from Authorization header only
+        let token;
+        const authHeader = req.headers['authorization'];
+        if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+            token = authHeader.slice(7);
+        }
+        // 4. If provided, verify JWT during upgrade for fast-fail clients.
+        const proceed = (payload) => {
+            // 5. Complete the WebSocket handshake. Message-level auth is still required.
+            wss.handleUpgrade(req, socket, head, (ws) => {
+                const sessionId = `session-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+                const client = ws;
+                client.vfideAddress = payload?.address?.toLowerCase();
+                client.isAuthenticated = Boolean(payload);
+                client.sessionId = sessionId;
+                client.remoteIp = ip;
+                client.connectedAt = Date.now();
+                client.subscribedTopics = new Set();
+                wss.emit('connection', client, req);
+            });
+        };
+        if (!token) {
+            proceed();
+            return;
+        }
+        (0, auth_1.verifyJWT)(token)
+            .then((payload) => {
+            if (!socket.destroyed)
+                proceed(payload);
+        })
+            .catch((err) => {
+            console.warn(`[ws] Invalid JWT from IP ${ip}: ${err.message}`);
+            if (!socket.destroyed) {
+                socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+                socket.destroy();
+            }
         });
-    };
-    if (!token) {
-        proceed();
-        return;
-    }
-    (0, auth_1.verifyJWT)(token)
-        .then((payload) => {
-        if (!socket.destroyed)
-            proceed(payload);
     })
         .catch((err) => {
-        console.warn(`[ws] Invalid JWT from IP ${ip}: ${err.message}`);
+        console.error(`[ws] Connection rate limiter error for IP ${ip}: ${err.message}`);
         if (!socket.destroyed) {
-            socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+            socket.write('HTTP/1.1 503 Service Unavailable\r\n\r\n');
             socket.destroy();
         }
     });
@@ -441,8 +456,15 @@ wss.on('connection', (ws, _req) => {
     // ── Message handler ───────────────────────────────────────────────────────
     ws.on('message', async (raw) => {
         // Per-IP message rate limiting
-        if (!messageRateLimiter.allow(client.remoteIp)) {
-            sendError(ws, 'RATE_LIMIT', 'Message rate limit exceeded');
+        try {
+            if (!(await messageRateLimiter.allow(client.remoteIp))) {
+                sendError(ws, 'RATE_LIMIT', 'Message rate limit exceeded');
+                return;
+            }
+        }
+        catch (err) {
+            console.error(`[ws] Message rate limiter error for ${client.remoteIp}: ${err.message}`);
+            sendError(ws, 'RATE_LIMIT_UNAVAILABLE', 'Rate limiter unavailable');
             return;
         }
         // Payload size check (belt-and-suspenders; maxPayload already set on server)
@@ -519,16 +541,6 @@ wss.on('connection', (ws, _req) => {
                 }
                 unsubscribeClientFromTopic(client, msg.payload.topic);
                 ws.send(JSON.stringify({ type: 'unsubscribed', payload: { topic: msg.payload.topic } }));
-                break;
-            case 'message':
-                ws.send(JSON.stringify({
-                    type: 'message',
-                    payload: {
-                        from: getClientLabel(client),
-                        data: msg.payload,
-                        timestamp: Date.now(),
-                    },
-                }));
                 break;
             default:
                 sendError(ws, 'UNKNOWN_TYPE', 'Unknown message type');

@@ -13,13 +13,40 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyJWT = verifyJWT;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = require("crypto");
+const fs_1 = require("fs");
 const JWT_ISSUER = 'vfide';
 const JWT_AUDIENCE = 'vfide-app';
 function requireSecret(name) {
     const val = process.env[name];
-    if (!val)
-        throw new Error(`Environment variable ${name} is not set`);
-    return val;
+    if (val && val.trim() !== '')
+        return val;
+    const filePath = process.env[`${name}_FILE`];
+    if (filePath && filePath.trim() !== '') {
+        try {
+            const fromFile = (0, fs_1.readFileSync)(filePath, 'utf8').trim();
+            if (fromFile)
+                return fromFile;
+        }
+        catch (error) {
+            throw new Error(`Failed reading ${name}_FILE (${filePath}): ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    throw new Error(`Environment variable ${name} or ${name}_FILE is not set`);
+}
+function readOptionalSecret(name) {
+    const direct = process.env[name];
+    if (direct && direct.trim() !== '')
+        return direct;
+    const filePath = process.env[`${name}_FILE`];
+    if (!filePath || filePath.trim() === '')
+        return null;
+    try {
+        const fromFile = (0, fs_1.readFileSync)(filePath, 'utf8').trim();
+        return fromFile || null;
+    }
+    catch (error) {
+        throw new Error(`Failed reading ${name}_FILE (${filePath}): ${error instanceof Error ? error.message : String(error)}`);
+    }
 }
 const BLACKLIST_PREFIX = 'token:blacklist:';
 async function upstashGet(key) {
@@ -94,7 +121,7 @@ async function verifyJWT(token) {
         return payload;
     }
     catch (primaryErr) {
-        const prevSecret = process.env.PREV_JWT_SECRET;
+        const prevSecret = readOptionalSecret('PREV_JWT_SECRET');
         if (prevSecret) {
             try {
                 const payload = tryVerify(prevSecret);
