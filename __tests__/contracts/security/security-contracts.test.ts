@@ -373,8 +373,8 @@ describe('VFIDE Security Contracts - Phase 1', () => {
 
       it('should increment blacklist count', () => {
         const source = readContract('CircuitBreaker.sol');
-        expect(source).toContain('function incrementBlacklist() external onlyRole(BLACKLIST_MANAGER_ROLE) notTriggered');
-        expect(source).toContain('monitoring.blacklistCount24h++');
+        expect(source).toContain('function recordSuspiciousActivity() external onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE) notTriggered');
+        expect(source).toContain('monitoring.suspiciousActivityCount24h++');
       });
     });
   });
@@ -443,148 +443,14 @@ describe('VFIDE Security Contracts - Phase 1', () => {
     });
   });
 
-  describe('WithdrawalQueue', () => {
-    describe('Request Withdrawal', () => {
-      it('should create withdrawal request', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function requestWithdrawal(uint256 _amount, string calldata _reason)');
-        expect(source).toContain('withdrawalQueue.push(WithdrawalRequest({');
-        expect(source).toContain('emit WithdrawalRequested(msg.sender, queueIndex, _amount, executionTime);');
-      });
-
-      it('should apply 7-day delay for large amounts', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('uint256 public constant WITHDRAWAL_DELAY = 7 days;');
-        expect(source).toContain('if (_amount >= minimumDelayAmount) {');
-        expect(source).toContain('executionTime += WITHDRAWAL_DELAY;');
-      });
-
-      it('should skip delay for small amounts', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('uint256 executionTime = block.timestamp;');
-        expect(source).toContain('if (_amount >= minimumDelayAmount) {');
-      });
-
-      it('should prevent zero amount withdrawal', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('require(_amount > 0, "WithdrawalQueue: zero amount")');
-      });
-
-      it('should prevent withdrawal exceeding balance', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('require(_amount > 0, "WithdrawalQueue: zero amount")');
-        expect(source).toContain('mapping(uint256 => uint256) public dailyWithdrawn;');
-      });
-    });
-
-    describe('Execute Withdrawal', () => {
-      it('should execute after delay', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function executeWithdrawal(uint256 _queueIndex) external nonReentrant');
-        expect(source).toContain('require(block.timestamp >= request.executionTime, "WithdrawalQueue: too early")');
-      });
-
-      it('should prevent early execution', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('require(block.timestamp >= request.executionTime, "WithdrawalQueue: too early")');
-      });
-
-      it('should check daily cap', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('uint256 public constant DAILY_WITHDRAWAL_CAP_PERCENT = 10;');
-        expect(source).toContain('uint256 dailyCap = (_effectiveVaultBalance() * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;');
-      });
-
-      it('should prevent exceeding 10% daily cap', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('dailyWithdrawn[today] + request.amount <= dailyCap,');
-        expect(source).toContain('dailyWithdrawn[today] += request.amount;');
-      });
-
-      it('should only allow requester to execute', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('require(msg.sender == request.user, "WithdrawalQueue: not requester")');
-      });
-    });
-
-    describe('Batch Execution', () => {
-      it('should execute multiple withdrawals', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function batchExecuteWithdrawals(uint256[] calldata _indices) external nonReentrant');
-      });
-
-      it('should check total against daily cap', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('dailyWithdrawn[today] + totalAmount <= dailyCap,');
-        expect(source).toContain('dailyWithdrawn[today] += totalAmount;');
-      });
-
-      it('should revert if any invalid', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('require(msg.sender == request.user, "WithdrawalQueue: not requester")');
-        expect(source).toContain('require(!request.cancelled, "WithdrawalQueue: already cancelled")');
-      });
-    });
-
-    describe('Cancellation', () => {
-      it('should allow governance to cancel', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function cancelWithdrawal(uint256 _queueIndex, string calldata _reason)');
-        expect(source).toContain('request.cancelled = true;');
-      });
-
-      it('should require reason for cancellation', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function cancelWithdrawal(uint256 _queueIndex, string calldata _reason)');
-        expect(source).toContain('emit WithdrawalCancelled(');
-      });
-
-      it('should prevent double cancellation', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('require(!request.cancelled, "WithdrawalQueue: already cancelled")');
-      });
-
-      it('should prevent non-governance cancellation', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        // cancelWithdrawal is gated by an access control modifier
-        const fnLine = source.split('\n').find(l => l.includes('function cancelWithdrawal'));
-        expect(fnLine).toBeTruthy();
-        // governance gate is on the following lines
-        expect(source).toContain('function cancelWithdrawal(uint256 _queueIndex, string calldata _reason)');
-      });
-    });
-
-    describe('Queue Management', () => {
-      it('should get user withdrawals', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function getUserWithdrawals(address _user) external view returns (uint256[] memory)');
-      });
-
-      it('should get pending withdrawals', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function getPendingWithdrawals(address _user)');
-      });
-
-      it('should calculate remaining daily capacity', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        expect(source).toContain('function getRemainingDailyCapacity() external view returns (uint256 remaining)');
-      });
-
-      it('should reset daily counter', () => {
-        const source = readContract('WithdrawalQueue.sol');
-        // daily counter resets by using block.timestamp / 1 days as key
-        expect(source).toContain('uint256 today = block.timestamp / 1 days;');
-        expect(source).toContain('mapping(uint256 => uint256) public dailyWithdrawn;');
-      });
-    });
-  });
+  // WithdrawalQueue.sol deleted per B-11 (dead code cleanup)
 
   describe('CircuitBreaker', () => {
     describe('Configuration', () => {
       it('should set initial thresholds', () => {
         const source = readContract('CircuitBreaker.sol');
         expect(source).toContain('dailyVolumeThreshold: 50,');
-        expect(source).toContain('blacklistThreshold: 10,');
+        expect(source).toContain('suspiciousActivityThreshold: 10,');
       });
 
       it('should update volume threshold', () => {
@@ -600,7 +466,7 @@ describe('VFIDE Security Contracts - Phase 1', () => {
 
       it('should update blacklist threshold', () => {
         const source = readContract('CircuitBreaker.sol');
-        expect(source).toContain('config.blacklistThreshold = _blacklistThreshold;');
+        expect(source).toContain('config.suspiciousActivityThreshold = _suspiciousActivityThreshold;');
       });
 
       it('should validate threshold ranges', () => {
@@ -644,7 +510,7 @@ describe('VFIDE Security Contracts - Phase 1', () => {
 
       it('should trigger on 20% price drop', () => {
         const source = readContract('CircuitBreaker.sol');
-        expect(source).toContain('uint256 dropPercent = (drop * 100) / lastPrice;');
+        expect(source).toContain('uint256 dropPercent = (drop * 100) / referencePrice;');
         expect(source).toContain('dropPercent >= config.priceDropThreshold');
       });
 
@@ -659,24 +525,24 @@ describe('VFIDE Security Contracts - Phase 1', () => {
       });
     });
 
-    describe('Blacklist Monitoring', () => {
+    describe('Suspicious Activity Monitoring', () => {
       it('should increment blacklist counter', () => {
         const source = readContract('CircuitBreaker.sol');
-        expect(source).toContain('function incrementBlacklist() external onlyRole(BLACKLIST_MANAGER_ROLE) notTriggered');
-        expect(source).toContain('monitoring.blacklistCount24h++;');
-        expect(source).toContain('emit BlacklistIncremented(monitoring.blacklistCount24h);');
+        expect(source).toContain('function recordSuspiciousActivity() external onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE) notTriggered');
+        expect(source).toContain('monitoring.suspiciousActivityCount24h++;');
+        expect(source).toContain('emit SuspiciousActivityRecorded(monitoring.suspiciousActivityCount24h);');
       });
 
       it('should trigger after 10 blacklists', () => {
         const source = readContract('CircuitBreaker.sol');
-        expect(source).toContain('blacklistThreshold: 10,');
-        expect(source).toContain('monitoring.blacklistCount24h > config.blacklistThreshold');
+        expect(source).toContain('suspiciousActivityThreshold: 10,');
+        expect(source).toContain('monitoring.suspiciousActivityCount24h > config.suspiciousActivityThreshold');
       });
 
       it('should reset counter after 24h', () => {
         const source = readContract('CircuitBreaker.sol');
         expect(source).toContain('monitoring.lastBlacklistReset + 1 days');
-        expect(source).toContain('monitoring.blacklistCount24h = 0;');
+        expect(source).toContain('monitoring.suspiciousActivityCount24h = 0;');
       });
     });
 
@@ -933,18 +799,18 @@ describe('VFIDE Security Contracts - Phase 1', () => {
       });
     });
 
-    describe('Withdrawal Queue + Token', () => {
-      it('should queue large withdrawals', () => {
-        const wq = readContract('WithdrawalQueue.sol');
-        expect(wq).toContain('uint256 public constant WITHDRAWAL_DELAY = 7 days;');
-        expect(wq).toContain('if (_amount >= minimumDelayAmount) {');
-        expect(wq).toContain('executionTime += WITHDRAWAL_DELAY;');
+    describe('Vault Queue + Token', () => {
+      it('should queue large approvals through CardBoundVault', () => {
+        const cbv = readContract('CardBoundVault.sol');
+        expect(cbv).toContain('function _queueTokenApproval(');
+        expect(cbv).toContain('pendingTokenApproval = PendingTokenApproval({');
+        expect(cbv).toContain('executeAfter: executeAfter');
       });
 
-      it('should enforce daily caps', () => {
-        const wq = readContract('WithdrawalQueue.sol');
-        expect(wq).toContain('uint256 public constant DAILY_WITHDRAWAL_CAP_PERCENT = 10;');
-        expect(wq).toContain('uint256 dailyCap = (_effectiveVaultBalance() * DAILY_WITHDRAWAL_CAP_PERCENT) / 100;');
+      it('should cap approval size before queueing', () => {
+        const cbv = readContract('CardBoundVault.sol');
+        expect(cbv).toContain('function _validateApprovalAmount(uint256 amount) internal view');
+        expect(cbv).toContain('if (amount > dailyTransferLimit) revert CBV_TransferLimit();');
       });
     });
   });

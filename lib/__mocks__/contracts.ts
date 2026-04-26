@@ -47,7 +47,6 @@ export const CONTRACT_ADDRESSES = {
   OwnerControlPanel: addr(36),
   FeeDistributor: addr(37),
   EscrowManager: addr(38),
-  WithdrawalQueue: addr(39),
 } as const
 
 export const VFIDE_TOKEN_ABI = [

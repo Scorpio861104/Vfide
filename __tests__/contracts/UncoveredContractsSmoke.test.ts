@@ -62,13 +62,7 @@ const cases: ContractSmokeCase[] = [
     file: 'VFIDEReentrancyGuard.sol',
     expectedPatterns: [/abstract\s+contract\s+VFIDEReentrancyGuard\b/],
   },
-  {
-    file: 'WithdrawalQueue.sol',
-    expectedPatterns: [
-      /abstract\s+contract\s+WithdrawalQueue\b/,
-      /contract\s+WithdrawalQueueStub\b/,
-    ],
-  },
+  // WithdrawalQueue.sol deleted per B-11 (dead code cleanup)
 ];
 
 describe('Contract-by-contract uncovered smoke checks', () => {

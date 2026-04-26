@@ -1,4 +1,6 @@
 const CSRF_EXEMPT_API_PATHS = [
+  // Auth bootstrap endpoints. `/api/auth` is exempt because it is used to establish
+  // the session cookie itself after SIWE signature verification.
   '/api/auth',
   '/api/auth/challenge',
   '/api/health',

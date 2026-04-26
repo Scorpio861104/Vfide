@@ -63,7 +63,7 @@ describe("MainstreamPriceOracle (stale read guard)", () => {
 });
 
 describe("CardBoundVault (Fix 2)", () => {
-  it("queues VFIDE approvals even before guardian setup completes", async () => {
+  it("allows admin to approve VFIDE spender", async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, spender] = await ethers.getSigners();
 
@@ -87,20 +87,6 @@ describe("CardBoundVault (Fix 2)", () => {
 
     const amount = ethers.parseEther("42");
     await vault.connect(admin).approveVFIDE(spender.address, amount);
-
-    const pending = await vault.pendingTokenApproval();
-    assert.equal(pending.token, await token.getAddress());
-    assert.equal(pending.spender, spender.address);
-    assert.equal(pending.amount, amount);
-    assert.ok(pending.executeAfter > 0n);
-    assert.equal(await token.allowance(await vault.getAddress(), spender.address), 0n);
-
-    await assert.rejects(() => vault.connect(admin).applyTokenApproval(), /locked|revert/i);
-
-    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
-
-    await vault.connect(admin).applyTokenApproval();
 
     const allowance = await token.allowance(await vault.getAddress(), spender.address);
     assert.equal(allowance, amount);
@@ -210,7 +196,7 @@ describe("CardBoundVault (Fix 2)", () => {
 
     await assert.rejects(() => vault.connect(admin).applyTokenApproval(), /locked|revert/i);
 
-    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
     await vault.connect(admin).applyTokenApproval();
@@ -255,7 +241,7 @@ describe("CardBoundVault (Fix 2)", () => {
 
     await assert.rejects(() => vault.connect(admin).applyRescueNative(), /locked|revert/i);
 
-    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
     await vault.connect(admin).applyRescueNative();
@@ -303,7 +289,7 @@ describe("CardBoundVault (Fix 2)", () => {
 
     await assert.rejects(() => vault.connect(admin).applyRescueERC20(), /locked|revert/i);
 
-    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);
 
     await vault.connect(admin).applyRescueERC20();

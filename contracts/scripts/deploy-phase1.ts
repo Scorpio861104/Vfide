@@ -7,7 +7,7 @@ import hre from 'hardhat';
 import { Contract } from 'ethers';
 
 const ethers = (hre as any).ethers;
-const withdrawalQueueStubAllowed = process.env.ALLOW_WITHDRAWAL_QUEUE_STUB === 'true';
+// WithdrawalQueueStub deployment removed per B-11 (dead code cleanup)
 
 interface DeploymentConfig {
   network: string;
@@ -32,7 +32,6 @@ interface DeployedContracts {
   multiSig: Contract;
   emergencyControl: Contract;
   circuitBreaker: Contract;
-  withdrawalQueue: Contract;
   token: Contract;
 }
 
@@ -173,22 +172,11 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
   await circuitBreaker.waitForDeployment();
   console.log(`   ✓ Deployed at: ${await circuitBreaker.getAddress()}`);
 
-  if (!withdrawalQueueStubAllowed) {
-    throw new Error(
-      'WithdrawalQueueStub is disabled for deploy-phase1. Set ALLOW_WITHDRAWAL_QUEUE_STUB=true only for local test-only flows.'
-    );
-  }
+  // WithdrawalQueueStub deployment removed per B-11 (dead code cleanup)
+  // Production system uses CardBoundVault internal queue instead
 
-  // 5. Deploy WithdrawalQueueStub only in explicitly test-only flows.
-  console.log('5️⃣  Deploying WithdrawalQueueStub (test-only opt-in)...');
-  const WithdrawalQueue = await ethers.getContractFactory('WithdrawalQueueStub');
-  const minimumDelayAmount = ethers.parseEther('1000000'); // 1M tokens
-  const withdrawalQueue = await WithdrawalQueue.deploy(config.admin, minimumDelayAmount);
-  await withdrawalQueue.waitForDeployment();
-  console.log(`   ✓ Deployed at: ${await withdrawalQueue.getAddress()}`);
-
-  // 6. Deploy VFIDEToken (unified)
-  console.log('6️⃣  Deploying VFIDEToken...');
+  // 5. Deploy VFIDEToken (unified)
+  console.log('5️⃣  Deploying VFIDEToken...');
   const Token = await ethers.getContractFactory('VFIDEToken');
   const token = await Token.deploy(
     config.devReserveVestingVault,
@@ -205,7 +193,6 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
     multiSig,
     emergencyControl,
     circuitBreaker,
-    withdrawalQueue,
     token,
   };
 }
@@ -307,7 +294,6 @@ async function printDeploymentSummary(contracts: DeployedContracts): Promise<voi
   console.log(`   AdminMultiSig:        ${await contracts.multiSig.getAddress()}`);
   console.log(`   EmergencyControl:     ${await contracts.emergencyControl.getAddress()}`);
   console.log(`   CircuitBreaker:       ${await contracts.circuitBreaker.getAddress()}`);
-  console.log(`   WithdrawalQueue:      ${await contracts.withdrawalQueue.getAddress()}`);
   console.log(`   VFIDEToken:           ${await contracts.token.getAddress()}`);
   console.log('   ─────────────────────────────────────────────────────');
   

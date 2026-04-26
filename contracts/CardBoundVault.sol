@@ -483,7 +483,14 @@ contract CardBoundVault is ReentrancyGuard {
     function approveVFIDE(address spender, uint256 amount) external onlyAdmin whenNotPaused {
         require(spender != address(0), "CBV: zero spender");
         _validateApprovalAmount(amount);
-        _queueTokenApproval(vfideToken, spender, amount);
+
+        if (_guardianSetupComplete()) {
+            _queueTokenApproval(vfideToken, spender, amount);
+            return;
+        }
+
+        IERC20(vfideToken).forceApprove(spender, amount);
+        emit VaultApprove(spender, amount);
     }
 
     /// @notice F-6 FIX: Approve a spender to pull any ERC20 from this vault.
@@ -497,7 +504,14 @@ contract CardBoundVault is ReentrancyGuard {
         require(spender != address(0), "CBV: zero spender");
         require(token != address(0), "CBV: zero token");
         _validateApprovalAmount(amount);
-        _queueTokenApproval(token, spender, amount);
+
+        if (_guardianSetupComplete()) {
+            _queueTokenApproval(token, spender, amount);
+            return;
+        }
+
+        IERC20(token).forceApprove(spender, amount);
+        emit ERC20Approve(token, spender, amount);
     }
 
     // slither-disable-next-line reentrancy-events

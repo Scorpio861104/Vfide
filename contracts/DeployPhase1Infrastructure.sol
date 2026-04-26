@@ -12,6 +12,6 @@ contract Phase1InfrastructureDeployer {
         require(_admin != address(0), "Phase1InfrastructureDeployer: zero admin address");
         require(_priceOracle != address(0), "Phase1InfrastructureDeployer: zero oracle address");
         require(_emergencyControl != address(0), "Phase1InfrastructureDeployer: zero emergency control");
-        revert("Phase1InfrastructureDeployer: WithdrawalQueueStub disabled; deploy a production withdrawal queue implementation");
+        revert("Phase1InfrastructureDeployer: deprecated Solidity path; use contracts/scripts/deploy-phase1.ts");
     }
 }

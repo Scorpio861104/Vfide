@@ -44,7 +44,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS', required: false, category: 'blockchain' },
-  { name: 'NEXT_PUBLIC_WITHDRAWAL_QUEUE_ADDRESS', required: false, category: 'blockchain' },
+
 
   // WalletConnect (optional but recommended)
   { name: 'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID', required: false, category: 'blockchain' },

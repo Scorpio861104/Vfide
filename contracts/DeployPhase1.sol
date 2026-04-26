@@ -116,6 +116,8 @@ contract Phase1Deployer {
             _priceOracle,
             addresses.emergencyControl
         );
+        // NOTE: `Phase1InfrastructureDeployer` is intentionally disabled and reverts.
+        // Production deployment must use `contracts/scripts/deploy-phase1.ts`.
 
         addresses.tokenV2 = IPhase1TokenDeployer(_tokenDeployer).deployToken(
             _tokenName,

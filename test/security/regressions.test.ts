@@ -42,7 +42,7 @@ describe("CRITICAL Regressions", function () {
     const requiredTests = [
       "AdminMultiSig", "VFIDEBridge", "VaultHub", "VaultInfrastructure",
       "Seer", "MainstreamPayments", "CircuitBreaker", "VFIDECommerce",
-      "VFIDESecurity", "ProofLedger", "WithdrawalQueue", "VFIDEAccessControl",
+      "VFIDESecurity", "ProofLedger", "VFIDEAccessControl",
       "VFIDEFinance", "SeerPolicyGuard", "SeerView", "VFIDETrust",
       "BadgeQualificationRules",
     ];

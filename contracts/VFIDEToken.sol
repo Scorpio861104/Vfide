@@ -104,6 +104,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     bool public feeBypass = false;                // bypass BurnRouter fee calculation only
     uint256 public feeBypassExpiry = 0;
     uint64 public feeBypassActivatedAt = 0;       // L-3 FIX: cooldown anchor for fee bypass
+    uint64 public constant FEE_BYPASS_COOLDOWN = 7 days;
     
     /// Exemptions
     mapping(address => bool) public systemExempt; // bypass all checks (sinks, etc)
@@ -224,6 +225,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     error VF_FeesExceedAmount();
     error VF_InvalidFeeSink();
     error VF_RouterRequired();
+    error VF_FeeBypassCooldown();
 
     /// Constructor: mint full supply and distribute at genesis
     constructor(
@@ -721,6 +723,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _syncEmergencyFlags();
         if (_active) {
             if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
+            if (feeBypassActivatedAt != 0 && block.timestamp < feeBypassActivatedAt + FEE_BYPASS_COOLDOWN) {
+                revert VF_FeeBypassCooldown();
+            }
             // H-6 FIX: Propose activation with 48-hour delay instead of instant enable
             pendingFeeBypassActive = true;
             pendingFeeBypassDuration = _duration;
