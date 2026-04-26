@@ -52,6 +52,7 @@ contract PayrollManager is ReentrancyGuard {
     event EmergencyWithdraw(uint256 indexed streamId, address indexed to, uint256 amount);
     event StreamExpired(uint256 indexed streamId, address indexed reclaimedBy, uint256 amount);
     event DAOSet(address indexed dao);
+    event SupportedTokenSet(address indexed token, bool supported);
 
     struct Stream {
         address payer;
@@ -91,6 +92,9 @@ contract PayrollManager is ReentrancyGuard {
     // NEW: Track streams by payer and payee
     mapping(address => uint256[]) private payerStreams;
     mapping(address => uint256[]) private payeeStreams;
+    mapping(address => uint256) public activePayerStreamCount;
+    mapping(address => uint256) public activePayeeStreamCount;
+    mapping(address => bool) public supportedTokens;
 
     // H-2 FIX: Timelocked DAO rotation
     address public pendingDAO_PM;
@@ -135,6 +139,12 @@ contract PayrollManager is ReentrancyGuard {
     function setSeer(address _seer) external onlyDAO {
         seer = ISeer_PM(_seer);
     }
+
+    function setSupportedToken(address token, bool supported) external onlyDAO {
+        require(token != address(0), "PM: zero token");
+        supportedTokens[token] = supported;
+        emit SupportedTokenSet(token, supported);
+    }
     
     /**
      * @dev Safe transfer helper for IERC20_Pay tokens
@@ -152,6 +162,7 @@ contract PayrollManager is ReentrancyGuard {
      */
     function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external returns (uint256) {
         if (payee == address(0)) revert PM_InvalidPayee();
+        require(supportedTokens[token], "PM: unsupported token");
         if (rate == 0) revert PM_InvalidRate();
         require(rate >= 1e12, "PM: rate too low");        if (initialDeposit == 0) revert PM_InvalidDeposit();
 
@@ -172,10 +183,12 @@ contract PayrollManager is ReentrancyGuard {
         });
         
         // Track streams for both parties (I-11: capped)
-        require(payerStreams[msg.sender].length < 200, "PM: payer stream cap");
+        require(activePayerStreamCount[msg.sender] < 200, "PM: payer stream cap");
         payerStreams[msg.sender].push(id);
-        require(payeeStreams[payee].length < 200, "PM: payee stream cap");
+        activePayerStreamCount[msg.sender] += 1;
+        require(activePayeeStreamCount[payee] < 200, "PM: payee stream cap");
         payeeStreams[payee].push(id);
+        activePayeeStreamCount[payee] += 1;
 
         emit StreamCreated(id, msg.sender, payee, rate);
 
@@ -201,10 +214,13 @@ contract PayrollManager is ReentrancyGuard {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
+        if (amount == 0) revert PM_InvalidDeposit();
 
-        s.depositBalance += amount;
+        uint256 balBefore = IERC20(s.token).balanceOf(address(this));
         IERC20(s.token).safeTransferFrom(msg.sender, address(this), amount);
-        emit TopUp(streamId, amount);
+        uint256 actualReceived = IERC20(s.token).balanceOf(address(this)) - balBefore;
+        s.depositBalance += actualReceived;
+        emit TopUp(streamId, actualReceived);
     }
     
     /**
@@ -300,8 +316,13 @@ contract PayrollManager is ReentrancyGuard {
         require(p.validFrom != 0, "PM: no pending update");
         require(block.timestamp >= p.validFrom, "PM: timelock pending");
         require(msg.sender == s.payee || msg.sender == p.newPayee, "PM: not payee");
+        require(activePayeeStreamCount[p.newPayee] < 200, "PM: payee stream cap");
 
         address oldPayee = s.payee;
+        if (activePayeeStreamCount[oldPayee] > 0) {
+            activePayeeStreamCount[oldPayee] -= 1;
+        }
+        activePayeeStreamCount[p.newPayee] += 1;
         s.payee = p.newPayee;
         delete pendingPayeeUpdates[streamId];
         emit PayeeUpdated(streamId, oldPayee, s.payee);
@@ -325,6 +346,7 @@ contract PayrollManager is ReentrancyGuard {
         uint256 balance = s.depositBalance;
         s.depositBalance = 0;
         s.active = false;
+        _decrementActiveCounts(s.payer, s.payee);
 
         emit EmergencyWithdraw(streamId, to, balance);
         
@@ -422,6 +444,7 @@ contract PayrollManager is ReentrancyGuard {
         s.depositBalance = 0;
         s.pausedAccrued = 0;
         s.active = false;
+        _decrementActiveCounts(payer, payee);
 
         if (due > 0) {
             emit Withdraw(streamId, payee, due);
@@ -449,6 +472,7 @@ contract PayrollManager is ReentrancyGuard {
         s.depositBalance = 0;
         s.active = false;
         s.pausedAccrued = 0;
+        _decrementActiveCounts(s.payer, s.payee);
 
         // Transfer payee's earned wages first
         if (payeeClaimable > 0) {
@@ -578,6 +602,15 @@ contract PayrollManager is ReentrancyGuard {
         results = new Stream[](streamIds.length);
         for (uint256 i = 0; i < streamIds.length; i++) {
             results[i] = streams[streamIds[i]];
+        }
+    }
+
+    function _decrementActiveCounts(address payer, address payee) internal {
+        if (activePayerStreamCount[payer] > 0) {
+            activePayerStreamCount[payer] -= 1;
+        }
+        if (activePayeeStreamCount[payee] > 0) {
+            activePayeeStreamCount[payee] -= 1;
         }
     }
 }

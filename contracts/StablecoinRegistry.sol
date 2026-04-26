@@ -3,6 +3,10 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 
+interface IERC20MetadataSR {
+    function decimals() external view returns (uint8);
+}
+
 /**
  * @title StablecoinRegistry
  * @notice Manages allowed stablecoins for ecosystem uses
@@ -23,17 +27,36 @@ contract StablecoinRegistry is Ownable, Pausable {
     event StablecoinAdded(address indexed token, uint8 decimals, string symbol);
     event StablecoinRemoved(address indexed token);
     event StablecoinUpdated(address indexed token, bool allowed);
+    event GovernanceSet(address indexed previousGovernance, address indexed newGovernance);
     
     error SR_Zero();
     error SR_AlreadyAdded();
     error SR_NotFound();
     error SR_Bounds();
+    error SR_NotGovernance();
+    error SR_DecimalsMismatch();
 
     uint8 public constant MIN_DECIMALS = 1;
     uint8 public constant MAX_DECIMALS = 18;
     uint8 public constant MAX_SYMBOL_LENGTH = 16;
+    address public governance;
+
+    modifier onlyGovernance() {
+        if (msg.sender != governance) revert SR_NotGovernance();
+        _;
+    }
     
-    constructor() {}
+    constructor() {
+        governance = msg.sender;
+        emit GovernanceSet(address(0), msg.sender);
+    }
+
+    function setGovernance(address newGovernance) external onlyOwner {
+        if (newGovernance == address(0)) revert SR_Zero();
+        address previousGovernance = governance;
+        governance = newGovernance;
+        emit GovernanceSet(previousGovernance, newGovernance);
+    }
     
     /**
      * @notice Add a stablecoin to the registry
@@ -41,12 +64,14 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @param decimals Decimals of the token (e.g., 6 for USDC/USDT, 18 for DAI)
      * @param symbol Symbol for reference (e.g., "USDC")
      */
-    function addStablecoin(address token, uint8 decimals, string calldata symbol) external onlyOwner whenNotPaused {
+    function addStablecoin(address token, uint8 decimals, string calldata symbol) external onlyGovernance whenNotPaused {
         if (token == address(0)) revert SR_Zero();
         if (stablecoins[token].allowed) revert SR_AlreadyAdded();
         if (decimals < MIN_DECIMALS || decimals > MAX_DECIMALS) revert SR_Bounds();
         uint256 symbolLength = bytes(symbol).length;
         if (symbolLength == 0 || symbolLength > MAX_SYMBOL_LENGTH) revert SR_Bounds();
+        uint8 reportedDecimals = IERC20MetadataSR(token).decimals();
+        if (reportedDecimals != decimals) revert SR_DecimalsMismatch();
         
         stablecoins[token] = StablecoinInfo({
             allowed: true,
@@ -63,7 +88,7 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @notice Remove a stablecoin from the registry
      * @param token Address of the stablecoin to remove
      */
-    function removeStablecoin(address token) external onlyOwner whenNotPaused {
+    function removeStablecoin(address token) external onlyGovernance whenNotPaused {
         if (!stablecoins[token].allowed) revert SR_NotFound();
         
         stablecoins[token].allowed = false;
@@ -89,7 +114,7 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @param token Address of the stablecoin
      * @param allowed Whether the stablecoin is allowed
      */
-    function setAllowed(address token, bool allowed) external onlyOwner {
+    function setAllowed(address token, bool allowed) external onlyGovernance {
         if (token == address(0)) revert SR_Zero();
         if (stablecoins[token].decimals == 0) revert SR_NotFound();
         stablecoins[token].allowed = allowed;
@@ -136,7 +161,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     address public treasury;
     
     /// @notice Set treasury address (for interface compatibility)
-    function setTreasury(address _treasury) external onlyOwner {
+    function setTreasury(address _treasury) external onlyGovernance {
         if (_treasury == address(0)) revert SR_Zero();
         treasury = _treasury;
     }
@@ -169,6 +194,6 @@ contract StablecoinRegistry is Ownable, Pausable {
         }
     }
 
-    function pause() external onlyOwner { _pause(); }
-    function unpause() external onlyOwner { _unpause(); }
+    function pause() external onlyGovernance { _pause(); }
+    function unpause() external onlyGovernance { _unpause(); }
 }
