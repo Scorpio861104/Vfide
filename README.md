@@ -38,6 +38,21 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
 
 For production, see `.env.production` for complete configuration.
 
+### Production Security Prerequisites
+
+These values are required for a safe production deployment and are validated by startup and production checks:
+
+- `DATABASE_URL` must connect with the constrained `vfide_app` role (not superuser / BYPASSRLS role).
+- `JWT_SECRET` must be strong and unique per environment.
+- `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` must be set.
+- `LOG_IP_HASH_SALT` must be set (minimum 16 characters recommended).
+- `APP_ORIGIN` and `NEXT_PUBLIC_APP_URL` must be set to your canonical app origin.
+
+Feature-specific production variables:
+
+- `USSD_GATEWAY_TOKEN` when `/api/ussd` is enabled.
+- `STREAM_ALLOWED_TOKENS` if stream symbols differ from defaults (`VFIDE,USDC,USDT,DAI,ETH,WETH`).
+
 ## Production Deployment
 
 ### Prerequisites
@@ -47,6 +62,7 @@ For production, see `.env.production` for complete configuration.
    - Redis (Upstash recommended for rate limiting)
    - Sentry account (for error tracking)
    - WalletConnect Project ID
+   - Constrained Postgres app role (`vfide_app`, `NOBYPASSRLS`)
 
 2. **Smart Contracts:**
    - Deploy contracts to mainnet
@@ -65,6 +81,8 @@ For production, see `.env.production` for complete configuration.
    npm run validate:env
    npm run validate:production
    ```
+
+   Production note: validation failures on Redis or `LOG_IP_HASH_SALT` must block deploy until fixed.
 
 3. **Build Application:**
    ```bash
