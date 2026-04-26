@@ -41,12 +41,14 @@ const replayWorkflowSrc = read(join(WORKFLOWS_DIR, 'security-replay-monitor.yml'
 describe('R-061 – Structured logging in critical flows', () => {
   it('central logger supports context object normalization', () => {
     expect(loggerSrc).toMatch(/function normalizeContext\(context: unknown\): LogContext \| undefined/);
-    expect(loggerSrc).toMatch(/return \{ value: String\(context\) \}/);
+    expect(loggerSrc).toMatch(/return \{ value: scrubString\(String\(context\)\) \}/);
   });
 
   it('logger warning/error paths send context extras to Sentry', () => {
-    expect(loggerSrc).toMatch(/Sentry\.captureMessage\(message, \{\s*level: 'warning',\s*extra: normalizeContext\(context\)/s);
-    expect(loggerSrc).toMatch(/Sentry\.captureException\(error, \{\s*extra: \{ message, \.\.\.normalizeContext\(context\) \}/s);
+    expect(loggerSrc).toMatch(/const safeExtra = toSentryExtras\(scrubValue\(normalizeContext\(context\)\)\)/s);
+    expect(loggerSrc).toMatch(/Sentry\.captureMessage\(message, \{\s*level: 'warning',\s*extra: safeExtra/s);
+    expect(loggerSrc).toMatch(/const safeContext = toSentryExtras\(scrubValue\(normalizeContext\(context\)\)\)/s);
+    expect(loggerSrc).toMatch(/Sentry\.captureException\(safeError, \{\s*extra: \{ message: safeMessage, \.\.\.\(safeContext \|\| \{\}\) \}/s);
   });
 
   it('security logs endpoint stores structured fields (address/type/severity/message/details)', () => {

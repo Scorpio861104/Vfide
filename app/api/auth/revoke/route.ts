@@ -3,6 +3,7 @@ import { getRequestAuthToken, requireAuth } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { extractToken } from '@/lib/auth/jwt';
 import { z } from 'zod4';
 
 const MAX_REVOKE_REASON_LENGTH = 200;
@@ -50,6 +51,15 @@ export async function POST(request: NextRequest) {
     const { revokeAll, reason } = body;
 
     const normalizedReason = typeof reason === 'string' ? reason.trim() : 'user_requested';
+
+    const headerToken = extractToken(request.headers.get('authorization'));
+    const cookieToken = request.cookies.get('vfide_auth_token')?.value?.trim() || null;
+    if (headerToken && cookieToken && headerToken !== cookieToken) {
+      return NextResponse.json(
+        { error: 'Provide only one auth token source when revoking a single token' },
+        { status: 400 }
+      );
+    }
 
     // Get the current token from the request
     const token = await getRequestAuthToken(request);

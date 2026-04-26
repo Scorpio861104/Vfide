@@ -111,6 +111,12 @@ function resolveMaxSessionDurationSeconds(): number {
 function getSessionStorageBackend(): Storage | null {
   if (typeof window === 'undefined') return null;
 
+  // Persistent permission records increase blast radius after XSS;
+  // keep them session-scoped in production even if the flag is enabled.
+  if (process.env.NODE_ENV === 'production') {
+    return window.sessionStorage;
+  }
+
   if (getEnv().NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS) {
     return window.localStorage;
   }
@@ -184,16 +190,28 @@ export class SessionKeyService {
     }
 
     const selector = callData.slice(0, 10).toLowerCase();
-    if (selector !== '0x095ea7b3' && selector !== '0xa9059cbb') {
+    let amountOffset = -1;
+
+    // approve(address,uint256), transfer(address,uint256), increaseAllowance(address,uint256), decreaseAllowance(address,uint256)
+    if (
+      selector === '0x095ea7b3' ||
+      selector === '0xa9059cbb' ||
+      selector === '0x39509351' ||
+      selector === '0xa457c2d7'
+    ) {
+      amountOffset = 10 + 64;
+    }
+
+    // transferFrom(address,address,uint256), permit(address,address,uint256,uint256,uint8,bytes32,bytes32)
+    if (selector === '0x23b872dd' || selector === '0xd505accf') {
+      amountOffset = 10 + 128;
+    }
+
+    if (amountOffset < 0 || callData.length < amountOffset + 64) {
       return null;
     }
 
-    // ABI encoding: 4-byte selector + 32-byte address + 32-byte amount
-    if (callData.length < 10 + (64 * 2)) {
-      return null;
-    }
-
-    const amountHex = callData.slice(10 + 64, 10 + 128);
+    const amountHex = callData.slice(amountOffset, amountOffset + 64);
     if (!/^[0-9a-fA-F]{64}$/.test(amountHex)) {
       return null;
     }

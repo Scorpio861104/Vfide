@@ -173,8 +173,33 @@ export async function safeQuery<T extends QueryResultRow = QueryResultRow>(
   let fullQuery = baseQuery;
 
   for (const { clause, param } of conditions) {
-    params.push(param);
-    fullQuery += ` ${clause.replace('?', `$${params.length}`)}`;
+    const placeholderMatches = clause.match(/\?/g);
+    const placeholderCount = placeholderMatches ? placeholderMatches.length : 0;
+
+    if (placeholderCount === 0) {
+      fullQuery += ` ${clause}`;
+      continue;
+    }
+
+    if (placeholderCount === 1) {
+      params.push(param);
+      fullQuery += ` ${clause.replace('?', `$${params.length}`)}`;
+      continue;
+    }
+
+    if (Array.isArray(param) && param.length === placeholderCount) {
+      let rewritten = clause;
+      for (const value of param) {
+        params.push(value);
+        rewritten = rewritten.replace('?', `$${params.length}`);
+      }
+      fullQuery += ` ${rewritten}`;
+      continue;
+    }
+
+    throw new Error(
+      `safeQuery clause requires ${placeholderCount} parameters but received ${Array.isArray(param) ? param.length : 1}`
+    );
   }
 
   if (suffix) {

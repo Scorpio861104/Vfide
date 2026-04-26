@@ -4,6 +4,18 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+const SENSITIVE_HEADERS = [
+  "authorization",
+  "cookie",
+  "x-api-key",
+  "x-csrf-token",
+  "x-auth-token",
+  "x-vfide-alert-signature",
+  "x-vfide-alert-timestamp",
+  "proxy-authorization",
+  "x-forwarded-for",
+];
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
@@ -56,8 +68,11 @@ Sentry.init({
 
     // Scrub sensitive data
     if (event.request?.headers) {
-      delete event.request.headers["Authorization"];
-      delete event.request.headers["Cookie"];
+      for (const header of SENSITIVE_HEADERS) {
+        delete event.request.headers[header];
+        delete event.request.headers[header.toLowerCase()];
+        delete event.request.headers[header.toUpperCase()];
+      }
     }
 
     return event;

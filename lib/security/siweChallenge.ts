@@ -123,6 +123,10 @@ async function storeChallengeRecord(record: ChallengeRecord): Promise<void> {
     return;
   }
 
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('SIWE challenge storage requires Redis in production');
+  }
+
   pruneExpiredChallenges();
   inMemoryChallenges.set(key, record);
 }
@@ -133,6 +137,10 @@ async function consumeChallengeRecord(address: string): Promise<ChallengeRecord 
   if (redis) {
     const record = await redis.getdel<string>(key);
     return record ? JSON.parse(record) as ChallengeRecord : null;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('SIWE challenge storage requires Redis in production');
   }
 
   const cached = inMemoryChallenges.get(key) ?? null;

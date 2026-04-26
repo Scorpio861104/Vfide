@@ -5,6 +5,8 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
 const ALLOW_MOCK_USSD = process.env.ALLOW_MOCK_USSD === 'true';
+const MAX_USSD_TEXT_LENGTH = 128;
+const MERCHANT_CODE_REGEX = /^[A-Z0-9]{3,12}$/;
 
 function isTrustedGateway(request: NextRequest): boolean {
   const configuredToken = process.env.USSD_GATEWAY_TOKEN;
@@ -23,22 +25,28 @@ function isTrustedGateway(request: NextRequest): boolean {
 }
 
 async function readUSSDFields(request: NextRequest): Promise<{ sessionId: string; phoneNumber: string; text: string }> {
-  const rawBody = await request.clone().text().catch(() => '');
-  const fromMultipart = (field: string) => rawBody.match(new RegExp(`name="${field}"\\r?\\n\\r?\\n([^\\r\\n]*)`))?.[1] || '';
-  const params = new URLSearchParams(rawBody);
+  const contentType = (request.headers.get('content-type') || '').toLowerCase();
+  const isFormUrlEncoded = contentType.includes('application/x-www-form-urlencoded');
+  const isMultipart = contentType.includes('multipart/form-data');
+
+  if (!isFormUrlEncoded && !isMultipart) {
+    throw new Error('Unsupported USSD content type');
+  }
 
   try {
     const formData = await request.formData();
-    const sessionId = formData.get('sessionId')?.toString() || params.get('sessionId') || fromMultipart('sessionId');
-    const phoneNumber = formData.get('phoneNumber')?.toString() || params.get('phoneNumber') || fromMultipart('phoneNumber');
-    const text = formData.get('text')?.toString() || params.get('text') || fromMultipart('text');
+    const sessionId = formData.get('sessionId')?.toString() || '';
+    const phoneNumber = formData.get('phoneNumber')?.toString() || '';
+    const text = formData.get('text')?.toString() || '';
 
     return { sessionId, phoneNumber, text };
   } catch {
+    const rawBody = await request.clone().text().catch(() => '');
+    const params = new URLSearchParams(rawBody);
     return {
-      sessionId: params.get('sessionId') || fromMultipart('sessionId'),
-      phoneNumber: params.get('phoneNumber') || fromMultipart('phoneNumber'),
-      text: params.get('text') || fromMultipart('text'),
+      sessionId: params.get('sessionId') || '',
+      phoneNumber: params.get('phoneNumber') || '',
+      text: params.get('text') || '',
     };
   }
 }
@@ -49,24 +57,37 @@ function hashPhone(phoneNumber: string): string {
 }
 
 function buildMenu(text: string): string {
-  const parts = text ? text.split('*') : [];
+  const normalizedText = text.trim();
+  const parts = normalizedText ? normalizedText.split('*') : [];
   const level = parts.length;
   const lastInput = parts[parts.length - 1] || '';
 
-  if (text === '') {
+  if (normalizedText === '') {
     return 'CON Welcome to VFIDE\n1. Pay Merchant\n2. Check Balance\n3. My Trust Score\n4. Recent Transactions';
   }
 
-  if (text === '1') {
+  if (normalizedText === '1') {
     return 'CON Enter merchant code (e.g., SHOP001):';
   }
 
   if (parts[0] === '1' && level === 2) {
-    return `CON Pay merchant ${lastInput}\nEnter amount:`;
+    const merchantCode = lastInput.toUpperCase();
+    if (!MERCHANT_CODE_REGEX.test(merchantCode)) {
+      return 'END Invalid merchant code format.';
+    }
+    return `CON Pay merchant ${merchantCode}\nEnter amount:`;
   }
 
   if (parts[0] === '1' && level === 3) {
-    return `CON Pay ${parts[2]} VFIDE to ${parts[1]}?\n1. Confirm\n2. Cancel`;
+    const merchantCode = parts[1]?.toUpperCase() || '';
+    const amountValue = Number(parts[2]);
+    if (!MERCHANT_CODE_REGEX.test(merchantCode)) {
+      return 'END Invalid merchant code format.';
+    }
+    if (!Number.isFinite(amountValue) || amountValue <= 0 || amountValue > 1_000_000) {
+      return 'END Invalid payment amount.';
+    }
+    return `CON Pay ${amountValue} VFIDE to ${merchantCode}?\n1. Confirm\n2. Cancel`;
   }
 
   if (parts[0] === '1' && level === 4 && lastInput === '1') {
@@ -77,15 +98,15 @@ function buildMenu(text: string): string {
     return 'END Payment cancelled.';
   }
 
-  if (text === '2') {
+  if (normalizedText === '2') {
     return 'END Balance: 0 VFIDE\nLink your wallet at vfide.io to see your balance.';
   }
 
-  if (text === '3') {
+  if (normalizedText === '3') {
     return 'END Trust Score: 5000 (Neutral)\nUse VFIDE to build your trust score.';
   }
 
-  if (text === '4') {
+  if (normalizedText === '4') {
     return 'END No recent transactions.\nStart using VFIDE at vfide.io';
   }
 
@@ -112,6 +133,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const { sessionId, phoneNumber, text } = await readUSSDFields(request);
+    if (text.length > MAX_USSD_TEXT_LENGTH) {
+      return new Response('END Request too long. Please try again.', {
+        status: 400,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
 
     logger.info(`[USSD] Session ${sessionId} from phone_hash:${hashPhone(phoneNumber)} with input: ${text}`);
 

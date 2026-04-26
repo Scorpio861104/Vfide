@@ -170,11 +170,6 @@ export function getUserFriendlyMessage(error: unknown): string {
     return match.userMessage;
   }
 
-  // If no pattern matches but it's a known short error, allow it
-  if (errorMessage.length < 100 && !errorMessage.includes('localhost') && !errorMessage.includes('/')) {
-    return errorMessage;
-  }
-
   // Default fallback (very safe)
   return 'An error occurred. Please try again or contact support if the problem persists.';
 }

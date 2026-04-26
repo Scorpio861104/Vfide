@@ -62,6 +62,15 @@ export function validateEnvironment(): void {
       'change-me',
       'secret',
       'default',
+      'test',
+      'password',
+      'admin',
+      '12345678',
+      'placeholder',
+      'example',
+      'dev',
+      'local',
+      'development',
     ];
 
     if (jwtSecret && defaultSecrets.some(def => jwtSecret.toLowerCase().includes(def))) {

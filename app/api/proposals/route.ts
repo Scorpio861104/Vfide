@@ -9,6 +9,7 @@ import { z } from 'zod4';
 const MAX_PROPOSALS_LIMIT = 100;
 const MAX_PROPOSALS_OFFSET = 10000;
 const DB_GOVERNANCE_SCORE_FALLBACK_MIN = 5000;
+const MAX_VOTING_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 const SEER_GOVERNANCE_ABI = [
   {
@@ -34,6 +35,27 @@ const createProposalRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().min(1).max(10000),
   endsAt: z.coerce.date().optional(),
+}).superRefine((value, ctx) => {
+  if (!value.endsAt) return;
+
+  const now = Date.now();
+  const endsAtMs = value.endsAt.getTime();
+  if (endsAtMs <= now) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['endsAt'],
+      message: 'endsAt must be in the future',
+    });
+    return;
+  }
+
+  if (endsAtMs > now + MAX_VOTING_WINDOW_MS) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['endsAt'],
+      message: 'Voting window cannot exceed 30 days',
+    });
+  }
 });
 
 function isDatabaseUnavailableError(error: unknown): boolean {

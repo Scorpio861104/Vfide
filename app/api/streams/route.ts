@@ -7,11 +7,24 @@ import { query } from '@/lib/db';
 export const runtime = 'nodejs';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const DEFAULT_ALLOWED_STREAM_TOKENS = ['VFIDE', 'USDC', 'USDT', 'DAI', 'ETH', 'WETH'];
+
+function getAllowedStreamTokens(): Set<string> {
+  const configured = (process.env.STREAM_ALLOWED_TOKENS || '')
+    .split(',')
+    .map((token) => token.trim().toUpperCase())
+    .filter((token) => token.length > 0);
+
+  const tokens = configured.length > 0 ? configured : DEFAULT_ALLOWED_STREAM_TOKENS;
+  return new Set(tokens);
+}
 
 const createStreamSchema = z.object({
   senderAddress: z.string().trim().regex(ADDRESS_REGEX),
   recipientAddress: z.string().trim().regex(ADDRESS_REGEX),
-  token: z.string().trim().min(1).max(20),
+  token: z.string().trim().toUpperCase().refine((value) => getAllowedStreamTokens().has(value), {
+    message: 'Unsupported token symbol',
+  }),
   totalAmount: z.number().positive(),
   ratePerSecond: z.number().positive(),
   startTime: z.string().datetime(),
