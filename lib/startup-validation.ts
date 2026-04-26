@@ -87,6 +87,15 @@ export function validateEnvironment(): void {
       );
     }
 
+    const ipHashSalt = process.env.LOG_IP_HASH_SALT?.trim() || '';
+    if (!ipHashSalt) {
+      errors.push(
+        'CRITICAL: LOG_IP_HASH_SALT is required in production to prevent predictable IP hashes in logs.'
+      );
+    } else if (ipHashSalt.length < 16) {
+      errors.push('WARNING: LOG_IP_HASH_SALT should be at least 16 characters long for security');
+    }
+
     // Validate PREV_JWT_SECRET during rotation window — must not equal JWT_SECRET
     const prevSecret = readEnvOrFile('PREV_JWT_SECRET');
     if (prevSecret) {

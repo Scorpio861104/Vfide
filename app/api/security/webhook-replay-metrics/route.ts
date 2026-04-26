@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'node:crypto';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -65,7 +66,9 @@ function isMachineTokenAuthorized(request: NextRequest): boolean {
   const bearerToken = extractBearerToken(request.headers.get('authorization'));
   if (!bearerToken) return false;
 
-  return bearerToken === configuredToken;
+  const provided = Buffer.from(bearerToken, 'utf8');
+  const expected = Buffer.from(configuredToken, 'utf8');
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
 export async function GET(request: NextRequest) {

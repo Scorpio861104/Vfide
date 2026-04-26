@@ -14,7 +14,7 @@ import { logger } from '@/lib/logger';
  * - Clears HTTPOnly cookies
  * - Rate limited to prevent abuse
  */
-export const POST = withAuth(async (request: NextRequest) => {
+export const POST = withAuth(async (request: NextRequest, user) => {
   // Apply rate limiting
   const rateLimitResponse = await withRateLimit(request, 'auth');
   if (rateLimitResponse) return rateLimitResponse;
@@ -27,8 +27,13 @@ export const POST = withAuth(async (request: NextRequest) => {
     if (normalizedToken.length > 0) {
       const tokenHash = await hashToken(normalizedToken);
       try {
-        // expiresAt is Unix timestamp 24h from now, reason is 'logout'
-        const expiresAt = Math.floor(Date.now() / 1000) + (60 * 60 * 24);
+        // Prefer JWT exp when available so revocation lifetime tracks actual token validity.
+        const now = Math.floor(Date.now() / 1000);
+        const fallbackExp = now + (60 * 60 * 24);
+        const tokenExp = Number(user?.exp ?? 0);
+        const expiresAt = Number.isFinite(tokenExp) && tokenExp > now
+          ? tokenExp
+          : fallbackExp;
         await revokeToken(tokenHash, expiresAt, 'logout');
       } catch (error) {
         // Log but don't fail - token might already be expired

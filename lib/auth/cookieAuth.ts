@@ -7,7 +7,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { logger } from '@/lib/logger';
 
 // Cookie configuration
 const AUTH_COOKIE_NAME = 'vfide_auth_token';
@@ -119,47 +118,6 @@ export async function clearAuthCookies(response?: NextResponse): Promise<void> {
 export async function hasAuthCookies(request?: NextRequest): Promise<boolean> {
   const token = await getAuthCookie(request);
   return token !== null;
-}
-
-/**
- * Migrate from localStorage to httpOnly cookies
- * This endpoint should be called by the client to complete migration
- */
-export async function migrateToHttpOnlyCookies(
-  request: NextRequest
-): Promise<NextResponse> {
-  try {
-    const body = await request.json();
-    const { token, refreshToken } = body;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No token provided for migration' },
-        { status: 400 }
-      );
-    }
-
-    // Create response
-    const response = NextResponse.json({
-      success: true,
-      message: 'Token migrated to httpOnly cookies',
-    });
-
-    // Set tokens in httpOnly cookies
-    await setAuthCookie(token, response);
-    
-    if (refreshToken) {
-      await setRefreshCookie(refreshToken, response);
-    }
-
-    return response;
-  } catch (error) {
-    logger.error('[Cookie Auth] Migration error:', error as Error);
-    return NextResponse.json(
-      { error: 'Failed to migrate tokens' },
-      { status: 500 }
-    );
-  }
 }
 
 /**

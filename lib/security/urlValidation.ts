@@ -6,17 +6,23 @@
 
 import { logger } from '@/lib/logger';
 
-/**
- * List of allowed domains for redirects
- * In production, load from environment variables
- */
-const ALLOWED_DOMAINS = [
+const BASE_ALLOWED_DOMAINS = [
   'vfide.io',
   'app.vfide.io',
   'testnet.vfide.io',
+];
+
+const DEV_ONLY_ALLOWED_DOMAINS = [
   'localhost',
   '127.0.0.1',
 ];
+
+function getRuntimeAllowedDomains(): readonly string[] {
+  if (process.env.NODE_ENV === 'production') {
+    return BASE_ALLOWED_DOMAINS;
+  }
+  return [...BASE_ALLOWED_DOMAINS, ...DEV_ONLY_ALLOWED_DOMAINS];
+}
 
 /**
  * List of allowed protocols for URLs
@@ -32,6 +38,8 @@ const ALLOWED_EXTERNAL_PROTOCOLS = ['http:', 'https:', 'mailto:'];
  */
 export function isUrlSafe(url: string, allowRelative: boolean = true): boolean {
   if (!url) return false;
+
+  const allowedDomains = getRuntimeAllowedDomains();
 
   try {
     // Allow relative URLs if specified
@@ -53,7 +61,7 @@ export function isUrlSafe(url: string, allowRelative: boolean = true): boolean {
       const hostname = parsed.hostname;
       
       // Check if domain is in allowed list
-      const isAllowed = ALLOWED_DOMAINS.some(domain => {
+      const isAllowed = allowedDomains.some(domain => {
         return hostname === domain || hostname.endsWith(`.${domain}`);
       });
 
@@ -131,7 +139,7 @@ export function validateNotificationUrl(actionUrl: string | undefined): string |
  * Get allowed domains list (useful for configuration)
  */
 export function getAllowedDomains(): readonly string[] {
-  return ALLOWED_DOMAINS;
+  return getRuntimeAllowedDomains();
 }
 
 /**
