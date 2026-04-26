@@ -365,6 +365,12 @@ if (isMainModule) {
   }
 
   if (!isCI && !result.valid) {
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && !frontendOnly) {
+      logger.info('❌ Production environment detected with validation errors — refusing to start');
+      logger.info('❌ Configure all required environment variables before deploying');
+      process.exit(1);
+    }
     logger.info('⚠️  Local environment has missing/partial config; continuing outside CI/deployment');
     process.exit(0);
   }
