@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { proxy } from '../../middleware';
+import { proxy } from '../../proxy';
 
 describe('proxy connect-src restrictions', () => {
   const originalEnv = { ...process.env };
