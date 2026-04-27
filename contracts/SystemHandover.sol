@@ -33,6 +33,9 @@ contract SystemHandover {
     event TimelockSet(address timelock);
     event CouncilElectionSet(address councilElection);
     event OwnershipAuditMarked(address indexed auditor);
+    event OwnershipAuditorQueued(address indexed auditor, uint64 executeAfter);
+    event OwnershipAuditorSet(address indexed auditor);
+    event OwnershipAuditorCanceled(address indexed auditor);
 
     address public devMultisig;
     IDAO_SH public dao;
@@ -53,6 +56,9 @@ contract SystemHandover {
     // F-22 FIX: Ownership audit flag — verification that all Ownable contracts have been transferred to DAO/timelock
     bool public ownershipAudited;
     address public ownershipAuditor;
+    address public pendingOwnershipAuditor;
+    uint64 public pendingOwnershipAuditorAt;
+    uint64 public constant OWNERSHIP_AUDITOR_DELAY = 48 hours;
 
     modifier onlyDev() {
         _checkDev();
@@ -161,7 +167,35 @@ contract SystemHandover {
         if (auditor_ == address(0)) revert SH_Zero();
         require(auditor_ != devMultisig, "SH: auditor cannot be dev");
         if (!_isCouncilMember(auditor_)) revert SH_AuditorNotCouncil();
-        ownershipAuditor = auditor_;
+        pendingOwnershipAuditor = auditor_;
+        pendingOwnershipAuditorAt = uint64(block.timestamp) + OWNERSHIP_AUDITOR_DELAY;
+        emit OwnershipAuditorQueued(auditor_, pendingOwnershipAuditorAt);
+        _log("ownership_auditor_queued");
+    }
+
+    /// @notice Apply a previously queued ownership auditor once timelock has elapsed.
+    function applyOwnershipAuditor() external onlyDev notArmed {
+        address pending = pendingOwnershipAuditor;
+        require(pending != address(0), "SH: no pending auditor");
+        require(block.timestamp >= pendingOwnershipAuditorAt, "SH: auditor timelock");
+        if (!_isCouncilMember(pending)) revert SH_AuditorNotCouncil();
+
+        ownershipAuditor = pending;
+        delete pendingOwnershipAuditor;
+        delete pendingOwnershipAuditorAt;
+        ownershipAudited = false;
+        emit OwnershipAuditorSet(ownershipAuditor);
+        _log("ownership_auditor_set");
+    }
+
+    /// @notice Cancel a pending ownership auditor change before it is applied.
+    function cancelOwnershipAuditor() external onlyDev notArmed {
+        address pending = pendingOwnershipAuditor;
+        require(pending != address(0), "SH: no pending auditor");
+        delete pendingOwnershipAuditor;
+        delete pendingOwnershipAuditorAt;
+        emit OwnershipAuditorCanceled(pending);
+        _log("ownership_auditor_canceled");
     }
 
     /// @notice Confirm that ownership of all Ownable contracts has been transferred to DAO/timelock

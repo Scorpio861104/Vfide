@@ -89,47 +89,25 @@ contract Phase1Deployer {
         string memory _tokenName,
         string memory _tokenSymbol,
         uint256 _initialSupply
-    ) external returns (DeploymentAddresses memory addresses) {
+    ) external pure returns (DeploymentAddresses memory) {
         require(_governanceDeployer != address(0), "Phase1Deployer: zero governance deployer");
         require(_infrastructureDeployer != address(0), "Phase1Deployer: zero infrastructure deployer");
         require(_tokenDeployer != address(0), "Phase1Deployer: zero token deployer");
         require(_admin != address(0), "Phase1Deployer: zero admin address");
         require(_priceOracle != address(0), "Phase1Deployer: zero oracle address");
 
-        (
-            addresses.accessControl,
-            addresses.multiSig,
-            addresses.emergencyControl
-        ) = IPhase1GovernanceDeployer(_governanceDeployer).deployGovernance(
-            _admin,
-            _council,
-            accessControlInitCode,
-            multiSigInitCode,
-            emergencyControlInitCode
-        );
+        // Explicitly mark legacy params as intentionally unused in this deprecated path.
+        _council;
+        accessControlInitCode;
+        multiSigInitCode;
+        emergencyControlInitCode;
+        _tokenName;
+        _tokenSymbol;
+        _initialSupply;
 
-        (
-            addresses.circuitBreaker,
-            addresses.withdrawalQueue
-        ) = IPhase1InfrastructureDeployer(_infrastructureDeployer).deployInfrastructure(
-            _admin,
-            _priceOracle,
-            addresses.emergencyControl
-        );
-        // NOTE: `Phase1InfrastructureDeployer` is intentionally disabled and reverts.
-        // Production deployment must use `contracts/scripts/deploy-phase1.ts`.
-
-        addresses.tokenV2 = IPhase1TokenDeployer(_tokenDeployer).deployToken(
-            _tokenName,
-            _tokenSymbol,
-            _initialSupply,
-            _admin,
-            addresses.multiSig
-        );
-
-        emit Phase1Deployed(msg.sender, addresses, block.timestamp);
-
-        return addresses;
+        // This Solidity orchestrator path is intentionally retired.
+        // Use contracts/scripts/deploy-phase1.ts to avoid partial side effects.
+        revert("DeployPhase1: deprecated Solidity path; use contracts/scripts/deploy-phase1.ts");
     }
 
     /**

@@ -16,7 +16,110 @@ async function queueTxAndGetId(timelock: any, signer: any, target: string, data:
   return queuedEvent.args[0];
 }
 
+async function queueAndApplyOwnershipAuditor(handover: any, dev: any, auditor: string, ethers: any) {
+  await handover.connect(dev).setOwnershipAuditor(auditor);
+  const delay = await handover.OWNERSHIP_AUDITOR_DELAY();
+  await ethers.provider.send('evm_increaseTime', [Number(delay) + 1]);
+  await ethers.provider.send('evm_mine', []);
+  await handover.connect(dev).applyOwnershipAuditor();
+}
+
 describe('SystemHandover security hardening', () => {
+  it('enforces ownership auditor timelock before apply', async () => {
+    const { ethers } = (await getConnection()) as any;
+    const [dev, councilAuditor] = await ethers.getSigners();
+
+    const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
+    const dao = await DaoStub.deploy();
+    await dao.waitForDeployment();
+
+    const TimelockStub = await ethers.getContractFactory('SHTimelockAdminStub');
+    const timelock = await TimelockStub.deploy();
+    await timelock.waitForDeployment();
+
+    const SeerStub = await ethers.getContractFactory('SHSeerStub');
+    const seer = await SeerStub.deploy();
+    await seer.waitForDeployment();
+
+    const CouncilStub = await ethers.getContractFactory('SHCouncilElectionStub');
+    const council = await CouncilStub.deploy();
+    await council.waitForDeployment();
+    await council.setMembers([councilAuditor.address]);
+
+    const SystemHandover = await ethers.getContractFactory('SystemHandover');
+    const handover = await SystemHandover.deploy(
+      dev.address,
+      await dao.getAddress(),
+      await timelock.getAddress(),
+      await seer.getAddress(),
+      await council.getAddress(),
+      ethers.ZeroAddress
+    );
+    await handover.waitForDeployment();
+
+    await handover.connect(dev).setOwnershipAuditor(councilAuditor.address);
+
+    await assert.rejects(
+      async () => {
+        await handover.connect(dev).applyOwnershipAuditor();
+      },
+      /SH: auditor timelock|revert/
+    );
+
+    const delay = await handover.OWNERSHIP_AUDITOR_DELAY();
+    await ethers.provider.send('evm_increaseTime', [Number(delay) + 1]);
+    await ethers.provider.send('evm_mine', []);
+
+    await handover.connect(dev).applyOwnershipAuditor();
+    assert.equal(await handover.ownershipAuditor(), councilAuditor.address);
+  });
+
+  it('allows canceling a pending ownership auditor', async () => {
+    const { ethers } = (await getConnection()) as any;
+    const [dev, councilAuditor] = await ethers.getSigners();
+
+    const DaoStub = await ethers.getContractFactory('SHDAOAdminStub');
+    const dao = await DaoStub.deploy();
+    await dao.waitForDeployment();
+
+    const TimelockStub = await ethers.getContractFactory('SHTimelockAdminStub');
+    const timelock = await TimelockStub.deploy();
+    await timelock.waitForDeployment();
+
+    const SeerStub = await ethers.getContractFactory('SHSeerStub');
+    const seer = await SeerStub.deploy();
+    await seer.waitForDeployment();
+
+    const CouncilStub = await ethers.getContractFactory('SHCouncilElectionStub');
+    const council = await CouncilStub.deploy();
+    await council.waitForDeployment();
+    await council.setMembers([councilAuditor.address]);
+
+    const SystemHandover = await ethers.getContractFactory('SystemHandover');
+    const handover = await SystemHandover.deploy(
+      dev.address,
+      await dao.getAddress(),
+      await timelock.getAddress(),
+      await seer.getAddress(),
+      await council.getAddress(),
+      ethers.ZeroAddress
+    );
+    await handover.waitForDeployment();
+
+    await handover.connect(dev).setOwnershipAuditor(councilAuditor.address);
+    await handover.connect(dev).cancelOwnershipAuditor();
+
+    assert.equal(await handover.pendingOwnershipAuditor(), ethers.ZeroAddress);
+    assert.equal(await handover.pendingOwnershipAuditorAt(), 0n);
+
+    await assert.rejects(
+      async () => {
+        await handover.connect(dev).applyOwnershipAuditor();
+      },
+      /SH: no pending auditor|revert/
+    );
+  });
+
   it('requires ownership auditor to be an active council member', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dev, nonCouncilAuditor, councilAuditor] = await ethers.getSigners();
@@ -56,7 +159,7 @@ describe('SystemHandover security hardening', () => {
       /SH_AuditorNotCouncil|revert/
     );
 
-    await handover.connect(dev).setOwnershipAuditor(councilAuditor.address);
+    await queueAndApplyOwnershipAuditor(handover, dev, councilAuditor.address, ethers);
     assert.equal(await handover.ownershipAuditor(), councilAuditor.address);
 
     await handover.connect(councilAuditor).markOwnershipAudited();
@@ -294,7 +397,9 @@ describe('SystemHandover security hardening', () => {
     await handover.waitForDeployment();
 
     // Use historical launch timestamp to represent already-mature handover window.
-    await handover.connect(dev).setOwnershipAuditor(councilMember.address);
+    await queueAndApplyOwnershipAuditor(handover, dev, councilMember.address, ethers);
+    await dao.setAdmin(newAdmin.address);
+    await timelock.setAdmin(await dao.getAddress());
     await handover.connect(dev).arm(1);
     await handover.connect(councilMember).markOwnershipAudited();
     await handover.connect(dev).executeHandover(newAdmin.address);
@@ -348,7 +453,7 @@ describe('SystemHandover security hardening', () => {
     );
     await handover.waitForDeployment();
 
-    await handover.connect(dev).setOwnershipAuditor(councilMember.address);
+    await queueAndApplyOwnershipAuditor(handover, dev, councilMember.address, ethers);
     await handover.connect(dev).arm(1);
     await handover.connect(councilMember).markOwnershipAudited();
     await handover.connect(dev).executeHandover(newAdmin.address);
@@ -455,6 +560,7 @@ describe('SystemHandover security hardening', () => {
     await timelock.connect(dev).execute(syncQuorumOpId);
     await timelock.connect(dev).execute(daoAdminOpId);
     await timelock.connect(dev).execute(timelockAdminOpId);
+    await dao.connect(newAdmin).acceptAdmin();
 
     assert.equal(await dao.councilElection(), await council.getAddress());
     assert.equal(await dao.minVotesRequired(), 6000n);
@@ -473,7 +579,7 @@ describe('SystemHandover security hardening', () => {
     );
     await handover.waitForDeployment();
 
-    await handover.connect(dev).setOwnershipAuditor(ownershipAuditor.address);
+    await queueAndApplyOwnershipAuditor(handover, dev, ownershipAuditor.address, ethers);
     await handover.connect(dev).arm(1);
     await handover.connect(ownershipAuditor).markOwnershipAudited();
     await handover.connect(dev).executeHandover(newAdmin.address);

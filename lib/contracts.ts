@@ -129,13 +129,15 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
  */
 function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
   const isProduction = process.env.NODE_ENV === 'production';
+  const isServer = typeof window === 'undefined';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
   const missingServerSecrets = !process.env.DATABASE_URL || !process.env.JWT_SECRET;
   const autoFrontendOnly =
     frontendOnlyEnv !== 'false' &&
     missingServerSecrets;
   const frontendOnly = frontendOnlyEnv === 'true' || autoFrontendOnly;
-  const strictProduction = isProduction && !frontendOnly;
+  // Keep strictness for server/runtime checks, but never crash client render trees.
+  const strictProduction = isProduction && !frontendOnly && isServer;
 
   if (!address) {
     const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
@@ -229,6 +231,7 @@ export type VaultImplementation = 'uservault' | 'cardbound';
 function resolveVaultImplementation(): VaultImplementation {
   const configured = process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION;
   const isProduction = process.env.NODE_ENV === 'production';
+  const isServer = typeof window === 'undefined';
 
   if (!configured || configured.trim() === '') {
     return 'cardbound';
@@ -239,7 +242,7 @@ function resolveVaultImplementation(): VaultImplementation {
   }
 
   const message = `[VFIDE] Invalid NEXT_PUBLIC_VAULT_IMPLEMENTATION value: ${configured}. Expected "cardbound" or "uservault".`;
-  if (isProduction) {
+  if (isProduction && isServer) {
     throw new Error(message);
   }
 

@@ -558,30 +558,34 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
             totalBps = microTxFeeCeilingBps;
         }
         
-        // Split total fee: 40% burn, 10% sanctum, 50% ecosystem
-        // Sustainable split to fund: council, fixed work compensation, and operations
-        uint256 burnBps = (totalBps * 40) / 100;       // 40% of total (deflationary)
-        uint256 sanctumBps = (totalBps * 10) / 100;    // 10% of total (charity)
-        uint256 ecosystemBps = totalBps - burnBps - sanctumBps; // 50% remainder (operations)
-        
+        // Compute aggregate fee first, then split by amount to avoid BPS-share rounding drift.
+        uint256 totalFee = (amount * totalBps) / 10000;
+
+        // Split total fee: 40% burn, 10% sanctum, 50% ecosystem.
+        // Ecosystem receives rounding dust by construction.
+        burnAmount = (totalFee * 40) / 100;
+        sanctumAmount = (totalFee * 10) / 100;
+        ecosystemAmount = totalFee - burnAmount - sanctumAmount;
+
         // Ensure ecosystem always gets minimum (sustainability)
-        if (ecosystemBps < ecosystemMinBps) {
-            uint256 shortfall = ecosystemMinBps - ecosystemBps;
-            ecosystemBps = ecosystemMinBps;
-            // Take shortfall from burn portion
-            if (burnBps >= shortfall) {
-                burnBps -= shortfall;
+        uint256 minEcosystemAmount = (amount * ecosystemMinBps) / 10000;
+        if (ecosystemAmount < minEcosystemAmount) {
+            uint256 shortfall = minEcosystemAmount - ecosystemAmount;
+            ecosystemAmount = minEcosystemAmount;
+
+            // Preserve total fee by reducing burn first, then sanctum if needed.
+            if (burnAmount >= shortfall) {
+                burnAmount -= shortfall;
             } else {
-                burnBps = 0;
+                uint256 remaining = shortfall - burnAmount;
+                burnAmount = 0;
+                if (sanctumAmount >= remaining) {
+                    sanctumAmount -= remaining;
+                } else {
+                    sanctumAmount = 0;
+                }
             }
         }
-        
-        // Compute burn/sanctum directly from totalBps to avoid chained divide-then-multiply paths.
-        // three amounts are derived consistently.  Ecosystem absorbs any rounding dust.
-        uint256 totalFee = (amount * totalBps) / 10000;
-        burnAmount    = (amount * burnBps) / 10000;
-        sanctumAmount = (amount * sanctumBps) / 10000;
-        ecosystemAmount = totalFee - burnAmount - sanctumAmount;
         
         // ═══ SUSTAINABILITY CHECKS ═══
         

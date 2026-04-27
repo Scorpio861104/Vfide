@@ -35,7 +35,10 @@ const AUTH_TIMEOUT_MS = Math.min(
 );
 
 const TOPIC_ACL_PATH = process.env.WS_TOPIC_ACL_PATH;
-const TOPIC_ACL_REFRESH_MS = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '30000', 10);
+const TOPIC_ACL_REFRESH_MS_RAW = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '5000', 10);
+const TOPIC_ACL_REFRESH_MS = Number.isFinite(TOPIC_ACL_REFRESH_MS_RAW)
+  ? TOPIC_ACL_REFRESH_MS_RAW
+  : 5000;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const TOPIC_ACL_ALLOW_MISSING = !IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
 
@@ -167,6 +170,8 @@ type TopicAclSnapshot = {
 
 let topicAclSnapshot: TopicAclSnapshot | null = null;
 let topicAclRefreshTimer: NodeJS.Timeout | null = null;
+let topicAclLoadedAtMs = 0;
+let topicAclFileMtimeMs = 0;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -246,13 +251,45 @@ function loadTopicAclSnapshot(path: string): TopicAclSnapshot | null {
 }
 
 function refreshTopicAclSnapshot(path: string): void {
+  let fileMtimeMs = 0;
+  try {
+    fileMtimeMs = fs.statSync(path).mtimeMs;
+  } catch {
+    // Fall through to loader for canonical error handling.
+  }
+
   const loaded = loadTopicAclSnapshot(path);
   if (!loaded) {
     return;
   }
 
   topicAclSnapshot = loaded;
+  topicAclLoadedAtMs = Date.now();
+  topicAclFileMtimeMs = fileMtimeMs;
   console.info(`[ws] Topic ACL snapshot refreshed (updatedAt=${loaded.updatedAt})`);
+}
+
+function ensureFreshTopicAclSnapshot(forceFileCheck: boolean): void {
+  if (!TOPIC_ACL_PATH || TOPIC_ACL_REFRESH_MS <= 0) {
+    return;
+  }
+
+  let shouldRefresh = topicAclLoadedAtMs === 0 || Date.now() - topicAclLoadedAtMs > TOPIC_ACL_REFRESH_MS;
+
+  if (forceFileCheck) {
+    try {
+      const currentMtimeMs = fs.statSync(TOPIC_ACL_PATH).mtimeMs;
+      if (currentMtimeMs > topicAclFileMtimeMs) {
+        shouldRefresh = true;
+      }
+    } catch {
+      // Ignore stat failures here; loader/interval refresh path logs canonical errors.
+    }
+  }
+
+  if (shouldRefresh) {
+    refreshTopicAclSnapshot(TOPIC_ACL_PATH);
+  }
 }
 
 function startTopicAclRefresh(): void {
@@ -293,7 +330,7 @@ function topicMatchesGrant(topic: string, grantTopic: string): boolean {
   return topic === grantTopic;
 }
 
-function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string): boolean {
+function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string, refreshForSubscribe = false): boolean {
   if (!isAllowedTopic(topic)) {
     return false;
   }
@@ -301,6 +338,11 @@ function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string): boole
   if (!TOPIC_ACL_PATH) {
     return TOPIC_ACL_ALLOW_MISSING;
   }
+
+  // For subscription checks, include file-change probing so ACL updates can be
+  // enforced immediately. Delivery checks rely on interval freshness to avoid
+  // synchronous fs.stat calls per message fanout.
+  ensureFreshTopicAclSnapshot(refreshForSubscribe);
 
   if (!topicAclSnapshot || !client.vfideAddress) {
     return false;
@@ -603,7 +645,7 @@ wss.on('connection', (ws: WebSocket, _req: http.IncomingMessage) => {
         break;
 
       case 'subscribe':
-        if (!isAuthorizedForTopic(client, msg.payload.topic)) {
+        if (!isAuthorizedForTopic(client, msg.payload.topic, true)) {
           sendError(ws, 'UNAUTHORIZED_TOPIC', `Subscription denied for topic ${msg.payload.topic}`);
           return;
         }

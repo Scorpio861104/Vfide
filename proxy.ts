@@ -46,8 +46,13 @@ function getAllowedOrigin(origin: string | null): string | null {
   const appUrl = asOrigin(process.env.NEXT_PUBLIC_APP_URL);
   if (appUrl) allowed.add(appUrl);
 
-  // Allow Vercel preview deployments
-  if (origin.endsWith('.vercel.app')) allowed.add(origin);
+  // Allow Vercel preview deployments only outside strict production runtime.
+  // In production, require explicit preview environment semantics.
+  if (origin.endsWith('.vercel.app')) {
+    if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === 'preview') {
+      allowed.add(origin);
+    }
+  }
 
   // Allow localhost in development
   if (process.env.NODE_ENV !== 'production') {

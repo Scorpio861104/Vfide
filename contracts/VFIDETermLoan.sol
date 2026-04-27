@@ -71,6 +71,10 @@ interface ICardBoundVaultTL {
     function guardianCount() external view returns (uint8);
 }
 
+interface IFraudRegistryTL {
+    function isServiceBanned(address user) external view returns (bool);
+}
+
 // ── Errors ──────────────────────────────────────────────────────────────────
 
 error TL_NotDAO();
@@ -308,7 +312,13 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     /// @notice Accept a loan offer. ProofScore checked. Needs guarantor co-sign after.
     function acceptLoan(uint256 id) external nonReentrant whenNotPaused {
-        if (fraudRegistry != address(0)) { (bool ok, bytes memory d) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, msg.sender)); if (ok && d.length >= 32 && abi.decode(d, (bool))) revert TL_Paused(); }
+        if (fraudRegistry != address(0)) {
+            try IFraudRegistryTL(fraudRegistry).isServiceBanned(msg.sender) returns (bool banned) {
+                if (banned) revert TL_Paused();
+            } catch {
+                revert TL_Paused();
+            }
+        }
         Loan storage l = loans[id];
         if (l.state != LoanState.OPEN) revert TL_WrongState();
         if (msg.sender == l.lender) revert TL_SelfLoan();
@@ -697,6 +707,14 @@ contract VFIDETermLoan is ReentrancyGuard {
             // Try to pull from the guarantor's chosen approval source (vault first, wallet fallback)
             address source = guarantorVault[id][g[i]];
             if (source == address(0)) source = g[i];
+
+            // Defense in depth: only pull from guarantor wallet or the guarantor's
+            // current vault mapping. If the source is no longer valid, skip extraction.
+            if (!_isValidGuarantorSource(g[i], source)) {
+                emit GuarantorExtractionSkipped(id, g[i], extractAmount);
+                continue;
+            }
+
             uint256 balBefore = vfideToken.balanceOf(recipient);
             try vfideToken.transferFrom(source, recipient, extractAmount) {
                 uint256 received = vfideToken.balanceOf(recipient) - balBefore;
@@ -902,6 +920,20 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     function _settlementRecipient(address participant) internal view returns (address) {
         return _settlementSource(participant);
+    }
+
+    function _isValidGuarantorSource(address guarantor, address source) internal view returns (bool) {
+        if (source == guarantor) return true;
+        if (address(vaultHub) == address(0) || source == address(0)) return false;
+
+        // Use staticcall for fail-closed behavior if a non-conforming vault hub is configured.
+        (bool ok, bytes memory data) = address(vaultHub).staticcall(
+            abi.encodeWithSignature("vaultOf(address)", guarantor)
+        );
+        if (!ok || data.length < 32) return false;
+
+        address currentVault = abi.decode(data, (address));
+        return currentVault != address(0) && currentVault == source;
     }
 
     function _maxBorrowable(address borrower) internal view returns (uint256) {

@@ -259,6 +259,41 @@ function parseEnv(): Environment {
     }
   }
 
+  if (process.env.NODE_ENV === 'production') {
+    const requiredExplicit = [
+      'NEXT_PUBLIC_NETWORK',
+      'NEXT_PUBLIC_CHAIN_ID',
+      'NEXT_PUBLIC_RPC_URL',
+      'NEXT_PUBLIC_IS_TESTNET',
+      'NEXT_PUBLIC_EXPLORER_URL',
+      'NEXT_PUBLIC_ENABLE_FAUCET',
+    ] as const;
+
+    const missingExplicit = requiredExplicit.filter((key) => {
+      const raw = process.env[key];
+      return raw === undefined || raw.trim() === '';
+    });
+
+    if (missingExplicit.length > 0) {
+      logger.error('❌ Production requires explicit env values; refusing to use runtime defaults.');
+      logger.error('Missing explicit vars:', missingExplicit);
+      throw new Error('Production environment variables must be explicitly configured');
+    }
+
+    const chainId = result.data.NEXT_PUBLIC_CHAIN_ID;
+    const isTestnet = result.data.NEXT_PUBLIC_IS_TESTNET;
+    const faucetEnabled = result.data.NEXT_PUBLIC_ENABLE_FAUCET;
+    const knownTestnetChainIds = new Set([11155111, 84532, 421614, 80002, 300]);
+
+    if (!isTestnet && faucetEnabled) {
+      throw new Error('NEXT_PUBLIC_ENABLE_FAUCET must be false when NEXT_PUBLIC_IS_TESTNET is false in production');
+    }
+
+    if (!isTestnet && knownTestnetChainIds.has(chainId)) {
+      throw new Error('NEXT_PUBLIC_CHAIN_ID is testnet while NEXT_PUBLIC_IS_TESTNET is false in production');
+    }
+  }
+
   return result.data;
 }
 

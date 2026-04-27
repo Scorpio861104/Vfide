@@ -217,6 +217,12 @@ contract CommerceEscrow {
         Escrow storage e = escrows[id];
         if (e.state != State.OPEN) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
+
+        // Defense in depth: only pull funds from the buyer vault that still belongs
+        // to the escrow buyer owner at funding time.
+        address currentBuyerVault = vaultHub.vaultOf(e.buyerOwner);
+        if (currentBuyerVault == address(0) || currentBuyerVault != e.buyerVault) revert COM_NotAllowed();
+
         e.state = State.FUNDED;
         escrowDeposited[id] = e.amount;
         token.safeTransferFrom(e.buyerVault, address(this), e.amount);

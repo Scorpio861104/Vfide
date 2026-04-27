@@ -64,7 +64,10 @@ const MAX_PAYLOAD_BYTES = 8 * 1024; // 8 KiB
 const AUTH_TIMEOUT_MS = Math.min(parseInt(process.env.WS_AUTH_TIMEOUT_MS || '5000', 10), 30000 // Maximum 30 seconds
 );
 const TOPIC_ACL_PATH = process.env.WS_TOPIC_ACL_PATH;
-const TOPIC_ACL_REFRESH_MS = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '30000', 10);
+const TOPIC_ACL_REFRESH_MS_RAW = parseInt(process.env.WS_TOPIC_ACL_REFRESH_MS || '5000', 10);
+const TOPIC_ACL_REFRESH_MS = Number.isFinite(TOPIC_ACL_REFRESH_MS_RAW)
+    ? TOPIC_ACL_REFRESH_MS_RAW
+    : 5000;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const TOPIC_ACL_ALLOW_MISSING = !IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
 if (IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true') {
@@ -147,6 +150,8 @@ const clients = new Map();
 const topicSubscribers = new Map();
 let topicAclSnapshot = null;
 let topicAclRefreshTimer = null;
+let topicAclLoadedAtMs = 0;
+let topicAclFileMtimeMs = 0;
 // ─── Helpers ───────────────────────────────────────────────────────────────
 function getRemoteIp(req) {
     // WS-1 mitigation: Only trust X-Forwarded-For if explicitly enabled and behind trusted proxy
@@ -211,12 +216,41 @@ function loadTopicAclSnapshot(path) {
     }
 }
 function refreshTopicAclSnapshot(path) {
+    let fileMtimeMs = 0;
+    try {
+        fileMtimeMs = fs.statSync(path).mtimeMs;
+    }
+    catch {
+        // Fall through to loader for canonical error handling.
+    }
     const loaded = loadTopicAclSnapshot(path);
     if (!loaded) {
         return;
     }
     topicAclSnapshot = loaded;
+    topicAclLoadedAtMs = Date.now();
+    topicAclFileMtimeMs = fileMtimeMs;
     console.info(`[ws] Topic ACL snapshot refreshed (updatedAt=${loaded.updatedAt})`);
+}
+function ensureFreshTopicAclSnapshot(forceFileCheck) {
+    if (!TOPIC_ACL_PATH || TOPIC_ACL_REFRESH_MS <= 0) {
+        return;
+    }
+    let shouldRefresh = topicAclLoadedAtMs === 0 || Date.now() - topicAclLoadedAtMs > TOPIC_ACL_REFRESH_MS;
+    if (forceFileCheck) {
+        try {
+            const currentMtimeMs = fs.statSync(TOPIC_ACL_PATH).mtimeMs;
+            if (currentMtimeMs > topicAclFileMtimeMs) {
+                shouldRefresh = true;
+            }
+        }
+        catch {
+            // Ignore stat failures here; loader/interval refresh path logs canonical errors.
+        }
+    }
+    if (shouldRefresh) {
+        refreshTopicAclSnapshot(TOPIC_ACL_PATH);
+    }
 }
 function startTopicAclRefresh() {
     if (!TOPIC_ACL_PATH) {
@@ -250,13 +284,17 @@ function topicMatchesGrant(topic, grantTopic) {
     }
     return topic === grantTopic;
 }
-function isAuthorizedForTopic(client, topic) {
+function isAuthorizedForTopic(client, topic, refreshForSubscribe = false) {
     if (!isAllowedTopic(topic)) {
         return false;
     }
     if (!TOPIC_ACL_PATH) {
         return TOPIC_ACL_ALLOW_MISSING;
     }
+    // For subscription checks, include file-change probing so ACL updates can be
+    // enforced immediately. Delivery checks rely on interval freshness to avoid
+    // synchronous fs.stat calls per message fanout.
+    ensureFreshTopicAclSnapshot(refreshForSubscribe);
     if (!topicAclSnapshot || !client.vfideAddress) {
         return false;
     }
@@ -519,7 +557,7 @@ wss.on('connection', (ws, _req) => {
                 ws.send(JSON.stringify({ type: 'pong', payload: { ts: Date.now() } }));
                 break;
             case 'subscribe':
-                if (!isAuthorizedForTopic(client, msg.payload.topic)) {
+                if (!isAuthorizedForTopic(client, msg.payload.topic, true)) {
                     sendError(ws, 'UNAUTHORIZED_TOPIC', `Subscription denied for topic ${msg.payload.topic}`);
                     return;
                 }

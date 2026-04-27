@@ -25,6 +25,10 @@ interface ICardBoundVaultPermitView {
     function dailyTransferLimit() external view returns (uint256);
 }
 
+interface IFraudRegistryMerchant {
+    function isServiceBanned(address user) external view returns (bool);
+}
+
 error MERCH_Zero();
 error MERCH_NotDAO();
 error MERCH_NotMerchant();
@@ -324,9 +328,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     function _checkFraudStatus(address subject) internal view {
         if (fraudRegistry == address(0)) return;
-
-        (bool ok, bytes memory data) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, subject));
-        if (ok && data.length >= 32 && abi.decode(data, (bool))) revert MERCH_Forbidden();
+        try IFraudRegistryMerchant(fraudRegistry).isServiceBanned(subject) returns (bool banned) {
+            if (banned) revert MERCH_Forbidden();
+        } catch {
+            revert MERCH_Forbidden();
+        }
     }
 
     // ─────────────────────────── Merchant Management

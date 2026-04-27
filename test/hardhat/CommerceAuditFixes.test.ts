@@ -419,3 +419,73 @@ describe("MerchantPortal (Fixes 3 and 5)", () => {
     );
   });
 });
+
+describe("CommerceEscrow (source authorization hardening)", () => {
+  it("rejects markFunded when buyer vault mapping changes after escrow open", async () => {
+    const { ethers } = (await getConnection()) as any;
+    const [dao, customer, merchant] = await ethers.getSigners();
+
+    const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+    const GuardianVaultStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianVaultStub");
+    const SeerStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:SeerScoreStub");
+    const TokenStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Placeholder = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:Placeholder");
+
+    const vaultHub = await VaultHubStub.deploy();
+    const buyerVault = await GuardianVaultStub.deploy();
+    const merchantVault = await GuardianVaultStub.deploy();
+    const remappedVault = await GuardianVaultStub.deploy();
+    const seer = await SeerStub.deploy();
+    const token = await TokenStub.deploy();
+    const ledger = await Placeholder.deploy();
+
+    await vaultHub.waitForDeployment();
+    await buyerVault.waitForDeployment();
+    await merchantVault.waitForDeployment();
+    await remappedVault.waitForDeployment();
+    await seer.waitForDeployment();
+    await token.waitForDeployment();
+    await ledger.waitForDeployment();
+
+    await vaultHub.setVault(customer.address, await buyerVault.getAddress());
+    await vaultHub.setVault(merchant.address, await merchantVault.getAddress());
+    await seer.setScore(merchant.address, 6000);
+
+    const MerchantRegistry = await ethers.getContractFactory("MerchantRegistry");
+    const registry = await MerchantRegistry.deploy(
+      dao.address,
+      await token.getAddress(),
+      await vaultHub.getAddress(),
+      await seer.getAddress(),
+      await ledger.getAddress(),
+    );
+    await registry.waitForDeployment();
+
+    await registry.connect(merchant).addMerchant(ethers.keccak256(ethers.toUtf8Bytes("merchant-meta")));
+
+    const CommerceEscrow = await ethers.getContractFactory("CommerceEscrow");
+    const escrow = await CommerceEscrow.deploy(
+      dao.address,
+      await token.getAddress(),
+      await vaultHub.getAddress(),
+      await registry.getAddress(),
+    );
+    await escrow.waitForDeployment();
+
+    const amount = ethers.parseEther("50");
+    await token.mint(await buyerVault.getAddress(), amount);
+    await buyerVault.approve(await token.getAddress(), await escrow.getAddress(), amount);
+
+    await escrow.connect(customer).open(merchant.address, amount, ethers.keccak256(ethers.toUtf8Bytes("escrow")));
+
+    // Buyer rotates/remaps vault after open; markFunded must fail closed.
+    await vaultHub.setVault(customer.address, await remappedVault.getAddress());
+
+    await assert.rejects(
+      async () => {
+        await escrow.connect(customer).markFunded(1);
+      },
+      /COM_NotAllowed|revert/
+    );
+  });
+});

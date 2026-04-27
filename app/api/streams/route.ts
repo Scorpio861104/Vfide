@@ -121,7 +121,13 @@ export async function GET(request: NextRequest) {
       rows = result.rows;
     }
 
-    return NextResponse.json({ streams: rows, total: rows.length });
+    return NextResponse.json({
+      streams: rows,
+      total: rows.length,
+      source: 'offchain-preview',
+      onchainBacked: false,
+      warning: 'Streams returned by this endpoint are off-chain previews, not on-chain PayrollManager state.',
+    });
   } catch (err) {
     console.error('streams GET error', err);
     return NextResponse.json({ error: 'Failed to fetch streams' }, { status: 500 });
@@ -160,7 +166,15 @@ export async function POST(request: NextRequest) {
       [normalized, recipientAddress.trim().toLowerCase(), token, totalAmount, ratePerSecond, startTime, endTime]
     );
 
-    return NextResponse.json({ stream: result.rows[0] }, { status: 201 });
+    return NextResponse.json(
+      {
+        stream: result.rows[0],
+        source: 'offchain-preview',
+        onchainBacked: false,
+        warning: 'Created stream is a preview record only and has no on-chain settlement effect.',
+      },
+      { status: 201 }
+    );
   } catch (err) {
     console.error('streams POST error', err);
     return NextResponse.json({ error: 'Failed to create stream' }, { status: 500 });

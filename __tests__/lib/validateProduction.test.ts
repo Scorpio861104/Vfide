@@ -24,6 +24,7 @@ describe('lib/validateProduction strict production chain checks', () => {
     NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     NEXT_PUBLIC_DEV_VAULT_ADDRESS: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     NEXT_PUBLIC_APP_URL: 'https://vfide.example',
+    APP_ORIGIN: 'https://vfide.example',
     DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/vfide_dev',
     JWT_SECRET: 'test-test-test-test-test-test-test-test',
   } as const;
@@ -82,5 +83,18 @@ describe('lib/validateProduction strict production chain checks', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('❌ NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID must be a positive integer, got "base-sepolia"');
+  });
+
+  it('fails strict production when faucet operator key is set on non-testnet deployments', async () => {
+    process.env.NEXT_PUBLIC_IS_TESTNET = 'false';
+    process.env.FAUCET_OPERATOR_PRIVATE_KEY = '0x' + '1'.repeat(64);
+
+    const { validateProductionEnvironment } = await import('../../lib/validateProduction');
+    const result = validateProductionEnvironment();
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain(
+      '❌ FAUCET_OPERATOR_PRIVATE_KEY must not be set when NEXT_PUBLIC_IS_TESTNET=false in production'
+    );
   });
 });

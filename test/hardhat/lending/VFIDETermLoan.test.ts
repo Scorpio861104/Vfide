@@ -282,6 +282,67 @@ describe("VFIDETermLoan", function () {
       expect(lenderVaultBalanceAfter - lenderVaultBalanceBefore).to.equal(ethers.parseEther("104.5"));
       expect(lenderWalletBalanceAfter).to.equal(lenderWalletBalanceBefore);
     });
+
+    it("skips guarantor extraction when stored source no longer matches guarantor ownership/vault", async function () {
+      const f = await loadFixture(deployFixture);
+
+      const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+      const GuardianVaultStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianVaultStub");
+
+      const vaultHub = await VaultHubStub.deploy();
+      const lenderVault = await GuardianVaultStub.deploy();
+      const borrowerVault = await GuardianVaultStub.deploy();
+      const guarantorVault = await GuardianVaultStub.deploy();
+      await vaultHub.waitForDeployment();
+      await lenderVault.waitForDeployment();
+      await borrowerVault.waitForDeployment();
+      await guarantorVault.waitForDeployment();
+
+      await vaultHub.setVault(f.lender.address, await lenderVault.getAddress());
+      await vaultHub.setVault(f.borrower.address, await borrowerVault.getAddress());
+      await vaultHub.setVault(f.guarantor1.address, await guarantorVault.getAddress());
+      await borrowerVault.setGuardian(f.guarantor1.address, true);
+
+      const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+      const termLoan = await TermLoan.deploy(
+        await f.token.getAddress(),
+        f.owner.address,
+        ethers.ZeroAddress,
+        await vaultHub.getAddress(),
+        f.feeCollector.address,
+      );
+      await termLoan.waitForDeployment();
+
+      const principal = ethers.parseEther("100");
+      await f.token.transfer(await lenderVault.getAddress(), principal);
+      await f.token.transfer(await guarantorVault.getAddress(), ethers.parseEther("200"));
+
+      await lenderVault.approve(await f.token.getAddress(), await termLoan.getAddress(), principal);
+      await guarantorVault.approve(await f.token.getAddress(), await termLoan.getAddress(), principal);
+
+      await termLoan.connect(f.lender).createLoan(principal, 500, f.ONE_DAY);
+      await termLoan.connect(f.borrower).acceptLoan(1);
+      await termLoan.connect(f.guarantor1).signAsGuarantor(1);
+
+      expect(await termLoan.guarantorVault(1, f.guarantor1.address)).to.equal(await guarantorVault.getAddress());
+
+      // Change guarantor's current vault mapping after signing to invalidate the stored source.
+      await vaultHub.setVault(f.guarantor1.address, f.guarantor2.address);
+      expect(await vaultHub.vaultOf(f.guarantor1.address)).to.equal(f.guarantor2.address);
+
+      await ethers.provider.send("evm_increaseTime", [f.ONE_DAY + 3 * f.ONE_DAY + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      await termLoan.connect(f.lender).claimDefault(1);
+      const lenderVaultBalanceBefore = await f.token.balanceOf(await lenderVault.getAddress());
+
+      await termLoan.connect(f.lender).extractFromGuarantors(1);
+
+      const lenderVaultBalanceAfter = await f.token.balanceOf(await lenderVault.getAddress());
+      expect(lenderVaultBalanceAfter).to.equal(lenderVaultBalanceBefore);
+      expect(await termLoan.totalExtracted(1)).to.equal(0);
+      expect(await termLoan.guarantorExtracted(1, f.guarantor1.address)).to.equal(0);
+    });
   });
 
   describe("View Functions", function () {

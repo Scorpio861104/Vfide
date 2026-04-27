@@ -112,13 +112,14 @@ function getEnvValue(name: string): string | undefined {
   }
 
   const inferredAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
+  const isProduction = process.env.NODE_ENV === 'production';
 
   const fallbacks: Record<string, string | undefined> = {
-    NEXT_PUBLIC_IS_TESTNET: 'true',
-    NEXT_PUBLIC_CHAIN_ID: '84532',
-    NEXT_PUBLIC_RPC_URL: 'https://sepolia.base.org',
-    NEXT_PUBLIC_EXPLORER_URL: 'https://sepolia.basescan.org',
-    NEXT_PUBLIC_APP_URL: inferredAppUrl || 'http://localhost:3000',
+    NEXT_PUBLIC_IS_TESTNET: isProduction ? undefined : 'true',
+    NEXT_PUBLIC_CHAIN_ID: isProduction ? undefined : '84532',
+    NEXT_PUBLIC_RPC_URL: isProduction ? undefined : 'https://sepolia.base.org',
+    NEXT_PUBLIC_EXPLORER_URL: isProduction ? undefined : 'https://sepolia.basescan.org',
+    NEXT_PUBLIC_APP_URL: inferredAppUrl || (isProduction ? undefined : 'http://localhost:3000'),
   };
 
   return fallbacks[name];
@@ -234,6 +235,11 @@ export function validateProductionEnvironment(): ValidationResult {
     // Production-specific checks
     if (isTestnet) {
       result.warnings.push('⚠️  NEXT_PUBLIC_IS_TESTNET is true in production mode');
+    }
+
+    if (!isTestnet && process.env.FAUCET_OPERATOR_PRIVATE_KEY && process.env.FAUCET_OPERATOR_PRIVATE_KEY.trim() !== '') {
+      result.errors.push('❌ FAUCET_OPERATOR_PRIVATE_KEY must not be set when NEXT_PUBLIC_IS_TESTNET=false in production');
+      result.valid = false;
     }
 
     // Check URL formats

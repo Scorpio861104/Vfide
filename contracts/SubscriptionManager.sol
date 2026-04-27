@@ -39,6 +39,7 @@ error SM_PaymentTooEarly();
 error SM_GracePeriodActive();
 error SM_GracePeriodExpired();
 error SM_EmergencyNotActive();
+error SM_VaultChanged();
 
 contract SubscriptionManager is ReentrancyGuard {
     event SubscriptionCreated(uint256 indexed subId, address indexed subscriber, address indexed merchant, uint256 amount, uint256 interval);
@@ -58,6 +59,8 @@ contract SubscriptionManager is ReentrancyGuard {
     struct Subscription {
         address subscriber;
         address merchant;
+        address subscriberVault;
+        address merchantVault;
         address token;
         uint256 amount;
         uint256 interval; // seconds
@@ -162,10 +165,16 @@ contract SubscriptionManager is ReentrancyGuard {
         if (amount == 0) revert SM_InvalidAmount();
         if (interval < 1 hours) revert SM_InvalidInterval();
 
+        address subscriberVault = vaultHub.vaultOf(msg.sender);
+        address merchantVault = vaultHub.vaultOf(merchant);
+        if (subscriberVault == address(0) || merchantVault == address(0)) revert SM_VaultChanged();
+
         subId = ++subCount;
         subscriptions[subId] = Subscription({
             subscriber: msg.sender,
             merchant: merchant,
+            subscriberVault: subscriberVault,
+            merchantVault: merchantVault,
             token: token,
             amount: amount,
             interval: interval,
@@ -290,6 +299,12 @@ contract SubscriptionManager is ReentrancyGuard {
         address merchantVault = vaultHub.vaultOf(sub.merchant);
         require(userVault != address(0), "no user vault");
         require(merchantVault != address(0), "no merchant vault");
+
+        // Defense in depth: subscription pulls are only valid while the stored
+        // vault mappings remain unchanged for subscriber and merchant.
+        if (userVault != sub.subscriberVault || merchantVault != sub.merchantVault) {
+            revert SM_VaultChanged();
+        }
 
         // Check allowance and balance
         uint256 allowance = IERC20(sub.token).allowance(userVault, address(this));

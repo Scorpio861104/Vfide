@@ -40,12 +40,17 @@ error Faucet_NoPendingWithdraw();
 error Faucet_WithdrawTimelockActive();
 error Faucet_NoPendingOwner();
 error Faucet_OwnerTransferTimelockActive();
+error Faucet_InvalidConfig();
 
 contract VFIDETestnetFaucet is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     uint64 public constant WITHDRAW_DELAY = 24 hours;
     uint64 public constant OWNER_TRANSFER_DELAY = 7 days;
+    uint256 public constant MAX_CLAIM_AMOUNT_VFIDE = 5_000e18;
+    uint256 public constant MAX_CLAIM_AMOUNT_ETH = 0.02 ether;
+    uint256 public constant MAX_DAILY_CLAIM_CAP = 200;
+    uint256 public constant MAX_OPERATOR_DAILY_CLAIM_CAP = 50;
 
     IERC20 public immutable vfideToken;
     
@@ -202,18 +207,21 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     
     function setClaimAmounts(uint256 _vfide, uint256 _eth) external onlyOwner {
         require(_vfide > 0, "Faucet: zero VFIDE");
+        if (_vfide > MAX_CLAIM_AMOUNT_VFIDE || _eth > MAX_CLAIM_AMOUNT_ETH) revert Faucet_InvalidConfig();
         claimAmountVFIDE = _vfide;
         claimAmountETH = _eth;
         emit ClaimAmountsSet(_vfide, _eth);
     }
     
     function setDailyCap(uint256 _cap) external onlyOwner {
+        if (_cap == 0 || _cap > MAX_DAILY_CLAIM_CAP || _cap < operatorDailyClaimCap) revert Faucet_InvalidConfig();
         dailyClaimCap = _cap;
         emit DailyCapSet(_cap);
     }
 
     function setOperatorDailyCap(uint256 _cap) external onlyOwner {
         require(_cap > 0, "Faucet: zero cap");
+        if (_cap > MAX_OPERATOR_DAILY_CLAIM_CAP || _cap > dailyClaimCap) revert Faucet_InvalidConfig();
         operatorDailyClaimCap = _cap;
         emit OperatorDailyCapSet(_cap);
     }

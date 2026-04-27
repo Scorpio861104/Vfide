@@ -99,17 +99,18 @@ Combined with the same dev controlling `executeHandover` (still gated `onlyDev` 
 
 ---
 
-### A-6 (High) — H-11: EcosystemVault and MerchantPortal still over EIP-170
+### A-6 (High) — H-11: EIP-170 size blocker status updated
 
-The remediation marks H-11 as `[~] PARTIAL`. The note inside `VFIDE_AUDIT_REMEDIATION_CHECKLIST.md` states:
+Status update (2026-04-27): previous over-limit values are now stale.
 
-> `EcosystemVault` (26,099) and `MerchantPortal` (25,181) are pre-existing violations requiring library extraction before mainnet deploy
+Current verification output from `scripts/verify-contract-size-buffer.ts` shows both formerly blocked contracts under the 24,576-byte EIP-170 runtime limit:
 
-Both contracts are on the deployable list (`PRODUCTION_SET.md`). The `hardhat.config.ts` overrides set `runs: 1` for both to maximize size compression — i.e., the team has already squeezed what it can from the optimizer. They're still 1.5 KB and 0.6 KB over the 24,576-byte limit. **As-is they will fail to deploy on Ethereum mainnet, Base, Polygon, and zkSync Era** (zkSync uses a different bytecode model, but in practice the size overflow is the same blocker via different errors).
+- `MerchantPortal`: 24,398 bytes
+- `EcosystemVault`: 23,846 bytes
 
-This is the single most important hard blocker on the list. Your existing tracker has it, but a `[~] PARTIAL` checkbox understates that no transfer can settle and no merchant can receive payment if these don't deploy.
+Additionally, `scripts/deploy-all.ts` now enforces an EIP-170 runtime bytecode preflight and fails fast if any deployment contract exceeds 24,576 bytes.
 
-**Fix:** Library extraction (`EcosystemVaultLib.sol` already exists for some of this — extend it; same for MerchantPortal — extract pricing math, refund flow, and event emission). Or, if you have weeks rather than months, accept that you ship without these two and the merchant rail is dark at launch.
+Residual risk: `MerchantPortal` remains close to the hard limit, so future feature additions must preserve bytecode budget or include further extraction work.
 
 ---
 

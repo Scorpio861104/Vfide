@@ -52,7 +52,16 @@ async function readUSSDFields(request: NextRequest): Promise<{ sessionId: string
 }
 
 function hashPhone(phoneNumber: string): string {
-  const salt = process.env.LOG_IP_HASH_SALT || 'vfide-local-log-salt';
+  const configuredSalt = process.env.LOG_IP_HASH_SALT;
+  if (!configuredSalt) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('LOG_IP_HASH_SALT is required in production');
+    }
+    const devSalt = process.env.VERCEL_ENV || 'vfide-local-dev';
+    return createHash('sha256').update(`${devSalt}:${phoneNumber.trim()}`).digest('hex').slice(0, 16);
+  }
+
+  const salt = configuredSalt;
   return createHash('sha256').update(`${salt}:${phoneNumber.trim()}`).digest('hex').slice(0, 16);
 }
 

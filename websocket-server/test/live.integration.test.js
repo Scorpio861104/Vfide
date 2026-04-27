@@ -352,3 +352,32 @@ test('enforces topic isolation by authenticated address grants', async () => {
     wsB.close();
   }
 });
+
+test('enforces ACL updates immediately on next subscription check', async () => {
+  const userA = '0x1111111111111111111111111111111111111111';
+
+  writeAcl({
+    'chat.alpha': [userA],
+  });
+  await new Promise((resolve) => setTimeout(resolve, ACL_REFRESH_MS));
+
+  const wsA = await connectClient();
+
+  try {
+    await authenticate(wsA, userA);
+
+    const allowedBefore = await subscribe(wsA, 'chat.alpha');
+    assert.equal(allowedBefore.type, 'subscribed');
+
+    // Revoke access and assert the next check picks it up immediately.
+    writeAcl({
+      'chat.alpha': [],
+    });
+
+    const deniedAfter = await subscribe(wsA, 'chat.alpha');
+    assert.equal(deniedAfter.type, 'error');
+    assert.equal(deniedAfter.payload.code, 'UNAUTHORIZED_TOPIC');
+  } finally {
+    wsA.close();
+  }
+});

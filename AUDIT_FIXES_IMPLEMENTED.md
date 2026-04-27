@@ -41,21 +41,18 @@
 - **Commit**: Pre-existing
 - **Notes**: Deployer now hard-reverts with error message instead of deploying unsafe stub
 
-### ⚠️ F-07: MerchantPortal.processPayment silently underdelivers on VFIDE
-- **Status**: OPEN
-- **Severity**: Critical
-- **Recommendation**: Reject VFIDE as a settlement token (stablecoin-only model) or implement fee-aware accounting
-
-### ⚠️ F-08: SeerAutonomous.beforeAction — uncaught oracle call freezes actions  
+### ✅ F-07: MerchantPortal.processPayment silently underdelivers on VFIDE
 - **Status**: Fixed
-- **Commit**: `7169b411`
-- **Change**: Wrapped `riskOracle.getRiskScore(subject)` in `try/catch` and emit `ExternalCallFailed` instead of reverting the entire action path
-- **Impact**: Misconfigured or unhealthy oracle can no longer freeze all transfers, votes, or deposits protocol-wide
+- **Change**: Added `_validateSettlementToken()` — if VFIDE is detected as settlement token, reverts with `MERCH_VFIDESettlementDisabled`. VFIDE can only flow via the burn router path.
 
-### ⚠️ F-09: SeerGuardian.checkAndEnforce permissionless freeze contradicts non-custodial story
-- **Status**: OPEN
-- **Severity**: Critical
-- **Recommendation**: Clarify freeze semantics or restrict to DAO-only enforcement
+### ✅ F-08: SeerAutonomous — uncaught oracle calls freeze actions and pattern enforcement
+- **Status**: Fixed (both call sites)
+- **Change**: `beforeAction` (commit `7169b411`) and `_handlePattern` both wrap `riskOracle.getRiskScore(subject)` in `try/catch (bytes memory reason)`, emit `ExternalCallFailed` on failure, and continue enforcement uninterrupted.
+- **Impact**: Misconfigured or unhealthy oracle can no longer freeze transfers, votes, deposits, or pattern enforcement protocol-wide.
+
+### ✅ F-09: SeerGuardian.checkAndEnforce permissionless freeze contradicts non-custodial story
+- **Status**: Fixed
+- **Change**: `checkAndEnforce` restricts callers to `subject || dao || address(seer)` with `SG_NotAuthorized` revert. Regression test added: "rejects third-party enforcement calls for another subject".
 
 ---
 
@@ -121,25 +118,22 @@
 
 | Category | Count | Coverage |
 |----------|-------|----------|
-| Critical (F-01–F-09) | 9 | 7/9 fixed (78%) |
+| Critical (F-01–F-09) | 9 | 9/9 fixed (100%) |
 | High (F-10–F-42) | 33 | 9/33 fixed (27%) |
 | Medium (F-43–F-75) | 33 | 0/33 fixed (0%) |
 | Low (F-76–F-89) | 14 | 0/14 fixed (0%) |
-| **TOTAL** | **89** | **16/89 fixed (18%)** |
+| **TOTAL** | **89** | **18/89 fixed (20%)** |
 
 ### High Priority Remaining
 
 1. **F-06**: Already resolved (WithdrawalQueueStub deployer disabled)
 2. **F-10**: Already fixed (VFIDETestnetFaucet calls `_registerReferral` → `ecosystemVault.registerUserReferral()`)
-3. **F-07**: MerchantPortal VFIDE underdelivery
-4. **F-09**: SeerGuardian freeze semantics clarity
-5. **F-14 / F-20**: Next concrete high-priority code fixes in the vault recovery surface
+3. **F-14 / F-20**: Next concrete high-priority code fixes in the vault recovery surface
 
 ### Deployment Blockers
 
 Before mainnet deployment, ensure:
-✅ F-01–F-06 and F-08 are fixed or verified in tree  
-❌ F-07 and F-09 still require explicit product/architecture decisions  
+✅ F-01–F-09 all fixed or verified in tree  
 ⚠️ F-10–F-42 still need continued implementation and deployment-impact review
 
 ---

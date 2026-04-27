@@ -671,18 +671,21 @@ contract SeerAutonomous is ReentrancyGuard {
         
         _saturatingAddViolationScore(subject, severity);
 
-        // Blend oracle risk if available
+        // Blend oracle risk if available (F-08: try/catch prevents broken oracle from freezing enforcement)
         if (address(riskOracle) != address(0)) {
-            uint8 risk = riskOracle.getRiskScore(subject);
-            if (risk > 100) {
-                emit RiskOracleOutOfRange(subject, risk);
-            } else if (risk > 0) {
-                _saturatingAddViolationScore(subject, risk);
-                severity += risk > 50 ? 20 : 0; // bump severity for high risk
+            try riskOracle.getRiskScore(subject) returns (uint8 risk) {
+                if (risk > 100) {
+                    emit RiskOracleOutOfRange(subject, risk);
+                } else if (risk > 0) {
+                    _saturatingAddViolationScore(subject, risk);
+                    severity += risk > 50 ? 20 : 0; // bump severity for high risk
+                }
+            } catch (bytes memory reason) {
+                emit ExternalCallFailed("_handlePattern.riskOracle", reason);
             }
         }
-        
-        // Escalating response based on violation count
+
+        // Escalating response based on violation count (severity may be updated by oracle blend above)
         if (count >= 5) {
             _applyRestriction(subject, RestrictionLevel.Suspended, 7 days, "repeated_pattern_violation", RC_REPEATED_PATTERN, true);
             return EnforcementResult.Blocked;
@@ -1203,6 +1206,7 @@ contract SeerAutonomous is ReentrancyGuard {
         uint256 totalViolations,
         uint256 violationRate,
         uint16 currentSensitivity
+            // F-08 FIX: Oracle call is now try/catch — a broken oracle cannot freeze pattern enforcement.
     ) {
         // SA-04: include blocked actions so health metrics reflect all enforcement attempts.
         totalActions = networkActionCount + networkBlockedCount;

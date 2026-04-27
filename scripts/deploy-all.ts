@@ -11,11 +11,84 @@
 import hre from "hardhat";
 
 const ethers = (hre as any).ethers;
+const TESTNET_CHAIN_IDS = new Set([31337, 84532, 11155111, 80002]);
+const EIP170_RUNTIME_LIMIT = 24_576;
+
+const DEPLOYMENT_CONTRACTS = [
+  "ProofLedger",
+  "DevReserveVestingVault",
+  "VFIDEToken",
+  "Seer",
+  "ProofScoreBurnRouter",
+  "VaultHub",
+  "FeeDistributor",
+  "MerchantPortal",
+  "DAOTimelock",
+  "GovernanceHooks",
+  "DAO",
+  "VFIDEFlashLoan",
+  "VFIDETermLoan",
+  "FraudRegistry",
+  "VFIDETestnetFaucet",
+] as const;
+
+function byteLength(hexData: string | undefined): number {
+  if (!hexData || hexData === '0x') return 0;
+  return Math.max(0, (hexData.length - 2) / 2);
+}
+
+async function assertDeploymentBytecodeLimits(contractNames: readonly string[]): Promise<void> {
+  const oversized: Array<{ name: string; runtimeBytes: number }> = [];
+
+  for (const name of contractNames) {
+    const artifact = await hre.artifacts.readArtifact(name);
+    const runtimeBytes = byteLength(artifact.deployedBytecode);
+    if (runtimeBytes > EIP170_RUNTIME_LIMIT) {
+      oversized.push({ name, runtimeBytes });
+    }
+  }
+
+  if (oversized.length === 0) {
+    return;
+  }
+
+  const details = oversized
+    .map((item) => `${item.name}: ${item.runtimeBytes} bytes`)
+    .join(', ');
+
+  throw new Error(
+    `Deployment blocked: EIP-170 runtime limit (${EIP170_RUNTIME_LIMIT} bytes) exceeded by ${details}. ` +
+    'Run contract-size verification and shrink oversized contracts before deployment.'
+  );
+}
+
+function parseBooleanEnv(value: string | undefined): boolean {
+  return (value || '').trim().toLowerCase() === 'true';
+}
 
 async function main() {
   const [deployer] = await ethers.getSigners();
+  const network = await ethers.provider.getNetwork();
+  const chainId = Number(network.chainId);
+  const isTestnetChain = TESTNET_CHAIN_IDS.has(chainId);
+  const deployTestnetFaucet = parseBooleanEnv(process.env.DEPLOY_TESTNET_FAUCET);
+
+  if (deployTestnetFaucet && !isTestnetChain) {
+    throw new Error(
+      `DEPLOY_TESTNET_FAUCET=true is not allowed on chainId ${chainId}. ` +
+      'Disable DEPLOY_TESTNET_FAUCET for production/mainnet deployments.'
+    );
+  }
+
   console.log("Deploying with:", deployer.address);
+  console.log("Chain ID:", chainId);
   console.log("Balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)));
+
+  const contractSet = deployTestnetFaucet
+    ? DEPLOYMENT_CONTRACTS
+    : DEPLOYMENT_CONTRACTS.filter((name) => name !== 'VFIDETestnetFaucet');
+  await assertDeploymentBytecodeLimits(contractSet);
+  console.log("Bytecode size preflight: all deployment contracts are within EIP-170 runtime limit.");
   
   const deployed: Record<string, string> = {};
   
@@ -177,11 +250,16 @@ async function main() {
     deployed.VFIDEToken,          // _vfideToken
   );
   
-  // VFIDETestnetFaucet(vfideToken, owner) — testnet only
-  await deploy("VFIDETestnetFaucet",
-    deployed.VFIDEToken,          // _vfideToken
-    deployer.address,             // _owner
-  );
+  // VFIDETestnetFaucet(vfideToken, owner) — testnet only and explicit opt-in
+  if (isTestnetChain && deployTestnetFaucet) {
+    await deploy("VFIDETestnetFaucet",
+      deployed.VFIDEToken,          // _vfideToken
+      deployer.address,             // _owner
+    );
+  } else {
+    deployed.VFIDETestnetFaucet = ethers.ZeroAddress;
+    console.log("  ⏭️  Skipping VFIDETestnetFaucet deployment (testnet + DEPLOY_TESTNET_FAUCET=true required)");
+  }
   
   // ══════════════════════════════════════════════
   //  WIRING (48h timelocks — these are proposals)

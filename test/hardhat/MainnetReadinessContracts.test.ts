@@ -20,13 +20,34 @@ describe("Mainnet readiness contract fixes", () => {
         await registry.addStablecoin(await token.getAddress(), 18, "USDC");
       });
 
-      await registry.setGovernance(signers[1].address);
+      const handoffTx = await registry.setGovernance(signers[1].address);
+      await handoffTx.wait();
 
       await assert.rejects(async () => {
-        await registry.addStablecoin(await token.getAddress(), 6, "USDC");
+        const tx = await registry.setGovernance(signers[2].address);
+        await tx.wait();
       });
 
-      await registry.connect(signers[1]).addStablecoin(await token.getAddress(), 6, "USDC");
+      const rotateTx = await registry.connect(signers[1]).setGovernance(signers[2].address);
+      await rotateTx.wait();
+
+      await assert.rejects(async () => {
+        const tx = await registry.connect(signers[1]).addStablecoin(await token.getAddress(), 6, "USDC");
+        await tx.wait();
+      });
+
+      await registry.connect(signers[2]).addStablecoin(await token.getAddress(), 6, "USDC");
+
+      await assert.rejects(async () => {
+        const tx = await registry.connect(signers[2]).applyQueuedChange();
+        await tx.wait();
+      });
+
+      const delay = await registry.CHANGE_DELAY();
+      await ethers.provider.send("evm_increaseTime", [Number(delay) + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      await registry.connect(signers[2]).applyQueuedChange();
       assert.equal(await registry.isWhitelisted(await token.getAddress()), true);
       assert.equal(await registry.tokenDecimals(await token.getAddress()), 6n);
     });
@@ -104,6 +125,57 @@ describe("Mainnet readiness contract fixes", () => {
 
       await assert.rejects(async () => {
         await payroll.connect(payer).createStream(payee.address, await token.getAddress(), 10n ** 12n, ethers.parseEther("1"));
+      });
+    });
+  });
+
+  describe("SubscriptionManager", () => {
+    it("fails closed when subscriber or merchant vault mapping changes after subscription creation", async () => {
+      const { ethers } = await network.connect();
+      const [dao, subscriber, merchant, other] = await ethers.getSigners();
+
+      const TokenFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+      const token = await TokenFactory.deploy();
+      await token.waitForDeployment();
+
+      const VaultHubFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+      const GuardianVaultFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianVaultStub");
+
+      const hub = await VaultHubFactory.deploy();
+      const subscriberVault = await GuardianVaultFactory.deploy();
+      const merchantVault = await GuardianVaultFactory.deploy();
+      await hub.waitForDeployment();
+      await subscriberVault.waitForDeployment();
+      await merchantVault.waitForDeployment();
+
+      await hub.setVault(subscriber.address, await subscriberVault.getAddress());
+      await hub.setVault(merchant.address, await merchantVault.getAddress());
+
+      const ManagerFactory = await ethers.getContractFactory("SubscriptionManager");
+      const manager = await ManagerFactory.deploy(await hub.getAddress(), dao.address, ethers.ZeroAddress);
+      await manager.waitForDeployment();
+
+      const paymentAmount = ethers.parseEther("5");
+      await token.mint(await subscriberVault.getAddress(), paymentAmount);
+      await subscriberVault.approve(await token.getAddress(), await manager.getAddress(), paymentAmount);
+
+      await manager.connect(subscriber).createSubscription(
+        merchant.address,
+        await token.getAddress(),
+        paymentAmount,
+        3600,
+        "sub"
+      );
+
+      const recorded = await manager.getSubscription(1);
+      assert.equal(recorded.subscriberVault, await subscriberVault.getAddress());
+      assert.equal(recorded.merchantVault, await merchantVault.getAddress());
+
+      // Remap subscriber vault and ensure processing now fails closed.
+      await hub.setVault(subscriber.address, other.address);
+
+      await assert.rejects(async () => {
+        await manager.connect(merchant).processPayment(1);
       });
     });
   });

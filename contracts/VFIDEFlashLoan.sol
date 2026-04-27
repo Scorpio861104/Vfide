@@ -69,6 +69,10 @@ interface IFeeDistributor_FL {
     function receiveFee(uint256 amount) external;
 }
 
+interface IFraudRegistryFL {
+    function isServiceBanned(address user) external view returns (bool);
+}
+
 interface ISeerFL {
     function getScore(address subject) external view returns (uint16);
     function reward(address subject, uint16 delta, string calldata reason) external;
@@ -212,9 +216,11 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     function _checkFraudStatus(address subject) internal view {
         if (fraudRegistry == address(0)) return;
-
-        (bool ok, bytes memory data) = fraudRegistry.staticcall(abi.encodeWithSelector(0x38603ddd, subject));
-        if (ok && data.length >= 32 && abi.decode(data, (bool))) revert FL_Paused();
+        try IFraudRegistryFL(fraudRegistry).isServiceBanned(subject) returns (bool banned) {
+            if (banned) revert FL_Paused();
+        } catch {
+            revert FL_Paused();
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════

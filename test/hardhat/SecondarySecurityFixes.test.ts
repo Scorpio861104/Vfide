@@ -96,7 +96,7 @@ describe("BridgeSecurityModule (BSM-01: flagged-user bypass closed)", { concurre
 describe("SeerGuardian (SG-01: severity-first restriction escalation)", { concurrency: 1 }, () => {
   async function seerGuardianFixture() {
     const { ethers } = (await getConnection()) as any;
-    const [dao, subject] = await ethers.getSigners();
+    const [dao, subject, attacker] = await ethers.getSigners();
 
     const SeerStub = await ethers.getContractFactory("SeerScoreStub");
     const seer = await SeerStub.deploy();
@@ -115,13 +115,25 @@ describe("SeerGuardian (SG-01: severity-first restriction escalation)", { concur
     // Enum values: None=0, TransferLimit=1, GovernanceBan=2, MerchantSuspended=3, FullFreeze=4
     const RestrictionType = { None: 0n, TransferLimit: 1n, GovernanceBan: 2n, FullFreeze: 4n };
 
-    return { ethers, sg, seer, dao, subject, RestrictionType };
+    return { ethers, sg, seer, dao, subject, attacker, RestrictionType };
   }
 
   async function deploySG() {
     const { networkHelpers } = (await getConnection()) as any;
     return networkHelpers.loadFixture(seerGuardianFixture);
   }
+
+  it("rejects third-party enforcement calls for another subject", async () => {
+    const { sg, seer, subject, attacker } = await deploySG();
+    const subjectAddr = subject.address;
+
+    await seer.setScore(subjectAddr, 500);
+
+    await assert.rejects(
+      () => sg.connect(attacker).checkAndEnforce(subjectAddr),
+      /SG_NotAuthorized|revert/i
+    );
+  });
 
   it("score 500 (critical) → FullFreeze applied in one call (SG-01 fix)", async () => {
     const { sg, seer, subject, RestrictionType } = await deploySG();

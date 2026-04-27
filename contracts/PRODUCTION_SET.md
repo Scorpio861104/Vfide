@@ -112,6 +112,7 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - mocks/**
 - security/**
 - scripts/**
+- VFIDETestnetFaucet.sol (testnet-only utility; listed in TESTNET_SET.md)
 - TempVault.sol (developer testing utility only; do not route production funds)
 - package.json
 - package-lock.json

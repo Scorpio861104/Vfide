@@ -182,6 +182,24 @@ describe("ProofScoreBurnRouter (F-26: only Seer updates score)", () => {
     assert.equal(smallTotalFee, (smallAmount * 100n) / 10000n);
     assert.ok(largeTotalFee > (largeAmount * 100n) / 10000n);
   });
+
+  it("splits fees from total fee amount to avoid BPS-share rounding drift", async () => {
+    const { owner, user, seer, router } = await deployBurnRouter();
+    await seer.setScore(owner.address, 6157); // force an interpolated fee tier
+
+    await router.connect(owner).setToken(owner.address);
+    await router.connect(owner).setSustainability(0n, 0n, 5);
+
+    const amount = 1_234_567n;
+    const [burnAmount, sanctumAmount, ecosystemAmount] =
+      await router.computeFees(owner.address, user.address, amount);
+
+    const totalFee = burnAmount + sanctumAmount + ecosystemAmount;
+    assert.equal(burnAmount, (totalFee * 40n) / 100n);
+    assert.equal(sanctumAmount, (totalFee * 10n) / 100n);
+    assert.equal(ecosystemAmount, totalFee - burnAmount - sanctumAmount);
+    assert.ok(totalFee <= amount);
+  });
 });
 
 describe("VaultHub (F-20: SecurityHub timelock)", () => {

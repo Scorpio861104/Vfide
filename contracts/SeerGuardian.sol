@@ -246,8 +246,15 @@ contract SeerGuardian is ReentrancyGuard {
     // slither-disable-next-line reentrancy-no-eth
     function checkAndEnforce(address subject) external nonReentrant {
         if (daoOverridden[subject]) return; // DAO has overridden, skip auto-enforcement
+
+        // F-09 REMEDIATION: Do not let arbitrary third parties trigger restrictions for others.
+        // Allow only the subject, DAO, or Seer to run automatic enforcement checks.
+        if (msg.sender != subject && msg.sender != dao && msg.sender != address(seer)) {
+            revert SG_NotAuthorized();
+        }
+
         // F-40 FIX: Let the subject bypass cooldown for their own checks.
-        // Third-party callers remain rate-limited to prevent spam.
+        // DAO/Seer-triggered checks remain rate-limited to prevent spam.
         if (msg.sender != subject) {
             require(block.timestamp >= lastEnforceCheck[subject] + 1 hours, "SG: cooldown");
         }
