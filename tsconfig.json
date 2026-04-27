@@ -53,12 +53,13 @@
     "types/**/*.ts",
     "types/**/*.tsx",
     "next.config.ts",
-    "middleware.ts",
     "proxy.ts",
-    "sentry.client.config.ts",
+    "instrumentation.ts",
+    "instrumentation-client.ts",
     "sentry.edge.config.ts",
     "sentry.server.config.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

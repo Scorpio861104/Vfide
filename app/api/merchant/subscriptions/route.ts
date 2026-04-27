@@ -234,7 +234,7 @@ export async function PATCH(request: NextRequest) {
  * Subscribe a customer to a plan.
  * Called internally when a customer subscribes via the checkout page.
  */
-export async function subscribeCustomer(
+async function subscribeCustomer(
   userId: number,
   planId: number,
   merchantAddress: string,

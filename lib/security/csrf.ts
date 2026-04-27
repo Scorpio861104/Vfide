@@ -9,7 +9,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { isCsrfExemptPath } from './csrfPolicy';
 
 const CSRF_TOKEN_LENGTH = 32;
@@ -131,6 +130,7 @@ export function validateCSRF(request: NextRequest): NextResponse | null {
  * This should be called from a GET endpoint to provide the token to the client
  */
 export async function getCSRFTokenForClient(): Promise<string> {
+  const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   let token = cookieStore.get(CSRF_COOKIE_NAME)?.value;
   

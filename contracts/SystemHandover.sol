@@ -159,6 +159,7 @@ contract SystemHandover {
     /// @param auditor_ The address of the ownership auditor (must be set by dev team)
     function setOwnershipAuditor(address auditor_) external onlyDev notArmed {
         if (auditor_ == address(0)) revert SH_Zero();
+        require(auditor_ != devMultisig, "SH: auditor cannot be dev");
         if (!_isCouncilMember(auditor_)) revert SH_AuditorNotCouncil();
         ownershipAuditor = auditor_;
     }

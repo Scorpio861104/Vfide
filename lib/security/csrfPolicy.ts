@@ -10,6 +10,7 @@ const CSRF_EXEMPT_API_PATHS = [
 /** Prefixes that are exempt (e.g. webhook routes with their own HMAC auth) */
 const CSRF_EXEMPT_PREFIXES = [
   '/api/security/webhook-',
+  '/monitoring',
 ] as const;
 
 export function isCsrfExemptPath(pathname: string): boolean {

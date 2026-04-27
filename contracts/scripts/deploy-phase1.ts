@@ -23,7 +23,7 @@ interface DeploymentConfig {
   /** Optional: pre-deployed VFIDE token address for AdminMultiSig stake-gated veto (H-05 fix) */
   vfideToken?: string;
   pausers: string[];
-  blacklistManagers: string[];
+  suspiciousActivityReporters: string[];
   configManagers: string[];
 }
 
@@ -38,7 +38,7 @@ interface DeployedContracts {
 type RoleGrantingContract = Contract & {
   grantRoleWithReason: (role: string, account: string, reason: string) => Promise<{ wait: () => Promise<void> }>;
   EMERGENCY_PAUSER_ROLE: () => Promise<string>;
-  BLACKLIST_MANAGER_ROLE: () => Promise<string>;
+  SUSPICIOUS_ACTIVITY_REPORTER_ROLE: () => Promise<string>;
   CONFIG_MANAGER_ROLE: () => Promise<string>;
 };
 
@@ -111,7 +111,7 @@ function getDeploymentConfig(): DeploymentConfig {
     // so AdminMultiSig can enforce token-stake-gated community veto (H-05 fix).
     vfideToken: process.env.VFIDE_TOKEN || undefined,
     pausers: (process.env.PAUSERS || '').split(',').filter(Boolean),
-    blacklistManagers: (process.env.BLACKLIST_MANAGERS || '').split(',').filter(Boolean),
+    suspiciousActivityReporters: (process.env.SUSPICIOUS_ACTIVITY_REPORTERS || process.env.BLACKLIST_MANAGERS || '').split(',').filter(Boolean),
     configManagers: (process.env.CONFIG_MANAGERS || '').split(',').filter(Boolean),
   };
 
@@ -206,51 +206,35 @@ async function configureContracts(
 ): Promise<void> {
   console.log('⚙️  Configuring contracts...\n');
 
-  const emergencyControl = asRoleGrantingContract(contracts.emergencyControl);
   const circuitBreaker = asRoleGrantingContract(contracts.circuitBreaker);
-  const withdrawalQueue = asRoleGrantingContract(contracts.withdrawalQueue);
 
   // Grant emergency pauser roles
   if (config.pausers.length > 0) {
     console.log('   Granting EMERGENCY_PAUSER_ROLE...');
     for (const pauser of config.pausers) {
-      const tx1 = await emergencyControl.grantRoleWithReason(
-        await emergencyControl.EMERGENCY_PAUSER_ROLE(),
-        pauser,
-        'Phase 1 deployment'
-      );
-      await tx1.wait();
-      
-      const tx2 = await circuitBreaker.grantRoleWithReason(
+      const tx = await circuitBreaker.grantRoleWithReason(
         await circuitBreaker.EMERGENCY_PAUSER_ROLE(),
         pauser,
         'Phase 1 deployment'
       );
-      await tx2.wait();
+      await tx.wait();
       
       console.log(`   ✓ Granted to: ${pauser}`);
     }
   }
 
-  // Grant blacklist manager roles
-  if (config.blacklistManagers.length > 0) {
-    console.log('\n   Granting BLACKLIST_MANAGER_ROLE...');
-    for (const manager of config.blacklistManagers) {
-      const tx1 = await emergencyControl.grantRoleWithReason(
-        await emergencyControl.BLACKLIST_MANAGER_ROLE(),
-        manager,
+  // Grant suspicious activity reporter roles (legacy BLACKLIST_MANAGERS env still supported)
+  if (config.suspiciousActivityReporters.length > 0) {
+    console.log('\n   Granting SUSPICIOUS_ACTIVITY_REPORTER_ROLE...');
+    for (const reporter of config.suspiciousActivityReporters) {
+      const tx = await circuitBreaker.grantRoleWithReason(
+        await circuitBreaker.SUSPICIOUS_ACTIVITY_REPORTER_ROLE(),
+        reporter,
         'Phase 1 deployment'
       );
-      await tx1.wait();
+      await tx.wait();
       
-      const tx2 = await circuitBreaker.grantRoleWithReason(
-        await circuitBreaker.BLACKLIST_MANAGER_ROLE(),
-        manager,
-        'Phase 1 deployment'
-      );
-      await tx2.wait();
-      
-      console.log(`   ✓ Granted to: ${manager}`);
+      console.log(`   ✓ Granted to: ${reporter}`);
     }
   }
 
@@ -258,26 +242,12 @@ async function configureContracts(
   if (config.configManagers.length > 0) {
     console.log('\n   Granting CONFIG_MANAGER_ROLE...');
     for (const manager of config.configManagers) {
-      const tx1 = await emergencyControl.grantRoleWithReason(
-        await emergencyControl.CONFIG_MANAGER_ROLE(),
-        manager,
-        'Phase 1 deployment'
-      );
-      await tx1.wait();
-      
-      const tx2 = await circuitBreaker.grantRoleWithReason(
+      const tx = await circuitBreaker.grantRoleWithReason(
         await circuitBreaker.CONFIG_MANAGER_ROLE(),
         manager,
         'Phase 1 deployment'
       );
-      await tx2.wait();
-      
-      const tx3 = await withdrawalQueue.grantRoleWithReason(
-        await withdrawalQueue.CONFIG_MANAGER_ROLE(),
-        manager,
-        'Phase 1 deployment'
-      );
-      await tx3.wait();
+      await tx.wait();
       
       console.log(`   ✓ Granted to: ${manager}`);
     }
@@ -329,20 +299,17 @@ async function verifyContracts(contracts: DeployedContracts, config: DeploymentC
   };
 
   await verifyContract(await contracts.accessControl.getAddress(), [config.admin]);
-  await verifyContract(await contracts.multiSig.getAddress(), [config.council]);
+  await verifyContract(await contracts.multiSig.getAddress(), [config.council, config.vfideToken || ethers.ZeroAddress]);
   await verifyContract(await contracts.emergencyControl.getAddress(), [
     config.admin,
     config.admin,
     config.ledger,
+    config.admin,
   ]);
   await verifyContract(await contracts.circuitBreaker.getAddress(), [
     config.admin,
     config.priceOracle,
     await contracts.emergencyControl.getAddress(),
-  ]);
-  await verifyContract(await contracts.withdrawalQueue.getAddress(), [
-    config.admin,
-    ethers.parseEther('1000000'),
   ]);
   await verifyContract(await contracts.token.getAddress(), [
     config.devReserveVestingVault,

@@ -1,43 +1,44 @@
 /**
- * Sanitization utilities using isomorphic-dompurify
- * 
- * This module provides XSS protection that works on both server and client.
- * Previously, DOMPurify was client-only, requiring a weak regex fallback on the server.
- * Now using isomorphic-dompurify for consistent, robust sanitization everywhere.
- * 
- * M-5 mitigation: DOMPurify now available server-side via isomorphic-dompurify
+ * Sanitization utilities
+ *
+ * Build-stability note:
+ * - Keep this module dependency-light so it can be imported by both client and server code
+ *   without pulling large DOM emulation packages into server bundles.
  */
 
-import DOMPurify from 'isomorphic-dompurify';
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function stripHtml(value: string): string {
+  return value.replace(/<[^>]*>/g, '');
+}
 
 /**
- * Sanitize user input to prevent XSS attacks
- * Works on both server and client, providing consistent sanitization
+ * Sanitize user input to prevent XSS attacks.
+ *
+ * For server-safe determinism, this function emits plain text.
+ * When allowHTML is enabled, it still strips tags rather than preserving markup.
  */
 export function sanitizeInput(input: string, options?: {
   allowHTML?: boolean;
   allowedTags?: string[];
   allowedAttributes?: string[];
 }): string {
-  const {
-    allowHTML = false,
-    allowedTags = [],
-    allowedAttributes = [],
-  } = options || {};
+  const { allowHTML = false } = options || {};
+  const value = String(input ?? '');
 
   if (!allowHTML) {
-    // Strip all HTML
-    return DOMPurify.sanitize(input, { 
-      ALLOWED_TAGS: [],
-      ALLOWED_ATTR: [],
-    });
+    return escapeHtml(stripHtml(value));
   }
 
-  // Allow specific tags and attributes
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: allowedTags.length > 0 ? allowedTags : ['b', 'i', 'em', 'strong', 'a', 'br', 'p'],
-    ALLOWED_ATTR: allowedAttributes.length > 0 ? allowedAttributes : ['href', 'target'],
-  });
+  // Conservative behavior: remove tags and escape residual entities.
+  return escapeHtml(stripHtml(value));
 }
 
 /**

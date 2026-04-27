@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractToken, JWTPayload } from './jwt';
 import { getAuthCookie } from './cookieAuth';
-import { runWithDbUserAddressContext } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: JWTPayload;
@@ -226,6 +226,7 @@ export function withAuth(handler: AuthenticatedHandler) {
     if (authResult instanceof NextResponse) {
       return authResult;
     }
+    const { runWithDbUserAddressContext } = await import('@/lib/db');
     return runWithDbUserAddressContext(authResult.user.address, () => handler(request, authResult.user));
   };
 }

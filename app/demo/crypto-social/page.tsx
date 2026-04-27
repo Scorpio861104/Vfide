@@ -1,12 +1,14 @@
 'use client';
 
-import { Footer } from '@/components/layout/Footer';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FeedTab } from './components/FeedTab';
-import { PremiumTab } from './components/PremiumTab';
-import { SubscriptionsTab } from './components/SubscriptionsTab';
-import { DashboardTab } from './components/DashboardTab';
+
+const Footer = dynamic(() => import('@/components/layout/Footer').then((mod) => mod.Footer), { ssr: false });
+const FeedTab = dynamic(() => import('./components/FeedTab').then((mod) => mod.FeedTab), { ssr: false });
+const PremiumTab = dynamic(() => import('./components/PremiumTab').then((mod) => mod.PremiumTab), { ssr: false });
+const SubscriptionsTab = dynamic(() => import('./components/SubscriptionsTab').then((mod) => mod.SubscriptionsTab), { ssr: false });
+const DashboardTab = dynamic(() => import('./components/DashboardTab').then((mod) => mod.DashboardTab), { ssr: false });
 
 type TabId = 'feed' | 'premium' | 'subscriptions' | 'dashboard';
 

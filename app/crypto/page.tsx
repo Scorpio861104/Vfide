@@ -1,23 +1,24 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * Crypto Dashboard Page
  * 
  * Central hub for wallet, payments, and transactions.
  */
 
-
-
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Wallet, TrendingUp, History } from 'lucide-react';
 import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
-import { TransactionHistory } from '@/components/crypto/TransactionHistory';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+
+const TransactionHistory = dynamic(
+  () => import('@/components/crypto/TransactionHistory').then((mod) => mod.TransactionHistory),
+  { ssr: false }
+);
 
 export default function CryptoDashboard() {
   const { address, isConnected } = useAccount();
