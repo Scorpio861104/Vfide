@@ -120,7 +120,7 @@ jobs:
           fetch-depth: 0
 
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@v3.94.3
+        uses: trufflesecurity/trufflehog@v3.95.2
         with:
           # Scan only the commits introduced by this push / PR.
           # Use origin/<default_branch> so TruffleHog receives a valid ref.
