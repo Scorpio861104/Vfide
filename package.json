@@ -284,7 +284,7 @@
     "eslint-plugin-security": "^4.0.0",
     "ethers": "^6.16.0",
     "fast-check": "^4.6.0",
-    "glob": "^11.1.0",
+    "glob": "^13.0.6",
     "hardhat": "^3.2.0",
     "husky": "^9.1.7",
     "jest": "^30.3.0",
