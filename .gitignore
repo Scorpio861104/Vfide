@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Do NOT allow middleware.ts at the root — proxy.ts is the sole security entrypoint
+/middleware.ts
+
 # Dependencies
 /node_modules
 /contracts/node_modules
