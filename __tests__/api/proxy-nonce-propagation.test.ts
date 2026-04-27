@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { proxy } from '../../proxy';
+import { proxy } from '../../middleware';
 
 describe('proxy nonce propagation consistency', () => {
   function assertNonceParity(response: Response): string {
