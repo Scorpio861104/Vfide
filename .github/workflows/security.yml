@@ -171,7 +171,7 @@ jobs:
         run: docker build -t vfide:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: 'vfide:${{ github.sha }}'
           format: 'sarif'
