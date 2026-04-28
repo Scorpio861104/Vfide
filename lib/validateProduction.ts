@@ -111,7 +111,25 @@ function getEnvValue(name: string): string | undefined {
     return `[from ${name}_FILE]`;
   }
 
-  const inferredAppUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined;
+  const normalizeOrigin = (hostOrUrl: string | undefined): string | undefined => {
+    if (!hostOrUrl || hostOrUrl.trim() === '') return undefined;
+    const trimmed = hostOrUrl.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      try {
+        return new URL(trimmed).origin;
+      } catch {
+        return undefined;
+      }
+    }
+    return `https://${trimmed}`;
+  };
+
+  // Vercel can provide either hostnames or full URLs depending on the variable.
+  // Prefer canonical production host when available.
+  const inferredAppOrigin =
+    normalizeOrigin(process.env.VERCEL_PROJECT_PRODUCTION_URL) ||
+    normalizeOrigin(process.env.VERCEL_BRANCH_URL) ||
+    normalizeOrigin(process.env.VERCEL_URL);
   const isProduction = process.env.NODE_ENV === 'production';
 
   const fallbacks: Record<string, string | undefined> = {
@@ -119,7 +137,8 @@ function getEnvValue(name: string): string | undefined {
     NEXT_PUBLIC_CHAIN_ID: isProduction ? undefined : '84532',
     NEXT_PUBLIC_RPC_URL: isProduction ? undefined : 'https://sepolia.base.org',
     NEXT_PUBLIC_EXPLORER_URL: isProduction ? undefined : 'https://sepolia.basescan.org',
-    NEXT_PUBLIC_APP_URL: inferredAppUrl || (isProduction ? undefined : 'http://localhost:3000'),
+    APP_ORIGIN: inferredAppOrigin,
+    NEXT_PUBLIC_APP_URL: inferredAppOrigin || (isProduction ? undefined : 'http://localhost:3000'),
   };
 
   return fallbacks[name];

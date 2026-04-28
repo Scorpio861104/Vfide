@@ -82,6 +82,11 @@ Feature-specific production variables:
    npm run validate:production
    ```
 
+   Vercel note:
+   - CI/deployment now fails fast on validation errors (no warning-only bypass).
+   - If `APP_ORIGIN` / `NEXT_PUBLIC_APP_URL` are unset on Vercel, validation infers them from `VERCEL_PROJECT_PRODUCTION_URL`, then `VERCEL_BRANCH_URL`, then `VERCEL_URL`.
+   - Explicitly setting `APP_ORIGIN` and `NEXT_PUBLIC_APP_URL` is still recommended for canonical production domains.
+
    Production note: validation failures on Redis or `LOG_IP_HASH_SALT` must block deploy until fixed.
 
 3. **Build Application:**
