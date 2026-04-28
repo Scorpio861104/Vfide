@@ -34,11 +34,6 @@ const nextConfig: NextConfig = {
   experimental: {
     webpackBuildWorker: false,
     cpus: 1,
-    optimizePackageImports: [
-      '@radix-ui/react-icons',
-      'lucide-react',
-      'framer-motion',
-    ],
   },
 
   // Image optimization — allow only explicit remote hosts used by the app.

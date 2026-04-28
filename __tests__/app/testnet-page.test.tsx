@@ -32,6 +32,7 @@ jest.mock('wagmi', () => ({
 
 jest.mock('@/lib/chains', () => ({
   isTestnetChainId: (id: number) => id === 84532,
+  getExplorerUrlForChainId: (id: number) => (id === 84532 ? 'https://sepolia.basescan.org' : 'https://basescan.org'),
 }));
 
 jest.mock('@/lib/testnet', () => ({

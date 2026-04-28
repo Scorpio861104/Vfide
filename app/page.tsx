@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
-import { isCardBoundVaultMode } from '@/lib/contracts';
+import { isCardBoundVaultMode } from '@/lib/vaultMode';
 import { HeroVisualization } from './components/HeroVisualization';
 import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';

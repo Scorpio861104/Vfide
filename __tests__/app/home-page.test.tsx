@@ -38,7 +38,7 @@ jest.mock('@/components/fees', () => ({
   FeeSavingsCalculator: () => <div data-testid="fee-savings-calculator" />,
 }));
 
-jest.mock('@/lib/contracts', () => ({
+jest.mock('@/lib/vaultMode', () => ({
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
 }));
 
@@ -76,7 +76,7 @@ describe('Home page pathways', () => {
 
     renderHomePage();
 
-    expect(screen.getByText(/Guardians help rotate wallet access and protect queued transfers/i)).toBeTruthy();
+    expect(screen.getByText(/Guardians help rotate wallet access, protect queued transfers, and support recovery flows/i)).toBeTruthy();
     expect(screen.queryByText(/Inheritance via Next of Kin/i)).toBeNull();
   });
 });

@@ -3,8 +3,6 @@
  * Replaces console.log/error with proper logging that respects environment
  */
 
-import * as Sentry from '@sentry/nextjs';
-
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
@@ -50,6 +48,7 @@ function toSentryExtras(value: unknown): Record<string, unknown> | undefined {
   }
   return value as Record<string, unknown>;
 }
+
 
 /**
  * Log levels for different environments
@@ -138,18 +137,8 @@ class Logger {
     if (isLevelEnabled('warn')) {
       console.warn(`[WARN] ${formatMessage(message, normalizeContext(context))}`);
 
-      // Send warnings to Sentry in production (if configured)
-      if (process.env.NODE_ENV === 'production') {
-        try {
-          const safeExtra = toSentryExtras(scrubValue(normalizeContext(context)));
-          Sentry.captureMessage(message, {
-            level: 'warning',
-            extra: safeExtra,
-          });
-        } catch {
-          // Sentry not configured - fail silently
-        }
-      }
+      // Sentry forwarding is intentionally disabled here to keep logger lightweight
+      // and avoid pulling heavy tracing dependencies into frontend startup.
     }
   }
 
@@ -161,26 +150,8 @@ class Logger {
     if (isLevelEnabled('error')) {
       console.error(`[ERROR] ${formatMessage(message, normalizeContext(context))}`, error);
 
-      // Always report errors to Sentry (if configured)
-      try {
-        const safeMessage = scrubString(message);
-        const safeContext = toSentryExtras(scrubValue(normalizeContext(context)));
-        if (error instanceof Error) {
-          const safeError = new Error(scrubString(error.message));
-          safeError.name = error.name;
-          safeError.stack = error.stack ? scrubString(error.stack) : undefined;
-          Sentry.captureException(safeError, {
-            extra: { message: safeMessage, ...(safeContext || {}) },
-          });
-        } else {
-          Sentry.captureMessage(message, {
-            level: 'error',
-            extra: { error: scrubValue(error), ...(safeContext || {}) },
-          });
-        }
-      } catch {
-        // Sentry not configured - fail silently
-      }
+      // Sentry forwarding is intentionally disabled here to keep logger lightweight
+      // and avoid pulling heavy tracing dependencies into frontend startup.
     }
   }
 

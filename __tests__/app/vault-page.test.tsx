@@ -366,7 +366,7 @@ describe('Vault page logic pathways', () => {
 
     renderVaultPage();
 
-  expect(screen.getByText(/guardian-backed wallet rotation and queued transfer protection/i)).toBeTruthy();
+  expect(screen.getByText(/guardian-backed wallet rotation, recovery, and queued transfer protection/i)).toBeTruthy();
   expect(screen.getByText(/^Wallet Rotation$/i)).toBeTruthy();
   expect(screen.getByText(/^Guardian Protections$/i)).toBeTruthy();
   expect(screen.queryByText(/^Next of Kin$/i)).toBeNull();

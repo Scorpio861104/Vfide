@@ -44,7 +44,7 @@ describe('About page logic pathways', () => {
 
     expect(screen.getByRole('heading', { name: /About VFIDE/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Our Mission/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Non-Custodial/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Guardian-Protected Self-Custody/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Community Governed/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /No Processor Fees/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /For Everyone/i })).toBeTruthy();

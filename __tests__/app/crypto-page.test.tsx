@@ -79,6 +79,6 @@ describe('Crypto dashboard page pathways', () => {
     expect(screen.getByText(/Manage your wallet and payments/i)).toBeTruthy();
     expect(screen.getByText('1.2345')).toBeTruthy();
     expect(screen.getByText(/USD conversion unavailable/i)).toBeTruthy();
-    expect(screen.getByText(/Transaction History: 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/i)).toBeTruthy();
+    expect(screen.getByText(/^Transactions$/i)).toBeTruthy();
   });
 });
