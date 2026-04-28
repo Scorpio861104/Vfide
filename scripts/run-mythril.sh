@@ -34,7 +34,6 @@ CRITICAL_CONTRACTS=(
   "VaultInfrastructure"
   "CircuitBreaker"
   "AdminMultiSig"
-  "MainstreamPayments"
   "EscrowManager"
   "CardBoundVault"
   "VFIDEToken"

@@ -46,7 +46,6 @@ async function main() {
     'MerchantRegistry',
     'CommerceEscrow',
     'VFIDEEnterpriseGateway',
-    'MainstreamPayments',
     'SubscriptionManager',
     'VFIDEBenefits',
   ] as const;

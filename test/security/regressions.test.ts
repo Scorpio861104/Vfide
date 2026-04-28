@@ -41,7 +41,7 @@ describe("CRITICAL Regressions", function () {
   it("C-03: All 27 previously-untested contracts have test files", async function () {
     const requiredTests = [
       "AdminMultiSig", "VFIDEBridge", "VaultHub", "VaultInfrastructure",
-      "Seer", "MainstreamPayments", "CircuitBreaker", "VFIDECommerce",
+      "Seer", "CircuitBreaker", "VFIDECommerce",
       "VFIDESecurity", "ProofLedger", "VFIDEAccessControl",
       "VFIDEFinance", "SeerPolicyGuard", "SeerView",
       "BadgeQualificationRules",
