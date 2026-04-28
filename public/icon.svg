@@ -1,54 +1,116 @@
-<svg width="32" height="32" viewBox="0 0 400 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="400" height="440" viewBox="0 0 400 440" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="fav-armL" x1="0" y1="0" x2="0.35" y2="1">
+    <!-- Left arm: darker face -->
+    <linearGradient id="armL" x1="0" y1="0" x2="0.35" y2="1">
       <stop offset="0%" stop-color="#1c3040"/>
+      <stop offset="40%" stop-color="#142430"/>
       <stop offset="100%" stop-color="#0a1218"/>
     </linearGradient>
-    <linearGradient id="fav-armR" x1="1" y1="0" x2="0.65" y2="1">
+    <!-- Right arm: lighter face -->
+    <linearGradient id="armR" x1="1" y1="0" x2="0.65" y2="1">
       <stop offset="0%" stop-color="#243848"/>
+      <stop offset="40%" stop-color="#1a2c38"/>
       <stop offset="100%" stop-color="#0e1a22"/>
     </linearGradient>
-    <linearGradient id="fav-barTop" x1="0" y1="0" x2="1" y2="0">
+    <!-- F top bar: luminous fade -->
+    <linearGradient id="barTop" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
       <stop offset="15%" stop-color="#00e8f0" stop-opacity="0.7"/>
       <stop offset="50%" stop-color="#00e8f0"/>
       <stop offset="85%" stop-color="#00e8f0" stop-opacity="0.7"/>
       <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="fav-barMid" x1="0" y1="0" x2="1" y2="0">
+    <!-- F crossbar: dimmer -->
+    <linearGradient id="barMid" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#00e8f0" stop-opacity="0"/>
       <stop offset="20%" stop-color="#00e8f0" stop-opacity="0.35"/>
       <stop offset="50%" stop-color="#00e8f0" stop-opacity="0.5"/>
       <stop offset="80%" stop-color="#00e8f0" stop-opacity="0.35"/>
       <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="fav-rise" x1="0.5" y1="1" x2="0.5" y2="0">
+    <!-- Vertex light rise -->
+    <linearGradient id="rise" x1="0.5" y1="1" x2="0.5" y2="0">
       <stop offset="0%" stop-color="#00e8f0"/>
       <stop offset="40%" stop-color="#00c0d0" stop-opacity="0.5"/>
       <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
     </linearGradient>
+    <!-- Inner shadow strokes -->
+    <linearGradient id="innerL" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0%" stop-color="#14242e"/>
+      <stop offset="100%" stop-color="#0a1418"/>
+    </linearGradient>
+    <linearGradient id="innerR" x1="0.7" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#1a2e38"/>
+      <stop offset="100%" stop-color="#0c1820"/>
+    </linearGradient>
+    <!-- Edge outline -->
+    <linearGradient id="edge" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#00dce6" stop-opacity="0.5"/>
+      <stop offset="50%" stop-color="#00dce6" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#00dce6" stop-opacity="0.6"/>
+    </linearGradient>
+    <!-- Base glow -->
+    <linearGradient id="glow" x1="0.5" y1="1" x2="0.5" y2="0.2">
+      <stop offset="0%" stop-color="#00e8f0" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#00e8f0" stop-opacity="0"/>
+    </linearGradient>
   </defs>
 
-  <!-- Left arm -->
-  <path d="M52 52 L96 52 L96 68 L82 68 L184 320 L172 320Z" fill="url(#fav-armL)"/>
+  <!-- Ground glow -->
+  <ellipse cx="200" cy="380" rx="80" ry="16" fill="url(#glow)"/>
 
-  <!-- Right arm -->
-  <path d="M348 52 L304 52 L304 68 L318 68 L216 320 L228 320Z" fill="url(#fav-armR)"/>
+  <!-- Left arm (V left + bracket) -->
+  <path d="M52 52 L96 52 L96 68 L82 68 L184 320 L172 320Z" fill="url(#armL)"/>
 
-  <!-- Inner depth strokes (simplified) -->
-  <path d="M102 100 L190 312" stroke="url(#fav-armL)" stroke-width="14" stroke-linecap="butt" opacity="0.6"/>
-  <path d="M298 100 L210 312" stroke="url(#fav-armR)" stroke-width="14" stroke-linecap="butt" opacity="0.6"/>
+  <!-- Right arm (V right + bracket) -->
+  <path d="M348 52 L304 52 L304 68 L318 68 L216 320 L228 320Z" fill="url(#armR)"/>
 
-  <!-- F top bar -->
-  <rect x="96" y="52" width="208" height="16" fill="url(#fav-barTop)"/>
+  <!-- Inner depth strokes -->
+  <path d="M102 100 L190 312" stroke="url(#innerL)" stroke-width="14" stroke-linecap="butt"/>
+  <path d="M298 100 L210 312" stroke="url(#innerR)" stroke-width="14" stroke-linecap="butt"/>
+
+  <!-- Bracket fill patches -->
+  <path d="M96 52 L96 68 L82 68 L88 80" fill="url(#innerL)"/>
+  <path d="M304 52 L304 68 L318 68 L312 80" fill="url(#innerR)"/>
+
+  <!-- F top bar (capstone) -->
+  <rect x="96" y="52" width="208" height="16" fill="url(#barTop)"/>
+
+  <!-- Bracket shadow blocks -->
+  <rect x="96" y="52" width="16" height="16" fill="#0c2030"/>
+  <rect x="288" y="52" width="16" height="16" fill="#0e2232"/>
 
   <!-- F crossbar -->
-  <rect x="116" y="130" width="168" height="10" fill="url(#fav-barMid)"/>
+  <rect x="116" y="130" width="168" height="10" fill="url(#barMid)"/>
+
+  <!-- Outer edge -->
+  <path d="M52 52 L96 52 L96 68 L82 68 L200 354 L318 68 L304 68 L304 52 L348 52" fill="none" stroke="url(#edge)" stroke-width="1.2" stroke-linejoin="miter"/>
+
+  <!-- Corner marks (architectural notation) -->
+  <path d="M52 52 L52 42 L62 42" fill="none" stroke="#00dce6" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+  <path d="M348 52 L348 42 L338 42" fill="none" stroke="#00dce6" stroke-width="1" opacity="0.4" stroke-linecap="round"/>
+
+  <!-- Tick marks along top -->
+  <path d="M96 46 L96 52" stroke="#00dce6" stroke-width="0.6" opacity="0.3"/>
+  <path d="M304 46 L304 52" stroke="#00dce6" stroke-width="0.6" opacity="0.3"/>
+  <path d="M140 46 L140 52" stroke="#00dce6" stroke-width="0.4" opacity="0.15"/>
+  <path d="M200 46 L200 52" stroke="#00dce6" stroke-width="0.4" opacity="0.15"/>
+  <path d="M260 46 L260 52" stroke="#00dce6" stroke-width="0.4" opacity="0.15"/>
 
   <!-- Vertex chevron + light -->
-  <path d="M184 320 L200 360 L216 320" fill="none" stroke="url(#fav-rise)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M184 320 L200 360 L216 320" fill="none" stroke="url(#rise)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
 
-  <!-- Focal point -->
+  <!-- Focal point (3 rings) -->
   <circle cx="200" cy="362" r="5.5" fill="#00e8f0"/>
   <circle cx="200" cy="362" r="10" fill="#00e8f0" opacity="0.12"/>
+  <circle cx="200" cy="362" r="18" fill="#00e8f0" opacity="0.04"/>
+
+  <!-- Light axis (ghosted) -->
+  <path d="M200 354 L200 38" stroke="url(#rise)" stroke-width="1" opacity="0.08"/>
+
+  <!-- Construction guidelines (ghosted) -->
+  <path d="M184 320 L92 128 M216 320 L308 128" fill="none" stroke="#00dce6" stroke-width="0.3" opacity="0.08" stroke-dasharray="2 6"/>
+
+  <!-- Inscription -->
+  <text x="200" y="414" text-anchor="middle" fill="#3a3a4c" font-family="'Times New Roman', 'Georgia', serif" font-size="11" letter-spacing="8">VERITAS · FIDES</text>
 </svg>

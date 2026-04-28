@@ -26,7 +26,7 @@ const organizationSchema = {
   '@type': 'Organization',
   name: 'VFIDE',
   url: 'https://vfide.io',
-  logo: 'https://vfide.io/logo.png',
+  logo: 'https://vfide.io/branding/vfide-lockup-horizontal.svg',
   description: 'Decentralized payment protocol with trust scoring and ProofScore verification.',
   sameAs: [
     'https://twitter.com/vfide',

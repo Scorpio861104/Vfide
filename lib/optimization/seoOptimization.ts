@@ -96,7 +96,7 @@ export function generateStructuredData(type: 'organization' | 'website' | 'bread
       '@type': 'Organization',
       name: 'VFIDE Protocol',
       url: baseUrl,
-      logo: `${baseUrl}/icon.svg`,
+      logo: `${baseUrl}/branding/vfide-lockup-horizontal.svg`,
       sameAs: [
         'https://twitter.com/vfideprotocol',
         'https://github.com/vfide',
@@ -138,7 +138,7 @@ export function generateStructuredData(type: 'organization' | 'website' | 'bread
         name: 'VFIDE Protocol',
         logo: {
           '@type': 'ImageObject',
-          url: `${baseUrl}/icon.svg`,
+          url: `${baseUrl}/branding/vfide-lockup-horizontal.svg`,
         },
       },
       datePublished: data?.publishedTime,
@@ -237,7 +237,7 @@ export function preloadSEOResources() {
 
   const resources = [
     { href: '/og-image.png', as: 'image' },
-    { href: '/icon.svg', as: 'image' },
+    { href: '/branding/vfide-mark-primary.svg', as: 'image' },
   ];
 
   resources.forEach(resource => {

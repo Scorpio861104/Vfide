@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
+import { VFIDEMark } from '@/components/ui';
 import {
   Home,
   LayoutDashboard,
@@ -628,15 +629,8 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="font-bold text-lg"
-              style={{
-                background: 'linear-gradient(135deg, #c0c5d0 0%, #9ca3b0 40%, #7a8290 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-              }}
             >
-              V
+              <VFIDEMark size={24} glowing={false} animated={false} className="opacity-90" />
             </motion.div>
           )}
         </AnimatePresence>
