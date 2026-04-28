@@ -5,7 +5,7 @@
  * "All wiring complete."
  *
  * Each run advances through ONE round of serialised system-exemption
- * confirmations (FeeDistributor → FraudRegistry → FlashLoan), applying
+ * confirmations (FeeDistributor → FraudRegistry → EcosystemVault), applying
  * any other 48-hour token-module and Seer timelocks along the way.
  *
  * Run:
@@ -41,8 +41,7 @@ function readBook(network: string): Book {
 const EXEMPT_SCHEDULE = [
   "FeeDistributor",   // proposed in deploy-full.ts; confirmed in run 1
   "FraudRegistry",    // proposed in run 1;           confirmed in run 2
-  "VFIDEFlashLoan",   // proposed in run 2;           confirmed in run 3
-  "EcosystemVault",   // proposed in run 3;           confirmed in run 4
+  "EcosystemVault",   // proposed in run 2;           confirmed in run 3
 ] as const;
 
 const EMERGENCY_CONTROLLER_MONITOR = [
@@ -52,7 +51,6 @@ const EMERGENCY_CONTROLLER_MONITOR = [
   "FraudRegistry",
   "FeeDistributor",
   "EcosystemVault",
-  "VFIDEFlashLoan",
 ] as const;
 
 async function main() {
@@ -198,8 +196,7 @@ async function main() {
     console.log("║  ✅  All wiring complete.                                     ║");
     console.log("║                                                              ║");
     console.log("║  System exempt status:                                       ║");
-    console.log("║    FeeDistributor ✅  FraudRegistry ✅  FlashLoan ✅          ║");
-    console.log("║    EcosystemVault ✅                                          ║");
+    console.log("║    FeeDistributor ✅  FraudRegistry ✅  EcosystemVault ✅      ║");
     console.log("║                                                              ║");
     console.log("║  Next steps:                                                 ║");
     console.log("║    1. Transfer all contract ownership to multisig            ║");

@@ -30,7 +30,6 @@ async function main() {
     feeDistributor: process.env.NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS!,
     fraudRegistry: process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS!,
     merchantPortal: process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS!,
-    flashLoan: process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS!,
     hooks: process.env.NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS!,
     councilElection: process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS || "",
     systemHandover:

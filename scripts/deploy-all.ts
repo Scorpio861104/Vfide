@@ -29,7 +29,6 @@ const DEPLOYMENT_CONTRACTS = [
   "DAOTimelock",
   "GovernanceHooks",
   "DAO",
-  "VFIDEFlashLoan",
   "VFIDETermLoan",
   "FraudRegistry",
   "VFIDETestnetFaucet",
@@ -246,15 +245,7 @@ async function main() {
   //  LAYER 6: Finance
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 6: Finance ═══");
-  
-  // VFIDEFlashLoan(vfideToken, dao, seer, feeDistributor)
-  await deploy("VFIDEFlashLoan",
-    deployed.VFIDEToken,          // _vfideToken
-    deployer.address,             // _dao (temp)
-    deployed.Seer,                // _seer
-    deployed.FeeDistributor,      // _feeDistributor
-  );
-  
+
   // VFIDETermLoan(token, dao, seer, vaultHub, feeDist)
   await deploy("VFIDETermLoan",
     deployed.VFIDEToken,          // _token
@@ -309,10 +300,9 @@ async function main() {
   await tokenContract.proposeSystemExempt(deployed.FeeDistributor, true);
   console.log("  Proposed: FeeDistributor as systemExempt (confirm in apply-all, then propose next)");
   
-  // NOTE: FraudRegistry and FlashLoan MUST also be systemExempt.
-  // FraudRegistry: without it, releaseEscrow() transfers will charge fees and re-escrow.
-  // FlashLoan: without it, flash loan repayment transfers will charge fees.
-  // These are proposed sequentially in apply-all.ts after each prior exemption is confirmed.
+  // NOTE: FraudRegistry must also be systemExempt.
+  // Without it, releaseEscrow() transfers will charge fees and re-escrow.
+  // It is proposed sequentially in apply-all.ts after FeeDistributor is confirmed.
 
   // ══════════════════════════════════════════════
   //  PROOF LEDGER — Register authorized loggers
@@ -329,7 +319,6 @@ async function main() {
     ["DAOTimelock", deployed.DAOTimelock],
     ["GovernanceHooks", deployed.GovernanceHooks],
     ["FraudRegistry", deployed.FraudRegistry],
-    ["VFIDEFlashLoan", deployed.VFIDEFlashLoan],
     ["VFIDETermLoan", deployed.VFIDETermLoan],
     ["DAOPayrollPool", deployed.DAOPayrollPool],
     ["MerchantCompetitionPool", deployed.MerchantCompetitionPool],
@@ -379,15 +368,6 @@ async function main() {
     console.log("  ✅ MerchantPortal.dao → DAO");
   } catch (e: any) {
     console.log("  ⏭️  MerchantPortal.setDAO:", (e as Error).message?.slice(0, 60));
-  }
-
-  // VFIDEFlashLoan → DAO
-  const flashLoan = await ethers.getContractAt("VFIDEFlashLoan", deployed.VFIDEFlashLoan);
-  try {
-    await flashLoan.setDAO(deployed.DAO);
-    console.log("  ✅ VFIDEFlashLoan.dao → DAO");
-  } catch (e: any) {
-    console.log("  ⏭️  VFIDEFlashLoan.setDAO:", (e as Error).message?.slice(0, 60));
   }
 
   // VFIDETermLoan → DAO
@@ -446,7 +426,6 @@ async function main() {
   console.log(`NEXT_PUBLIC_FAUCET_ADDRESS=${deployed.VFIDETestnetFaucet}`);
   console.log(`NEXT_PUBLIC_PROOF_LEDGER_ADDRESS=${deployed.ProofLedger}`);
   console.log(`NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS=${deployed.GovernanceHooks}`);
-  console.log(`NEXT_PUBLIC_FLASH_LOAN_ADDRESS=${deployed.VFIDEFlashLoan}`);
   console.log(`NEXT_PUBLIC_TERM_LOAN_ADDRESS=${deployed.VFIDETermLoan}`);
   
   console.log("\n⚠️  IMPORTANT: Wait 48 hours, then run apply-all.ts to finalize wiring.");
