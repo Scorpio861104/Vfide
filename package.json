@@ -243,7 +243,7 @@
     "@next/bundle-analyzer": "^16.2.4",
     "@nomicfoundation/hardhat-ethers": "^4.0.6",
     "@nomicfoundation/hardhat-ethers-chai-matchers": "^3.0.5",
-    "@nomicfoundation/hardhat-mocha": "^3.0.15",
+    "@nomicfoundation/hardhat-mocha": "^3.0.17",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.3",
     "@openzeppelin/contracts": "^5.4.0",
     "@playwright/test": "^1.59.1",
