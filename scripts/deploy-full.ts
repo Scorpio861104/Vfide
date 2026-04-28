@@ -46,6 +46,19 @@ function envArgs(contractName: string): unknown[] {
   return parsed;
 }
 
+function poolArgs(contractName: "DAOPayrollPool" | "MerchantCompetitionPool" | "HeadhunterCompetitionPool", tokenAddress: string, admin: string): unknown[] {
+  const fromEnv = envArgs(contractName);
+  if (fromEnv.length > 0) return fromEnv;
+
+  if (contractName === "DAOPayrollPool") {
+    return [tokenAddress, admin, 12, ethers.parseEther("500000")];
+  }
+  if (contractName === "MerchantCompetitionPool") {
+    return [tokenAddress, admin, ethers.parseEther("500000"), 1_000_000];
+  }
+  return [tokenAddress, admin, ethers.parseEther("250000")];
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const network = process.env.HARDHAT_NETWORK ?? "hardhat";
@@ -151,13 +164,28 @@ async function main() {
   console.log("\n═══ LAYER 4: Commerce Core ═══");
 
   await deploy(
+    "DAOPayrollPool",
+    ...poolArgs("DAOPayrollPool", book.VFIDEToken, deployer.address),
+  );
+
+  await deploy(
+    "MerchantCompetitionPool",
+    ...poolArgs("MerchantCompetitionPool", book.VFIDEToken, deployer.address),
+  );
+
+  await deploy(
+    "HeadhunterCompetitionPool",
+    ...poolArgs("HeadhunterCompetitionPool", book.VFIDEToken, deployer.address),
+  );
+
+  await deploy(
     "FeeDistributor",
     book.VFIDEToken,
     deployer.address, // _burn (temp)
     deployer.address, // _sanctum (temp)
-    deployer.address, // _daoPayroll (temp)
-    deployer.address, // _merchantPool (temp)
-    deployer.address, // _headhunterPool (temp)
+    book.DAOPayrollPool,
+    book.MerchantCompetitionPool,
+    book.HeadhunterCompetitionPool,
     deployer.address, // _admin
   );
 
@@ -304,6 +332,9 @@ async function main() {
     ["FraudRegistry",        book.FraudRegistry],
     ["VFIDEFlashLoan",       book.VFIDEFlashLoan],
     ["VFIDETermLoan",        book.VFIDETermLoan],
+    ["DAOPayrollPool",       book.DAOPayrollPool],
+    ["MerchantCompetitionPool", book.MerchantCompetitionPool],
+    ["HeadhunterCompetitionPool", book.HeadhunterCompetitionPool],
     ["MerchantRegistry",     book.MerchantRegistry],
     ["CommerceEscrow",       book.CommerceEscrow],
   ];
@@ -385,6 +416,9 @@ async function main() {
     ["NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS",       book.DAOTimelock],
     ["NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS",     book.FraudRegistry],
     ["NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS",    book.FeeDistributor],
+    ["NEXT_PUBLIC_DAO_PAYROLL_POOL_ADDRESS",   book.DAOPayrollPool],
+    ["NEXT_PUBLIC_MERCHANT_POOL_ADDRESS",      book.MerchantCompetitionPool],
+    ["NEXT_PUBLIC_HEADHUNTER_POOL_ADDRESS",    book.HeadhunterCompetitionPool],
     ["NEXT_PUBLIC_FAUCET_ADDRESS",             book.VFIDETestnetFaucet],
     ["NEXT_PUBLIC_PROOF_LEDGER_ADDRESS",       book.ProofLedger],
     ["NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS",   book.GovernanceHooks],

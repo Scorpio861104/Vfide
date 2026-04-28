@@ -21,6 +21,9 @@ const DEPLOYMENT_CONTRACTS = [
   "Seer",
   "ProofScoreBurnRouter",
   "VaultHub",
+  "DAOPayrollPool",
+  "MerchantCompetitionPool",
+  "HeadhunterCompetitionPool",
   "FeeDistributor",
   "MerchantPortal",
   "DAOTimelock",
@@ -169,15 +172,38 @@ async function main() {
   //  LAYER 4: Commerce
   // ══════════════════════════════════════════════
   console.log("\n═══ LAYER 4: Commerce ═══");
+
+  // DAOPayrollPool(token, admin, initialMaxMembers, maxPayoutPerPeriod)
+  await deploy("DAOPayrollPool",
+    deployed.VFIDEToken,
+    deployer.address,
+    12,
+    ethers.parseEther("500000"),
+  );
+
+  // MerchantCompetitionPool(token, admin, maxPayoutPerPeriod, minTransactionSize)
+  await deploy("MerchantCompetitionPool",
+    deployed.VFIDEToken,
+    deployer.address,
+    ethers.parseEther("500000"),
+    1_000_000,
+  );
+
+  // HeadhunterCompetitionPool(token, admin, maxPayoutPerPeriod)
+  await deploy("HeadhunterCompetitionPool",
+    deployed.VFIDEToken,
+    deployer.address,
+    ethers.parseEther("250000"),
+  );
   
   // FeeDistributor(token, burn, sanctum, daoPayroll, merchantPool, headhunterPool, admin)
   await deploy("FeeDistributor",
     deployed.VFIDEToken,          // _token
     deployer.address,             // _burn (temp)
     deployer.address,             // _sanctum (temp)
-    deployer.address,             // _daoPayroll (temp)
-    deployer.address,             // _merchantPool (temp)
-    deployer.address,             // _headhunterPool (temp)
+    deployed.DAOPayrollPool,      // _daoPayroll
+    deployed.MerchantCompetitionPool, // _merchantPool
+    deployed.HeadhunterCompetitionPool, // _headhunterPool
     deployer.address,             // _admin
   );
 
@@ -305,6 +331,9 @@ async function main() {
     ["FraudRegistry", deployed.FraudRegistry],
     ["VFIDEFlashLoan", deployed.VFIDEFlashLoan],
     ["VFIDETermLoan", deployed.VFIDETermLoan],
+    ["DAOPayrollPool", deployed.DAOPayrollPool],
+    ["MerchantCompetitionPool", deployed.MerchantCompetitionPool],
+    ["HeadhunterCompetitionPool", deployed.HeadhunterCompetitionPool],
   ];
 
   for (const [name, addr] of loggers) {
@@ -411,6 +440,9 @@ async function main() {
   console.log(`NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS=${deployed.DAOTimelock}`);
   console.log(`NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS=${deployed.FraudRegistry}`);
   console.log(`NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS=${deployed.FeeDistributor}`);
+  console.log(`NEXT_PUBLIC_DAO_PAYROLL_POOL_ADDRESS=${deployed.DAOPayrollPool}`);
+  console.log(`NEXT_PUBLIC_MERCHANT_POOL_ADDRESS=${deployed.MerchantCompetitionPool}`);
+  console.log(`NEXT_PUBLIC_HEADHUNTER_POOL_ADDRESS=${deployed.HeadhunterCompetitionPool}`);
   console.log(`NEXT_PUBLIC_FAUCET_ADDRESS=${deployed.VFIDETestnetFaucet}`);
   console.log(`NEXT_PUBLIC_PROOF_LEDGER_ADDRESS=${deployed.ProofLedger}`);
   console.log(`NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS=${deployed.GovernanceHooks}`);

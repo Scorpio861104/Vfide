@@ -22,7 +22,9 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - MerchantPortal.sol
 - OwnerControlPanel.sol
 - PayrollManager.sol
-- Pools.sol
+- pools/DAOPayrollPool.sol
+- pools/MerchantCompetitionPool.sol
+- pools/HeadhunterCompetitionPool.sol
 - ProofLedger.sol
 - ProofScoreBurnRouter.sol
 - RevenueSplitter.sol
