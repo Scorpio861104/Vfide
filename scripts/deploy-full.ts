@@ -230,6 +230,14 @@ async function main() {
   console.log("\n═══ LAYER 6: Finance ═══");
 
   await deploy(
+    "VFIDEFlashLoan",
+    book.VFIDEToken,
+    deployer.address, // _dao (temp)
+    book.Seer,
+    book.FeeDistributor,
+  );
+
+  await deploy(
     "VFIDETermLoan",
     book.VFIDEToken,
     deployer.address, // _dao (temp)
@@ -325,6 +333,7 @@ async function main() {
     ["DAOTimelock",          book.DAOTimelock],
     ["GovernanceHooks",      book.GovernanceHooks],
     ["FraudRegistry",        book.FraudRegistry],
+    ["VFIDEFlashLoan",       book.VFIDEFlashLoan],
     ["VFIDETermLoan",        book.VFIDETermLoan],
     ["DAOPayrollPool",       book.DAOPayrollPool],
     ["MerchantCompetitionPool", book.MerchantCompetitionPool],
@@ -348,6 +357,10 @@ async function main() {
   // MerchantPortal → DAO
   const merchant = await ethers.getContractAt("MerchantPortal", book.MerchantPortal);
   await call("MerchantPortal.setDAO → DAO", () => merchant.setDAO(book.DAO));
+
+  // VFIDEFlashLoan → DAO
+  const flash = await ethers.getContractAt("VFIDEFlashLoan", book.VFIDEFlashLoan);
+  await call("VFIDEFlashLoan.setDAO → DAO", () => flash.setDAO(book.DAO));
 
   // VFIDETermLoan → DAO
   const term = await ethers.getContractAt("VFIDETermLoan", book.VFIDETermLoan);
@@ -412,6 +425,7 @@ async function main() {
     ["NEXT_PUBLIC_FAUCET_ADDRESS",             book.VFIDETestnetFaucet],
     ["NEXT_PUBLIC_PROOF_LEDGER_ADDRESS",       book.ProofLedger],
     ["NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS",   book.GovernanceHooks],
+    ["NEXT_PUBLIC_FLASH_LOAN_ADDRESS",         book.VFIDEFlashLoan],
     ["NEXT_PUBLIC_TERM_LOAN_ADDRESS",          book.VFIDETermLoan],
     ["NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS",     book.VFIDECommerce],
     ["NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS",    book.CommerceEscrow],

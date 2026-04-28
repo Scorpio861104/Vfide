@@ -36,6 +36,7 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - VFIDEAccessControl.sol
 - VFIDECommerce.sol
 - VFIDEFinance.sol
+- VFIDEFlashLoan.sol
 - VFIDEPriceOracle.sol
 - VFIDESecurity.sol
 - VFIDETermLoan.sol

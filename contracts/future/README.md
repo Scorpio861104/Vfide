@@ -33,4 +33,3 @@ Contracts in this directory are intentionally excluded from the active productio
 - VFIDEBenefits.sol
 - VFIDEBridge.sol
 - VFIDEEnterpriseGateway.sol
-- VFIDEFlashLoan.sol
