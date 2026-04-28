@@ -4,7 +4,7 @@ Contracts in this list are for testnet operations only and must never be deploye
 
 ## Testnet Utilities
 
-- VFIDETestnetFaucet.sol
+- testnet/VFIDETestnetFaucet.sol
 
 ## Policy
 
