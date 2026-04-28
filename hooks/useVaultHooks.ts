@@ -14,20 +14,19 @@ import { useAppStore } from '@/lib/store/appStore';
 // ============================================
 // VAULT HOOKS - Non-custodial vault management
 // 
-// Uses full VaultInfrastructure (VaultHubABI) for all vault features including:
+// CardBoundVault is the sole active vault implementation with:
+// - Wallet-based authorization (ATM-card model)
 // - Guardian management with maturity periods
 // - Next of Kin (inheritance) functionality  
 // - Recovery mechanisms
-// - Balance snapshots and pending transactions
+// - 7-day withdrawal queue protection
 // ============================================
 
-// Use VaultHub (VaultInfrastructure) ABI for hub operations
+// VaultHub orchestrates all vault operations
 const HUB_ABI = VaultHubABI
 
-// Use active vault ABI that matches deployed vault type (CardBoundVault or UserVault-style)
-// CRITICAL: Must use ACTIVE_VAULT_ABI to match actually deployed contract
+// CardBoundVault: the active vault implementation
 const VAULT_ABI = ACTIVE_VAULT_ABI
-const LEGACY_VAULT_UNSUPPORTED_MESSAGE = 'This action is not supported in CardBound vault mode.'
 
 export function useUserVault() {
   const { address } = useAccount()
@@ -98,7 +97,6 @@ export function useCreateVault() {
 export function useVaultBalance() {
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
   const hasTokenConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
   
   const { data: balance, isLoading, refetch } = useReadContract({
@@ -112,13 +110,13 @@ export function useVaultBalance() {
     }
   })
 
-  // Fetch pending transaction count to compute locked balance
+  // CardBoundVault uses withdrawal queue instead of pending tx; disabled for now
   const { data: pendingTxCount } = useReadContract({
     address: vaultAddress ?? undefined,
     abi: VAULT_ABI,
     functionName: 'pendingTxCount',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: false, // CardBoundVault doesn't use pendingTxCount
       refetchInterval: 5000,
     }
   })
@@ -188,7 +186,6 @@ export function useTransferVFIDE() {
   const chainId = useChainId()
   const { vaultAddress } = useUserVault()
   const { writeContract, data, isPending } = useWriteContract()
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -196,9 +193,8 @@ export function useTransferVFIDE() {
   
   const transfer = (toVault: `0x${string}`, amount: string) => {
     if (!vaultAddress) return
-    if (!isLegacyMode) {
-      throw new Error('Direct vault transfers are not available in CardBound vault mode. Use the card-bound transfer flow instead.')
-    }
+    // CardBoundVault: use queueWithdrawal or vault-to-vault transfer via VaultHub
+    throw new Error('Use CardBoundVault vault-to-vault transfer flow (via queueWithdrawal or ensureVault)')
     
     // Validate recipient address
     const validation = validateAddress(toVault)
@@ -231,7 +227,7 @@ export function useTransferVFIDE() {
     isTransferring: isPending || isConfirming,
     isSuccess,
     txHash: data,
-    isSupported: isLegacyMode,
+    isSupported: false, // CardBoundVault uses different transfer model
   }
 }
 
@@ -261,7 +257,6 @@ export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
  * Check if guardian is mature (past 7-day maturity period)
  */
 export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { data: isMature } = useReadContract({
     address: vaultAddress,
@@ -269,12 +264,12 @@ export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddres
     functionName: 'isGuardianMature',
     args: guardianAddress ? [guardianAddress] : undefined,
     query: {
-      enabled: isLegacyMode && !!vaultAddress && !!guardianAddress,
+      enabled: false, // CardBoundVault: !!vaultAddress && !!guardianAddress,
     }
   })
 
   return {
-    isMature: isLegacyMode ? (isMature || false) : false,
+    isMature: false, // CardBoundVault uses different maturity model
   }
 }
 
@@ -300,8 +295,8 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
     setError(null)
 
     if (cardBoundMode) {
-      setError(LEGACY_VAULT_UNSUPPORTED_MESSAGE)
-      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+      setError(`CardBoundVault uses different operation model`)
+      return { success: false, error: `CardBoundVault uses different operation model` }
     }
     
     // Validate guardian address (don't allow zero address for adding)
@@ -355,14 +350,13 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
  * Get abnormal transaction threshold (dynamic based on settings)
  */
 export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { data: threshold } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'abnormalTransactionThreshold',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: false, // CardBoundVault: !!vaultAddress,
     }
   })
 
@@ -371,7 +365,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
     abi: VAULT_ABI,
     functionName: 'usePercentageThreshold',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: false, // CardBoundVault: !!vaultAddress,
     }
   })
 
@@ -380,7 +374,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
     abi: VAULT_ABI,
     functionName: 'abnormalTransactionPercentageBps',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: false, // CardBoundVault: !!vaultAddress,
     }
   })
 
@@ -398,15 +392,14 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const setSnapshotMode = async (useSnapshot: boolean) => {
-    if (!isLegacyMode) {
-      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    if (true) { // CardBoundVault-only:
+      return { success: false, error: `CardBoundVault uses different operation model` }
     }
 
     try {
@@ -443,15 +436,14 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const updateSnapshot = async () => {
-    if (!isLegacyMode) {
-      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    if (true) { // CardBoundVault-only:
+      return { success: false, error: `CardBoundVault uses different operation model` }
     }
 
     try {
@@ -484,14 +476,13 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
  * Get balance snapshot info
  */
 export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { data: useSnapshot } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
     functionName: 'useBalanceSnapshot',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: false, // CardBoundVault: !!vaultAddress,
     }
   })
 
@@ -500,7 +491,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
     abi: VAULT_ABI,
     functionName: 'balanceSnapshot',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: false, // CardBoundVault: !!vaultAddress,
     }
   })
 
@@ -514,7 +505,6 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
  * Get pending transaction details
  */
 export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: number) {
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { data: pendingTx } = useReadContract({
     address: vaultAddress,
@@ -522,7 +512,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
     functionName: 'pendingTransactions',
     args: txId !== undefined ? [BigInt(txId)] : undefined,
     query: {
-      enabled: isLegacyMode && !!vaultAddress && txId !== undefined,
+      enabled: false, // CardBoundVault: !!vaultAddress && txId !== undefined,
     }
   })
 
@@ -531,7 +521,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
     abi: VAULT_ABI,
     functionName: 'pendingTxCount',
     query: {
-      enabled: isLegacyMode && !!vaultAddress,
+      enabled: false, // CardBoundVault: !!vaultAddress,
     }
   })
 
@@ -556,15 +546,14 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const approve = async (txId: number) => {
-    if (!isLegacyMode) {
-      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    if (true) { // CardBoundVault-only:
+      return { success: false, error: `CardBoundVault uses different operation model` }
     }
 
     try {
@@ -601,15 +590,14 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const execute = async (txId: number) => {
-    if (!isLegacyMode) {
-      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    if (true) { // CardBoundVault-only:
+      return { success: false, error: `CardBoundVault uses different operation model` }
     }
 
     try {
@@ -646,15 +634,14 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const cleanup = async (txId: number) => {
-    if (!isLegacyMode) {
-      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    if (true) { // CardBoundVault-only:
+      return { success: false, error: `CardBoundVault uses different operation model` }
     }
 
     try {
@@ -691,15 +678,14 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-  const isLegacyMode = ACTIVE_VAULT_IMPLEMENTATION === 'uservault'
 
   const { isSuccess, isLoading } = useWaitForTransactionReceipt({
     hash: txHash || undefined,
   })
 
   const cancelInheritance = async () => {
-    if (!isLegacyMode) {
-      return { success: false, error: LEGACY_VAULT_UNSUPPORTED_MESSAGE }
+    if (true) { // CardBoundVault-only:
+      return { success: false, error: `CardBoundVault uses different operation model` }
     }
 
     try {

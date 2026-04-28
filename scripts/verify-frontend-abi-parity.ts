@@ -27,10 +27,7 @@ function getPlaceholderExceptions(): string[] {
   return (signoff.placeholders ?? []).map((name) => `${name}.json`);
 }
 
-const MANUAL_ABI_EXCEPTIONS = new Set<string>([
-  'UserRewards.json',
-  ...getPlaceholderExceptions(),
-]);
+const MANUAL_ABI_EXCEPTIONS = new Set<string>(getPlaceholderExceptions());
 
 const PARITY_EXEMPTIONS = new Set<string>([
   // Intentional synthetic/helper ABIs not expected to byte-for-byte match one compiled artifact.

@@ -61,6 +61,7 @@ describe("EcosystemVault (EV-07: payExpense accounting order)", { concurrency: 1
 
     await vault.connect(owner).setManager(manager.address, true);
     await vault.connect(owner).setAllocations(500, 500, 500);
+    await vault.connect(owner).setEpochCaps(10_000, 10_000);
     await advanceTime(ethers, CHANGE_DELAY);
     await vault.connect(owner).executeManagerChange();
     await vault.connect(owner).executeAllocationChange();

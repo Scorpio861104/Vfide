@@ -13,10 +13,16 @@ contract VFIDEAccessControl is AccessControlEnumerable {
     bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
     bytes32 public constant BLACKLIST_MANAGER_ROLE = keccak256("BLACKLIST_MANAGER_ROLE");
     bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER_ROLE");
+    uint64 public constant ADMIN_TRANSFER_DELAY = 48 hours;
     uint256 private _reentrancyLock;
+    address public pendingAdmin;
+    uint64 public pendingAdminAt;
 
     event RoleGrantedWithReason(bytes32 indexed role, address indexed account, address indexed grantor, string reason);
     event RoleRevokedWithReason(bytes32 indexed role, address indexed account, address indexed revoker, string reason);
+    event AdminTransferQueued(address indexed previousAdmin, address indexed pendingAdmin, uint64 executeAfter);
+    event AdminTransferApplied(address indexed previousAdmin, address indexed newAdmin);
+    event AdminTransferCanceled(address indexed previousAdmin, address indexed pendingAdmin);
 
     modifier nonReentrantAC() {
         require(_reentrancyLock == 0, "VFIDEAccessControl: reentrant call");
@@ -40,17 +46,48 @@ contract VFIDEAccessControl is AccessControlEnumerable {
     }
 
     /**
-     * @notice Transfer DEFAULT_ADMIN_ROLE to a new admin (e.g. DAO timelock) and
-     *         renounce the caller's own admin role in one atomic step.
-     *         Call this after deployment to transfer control from the deploy EOA to governance.
+     * @notice Queue DEFAULT_ADMIN_ROLE transfer to a new admin (e.g. DAO timelock).
+     *         Call applyAdminRoleTransfer after the delay to complete the handoff.
      * @param newAdmin Address to receive DEFAULT_ADMIN_ROLE (should be DAO timelock)
      */
     function transferAdminRole(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(newAdmin != address(0), "VFIDEAccessControl: new admin is zero address");
         require(newAdmin != msg.sender, "VFIDEAccessControl: already admin");
+        require(pendingAdminAt == 0, "VFIDEAccessControl: transfer already pending");
+
+        pendingAdmin = newAdmin;
+        pendingAdminAt = uint64(block.timestamp) + ADMIN_TRANSFER_DELAY;
+        emit AdminTransferQueued(msg.sender, newAdmin, pendingAdminAt);
+    }
+
+    /**
+     * @notice Complete a queued DEFAULT_ADMIN_ROLE transfer after the timelock expires.
+     */
+    function applyAdminRoleTransfer() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
+        require(pendingAdmin != address(0) && pendingAdminAt != 0, "VFIDEAccessControl: no pending transfer");
+        require(block.timestamp >= pendingAdminAt, "VFIDEAccessControl: transfer timelock active");
+
+        address previousAdmin = msg.sender;
+        address newAdmin = pendingAdmin;
         _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
         _revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        // Both events emit naturally via OZ AccessControl's internal hooks
+
+        delete pendingAdmin;
+        delete pendingAdminAt;
+        emit AdminTransferApplied(previousAdmin, newAdmin);
+        // RoleGranted/RoleRevoked emit naturally via OZ AccessControl hooks.
+    }
+
+    /**
+     * @notice Cancel a queued DEFAULT_ADMIN_ROLE transfer.
+     */
+    function cancelAdminRoleTransfer() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
+        require(pendingAdmin != address(0) && pendingAdminAt != 0, "VFIDEAccessControl: no pending transfer");
+
+        address queuedAdmin = pendingAdmin;
+        delete pendingAdmin;
+        delete pendingAdminAt;
+        emit AdminTransferCanceled(msg.sender, queuedAdmin);
     }
 
     /**

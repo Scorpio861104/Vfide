@@ -32,7 +32,37 @@
   },
   {
     "inputs": [],
+    "name": "MERCH_AlreadyCompleted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_AlreadyRegistered",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_ApprovalExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_CapExceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MERCH_EscrowRequired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_Forbidden",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_InvalidConfig",
     "type": "error"
   },
   {
@@ -42,12 +72,37 @@
   },
   {
     "inputs": [],
+    "name": "MERCH_LimitExceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MERCH_LowTrust",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "MERCH_NoVault",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_NotApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_NotConfigured",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MERCH_NotDAO",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_NotFound",
     "type": "error"
   },
   {
@@ -63,6 +118,21 @@
   {
     "inputs": [],
     "name": "MERCH_Suspended",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_TokenNotAccepted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_VFIDESettlementDisabled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_Zero",
     "type": "error"
   },
   {
@@ -117,6 +187,75 @@
   },
   {
     "anonymous": false,
+    "inputs": [],
+    "name": "DAORotationCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "nextDAO",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "DAORotationProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "oldDAO",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newDAO",
+        "type": "address"
+      }
+    ],
+    "name": "DAOSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "EmergencyControllerCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "controller",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "EmergencyControllerProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
     "inputs": [
       {
         "indexed": true,
@@ -132,6 +271,25 @@
       }
     ],
     "name": "EmergencyControllerSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "validFrom",
+        "type": "uint64"
+      }
+    ],
+    "name": "EmergencyOwnershipProposed",
     "type": "event"
   },
   {
@@ -246,6 +404,43 @@
       }
     ],
     "name": "MerchantPullPermitSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "customer",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maxAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "expiresAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "MerchantPullPermitTokenSet",
     "type": "event"
   },
   {
@@ -618,6 +813,58 @@
   },
   {
     "inputs": [],
+    "name": "DAO_CHANGE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "EMERGENCY_CONTROLLER_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "EMERGENCY_OWNERSHIP_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_PULL_PERMIT_DURATION",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_SWAP_OUTPUT_BPS",
     "outputs": [
       {
@@ -670,6 +917,13 @@
   },
   {
     "inputs": [],
+    "name": "acceptEmergencyOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "acceptOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -695,6 +949,20 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "applyDAO",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyEmergencyController",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -708,30 +976,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "calculateFee",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "fee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "netAmount",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -784,6 +1028,20 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelDAO",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelEmergencyController",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -854,6 +1112,19 @@
   },
   {
     "inputs": [],
+    "name": "emergencyTransferValidFrom",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "feeSink",
     "outputs": [
       {
@@ -907,68 +1178,6 @@
         "internalType": "bool",
         "name": "eligible",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "getMerchantCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      }
-    ],
-    "name": "getMerchantInfo",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "registered",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "suspended",
-        "type": "bool"
-      },
-      {
-        "internalType": "string",
-        "name": "businessName",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "category",
-        "type": "string"
-      },
-      {
-        "internalType": "uint64",
-        "name": "registeredAt",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalVolume",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "txCount",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1107,44 +1316,6 @@
         "internalType": "address",
         "name": "customer",
         "type": "address"
-      }
-    ],
-    "name": "getRefundsForCustomer",
-    "outputs": [
-      {
-        "internalType": "bytes32[]",
-        "name": "",
-        "type": "bytes32[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      }
-    ],
-    "name": "getRefundsForMerchant",
-    "outputs": [
-      {
-        "internalType": "bytes32[]",
-        "name": "",
-        "type": "bytes32[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "customer",
-        "type": "address"
       },
       {
         "internalType": "address",
@@ -1171,25 +1342,6 @@
       }
     ],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "isTokenAccepted",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1291,6 +1443,30 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "merchantPullToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1579,7 +1755,7 @@
   },
   {
     "inputs": [],
-    "name": "pendingOwner",
+    "name": "pendingDAO",
     "outputs": [
       {
         "internalType": "address",
@@ -1591,49 +1767,65 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "customer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "itemAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "previewCheckout",
+    "inputs": [],
+    "name": "pendingDAOAt",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "grossAmount",
-        "type": "uint256"
-      },
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingEmergencyController",
+    "outputs": [
       {
-        "internalType": "uint256",
-        "name": "totalFee",
-        "type": "uint256"
-      },
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingEmergencyControllerAt",
+    "outputs": [
       {
-        "internalType": "uint256",
-        "name": "protocolFee",
-        "type": "uint256"
-      },
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingEmergencyOwner",
+    "outputs": [
       {
-        "internalType": "uint256",
-        "name": "networkFee",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1773,6 +1965,13 @@
   },
   {
     "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "seer",
     "outputs": [
       {
@@ -1811,6 +2010,19 @@
       }
     ],
     "name": "setAutoConvert",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_dao",
+        "type": "address"
+      }
+    ],
+    "name": "setDAO",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1891,6 +2103,34 @@
       }
     ],
     "name": "setMerchantPullPermit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "expiresAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "setMerchantPullPermitForToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

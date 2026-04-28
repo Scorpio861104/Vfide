@@ -79,6 +79,22 @@ contract MintableTokenStub {
     }
 }
 
+contract MutableDecimalsTokenStub is MintableTokenStub {
+    uint8 private _decimals;
+
+    constructor(uint8 decimals_) {
+        _decimals = decimals_;
+    }
+
+    function setDecimals(uint8 decimals_) external {
+        _decimals = decimals_;
+    }
+
+    function decimals() external view returns (uint8) {
+        return _decimals;
+    }
+}
+
 /// @dev Mintable token stub with systemExempt registry used by flash-loan initialization tests.
 contract ExemptableMintableTokenStub is MintableTokenStub {
     mapping(address => bool) public systemExempt;
@@ -188,6 +204,19 @@ contract VaultSpendLimitStub {
 
     function setDailyTransferLimit(uint256 _dailyTransferLimit) external {
         dailyTransferLimit = _dailyTransferLimit;
+    }
+}
+
+/// @dev Minimal vault stub for MerchantPortal permit-flow tests.
+contract VaultPermitStub {
+    uint256 public dailyTransferLimit;
+
+    constructor(uint256 _dailyTransferLimit) {
+        dailyTransferLimit = _dailyTransferLimit;
+    }
+
+    function approve(address token, address spender, uint256 amount) external {
+        MintableTokenStub(token).approve(spender, amount);
     }
 }
 

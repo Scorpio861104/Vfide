@@ -992,11 +992,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     _balances[sink3] += _ecoAmt;
                     emit Transfer(from, sink3, _ecoAmt);
                     remaining -= _ecoAmt;
-                    // C-1 FIX: Notify FeeDistributor so it can track incoming revenue
+                    // C-5 FIX: Notify FeeDistributor so it can track incoming revenue.
+                    // Tokens are already credited to sink3 above; the receiveFee() call is a
+                    // required accounting notification — do NOT silently swallow failures.
+                    // If FeeDistributor reverts the entire transfer reverts so accounting stays
+                    // in sync and fees can never be credited without FeeDistributor consent.
                     if (sink3 == ecosystemDistributor) {
-                        try IEcosystemDistributor(sink3).receiveFee(_ecoAmt) {} catch (bytes memory reason) {
-                            emit ExternalCallFailed("rf", reason);
-                        }
+                        IEcosystemDistributor(sink3).receiveFee(_ecoAmt);
                     }
                 }
 

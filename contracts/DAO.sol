@@ -68,6 +68,12 @@ contract DAO is ReentrancyGuard {
     address public pendingAdmin;
     /// @notice DAO-03 FIX: Secondary admin required to co-approve emergency actions (prevent sole admin bypass)
     address public emergencyApprover;
+    // H-4 FIX: Break-glass admin that can replace DAO admin with a 7-day delay, bypassing a
+    // potentially compromised timelock and resolving DAO/DAOTimelock circular deadlock.
+    address public breakGlassAdmin;
+    address public pendingBreakGlassAdmin;
+    uint64  public breakGlassAdminReadyAt;
+    uint64  public constant BREAK_GLASS_DELAY = 7 days;
     IDAOTimelock public timelock;
     ISeer public seer;
     IVaultHub public vaultHub;
@@ -178,6 +184,9 @@ contract DAO is ReentrancyGuard {
         // NEW-08 hardening: initialize emergency approver at deployment so
         // emergency controls are not dead-on-arrival before a timelock update.
         emergencyApprover = _timelock;
+        // H-4 FIX: Bootstrap break-glass admin to the deployer admin so a timelock deadlock
+        // can be resolved without the (potentially compromised) timelock.
+        breakGlassAdmin = _admin;
         emit ModulesSet(_timelock,_seer,_hub,_hooks,address(0)); emit AdminSet(_admin); emit RequireProposalPoliciesSet(true);
     }
 
@@ -230,6 +239,36 @@ contract DAO is ReentrancyGuard {
     function setEmergencyApprover(address _approver) external onlyTimelock {
         require(_approver != address(0), "zero");
         emergencyApprover = _approver;
+    }
+
+    // ── H-4 Break-glass admin rotation (no timelock dependency) ──────────────
+
+    /// @notice Queue a break-glass admin rotation. Only current breakGlassAdmin can call.
+    ///         Completes after BREAK_GLASS_DELAY (7 days) without requiring the timelock.
+    ///         Intended ONLY to recover from a DAOTimelock deadlock.
+    function proposeBreakGlassAdmin(address _newAdmin) external {
+        require(msg.sender == breakGlassAdmin, "DAO: not breakGlassAdmin");
+        require(_newAdmin != address(0), "zero");
+        pendingBreakGlassAdmin = _newAdmin;
+        breakGlassAdminReadyAt = uint64(block.timestamp) + BREAK_GLASS_DELAY;
+        emit AdminTransferProposed(_newAdmin);
+    }
+
+    /// @notice After 7-day delay, apply the break-glass admin rotation.
+    function applyBreakGlassAdmin() external {
+        require(msg.sender == breakGlassAdmin, "DAO: not breakGlassAdmin");
+        require(pendingBreakGlassAdmin != address(0), "DAO: no pending break-glass admin");
+        require(block.timestamp >= breakGlassAdminReadyAt, "DAO: break-glass delay active");
+        admin = pendingBreakGlassAdmin;
+        pendingBreakGlassAdmin = address(0);
+        breakGlassAdminReadyAt = 0;
+        emit AdminSet(admin);
+    }
+
+    /// @notice Update the breakGlassAdmin address itself (requires timelock when timelock is healthy).
+    function setBreakGlassAdmin(address _bga) external onlyTimelock {
+        require(_bga != address(0), "zero");
+        breakGlassAdmin = _bga;
     }
     function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
         if(_period<1 hours)_period=1 hours;

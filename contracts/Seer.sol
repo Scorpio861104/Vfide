@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 // ProofLedger (and the TRUST_NotDAO / TRUST_Zero errors) live in ProofLedger.sol.
 import "./ProofLedger.sol";
+import "./lib/ScoringConstants.sol";
 import "./SharedInterfaces.sol";
 
 /// ────────────────────────── Interfaces
@@ -231,7 +232,7 @@ contract Seer is ReentrancyGuard {
     // WHITEPAPER: Low Trust ≤40% (4000), High Trust ≥80% (8000)
     uint16 public lowTrustThreshold   = 4000;   // ≤4000 → max fees (40%)
     uint16 public highTrustThreshold  = 8000;   // ≥8000 → min fees (80%)
-    uint16 public minForGovernance    = 5400;   // voting/standing (54%)
+    uint16 public minForGovernance    = ScoringConstants.MIN_GOVERNANCE;   // voting/standing (54%)
     uint16 public minForMerchant      = 5600;   // to remain listed (56%)
 
     modifier onlyDAO() {

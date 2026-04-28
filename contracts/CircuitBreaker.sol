@@ -49,7 +49,10 @@ contract CircuitBreaker is VFIDEAccessControl {
     TriggerConfig public config;
     MonitoringData public monitoring;
     // F-31 FIX: Keep a bounded rolling sample window to avoid single-tick trigger risk.
-    uint256[10] public priceSamples;
+        // M-4 FIX: Require at least MIN_SAMPLES_FOR_TRIGGER samples before firing the price-drop
+        //          circuit breaker so a single oracle spike cannot trip it on its own.
+        uint8 public constant MIN_SAMPLES_FOR_TRIGGER = 3;
+        uint256[10] public priceSamples;
     uint8 public priceSampleCount;
     uint8 public priceSampleIndex;
     
@@ -208,7 +211,11 @@ contract CircuitBreaker is VFIDEAccessControl {
             block.timestamp <= lastPriceUpdate + config.monitoringWindow) {
 
             // F-31 FIX: Use rolling median when available to damp single bad ticks.
-            uint256 referencePrice = _rollingMedianPrice();
+            // M-4 FIX: Only compute a median reference when MIN_SAMPLES_FOR_TRIGGER are present.
+            uint256 referencePrice;
+            if (priceSampleCount >= MIN_SAMPLES_FOR_TRIGGER) {
+                referencePrice = _rollingMedianPrice();
+            }
             if (referencePrice == 0) {
                 referencePrice = lastPrice;
             }

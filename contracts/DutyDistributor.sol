@@ -49,6 +49,12 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     // L-3 FIX: Max points per user to prevent gaming
     uint256 public maxPointsPerUser = 10_000;
 
+    // M-7 FIX: Enforce a per-user daily point accrual limit so users cannot reach maxPointsPerUser
+    //          in a single block by voting on every proposal in the same transaction batch.
+    uint256 public maxPointsPerUserPerDay = 100; // caps daily accrual (DAO can adjust)
+    mapping(address => uint256) public userDailyPoints;
+    mapping(address => uint64)  public userDayStart;
+
     constructor(address _dao) {
         require(_dao != address(0), "DD: zero dao");
         dao = _dao;
@@ -77,14 +83,29 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
         maxPointsPerUser = _maxPoints;
     }
 
+    /// @notice M-7 FIX: Adjust daily per-user point accrual cap.
+    function setMaxPointsPerUserPerDay(uint256 _maxPerDay) external onlyDAO {
+        require(_maxPerDay >= pointsPerVote, "DD: daily cap below pointsPerVote");
+        require(_maxPerDay <= maxPointsPerUser, "DD: daily cap exceeds lifetime cap");
+        maxPointsPerUserPerDay = _maxPerDay;
+    }
+
     // -------------------------------------------------------
     // Governance Hooks (Called by DAO)
     // -------------------------------------------------------
 
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external override onlyDAO {
         // L-3 FIX: Check points cap before adding
+        // M-7 FIX: Roll over daily window if needed.
+        if (block.timestamp >= uint256(userDayStart[voter]) + 1 days) {
+            userDailyPoints[voter] = 0;
+            userDayStart[voter] = uint64(block.timestamp);
+        }
+        // Apply daily cap before lifetime cap.
+        if (userDailyPoints[voter] + pointsPerVote > maxPointsPerUserPerDay) return;
         if (userPoints[voter] + pointsPerVote <= maxPointsPerUser) {
             userPoints[voter] += pointsPerVote;
+            userDailyPoints[voter] += pointsPerVote;
             totalPoints += pointsPerVote;
             emit DutyPointsEarned(voter, pointsPerVote, "vote");
         }

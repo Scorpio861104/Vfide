@@ -47,6 +47,12 @@ contract UserVaultLegacy is ReentrancyGuard {
     uint64 public lastWithdrawalTime;
     uint64 public withdrawalCooldown = 24 hours; // Default 24h cooldown
     uint256 public largeTransferThreshold = 10000 * 1e18; // Default 10k VFIDE (legacy, optional)
+
+    // H-1 FIX: Daily transfer limit — mirrors CardBoundVault spend limit enforcement.
+    // 0 = no limit (opt-in; owner sets via setDailyTransferLimit).
+    uint256 public dailyTransferLimit;
+    uint256 public spentToday;
+    uint64  public dayStart;
     
     uint64 public lastExecuteTime;
     uint64 public executeCooldown = 1 hours; // Default 1h cooldown for execute()
@@ -269,6 +275,17 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(threshold <= 1_000_000 * 1e18, "UV: threshold too high");
         largeTransferThreshold = threshold;
         _logEv(msg.sender, "threshold_set", threshold, "");
+    }
+
+    /// @notice H-1 FIX: Set a rolling 24-hour transfer limit aligned with CardBoundVault.
+    ///         Pass 0 to disable the limit.
+    function setDailyTransferLimit(uint256 limit) external onlyOwner notLocked {
+        require(limit == 0 || limit >= 100 * 1e18, "UV: limit too low");
+        dailyTransferLimit = limit;
+        // Reset window so the new limit takes effect from now.
+        spentToday = 0;
+        dayStart   = uint64(block.timestamp);
+        _logEv(msg.sender, "daily_limit_set", limit, "");
     }
     
     // ——— User Security Controls
@@ -727,7 +744,16 @@ contract UserVaultLegacy is ReentrancyGuard {
         
         // Amount-based threshold: large transfers face additional scrutiny
         // (All transfers already checked by notLocked and notFrozen modifiers above)
-        // This could be used for future enhanced checks on large amounts
+        // H-1 FIX: Enforce daily transfer limit when set (dailyTransferLimit > 0).
+        if (dailyTransferLimit > 0) {
+            // Roll over daily window if needed.
+            if (block.timestamp >= uint256(dayStart) + 1 days) {
+                spentToday = 0;
+                dayStart   = uint64(block.timestamp);
+            }
+            require(spentToday + amount <= dailyTransferLimit, "UV: daily limit exceeded");
+            spentToday += amount;
+        }
         if (amount > largeTransferThreshold && largeTransferThreshold > 0) {
             // Large transfer - log for extra scrutiny
             _logEv(toVault, "large_transfer_attempt", amount, "");

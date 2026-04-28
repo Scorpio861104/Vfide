@@ -66,31 +66,6 @@
         "type": "uint8"
       },
       {
-        "indexed": false,
-        "internalType": "string",
-        "name": "reason",
-        "type": "string"
-      }
-    ],
-    "name": "AutoRestrictionApplied",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "subject",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SeerGuardian.RestrictionType",
-        "name": "rtype",
-        "type": "uint8"
-      },
-      {
         "indexed": true,
         "internalType": "uint16",
         "name": "reasonCode",
@@ -103,7 +78,7 @@
         "type": "string"
       }
     ],
-    "name": "AutoRestrictionAppliedCode",
+    "name": "AutoRestrictionApplied",
     "type": "event"
   },
   {
@@ -286,6 +261,31 @@
       },
       {
         "indexed": false,
+        "internalType": "bytes",
+        "name": "revertReason",
+        "type": "bytes"
+      }
+    ],
+    "name": "PenaltyApplicationFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "scorePenalty",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
         "internalType": "string",
         "name": "reason",
         "type": "string"
@@ -412,6 +412,19 @@
     ],
     "name": "ViolationRecorded",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "DAO_OVERRIDE_MIN_AGE",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -916,6 +929,25 @@
     "name": "recordViolation",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "restrictionAppliedAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

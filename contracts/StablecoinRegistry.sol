@@ -28,6 +28,8 @@ contract StablecoinRegistry is Ownable, Pausable {
     event StablecoinRemoved(address indexed token);
     event StablecoinUpdated(address indexed token, bool allowed);
     event GovernanceSet(address indexed previousGovernance, address indexed newGovernance);
+    event GovernanceChangeQueued(address indexed previousGovernance, address indexed pendingGovernance, uint64 executeAfter);
+    event GovernanceChangeCanceled(address indexed previousGovernance, address indexed pendingGovernance);
     event ChangeQueued(ChangeAction indexed action, address indexed token, bool allowed, uint8 decimals, string symbol, address treasury, uint64 executeAfter);
     event ChangeApplied(ChangeAction indexed action, address indexed token, bool allowed, uint8 decimals, string symbol, address treasury);
     event ChangeCanceled(ChangeAction indexed action, address indexed token, bool allowed, uint8 decimals, string symbol, address treasury);
@@ -42,11 +44,14 @@ contract StablecoinRegistry is Ownable, Pausable {
     error SR_NoPendingChange();
     error SR_TimelockActive();
     error SR_PendingExists();
+    error SR_NoPendingGovernance();
 
     uint8 public constant MIN_DECIMALS = 1;
     uint8 public constant MAX_DECIMALS = 18;
     uint8 public constant MAX_SYMBOL_LENGTH = 16;
     address public governance;
+    address public pendingGovernance;
+    uint64 public pendingGovernanceAt;
     uint64 public constant CHANGE_DELAY = 48 hours;
 
     enum ChangeAction { None, AddStablecoin, RemoveStablecoin, SetAllowed, SetTreasury }
@@ -81,10 +86,31 @@ contract StablecoinRegistry is Ownable, Pausable {
         if (msg.sender != governance) {
             revert SR_GovernanceUpdateNotAuthorized();
         }
+        if (pendingGovernanceAt != 0) revert SR_PendingExists();
+
+        pendingGovernance = newGovernance;
+        pendingGovernanceAt = uint64(block.timestamp) + CHANGE_DELAY;
+        emit GovernanceChangeQueued(governance, newGovernance, pendingGovernanceAt);
+    }
+
+    function applyGovernance() external onlyGovernance {
+        if (pendingGovernanceAt == 0 || pendingGovernance == address(0)) revert SR_NoPendingGovernance();
+        if (block.timestamp < pendingGovernanceAt) revert SR_TimelockActive();
 
         address previousGovernance = governance;
-        governance = newGovernance;
-        emit GovernanceSet(previousGovernance, newGovernance);
+        governance = pendingGovernance;
+        delete pendingGovernance;
+        delete pendingGovernanceAt;
+        emit GovernanceSet(previousGovernance, governance);
+    }
+
+    function cancelGovernance() external onlyGovernance {
+        if (pendingGovernanceAt == 0 || pendingGovernance == address(0)) revert SR_NoPendingGovernance();
+
+        address queuedGovernance = pendingGovernance;
+        delete pendingGovernance;
+        delete pendingGovernanceAt;
+        emit GovernanceChangeCanceled(governance, queuedGovernance);
     }
     
     /**
@@ -130,7 +156,9 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @return Whether the stablecoin is allowed
      */
     function isAllowed(address stable) external view returns (bool) {
-        return stablecoins[stable].allowed;
+        // L-1 FIX: Return false when paused so callers (MerchantPortal, EcosystemVault, etc.)
+        // automatically reject tokens while the registry is in emergency-paused state.
+        return !paused() && stablecoins[stable].allowed;
     }
     
     /**
@@ -139,7 +167,7 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @return Whether the stablecoin is whitelisted
      */
     function isWhitelisted(address token) external view returns (bool) {
-        return stablecoins[token].allowed;
+        return !paused() && stablecoins[token].allowed;
     }
     
     /**

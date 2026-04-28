@@ -377,9 +377,11 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         // Protocol fee → FeeDistributor → 5-way community split
         if (protocolFee > 0 && feeDistributor != address(0)) {
             vfideToken.safeTransfer(feeDistributor, protocolFee);
-                // F-33 FIX: Call receiveFee to update FeeDistributor accounting
-                try IFeeDistributor_FL(feeDistributor).receiveFee(protocolFee) {} 
-                catch {}
+            // H-7 FIX: Tokens are already at FeeDistributor; require the accounting
+            // callback to succeed. If VFIDEFlashLoan is not in authorizedFeeSources
+            // the deployment setup is misconfigured — surface it rather than silently
+            // dropping protocol revenue.
+            IFeeDistributor_FL(feeDistributor).receiveFee(protocolFee);
         }
 
         // ── BOOKKEEPING ──────────────────────────────────────────

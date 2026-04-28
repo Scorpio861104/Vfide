@@ -47,19 +47,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "count24h",
-        "type": "uint256"
-      }
-    ],
-    "name": "BlacklistIncremented",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "dailyVolumeThreshold",
         "type": "uint256"
       },
@@ -72,7 +59,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "blacklistThreshold",
+        "name": "suspiciousActivityThreshold",
         "type": "uint256"
       }
     ],
@@ -298,6 +285,51 @@
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "count24h",
+        "type": "uint256"
+      }
+    ],
+    "name": "SuspiciousActivityRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newSource",
+        "type": "address"
+      }
+    ],
+    "name": "TVLSourceUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "previousTVL",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newTVL",
+        "type": "uint256"
+      }
+    ],
+    "name": "TVLUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       },
@@ -379,6 +411,19 @@
   {
     "inputs": [],
     "name": "RECORDER_ROLE",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUSPICIOUS_ACTIVITY_REPORTER_ROLE",
     "outputs": [
       {
         "internalType": "bytes32",
@@ -498,7 +543,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "blacklistThreshold",
+        "name": "suspiciousActivityThreshold",
         "type": "uint256"
       },
       {
@@ -524,7 +569,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_blacklistThreshold",
+        "name": "_suspiciousActivityThreshold",
         "type": "uint256"
       }
     ],
@@ -572,7 +617,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "blacklistCount",
+        "name": "suspiciousActivityCount",
         "type": "uint256"
       },
       {
@@ -815,13 +860,6 @@
   },
   {
     "inputs": [],
-    "name": "incrementBlacklist",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "lastTriggerTime",
     "outputs": [
       {
@@ -877,7 +915,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "blacklistCount24h",
+        "name": "suspiciousActivityCount24h",
         "type": "uint256"
       },
       {
@@ -900,6 +938,58 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "priceSampleCount",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "priceSampleIndex",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "priceSamples",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "recordSuspiciousActivity",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1061,6 +1151,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "tvlSource",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1108,6 +1211,26 @@
       }
     ],
     "name": "updateTVL",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "updateTVLFromSource",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_source",
+        "type": "address"
+      }
+    ],
+    "name": "updateTVLSource",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -424,14 +424,28 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", () => {
     return networkHelpers.loadFixture(accessControlFixture);
   }
 
-  it("transfers DEFAULT_ADMIN_ROLE atomically", async () => {
+  it("queues and applies DEFAULT_ADMIN_ROLE transfer after delay", async () => {
     const { initialAdmin, newAdmin, ac } = await deployAccessControlHarness();
+    const { ethers } = await getDefaultConnection();
 
     const DEFAULT_ADMIN_ROLE = await ac.DEFAULT_ADMIN_ROLE();
     assert.equal(await ac.hasRole(DEFAULT_ADMIN_ROLE, initialAdmin.address), true);
 
-    // Transfer admin
+    // Queue transfer
     await ac.connect(initialAdmin).transferAdminRole(newAdmin.address);
+
+    assert.equal(await ac.hasRole(DEFAULT_ADMIN_ROLE, initialAdmin.address), true);
+    assert.equal(await ac.hasRole(DEFAULT_ADMIN_ROLE, newAdmin.address), false);
+
+    await assert.rejects(async () => {
+      await ac.connect(initialAdmin).applyAdminRoleTransfer();
+    });
+
+    const delay = await ac.ADMIN_TRANSFER_DELAY();
+    await ethers.provider.send("evm_increaseTime", [Number(delay) + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await ac.connect(initialAdmin).applyAdminRoleTransfer();
 
     // Check roles switched
     assert.equal(await ac.hasRole(DEFAULT_ADMIN_ROLE, initialAdmin.address), false);
@@ -440,9 +454,14 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", () => {
 
   it("new admin can grant roles immediately after transfer", async () => {
     const { initialAdmin, newAdmin, other, ac } = await deployAccessControlHarness();
+    const { ethers } = await getDefaultConnection();
 
-    // Transfer admin
+    // Queue and apply transfer
     await ac.connect(initialAdmin).transferAdminRole(newAdmin.address);
+    const delay = await ac.ADMIN_TRANSFER_DELAY();
+    await ethers.provider.send("evm_increaseTime", [Number(delay) + 1]);
+    await ethers.provider.send("evm_mine", []);
+    await ac.connect(initialAdmin).applyAdminRoleTransfer();
 
     // New admin grants role immediately
     const TREASURY_MANAGER_ROLE = await ac.TREASURY_MANAGER_ROLE();

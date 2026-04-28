@@ -198,12 +198,19 @@ describe("VFIDEAccessControl coverage backfill", { concurrency: 1 }, () => {
     return networkHelpers.loadFixture(accessControlFixture);
   }
 
-  it("transfers DEFAULT_ADMIN_ROLE atomically", async () => {
+  it("transfers DEFAULT_ADMIN_ROLE with delay", async () => {
     const { admin, newAdmin, access } = await deployFixture();
+    const { ethers } = (await getConnection()) as any;
     const defaultAdminRole = await access.DEFAULT_ADMIN_ROLE();
 
     assert.equal(await access.hasRole(defaultAdminRole, admin.address), true);
     await access.connect(admin).transferAdminRole(newAdmin.address);
+
+    const delay = await access.ADMIN_TRANSFER_DELAY();
+    await ethers.provider.send("evm_increaseTime", [Number(delay) + 1]);
+    await ethers.provider.send("evm_mine", []);
+    await access.connect(admin).applyAdminRoleTransfer();
+
     assert.equal(await access.hasRole(defaultAdminRole, admin.address), false);
     assert.equal(await access.hasRole(defaultAdminRole, newAdmin.address), true);
   });

@@ -28,8 +28,26 @@ describe("Mainnet readiness contract fixes", () => {
         await tx.wait();
       });
 
+      await assert.rejects(async () => {
+        const tx = await registry.applyGovernance();
+        await tx.wait();
+      });
+
+      const governanceDelay = await registry.CHANGE_DELAY();
+      await ethers.provider.send("evm_increaseTime", [Number(governanceDelay) + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      const applyTx = await registry.applyGovernance();
+      await applyTx.wait();
+
       const rotateTx = await registry.connect(signers[1]).setGovernance(signers[2].address);
       await rotateTx.wait();
+
+      await ethers.provider.send("evm_increaseTime", [Number(governanceDelay) + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      const applyRotateTx = await registry.connect(signers[1]).applyGovernance();
+      await applyRotateTx.wait();
 
       await assert.rejects(async () => {
         const tx = await registry.connect(signers[1]).addStablecoin(await token.getAddress(), 6, "USDC");
@@ -50,6 +68,60 @@ describe("Mainnet readiness contract fixes", () => {
       await registry.connect(signers[2]).applyQueuedChange();
       assert.equal(await registry.isWhitelisted(await token.getAddress()), true);
       assert.equal(await registry.tokenDecimals(await token.getAddress()), 6n);
+    });
+  });
+
+  describe("MerchantPortal", () => {
+    it("rejects configured stablecoin settlement when live decimals drift", async () => {
+      const { ethers } = await network.connect();
+      const [dao, customer, merchant, feeSink] = await ethers.getSigners();
+
+      const VaultHubFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+      const vaultHub = await VaultHubFactory.deploy();
+      await vaultHub.waitForDeployment();
+
+      const SeerFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:SeerScoreStub");
+      const seer = await SeerFactory.deploy();
+      await seer.waitForDeployment();
+      await seer.setScore(customer.address, 6000);
+      await seer.setScore(merchant.address, 7000);
+
+      const SecurityHubFactory = await ethers.getContractFactory("test/contracts/mocks/SecurityHubMock.sol:SecurityHubMock");
+      const securityHub = await SecurityHubFactory.deploy();
+      await securityHub.waitForDeployment();
+
+      const TokenFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+      const token = await TokenFactory.deploy(6);
+      await token.waitForDeployment();
+
+      const PortalFactory = await ethers.getContractFactory("MerchantPortal");
+      const portal = await PortalFactory.deploy(
+        dao.address,
+        await vaultHub.getAddress(),
+        await seer.getAddress(),
+        await securityHub.getAddress(),
+        feeSink.address,
+      );
+      await portal.waitForDeployment();
+
+      await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
+      await portal.connect(dao).setSwapConfig(ethers.ZeroAddress, await token.getAddress());
+
+      await vaultHub.setVault(customer.address, customer.address);
+      await vaultHub.setVault(merchant.address, merchant.address);
+      await portal.connect(merchant).registerMerchant("Shop", "retail");
+
+      const amount = 1_000_000n;
+      await token.mint(customer.address, amount);
+      await token.connect(customer).approve(await portal.getAddress(), amount);
+      const expiresAt = BigInt((await ethers.provider.getBlock("latest"))!.timestamp + 3600);
+      await portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await token.getAddress(), amount, expiresAt);
+
+      await token.setDecimals(18);
+
+      await assert.rejects(async () => {
+        await portal.connect(merchant).processPayment(customer.address, await token.getAddress(), amount, "order-decimals-drift");
+      });
     });
   });
 

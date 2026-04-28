@@ -45,7 +45,6 @@ import {
   ERC20ABI,
   SeerSocialABI,
   SeerViewABI,
-  UserRewardsABI,
   FraudRegistryABI,
   VFIDETestnetFaucetABI,
   VFIDETermLoanABI,
@@ -221,41 +220,37 @@ export const SEER_ABI = SeerABI;
 export const VFIDE_TOKEN_ABI = VFIDETokenABI;
 // Use the full VaultHub ABI for all features.
 export const VAULT_HUB_ABI = VaultHubABI;
-// UserVault ABI for individual vault operations (Next of Kin, guardians, inheritance)
-export const USER_VAULT_ABI = UserVaultABI;
-// CardBoundVault ABI for ATM-card style authorization and vault-to-vault transfers.
+// CardBoundVault is the sole active vault implementation (non-custodial, wallet authorization model)
 export const CARD_BOUND_VAULT_ABI = CardBoundVaultABI;
+// Legacy alias: UserVaultABI retained only for read-only compat paths, not active runtime
+export const USER_VAULT_ABI = UserVaultABI;
 
-export type VaultImplementation = 'uservault' | 'cardbound';
+export type VaultImplementation = 'cardbound';
 
 function resolveVaultImplementation(): VaultImplementation {
   const configured = process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION;
   const isProduction = process.env.NODE_ENV === 'production';
   const isServer = typeof window === 'undefined';
 
-  if (!configured || configured.trim() === '') {
+  if (!configured || configured.trim() === '' || configured === 'cardbound') {
     return 'cardbound';
   }
 
-  if (configured === 'cardbound' || configured === 'uservault') {
-    return configured;
-  }
-
-  const message = `[VFIDE] Invalid NEXT_PUBLIC_VAULT_IMPLEMENTATION value: ${configured}. Expected "cardbound" or "uservault".`;
+  const message = `[VFIDE] Invalid NEXT_PUBLIC_VAULT_IMPLEMENTATION value: ${configured}. Expected "cardbound" (legacy "uservault" is no longer supported).`;
   if (isProduction && isServer) {
     throw new Error(message);
   }
 
-  logger.warn(`${message} Falling back to "cardbound" for non-production runtime.`);
+  logger.warn(`${message} Using "cardbound" vault implementation.`);
   return 'cardbound';
 }
 
 export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation = resolveVaultImplementation();
 
-export const ACTIVE_VAULT_ABI =
-  ACTIVE_VAULT_IMPLEMENTATION === 'cardbound' ? CARD_BOUND_VAULT_ABI : USER_VAULT_ABI;
+// CardBoundVault is the only active implementation
+export const ACTIVE_VAULT_ABI = CARD_BOUND_VAULT_ABI;
 
-export const isCardBoundVaultMode = (): boolean => ACTIVE_VAULT_IMPLEMENTATION === 'cardbound';
+export const isCardBoundVaultMode = (): boolean => true;
 
 export {
   VFIDETokenABI,
@@ -296,7 +291,6 @@ export {
   ERC20ABI,
   SeerSocialABI,
   SeerViewABI,
-  UserRewardsABI,
   FraudRegistryABI,
   VFIDETestnetFaucetABI,
   VFIDETermLoanABI,

@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
+import "./lib/ScoringConstants.sol";
 
 /**
  * VFIDETermLoan — Trust-Based Peer-to-Peer Lending
@@ -124,10 +125,10 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     // ProofScore thresholds → max loan amount (in token units, 18 decimals)
     // DAO can adjust these via setScoreTiers()
-    uint16 public constant TIER_1_SCORE = 5000;  // Neutral
-    uint16 public constant TIER_2_SCORE = 6000;
-    uint16 public constant TIER_3_SCORE = 7000;
-    uint16 public constant TIER_4_SCORE = 8000;  // Highly trusted
+    uint16 public constant TIER_1_SCORE = ScoringConstants.TIER_1;  // 50% – neutral
+    uint16 public constant TIER_2_SCORE = ScoringConstants.TIER_2;  // 60%
+    uint16 public constant TIER_3_SCORE = ScoringConstants.TIER_3;  // 70%
+    uint16 public constant TIER_4_SCORE = ScoringConstants.TIER_4;  // 80% – highly trusted
 
     // Graduated ProofScore adjustments
     uint16 public constant REWARD_ONTIME_BORROWER = 5;      // +0.5

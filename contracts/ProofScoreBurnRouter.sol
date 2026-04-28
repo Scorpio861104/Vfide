@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
+import "./lib/ScoringConstants.sol";
 
 /**
  * ProofScoreBurnRouter — VFIDE Ecosystem Burns & Sanctum Router
@@ -20,6 +21,11 @@ error BURN_NotDAO();
 contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     event ModulesSet(address seer, address sanctumSink, address burnSink, address ecosystemSink);
     event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 baseEcosystemBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
+    // H-6 FIX: Emit effective ecosystem allocations at representative score tiers whenever fee
+    // policy changes so monitoring can detect drift between BurnRouter and EcosystemVault splits.
+    // ecosystemBpsAtLow = effective ecosystem bps for a LOW_SCORE_THRESHOLD user.
+    // ecosystemBpsAtHigh = effective ecosystem bps for a HIGH_SCORE_THRESHOLD user.
+    event EcosystemAllocationImpact(uint256 ecosystemBpsAtLow, uint256 ecosystemBpsAtNeutral, uint256 ecosystemBpsAtHigh);
     event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint16 score);
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
     event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
@@ -57,8 +63,8 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
     // Linear fee curve parameters (0-10000 scale)
     // Fee = linear interpolation between minFeeBps and maxFeeBps based on score
     // WHITEPAPER: Low Trust ≤40% (4000), High Trust ≥80% (8000)
-    uint16 public constant LOW_SCORE_THRESHOLD = 4000;  // ≤4000 pays max fee (40%)
-    uint16 public constant HIGH_SCORE_THRESHOLD = 8000; // ≥8000 pays min fee (80%)
+    uint16 public constant LOW_SCORE_THRESHOLD = ScoringConstants.LOW_FEE_FLOOR;  // ≤4000 pays max fee (40%)
+    uint16 public constant HIGH_SCORE_THRESHOLD = ScoringConstants.HIGH_FEE_CEIL;  // ≥8000 pays min fee (80%)
     uint16 public constant MIN_TOTAL_FEE_FLOOR_BPS = 10; // 0.10% hard floor
     uint16 public minTotalBps = 25;   // 0.25% minimum fee for score ≥8000
     uint16 public maxTotalBps = 500;  // 5% maximum fee for score ≤4000
@@ -186,6 +192,8 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         uint16 _highVolMultiplier,
         bool _enabled
     ) external onlyOwner nonReentrant {
+        // H-2 FIX: Adaptive-fee multipliers are fee-policy parameters; enforce same cooldown as setFeePolicy.
+        require(block.timestamp >= lastFeePolicyChange + FEE_POLICY_COOLDOWN, "BR: fee policy cooldown active");
         require(_lowVolumeThreshold <= _highVolumeThreshold, "low > high");
         require(_lowVolMultiplier <= 20000, "low mult max 2x"); // Max 2x
         require(_highVolMultiplier >= 5000, "high mult min 0.5x"); // Min 0.5x
@@ -195,6 +203,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         lowVolumeFeeMultiplier = _lowVolMultiplier;
         highVolumeFeeMultiplier = _highVolMultiplier;
         adaptiveFeesEnabled = _enabled;
+        lastFeePolicyChange = uint64(block.timestamp);
     }
     
     /**
@@ -376,7 +385,10 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         uint256 totalWeight = 0;
         uint256 weightedSum = 0;
 
-        for (uint256 i = 0; i < len; i++) {
+        // M-1 FIX: Cap iteration at MAX_SCORE_SNAPSHOTS to bound gas regardless of historical
+        // array length (e.g. entries written before the cap was introduced).
+        uint256 iterLen = len > MAX_SCORE_SNAPSHOTS ? MAX_SCORE_SNAPSHOTS : len;
+        for (uint256 i = 0; i < iterLen; i++) {
             uint64 snapshotTime = scoreHistory[user][i].timestamp;
             if (snapshotTime < windowStart) continue;
 
@@ -407,11 +419,18 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         uint64 windowStart = now_ > SCORE_WINDOW ? now_ - SCORE_WINDOW : 0;
 
         // If the cached weighted score is stale, fall back to Seer's current cached score.
+        uint16 cachedScore;
         if (scoreHistoryLatestTs[user] < windowStart) {
-            return seer.getCachedScore(user);
+            cachedScore = seer.getCachedScore(user);
+        } else {
+            cachedScore = cachedTimeWeightedScore[user];
         }
 
-        return cachedTimeWeightedScore[user];
+        // H-3 FIX: A live score drop (fraud detection, score decay) must be honored immediately
+        // even if the burn-router cache has not yet been refreshed (1-hour interval).
+        // Use min(cached, live): lower score → higher fee, so fee can never be under-charged.
+        uint16 liveScore = seer.getCachedScore(user);
+        return liveScore < cachedScore ? liveScore : cachedScore;
     }
 
     /**
@@ -481,6 +500,12 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         lastFeePolicyChange = uint64(block.timestamp);
         
         emit PolicySet(baseBurnBps, baseSanctumBps, baseEcosystemBps, 0, 0);
+        // H-6 FIX: Emit effective ecosystem bps at three representative score tiers so
+        // EcosystemVault stakeholders can detect fee-split drift without a manual audit.
+        uint256 bpsLow     = (_calculateLinearFee(LOW_SCORE_THRESHOLD)  * 50) / 100;
+        uint256 bpsNeutral = (_calculateLinearFee(ScoringConstants.NEUTRAL) * 50) / 100;
+        uint256 bpsHigh    = (_calculateLinearFee(HIGH_SCORE_THRESHOLD)  * 50) / 100;
+        emit EcosystemAllocationImpact(bpsLow, bpsNeutral, bpsHigh);
     }
 
     function setMicroTxFeeCeiling(uint16 _maxBps, uint256 _maxAmount) external onlyOwner nonReentrant {
@@ -492,6 +517,10 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
 
     // slither-disable-next-line missing-zero-check
     function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner nonReentrant {
+        // L-2 FIX: Bound the USD cap to prevent accidentally disabling it with an absurd value
+        // or setting it to 0 unexpectedly. 0 = disable the cap; max = $10,000 (10_000e6).
+        require(_maxUsd6 == 0 || (_maxUsd6 >= 1e6 && _maxUsd6 <= 10_000e6), "BR: invalid usd cap");
+        if (_maxUsd6 > 0) require(_priceOracle != address(0), "BR: oracle required with cap");
         microTxPriceOracle = _priceOracle;
         microTxMaxUsd6 = _maxUsd6;
         emit MicroTxUsdCapSet(_priceOracle, _maxUsd6);

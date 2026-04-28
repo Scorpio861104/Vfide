@@ -89,10 +89,12 @@ contract EmergencyControl is ReentrancyGuard {
     uint64  public pendingFoundationAt;
 
     /// @notice 24-hour queue for foundation-initiated committee member changes.
-    /// @dev DAO-initiated changes are immediate (DAO already has its own governance timelock).
+    /// @dev M-5 FIX: DAO-initiated changes now also use a short 1-hour queue so monitoring
+    ///      can detect any unexpected membership change even if DAO admin is compromised.
     ///      When the foundation adds or removes a member, the change is queued here so the
     ///      DAO has a window to observe and react before it takes effect.
     uint64 public constant FOUNDATION_MEMBER_CHANGE_DELAY = 24 hours;
+    uint64 public constant DAO_MEMBER_CHANGE_DELAY = 1 hours;
     struct PendingFoundationMemberChange {
         address member;
         bool isAdd;
@@ -205,8 +207,12 @@ contract EmergencyControl is ReentrancyGuard {
         if (isMember[m]) revert EC_AlreadyMember();
 
         if (msg.sender == dao) {
-            // DAO: immediate (DAO proposals already carry their own governance timelock)
-            _applyAddMember(m);
+            // M-5 FIX: DAO path now queued for 1 hour (short observability window).
+            if (pendingFoundationMemberChange.effectiveAt != 0) revert EC_PendingFoundationChange();
+            uint64 effectiveAt = uint64(block.timestamp) + DAO_MEMBER_CHANGE_DELAY;
+            pendingFoundationMemberChange = PendingFoundationMemberChange(m, true, effectiveAt);
+            emit FoundationMemberChangeQueued(m, true, effectiveAt);
+            _log("ec_dao_add_queued");
         } else {
             // Foundation: 24-hour queue — gives DAO time to observe and react
             if (pendingFoundationMemberChange.effectiveAt != 0) revert EC_PendingFoundationChange();
@@ -222,9 +228,13 @@ contract EmergencyControl is ReentrancyGuard {
         require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
 
         if (msg.sender == dao) {
-            // DAO: immediate
+            // M-5 FIX: DAO remove also queued for 1-hour observability.
             if (!isMember[m]) revert EC_NotMember();
-            _applyRemoveMember(m);
+            if (pendingFoundationMemberChange.effectiveAt != 0) revert EC_PendingFoundationChange();
+            uint64 effectiveAt = uint64(block.timestamp) + DAO_MEMBER_CHANGE_DELAY;
+            pendingFoundationMemberChange = PendingFoundationMemberChange(m, false, effectiveAt);
+            emit FoundationMemberChangeQueued(m, false, effectiveAt);
+            _log("ec_dao_remove_queued");
         } else {
             // Foundation: 24-hour queue
             if (!isMember[m]) revert EC_NotMember();

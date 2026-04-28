@@ -16,6 +16,7 @@ pragma solidity 0.8.30;
  */
 
 import "./SharedInterfaces.sol";
+import "./lib/ScoringConstants.sol";
 
 interface IVFIDETokenBurnRouterView {
     function burnRouter() external view returns (address);
@@ -131,7 +132,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     address public feeSink; // Where protocol fees go (could be treasury or burn)
 
     /// Merchant minimum ProofScore requirement (0-10000 scale)
-    uint16 public minMerchantScore = 5600; // From Seer: minForMerchant = 5600 (56%)
+    uint16 public minMerchantScore = ScoringConstants.MIN_MERCHANT; // From ScoringConstants: 5600 (56%)
 
     /// Merchant registry
     struct MerchantInfo {

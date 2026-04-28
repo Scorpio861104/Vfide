@@ -37,7 +37,6 @@ import VaultRegistryABI from './VaultRegistry.json'
 import ERC20ABI from './ERC20.json'
 import SeerSocialABI from './SeerSocial.json'
 import SeerViewABI from './SeerView.json'
-import UserRewardsABI from './UserRewards.json'
 import OwnerControlPanelABI from './OwnerControlPanel.json'
 import EscrowManagerABI from './EscrowManager.json'
 import BadgeManagerABI from './BadgeManager.json'
@@ -66,22 +65,10 @@ import RevenueSplitterABI from './RevenueSplitter.json'
 import SeerAutonomousLibABI from './SeerAutonomousLib.json'
 import SeerWorkAttestationABI from './SeerWorkAttestation.json'
 import ServicePoolABI from './ServicePool.json'
-import TempVaultABI from './TempVault.json'
 import VFIDEAccessControlABI from './VFIDEAccessControl.json'
 import VFIDEEnterpriseGatewayABI from './VFIDEEnterpriseGateway.json'
 import VFIDEPriceOracleABI from './VFIDEPriceOracle.json'
-import VFIDEReentrancyGuardABI from './VFIDEReentrancyGuard.json'
 import VaultRecoveryClaimABI from './VaultRecoveryClaim.json'
-import DeployPhase1ABI from './DeployPhase1.json'
-import DeployPhase1GovernanceABI from './DeployPhase1Governance.json'
-import DeployPhase1InfrastructureABI from './DeployPhase1Infrastructure.json'
-import DeployPhase1TokenABI from './DeployPhase1Token.json'
-import DeployPhases3to6ABI from './DeployPhases3to6.json'
-import PoolsABI from './Pools.json'
-import SharedInterfacesABI from './SharedInterfaces.json'
-import VFIDEFinanceABI from './VFIDEFinance.json'
-import VFIDESecurityABI from './VFIDESecurity.json'
-import VFIDETrustABI from './VFIDETrust.json'
 import VFIDETermLoanABI from './VFIDETermLoan.json'
 import VFIDEFlashLoanABI from './VFIDEFlashLoan.json'
 import { logger } from '@/lib/logger';
@@ -97,9 +84,6 @@ const KNOWN_EMPTY_ABIS = new Set([
   'EcosystemVaultLib',
   'SeerAutonomousLib',
   'Pools',
-  'SharedInterfaces',
-  'VFIDEFinance',
-  'VFIDESecurity',
   'VFIDETrust',
 ]);
 
@@ -173,7 +157,6 @@ validateABI(VaultRegistryABI, 'VaultRegistry');
 validateABI(ERC20ABI, 'ERC20');
 validateABI(SeerSocialABI, 'SeerSocial');
 validateABI(SeerViewABI, 'SeerView');
-validateABI(UserRewardsABI, 'UserRewards');
 validateABI(OwnerControlPanelABI, 'OwnerControlPanel');
 validateABI(EscrowManagerABI, 'EscrowManager');
 validateABI(BadgeManagerABI, 'BadgeManager');
@@ -213,37 +196,13 @@ validateABI(SeerWorkAttestationABI, 'SeerWorkAttestation');
 
 validateABI(ServicePoolABI, 'ServicePool');
 
-validateABI(TempVaultABI, 'TempVault');
-
 validateABI(VFIDEAccessControlABI, 'VFIDEAccessControl');
 
 validateABI(VFIDEEnterpriseGatewayABI, 'VFIDEEnterpriseGateway');
 
 validateABI(VFIDEPriceOracleABI, 'VFIDEPriceOracle');
 
-validateABI(VFIDEReentrancyGuardABI, 'VFIDEReentrancyGuard');
-
 validateABI(VaultRecoveryClaimABI, 'VaultRecoveryClaim');
-
-validateABI(DeployPhase1ABI, 'DeployPhase1');
-
-validateABI(DeployPhase1GovernanceABI, 'DeployPhase1Governance');
-
-validateABI(DeployPhase1InfrastructureABI, 'DeployPhase1Infrastructure');
-
-validateABI(DeployPhase1TokenABI, 'DeployPhase1Token');
-
-validateABI(DeployPhases3to6ABI, 'DeployPhases3to6');
-
-validateABI(PoolsABI, 'Pools');
-
-validateABI(SharedInterfacesABI, 'SharedInterfaces');
-
-validateABI(VFIDEFinanceABI, 'VFIDEFinance');
-
-validateABI(VFIDESecurityABI, 'VFIDESecurity');
-
-validateABI(VFIDETrustABI, 'VFIDETrust');
 
 // VaultHub ABI — getVaultInfo/checkVaultStatus/predictVaultsBatch removed for size; use VaultRegistry.getVaultInfo instead.
 validateABI(VaultHubFullABI, 'VaultHub');
@@ -286,7 +245,6 @@ export {
   ERC20ABI,
   SeerSocialABI,
   SeerViewABI,
-  UserRewardsABI,
   OwnerControlPanelABI,
   EscrowManagerABI,
   BadgeManagerABI,
@@ -315,22 +273,10 @@ export {
   SeerAutonomousLibABI,
   SeerWorkAttestationABI,
   ServicePoolABI,
-  TempVaultABI,
   VFIDEAccessControlABI,
   VFIDEEnterpriseGatewayABI,
   VFIDEPriceOracleABI,
-  VFIDEReentrancyGuardABI,
   VaultRecoveryClaimABI,
-  DeployPhase1ABI,
-  DeployPhase1GovernanceABI,
-  DeployPhase1InfrastructureABI,
-  DeployPhase1TokenABI,
-  DeployPhases3to6ABI,
-  PoolsABI,
-  SharedInterfacesABI,
-  VFIDEFinanceABI,
-  VFIDESecurityABI,
-  VFIDETrustABI,
   VFIDETermLoanABI,
   VFIDEFlashLoanABI,
 }

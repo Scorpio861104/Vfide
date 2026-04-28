@@ -159,13 +159,13 @@ contract DAOTimelock is ReentrancyGuard {
     }
 
     /**
-     * @notice TL-02 FIX: Secondary executor path — can run a queued tx after `eta + SECONDARY_EXECUTOR_DELAY`.
+     * @notice TL-02 FIX: Secondary executor path — can run a queued tx after `eta + effectiveSecondaryDelay`.
      * @dev This is a backup in case the primary admin is unable to execute. Requires the secondary executor
      *      role, which must be set by governance via setSecondaryExecutor().
      *
-     * Window: secondary executor may act between `eta + SECONDARY_EXECUTOR_DELAY (3d)` and
-     * `eta + EXPIRY_WINDOW (7d)` — a 4-day window. Governance should queue transactions at least
-     * 3 days before the 7-day expiry to leave a meaningful secondary-executor window.
+     * H-8 FIX: The secondary delay is now proportional: min(SECONDARY_EXECUTOR_DELAY, EXPIRY_WINDOW/2).
+     * This ensures the secondary executor always has at least half the expiry window to act,
+     * regardless of how short the original ETA window was.
      */
     function executeBySecondary(bytes32 id) external payable nonReentrant returns (bytes memory res) {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");
@@ -175,8 +175,12 @@ contract DAOTimelock is ReentrancyGuard {
         if (op.eta == 0) revert TL_NotQueued();
         if (op.done)     revert TL_AlreadyExecuted();
 
-        // Secondary executor must wait eta + SECONDARY_EXECUTOR_DELAY
-        require(block.timestamp >= op.eta + SECONDARY_EXECUTOR_DELAY, "TL: secondary delay not elapsed");
+        // H-8 FIX: Use the smaller of fixed 3-day delay and half the expiry window so that
+        // short-ETA urgent operations are still reachable by the secondary executor.
+        uint64 effectiveDelay = SECONDARY_EXECUTOR_DELAY < EXPIRY_WINDOW / 2
+            ? SECONDARY_EXECUTOR_DELAY
+            : uint64(EXPIRY_WINDOW / 2);
+        require(block.timestamp >= op.eta + effectiveDelay, "TL: secondary delay not elapsed");
         // Transaction must not have expired
         require(block.timestamp <= op.eta + EXPIRY_WINDOW, "TL: transaction expired");
 
