@@ -21,7 +21,7 @@ pragma solidity 0.8.30;
  *                 serving as the single source of truth for all security primitives.
  *
  * SUPPLY-CHAIN STRATEGY (H-01 note):
- * Core contracts (VFIDEToken, VFIDETrust, DAO, VaultHub, OwnerControlPanel)
+ * Core contracts (VFIDEToken, Seer, ProofLedger, DAO, VaultHub, OwnerControlPanel)
  * use LOCAL reimplementations defined in this file. VFIDEBridge imports from OZ directly
  * because LayerZero OApp requires OZ Ownable. BSM and VFIDEPriceOracle were migrated to
  * custom SharedInterfaces (H-18 fix) and deployed via DeployPhase3Peripherals.sol.

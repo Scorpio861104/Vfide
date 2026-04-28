@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "./SharedInterfaces.sol";
-import { Seer } from "./VFIDETrust.sol";
+import { Seer } from "./Seer.sol";
 import "./BadgeRegistry.sol";
 
 /**
@@ -20,7 +20,7 @@ import "./BadgeRegistry.sol";
  * - Soulbound: Cannot be transferred (except burn)
  * - Provenance: Stores mint timestamp and badge number
  * - Metadata: Rich JSON with images, descriptions, rarity
- * - Synced with Seer: NFT requires active badge in VFIDETrust contract
+ * - Synced with Seer: NFT requires active badge in Seer contract
  */
 contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, ReentrancyGuard {
     

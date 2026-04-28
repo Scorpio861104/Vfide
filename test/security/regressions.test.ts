@@ -43,7 +43,7 @@ describe("CRITICAL Regressions", function () {
       "AdminMultiSig", "VFIDEBridge", "VaultHub", "VaultInfrastructure",
       "Seer", "MainstreamPayments", "CircuitBreaker", "VFIDECommerce",
       "VFIDESecurity", "ProofLedger", "VFIDEAccessControl",
-      "VFIDEFinance", "SeerPolicyGuard", "SeerView", "VFIDETrust",
+      "VFIDEFinance", "SeerPolicyGuard", "SeerView",
       "BadgeQualificationRules",
     ];
 

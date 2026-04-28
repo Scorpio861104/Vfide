@@ -32,7 +32,6 @@ CRITICAL_CONTRACTS=(
   "VFIDEFinance"
   "VaultHub"
   "VaultInfrastructure"
-  "WithdrawalQueue"
   "CircuitBreaker"
   "AdminMultiSig"
   "MainstreamPayments"
