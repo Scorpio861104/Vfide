@@ -26,7 +26,6 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - FraudRegistry.sol
 - GovernanceHooks.sol
 - LiquidityIncentives.sol
-- MainstreamPayments.sol
 - MerchantPortal.sol
 - OwnerControlPanel.sol
 - PayrollManager.sol

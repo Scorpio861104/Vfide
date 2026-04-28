@@ -19,7 +19,10 @@ function hasArtifact(...paths: string[]) {
 
 describe("FiatRampRegistry", function () {
   const suiteAvailable =
-    hasArtifact("artifacts/contracts/MainstreamPayments.sol/FiatRampRegistry.json") &&
+    hasArtifact(
+      "artifacts/contracts/MainstreamPayments.sol/FiatRampRegistry.json",
+      "artifacts/contracts/future/MainstreamPayments.sol/FiatRampRegistry.json"
+    ) &&
     hasArtifact(
       "artifacts/test/contracts/mocks/MockContracts.sol/MockERC20.json",
       "artifacts/test/contracts/mocks/MockERC20.sol/MockERC20.json"
