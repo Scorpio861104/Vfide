@@ -61,7 +61,9 @@ export function buildCsp(nonce: string, env: NodeJS.ProcessEnv = process.env): s
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
+    // Keep nonce for request correlation, but allow inline bootstrap scripts that
+    // Next injects for RSC hydration/runtime handoff.
+    `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",
