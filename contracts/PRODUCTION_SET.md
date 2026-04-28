@@ -5,15 +5,8 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 ## Deployable Contracts
 
 - AdminMultiSig.sol
-- BadgeManager.sol
-- BadgeQualificationRules.sol
-- BadgeRegistry.sol
-- BridgeSecurityModule.sol
 - CardBoundVault.sol
 - CircuitBreaker.sol
-- CouncilElection.sol
-- CouncilManager.sol
-- CouncilSalary.sol
 - DAO.sol
 - DAOTimelock.sol
 - DeployPhase3Peripherals.sol
@@ -35,22 +28,12 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 - RevenueSplitter.sol
 - SanctumVault.sol
 - Seer.sol
-- SeerAutonomous.sol
-- SeerGuardian.sol
-- SeerSocial.sol
-- SeerWorkAttestation.sol
 - ServicePool.sol
 - StablecoinRegistry.sol
-- SubscriptionManager.sol
 - SystemHandover.sol
 - VFIDEAccessControl.sol
-- VFIDEBadgeNFT.sol
-- VFIDEBenefits.sol
-- VFIDEBridge.sol
 - VFIDECommerce.sol
-- VFIDEEnterpriseGateway.sol
 - VFIDEFinance.sol
-- VFIDEFlashLoan.sol
 - VFIDEPriceOracle.sol
 - VFIDESecurity.sol
 - VFIDETermLoan.sol
@@ -64,16 +47,12 @@ Authoritative inventory for the current `contracts/` tree. This replaces stale r
 
 - EcosystemVaultLib.sol
 - EcosystemVaultView.sol
-- SeerAutonomousLib.sol
-- SeerPolicyGuard.sol
-- SeerView.sol
 - SharedInterfaces.sol
 
 ## Interfaces
 
 - interfaces/AggregatorV3Interface.sol
 - interfaces/ICommerceEscrow.sol
-- interfaces/ICouncilElection.sol
 - interfaces/IDAO.sol
 - interfaces/IDAOTimelock.sol
 - interfaces/IDevReserveVestingVault.sol

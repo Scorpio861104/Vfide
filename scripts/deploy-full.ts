@@ -264,30 +264,9 @@ async function main() {
     "SanctumVault",
     "EcosystemVault",
     "EcosystemVaultView",
-    "CouncilElection",
-    "CouncilManager",
-    "CouncilSalary",
-    "BadgeManager",
-    "VFIDEBadgeNFT",
     "VaultRegistry",
     "PayrollManager",
     "LiquidityIncentives",
-  ] as const) {
-    await deploy(name, ...envArgs(name));
-  }
-
-  // ══════════════════════════════════════════════════════════════════════════
-  //  LAYER 10: Seer modules  (formerly phase 4)
-  // ══════════════════════════════════════════════════════════════════════════
-  console.log("\n═══ LAYER 10: Seer Modules ═══");
-
-  for (const name of [
-    "SeerAutonomous",
-    "SeerGuardian",
-    "SeerSocial",
-    "SeerWorkAttestation",
-    "SeerView",
-    "SeerPolicyGuard",
   ] as const) {
     await deploy(name, ...envArgs(name));
   }
@@ -300,9 +279,6 @@ async function main() {
   for (const name of [
     "MerchantRegistry",
     "CommerceEscrow",
-    "VFIDEEnterpriseGateway",
-    "SubscriptionManager",
-    "VFIDEBenefits",
   ] as const) {
     await deploy(name, ...envArgs(name));
   }
@@ -328,12 +304,8 @@ async function main() {
     ["FraudRegistry",        book.FraudRegistry],
     ["VFIDEFlashLoan",       book.VFIDEFlashLoan],
     ["VFIDETermLoan",        book.VFIDETermLoan],
-    ["SeerAutonomous",       book.SeerAutonomous],
-    ["SeerGuardian",         book.SeerGuardian],
-    ["SeerSocial",           book.SeerSocial],
     ["MerchantRegistry",     book.MerchantRegistry],
     ["CommerceEscrow",       book.CommerceEscrow],
-    ["SubscriptionManager",  book.SubscriptionManager],
   ];
   for (const [name, addr] of loggers) {
     if (!addr) continue;
@@ -360,12 +332,6 @@ async function main() {
   const term = await ethers.getContractAt("VFIDETermLoan", book.VFIDETermLoan);
   await call("VFIDETermLoan.setDAO → DAO", () => term.setDAO(book.DAO));
 
-  // SubscriptionManager → DAO
-  if (book.SubscriptionManager) {
-    const sub = await ethers.getContractAt("SubscriptionManager", book.SubscriptionManager);
-    await call("SubscriptionManager.setDAO → DAO", () => sub.setDAO(book.DAO));
-  }
-
   // MerchantRegistry ↔ CommerceEscrow
   if (book.MerchantRegistry && book.CommerceEscrow) {
     const registry = await ethers.getContractAt("MerchantRegistry", book.MerchantRegistry);
@@ -376,20 +342,6 @@ async function main() {
 
   // Seer module wiring
   const seer = await ethers.getContractAt("Seer", book.Seer);
-  if (book.SeerAutonomous) {
-    await call("Seer.setSeerAutonomous", () => seer.setSeerAutonomous(book.SeerAutonomous));
-    await call("Seer.setOperator(SeerAutonomous, true)", () =>
-      seer.setOperator(book.SeerAutonomous, true),
-    );
-  }
-  if (book.SeerGuardian) {
-    await call("Seer.setOperator(SeerGuardian, true)", () =>
-      seer.setOperator(book.SeerGuardian, true),
-    );
-  }
-  if (book.SeerSocial) {
-    await call("Seer.setSeerSocial", () => seer.setSeerSocial(book.SeerSocial));
-  }
 
   // ══════════════════════════════════════════════════════════════════════════
   //  TIMELOCKED PROPOSALS  (48-hour; confirmed via apply-full.ts)
@@ -411,14 +363,6 @@ async function main() {
   await call("Token.proposeSystemExempt(FeeDistributor) — round 1", () =>
     token.proposeSystemExempt(book.FeeDistributor, true),
   );
-
-  // VaultHub: SeerGuardian as recovery approver
-  if (book.SeerGuardian) {
-    const hub = await ethers.getContractAt("VaultHub", book.VaultHub);
-    await call("VaultHub.setRecoveryApprover(SeerGuardian) (proposal)", () =>
-      hub.setRecoveryApprover(book.SeerGuardian, true),
-    );
-  }
 
   saveBook(network, book);
 
@@ -448,12 +392,6 @@ async function main() {
     ["NEXT_PUBLIC_TERM_LOAN_ADDRESS",          book.VFIDETermLoan],
     ["NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS",     book.VFIDECommerce],
     ["NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS",    book.CommerceEscrow],
-    ["NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS", book.SubscriptionManager],
-    ["NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS",    book.SeerAutonomous],
-    ["NEXT_PUBLIC_SEER_GUARDIAN_ADDRESS",      book.SeerGuardian],
-    ["NEXT_PUBLIC_SEER_SOCIAL_ADDRESS",        book.SeerSocial],
-    ["NEXT_PUBLIC_BADGE_MANAGER_ADDRESS",      book.BadgeManager],
-    ["NEXT_PUBLIC_BADGE_NFT_ADDRESS",          book.VFIDEBadgeNFT],
     ["NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS",     book.VaultRegistry],
     ["NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS",book.OwnerControlPanel],
     ["NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS",     book.AdminMultiSig],

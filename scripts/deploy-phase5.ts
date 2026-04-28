@@ -45,9 +45,6 @@ async function main() {
   const phase5Contracts = [
     'MerchantRegistry',
     'CommerceEscrow',
-    'VFIDEEnterpriseGateway',
-    'SubscriptionManager',
-    'VFIDEBenefits',
   ] as const;
 
   for (const contractName of phase5Contracts) {

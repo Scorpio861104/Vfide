@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./BridgeSecurityModule.sol";
+import "./future/BridgeSecurityModule.sol";
 import "./VFIDEPriceOracle.sol";
 
 /// @title DeployPhase3Peripherals

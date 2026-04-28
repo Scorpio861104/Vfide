@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard, ISeer } from "./SharedInterfaces.sol";
+import { ReentrancyGuard, ISeer } from "../SharedInterfaces.sol";
 import { SeerAutonomousLib } from "./SeerAutonomousLib.sol";
 
 /**

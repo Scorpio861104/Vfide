@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
  * - Clear employment relationship (NOT securities)
  */
 
-import "./SharedInterfaces.sol";
+import "../SharedInterfaces.sol";
 
 contract CouncilSalary {
     using SafeERC20 for IERC20;

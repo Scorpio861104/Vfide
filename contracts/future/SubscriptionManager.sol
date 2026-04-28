@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
  * - Subscription modification support
  */
 
-import "./SharedInterfaces.sol";
+import "../SharedInterfaces.sol";
 
 using SafeERC20 for IERC20;
 
