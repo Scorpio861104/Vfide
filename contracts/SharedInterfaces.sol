@@ -407,10 +407,9 @@ abstract contract Ownable {
     }
 }
 
-/// @dev I-16 Note: Three ReentrancyGuard implementations exist by design:
-///   1. This (SharedInterfaces.ReentrancyGuard) — single-contract guard, used by most contracts
-///   2. VFIDEReentrancyGuard.sol — cross-contract guard with per-address locking (WithdrawalQueue)
-///   3. OZ ReentrancyGuard — VFIDEBridge only (required by LayerZero OApp inheritance)
+/// @dev I-16 Note: Two ReentrancyGuard implementations are intentionally retained:
+///   1. This (SharedInterfaces.ReentrancyGuard) — single-contract guard, used by core contracts
+///   2. OZ ReentrancyGuard — required by LayerZero OApp inheritance in bridge/peripheral contracts
 abstract contract ReentrancyGuard {
     uint256 private _status = 1;
     modifier nonReentrant() {
