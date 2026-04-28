@@ -81,7 +81,6 @@ ALL_CONTRACTS=(
   "VaultRecoveryClaim"
   "VaultRegistry"
   "SystemHandover"
-  "TempVault"
 )
 
 mkdir -p "$REPORTS_DIR"
