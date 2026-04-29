@@ -20,7 +20,7 @@ describe('WebSocket subscription ACL refresh hardening', () => {
   });
 
   it('enforces ACL authorization on subscribe and unsubscribe', () => {
-    expect(serverSource).toContain('isAuthorizedForTopic(client, msg.payload.topic)');
+    expect(serverSource).toContain('isAuthorizedForTopic(client, msg.payload.topic, true)');
     expect(serverSource).toContain("'UNAUTHORIZED_TOPIC'");
   });
 
