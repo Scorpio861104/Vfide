@@ -69,6 +69,12 @@ describe('Enhanced WebSocket Integration Tests', () => {
     jest.useRealTimers();
   });
 
+  const advanceTimers = (ms: number) => {
+    act(() => {
+      jest.advanceTimersByTime(ms);
+    });
+  };
+
   describe('Connection Lifecycle', () => {
     it('should establish connection with authentication', async () => {
       const wsManager = new WebSocketManager({
@@ -77,7 +83,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       });
 
       const p = wsManager.connect('0x123', 'signature', 'message', 8453);
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       expect(mockInstances.length).toBe(1);
@@ -102,7 +108,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       wsManager.on('disconnect', disconnectHandler);
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       expect(connectHandler).toHaveBeenCalled();
@@ -117,7 +123,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       const wsManager = new WebSocketManager({ url: 'ws://localhost:8080' });
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       wsManager.disconnect();
@@ -137,7 +143,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       wsManager.on('disconnect', disconnectHandler);
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       mockInstances[0].simulateDisconnect();
@@ -155,7 +161,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
 
       await expect(promise2).rejects.toThrow('Already connecting');
 
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await promise1;
 
       wsManager.disconnect();
@@ -168,7 +174,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
     beforeEach(async () => {
       wsManager = new WebSocketManager({ url: 'ws://localhost:8080' });
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
       mockInstances[0].send.mockClear();
     });
@@ -277,7 +283,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       wsManager.on('error', errorHandler);
 
       const connectPromise = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
 
       await expect(connectPromise).rejects.toThrow('WebSocket connection failed');
       expect(errorHandler).toHaveBeenCalled();
@@ -293,7 +299,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       });
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       const disconnectHandler = jest.fn();
@@ -309,7 +315,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       const wsManager = new WebSocketManager({ url: 'ws://localhost:8080' });
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       expect(wsManager.isConnected).toBe(true);
@@ -326,11 +332,11 @@ describe('Enhanced WebSocket Integration Tests', () => {
       const ws2 = new WebSocketManager({ url: 'ws://localhost:8080' });
 
       const p1 = ws1.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p1;
 
       const p2 = ws2.connect('0x456');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p2;
 
       expect(ws1.isConnected).toBe(true);
@@ -348,11 +354,11 @@ describe('Enhanced WebSocket Integration Tests', () => {
       const ws2 = new WebSocketManager({ url: 'ws://localhost:8080' });
 
       const p1 = ws1.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p1;
 
       const p2 = ws2.connect('0x456');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p2;
 
       const handler1 = jest.fn();
@@ -377,7 +383,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
     beforeEach(async () => {
       wsManager = new WebSocketManager({ url: 'ws://localhost:8080' });
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
       mockInstances[0].send.mockClear();
     });
@@ -430,11 +436,11 @@ describe('Enhanced WebSocket Integration Tests', () => {
       });
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       mockInstances[0].send.mockClear();
-      jest.advanceTimersByTime(1000);
+      advanceTimers(1000);
 
       expect(mockInstances[0].send).toHaveBeenCalled();
       const sent = JSON.parse(mockInstances[0].send.mock.calls[0][0]);
@@ -450,7 +456,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       });
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       const pongHandler = jest.fn();
@@ -472,7 +478,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       });
 
       const p = wsManager.connect('0x123', 'test-signature', 'test-message');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       const authFrame = JSON.parse(mockInstances[0].send.mock.calls[0][0]);
@@ -492,7 +498,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       });
 
       const p = wsManager.connect('0x123', 'invalid-signature');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       const authErrorHandler = jest.fn();
@@ -512,7 +518,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       });
 
       const p = wsManager.connect('0x123', 'test-signature');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       const disconnectHandler = jest.fn();
@@ -531,7 +537,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
     beforeEach(async () => {
       wsManager = new WebSocketManager({ url: 'ws://localhost:8080' });
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
     });
 
@@ -566,7 +572,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
       wsManager.send(message);
 
       const p = wsManager.connect('0x123');
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
       await p;
 
       const resendResult = wsManager.send(message);
@@ -594,7 +600,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
         useWebSocket({ url: 'ws://localhost:8080' }, '0x123')
       );
 
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
 
       await waitFor(() => {
         expect(result.current.isConnected).toBe(true);
@@ -606,7 +612,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
         useWebSocket({ url: 'ws://localhost:8080' }, '0x123')
       );
 
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
 
       await waitFor(() => {
         expect(result.current.isConnected).toBe(true);
@@ -624,7 +630,7 @@ describe('Enhanced WebSocket Integration Tests', () => {
         useWebSocket({ url: 'ws://localhost:8080' }, '0x123')
       );
 
-      jest.advanceTimersByTime(10);
+      advanceTimers(10);
 
       await waitFor(() => {
         expect(result.current.isConnected).toBe(true);
