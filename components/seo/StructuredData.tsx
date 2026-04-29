@@ -161,12 +161,14 @@ export function FAQSchema({ faqs }: { faqs: FAQItem[] }) {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    // N-L32 FIX: sanitize question and answer strings to prevent merchants from
+    // injecting misleading schema.org subtypes or breaking the JSON-LD block.
     mainEntity: faqs.map((faq) => ({
       '@type': 'Question',
-      name: faq.question,
+      name: sanitizeJsonLdString(faq.question),
       acceptedAnswer: {
         '@type': 'Answer',
-        text: faq.answer,
+        text: sanitizeJsonLdString(faq.answer),
       },
     })),
   };

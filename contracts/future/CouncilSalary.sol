@@ -90,6 +90,25 @@ contract CouncilSalary {
         require(msg.sender == dao, "not dao");
         currentTerm++;
     }
+
+    /// @notice N-L31 FIX: Called by CouncilElection.applyCouncil (or DAO) after a new
+    ///         council is seated to advance the term automatically.
+    ///         This ensures removal-vote counters reset at the correct boundary rather
+    ///         than requiring the DAO to remember to call startNewTerm() manually.
+    ///         CouncilElection should call this via an ICouncilSalary interface after
+    ///         each successful applyCouncil() execution.
+    function notifyNewCouncil() external {
+        require(msg.sender == dao || msg.sender == councilElection, "not dao or election");
+        currentTerm++;
+    }
+
+    // Address of the CouncilElection contract allowed to trigger term advances.
+    address public councilElection;
+
+    function setCouncilElection(address _election) external {
+        require(msg.sender == dao, "not dao");
+        councilElection = _election;
+    }
     
     function setDAO(address _dao) external {
         require(msg.sender == dao, "not dao");

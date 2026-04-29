@@ -66,6 +66,7 @@
 - [x] N-M35 — `BridgeSecurityModule` retains explicit blacklist/clear-flags admin functions, contradicting non-custodial removal
 - [x] N-M36 — `CouncilSalary.distributeSalary` pays in VFIDE (duplicate of N-M32)
 - [ ] N-M37 — `SeerWorkAttestation` is built but disconnected from the pools that pay people
+- [x] N-M37 — `SeerWorkAttestation` is built but disconnected from the pools that pay people
 - [x] N-M38 — `PayrollManager.emergencyWithdraw` lets DAO drain any stream to any address with no timelock and no participant consent
 - [x] N-M39 — `ProofLedger.setDAO` and `setLogger` are instant, no timelock; captured DAO can pollute the immutable event log
 - [x] N-M40 — `app/api/remittance/beneficiaries/route.ts` collects PII contradicting the public privacy claim
@@ -84,26 +85,45 @@
 - [x] N-L13 — `SubscriptionManager.processPayment` does not check fraud status
 - [x] N-L14 — `VFIDEBridge._lzReceive` does not check fraud status of receiver
 - [ ] N-L15 — `SessionKeyManager` is a complete, unintegrated contract
+- [x] N-L15 — `SessionKeyManager` is a complete, unintegrated contract
 - [ ] N-L16 — Websocket server has `broadcast` exported but no caller
+- [x] N-L16 — Websocket server has `broadcast` exported but no caller
 - [x] N-L17 — `SeerGuardian.setDAO` instant rotation, no timelock
 - [x] N-L18 — `CommerceEscrow.dispute` lacks `nonReentrant` while peer functions have it
 - [ ] N-L19 — `DAOTimelock.execute` admin-only; secondary executor recovery requires `secondaryExecutor` rotation runbook
+- [x] N-L19 — `DAOTimelock.execute` admin-only; secondary executor recovery requires `secondaryExecutor` rotation runbook
 - [ ] N-L20 — `app/api/messages/route.ts` validates the `sig` field structurally only; never ECDSA-recovers
+- [x] N-L20 — `app/api/messages/route.ts` validates the `sig` field structurally only; never ECDSA-recovers
 - [ ] N-L21 — `app/api/messages/route.ts` replay-detection only catches identical-content
+- [x] N-L21 — `app/api/messages/route.ts` replay-detection only catches identical-content
 - [x] N-L22 — `DutyDistributor.maxPointsPerUser = 10_000` and `pointsPerVote = 10` cap users at 1000 lifetime votes
 - [ ] N-L23 — `VFIDEFinance.noteVFIDE` accepts a self-reported amount with no on-chain verification
+- [x] N-L23 — `VFIDEFinance.noteVFIDE` accepts a self-reported amount with no on-chain verification
 - [ ] N-L24 — `VFIDEBadgeNFT` is soulbound with no burn path; lost-wallet badges unreachable
+- [x] N-L24 — `VFIDEBadgeNFT` is soulbound with no burn path; lost-wallet badges unreachable
 - [x] N-L25 — `SeerGuardian.setDAO` instant rotation (duplicate of N-L17)
 - [x] N-L26 — `CommerceEscrow.dispute` lacks `nonReentrant` (duplicate of N-L18)
 - [ ] N-L27 — `lib/auth/middleware.requireAdmin` rejects users matching `OCP.owner()` but not in `ADMIN_ADDRESSES` env
+- [x] N-L27 — `lib/auth/middleware.requireAdmin` rejects users matching `OCP.owner()` but not in `ADMIN_ADDRESSES` env
 - [ ] N-L28 — `ADMIN_ADDRESSES` loaded once at module init; rotation requires process restart
+- [x] N-L28 — `ADMIN_ADDRESSES` loaded once at module init; rotation requires process restart
 - [ ] N-L29 — `app/api/pos/charge/route.ts` returns `chargeId = pos_${Date.now()}` and persists nothing
+- [x] N-L29 — `app/api/pos/charge/route.ts` returns `chargeId = pos_${Date.now()}` and persists nothing
 - [ ] N-L30 — `app/api/seer/analytics/rollup/route.ts` is gated behind double-check `requireAdmin`
+- [x] N-L30 — `app/api/seer/analytics/rollup/route.ts` is gated behind double-check `requireAdmin`
 - [ ] N-L31 — `CouncilSalary.currentTerm` only incremented manually via `startNewTerm()` (DAO-only)
+- [x] N-L31 — `CouncilSalary.currentTerm` only incremented manually via `startNewTerm()` (DAO-only)
 - [ ] N-L32 — `components/seo/StructuredData.tsx::FAQSchema` does not pass `faq.question`/`faq.answer` through `sanitizeJsonLdString`
+- [x] N-L32 — `components/seo/StructuredData.tsx::FAQSchema` does not pass `faq.question`/`faq.answer` through `sanitizeJsonLdString`
 - [ ] N-L33 — `lib/postQuantumEncryption.ts` keeps PQ private keys in process memory only
+- [x] N-L33 — `lib/postQuantumEncryption.ts` keeps PQ private keys in process memory only
 - [ ] N-L34 — `app/api/privacy/delete/route.ts` only queues a deletion request; no automatic deletion happens
+- [x] N-L34 — `app/api/privacy/delete/route.ts` only queues a deletion request; no automatic deletion happens
 - [ ] N-L35 — `SeerPolicyGuard.setDAO` is instant while `setSeer` is two-step migration; inconsistent
+- [x] N-L35 — `SeerPolicyGuard.setDAO` is instant while `setSeer` is two-step migration; inconsistent
 - [ ] N-L36 — `SystemHandover.executeHandover` doesn't actually call `setAdmin` on DAO/Timelock; relies on dev pre-configuring via governance
+- [x] N-L36 — `SystemHandover.executeHandover` doesn't actually call `setAdmin` on DAO/Timelock; relies on dev pre-configuring via governance
 - [ ] N-L37 — `app/api/auth/route.ts` uses `verifyMessage` from `viem` which accepts EIP-1271 contract-wallet signatures
+- [x] N-L37 — `app/api/auth/route.ts` uses `verifyMessage` from `viem` which accepts EIP-1271 contract-wallet signatures
 - [ ] N-L38 — `ServicePool.emergencyWithdraw` is `DEFAULT_ADMIN_ROLE` only and bypasses `pause`/`unpause`
+- [x] N-L38 — `ServicePool.emergencyWithdraw` is `DEFAULT_ADMIN_ROLE` only and bypasses `pause`/`unpause`

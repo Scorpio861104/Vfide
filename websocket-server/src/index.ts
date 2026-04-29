@@ -109,10 +109,50 @@ const wss = new WebSocketServer({
 });
 
 // Lightweight health probe for container/runtime monitoring.
+// ─── Internal event bridge HTTP endpoint ─────────────────────────────────────
+// N-L16 FIX: Accept POST /event from the Next.js backend (or any backend service)
+// to push broadcast messages to connected subscribers.
+//
+// Authentication: shared secret via `x-internal-secret` header.
+// Set WS_INTERNAL_SECRET env to a long random string; the Next.js API must send
+// the same value. If the env is unset in production, all POST /event calls are
+// rejected (fail-closed).
+const WS_INTERNAL_SECRET = process.env.WS_INTERNAL_SECRET || '';
+
+if (IS_PRODUCTION && !WS_INTERNAL_SECRET) {
+  console.warn('[ws] WARNING: WS_INTERNAL_SECRET is not set. POST /event will be rejected in production.');
+}
+
 server.on('request', (req, res) => {
   if (req.method === 'GET' && req.url === '/health') {
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ status: 'ok' }));
+    return;
+  }
+
+  // N-L16 FIX: internal broadcast bridge — Next.js and other backend services call
+  // POST /event with a JSON body matching OutboundMessage to push events to subscribers.
+  if (req.method === 'POST' && req.url === '/event') {
+    const secret = req.headers['x-internal-secret'];
+    if (!WS_INTERNAL_SECRET || secret !== WS_INTERNAL_SECRET) {
+      res.writeHead(401, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized' }));
+      return;
+    }
+
+    let body = '';
+    req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const msg = JSON.parse(body) as OutboundMessage;
+        broadcast(msg);
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      } catch {
+        res.writeHead(400, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+      }
+    });
     return;
   }
 

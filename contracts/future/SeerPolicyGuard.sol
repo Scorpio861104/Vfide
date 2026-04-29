@@ -5,6 +5,8 @@ error SPG_NotDAO();
 error SPG_NotSeer();
 error SPG_Zero();
 error SPG_InvalidState();
+error SPG_NoPending();
+error SPG_TimelockActive();
 
 contract SeerPolicyGuard {
     uint8 public constant POLICY_CLASS_CRITICAL = 0;
@@ -14,16 +16,24 @@ contract SeerPolicyGuard {
     uint64 public constant POLICY_DELAY_CLASS_A = 7 days;
     uint64 public constant POLICY_DELAY_CLASS_B = 72 hours;
     uint64 public constant POLICY_DELAY_CLASS_C = 24 hours;
+    /// @notice N-L35 FIX: DAO rotation uses the same 48h delay as SeerGuardian
+    ///         to prevent an instant capture of the policy guard via DAO takeover.
+    uint64 public constant DAO_ROTATION_DELAY = 48 hours;
 
     address public dao;
     address public seer;
     bool public seerMigrationInProgress;
     address public pendingSeer;
+    // N-L35 FIX: two-step DAO rotation state
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
     uint256 private _guardLock;
 
     mapping(bytes32 => uint64) public policyChangeReadyAt;
 
     event DAOSet(address indexed oldDAO, address indexed newDAO);
+    event DAOChangeQueued(address indexed pendingDAO, uint64 effectiveAt);
+    event DAOChangeCancelled(address indexed cancelledDAO);
     event SeerSet(address indexed oldSeer, address indexed newSeer);
     event SeerMigrationStarted(address indexed oldSeer, address indexed newSeer);
     event SeerMigrationCancelled(address indexed oldSeer, address indexed pendingSeer);
@@ -54,11 +64,34 @@ contract SeerPolicyGuard {
         seer = _seer;
     }
 
+    /// @notice N-L35 FIX: Queue a DAO rotation with a 48h delay.
+    ///         Mirrors the two-step pattern used by SeerGuardian.setDAO.
     function setDAO(address _dao) external onlyDAO nonReentrantSPG {
         if (_dao == address(0)) revert SPG_Zero();
+        if (pendingDAOAt != 0) revert SPG_InvalidState(); // rotation already pending
+        pendingDAO = _dao;
+        pendingDAOAt = uint64(block.timestamp) + DAO_ROTATION_DELAY;
+        emit DAOChangeQueued(_dao, pendingDAOAt);
+    }
+
+    /// @notice Apply the pending DAO rotation after the 48h delay.
+    function applyDAO() external onlyDAO nonReentrantSPG {
+        if (pendingDAO == address(0) || pendingDAOAt == 0) revert SPG_NoPending();
+        if (block.timestamp < pendingDAOAt) revert SPG_TimelockActive();
         address old = dao;
-        dao = _dao;
-        emit DAOSet(old, _dao);
+        dao = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOSet(old, dao);
+    }
+
+    /// @notice Cancel a pending DAO rotation before it takes effect.
+    function cancelDAO() external onlyDAO nonReentrantSPG {
+        if (pendingDAOAt == 0) revert SPG_NoPending();
+        address cancelled = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOChangeCancelled(cancelled);
     }
 
     function setSeer(address _seer) external onlyDAO nonReentrantSPG {

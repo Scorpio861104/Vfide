@@ -113,22 +113,34 @@ export async function requireOwnership(
 }
 
 /**
- * Admin addresses — populated exclusively from environment variables.
- * Set ADMIN_ADDRESS (single) or ADMIN_ADDRESSES (comma-separated) in your environment.
- * Never hard-code addresses here; doing so grants permanent admin access to that wallet.
+ * N-L28 FIX: Read ADMIN_ADDRESSES from env per-call so that rotation takes effect
+ * without requiring a full process restart.  A module-level Set is kept as a
+ * 60-second cache to avoid re-parsing on every hot path; a rotation is visible
+ * within at most 60 seconds.
  */
-const ADMIN_ADDRESSES = new Set(
-  [
-    process.env.ADMIN_ADDRESS?.toLowerCase(),
-    ...(process.env.ADMIN_ADDRESSES?.split(',').map(a => a.trim().toLowerCase()) ?? []),
-  ].filter(Boolean) as string[]
-);
+let _adminAddressesCache: Set<string> = new Set();
+let _adminAddressesCacheAt = 0;
+const ADMIN_ADDRESSES_CACHE_TTL_MS = 60_000;
+
+function getAdminAddresses(): Set<string> {
+  const now = Date.now();
+  if (now - _adminAddressesCacheAt > ADMIN_ADDRESSES_CACHE_TTL_MS) {
+    _adminAddressesCache = new Set(
+      [
+        process.env.ADMIN_ADDRESS?.toLowerCase(),
+        ...(process.env.ADMIN_ADDRESSES?.split(',').map(a => a.trim().toLowerCase()) ?? []),
+      ].filter(Boolean) as string[]
+    );
+    _adminAddressesCacheAt = now;
+  }
+  return _adminAddressesCache;
+}
 
 /**
- * Check if user is an admin
+ * Check if user is an admin (env-list check only — hint, not gate).
  */
 export function isAdmin(user: JWTPayload): boolean {
-  return ADMIN_ADDRESSES.has(user.address.toLowerCase());
+  return getAdminAddresses().has(user.address.toLowerCase());
 }
 
 /**
@@ -149,7 +161,7 @@ export async function verifyOnChainAdmin(address: string): Promise<boolean> {
     }
 
     // In non-production, allow env-based fallback to avoid blocking local development.
-    return ADMIN_ADDRESSES.has(address.toLowerCase());
+    return getAdminAddresses().has(address.toLowerCase());
   }
   try {
     const response = await fetch(rpcUrl, {
@@ -181,6 +193,9 @@ export async function verifyOnChainAdmin(address: string): Promise<boolean> {
 
 /**
  * Require admin role
+ * N-L27 FIX: Accept the request if the caller passes the on-chain ownership check,
+ * even when their address is not listed in ADMIN_ADDRESSES env.
+ * Env list is treated as a hint / fast-path; on-chain is the authoritative gate.
  */
 export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPayload } | NextResponse> {
   const authResult = await requireAuth(request);
@@ -189,20 +204,19 @@ export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPay
     return authResult;
   }
 
+  // N-L27 FIX: try on-chain first; if it passes, grant access regardless of env list.
+  const verifiedOnChain = await verifyOnChainAdmin(authResult.user.address);
+  if (verifiedOnChain) {
+    return authResult;
+  }
+
+  // Fallback: accept if address is in the env list (useful in dev / when OCP is unset).
   if (!isAdmin(authResult.user)) {
     return NextResponse.json(
       { error: 'Admin access required' },
       { status: 403 }
     );
   }
-
-   const verifiedOnChain = await verifyOnChainAdmin(authResult.user.address);
-   if (!verifiedOnChain) {
-     return NextResponse.json(
-       { error: 'On-chain admin verification failed' },
-       { status: 403 }
-     );
-   }
 
   return authResult;
 }

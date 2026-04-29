@@ -241,6 +241,46 @@ contract SystemHandover {
 
     function setLedger(address _ledger) external onlyDev notArmed { ledger=IProofLedger_SH(_ledger); emit LedgerSet(_ledger); }
 
+    /// @notice N-L36 FIX: Pre-flight dry-run for executeHandover.
+    /// @dev    Call this before (or instead of) executeHandover to verify all
+    ///         preconditions are satisfied without consuming the handover itself.
+    ///         Governance runbook: after seating the final council and transferring
+    ///         DAO/timelock adminship via governance proposals, call this view.
+    ///         If it returns (true, ""), it is safe to call executeHandover.
+    /// @param newAdmin The proposed new admin address (pass address(0) to use address(dao)).
+    /// @return ok     True if executeHandover would succeed.
+    /// @return reason Human-readable failure reason (empty when ok=true).
+    function canExecuteHandover(address newAdmin) external view returns (bool ok, string memory reason) {
+        if (start == 0) return (false, "handover not armed");
+        if (handoverExecuted) return (false, "handover already executed");
+        if (block.timestamp < handoverAt) return (false, "handover timelock still active");
+        if (!ownershipAudited) return (false, "ownership audit not marked");
+
+        address effectiveAdmin = newAdmin == address(0) ? address(dao) : newAdmin;
+
+        address actualDAOAdmin = dao.admin();
+        if (actualDAOAdmin != effectiveAdmin) {
+            return (false, string(abi.encodePacked("DAO admin mismatch: expected ", _toHex(effectiveAdmin), " got ", _toHex(actualDAOAdmin))));
+        }
+        address actualTimelockAdmin = timelock.admin();
+        if (actualTimelockAdmin != address(dao)) {
+            return (false, string(abi.encodePacked("timelock admin mismatch: expected DAO got ", _toHex(actualTimelockAdmin))));
+        }
+        return (true, "");
+    }
+
+    function _toHex(address a) internal pure returns (string memory) {
+        bytes memory b = abi.encodePacked(a);
+        bytes memory HEX = "0123456789abcdef";
+        bytes memory str = new bytes(42);
+        str[0] = '0'; str[1] = 'x';
+        for (uint256 i = 0; i < 20; i++) {
+            str[2 + i * 2] = HEX[uint8(b[i]) >> 4];
+            str[3 + i * 2] = HEX[uint8(b[i]) & 0xf];
+        }
+        return string(str);
+    }
+
     // slither-disable-next-line reentrancy-events
     function _log(string memory action) internal {
         if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }

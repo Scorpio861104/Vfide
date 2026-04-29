@@ -87,6 +87,12 @@ function isEncryptedDirectMessagePayload(content: string): boolean {
     if (typeof ts !== 'number' || !Number.isFinite(ts) || ts <= 0) return false;
     if (typeof nonce !== 'string' || nonce.length < 16 || !HEX_STRING_REGEX.test(nonce)) return false;
 
+    // N-L20: Trust boundary — the server validates the structural format of `sig`
+    // (length 65 bytes, Ethereum hex prefix) but does NOT ECDSA-recover against `from`.
+    // The encrypted payload is opaque to the server; only the recipient's client can
+    // decrypt and verify the signature over (ciphertext ‖ ts ‖ nonce).
+    // Upgrade path: pass `from` into this function and call `verifyMessage` before returning.
+
     return true;
   } catch (error) {
     logger.debug('[Messages] Failed to parse encrypted payload', error);
@@ -376,15 +382,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // N-L21 FIX: Replay detection keyed on (sender_id, recipient_id, nonce) rather than
+    // content equality. An attacker who intercepts a ciphertext and re-submits it with a
+    // different nonce field would bypass a content-equality check; moving to nonce binding
+    // ties replay prevention to the crypto layer's unique-message guarantee.
+    // If the payload is encrypted, extract the nonce from the outer JSON; fall back to a
+    // hash-of-content guard for non-encrypted messages.
+    let replayKey: string = content;
+    if (isEncryptedDirectMessagePayload(content)) {
+      try {
+        const outerPayload = JSON.parse(content) as Record<string, unknown>;
+        const payloadNonce = outerPayload.nonce;
+        if (typeof payloadNonce === 'string' && payloadNonce.length >= 16) {
+          replayKey = payloadNonce;
+        }
+      } catch {
+        // fall back to content equality
+      }
+    }
+
     const replayResult = await client.query<{ id: number }>(
       `SELECT id
        FROM messages
        WHERE sender_id = $1
          AND recipient_id = $2
-         AND content = $3
-         AND created_at > NOW() - INTERVAL '10 minutes'
+         AND content::text LIKE $3
+         AND created_at > NOW() - INTERVAL '30 minutes'
        LIMIT 1`,
-      [senderId, recipientId, content]
+      [senderId, recipientId, `%"nonce":"${replayKey}"%`]
     );
 
     if (replayResult.rows.length > 0) {

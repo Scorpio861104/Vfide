@@ -426,4 +426,11 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     function getCategoryCount(uint8 category) external view returns (uint256) {
         return categoryTaskCount[category];
     }
+
+    /// @notice N-M37 FIX: Return the total number of attested tasks for a worker.
+    ///         Used by ServicePool.seerAttestation gate to confirm a worker has
+    ///         at least one verified task before crediting contribution score.
+    function workerTaskCount(address worker) external view returns (uint256) {
+        return workerTasks[worker].length;
+    }
 }

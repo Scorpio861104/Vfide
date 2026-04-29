@@ -438,4 +438,32 @@ contract DAOTimelock is ReentrancyGuard {
         queuedIds.pop();
         delete queuedIdIndex[id];
     }
+
+    /// @notice N-L19 FIX: Dry-run pre-flight check for secondary-executor rotation.
+    /// @return ok          True if the handover preconditions are satisfied.
+    /// @return reason      Human-readable failure reason (empty string when ok=true).
+    /// @dev    Ops runbook: before calling setSecondaryExecutor via governance, run this
+    ///         view to confirm the new executor address is non-zero, is a contract (not EOA),
+    ///         and the current secondary slot is already filled (preventing accidental clear).
+    ///         Governance flow: queue setSecondaryExecutor → wait delay → execute →
+    ///         run canRotateSecondaryExecutor() to confirm the new address is live.
+    function canRotateSecondaryExecutor(address newExecutor)
+        external
+        view
+        returns (bool ok, string memory reason)
+    {
+        if (newExecutor == address(0)) {
+            return (false, "new executor is zero address");
+        }
+        if (newExecutor == admin) {
+            return (false, "new executor equals admin; rotation would not add redundancy");
+        }
+        if (newExecutor == secondaryExecutor) {
+            return (false, "new executor is already the current secondary executor");
+        }
+        if (newExecutor.code.length == 0) {
+            return (false, "new executor is an EOA; a multisig contract is recommended");
+        }
+        return (true, "");
+    }
 }

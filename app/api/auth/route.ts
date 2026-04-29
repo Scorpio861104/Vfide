@@ -152,6 +152,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the cryptographic signature
+    // N-L37: viem's verifyMessage delegates to eth_call for contract-wallet addresses
+    // (EIP-1271 isValidSignature).  Any vault contract whose isValidSignature always returns
+    // the magic value (0x1626ba7e) would accept any signature for that address.
+    // Trust assumption: no deployed vault contract has a permissive isValidSignature.
+    // Mitigation: vault contracts (CardBoundVault, EcosystemVault) must NOT implement
+    // isValidSignature(..) → 0x1626ba7e unconditionally; enforced by code review.
     const isValid = await verifyMessage({
       address: address as `0x${string}`,
       message,

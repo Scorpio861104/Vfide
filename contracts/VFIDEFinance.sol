@@ -141,10 +141,23 @@ contract EcoTreasuryVault is ReentrancyGuard {
 
     /**
      * @notice Record incoming VFIDE (called by authorized fee distribution contracts)
+     * @dev N-L23 FIX: After incrementing totalReceived we verify the on-chain balance
+     *      is at least as large as the net of all recorded inflows less outflows.
+     *      This catches a compromised authorised notifier inflating totalReceived
+     *      without a matching on-chain transfer: if the VFIDE never arrived the
+     *      invariant (balanceOf >= totalReceived - totalDisbursed) breaks and reverts.
      */
     function noteVFIDE(uint256 amount, address from) external {
         require(authorizedNotifiers[msg.sender], "FI: not authorized notifier");
         totalReceived += amount;
+        // Reconciliation: on-chain balance must cover all recorded net inflows.
+        uint256 netAccountedInflows = totalReceived > totalDisbursed
+            ? totalReceived - totalDisbursed
+            : 0;
+        require(
+            vfideToken.balanceOf(address(this)) >= netAccountedInflows,
+            "FI: balance does not cover reported inflow"
+        );
         emit ReceivedVFIDE(amount, from);
         _logEv(from, "treasury_vfide_in", amount, "");
     }

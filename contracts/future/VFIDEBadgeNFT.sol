@@ -344,6 +344,48 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         
         emit BadgeNFTBurned(owner, tokenId, badge);
     }
+
+    /**
+     * @notice N-L24 FIX: Migrate a badge from a lost wallet to a new wallet address.
+     * @dev    Only callable by contract owner (DAO/multisig).
+     *         Precondition: Seer must still recognise the badge as active for `oldOwner`.
+     *         Use case: user has verifiably lost access to `oldOwner` and Seer still
+     *         records the badge as earned. DAO burns the old NFT and mints to `newOwner`.
+     *         The badge record in Seer is NOT changed by this function — a governance
+     *         proposal to update Seer should accompany this call.
+     * @param tokenId  Token ID currently held by the lost wallet.
+     * @param newOwner New wallet address to receive the badge.
+     */
+    function migrateBadge(uint256 tokenId, address newOwner) external onlyOwner nonReentrant {
+        if (newOwner == address(0)) revert InvalidBadge();
+
+        address oldOwner = ownerOf(tokenId);
+        bytes32 badge = tokenBadge[tokenId];
+
+        if (!BadgeRegistry.isValidBadge(badge)) revert InvalidBadge();
+        if (userBadgeToken[newOwner][badge] != 0) revert BadgeAlreadyMinted(badge);
+
+        // Clear old wallet mappings
+        delete userBadgeToken[oldOwner][badge];
+        delete tokenBadge[tokenId];
+        delete mintTimestamp[tokenId];
+        delete badgeNumber[tokenId];
+
+        _burn(tokenId);
+        emit BadgeNFTBurned(oldOwner, tokenId, badge);
+
+        // Mint to new wallet
+        uint256 newTokenId = _nextTokenId++;
+        _safeMint(newOwner, newTokenId);
+        tokenBadge[newTokenId] = badge;
+        userBadgeToken[newOwner][badge] = newTokenId;
+        mintTimestamp[newTokenId] = block.timestamp;
+        badgeMintCount[badge] += 1;
+        badgeNumber[newTokenId] = badgeMintCount[badge];
+
+        emit Locked(newTokenId);
+        emit BadgeNFTMinted(newOwner, newTokenId, badge, badgeMintCount[badge], block.timestamp);
+    }
     
     // ============ INTERNAL HELPERS ============
     

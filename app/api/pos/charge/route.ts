@@ -52,7 +52,9 @@ export async function POST(request: NextRequest) {
     }
 
     const now = Date.now();
-    const chargeId = parsed.data.offlineId ?? `pos_${now}`;
+    // N-L29 FIX: Use a UUIDv4 for chargeId to prevent collision and enumeration.
+    // `pos_${Date.now()}` is ms-resolution and collides across concurrent terminals.
+    const chargeId = parsed.data.offlineId ?? crypto.randomUUID();
 
     // Queue the intent only. Settlement is confirmed by the merchant payment confirmation flow.
     return NextResponse.json({

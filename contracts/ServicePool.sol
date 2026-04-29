@@ -13,6 +13,14 @@ import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// N-M37 FIX: minimal interface so pools can gate score-crediting on SeerWorkAttestation.
+//            When seerAttestation is set (non-zero), _recordContribution requires that
+//            the worker has at least one attested task recorded for the current period.
+interface ISeerWorkAttestation_SP {
+    function workerTasks(address worker, uint256 index) external view returns (bytes32);
+    function workerTaskCount(address worker) external view returns (uint256);
+}
+
 /// @title ServicePool — Base for Percentage-Based Work Compensation Pools
 /// @author VFIDE Team
 /// @notice Each period (30 days), the pool's accumulated fee revenue is split
@@ -103,6 +111,9 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     );
     event FundingReceived(uint256 amount, uint256 newBalance);
     event UnclaimedSwept(uint256 indexed period, uint256 amount, address indexed to);
+    event EmergencyWithdrawQueued(address indexed to, uint256 amount, uint64 readyAt);
+    event EmergencyWithdrawCancelled();
+    event EmergencyWithdrawExecuted(address indexed to, uint256 amount);
 
     // ═══════════════════════════════════════════════════════════
     // ERRORS
@@ -118,6 +129,27 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     error NothingToClaim();
     error MaxParticipantsReached();
     error ClaimWindowExpired();
+    error AttestationRequired();
+    error SP_NotQueued();
+    error SP_TimelockActive();
+    error SP_AlreadyQueued();
+
+    // N-M37 FIX: optional SeerWorkAttestation gate; zero address = disabled.
+    ISeerWorkAttestation_SP public seerAttestation;
+    event SeerAttestationSet(address indexed attestation);
+
+    // N-L38 FIX: 24h timelock for emergencyWithdraw.
+    uint64 public constant EMERGENCY_WITHDRAW_DELAY = 24 hours;
+    struct PendingEmergencyWithdraw {
+        address to;
+        uint64 readyAt;
+    }
+    PendingEmergencyWithdraw public pendingEmergencyWithdraw;
+
+    function setSeerAttestation(address _attestation) external onlyRole(ADMIN_ROLE) {
+        seerAttestation = ISeerWorkAttestation_SP(_attestation);
+        emit SeerAttestationSet(_attestation);
+    }
 
     // ═══════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -154,6 +186,12 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     function _recordContribution(address participant, uint256 score) internal {
         if (participant == address(0)) revert ZeroAddress();
         if (score == 0) revert ZeroAmount();
+
+        // N-M37 FIX: when SeerWorkAttestation is configured, require the worker
+        //            to have at least one on-chain attested task before crediting score.
+        if (address(seerAttestation) != address(0)) {
+            if (seerAttestation.workerTaskCount(participant) == 0) revert AttestationRequired();
+        }
 
         _advancePeriodIfNeeded();
 
@@ -355,12 +393,36 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     function unpause() external onlyRole(ADMIN_ROLE) { _unpause(); }
 
     function emergencyWithdraw(address to) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        // N-L38 FIX: queue an emergency withdraw with a 24h delay so that
+        // participants can observe and contest before funds leave the pool.
         if (to == address(0)) revert ZeroAddress();
-        // H-28 FIX: Only withdraw tokens not already committed to finalized periods.
+        if (pendingEmergencyWithdraw.readyAt != 0) revert SP_AlreadyQueued();
+        uint64 readyAt = uint64(block.timestamp) + EMERGENCY_WITHDRAW_DELAY;
+        pendingEmergencyWithdraw = PendingEmergencyWithdraw({ to: to, readyAt: readyAt });
+        uint256 total = vfideToken.balanceOf(address(this));
+        uint256 withdrawable = total > totalCommitted ? total - totalCommitted : 0;
+        emit EmergencyWithdrawQueued(to, withdrawable, readyAt);
+    }
+
+    /// @notice Execute a queued emergency withdraw after the 24h delay.
+    function applyEmergencyWithdraw() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
+        PendingEmergencyWithdraw memory p = pendingEmergencyWithdraw;
+        if (p.readyAt == 0) revert SP_NotQueued();
+        if (block.timestamp < p.readyAt) revert SP_TimelockActive();
+        delete pendingEmergencyWithdraw;
+
         uint256 total = vfideToken.balanceOf(address(this));
         uint256 withdrawable = total > totalCommitted ? total - totalCommitted : 0;
         if (withdrawable == 0) revert("SP: nothing to withdraw above committed");
-        vfideToken.safeTransfer(to, withdrawable);
+        emit EmergencyWithdrawExecuted(p.to, withdrawable);
+        vfideToken.safeTransfer(p.to, withdrawable);
+    }
+
+    /// @notice Cancel a queued emergency withdraw before it executes.
+    function cancelEmergencyWithdraw() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (pendingEmergencyWithdraw.readyAt == 0) revert SP_NotQueued();
+        delete pendingEmergencyWithdraw;
+        emit EmergencyWithdrawCancelled();
     }
 
     // ═══════════════════════════════════════════════════════════

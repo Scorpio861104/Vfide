@@ -126,6 +126,18 @@ export function validateEnvironment(): void {
     }
   }
 
+  // N-L30 FIX: In production, OCP_ADDRESS must be set so that requireAdmin() can perform
+  // on-chain admin verification.  When it is absent the rollup endpoint and every other
+  // double-checked admin route falls back to the env list only, which may silently exclude
+  // the legitimate on-chain owner after an OCP ownership transfer.
+  if (process.env.NODE_ENV === 'production' && !process.env.OCP_ADDRESS) {
+    errors.push(
+      'OCP_ADDRESS is not set. On-chain admin verification (requireAdmin) will fall back to ' +
+      'ADMIN_ADDRESSES env only, which may differ from the on-chain owner after an OCP ownership ' +
+      'transfer. Set OCP_ADDRESS to the deployed OwnerControlPanel contract address.'
+    );
+  }
+
   // If there are errors, fail fast
   if (errors.length > 0) {
     logger.error('❌ Environment validation failed:');
