@@ -188,13 +188,9 @@ export async function POST(request: NextRequest) {
     // Generate secure JWT token
     const tokenResponse = generateToken(normalizedAddress, chainId);
 
-    // Create response with HTTPOnly cookie for enhanced security
-    // IMPORTANT: Include token in JSON for client-side API compatibility
-    // The HTTPOnly cookie provides XSS protection; the JSON token enables
-    // fetch() requests that can read the response body (unlike XML-over-HTTP pattern)
+    // Create response with HTTPOnly cookie only (do not expose token in JSON body).
     const response = NextResponse.json({
       success: true,
-      token: tokenResponse.token,
       address: tokenResponse.address,
       expiresIn: tokenResponse.expiresIn,
     });

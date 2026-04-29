@@ -200,11 +200,15 @@ export function SetupWizard({ onComplete, referrer }: SetupWizardProps) {
 
       {/* Guardian Wizard modal (shown over SetupWizard) */}
       {showGuardianWizard && (
-        <GuardianWizard onClose={() => {
-          setShowGuardianWizard(false)
-          setGuardiansComplete(true)
-          setCurrentStep('complete')
-        }} />
+        <GuardianWizard
+          onClose={() => {
+            setShowGuardianWizard(false)
+          }}
+          onComplete={() => {
+            setGuardiansComplete(true)
+            setCurrentStep('complete')
+          }}
+        />
       )}
 
       <AnimatePresence>
@@ -423,7 +427,7 @@ export function SetupWizard({ onComplete, referrer }: SetupWizardProps) {
                         <CheckCircle size={18} className="text-emerald-400 mt-0.5 shrink-0" />
                         <div>
                           <p className="text-zinc-200 text-sm font-medium">We recommend at least 2</p>
-                          <p className="text-zinc-400 text-xs">More guardians = more safety. You need at least 1.</p>
+                          <p className="text-zinc-400 text-xs">More guardians = more safety. You need at least 2.</p>
                         </div>
                       </div>
                     </div>

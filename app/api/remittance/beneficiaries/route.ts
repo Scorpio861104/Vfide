@@ -9,15 +9,15 @@ const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 const beneficiarySchema = z.object({
   label: z.string().trim().max(80).optional(),
-  name: z.string().trim().min(1).max(120),
-  phone: z.string().trim().min(6).max(32),
+  name: z.string().trim().min(1).max(120).optional(),
+  phone: z.string().trim().min(6).max(32).optional(),
   network: z.enum(['mpesa', 'mtn_momo', 'gcash', 'bank', 'wallet']),
   accountNumber: z.string().trim().max(64).optional(),
   walletAddress: z.string().trim().optional().refine((value) => !value || ADDRESS_LIKE_REGEX.test(value), {
     message: 'Invalid wallet address',
   }),
   country: z.string().trim().length(2),
-  relationship: z.string().trim().min(1).max(40),
+  relationship: z.string().trim().min(1).max(40).optional(),
 });
 
 async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await query(
-      `SELECT id, owner_address, label, name, phone, network, account_number, wallet_address, country, relationship, created_at
+      `SELECT id, owner_address, label, network, wallet_address, country, created_at
          FROM remittance_beneficiaries
         WHERE owner_address = $1
         ORDER BY created_at DESC`,
@@ -71,13 +71,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid beneficiary payload' }, { status: 400 });
     }
 
-    const { label, name, phone, network, accountNumber, walletAddress, country, relationship } = parsedBody.data;
+    const { label, network, walletAddress, country } = parsedBody.data;
+    const redactedName = 'redacted';
+    const redactedPhone = 'redacted';
+    const redactedRelationship = 'unspecified';
     const result = await query(
       `INSERT INTO remittance_beneficiaries
          (owner_address, label, name, phone, network, account_number, wallet_address, country, relationship)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING id, owner_address, label, name, phone, network, account_number, wallet_address, country, relationship, created_at`,
-      [authAddress, label ?? null, name, phone, network, accountNumber ?? null, walletAddress ?? null, country.toUpperCase(), relationship]
+       RETURNING id, owner_address, label, network, wallet_address, country, created_at`,
+      [authAddress, label ?? null, redactedName, redactedPhone, network, null, walletAddress ?? null, country.toUpperCase(), redactedRelationship]
     );
 
     return NextResponse.json({ success: true, beneficiary: result.rows[0] });

@@ -241,7 +241,8 @@ export function getPaymasterService(config?: PaymasterConfig): PaymasterService 
     // Default configuration
     paymasterInstance = new PaymasterService({
       provider: 'pimlico',
-      apiKey: process.env.NEXT_PUBLIC_PIMLICO_API_KEY,
+      // N-H22 FIX: Do not expose paymaster API keys via NEXT_PUBLIC envs.
+      apiKey: process.env.PIMLICO_API_KEY,
     });
   }
   

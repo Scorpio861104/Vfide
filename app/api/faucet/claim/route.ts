@@ -18,6 +18,12 @@ function isTestnetEnvironment(): boolean {
   return process.env.NEXT_PUBLIC_IS_TESTNET === 'true';
 }
 
+function isUnsafeLocalSignerEnabled(): boolean {
+  // Local private-key signing is intentionally disabled by default.
+  // Production deployments must use an external signer (KMS/HSM/relayer).
+  return process.env.FAUCET_ENABLE_UNSAFE_LOCAL_SIGNER === 'true' && process.env.NODE_ENV !== 'production';
+}
+
 export async function POST(request: NextRequest) {
   if (!isTestnetEnvironment()) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -57,8 +63,16 @@ export async function POST(request: NextRequest) {
     const operatorKey = process.env.FAUCET_OPERATOR_PRIVATE_KEY;
     const rpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
 
-    if (!isConfiguredContractAddress(faucetAddress) || !operatorKey) {
+    if (!isConfiguredContractAddress(faucetAddress)) {
       return NextResponse.json({ error: 'Faucet not configured' }, { status: 503 });
+    }
+
+    if (!isUnsafeLocalSignerEnabled()) {
+      return NextResponse.json({ error: 'Faucet signer unavailable' }, { status: 503 });
+    }
+
+    if (!operatorKey || !/^0x[a-fA-F0-9]{64}$/.test(operatorKey)) {
+      return NextResponse.json({ error: 'Faucet signer unavailable' }, { status: 503 });
     }
 
     const publicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) });

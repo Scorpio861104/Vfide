@@ -59,6 +59,9 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Suspicious transfer tracking
     mapping(address => SuspiciousFlags) public suspiciousActivity;
+    /// @notice Deprecated legacy field kept for ABI compatibility.
+    mapping(address => bool) public blacklist;
+
 
     struct SuspiciousFlags {
         uint256 rapidTransferCount;
@@ -68,9 +71,6 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Whitelist for high-volume users
     mapping(address => bool) public whitelist;
-
-    /// @notice Blacklist
-    mapping(address => bool) public blacklist;
 
     // Events
     event RateLimitChecked(address indexed user, uint256 amount, bool approved);
@@ -110,10 +110,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
         address user,
         uint256 amount
     ) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
-        // Check blacklist
-        if (blacklist[user]) revert Blacklisted();
-
-        // BSM-01: Reject flagged users — suspicious-activity flag must be manually cleared by admin
+        // BSM-01: Reject flagged users (fail-closed once flagged).
         if (suspiciousActivity[user].flagged) revert SuspiciousActivity();
 
         // Whitelist bypasses limits
@@ -223,17 +220,6 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice Blacklist user
-     * @param user User address
-     * @param status Blacklist status
-     */
-    function setBlacklist(address user, bool status) external onlyOwner {
-        require(user != address(0), "Invalid user");
-        blacklist[user] = status;
-        emit UserBlacklisted(user, status);
-    }
-
-    /**
      * @notice Update bridge address
      * @param _bridge New bridge address
      */
@@ -264,6 +250,15 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     }
 
     /**
+     * @notice Deprecated: blacklist controls are disabled to preserve non-custodial guarantees.
+     */
+    function setBlacklist(address user, bool status) external onlyOwner {
+        user;
+        status;
+        revert("BSM: blacklist disabled");
+    }
+
+    /**
      * @notice Set required oracle count
      * @param _required Required oracle count
      */
@@ -276,11 +271,11 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice Clear suspicious flags for user
-     * @param user User address
+     * @notice Deprecated: manual suspicious-flag clearing is disabled.
      */
     function clearSuspiciousFlags(address user) external onlyOwner {
-        delete suspiciousActivity[user];
+        user;
+        revert("BSM: clear flags disabled");
     }
 
     /**

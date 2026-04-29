@@ -32,6 +32,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     uint16 internal constant MSG_TYPE_BRIDGE_TRANSFER = 1;
     uint16 internal constant MSG_TYPE_BRIDGE_CONFIRMATION = 2;
+    uint16 internal constant MSG_TYPE_BRIDGE_FAILURE = 3;
 
     /// @notice VFIDE token contract
     IERC20 public immutable vfideToken;
@@ -172,6 +173,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     );
     event DeliveryConfirmationSkipped(uint32 indexed dstChainId, bytes32 indexed txId, string reason);
     event BridgeDeliveryConfirmed(bytes32 indexed txId);
+    event BridgeDeliveryFailed(bytes32 indexed txId, uint32 indexed srcChainId, string reason);
 
     event TrustedRemoteSet(uint32 indexed chainId, bytes32 remote);
     event TrustedRemoteScheduled(uint32 indexed chainId, bytes32 remote, uint64 effectiveAt);
@@ -438,6 +440,14 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
             return;
         }
 
+        // N-H13 FIX: Destination bridge can notify source about deterministic delivery failure
+        // (e.g. insufficient destination liquidity), so refund windows open automatically.
+        if (messageType == MSG_TYPE_BRIDGE_FAILURE) {
+            (, bytes32 failedTxId) = abi.decode(payload, (uint16, bytes32));
+            _markBridgeFailed(failedTxId, _origin.srcEid, "insufficient destination liquidity");
+            return;
+        }
+
         // New inbound bridge transfers respect the pause state
         if (paused()) revert EnforcedPause();
 
@@ -453,22 +463,44 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         // Generate transaction ID
         bytes32 txId = _guid;
 
-        // Update statistics
-        userStats[receiver].totalReceived += amount;
-        totalBridgedIn += amount;
-
         // Release tokens to receiver from destination bridge liquidity.
         uint256 bridgeBalance = vfideToken.balanceOf(address(this));
         uint256 availableLiquidity_ = bridgeBalance > pendingOutboundAmount
             ? bridgeBalance - pendingOutboundAmount
             : 0;
-        require(availableLiquidity_ >= amount, "VFIDEBridge: insufficient liquidity");
+        if (availableLiquidity_ < amount) {
+            _sendBridgeFailureNotification(_origin.srcEid, _guid);
+            emit BridgeDeliveryFailed(_guid, _origin.srcEid, "insufficient destination liquidity");
+            return;
+        }
+
+        // Defense in depth: avoid releasing bridged funds directly to addresses
+        // currently flagged for escrow by the token's fraud controls.
+        if (_receiverRequiresEscrow(receiver)) {
+            _sendBridgeFailureNotification(_origin.srcEid, _guid);
+            emit BridgeDeliveryFailed(_guid, _origin.srcEid, "receiver requires escrow");
+            return;
+        }
+
+        // Update statistics
+        userStats[receiver].totalReceived += amount;
+        totalBridgedIn += amount;
         vfideToken.safeTransfer(receiver, amount);
 
         _sendDeliveryConfirmation(_origin.srcEid, _guid);
 
         // slither-disable-next-line reentrancy-events
         emit BridgeReceived(receiver, _origin.srcEid, amount, txId);
+    }
+
+    function _receiverRequiresEscrow(address receiver) internal view returns (bool) {
+        (bool ok, bytes memory data) = address(vfideToken).staticcall(
+            abi.encodeWithSignature("requiresEscrow(address)", receiver)
+        );
+        if (!ok || data.length < 32) {
+            return false;
+        }
+        return abi.decode(data, (bool));
     }
 
     /**
@@ -1060,6 +1092,23 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         }
     }
 
+    function _sendBridgeFailureNotification(uint32 _dstChainId, bytes32 txId) internal virtual {
+        bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_FAILURE, txId);
+        // Reuse confirmation options/fee profile for failure notifications.
+        bytes memory options = enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION];
+        MessagingFee memory fee = _quote(_dstChainId, payload, options, false);
+
+        if (address(this).balance < fee.nativeFee) {
+            emit DeliveryConfirmationSkipped(_dstChainId, txId, "insufficient native fee (failure notify)");
+            return;
+        }
+
+        try this.__sendDeliveryConfirmation(_dstChainId, payload, options, fee.nativeFee) {
+        } catch {
+            emit DeliveryConfirmationSkipped(_dstChainId, txId, "failure notify send failed");
+        }
+    }
+
     /// @dev External self-call target used to preserve try/catch semantics for LayerZero send failures.
     function __sendDeliveryConfirmation(
         uint32 _dstChainId,
@@ -1083,6 +1132,18 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         }
         delete bridgeRefundableAfter[txId];
         emit BridgeDeliveryConfirmed(txId);
+    }
+
+    function _markBridgeFailed(bytes32 txId, uint32 srcChainId, string memory reason) internal {
+        BridgeTransaction storage btx = bridgeTransactions[txId];
+        if (btx.sender == address(0) || btx.executed) {
+            return;
+        }
+        if (bridgeRefundableAfter[txId] == 0) {
+            bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
+            emit BridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
+        }
+        emit BridgeDeliveryFailed(txId, srcChainId, reason);
     }
 
     function _rollDailyBridgeWindow() internal {

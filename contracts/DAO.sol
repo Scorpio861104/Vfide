@@ -752,7 +752,7 @@ contract DAO is ReentrancyGuard {
         if (passed){
             p.queued=true;
             p.queuedAt=uint64(block.timestamp); // DAO-12 FIX: Record queue time for expiry
-            bytes32 tlId = timelock.queueTx(p.target,p.value,p.data);
+            bytes32 tlId = timelock.queueTxFromDAO(p.target,p.value,p.data,id);
             emit Queued(id,tlId);
             if (address(hooks)!=address(0)) { try hooks.onProposalQueued(id,p.target,p.value) {} catch {} }
         }

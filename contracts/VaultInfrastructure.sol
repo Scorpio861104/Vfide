@@ -156,15 +156,6 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (msg.sender != owner) revert UV_NotOwner();
     }
 
-    modifier notLocked() {
-        _checkNotLocked();
-        _;
-    }
-
-    function _checkNotLocked() internal view {
-        // SecurityHub lock check removed — non-custodial, no third-party locks
-    }
-    
     modifier notFrozen() {
         _checkNotFrozen();
         _;
@@ -211,7 +202,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     uint64 public constant GUARDIAN_MATURITY_PERIOD = 7 days;
     uint8 public constant MAX_GUARDIANS = 20;
 
-    function setGuardian(address g, bool active) external onlyOwner notLocked {
+    function setGuardian(address g, bool active) external onlyOwner {
         if (g == address(0)) revert UV_Zero();
         
         // Prevent guardian changes during active recovery to protect vote integrity
@@ -252,7 +243,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         return block.timestamp >= guardianAddTime[g] + GUARDIAN_MATURITY_PERIOD;
     }
 
-    function setNextOfKin(address kin) external onlyOwner notLocked {
+    function setNextOfKin(address kin) external onlyOwner {
         if (kin == address(0)) revert UV_Zero();
         if (_inheritance.active) revert UV_InheritanceActive();
         nextOfKin = kin;
@@ -262,7 +253,7 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     event WithdrawalCooldownSet(uint64 cooldown);
     
-    function setWithdrawalCooldown(uint64 cooldown) external onlyOwner notLocked {
+    function setWithdrawalCooldown(uint64 cooldown) external onlyOwner {
         require(cooldown <= 7 days, "UV:cooldown-too-long");
         require(cooldown >= 1 hours || cooldown == 0, "UV:cooldown-too-short");
         withdrawalCooldown = cooldown;
@@ -270,7 +261,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logEv(msg.sender, "cooldown_set", cooldown, "");
     }
 
-    function setLargeTransferThreshold(uint256 threshold) external onlyOwner notLocked {
+    function setLargeTransferThreshold(uint256 threshold) external onlyOwner {
         require(threshold >= 100 * 1e18, "UV: threshold too low");
         require(threshold <= 1_000_000 * 1e18, "UV: threshold too high");
         largeTransferThreshold = threshold;
@@ -279,13 +270,23 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     /// @notice H-1 FIX: Set a rolling 24-hour transfer limit aligned with CardBoundVault.
     ///         Pass 0 to disable the limit.
-    function setDailyTransferLimit(uint256 limit) external onlyOwner notLocked {
+    function setDailyTransferLimit(uint256 limit) external onlyOwner {
         require(limit == 0 || limit >= 100 * 1e18, "UV: limit too low");
         dailyTransferLimit = limit;
         // Reset window so the new limit takes effect from now.
         spentToday = 0;
         dayStart   = uint64(block.timestamp);
         _logEv(msg.sender, "daily_limit_set", limit, "");
+    }
+
+    function _consumeDailyTransferLimit(uint256 amount) internal {
+        if (amount == 0 || dailyTransferLimit == 0) return;
+        if (block.timestamp >= uint256(dayStart) + 1 days) {
+            spentToday = 0;
+            dayStart = uint64(block.timestamp);
+        }
+        require(spentToday + amount <= dailyTransferLimit, "UV: daily limit exceeded");
+        spentToday += amount;
     }
     
     // ——— User Security Controls
@@ -317,7 +318,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         bool _usePercentage,
         uint256 _fixedAmount,
         uint16 _percentageBps
-    ) external onlyOwner notLocked {
+    ) external onlyOwner {
         if (_usePercentage) {
             require(_percentageBps > 0 && _percentageBps <= 10000, "UV: invalid percentage (0-10000 bps)");
             abnormalTransactionPercentageBps = _percentageBps;
@@ -337,7 +338,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @dev When enabled, uses snapshot balance for calculations to prevent threshold manipulation
      * @param _useSnapshot True to use balance snapshot, false to use current balance
      */
-    function setBalanceSnapshotMode(bool _useSnapshot) external onlyOwner notLocked {
+    function setBalanceSnapshotMode(bool _useSnapshot) external onlyOwner {
         useBalanceSnapshot = _useSnapshot;
         if (_useSnapshot) {
             // Take snapshot of current balance
@@ -353,7 +354,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @notice Update balance snapshot (when in snapshot mode)
      * @dev Allows owner to update snapshot after significant deposits
      */
-    function updateBalanceSnapshot() external onlyOwner notLocked {
+    function updateBalanceSnapshot() external onlyOwner {
         require(useBalanceSnapshot, "UV: snapshot mode not enabled");
         balanceSnapshot = IERC20(vfideToken).balanceOf(address(this));
         _logEv(msg.sender, "balance_snapshot_updated", balanceSnapshot, "");
@@ -427,7 +428,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @notice Execute approved pending transaction
      * @param txId Transaction ID to execute
      */
-    function executePendingTransaction(uint256 txId) external onlyOwner notLocked notFrozen nonReentrant {
+    function executePendingTransaction(uint256 txId) external onlyOwner notFrozen nonReentrant {
         PendingTransaction storage ptx = pendingTransactions[txId];
         if (ptx.amount == 0) revert UV_NoPendingTx();
         if (ptx.executed) revert UV_TxAlreadyProcessed();
@@ -447,7 +448,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Recovery flow (owner lost)
-    function requestRecovery(address proposedOwner) external notLocked {
+    function requestRecovery(address proposedOwner) external {
         // Either nextOfKin, an existing guardian, or the current owner may open a request
         if (!(msg.sender == owner || isGuardian[msg.sender] || msg.sender == nextOfKin)) revert UV_NotGuardian();
         if (proposedOwner == address(0)) revert UV_Zero();
@@ -487,7 +488,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logEv(proposedOwner, "recovery_requested", 0, "");
     }
 
-    function guardianApproveRecovery() external notLocked {
+    function guardianApproveRecovery() external {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         require(isGuardianMature(msg.sender), "UV: guardian not mature");
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
@@ -499,7 +500,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logEv(msg.sender, "recovery_approval", _recovery.approvals, "");
     }
 
-    function finalizeRecovery() external notLocked {
+    function finalizeRecovery() external {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
         require(block.timestamp >= _recovery.readyTime, "UV: recovery timelock");
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
@@ -524,7 +525,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logSys("recovery_finalized");
     }
 
-    function cancelRecovery() external onlyOwner notLocked {
+    function cancelRecovery() external onlyOwner {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
         
         // Clear the recovery request
@@ -546,7 +547,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @dev Requires guardian approval OR DAO approval to prevent gaming
      * Owner can deny the request if called prematurely
      */
-    function requestInheritance() external notLocked {
+    function requestInheritance() external {
         if (msg.sender != nextOfKin) revert UV_NotNextOfKin();
         if (nextOfKin == address(0)) revert UV_Zero();
         
@@ -569,7 +570,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @notice Guardians approve inheritance request
      * @dev Requires 2/3 guardians to approve (same threshold as recovery)
      */
-    function approveInheritance() external notLocked {
+    function approveInheritance() external {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         require(isGuardianMature(msg.sender), "UV: guardian not mature");
         if (!_inheritance.active) revert UV_NoInheritance();
@@ -590,7 +591,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @notice Owner denies inheritance request (prevents gaming/premature claims)
      * @dev If owner is alive and accessible, they can deny the request
      */
-    function denyInheritance() external onlyOwner notLocked {
+    function denyInheritance() external onlyOwner {
         if (!_inheritance.active) revert UV_NoInheritance();
         
         _inheritance.ownerDenied = true;
@@ -616,7 +617,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * Use case: Next of Kin files claim while owner is traveling (unreachable)
      * C-1 FIX: Uses nonce to properly reset votes after successful cancellation
      */
-    function guardianCancelInheritance() external notLocked {
+    function guardianCancelInheritance() external {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         if (!_inheritance.active) revert UV_NoInheritance();
         // C-1 FIX: Check vote using current nonce
@@ -657,7 +658,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * This ensures inheritor is a responsible user who understands the system
      * Deceased's vault remains locked for records
      */
-    function finalizeInheritance() external notLocked nonReentrant {
+    function finalizeInheritance() external nonReentrant {
         if (!_inheritance.active) revert UV_NoInheritance();
         if (_inheritance.ownerDenied) revert UV_InheritanceDenied();
         require(block.timestamp >= _inheritance.readyTime, "UV: inheritance timelock");
@@ -705,7 +706,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     event TransferPendingApproval(uint256 indexed txId, address indexed toVault, uint256 amount);
     
     // slither-disable-next-line reentrancy-benign
-    function transferVFIDE(address toVault, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bool) {
+    function transferVFIDE(address toVault, uint256 amount) external onlyOwner notFrozen noActiveClaims nonReentrant returns (bool) {
         if (toVault == address(0)) revert UV_Zero();
         require(amount > 0, "UV: zero amount");
         uint256 currentBalance = IERC20(vfideToken).balanceOf(address(this));
@@ -743,17 +744,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         lastWithdrawalTime = uint64(block.timestamp);
         
         // Amount-based threshold: large transfers face additional scrutiny
-        // (All transfers already checked by notLocked and notFrozen modifiers above)
-        // H-1 FIX: Enforce daily transfer limit when set (dailyTransferLimit > 0).
-        if (dailyTransferLimit > 0) {
-            // Roll over daily window if needed.
-            if (block.timestamp >= uint256(dayStart) + 1 days) {
-                spentToday = 0;
-                dayStart   = uint64(block.timestamp);
-            }
-            require(spentToday + amount <= dailyTransferLimit, "UV: daily limit exceeded");
-            spentToday += amount;
-        }
+        // (All transfers already checked by the notFrozen modifier above)
+        _consumeDailyTransferLimit(amount);
         if (amount > largeTransferThreshold && largeTransferThreshold > 0) {
             // Large transfer - log for extra scrutiny
             _logEv(toVault, "large_transfer_attempt", amount, "");
@@ -767,7 +759,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // slither-disable-next-line reentrancy-events
-    function approveVFIDE(address spender, uint256 amount) external onlyOwner notLocked notFrozen noActiveClaims returns (bool) {
+    function approveVFIDE(address spender, uint256 amount) external onlyOwner notFrozen noActiveClaims returns (bool) {
         if (spender == address(0)) revert UV_Zero();
         
         // VI-05 FIX: Apply same protections as transferVFIDE
@@ -781,6 +773,7 @@ contract UserVaultLegacy is ReentrancyGuard {
                 require(block.timestamp >= lastWithdrawalTime + withdrawalCooldown, "UV:cooldown-active");
             }
             lastWithdrawalTime = uint64(block.timestamp);
+            _consumeDailyTransferLimit(amount);
         }
         
         bool ok = IERC20(vfideToken).approve(spender, amount);
@@ -791,7 +784,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Generic Execution (Smart Account)
-    function execute(address target, uint256 value, bytes calldata data) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bytes memory result) {
+    function execute(address target, uint256 value, bytes calldata data) external onlyOwner notFrozen noActiveClaims nonReentrant returns (bytes memory result) {
         if (target == address(0)) revert UV_Zero();
         require(target != vfideToken, "UV:use-transferVFIDE");
         
@@ -807,6 +800,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (executeWhitelistEnforced) {
             require(allowedExecuteTarget[target], "UV:target-not-whitelisted");
         }
+
+        _consumeDailyTransferLimit(value);
 
         // Update execute timestamp before external interaction to minimize reentrancy surface.
         lastExecuteTime = uint64(block.timestamp);
@@ -828,8 +823,14 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Batch Execution (UX improvement)
-    function executeBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external onlyOwner notLocked notFrozen noActiveClaims nonReentrant returns (bytes[] memory results) {
+    function executeBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external onlyOwner notFrozen noActiveClaims nonReentrant returns (bytes[] memory results) {
         require(targets.length == values.length && values.length == datas.length, "UV:length-mismatch");
+
+        uint256 totalValue;
+        for (uint256 i = 0; i < values.length; i++) {
+            totalValue += values[i];
+        }
+        _consumeDailyTransferLimit(totalValue);
         
         if (executeCooldown > 0 && lastExecuteTime > 0) {
             require(block.timestamp >= lastExecuteTime + executeCooldown, "UV:execute-cooldown-active");
@@ -911,7 +912,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @dev Owner can withdraw ETH that was accidentally sent to the vault
      * Added nonReentrant to prevent reentrancy via malicious recipient
      */
-    function rescueETH(address payable recipient) external onlyOwner notLocked notFrozen nonReentrant {
+    function rescueETH(address payable recipient) external onlyOwner notFrozen nonReentrant {
         require(recipient != address(0), "UV: zero recipient");
         uint256 balance = address(this).balance;
         require(balance > 0, "UV: no ETH to rescue");
@@ -926,7 +927,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @notice Rescue any ERC20 token (except VFIDE which uses transferVFIDE)
      * @dev For tokens accidentally sent to vault
      */
-    function rescueToken(address token, address recipient, uint256 amount) external onlyOwner notLocked notFrozen {
+    function rescueToken(address token, address recipient, uint256 amount) external onlyOwner notFrozen {
         require(token != address(0) && recipient != address(0), "UV: zero address");
         require(token != vfideToken, "UV: use transferVFIDE for VFIDE");
         

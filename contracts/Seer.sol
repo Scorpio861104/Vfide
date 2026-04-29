@@ -92,6 +92,7 @@ contract Seer is ReentrancyGuard {
     bytes4 private constant SEL_SET_DECENTRALIZATION_WEIGHTS = bytes4(keccak256("setDecentralizationWeights(uint8,uint8)"));
     bytes4 private constant SEL_SET_POLICY_VERSION = bytes4(keccak256("setPolicyVersion(bytes32,string)"));
     bytes4 private constant SEL_SET_OPERATOR_LIMITS = bytes4(keccak256("setOperatorLimits(uint16,uint16)"));
+    bytes4 private constant SEL_SET_OPERATOR_PUNISH_LIMITS = bytes4(keccak256("setOperatorPunishLimits(uint16,uint32)"));
 
     // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
@@ -625,12 +626,13 @@ contract Seer is ReentrancyGuard {
         for (uint256 i = 0; i < scoreSources.length; i++) {
             if (!scoreSources[i].active) continue;
             
-            try IScoreSource(scoreSources[i].source).getScoreContribution(subject) returns (uint16 score, uint8 weight) {
-                if (weight > 0 && score <= 1000) {
+            uint8 sourceWeight = scoreSources[i].weight;
+            try IScoreSource(scoreSources[i].source).getScoreContribution(subject) returns (uint16 score, uint8) {
+                if (sourceWeight > 0 && score <= 1000) {
                     // Score sources return 0-1000, we need 0-10000
                     uint256 scaledScore = uint256(score) * 10;
-                    weightedScore += scaledScore * weight;
-                    totalWeight += weight;
+                    weightedScore += scaledScore * sourceWeight;
+                    totalWeight += sourceWeight;
                 }
             } catch {
                 // Source failed, skip it
@@ -841,6 +843,22 @@ contract Seer is ReentrancyGuard {
         maxDailyOperatorReward = _maxDaily;
         maxDailyOperatorGlobalReward = _maxGlobal;
         _consumePolicyChange(SEL_SET_OPERATOR_LIMITS, PolicyClass.Important);
+        _logSystem();
+    }
+
+    /// @notice DAO can set operator punishment and cross-operator subject limits
+    function setOperatorPunishLimits(uint16 _maxDailyPunish, uint32 _maxDailySubject)
+        external
+        onlyDAO
+        nonReentrant
+    {
+        if (_maxDailyPunish > 1000) revert TRUST_Bounds();
+        if (_maxDailySubject > 2000) revert TRUST_Bounds();
+        if (_maxDailySubject < _maxDailyPunish) revert TRUST_Bounds();
+
+        maxDailyOperatorPunish = _maxDailyPunish;
+        maxDailySubjectDelta = _maxDailySubject;
+        _consumePolicyChange(SEL_SET_OPERATOR_PUNISH_LIMITS, PolicyClass.Important);
         _logSystem();
     }
 

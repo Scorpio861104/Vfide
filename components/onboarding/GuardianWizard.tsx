@@ -17,7 +17,7 @@ interface Step {
 
 const iconClass = "w-10 h-10 text-emerald-500";
 
-export function GuardianWizard({ onClose }: { onClose: () => void }) {
+export function GuardianWizard({ onClose, onComplete }: { onClose: () => void; onComplete?: () => void }) {
   const [step, setStep] = useState(0);
   const [guardians, setGuardians] = useState(['', '', '']);
   const { executeVaultAction, userMessage, actionStatus } = useSimpleVault();
@@ -43,7 +43,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
     {
       icon: <CheckCircle className={iconClass} />,
       title: "Confirm & Setup",
-      description: "Your vault will ask these people to be your guardians. If you ever lose your wallet, at least 3 of them can help you recover access.",
+      description: "Your vault will ask these people to be your guardians. If you ever lose your wallet, at least 2 of them can help you recover access.",
     },
   ];
 
@@ -55,8 +55,8 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
 
   const handleSetupGuardians = async () => {
     const validGuardians = guardians.filter(g => g.startsWith('0x') && g.length === 42);
-    if (validGuardians.length < 3) {
-      alert('You need at least 3 guardians!');
+    if (validGuardians.length < 2) {
+      alert('You need at least 2 guardians!');
       return;
     }
 
@@ -83,6 +83,11 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
         callData
       );
     }
+
+    if (onComplete) {
+      onComplete();
+    }
+    onClose();
   };
 
   return (
@@ -141,7 +146,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
                 {[0, 1, 2, 3, 4].map((index) => (
                   <div key={index}>
                     <label className="block text-zinc-400 text-sm mb-2 font-(family-name:--font-body)">
-                      Guardian #{index + 1} {index < 3 && <span className="text-red-500">*</span>}
+                      Guardian #{index + 1} {index < 2 && <span className="text-red-500">*</span>}
                     </label>
                     <input
                       type="text"
@@ -153,7 +158,7 @@ export function GuardianWizard({ onClose }: { onClose: () => void }) {
                   </div>
                 ))}
                 <div className="text-zinc-400 text-xs text-center">
-                  Need at least 3 guardians (marked with *)
+                  Need at least 2 guardians (marked with *)
                 </div>
               </div>
             )}

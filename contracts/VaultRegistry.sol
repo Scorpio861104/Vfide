@@ -217,16 +217,18 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address vault,
         bytes32 emailHash
     ) external onlyVaultOwner(vault) validVault(vault) {
+        // N-H18 FIX: Always scope recovery identifiers before storage to prevent unsalted hash reuse.
+        bytes32 scopedEmailHash = _scopeIdentifierHash(emailHash);
         // Clear old email if exists
         bytes32 oldEmail = _getStoredEmailHash(vault);
-        if (oldEmail != bytes32(0) && oldEmail != emailHash) {
+        if (oldEmail != bytes32(0) && oldEmail != scopedEmailHash) {
             _removeEmailVault(oldEmail, vault);
         }
 
-        _addEmailVault(emailHash, vault);
-        _setStoredEmailHash(vault, emailHash);
+        _addEmailVault(scopedEmailHash, vault);
+        _setStoredEmailHash(vault, scopedEmailHash);
         
-        emit EmailRecoverySet(vault, emailHash);
+        emit EmailRecoverySet(vault, scopedEmailHash);
     }
     
     /**
@@ -238,14 +240,16 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         address vault,
         bytes32 phoneHash
     ) external onlyVaultOwner(vault) validVault(vault) {
+        // N-H18 FIX: Always scope recovery identifiers before storage to prevent unsalted hash reuse.
+        bytes32 scopedPhoneHash = _scopeIdentifierHash(phoneHash);
         bytes32 oldPhone = _phoneHashStorage[vault];
-        if (oldPhone != bytes32(0) && oldPhone != phoneHash) {
+        if (oldPhone != bytes32(0) && oldPhone != scopedPhoneHash) {
             _removePhoneVault(oldPhone, vault);
         }
 
-        _addPhoneVault(phoneHash, vault);
-        _phoneHashStorage[vault] = phoneHash;
-        emit PhoneRecoverySet(vault, phoneHash);
+        _addPhoneVault(scopedPhoneHash, vault);
+        _phoneHashStorage[vault] = scopedPhoneHash;
+        emit PhoneRecoverySet(vault, scopedPhoneHash);
     }
     
     /**
@@ -403,12 +407,17 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @return vault The vault address if found
      */
     function searchByEmail(bytes32 emailHash) external view returns (address vault) {
-        return vaultByEmailHash[emailHash];
+        // Accept both scoped input and legacy unsalted input for backward compatibility.
+        vault = vaultByEmailHash[emailHash];
+        if (vault != address(0)) return vault;
+        return vaultByEmailHash[_scopeIdentifierHash(emailHash)];
     }
 
     /// @notice Return all vault matches for an email hash (collision-safe lookup)
     function searchByEmailAll(bytes32 emailHash) external view returns (address[] memory vaults) {
-        return vaultsByEmailHash[emailHash];
+        vaults = vaultsByEmailHash[emailHash];
+        if (vaults.length > 0) return vaults;
+        return vaultsByEmailHash[_scopeIdentifierHash(emailHash)];
     }
     
     /**
@@ -419,12 +428,21 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @return vault The vault address if found
      */
     function searchByPhone(bytes32 phoneHash) external view returns (address vault) {
-        return vaultByPhoneHash[phoneHash];
+        // Accept both scoped input and legacy unsalted input for backward compatibility.
+        vault = vaultByPhoneHash[phoneHash];
+        if (vault != address(0)) return vault;
+        return vaultByPhoneHash[_scopeIdentifierHash(phoneHash)];
     }
 
     /// @notice Return all vault matches for a phone hash (collision-safe lookup)
     function searchByPhoneAll(bytes32 phoneHash) external view returns (address[] memory vaults) {
-        return vaultsByPhoneHash[phoneHash];
+        vaults = vaultsByPhoneHash[phoneHash];
+        if (vaults.length > 0) return vaults;
+        return vaultsByPhoneHash[_scopeIdentifierHash(phoneHash)];
+    }
+
+    function _scopeIdentifierHash(bytes32 rawHash) internal view returns (bytes32) {
+        return keccak256(abi.encode(block.chainid, address(this), rawHash));
     }
     
     /**

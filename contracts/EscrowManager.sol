@@ -18,6 +18,7 @@ pragma solidity 0.8.30;
  */
 
 import "./SharedInterfaces.sol";
+import "./lib/ScoringConstants.sol";
 
 interface ISeerAutonomous_ESC {
     function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
@@ -156,8 +157,8 @@ contract EscrowManager is ReentrancyGuard {
             // F-18 FIX: Use getCachedScore (reflects longer-term cached behavior) instead of live getScore
             // to reduce the impact of temporary score pump-and-dump attacks.
             uint16 score = seer.getCachedScore(merchant);
-            if (score >= 8000) lockPeriod = 3 days;       // High Trust (80%+)
-            else if (score >= 6000) lockPeriod = 7 days;  // Medium Trust (60%+)
+            if (score >= ScoringConstants.TIER_4) lockPeriod = 3 days;       // High Trust (80%+)
+            else if (score >= ScoringConstants.TIER_2) lockPeriod = 7 days;  // Medium Trust (60%+)
         }
         // F-18 FIX: Enforce minimum lock period as a safety net
         require(lockPeriod >= MIN_LOCK_PERIOD, "ESC: lock period too short");

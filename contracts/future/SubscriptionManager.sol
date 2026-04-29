@@ -25,6 +25,10 @@ interface ISeer_SM {
     function reward(address subject, uint16 delta, string calldata reason) external;
 }
 
+interface IFraudRegistry_SM {
+    function isServiceBanned(address user) external view returns (bool);
+}
+
 error SM_NotSubscriber();
 error SM_NotMerchant();
 error SM_NotAuthorized();
@@ -40,6 +44,7 @@ error SM_GracePeriodActive();
 error SM_GracePeriodExpired();
 error SM_EmergencyNotActive();
 error SM_VaultChanged();
+error SM_FraudBlocked();
 
 contract SubscriptionManager is ReentrancyGuard {
     event SubscriptionCreated(uint256 indexed subId, address indexed subscriber, address indexed merchant, uint256 amount, uint256 interval);
@@ -55,6 +60,7 @@ contract SubscriptionManager is ReentrancyGuard {
     event EmergencyBreakerChangeQueued(address indexed breaker, uint64 effectiveAt);
     event EmergencyBreakerChangeApplied(address indexed breaker);
     event EmergencyBreakerChangeCancelled(address indexed breaker);
+    event FraudRegistrySet(address indexed fraudRegistry);
 
     struct Subscription {
         address subscriber;
@@ -70,6 +76,7 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 pausedAt;      // NEW: When paused
         uint256 graceEndTime;  // NEW: Grace period end (0 = no grace)
         uint256 failedPayments; // NEW: Count of consecutive failed payments
+        uint256 lastFailedPaymentBlock; // N-H12 FIX: prevent same-block failure spam increments
         string memo; // e.g. "Netflix Premium"
     }
 
@@ -95,6 +102,7 @@ contract SubscriptionManager is ReentrancyGuard {
     
     // ProofScore integration
     ISeer_SM public seer;
+    IFraudRegistry_SM public fraudRegistry;
     uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2;    // +0.2 per payment
     uint16 public constant SUBSCRIPTION_MERCHANT_REWARD = 3; // +0.3 per payment
 
@@ -116,6 +124,11 @@ contract SubscriptionManager is ReentrancyGuard {
      */
     function setSeer(address _seer) external onlyDAO {
         seer = ISeer_SM(_seer);
+    }
+
+    function setFraudRegistry(address _fraudRegistry) external onlyDAO {
+        fraudRegistry = IFraudRegistry_SM(_fraudRegistry);
+        emit FraudRegistrySet(_fraudRegistry);
     }
     
     /**
@@ -184,6 +197,7 @@ contract SubscriptionManager is ReentrancyGuard {
             pausedAt: 0,
             graceEndTime: 0,
             failedPayments: 0,
+            lastFailedPaymentBlock: 0,
             memo: memo
         });
 
@@ -276,6 +290,12 @@ contract SubscriptionManager is ReentrancyGuard {
         if (sub.paused) revert SM_SubscriptionPaused(); // Cannot process while paused
         if (block.timestamp < sub.nextPayment) revert SM_PaymentTooEarly();
 
+        if (address(fraudRegistry) != address(0)) {
+            if (fraudRegistry.isServiceBanned(sub.subscriber) || fraudRegistry.isServiceBanned(sub.merchant)) {
+                revert SM_FraudBlocked();
+            }
+        }
+
         // During the merchant-exclusive window only the merchant may trigger.
         if (block.timestamp < sub.nextPayment + MERCHANT_EXCLUSIVE_WINDOW) {
             if (msg.sender != sub.merchant) revert SM_NotMerchant();
@@ -312,7 +332,13 @@ contract SubscriptionManager is ReentrancyGuard {
         
         // NEW: Grace period handling for insufficient funds
         if (allowance < sub.amount || balance < sub.amount) {
-            sub.failedPayments++;
+            // N-H12 FIX: Count at most one failed payment per block for this subscription.
+            // Prevents merchants from calling processPayment 3x in the same block to force
+            // immediate auto-cancellation.
+            if (sub.lastFailedPaymentBlock != block.number) {
+                sub.failedPayments++;
+                sub.lastFailedPaymentBlock = block.number;
+            }
             
             if (sub.failedPayments >= MAX_FAILED_PAYMENTS) {
                 // Too many failures, cancel subscription

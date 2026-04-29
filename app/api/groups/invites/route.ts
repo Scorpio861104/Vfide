@@ -52,12 +52,22 @@ function parsePositiveInteger(value: string): number | null {
 
 async function generateInviteCode(): Promise<string> {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const bytes = new Uint8Array(12);
-  crypto.getRandomValues(bytes);
+  const base = chars.length;
+  const maxUnbiased = Math.floor(256 / base) * base;
+
   let code = '';
-  for (let i = 0; i < 12; i++) {
-    code += chars.charAt(bytes[i]! % chars.length);
+  while (code.length < 12) {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    for (let i = 0; i < bytes.length && code.length < 12; i++) {
+      const value = bytes[i]!;
+      if (value >= maxUnbiased) {
+        continue;
+      }
+      code += chars.charAt(value % base);
+    }
   }
+
   const existing = await query('SELECT id FROM group_invites WHERE code = $1', [code]);
   if (existing.rows.length > 0) {
     return generateInviteCode();

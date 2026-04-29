@@ -279,6 +279,7 @@ interface IEscrowManager {
 
 interface IDAOTimelock {
     function queueTx(address target, uint256 value, bytes calldata data) external returns (bytes32);
+    function queueTxFromDAO(address target, uint256 value, bytes calldata data, uint256 daoProposalId) external returns (bytes32);
 }
 
 interface IGovernanceHooks {

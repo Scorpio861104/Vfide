@@ -47,7 +47,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     uint256 public constant MIN_POINTS_PER_USER_CAP = 1;
     
     // L-3 FIX: Max points per user to prevent gaming
-    uint256 public maxPointsPerUser = 10_000;
+    uint256 public maxPointsPerUser = 100_000;
 
     // M-7 FIX: Enforce a per-user daily point accrual limit so users cannot reach maxPointsPerUser
     //          in a single block by voting on every proposal in the same transaction batch.

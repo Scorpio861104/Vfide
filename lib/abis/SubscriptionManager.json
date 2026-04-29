@@ -804,6 +804,11 @@
             "type": "uint256"
           },
           {
+            "internalType": "uint256",
+            "name": "lastFailedPaymentBlock",
+            "type": "uint256"
+          },
+          {
             "internalType": "string",
             "name": "memo",
             "type": "string"
@@ -892,6 +897,11 @@
           {
             "internalType": "uint256",
             "name": "failedPayments",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lastFailedPaymentBlock",
             "type": "uint256"
           },
           {
@@ -1153,6 +1163,11 @@
       {
         "internalType": "uint256",
         "name": "failedPayments",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastFailedPaymentBlock",
         "type": "uint256"
       },
       {

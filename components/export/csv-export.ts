@@ -24,7 +24,10 @@ export interface CSVExportOptions {
 
 function escapeCSV(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return '';
-  const str = String(value);
+  const raw = String(value);
+  // N-H8 FIX: Prevent CSV/Spreadsheet formula injection by neutralizing cells that
+  // begin with formula trigger characters.
+  const str = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {
     return `"${str.replace(/"/g, '""')}"`;
   }

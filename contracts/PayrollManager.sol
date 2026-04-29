@@ -50,6 +50,8 @@ contract PayrollManager is ReentrancyGuard {
     event RateModified(uint256 indexed streamId, uint256 oldRate, uint256 newRate);
     event PayeeUpdated(uint256 indexed streamId, address indexed oldPayee, address indexed newPayee);
     event EmergencyWithdraw(uint256 indexed streamId, address indexed to, uint256 amount);
+    event EmergencyWithdrawProposed(uint256 indexed streamId, address indexed to, uint256 amount, uint64 executeAfter);
+    event EmergencyWithdrawCancelled(uint256 indexed streamId, address indexed to);
     event StreamExpired(uint256 indexed streamId, address indexed reclaimedBy, uint256 amount);
     event DAOSet(address indexed dao);
     event SupportedTokenSet(address indexed token, bool supported);
@@ -79,6 +81,13 @@ contract PayrollManager is ReentrancyGuard {
     }
     mapping(uint256 => PendingPayeeUpdate) public pendingPayeeUpdates;
     uint256 public constant PAYEE_UPDATE_DELAY = 48 hours;
+
+    struct PendingEmergencyWithdraw {
+        address to;
+        uint64 executeAfter;
+    }
+    mapping(uint256 => PendingEmergencyWithdraw) public pendingEmergencyWithdraws;
+    uint64 public constant EMERGENCY_WITHDRAW_DELAY = 7 days;
     
     // NEW: DAO for emergency controls
     address public dao;
@@ -336,21 +345,52 @@ contract PayrollManager is ReentrancyGuard {
     }
     
     /**
-     * @notice Emergency withdraw by DAO (for contract migration or disputes)
+     * @notice Propose emergency withdraw by DAO (for contract migration or disputes)
+     * @dev N-M38 FIX: execution is delayed by 7 days to prevent instant confiscation.
      */
     function emergencyWithdraw(uint256 streamId, address to) external onlyDAO {
         Stream storage s = streams[streamId];
         require(s.active, "PM: stream inactive");
         require(to != address(0), "PM: zero address");
-        
+
+        PendingEmergencyWithdraw storage pending = pendingEmergencyWithdraws[streamId];
+        require(pending.executeAfter == 0, "PM: pending emergency withdraw");
+
+        uint64 executeAfter = uint64(block.timestamp) + EMERGENCY_WITHDRAW_DELAY;
+        pendingEmergencyWithdraws[streamId] = PendingEmergencyWithdraw({
+            to: to,
+            executeAfter: executeAfter
+        });
+
+        emit EmergencyWithdrawProposed(streamId, to, s.depositBalance, executeAfter);
+    }
+
+    function applyEmergencyWithdraw(uint256 streamId) external onlyDAO {
+        Stream storage s = streams[streamId];
+        require(s.active, "PM: stream inactive");
+
+        PendingEmergencyWithdraw storage pending = pendingEmergencyWithdraws[streamId];
+        require(pending.executeAfter != 0, "PM: no pending emergency withdraw");
+        require(block.timestamp >= pending.executeAfter, "PM: emergency timelock");
+
+        address to = pending.to;
         uint256 balance = s.depositBalance;
         s.depositBalance = 0;
         s.active = false;
         _decrementActiveCounts(s.payer, s.payee);
+        delete pendingEmergencyWithdraws[streamId];
 
         emit EmergencyWithdraw(streamId, to, balance);
-        
+
         _safeTransferPay(s.token, to, balance);
+    }
+
+    function cancelEmergencyWithdraw(uint256 streamId) external onlyDAO {
+        PendingEmergencyWithdraw storage pending = pendingEmergencyWithdraws[streamId];
+        require(pending.executeAfter != 0, "PM: no pending emergency withdraw");
+        address to = pending.to;
+        delete pendingEmergencyWithdraws[streamId];
+        emit EmergencyWithdrawCancelled(streamId, to);
     }
 
     /**

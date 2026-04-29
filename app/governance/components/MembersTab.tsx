@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from "react"
+import { exportCSV } from "@/components/export/csv-export"
 
 export function MembersTab({ searchQuery }: { searchQuery: string }) {
   const [sortBy, setSortBy] = useState<"score" | "votes" | "participation">("score")
@@ -34,15 +35,11 @@ export function MembersTab({ searchQuery }: { searchQuery: string }) {
               <h2 className="text-2xl font-bold text-zinc-100">DAO Members & Voting Activity</h2>
               <button
                 onClick={() => {
-                  const csv =
-                    "Address,Score,Votes,Participation,Fatigue\n" +
-                    filteredMembers.map((m) => `${m.address},${m.score},${m.votes},${m.participation},${m.fatigue}`).join("\n")
-                  const blob = new Blob([csv], { type: "text/csv" })
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement("a")
-                  a.href = url
-                  a.download = "members.csv"
-                  a.click()
+                  exportCSV({
+                    filename: "members",
+                    headers: ["Address", "Score", "Votes", "Participation", "Fatigue"],
+                    rows: filteredMembers.map((m) => [m.address, m.score, m.votes, m.participation, m.fatigue]),
+                  })
                 }}
                 className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
               >

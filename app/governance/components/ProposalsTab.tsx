@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useReadContract, usePublicClient } from "wagmi"
 import { Sparkles } from "lucide-react"
 
+import { exportCSV } from "@/components/export/csv-export"
 import { DAOABI } from "@/lib/abis"
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts"
 import { GOVERNANCE_QUORUM_VOTES } from "@/lib/constants"
@@ -238,15 +239,11 @@ export function ProposalsTab({
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    const csv =
-                      "ID,Type,Title,For Votes,Against Votes\n" +
-                      filteredProposals.map((p) => `${p.id},${p.type},"${p.title}",${p.forVotes},${p.againstVotes}`).join("\n")
-                    const blob = new Blob([csv], { type: "text/csv" })
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement("a")
-                    a.href = url
-                    a.download = "proposals.csv"
-                    a.click()
+                    exportCSV({
+                      filename: "proposals",
+                      headers: ["ID", "Type", "Title", "For Votes", "Against Votes"],
+                      rows: filteredProposals.map((p) => [p.id, p.type, p.title, p.forVotes, p.againstVotes]),
+                    })
                   }}
                   className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400 transition-colors"
                 >

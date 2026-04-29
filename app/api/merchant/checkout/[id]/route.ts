@@ -8,12 +8,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { createPublicClient, http } from 'viem';
 import type { Hash } from 'viem';
 import { z } from 'zod4';
 
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const checkoutActionSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('view') }),
   z.object({ action: z.literal('pay'), tx_hash: z.string().regex(TX_HASH_REGEX) }),
@@ -141,6 +143,36 @@ export async function PATCH(
     }
 
     if (action === 'pay') {
+      // N-H7 FIX: Only an authenticated, invoice-bound customer can move status to
+      // pending_confirmation. This prevents arbitrary public-link callers from forcing
+      // merchant invoices into pending states.
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+      const authAddress = typeof authResult.user?.address === 'string'
+        ? authResult.user.address.trim().toLowerCase()
+        : '';
+      if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      const invoiceCustomer = typeof invoice.customer_address === 'string'
+        ? invoice.customer_address.trim().toLowerCase()
+        : '';
+      if (!invoiceCustomer || !ADDRESS_LIKE_REGEX.test(invoiceCustomer)) {
+        return NextResponse.json(
+          { error: 'Invoice is not bound to a verified customer address' },
+          { status: 403 }
+        );
+      }
+      if (invoiceCustomer !== authAddress) {
+        return NextResponse.json(
+          { error: 'Only the bound customer can submit payment confirmation' },
+          { status: 403 }
+        );
+      }
+
       // Mark as pending confirmation (requires valid tx_hash for on-chain verification)
       if (invoice.status === 'paid') {
         return NextResponse.json({ error: 'Already paid' }, { status: 400 });

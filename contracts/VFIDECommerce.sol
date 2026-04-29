@@ -174,11 +174,20 @@ contract CommerceEscrow {
     uint256 public escrowCount;
     mapping(uint256 => Escrow) public escrows;
 
+    // N-H14 FIX: Only disputes above this amount increment merchant dispute counters.
+    // Prevents griefers from opening tiny-value escrows and forcing auto-suspension.
+    uint256 public minDisputeAmountForPenalty = 100 * 1e18;
+
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
     constructor(address _dao, address _token, address _hub, address _merchants) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_merchants==address(0)) revert COM_Zero();
         dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); merchants=MerchantRegistry(_merchants);
+    }
+
+    function setMinDisputeAmountForPenalty(uint256 amount) external onlyDAO {
+        if (amount == 0) revert COM_BadAmount();
+        minDisputeAmountForPenalty = amount;
     }
 
     /**
@@ -233,7 +242,11 @@ contract CommerceEscrow {
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
         e.state = State.RELEASED;
-        token.safeTransfer(e.sellerVault, e.amount);
+        // N-H15 FIX: Resolve seller vault at release-time so mid-flight vault rotation
+        // does not orphan escrowed funds in a stale vault address.
+        address sellerVaultNow = vaultHub.vaultOf(e.merchantOwner);
+        if (sellerVaultNow == address(0)) revert COM_NotSeller();
+        token.safeTransfer(sellerVaultNow, e.amount);
     }
 
     function refund(uint256 id) external nonReentrant {
@@ -242,15 +255,22 @@ contract CommerceEscrow {
         if (msg.sender != e.merchantOwner && msg.sender != dao) revert COM_NotAllowed();
         e.state = State.REFUNDED;
         merchants._noteRefund(e.merchantOwner);
-        token.safeTransfer(e.buyerVault, e.amount);
+        // N-H15 FIX: Resolve buyer vault at refund-time so mid-flight vault rotation
+        // does not orphan escrowed funds in a stale vault address.
+        address buyerVaultNow = vaultHub.vaultOf(e.buyerOwner);
+        if (buyerVaultNow == address(0)) revert COM_NotBuyer();
+        token.safeTransfer(buyerVaultNow, e.amount);
     }
 
-    function dispute(uint256 id, string calldata /*reason*/) external {
+    function dispute(uint256 id, string calldata /*reason*/) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner) revert COM_NotAllowed();
         e.state = State.DISPUTED;
-        merchants._noteDispute(e.merchantOwner);
+        // N-H14 FIX: Ignore low-value disputes for auto-suspension accounting.
+        if (e.amount >= minDisputeAmountForPenalty) {
+            merchants._noteDispute(e.merchantOwner);
+        }
     }
 
     function resolve(uint256 id, bool buyerWins) external nonReentrant onlyDAO {
@@ -258,9 +278,13 @@ contract CommerceEscrow {
         if (e.state != State.DISPUTED) revert COM_BadState();
         e.state = State.RESOLVED;
         if (buyerWins) {
-            token.safeTransfer(e.buyerVault, e.amount);
+            address buyerVaultNow = vaultHub.vaultOf(e.buyerOwner);
+            if (buyerVaultNow == address(0)) revert COM_NotBuyer();
+            token.safeTransfer(buyerVaultNow, e.amount);
         } else {
-            token.safeTransfer(e.sellerVault, e.amount);
+            address sellerVaultNow = vaultHub.vaultOf(e.merchantOwner);
+            if (sellerVaultNow == address(0)) revert COM_NotSeller();
+            token.safeTransfer(sellerVaultNow, e.amount);
         }
     }
 }

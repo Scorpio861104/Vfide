@@ -34,6 +34,8 @@ interface ISeer_FR {
 
 interface IVaultHub_FR {
     function isVault(address account) external view returns (bool);
+    function ownerOfVault(address vault) external view returns (address);
+    function vaultOf(address owner) external view returns (address);
 }
 
 /// @dev F-11 FIX: Minimal interface to check systemExempt status on token
@@ -82,6 +84,7 @@ contract FraudRegistry is ReentrancyGuard {
 
     // ── Complaint tracking ───────────────────────────────────
     event SystemExemptCheckFailed(address indexed fraudRegistry);
+    event EscrowReleaseTargetResolved(uint256 indexed escrowIndex, address indexed originalTarget, address indexed resolvedTarget);
 
     struct Complaint {
         address reporter;
@@ -103,6 +106,9 @@ contract FraudRegistry is ReentrancyGuard {
     mapping(address => uint64) public flaggedAt;
     mapping(address => uint64) public pendingReviewAt;  // When review was triggered
     mapping(address => uint256) public dismissedComplaintPenaltyCursor; // Number of dismissed complaints already penalized
+    // N-H1 FIX: Chunked escrow-refund state used after clearFlag to avoid unbounded loops.
+    mapping(address => uint256) public clearFlagEscrowCursor;
+    mapping(address => bool) public clearFlagEscrowRefundPending;
     // H-4 FIX: Pending permanent ban state (7-day timelock)
     mapping(address => uint64) public pendingPermanentBanAt; // 0 = no pending ban
 
@@ -134,6 +140,7 @@ contract FraudRegistry is ReentrancyGuard {
     event EscrowReleased(uint256 indexed escrowIndex, address indexed to, uint256 amount);
     event EscrowRescued(uint256 indexed escrowIndex, address indexed recipient, uint256 amount);
     event EscrowCancelledOnClear(uint256 indexed escrowIndex, address indexed from, uint256 amount);
+    event ClearFlagEscrowRefundProgress(address indexed target, uint256 processed, uint256 nextCursor, bool complete);
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event DAOProposed(address indexed newDAO, uint64 effectiveAt);
     event DAOChangeCancelled();
@@ -246,11 +253,32 @@ contract FraudRegistry is ReentrancyGuard {
         // H-3 FIX: Decrement active escrow counter before transfer
         totalActiveEscrowed -= e.amount;
 
-        // F-11 FIX: Verify systemExempt is configured so recipient receives full amount.
-        // If FraudRegistry is not systemExempt on VFIDEToken, this transfer would incur
-        // burn/sanctum/ecosystem fees, and recipient gets less than escrowed.
+        // N-H3 FIX: Resolve current destination vault at release-time when possible.
+        // If the recipient rotated vaults during escrow, redirect to the recipient's current vault
+        // instead of the stale vault address captured at send-time.
+        address releaseTarget = e.to;
+        if (address(vaultHub) != address(0)) {
+            try vaultHub.isVault(e.to) returns (bool wasVault) {
+                if (wasVault) {
+                    try vaultHub.ownerOfVault(e.to) returns (address owner) {
+                        if (owner != address(0)) {
+                            try vaultHub.vaultOf(owner) returns (address currentVault) {
+                                if (currentVault != address(0) && currentVault != e.to) {
+                                    releaseTarget = currentVault;
+                                }
+                            } catch {}
+                        }
+                    } catch {}
+                }
+            } catch {}
+        }
+
+        // F-11/N-H4 FIX: Check systemExempt for full-amount delivery, but do not permanently lock
+        // release if exemption is removed. Emit warning and continue transfer so escrow is not stuck forever.
         try IVFIDEToken_SystemExempt(address(vfideToken)).systemExempt(address(this)) returns (bool exempt) {
-            require(exempt, "FR: not systemExempt on token; recipient would get less than escrowed");
+            if (!exempt) {
+                emit SystemExemptCheckFailed(address(this));
+            }
         } catch {
             // If systemExempt query fails, emit warning but continue (fallback for older token versions)
             emit SystemExemptCheckFailed(address(this));
@@ -259,9 +287,12 @@ contract FraudRegistry is ReentrancyGuard {
         // Transfer tokens from this contract to the intended recipient
         // FraudRegistry must be systemExempt on VFIDEToken so this transfer
         // skips fees and fraud checks (preventing infinite recursion)
-        SafeERC20.safeTransfer(vfideToken, e.to, e.amount);
+        SafeERC20.safeTransfer(vfideToken, releaseTarget, e.amount);
 
-        emit EscrowReleased(escrowIndex, e.to, e.amount);
+        if (releaseTarget != e.to) {
+            emit EscrowReleaseTargetResolved(escrowIndex, e.to, releaseTarget);
+        }
+        emit EscrowReleased(escrowIndex, releaseTarget, e.amount);
     }
 
     function rescueStuckEscrow(uint256 escrowIndex, address recipient) external onlyDAO nonReentrant {
@@ -339,6 +370,10 @@ contract FraudRegistry is ReentrancyGuard {
         // Complaint count and history stay — on-chain record is permanent
         // But no consequences are applied
 
+        // N-M4 FIX: Process a bounded first chunk immediately so penalty application
+        // does not depend entirely on a separate keeper call.
+        _processDismissedComplaintPenalties(target, 20);
+
         emit ComplaintsDismissedByDAO(target, msg.sender);
     }
 
@@ -346,6 +381,10 @@ contract FraudRegistry is ReentrancyGuard {
     /// @param target Address whose dismissed complaints are being processed.
     /// @param maxCount Maximum number of complaints to process in this call. Zero means 20.
     function processDismissedComplaintPenalties(address target, uint256 maxCount) external nonReentrant returns (uint256 processed) {
+        processed = _processDismissedComplaintPenalties(target, maxCount);
+    }
+
+    function _processDismissedComplaintPenalties(address target, uint256 maxCount) internal returns (uint256 processed) {
         uint256 end = complaints[target].length;
         uint256 cursor = dismissedComplaintPenaltyCursor[target];
         if (cursor >= end) {
@@ -377,28 +416,67 @@ contract FraudRegistry is ReentrancyGuard {
         if (!isFlagged[target]) revert FR_NotFlagged();
         isFlagged[target] = false;
         flaggedAt[target] = 0;
+
+        // N-H2 FIX: Reset complaint state so a cleared subject is not immediately re-flaggable
+        // with a single new complaint due to stale counters/history.
+        isPendingReview[target] = false;
+        pendingReviewAt[target] = 0;
+        complaintCount[target] = 0;
+        delete complaints[target];
+        dismissedComplaintPenaltyCursor[target] = 0;
+
+        // N-H1 FIX: Escrow refunds are processed in bounded chunks via
+        // processClearFlagEscrowRefunds() to prevent clearFlag gas exhaustion.
+        clearFlagEscrowCursor[target] = 0;
+        clearFlagEscrowRefundPending[target] = true;
         
-        // F-12 FIX: When a flag is cleared (fraud was false), retroactively cancel
-        // pending escrows and refund the flagged user. Otherwise users falsely flagged
-        // pay the full 30-day time penalty even after rehabilitation.
+        emit FlagCleared(target, msg.sender);
+    }
+
+    /// @notice Process refund cancellation for escrows linked to a target whose flag was cleared.
+    /// @dev N-H1 FIX: Bounded chunk processing to avoid unbounded clearFlag loops.
+    /// @param target Address whose flag was cleared.
+    /// @param maxCount Max escrow entries to scan in this call (0 => default 25).
+    function processClearFlagEscrowRefunds(address target, uint256 maxCount)
+        external
+        nonReentrant
+        returns (uint256 processed)
+    {
+        require(clearFlagEscrowRefundPending[target], "FR: no pending clear-refunds");
+
         uint256[] storage userIndices = userEscrowIndices[target];
-        uint256 indexCount = userIndices.length;
-        
-        for (uint256 i = 0; i < indexCount; i++) {
+        uint256 cursor = clearFlagEscrowCursor[target];
+        uint256 len = userIndices.length;
+        if (cursor >= len) {
+            clearFlagEscrowRefundPending[target] = false;
+            emit ClearFlagEscrowRefundProgress(target, 0, cursor, true);
+            return 0;
+        }
+
+        uint256 limit = maxCount == 0 ? 25 : maxCount;
+        uint256 stop = cursor + limit;
+        if (stop > len) stop = len;
+
+        for (uint256 i = cursor; i < stop; i++) {
             uint256 escrowIndex = userIndices[i];
             if (escrowIndex >= escrowedTransfers.length) continue;
-            
+
             EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
             if (!e.released && !e.cancelled) {
-                // Cancel the escrow and refund to sender (the user who was flagged)
                 e.cancelled = true;
                 totalActiveEscrowed -= e.amount;
                 SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
                 emit EscrowCancelledOnClear(escrowIndex, e.from, e.amount);
+                processed++;
             }
         }
-        
-        emit FlagCleared(target, msg.sender);
+
+        clearFlagEscrowCursor[target] = stop;
+        bool complete = stop >= len;
+        if (complete) {
+            clearFlagEscrowRefundPending[target] = false;
+        }
+        emit ClearFlagEscrowRefundProgress(target, processed, stop, complete);
     }
 
     /// @notice Schedule a permanent ban with a 7-day timelock (H-4 FIX).

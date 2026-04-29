@@ -9,6 +9,10 @@ interface IVFIDEBurnable {
     function burn(uint256 amount) external;
 }
 
+interface IVaultHubReferral_ECO {
+    function vaultOf(address owner) external view returns (address);
+}
+
 /**
  * EcosystemVault — Growth Incentive Treasury (Howey-safe)
  * ----------------------------------------------------------
@@ -72,6 +76,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event SeerUpdated(address indexed oldSeer, address indexed newSeer);
     event PendingReferralRegistered(address indexed referred, address indexed referrer, bool isMerchant);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
+    event ReferralVaultHubUpdated(address indexed oldHub, address indexed newHub);
     event WorkRewardPaid(address indexed worker, uint256 amount, string program, string reason);
     event ManagerChangeQueued(address indexed manager, bool active, uint256 executeAfter);
     event ManagerChangeCancelled(address indexed manager, bool active);
@@ -112,6 +117,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // Minimum activity for referral to count
     uint8 public constant MIN_MERCHANT_TX = 3;        // Merchant needs 3 transactions
     uint256 public constant MIN_USER_VAULT_USD = 25;  // User needs $25 worth in vault
+    uint256 public constant MIN_USER_VAULT_BALANCE = 25e18;
 
     // Merchant tier multipliers (weight for ranking, not direct payout)
     // Higher tier = more weight per transaction
@@ -146,6 +152,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     IERC20 public rewardToken;
     ISeer public seer;
     ICouncilManager public councilManager;
+    IVaultHubReferral_ECO public referralVaultHub;
     
     mapping(address => bool) public isManager;
 
@@ -233,6 +240,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(uint256 => bool) public merchantPeriodEnded; // period => ended
     mapping(uint256 => mapping(address => bool)) public merchantPeriodClaimed; // period => merchant => claimed
     mapping(address => uint256) public totalMerchantBonusesPaid;
+    mapping(address => uint256) public merchantLifetimeTxCount;
 
     // Headhunter tracking (year-long accumulation, quarterly payouts)
     uint256 public currentYear;
@@ -423,6 +431,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         address oldToken = address(rewardToken);
         rewardToken = IERC20(token);
         emit RewardTokenUpdated(oldToken, token);
+    }
+
+    function setReferralVaultHub(address hub) external onlyOwner {
+        address oldHub = address(referralVaultHub);
+        referralVaultHub = IVaultHubReferral_ECO(hub);
+        emit ReferralVaultHubUpdated(oldHub, hub);
     }
 
     /// @notice Migrate to a new reward token while preserving pool accounting.
@@ -844,6 +858,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
         
         periodMerchantTxCount[currentMerchantPeriod][merchant]++;
+        merchantLifetimeTxCount[merchant]++;
         
         // Store best tier achieved this period
         if (tier > periodMerchantTier[currentMerchantPeriod][merchant]) {
@@ -939,6 +954,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         address referrer = pendingMerchantReferrer[merchant];
         if (referrer == address(0)) return;
         if (referralCredited[merchant]) return;
+        if (merchantLifetimeTxCount[merchant] < MIN_MERCHANT_TX) return;
         
         // Referrer must still have minimum score at credit time
         if (seer.getScore(referrer) < HEADHUNTER_MIN_SCORE) return;
@@ -956,6 +972,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         address referrer = pendingUserReferrer[user];
         if (referrer == address(0)) return;
         if (referralCredited[user]) return;
+        if (!_meetsUserReferralThreshold(user)) return;
         
         // Referrer must still have minimum score at credit time
         if (seer.getScore(referrer) < HEADHUNTER_MIN_SCORE) return;
@@ -1008,6 +1025,20 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         totalHeadhunterPaid += amount;
         _deliverWorkReward(worker, amount, reason);
         return true;
+    }
+
+    function _meetsUserReferralThreshold(address user) internal view returns (bool) {
+        address hub = address(referralVaultHub);
+        if (hub == address(0)) {
+            return false;
+        }
+
+        address vault = referralVaultHub.vaultOf(user);
+        if (vault == address(0)) {
+            return false;
+        }
+
+        return vfide.balanceOf(vault) >= MIN_USER_VAULT_BALANCE;
     }
 
     /**

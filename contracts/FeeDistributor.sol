@@ -67,6 +67,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     uint256 public totalToDAO;
     uint256 public totalToMerchants;
     uint256 public totalToHeadhunters;
+    uint256 public totalRescued;
 
     // F-33 FIX: Authorized fee sources (in addition to vfideToken)
     // Allows other contracts to call receiveFee() while maintaining security gate
@@ -90,6 +91,14 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     }
     PendingDestinationChange public pendingDestinationChange;
 
+    struct PendingRescue {
+        address to;
+        uint256 amount;
+        uint256 effectiveTime;
+        bool pending;
+    }
+    PendingRescue public pendingRescue;
+
     event FeeReceived(uint256 amount);
     event FeeDistributed(uint256 total, uint256 burned, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters);
     event BurnFallbackTransfer(uint256 amount, address indexed burnAddress);
@@ -102,6 +111,9 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     event DestinationUpdated(string name, address indexed addr);
     event MinDistributionAmountSet(uint256 oldAmount, uint256 newAmount);
     event DistributionTransferFailed(string channel, address indexed recipient, uint256 amount);
+    event RescueProposed(address indexed to, uint256 amount, uint256 effectiveTime);
+    event RescueExecuted(address indexed to, uint256 amount);
+    event RescueCancelled(address indexed to, uint256 amount);
 
     error ZeroAddress();
     error InvalidSplit();
@@ -111,6 +123,9 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     error BelowMinimum();
     error SplitChangeNotReady();
     error NoSplitChangePending();
+    error NoRescuePending();
+    error RescueNotReady();
+    error RescueAmountTooHigh();
 
     constructor(
         address _token,
@@ -329,6 +344,46 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 oldAmount = minDistributionAmount;
         minDistributionAmount = _min;
         emit MinDistributionAmountSet(oldAmount, _min);
+    }
+
+    /// @notice Queue a rescue transfer for stranded balances after repeated sink failures.
+    function proposeRescue(address to, uint256 amount) external onlyRole(ADMIN_ROLE) {
+        if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) revert BelowMinimum();
+        if (pendingRescue.pending) revert NoSplitChangePending();
+
+        uint256 balance = vfideToken.balanceOf(address(this));
+        if (amount > balance) revert RescueAmountTooHigh();
+
+        pendingRescue = PendingRescue({
+            to: to,
+            amount: amount,
+            effectiveTime: block.timestamp + DESTINATION_CHANGE_DELAY,
+            pending: true
+        });
+        emit RescueProposed(to, amount, pendingRescue.effectiveTime);
+    }
+
+    function executeRescue() external onlyRole(ADMIN_ROLE) nonReentrant {
+        if (!pendingRescue.pending) revert NoRescuePending();
+        if (block.timestamp < pendingRescue.effectiveTime) revert RescueNotReady();
+
+        address to = pendingRescue.to;
+        uint256 amount = pendingRescue.amount;
+        delete pendingRescue;
+
+        IERC20(address(vfideToken)).safeTransfer(to, amount);
+        totalDistributed += amount;
+        totalRescued += amount;
+        emit RescueExecuted(to, amount);
+    }
+
+    function cancelRescue() external onlyRole(ADMIN_ROLE) {
+        if (!pendingRescue.pending) revert NoRescuePending();
+        address to = pendingRescue.to;
+        uint256 amount = pendingRescue.amount;
+        delete pendingRescue;
+        emit RescueCancelled(to, amount);
     }
 
     /// @notice Pause fee distribution operations.

@@ -30,6 +30,10 @@ interface IFraudRegistryMerchant {
     function isServiceBanned(address user) external view returns (bool);
 }
 
+interface IERC20DecimalsMerchant {
+    function decimals() external view returns (uint8);
+}
+
 error MERCH_Zero();
 error MERCH_NotDAO();
 error MERCH_NotMerchant();
@@ -152,6 +156,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// Supported payment tokens (VFIDE + stablecoins)
     mapping(address => bool) public acceptedTokens;
+    mapping(address => uint8) public acceptedTokenDecimals;
     mapping(address => mapping(address => bool)) public merchantPullApproved; // customer => merchant => approved
     mapping(address => mapping(address => uint256)) public merchantPullRemaining; // customer => merchant => remaining pull amount
     mapping(address => mapping(address => uint64)) public merchantPullExpiry; // customer => merchant => expiry timestamp (0 = no expiry)
@@ -278,6 +283,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function setAcceptedToken(address token, bool accepted) external onlyDAO {
         if (token == address(0)) revert MERCH_Zero();
         acceptedTokens[token] = accepted;
+        if (accepted) {
+            (uint8 decimals, bool ok) = _readTokenDecimals(token);
+            if (!ok) revert MERCH_InvalidConfig();
+            acceptedTokenDecimals[token] = decimals;
+        } else {
+            delete acceptedTokenDecimals[token];
+        }
         _log(accepted ? "token_accepted" : "token_removed");
     }
 
@@ -451,6 +463,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         string calldata orderId
     ) external onlyMerchant returns (bytes32 refundId) {
         if (customer == address(0) || amount == 0) revert MERCH_InvalidPayment();
+
+        // N-H11 FIX: Reserve headroom in the customer's refund history so one merchant
+        // cannot saturate the full 500-slot history and block all future refunds.
+        if (customerRefunds[customer].length >= 450) revert MERCH_CapExceeded();
         
         refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
         
@@ -466,7 +482,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         });
         
         // Track refunds for both parties (I-11: capped)
-        if (customerRefunds[customer].length >= 500) revert MERCH_CapExceeded();
         customerRefunds[customer].push(refundId);
         if (merchantRefunds[msg.sender].length >= 500) revert MERCH_CapExceeded();
         merchantRefunds[msg.sender].push(refundId);
@@ -497,6 +512,31 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Pull refund from the merchant caller to avoid requiring approvals from vault contracts.
         IERC20(r.token).safeTransferFrom(msg.sender, customerVault, r.amount);
         
+        emit RefundCompleted(r.customer, r.merchant, r.orderId, r.amount);
+        _logEv(r.customer, "refund_completed", r.amount, r.orderId);
+    }
+
+    /**
+     * @notice Complete a refund by pulling from the merchant's vault allowance.
+     * @dev Requires the merchant vault to have approved this portal for the refund token.
+     * @param refundId The refund ID from initiateRefund
+     */
+    function completeRefundFromVault(bytes32 refundId) external nonReentrant {
+        RefundRequest storage r = refundRequests[refundId];
+        if (r.amount == 0) revert MERCH_NotFound();
+        if (!r.approved) revert MERCH_NotApproved();
+        if (r.completed) revert MERCH_AlreadyCompleted();
+        if (msg.sender != r.merchant) revert MERCH_Forbidden();
+        if (block.timestamp > uint256(r.requestTime) + REFUND_COMPLETION_WINDOW) revert MERCH_ApprovalExpired();
+
+        r.completed = true;
+
+        address merchantVault = vaultHub.vaultOf(r.merchant);
+        address customerVault = vaultHub.vaultOf(r.customer);
+        if (merchantVault == address(0) || customerVault == address(0)) revert MERCH_NoVault();
+
+        IERC20(r.token).safeTransferFrom(merchantVault, customerVault, r.amount);
+
         emit RefundCompleted(r.customer, r.merchant, r.orderId, r.amount);
         _logEv(r.customer, "refund_completed", r.amount, r.orderId);
     }
@@ -570,6 +610,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (customer == address(0) || token == address(0) || amount == 0) {
             revert MERCH_InvalidPayment();
         }
+
+        // N-H9/N-H17 FIX: Legacy processPayment entrypoint must enforce the same fraud
+        // gates as pay()/internal paths so banned users cannot route around checks.
+        _checkFraudStatus(customer);
+        _checkFraudStatus(msg.sender);
         
         MerchantInfo storage merchant = merchants[msg.sender];
         if (merchant.suspended) revert MERCH_Suspended();
@@ -976,6 +1021,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     ) internal {
         if (autoConvert[merchant] && token != stablecoin) {
             emit AutoConvertFallback(merchant, token, netAmount, "auto_convert_disabled_pending_safe_pricing");
+            revert MERCH_NotConfigured();
         }
 
         IERC20(token).safeTransferFrom(customerVault, recipient, netAmount);
@@ -1115,6 +1161,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function _validateSettlementToken(address token) internal view {
         if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
 
+        (uint8 liveDecimals, bool decimalsOk) = _readTokenDecimals(token);
+        if (!decimalsOk || liveDecimals != acceptedTokenDecimals[token]) revert MERCH_InvalidConfig();
+
         // F-07 REMEDIATION: Settlement is stablecoin-only.
         // Tokens with a VFIDE-style burn router underdeliver versus invoice amounts.
         // Reject them at the contract layer to prevent accounting mismatch.
@@ -1122,6 +1171,14 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             if (r != address(0)) revert MERCH_VFIDESettlementDisabled();
         } catch {
             // Non-VFIDE tokens do not expose burnRouter(); allow them when accepted.
+        }
+    }
+
+    function _readTokenDecimals(address token) internal view returns (uint8 decimals, bool ok) {
+        try IERC20DecimalsMerchant(token).decimals() returns (uint8 d) {
+            return (d, true);
+        } catch {
+            return (0, false);
         }
     }
 

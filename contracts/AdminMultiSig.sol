@@ -389,11 +389,19 @@ contract AdminMultiSig is ReentrancyGuard {
             "AdminMultiSig: veto window closed"
         );
         if (address(seer) != address(0)) {
-            // M-6 FIX: Primary gate — ProofScore reflects reputation, not just wealth
+            // N-M21 FIX: In production, require BOTH reputation and stake to reduce
+            // low-cost sybil vetoing with fresh default-score vaults.
             require(
                 seer.getCachedScore(msg.sender) >= vetoMinScore,
                 "AdminMultiSig: ProofScore too low to veto"
             );
+            if (vetoMinStake > 0) {
+                require(address(vfideToken) != address(0), "AdminMultiSig: VFIDE token not configured");
+                require(
+                    vfideToken.balanceOf(msg.sender) >= vetoMinStake,
+                    "AdminMultiSig: insufficient VFIDE stake to veto"
+                );
+            }
         } else if (vetoMinStake > 0 && address(vfideToken) != address(0)) {
             // Fallback to token-balance gate when seer is not yet configured
             require(

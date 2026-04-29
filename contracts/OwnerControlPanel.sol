@@ -110,6 +110,8 @@ contract OwnerControlPanel {
         error OCP_PanicGuardNotSet();
         error OCP_ETHTransferFailed();
             error OCP_UnfreezeViaDAO();
+            error OCP_RecoveryDisabled();
+            error OCP_DeprecatedVaultFreeze();
     
     modifier onlyOwner() {
         if (msg.sender != owner) revert OCP_NotOwner();
@@ -780,30 +782,28 @@ contract OwnerControlPanel {
     }
     
     /**
-     * @notice Initiate DAO emergency recovery for a vault
+     * @notice Deprecated: DAO emergency recovery path is disabled in VaultHub.
      */
     function vault_requestDAORecovery(address vault, address newOwner) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_vault_requestDAORecovery(vault, newOwner));
-        vaultHub.requestDAORecovery(vault, newOwner);
-        emit EmergencyAction("dao_recovery_requested", vault);
+        vault;
+        newOwner;
+        revert OCP_RecoveryDisabled();
     }
     
     /**
-     * @notice Finalize DAO recovery after timelock
+     * @notice Deprecated: DAO emergency recovery path is disabled in VaultHub.
      */
     function vault_finalizeDAORecovery(address vault) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_vault_finalizeDAORecovery(vault));
-        vaultHub.finalizeDAORecovery(vault);
-        emit EmergencyAction("dao_recovery_finalized", vault);
+        vault;
+        revert OCP_RecoveryDisabled();
     }
     
     /**
-     * @notice Cancel DAO recovery request
+     * @notice Deprecated: DAO emergency recovery path is disabled in VaultHub.
      */
     function vault_cancelDAORecovery(address vault) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_vault_cancelDAORecovery(vault));
-        vaultHub.cancelDAORecovery(vault);
-        emit EmergencyAction("dao_recovery_cancelled", vault);
+        vault;
+        revert OCP_RecoveryDisabled();
     }
     
     /**
@@ -817,18 +817,24 @@ contract OwnerControlPanel {
         emit PanicGuardUpdated(_panicGuard);
     }
 
-    /// @notice Freeze/unfreeze a vault via PanicGuard (does not call vault directly — OCP is not vault owner)
-    /// @dev Freeze: reports high-severity risk to PanicGuard (panicGuard must be set). Unfreeze: clears via DAO process.
+    /// @notice Deprecated: this does not freeze a single vault; kept for compatibility only.
     function vault_freezeVault(address vault, bool frozen) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_vault_freezeVault(vault, frozen));
+        vault;
+        frozen;
+        revert OCP_DeprecatedVaultFreeze();
+    }
+
+    /// @notice N-H19 FIX: Explicit risk-reporting primitive replacing misleading "freeze" semantics.
+    /// @dev This triggers PanicGuard risk handling; it is NOT a per-vault custody freeze.
+    function vault_reportRisk(address vault, uint64 duration, uint8 severity, string calldata reason)
+        external
+        onlyOwner
+        nonReentrant
+    {
+        _consumeQueuedAction(keccak256(abi.encode("vault_reportRisk", vault, duration, severity, reason)));
         if (address(panicGuard) == address(0)) revert OCP_PanicGuardNotSet();
-        if (frozen) {
-            panicGuard.reportRisk(vault, 30 days, 100, "ocp_freeze");
-        } else {
-            // Unfreeze requires PanicGuard.clear() which is onlyDAO — emit for off-chain handling
-            revert OCP_UnfreezeViaDAO();
-        }
-        emit EmergencyAction(frozen ? "vault_frozen" : "vault_unfrozen", vault);
+        panicGuard.reportRisk(vault, duration, severity, reason);
+        emit EmergencyAction("vault_risk_reported", vault);
     }
     
     // ═══════════════════════════════════════════════════════════════════════

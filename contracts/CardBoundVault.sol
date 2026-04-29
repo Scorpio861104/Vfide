@@ -13,6 +13,10 @@ interface ICardBoundVaultView {
     function canReceiveTransfer(uint256 amount) external view returns (bool);
 }
 
+interface ISeerAutonomousVault {
+    function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
+}
+
 /**
  * @title CardBoundVault
  * @notice Active vault implementation — wallet is authorization-only (ATM-card model).
@@ -46,6 +50,7 @@ contract CardBoundVault is ReentrancyGuard {
     address public immutable hub;
     address public immutable vfideToken;
     IProofLedger public immutable ledger;
+    ISeerAutonomousVault public seerAutonomous;
 
     address public admin;
     address public pendingAdmin;
@@ -193,6 +198,7 @@ contract CardBoundVault is ReentrancyGuard {
     );
 
     event PauseSet(bool paused, address indexed by);
+    event SeerAutonomousSet(address indexed seerAutonomous);
     event SpendLimitsSet(uint256 maxPerTransfer, uint256 dailyTransferLimit);
     event VaultApprove(address indexed spender, uint256 amount);
     event NativeRescue(address indexed to, uint256 amount);
@@ -229,6 +235,7 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_QueueInvalidIndex();
     error CBV_QueueNotReady();
     error CBV_QueueAlreadyProcessed();
+    error CBV_SeerBlocked();
     /// @notice C-7 FIX: Destination vault cannot receive transfer (unguarded and cap would be exceeded).
     error CBV_ReceiverNeedsGuardian();
 
@@ -465,6 +472,11 @@ contract CardBoundVault is ReentrancyGuard {
         emit SpendLimitsChangeCancelled();
     }
 
+    function setSeerAutonomous(address _seerAutonomous) external onlyAdmin {
+        seerAutonomous = ISeerAutonomousVault(_seerAutonomous);
+        emit SeerAutonomousSet(_seerAutonomous);
+    }
+
     /// @notice C-7 FIX: Returns true if this vault can receive `amount` more VFIDE without
     ///         guardian setup complete.  Once guardian setup is done the cap is lifted.
     function canReceiveTransfer(uint256 amount) external view returns (bool) {
@@ -637,6 +649,8 @@ contract CardBoundVault is ReentrancyGuard {
         address signer = _recoverTransferSigner(intent, signature);
         if (signer != activeWallet) revert CBV_InvalidSigner();
 
+        _enforceSeerAction(admin, 0, amount, intent.toVault);
+
         nextNonce += 1;
 
         // ── Large transfer queueing ─────────────────────────────
@@ -731,6 +745,8 @@ contract CardBoundVault is ReentrancyGuard {
         //            so dayStart > w.requestTime is always true here.
         _refreshDailyWindow();
         if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
+
+        _enforceSeerAction(admin, 0, w.amount, w.toVault);
 
         w.executed = true;
         if (activeQueuedWithdrawals > 0) {
@@ -967,6 +983,15 @@ contract CardBoundVault is ReentrancyGuard {
         }
     }
 
+    function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
+        if (address(seerAutonomous) == address(0)) return;
+        try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
+            if (r != 0) revert CBV_SeerBlocked();
+        } catch {
+            revert CBV_SeerBlocked();
+        }
+    }
+
     /// @notice Rescue accidentally sent native token; vault custody remains token-based.
     function rescueNative(address payable to, uint256 amount) external onlyAdmin nonReentrant {
         if (to == address(0)) revert CBV_Zero();
@@ -1045,8 +1070,18 @@ contract CardBoundVault is ReentrancyGuard {
         admin = newWallet;
         pendingAdmin = address(0);
         paused = true;
+
+        // N-H6/N-H10 FIX: Recovery rotation must clear ALL sensitive queued state so the
+        // new admin cannot accidentally apply stale operations approved under the old wallet.
         delete pendingRotation;
         delete pendingGuardianChange;
+        delete pendingSpendLimitChange;
+        delete pendingLargeTransferThresholdChange;
+        delete pendingERC20Rescue;
+        delete pendingNativeRescue;
+        delete pendingTokenApproval;
+        delete withdrawalQueue;
+        activeQueuedWithdrawals = 0;
 
         emit RecoveryRotationExecuted(oldWallet, newWallet, oldAdmin, newWallet);
         emit WalletRotated(oldWallet, newWallet, walletEpoch);

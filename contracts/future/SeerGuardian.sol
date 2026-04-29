@@ -69,6 +69,8 @@ error SG_Cooldown();
 error SG_AlreadyOverridden();
 error SG_NoViolation();
 error SG_InvalidAction();
+error SG_NoPending();
+error SG_TimelockActive();
 
 /// ═══════════════════════════════════════════════════════════════════════════
 ///                           SEER GUARDIAN
@@ -89,6 +91,8 @@ contract SeerGuardian is ReentrancyGuard {
     
     event ModulesSet(address seer, address dao, address vaultHub, address ledger);
     event DAOSet(address indexed oldDAO, address indexed newDAO);
+    event DAOChangeQueued(address indexed oldDAO, address indexed newDAO, uint64 executeAfter);
+    event DAOChangeCancelled(address indexed oldDAO, address indexed newDAO);
     
     // Automatic enforcement events
     // F-87: consolidated event (single emission with both reason code and reason text).
@@ -136,6 +140,9 @@ contract SeerGuardian is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     address public dao;
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
+    uint64 public constant DAO_CHANGE_DELAY = 48 hours;
     ISeer_Guardian public seer;
     IVaultHub_Guardian public vaultHub;
     IProofLedger_Guardian public ledger;
@@ -214,9 +221,28 @@ contract SeerGuardian is ReentrancyGuard {
     
     function setDAO(address _newDAO) external onlyDAO nonReentrant {
         if (_newDAO == address(0)) revert SG_Zero();
+        if (pendingDAOAt != 0) revert SG_Cooldown();
+        pendingDAO = _newDAO;
+        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit DAOChangeQueued(dao, _newDAO, pendingDAOAt);
+    }
+
+    function applyDAO() external onlyDAO nonReentrant {
+        if (pendingDAOAt == 0 || pendingDAO == address(0)) revert SG_NoPending();
+        if (block.timestamp < pendingDAOAt) revert SG_TimelockActive();
         address old = dao;
-        dao = _newDAO;
-        emit DAOSet(old, _newDAO);
+        dao = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOSet(old, dao);
+    }
+
+    function cancelDAO() external onlyDAO nonReentrant {
+        if (pendingDAOAt == 0 || pendingDAO == address(0)) revert SG_NoPending();
+        address queued = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOChangeCancelled(dao, queued);
     }
     
     function setThresholds(

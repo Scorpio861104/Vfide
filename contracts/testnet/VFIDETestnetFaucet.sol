@@ -183,9 +183,10 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
             totalUsers++;
             
             if (referrers[i] != address(0)) {
-                if (referrers[i] == user || !hasClaimed[referrers[i]]) revert Faucet_ReferrerNotEligible();
-                referredBy[user] = referrers[i];
-                _registerReferral(referrers[i], user);
+                if (referrers[i] != user && hasClaimed[referrers[i]]) {
+                    referredBy[user] = referrers[i];
+                    _registerReferral(referrers[i], user);
+                }
             }
             
             vfideToken.safeTransfer(user, claimAmountVFIDE);
@@ -228,6 +229,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
 
     // slither-disable-next-line missing-zero-check
     function setEcosystemVault(address _ecosystemVault) external onlyOwner {
+        if (_ecosystemVault == address(0)) revert Faucet_Zero();
         ecosystemVault = _ecosystemVault;
         emit EcosystemVaultSet(_ecosystemVault);
     }

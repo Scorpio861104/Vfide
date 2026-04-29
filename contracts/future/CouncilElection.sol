@@ -201,7 +201,7 @@ contract CouncilElection {
         if (_hasVoted[electionEpoch][msg.sender]) revert CE_AlreadyVoted();
 
         _hasVoted[electionEpoch][msg.sender] = true;
-        uint256 weight = seer.getScore(msg.sender);
+        uint256 weight = seer.getScoreAt(msg.sender, electionStartAt);
         _candidateVotes[electionEpoch][candidate] += weight;
 
         emit ElectionVoteCast(electionEpoch, msg.sender, candidate, weight);

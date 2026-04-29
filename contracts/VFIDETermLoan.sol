@@ -689,7 +689,6 @@ contract VFIDETermLoan is ReentrancyGuard {
             block.timestamp < lastExtractionTime[id] + EXTRACTION_INTERVAL) {
             revert TL_GraceNotExpired();
         }
-        lastExtractionTime[id] = uint64(block.timestamp);
 
         uint256 liabilityPer = guarantorLiabilityEach[id];
         address[] storage g = guarantors[id];
@@ -744,6 +743,9 @@ contract VFIDETermLoan is ReentrancyGuard {
         }
 
         totalExtracted[id] += totalThisRound;
+        if (totalThisRound > 0) {
+            lastExtractionTime[id] = uint64(block.timestamp);
+        }
     }
 
     /**

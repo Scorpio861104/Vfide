@@ -345,7 +345,7 @@ function getContentType(format: string): string {
     case 'json':
       return 'application/json';
     case 'pdf':
-      return 'text/html'; // Would be application/pdf with proper PDF generation
+      return 'application/pdf';
     default:
       return 'application/octet-stream';
   }

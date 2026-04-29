@@ -3,6 +3,28 @@ pragma solidity 0.8.30;
 
 import "./interfaces/AggregatorV3Interface.sol";
 import "./SharedInterfaces.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+
+interface IUniswapV3PoolLite {
+    function token0() external view returns (address);
+    function token1() external view returns (address);
+    function slot0()
+        external
+        view
+        returns (
+            uint160 sqrtPriceX96,
+            int24 tick,
+            uint16 observationIndex,
+            uint16 observationCardinality,
+            uint16 observationCardinalityNext,
+            uint8 feeProtocol,
+            bool unlocked
+        );
+}
+
+interface IERC20DecimalsOracle {
+    function decimals() external view returns (uint8);
+}
 
 /**
  * @title VFIDEPriceOracle
@@ -19,6 +41,8 @@ import "./SharedInterfaces.sol";
  */
 // ReentrancyGuard intentionally omitted: oracle update path stores rates and emits events without transfer calls.
 contract VFIDEPriceOracle is Ownable, Pausable {
+    using Math for uint256;
+
     /// @notice Chainlink price feed
     AggregatorV3Interface public chainlinkFeed;
 
@@ -246,9 +270,81 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             return (0, PriceSource.UNISWAP);
         }
 
-        // Uniswap TWAP integration is currently disabled in favor of Chainlink-only pricing.
-        // Keeping the pool address allows future upgrades without breaking storage layout.
-        return (0, PriceSource.UNISWAP);
+        IUniswapV3PoolLite pool = IUniswapV3PoolLite(uniswapPool);
+        address token0;
+        address token1;
+        try pool.token0() returns (address t0) {
+            token0 = t0;
+        } catch {
+            return (0, PriceSource.UNISWAP);
+        }
+        try pool.token1() returns (address t1) {
+            token1 = t1;
+        } catch {
+            return (0, PriceSource.UNISWAP);
+        }
+
+        bool vfideIsToken0 = vfideToken == token0 && quoteToken == token1;
+        bool vfideIsToken1 = vfideToken == token1 && quoteToken == token0;
+        if (!vfideIsToken0 && !vfideIsToken1) {
+            return (0, PriceSource.UNISWAP);
+        }
+
+        uint160 sqrtPriceX96;
+        try pool.slot0() returns (
+            uint160 sqrtPriceRaw,
+            int24,
+            uint16,
+            uint16,
+            uint16,
+            uint8,
+            bool
+        ) {
+            sqrtPriceX96 = sqrtPriceRaw;
+        } catch {
+            return (0, PriceSource.UNISWAP);
+        }
+        if (sqrtPriceX96 == 0) {
+            return (0, PriceSource.UNISWAP);
+        }
+
+        (uint8 vfideDecimals, bool vfideDecimalsOk) = _getTokenDecimals(vfideToken);
+        (uint8 quoteDecimals, bool quoteDecimalsOk) = _getTokenDecimals(quoteToken);
+        if (!vfideDecimalsOk || !quoteDecimalsOk || vfideDecimals > 36 || quoteDecimals > 36) {
+            return (0, PriceSource.UNISWAP);
+        }
+
+        uint256 sqrtPrice = uint256(sqrtPriceX96);
+        uint256 ratioX192 = Math.mulDiv(sqrtPrice, sqrtPrice, 1);
+        if (ratioX192 == 0) {
+            return (0, PriceSource.UNISWAP);
+        }
+
+        uint256 vfideUnit = 10 ** uint256(vfideDecimals);
+        uint256 quoteUnit = 10 ** uint256(quoteDecimals);
+        uint256 q192 = 2 ** 192;
+
+        if (vfideIsToken0) {
+            uint256 numerator = Math.mulDiv(ratioX192, vfideUnit * 1e18, 1);
+            price = numerator / (q192 * quoteUnit);
+        } else {
+            uint256 numerator = Math.mulDiv(q192, quoteUnit * 1e18, 1);
+            price = numerator / (ratioX192 * vfideUnit);
+        }
+
+        if (price == 0) {
+            return (0, PriceSource.UNISWAP);
+        }
+
+        return (price, PriceSource.UNISWAP);
+    }
+
+    function _getTokenDecimals(address token) internal view returns (uint8 decimals, bool ok) {
+        try IERC20DecimalsOracle(token).decimals() returns (uint8 d) {
+            return (d, true);
+        } catch {
+            return (0, false);
+        }
     }
 
     /**

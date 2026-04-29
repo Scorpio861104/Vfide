@@ -60,14 +60,21 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     mapping(uint256 => mapping(address => bool)) internal _isParticipant;
     // period => finalized
     mapping(uint256 => bool) public periodFinalized;
+    // period => timestamp when finalization happened
+    mapping(uint256 => uint256) public periodFinalizedAt;
     // period => snapshot of balance at finalization
     mapping(uint256 => uint256) public periodPool;
+    // period => cumulative claimed amount
+    mapping(uint256 => uint256) public periodClaimedTotal;
+    // period => whether unclaimed funds were swept
+    mapping(uint256 => bool) public periodSwept;
     // period => participant => claimed
     mapping(uint256 => mapping(address => bool)) public claimed;
 
     // Lifetime tracking
     uint256 public totalPaidAllTime;
     uint256 public totalCommitted;  // Tokens promised to finalized periods but not yet claimed
+    uint256 public constant UNCLAIMED_SWEEP_DELAY = 180 days;
     mapping(address => uint256) public totalEarnedByWorker;
 
     // ═══════════════════════════════════════════════════════════
@@ -95,6 +102,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         uint256 totalScore
     );
     event FundingReceived(uint256 amount, uint256 newBalance);
+    event UnclaimedSwept(uint256 indexed period, uint256 amount, address indexed to);
 
     // ═══════════════════════════════════════════════════════════
     // ERRORS
@@ -109,6 +117,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     error NoContribution();
     error NothingToClaim();
     error MaxParticipantsReached();
+    error ClaimWindowExpired();
 
     // ═══════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -192,6 +201,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         if (participantCount == 0 || totalScores[period] == 0) {
             // No work done — balance carries forward to next period
             periodFinalized[period] = true;
+            periodFinalizedAt[period] = block.timestamp;
             periodPool[period] = 0;
             emit PeriodFinalized(period, 0, 0, 0);
             return;
@@ -204,6 +214,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         periodPool[period] = pool;
         totalCommitted += pool;
         periodFinalized[period] = true;
+        periodFinalizedAt[period] = block.timestamp;
 
         emit PeriodFinalized(period, participantCount, totalScores[period], pool);
     }
@@ -216,6 +227,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     ///         Payment = (your score / total score) * pool amount
     function claimPayment(uint256 period) external nonReentrant whenNotPaused {
         if (!periodFinalized[period]) revert PeriodNotFinalized();
+        if (periodSwept[period]) revert ClaimWindowExpired();
         if (claimed[period][msg.sender]) revert AlreadyClaimed();
 
         uint256 myScore = scores[period][msg.sender];
@@ -229,6 +241,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         if (payment == 0) revert NothingToClaim();
 
         claimed[period][msg.sender] = true;
+        periodClaimedTotal[period] += payment;
         totalPaidAllTime += payment;
         totalEarnedByWorker[msg.sender] += payment;
         totalCommitted -= payment;
@@ -248,6 +261,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
 
             if (
                 periodFinalized[period] &&
+                !periodSwept[period] &&
                 !claimed[period][msg.sender] &&
                 scores[period][msg.sender] > 0 &&
                 periodPool[period] > 0
@@ -255,6 +269,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
                 uint256 payment = (periodPool[period] * scores[period][msg.sender]) / totalScores[period];
                 if (payment > 0) {
                     claimed[period][msg.sender] = true;
+                    periodClaimedTotal[period] += payment;
                     totalPayment += payment;
                     emit PaymentClaimed(period, msg.sender, payment, scores[period][msg.sender], totalScores[period]);
                 }
@@ -269,6 +284,48 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         totalEarnedByWorker[msg.sender] += totalPayment;
         totalCommitted -= totalPayment;
         vfideToken.safeTransfer(msg.sender, totalPayment);
+    }
+
+    /// @notice Sweep unclaimed funds from old finalized periods after claim window expiry.
+    /// @dev Keeps `totalCommitted` aligned with actual outstanding obligations.
+    function sweepUnclaimed(uint256[] calldata periods, address to)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        nonReentrant
+    {
+        if (to == address(0)) revert ZeroAddress();
+        require(periods.length <= 100, "Batch too large");
+
+        uint256 totalSweep = 0;
+
+        for (uint256 i = 0; i < periods.length;) {
+            uint256 period = periods[i];
+
+            if (
+                periodFinalized[period] &&
+                !periodSwept[period] &&
+                periodFinalizedAt[period] > 0 &&
+                block.timestamp >= periodFinalizedAt[period] + UNCLAIMED_SWEEP_DELAY
+            ) {
+                uint256 pool = periodPool[period];
+                uint256 claimedTotal = periodClaimedTotal[period];
+                uint256 outstanding = pool > claimedTotal ? pool - claimedTotal : 0;
+
+                if (outstanding > 0) {
+                    totalCommitted -= outstanding;
+                    totalSweep += outstanding;
+                }
+
+                periodSwept[period] = true;
+                emit UnclaimedSwept(period, outstanding, to);
+            }
+
+            unchecked { i++; }
+        }
+
+        if (totalSweep > 0) {
+            vfideToken.safeTransfer(to, totalSweep);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════

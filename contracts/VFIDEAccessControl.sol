@@ -11,7 +11,6 @@ import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
 contract VFIDEAccessControl is AccessControlEnumerable {
     bytes32 public constant EMERGENCY_PAUSER_ROLE = keccak256("EMERGENCY_PAUSER_ROLE");
     bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
-    bytes32 public constant BLACKLIST_MANAGER_ROLE = keccak256("BLACKLIST_MANAGER_ROLE");
     bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER_ROLE");
     uint64 public constant ADMIN_TRANSFER_DELAY = 48 hours;
     uint256 private _reentrancyLock;
@@ -41,7 +40,6 @@ contract VFIDEAccessControl is AccessControlEnumerable {
         
         _setRoleAdmin(EMERGENCY_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
         _setRoleAdmin(CONFIG_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
-        _setRoleAdmin(BLACKLIST_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
         _setRoleAdmin(TREASURY_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
     }
 

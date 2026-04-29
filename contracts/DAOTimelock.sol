@@ -10,6 +10,10 @@ error TL_TooEarly();
 error TL_AlreadyExecuted(); // TL-02 FIX: distinct error for already-executed ops
 error TL_OnlyTimelock();
 
+interface IDAOExecutionTracker {
+    function markExecuted(uint256 id) external;
+}
+
 contract DAOTimelock is ReentrancyGuard {
     event AdminSet(address admin);
     event DelaySet(uint64 delay);
@@ -38,6 +42,7 @@ contract DAOTimelock is ReentrancyGuard {
 
     struct Op { address target; uint256 value; bytes data; uint64 eta; bool done; }
     mapping(bytes32 => Op) public queue;
+    mapping(bytes32 => uint256) public daoProposalForTx;
     uint256 public nonce; // Nonce to ensure unique transaction IDs
 
     modifier onlyAdmin() {
@@ -110,7 +115,18 @@ contract DAOTimelock is ReentrancyGuard {
         id = _queueTracked(target, value, data);
     }
 
-    function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; _removeFromQueuedIds(id); emit Cancelled(id); _log("tl_cancelled"); }
+    /// @notice N-C6 FIX: Queue a tx linked to a DAO proposal id so execute() can mark it executed.
+    function queueTxFromDAO(address target, uint256 value, bytes calldata data, uint256 daoProposalId)
+        external
+        onlyAdmin
+        returns (bytes32 id)
+    {
+        require(daoProposalId > 0, "TL: daoProposalId=0");
+        id = _queueTracked(target, value, data);
+        daoProposalForTx[id] = daoProposalId;
+    }
+
+    function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; delete daoProposalForTx[id]; _removeFromQueuedIds(id); emit Cancelled(id); _log("tl_cancelled"); }
 
     function cancelBySecondary(bytes32 id) external {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");
@@ -122,6 +138,7 @@ contract DAOTimelock is ReentrancyGuard {
         require(block.timestamp >= op.eta + SECONDARY_EXECUTOR_DELAY, "TL: secondary delay not elapsed");
 
         delete queue[id];
+        delete daoProposalForTx[id];
         _removeFromQueuedIds(id);
         emit CancelledBySecondary(id);
         _log("tl_cancelled_by_secondary");
@@ -151,8 +168,10 @@ contract DAOTimelock is ReentrancyGuard {
         }
 
         _validateERC20BoolReturn(op.data, r);
+        _markDaoExecutedIfTracked(id);
 
         _removeFromQueuedIds(id);
+        delete daoProposalForTx[id];
 
         emit Executed(id); _log("tl_executed");
         return r;
@@ -192,8 +211,10 @@ contract DAOTimelock is ReentrancyGuard {
 
         // Keep parity with primary execution path for ERC20 bool-returning calls.
         _validateERC20BoolReturn(op.data, r);
+        _markDaoExecutedIfTracked(id);
 
         _removeFromQueuedIds(id);
+        delete daoProposalForTx[id];
 
         emit ExecutedBySecondary(id);
         _log("tl_executed_by_secondary");
@@ -216,6 +237,12 @@ contract DAOTimelock is ReentrancyGuard {
                 require(returnValue, "TL: ERC20 call returned false");
             }
         }
+    }
+
+    function _markDaoExecutedIfTracked(bytes32 id) internal {
+        uint256 daoProposalId = daoProposalForTx[id];
+        if (daoProposalId == 0) return;
+        IDAOExecutionTracker(admin).markExecuted(daoProposalId);
     }
 
     function _revertWithReason(bytes memory returndata, string memory fallbackMessage) internal pure {
@@ -348,6 +375,7 @@ contract DAOTimelock is ReentrancyGuard {
         require(block.timestamp > op.eta + EXPIRY_WINDOW, "TL: not expired");
         
         delete queue[id];
+        delete daoProposalForTx[id];
         _removeFromQueuedIds(id);
         emit Cancelled(id);
         _log("tl_cleanup_expired");

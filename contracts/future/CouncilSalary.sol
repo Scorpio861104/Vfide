@@ -9,11 +9,10 @@ pragma solidity 0.8.30;
  * - Enforces "Good Behavior" (ProofScore).
  * - Allows Council to vote out bad actors (Self-Policing).
  * 
- * HOWEY COMPLIANCE:
- * - Council members are EMPLOYED, not investors
- * - Salaries are work-for-pay (not investment returns)
- * - Payments via auto-swap to ETH/USDC (not VFIDE)
- * - Clear employment relationship (NOT securities)
+ * COMPLIANCE NOTE:
+ * - Council members are compensated as governance contributors.
+ * - Salaries are paid in the configured ERC-20 token (`token`), currently VFIDE.
+ * - This contract does not perform on-chain asset swaps.
  */
 
 import "../SharedInterfaces.sol";
@@ -27,6 +26,8 @@ contract CouncilSalary {
     event MemberReinstated(address indexed member);
     event KeeperSet(address indexed keeper, bool authorized);
     event DAOSet(address indexed oldDAO, address indexed newDAO);
+    event DAOChangeQueued(address indexed oldDAO, address indexed newDAO, uint64 executeAfter);
+    event DAOChangeCancelled(address indexed oldDAO, address indexed newDAO);
 
     uint256 private _reentrancyStatus = 1;
     modifier nonReentrant() {
@@ -54,6 +55,9 @@ contract CouncilSalary {
     mapping(address => bool) public isBlacklisted;
     
     address public dao;
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
+    uint64 public constant DAO_CHANGE_DELAY = 48 hours;
     
     // C-1 FIX: Authorized keepers for distribution
     mapping(address => bool) public isKeeper;
@@ -90,17 +94,44 @@ contract CouncilSalary {
     function setDAO(address _dao) external {
         require(msg.sender == dao, "not dao");
         require(_dao != address(0), "zero address");
+        require(pendingDAOAt == 0, "dao change pending");
+
+        pendingDAO = _dao;
+        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit DAOChangeQueued(dao, _dao, pendingDAOAt);
+    }
+
+    function applyDAO() external {
+        require(msg.sender == dao, "not dao");
+        require(pendingDAOAt != 0 && pendingDAO != address(0), "no pending dao");
+        require(block.timestamp >= pendingDAOAt, "dao timelock active");
+
         address oldDAO = dao;
-        dao = _dao;
-        emit DAOSet(oldDAO, _dao);
+        dao = pendingDAO;
+        isKeeper[dao] = true;
+
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOSet(oldDAO, dao);
+    }
+
+    function cancelDAO() external {
+        require(msg.sender == dao, "not dao");
+        require(pendingDAOAt != 0 && pendingDAO != address(0), "no pending dao");
+
+        address oldDAO = dao;
+        address queued = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOChangeCancelled(oldDAO, queued);
     }
     /**
      * Distribute salary to eligible council members.
      * C-1 FIX: Now requires DAO or authorized keeper to call
      * This prevents MEV manipulation and timing attacks
      * 
-     * NOTE: Council salaries are EMPLOYMENT COMPENSATION (not investment returns).
-     * Payments should be made via auto-swap to ETH/USDC, not VFIDE.
+    * NOTE: Council salaries are paid in the configured `token` balance held by this contract.
+    * This function does not swap VFIDE to other assets.
      */
     function distributeSalary() external nonReentrant {
         // C-1 FIX: Only DAO or authorized keepers can distribute

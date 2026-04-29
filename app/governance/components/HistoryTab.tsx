@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from "react"
+import { exportCSV } from "@/components/export/csv-export"
 
 export function HistoryTab({ searchQuery = '' }: { searchQuery?: string }) {
   const filteredHistory = useMemo(() => {
@@ -28,15 +29,11 @@ export function HistoryTab({ searchQuery = '' }: { searchQuery?: string }) {
             <h2 className="text-2xl font-bold text-zinc-100">Your Voting History ({filteredHistory.length})</h2>
             <button
               onClick={() => {
-                const csv =
-                  "ID,Title,Vote,Date,Result,Power\n" +
-                  filteredHistory.map((h) => `${h.id},"${h.title}",${h.vote},"${h.date}","${h.result}",${h.power}`).join("\n")
-                const blob = new Blob([csv], { type: "text/csv" })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement("a")
-                a.href = url
-                a.download = "voting-history.csv"
-                a.click()
+                exportCSV({
+                  filename: "voting-history",
+                  headers: ["ID", "Title", "Vote", "Date", "Result", "Power"],
+                  rows: filteredHistory.map((h) => [h.id, h.title, h.vote, h.date, h.result, h.power]),
+                })
               }}
               className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400"
             >

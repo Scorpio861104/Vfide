@@ -97,6 +97,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     event GuardianSetupExpiring(address indexed vault, address indexed owner, uint256 deadline);
     event RecoveryRotationProposed(address indexed vault, address indexed newWallet, uint64 executeAfter, uint256 nonce);
     event RecoveryRotationApproved(address indexed vault, address indexed approver, address indexed newWallet, uint8 approvals, uint256 nonce);
+    event RecoveryRotationAborted(address indexed vault, address indexed owner, uint256 nonce);
 
     /// Errors
     error VH_Zero();
@@ -487,7 +488,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
-    function executeRecoveryRotation(address vault, address newWallet) external nonReentrant {
+    function executeRecoveryRotation(address vault, address newWallet) external whenNotPaused nonReentrant {
         if (!isRecoveryApprover[msg.sender]) revert VH_NotRecoveryContract();
         // M-3 FIX: Block recovery if guardian setup grace period has expired without completion.
         // This prevents vaults without proper guardian coverage from silently allowing recovery.
@@ -536,6 +537,24 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
         emit RecoveryRotationRequested(vault, newWallet, msg.sender);
         _logEv(vault, "recovery_rotation", 0, "");
+    }
+
+    /// @notice N-C2 FIX: Owner can abort a pending recovery rotation during the challenge window.
+    /// @dev Aborting bumps recoveryNonce so previously collected approvals become unusable.
+    function abortRecoveryRotation(address vault) external nonReentrant {
+        if (vault == address(0)) revert VH_Zero();
+        if (ownerOfVault[vault] != msg.sender) revert VH_NotVaultOwner();
+        uint256 nonce = recoveryNonce[vault];
+        if (recoveryUnlockTime[vault] == 0) revert VH_Timelock();
+
+        delete recoveryUnlockTime[vault];
+        delete recoveryProposedOwner[vault];
+        delete recoveryApprovalCount[vault];
+        delete recoveryCandidateForNonce[vault][nonce];
+        recoveryNonce[vault] = nonce + 1;
+
+        emit RecoveryRotationAborted(vault, msg.sender, nonce);
+        _logEv(vault, "recovery_rotation_aborted", 0, "");
     }
 
     function invalidateGuardianSetup(address vault) external {

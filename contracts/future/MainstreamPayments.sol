@@ -72,7 +72,9 @@ contract FiatRampRegistry is ReentrancyGuard {
     uint16 public constant FIRST_RAMP_BONUS = 50;
     uint16 public constant RAMP_TX_BONUS = 5;
     uint256 public constant MAX_RAMP_REWARDS_PER_PROVIDER_USER = 5;
+    uint256 public constant MAX_RAMP_REWARDS_PER_USER = 5;
     mapping(address => mapping(address => uint256)) public rampRewardCount;
+    mapping(address => uint256) public userRampRewardCount;
     mapping(address => mapping(address => uint64)) public lastRampTime;
     uint64 public constant RAMP_COOLDOWN = 1 hours;
     
@@ -238,7 +240,9 @@ contract FiatRampRegistry is ReentrancyGuard {
     function _rewardRampUser(address user) internal {
         if (address(seer) == address(0)) return;
         if (rampRewardCount[msg.sender][user] >= MAX_RAMP_REWARDS_PER_PROVIDER_USER) return;
+        if (userRampRewardCount[user] >= MAX_RAMP_REWARDS_PER_USER) return;
         rampRewardCount[msg.sender][user]++;
+        userRampRewardCount[user]++;
         
         uint16 currentScore = seer.getScore(user);
         if (currentScore < 100) {
@@ -843,9 +847,11 @@ contract TerminalRegistry is ReentrancyGuard {
     event TerminalLocationUpdated(bytes32 indexed terminalId, string newLocation);
     event TapLimitUpdated(uint256 oldLimit, uint256 newLimit);
     event PaymentRecorderSet(address indexed recorder, bool allowed);
+    event TerminalRegistrarSet(address indexed registrar);
     
     address public dao;
     IVaultHub public vaultHub;
+    address public terminalRegistrar;
     
     struct Terminal {
         address merchant;
@@ -861,6 +867,7 @@ contract TerminalRegistry is ReentrancyGuard {
     mapping(bytes32 => Terminal) public terminals;
     mapping(address => bytes32[]) private merchantTerminals;
     mapping(address => bool) public paymentRecorders;
+    mapping(bytes32 => bool) public usedRegistrationDigests;
     
     // Spending limits for tap-to-pay (no signature required)
     uint256 public tapLimit = 50 * 1e18;  // 50 VFIDE max for tap (like $50 contactless limit)
@@ -874,17 +881,46 @@ contract TerminalRegistry is ReentrancyGuard {
         require(_dao != address(0) && _vaultHub != address(0), "TR: zero");
         dao = _dao;
         vaultHub = IVaultHub(_vaultHub);
+        terminalRegistrar = _dao;
     }
     
     /**
      * @notice Register a new terminal for a merchant
      * @param terminalId Unique hardware ID (could be NFC chip ID, serial number, etc.)
      * @param location Physical location description
+     * @param deadline Signature expiry timestamp
+     * @param nonce Merchant-provided unique nonce
+     * @param signature Off-chain registrar authorization signature
      */
-    function registerTerminal(bytes32 terminalId, string calldata location) external nonReentrant {
+    function registerTerminal(
+        bytes32 terminalId,
+        string calldata location,
+        uint64 deadline,
+        bytes32 nonce,
+        bytes calldata signature
+    ) external nonReentrant {
         require(terminalId != bytes32(0), "TR: zero terminal ID");
         require(terminals[terminalId].merchant == address(0), "TR: terminal exists");
         require(vaultHub.vaultOf(msg.sender) != address(0), "TR: no vault");
+        require(terminalRegistrar != address(0), "TR: registrar not set");
+        require(block.timestamp <= deadline, "TR: registration expired");
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "VFIDE_TERMINAL_REGISTER",
+                address(this),
+                block.chainid,
+                msg.sender,
+                terminalId,
+                nonce,
+                deadline
+            )
+        );
+        require(!usedRegistrationDigests[digest], "TR: registration replay");
+
+        address signer = _recoverRegistrationSigner(digest, signature);
+        require(signer == terminalRegistrar, "TR: invalid registrar signature");
+        usedRegistrationDigests[digest] = true;
         
         terminals[terminalId] = Terminal({
             merchant: msg.sender,
@@ -901,6 +937,12 @@ contract TerminalRegistry is ReentrancyGuard {
         merchantTerminals[msg.sender].push(terminalId);
         
         emit TerminalRegistered(terminalId, msg.sender, location);
+    }
+
+    function setTerminalRegistrar(address registrar) external onlyDAO nonReentrant {
+        require(registrar != address(0), "TR: zero registrar");
+        terminalRegistrar = registrar;
+        emit TerminalRegistrarSet(registrar);
     }
     
     /**
@@ -1028,6 +1070,27 @@ contract TerminalRegistry is ReentrancyGuard {
         uint256 oldLimit = tapLimit;
         tapLimit = newLimit;
         emit TapLimitUpdated(oldLimit, newLimit);
+    }
+
+    function _recoverRegistrationSigner(bytes32 digest, bytes calldata signature) internal pure returns (address) {
+        if (signature.length != 65) return address(0);
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := calldataload(signature.offset)
+            s := calldataload(add(signature.offset, 32))
+            v := byte(0, calldataload(add(signature.offset, 64)))
+        }
+
+        if (v < 27) v += 27;
+        if (v != 27 && v != 28) return address(0);
+
+        bytes32 ethSignedDigest = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)
+        );
+        return ecrecover(ethSignedDigest, v, r, s);
     }
 }
 

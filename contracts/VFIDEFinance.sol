@@ -30,6 +30,8 @@ contract EcoTreasuryVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     event ModulesSet(address dao, address ledger, address vfideToken);
+    event ModulesChangeQueued(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
+    event ModulesChangeCancelled(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
     event ReceivedVFIDE(uint256 amount, address from);
     event Sent(address indexed token, address to, uint256 amount, string reason);
     event NotifierChangeQueued(address indexed notifier, bool authorized, uint64 effectiveAt);
@@ -37,6 +39,8 @@ contract EcoTreasuryVault is ReentrancyGuard {
 
     address public dao;
     address public pendingDAO;
+    address public pendingLedger;
+    address public pendingVfideToken;
     IProofLedger public ledger;
     IERC20 public vfideToken;
     
@@ -57,18 +61,37 @@ contract EcoTreasuryVault is ReentrancyGuard {
 
     function setModules(address _dao, address _ledger, address _vfide) external onlyDAO {
         if (_dao == address(0) || _vfide == address(0)) revert FI_Zero();
+        require(_ledger != address(0), "FI: zero ledger");
         pendingDAO = _dao;
-        ledger = IProofLedger(_ledger); 
-        vfideToken = IERC20(_vfide);
-        emit ModulesSet(_dao, _ledger, _vfide);
-        _log("treasury_modules_set");
+        pendingLedger = _ledger;
+        pendingVfideToken = _vfide;
+        emit ModulesChangeQueued(_dao, _ledger, _vfide);
+        _log("treasury_modules_queued");
     }
 
     function acceptDAO() external {
         require(msg.sender == pendingDAO, "FI: not pending DAO");
+        require(pendingLedger != address(0) && pendingVfideToken != address(0), "FI: pending modules missing");
+
         dao = pendingDAO;
+        ledger = IProofLedger(pendingLedger);
+        vfideToken = IERC20(pendingVfideToken);
+
+        emit ModulesSet(dao, pendingLedger, pendingVfideToken);
+
         pendingDAO = address(0);
+        pendingLedger = address(0);
+        pendingVfideToken = address(0);
         _log("treasury_dao_accepted");
+    }
+
+    function cancelModules() external onlyDAO {
+        require(pendingDAO != address(0), "FI: no pending modules");
+        emit ModulesChangeCancelled(pendingDAO, pendingLedger, pendingVfideToken);
+        pendingDAO = address(0);
+        pendingLedger = address(0);
+        pendingVfideToken = address(0);
+        _log("treasury_modules_cancelled");
     }
 
     mapping(address => bool) public authorizedNotifiers;

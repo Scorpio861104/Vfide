@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
     const code = searchParams.get('code');
 
     if (!code || typeof code !== 'string' || code.trim().length === 0) {
-      return NextResponse.json(
-        { valid: false, error: 'Missing or invalid code parameter' },
-        { status: 400 }
-      );
+      return NextResponse.json({ valid: false });
     }
 
     const inviteCode = code.trim().toLowerCase();
@@ -65,9 +62,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ valid: true });
   } catch (error) {
     logger.error('Error validating invite code:', error);
-    return NextResponse.json(
-      { valid: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ valid: false });
   }
 }

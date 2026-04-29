@@ -69,7 +69,9 @@ class GasPriceService {
   private minFetchInterval = 10000; // 10 seconds between fetches
 
   constructor() {
-    this.etherscanApiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+    // N-H21 FIX: Never source explorer API keys from NEXT_PUBLIC_* envs.
+    // Client bundles must not expose privileged keys.
+    this.etherscanApiKey = process.env.ETHERSCAN_API_KEY;
   }
 
   /**

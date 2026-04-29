@@ -14,6 +14,10 @@ interface IEcosystemDistributor {
     function receiveFee(uint256 amount) external;
 }
 
+interface ISeerAutonomousToken {
+    function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
+}
+
 /**
  * VFIDEToken (zkSync Era ready)
  * ----------------------------------------------------------
@@ -47,6 +51,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     uint256 public constant MAX_SUPPLY = 200_000_000e18;
     uint256 public constant DEV_RESERVE_SUPPLY = 50_000_000e18;
+    uint256 private constant ECDSA_S_UPPER_BOUND = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
     bytes32 private constant EMPTY_CODE_HASH = keccak256("");
 
     // ─────────────────────────── Anti-Whale Protection
@@ -84,6 +89,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     IVaultHub public vaultHub;                    // vault registry (required)
     IProofLedger public ledger;                   // event logging (optional)
     IProofScoreBurnRouterToken public burnRouter; // fee calculator (optional)
+    IEmergencyBreaker public emergencyBreaker;    // global emergency halt gate
+    ISeerAutonomousToken public seerAutonomous;   // optional proactive transfer enforcement
 
     /// Fraud registry — community-driven fraud flagging
     /// Flagged addresses (3+ complaints) have transfers escrowed for 30 days
@@ -131,6 +138,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     address public pendingVaultHub;
     uint64  public pendingVaultHubAt;
 
+    address public pendingEmergencyBreaker;
+    uint64  public pendingEmergencyBreakerAt;
+
     /// F-05 FIX: Add timelock state for ledger changes (matches other module setters)
     address public pendingLedger;
     uint64  public pendingLedgerAt;
@@ -171,6 +181,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Events
     event VaultHubSet(address indexed hub);
     event VaultHubScheduled(address indexed hub, uint64 effectiveAt);
+    event EmergencyBreakerSet(address indexed breaker);
+    event EmergencyBreakerScheduled(address indexed breaker, uint64 effectiveAt);
+    event SeerAutonomousSet(address indexed seerAutonomous);
 
     event LedgerSet(address indexed ledger);
     event LedgerScheduled(address indexed ledger, uint64 effectiveAt);
@@ -226,6 +239,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     error VF_InvalidFeeSink();
     error VF_RouterRequired();
     error VF_FeeBypassCooldown();
+    error VF_EmergencyHalted();
+    error VF_SeerBlocked();
 
     /// Constructor: mint full supply and distribute at genesis
     constructor(
@@ -332,7 +347,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
         if (block.timestamp > deadline) revert VF_PermitExpired();
         // F-01 FIX: Reject malleable signatures (EIP-2 / secp256k1 upper bound on s)
-        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) revert VF_InvalidPermit();
+        if (uint256(s) > ECDSA_S_UPPER_BOUND) revert VF_InvalidPermit();
         if (v != 27 && v != 28) revert VF_InvalidPermit();
         bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++));
         bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
@@ -396,6 +411,39 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         delete pendingVaultHub;
         delete pendingVaultHubAt;
         _log("vhx");
+    }
+
+    /// @notice Configure global emergency breaker used to halt non-exempt token transfers.
+    function setEmergencyBreaker(address _breaker) external onlyOwner {
+        if (_breaker == address(0)) revert VF_ZeroAddress();
+        if (pendingEmergencyBreakerAt != 0) revert VF_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingEmergencyBreaker = _breaker;
+        pendingEmergencyBreakerAt = effectiveAt;
+        emit EmergencyBreakerScheduled(_breaker, effectiveAt);
+        _log("ebs");
+    }
+
+    function applyEmergencyBreaker() external onlyOwner {
+        if (pendingEmergencyBreakerAt == 0) revert VF_NoPending();
+        if (block.timestamp < pendingEmergencyBreakerAt) revert VF_TimelockActive();
+        emergencyBreaker = IEmergencyBreaker(pendingEmergencyBreaker);
+        emit EmergencyBreakerSet(pendingEmergencyBreaker);
+        delete pendingEmergencyBreaker;
+        delete pendingEmergencyBreakerAt;
+        _log("eb=");
+    }
+
+    function cancelEmergencyBreaker() external onlyOwner {
+        if (pendingEmergencyBreakerAt == 0) revert VF_NoPending();
+        delete pendingEmergencyBreaker;
+        delete pendingEmergencyBreakerAt;
+        _log("ebx");
+    }
+
+    function setSeerAutonomous(address _seerAutonomous) external onlyOwner {
+        seerAutonomous = ISeerAutonomousToken(_seerAutonomous);
+        emit SeerAutonomousSet(_seerAutonomous);
     }
 
     // ── SecurityHub functions REMOVED — non-custodial, no third-party locks ──
@@ -885,8 +933,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (from == address(0) || to == address(0)) revert VF_ZERO();
         if (amount == 0) revert VF_ZERO();
 
+        if (address(emergencyBreaker) != address(0) && emergencyBreaker.halted()) {
+            if (!(systemExempt[from] || systemExempt[to])) revert VF_EmergencyHalted();
+        }
+
         address logicalTo = to;
         address custodyTo = to;
+
+        _enforceSeerAction(_resolveFeeScoringAddress(from), 0, amount, _resolveFeeScoringAddress(logicalTo));
 
 
         // Route EOA receipts into the recipient's vault without changing the fee/scoring context.
@@ -904,6 +958,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 if (custodyTo == address(0)) revert Token_NotVault();
             }
         }
+
+        address fraudCheckAddr = _resolveFeeScoringAddress(from);
+        bool escrowTransferRequired =
+            address(fraudRegistry) != address(0) &&
+            !systemExempt[from] &&
+            !systemExempt[logicalTo] &&
+            fraudRegistry.requiresEscrow(fraudCheckAddr);
 
         // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
         // EE-1 GAS FIX: _checkWhaleProtection now returns the daily window state it read from
@@ -948,7 +1009,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 remaining = amount;
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
-        if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[logicalTo])) {
+        if (
+            !escrowTransferRequired &&
+            address(burnRouter) != address(0) &&
+            !isFeeBypassed() &&
+            !(systemExempt[from] || systemExempt[logicalTo])
+        ) {
             address feeFrom = _resolveFeeScoringAddress(from);
             try burnRouter.computeFeesAndReserve(feeFrom, logicalTo, amount) returns (
                 uint256 _burnAmt,
@@ -1033,9 +1099,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // ── Fraud escrow: flagged senders get 30-day delay ─────
         // Not a freeze. Tokens are held for 30 days then delivered.
         // Community-driven: requires 3 complaints from trusted users.
-        if (address(fraudRegistry) != address(0) &&
-            !systemExempt[from] && !systemExempt[logicalTo] &&
-            fraudRegistry.requiresEscrow(from)) {
+        if (escrowTransferRequired) {
             // C-1 FIX: Credit balance AND register escrow atomically.
             // If escrowTransfer reverts (e.g., 500-escrow limit), the entire
             // transfer reverts — no silent token loss.
@@ -1053,6 +1117,15 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     assert(remaining <= amount);
 
         _logEv(from, "transfer", amount, "");
+    }
+
+    function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
+        if (address(seerAutonomous) == address(0)) return;
+        try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
+            if (r != 0) revert VF_SeerBlocked();
+        } catch {
+            revert VF_SeerBlocked();
+        }
     }
 
     function _applyBurn(address from, address sink, uint256 burnAmt) internal {

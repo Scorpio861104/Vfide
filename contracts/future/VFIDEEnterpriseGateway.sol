@@ -182,6 +182,9 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     
     event StableSettlementConfigured(address swapRouter, address stablecoin, bool enabled);
     event OrderSettledToStable(bytes32 indexed orderId, address indexed buyer, uint256 vfideAmount, uint256 stableAmount);
+    event OracleFloorScheduled(uint256 floorPerVfide, uint64 executeAfter);
+    event OracleFloorApplied(uint256 floorPerVfide);
+    event OracleFloorCancelled(uint256 floorPerVfide);
     
     // DEX router for VFIDE → Stablecoin swaps
     address public swapRouter;
@@ -192,6 +195,9 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     // Represents the minimum acceptable stablecoin amount per 1e18 VFIDE (18 decimals).
     // Prevents tautological slippage where getAmountsOut + swap both use the same manipulated AMM state.
     uint256 public oracleFloorAmountPerVfide; // e.g. 0.95 USDC = 0.95e6 if stablecoin is 6-decimal
+    uint64 public constant ORACLE_FLOOR_DELAY = 48 hours;
+    uint256 public pendingOracleFloorAmountPerVfide;
+    uint64 public pendingOracleFloorAt;
     
     /**
      * @notice Configure stablecoin settlement for merchants who need stable revenue
@@ -219,9 +225,27 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     }
 
     /// @notice H-37 FIX: DAO sets the external oracle floor price for swap validation.
-    /// @param floorPerVfide Minimum stablecoin units per 1e18 VFIDE (0 = disabled).
+    /// @param floorPerVfide Minimum stablecoin units per 1e18 VFIDE.
     function setOracleFloor(uint256 floorPerVfide) external onlyDAO {
-        oracleFloorAmountPerVfide = floorPerVfide;
+        pendingOracleFloorAmountPerVfide = floorPerVfide;
+        pendingOracleFloorAt = uint64(block.timestamp) + ORACLE_FLOOR_DELAY;
+        emit OracleFloorScheduled(floorPerVfide, pendingOracleFloorAt);
+    }
+
+    function applyOracleFloor() external onlyDAO {
+        if (pendingOracleFloorAt == 0 || block.timestamp < pendingOracleFloorAt) revert ENT_NotPending();
+        oracleFloorAmountPerVfide = pendingOracleFloorAmountPerVfide;
+        emit OracleFloorApplied(oracleFloorAmountPerVfide);
+        delete pendingOracleFloorAmountPerVfide;
+        delete pendingOracleFloorAt;
+    }
+
+    function cancelOracleFloor() external onlyDAO {
+        if (pendingOracleFloorAt == 0) revert ENT_NotPending();
+        uint256 pending = pendingOracleFloorAmountPerVfide;
+        delete pendingOracleFloorAmountPerVfide;
+        delete pendingOracleFloorAt;
+        emit OracleFloorCancelled(pending);
     }
 
     /**
@@ -284,6 +308,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
      */
     function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
         if (vfideAmount == 0) return 0;
+        if (oracleFloorAmountPerVfide == 0) return 0;
         
         // Approve router
         token.forceApprove(swapRouter, vfideAmount);
@@ -298,11 +323,9 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
             uint256 expectedOut = amountsOut[amountsOut.length - 1];
             minAmountOut = expectedOut * (10000 - maxSlippageBps) / 10000;
             // H-37 FIX: Apply external oracle floor to prevent tautological AMM slippage.
-            if (oracleFloorAmountPerVfide > 0) {
-                uint256 oracleFloor = vfideAmount * oracleFloorAmountPerVfide / 1e18;
-                if (oracleFloor > minAmountOut) {
-                    minAmountOut = oracleFloor;
-                }
+            uint256 oracleFloor = vfideAmount * oracleFloorAmountPerVfide / 1e18;
+            if (oracleFloor > minAmountOut) {
+                minAmountOut = oracleFloor;
             }
             if (minAmountOut == 0) {
                 token.forceApprove(swapRouter, 0);

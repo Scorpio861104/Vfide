@@ -7,6 +7,10 @@ import {
   getStepUpAndCooldownPolicy,
   recordSecurityEvent,
 } from '@/lib/security/accountProtection';
+import {
+  buildPaymentStepUpPayloadHash,
+  validateAndConsumePaymentStepUpChallenge,
+} from '@/lib/security/paymentStepUpChallenge';
 import { getRequestIp } from '@/lib/security/requestContext';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -23,6 +27,8 @@ const createPaymentRequestSchema = z.object({
     z.number().positive(),
     z.string().trim().regex(DECIMAL_AMOUNT_REGEX),
   ]),
+  stepUpNonce: z.string().trim().min(1).optional(),
+  stepUpSignature: z.string().trim().regex(/^0x[0-9a-fA-F]{130}$/).optional(),
   token: z.string().trim().optional(),
   memo: z.string().max(500).nullable().optional(),
 });
@@ -145,7 +151,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { fromUserId, toUserId, toAddress, amount, token, memo } = body;
+    const { fromUserId, toUserId, toAddress, amount, token, memo, stepUpNonce, stepUpSignature } = body;
 
     // Resolve sender: use authenticated wallet address to look up fromUserId
     const senderResult = await query(
@@ -227,12 +233,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate token before step-up payload binding.
+    const ALLOWED_TOKENS = ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'];
+    const tokenValue = typeof token === 'string' && token.trim() ? token.trim().toUpperCase() : 'ETH';
+
+    if (!ALLOWED_TOKENS.includes(tokenValue)) {
+      return NextResponse.json(
+        { error: `Invalid token. Allowed tokens: ${ALLOWED_TOKENS.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
     const policy = getStepUpAndCooldownPolicy(numAmount);
     if (policy.isHighRisk) {
-      const stepUpHeader = request.headers.get('x-vfide-step-up') || '';
-      const delayHeader = request.headers.get('x-vfide-delay-ack') || '';
+      const payloadHash = buildPaymentStepUpPayloadHash({
+        fromUserId: Number(fromUserIdValue),
+        toUserId: Number(toUserIdValue),
+        amount: normalizedAmountValue,
+        token: tokenValue,
+      });
 
-      if (policy.requiresStepUp && stepUpHeader.toLowerCase() !== 'verified') {
+      if (policy.requiresStepUp && (!stepUpNonce || !stepUpSignature)) {
         await recordSecurityEvent(authAddress, {
           ts: Date.now(),
           ip: requesterIp,
@@ -244,20 +265,40 @@ export async function POST(request: NextRequest) {
           {
             error: 'Step-up authentication required for high-risk payment request',
             requiresStepUp: true,
+            challengeEndpoint: '/api/crypto/payment-requests/step-up',
             hardwareWalletRecommended: policy.hardwareWalletRecommended,
           },
           { status: 403 }
         );
       }
 
-      if (policy.requiresDelay && delayHeader.toLowerCase() !== 'acknowledged') {
+      const validatedStepUp = await validateAndConsumePaymentStepUpChallenge({
+        address: authAddress as `0x${string}`,
+        nonce: stepUpNonce || '',
+        signature: (stepUpSignature || '0x') as `0x${string}`,
+        payloadHash,
+        minAgeSeconds: policy.requiresDelay ? policy.cooldownSeconds : 0,
+      });
+
+      if (!validatedStepUp.ok && validatedStepUp.cooldownSeconds) {
         return NextResponse.json(
           {
-            error: 'High-risk payment request requires delay acknowledgement',
+            error: validatedStepUp.error,
             requiresDelay: true,
-            cooldownSeconds: policy.cooldownSeconds,
+            cooldownSeconds: validatedStepUp.cooldownSeconds,
           },
           { status: 409 }
+        );
+      }
+
+      if (!validatedStepUp.ok) {
+        return NextResponse.json(
+          {
+            error: validatedStepUp.error,
+            requiresStepUp: true,
+            challengeEndpoint: '/api/crypto/payment-requests/step-up',
+          },
+          { status: 403 }
         );
       }
 
@@ -273,17 +314,6 @@ export async function POST(request: NextRequest) {
           { status: 423 }
         );
       }
-    }
-
-    // Validate token if provided
-    const ALLOWED_TOKENS = ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'];
-    const tokenValue = typeof token === 'string' && token.trim() ? token.trim().toUpperCase() : 'ETH';
-    
-    if (!ALLOWED_TOKENS.includes(tokenValue)) {
-      return NextResponse.json(
-        { error: `Invalid token. Allowed tokens: ${ALLOWED_TOKENS.join(', ')}` },
-        { status: 400 }
-      );
     }
 
     // Validate memo length if provided

@@ -15,11 +15,21 @@ contract ProofLedger {
     event EventLog(address indexed who, string action, uint256 amount, string note);
     event TransferLog(address indexed from, address indexed to, uint256 amount, string context);
     event LoggerSet(address indexed logger, bool authorized);
+    event DAOChangeQueued(address indexed oldDAO, address indexed newDAO, uint64 executeAfter);
+    event DAOChangeCancelled(address indexed oldDAO, address indexed queuedDAO);
+    event LoggerChangeQueued(address indexed logger, bool authorized, uint64 executeAfter);
+    event LoggerChangeCancelled(address indexed logger, bool authorized);
 
     address public dao;
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
     mapping(address => bool) public authorizedLoggers;
+    address public pendingLogger;
+    bool public pendingLoggerAuthorized;
+    uint64 public pendingLoggerAt;
     mapping(address => mapping(uint256 => uint256)) public logCountPerBlock;
     uint256 public constant MAX_LOGS_PER_BLOCK = 50;
+    uint64 public constant CHANGE_DELAY = 48 hours;
 
     modifier onlyDAO() { _checkDAOPL(); _; }
     function _checkDAOPL() internal view { if (msg.sender != dao) revert TRUST_NotDAO(); }
@@ -36,14 +46,59 @@ contract ProofLedger {
 
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert TRUST_Zero();
-        dao = _dao;
+        require(pendingDAOAt == 0, "PL: pending dao");
+        pendingDAO = _dao;
+        pendingDAOAt = uint64(block.timestamp) + CHANGE_DELAY;
+        emit DAOChangeQueued(dao, _dao, pendingDAOAt);
+    }
+
+    function applyDAO() external onlyDAO {
+        require(pendingDAOAt != 0 && pendingDAO != address(0), "PL: no pending dao");
+        require(block.timestamp >= pendingDAOAt, "PL: dao timelock");
+        dao = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+    }
+
+    function cancelDAO() external onlyDAO {
+        require(pendingDAOAt != 0 && pendingDAO != address(0), "PL: no pending dao");
+        address oldDAO = dao;
+        address queuedDAO = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOChangeCancelled(oldDAO, queuedDAO);
     }
 
     /// @notice Authorize or deauthorize a contract to write log entries
     function setLogger(address logger, bool authorized) external onlyDAO {
         if (logger == address(0)) revert TRUST_Zero();
+        require(pendingLoggerAt == 0, "PL: pending logger");
+        pendingLogger = logger;
+        pendingLoggerAuthorized = authorized;
+        pendingLoggerAt = uint64(block.timestamp) + CHANGE_DELAY;
+        emit LoggerChangeQueued(logger, authorized, pendingLoggerAt);
+    }
+
+    function applyLogger() external onlyDAO {
+        require(pendingLoggerAt != 0 && pendingLogger != address(0), "PL: no pending logger");
+        require(block.timestamp >= pendingLoggerAt, "PL: logger timelock");
+        address logger = pendingLogger;
+        bool authorized = pendingLoggerAuthorized;
         authorizedLoggers[logger] = authorized;
+        delete pendingLogger;
+        delete pendingLoggerAuthorized;
+        delete pendingLoggerAt;
         emit LoggerSet(logger, authorized);
+    }
+
+    function cancelLogger() external onlyDAO {
+        require(pendingLoggerAt != 0 && pendingLogger != address(0), "PL: no pending logger");
+        address logger = pendingLogger;
+        bool authorized = pendingLoggerAuthorized;
+        delete pendingLogger;
+        delete pendingLoggerAuthorized;
+        delete pendingLoggerAt;
+        emit LoggerChangeCancelled(logger, authorized);
     }
 
     function logSystemEvent(address who, string calldata action, address by) external onlyLogger {
