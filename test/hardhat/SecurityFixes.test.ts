@@ -13,29 +13,23 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
-let defaultConnectionPromise: Promise<any> | null = null;
-let unlimitedConnectionPromise: Promise<any> | null = null;
+let connectionPromise: Promise<any> | null = null;
 
-async function getDefaultConnection() {
-  defaultConnectionPromise ??= network.connect();
-  return defaultConnectionPromise;
-}
-
-async function getUnlimitedConnection() {
-  unlimitedConnectionPromise ??= network.connect({
+async function getConnection() {
+  connectionPromise ??= network.connect({
     override: {
       allowUnlimitedContractSize: true,
     },
   });
-  return unlimitedConnectionPromise;
+  return connectionPromise;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // M-11: VaultHub + Non-custodial recovery guard
 // ──────────────────────────────────────────────────────────────────────────────
-describe("VaultHub (M-11: non-custodial recovery guard)", () => {
+describe("VaultHub (M-11: non-custodial recovery guard)", { concurrency: 1 }, () => {
   async function vaultHubRecoveryFixture() {
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
     const [, dao, , councilMember, vaultOwner, newOwner] = await ethers.getSigners();
 
     const TokenStub = await ethers.getContractFactory("TokenStub");
@@ -59,8 +53,7 @@ describe("VaultHub (M-11: non-custodial recovery guard)", () => {
   }
 
   async function deployVaultHubRecoveryHarness() {
-    const { networkHelpers } = await getDefaultConnection();
-    return networkHelpers.loadFixture(vaultHubRecoveryFixture);
+    return vaultHubRecoveryFixture();
   }
 
   it("keeps DAO/council force recovery paths disabled", async () => {
@@ -74,7 +67,7 @@ describe("VaultHub (M-11: non-custodial recovery guard)", () => {
   });
 
   it("requires multi-approver quorum and delay for recovery rotation", async () => {
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
     const [owner, dao, recovery1, recovery2, vaultOwner, newOwner] = await ethers.getSigners();
 
     const TokenStub = await ethers.getContractFactory("TokenStub");
@@ -117,9 +110,9 @@ describe("VaultHub (M-11: non-custodial recovery guard)", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // H-03: DevReserveVestingVault + DAO Pause Claims
 // ──────────────────────────────────────────────────────────────────────────────
-describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
+describe("DevReserveVestingVault (H-03: DAO pause claims)", { concurrency: 1 }, () => {
   async function devReserveFixture() {
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
     const [, bene, dao] = await ethers.getSigners();
 
     const TokenStub = await ethers.getContractFactory("TokenStub");
@@ -141,8 +134,7 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
   }
 
   async function deployDevReserveHarness() {
-    const { networkHelpers } = await getDefaultConnection();
-    return networkHelpers.loadFixture(devReserveFixture);
+    return devReserveFixture();
   }
 
   it("DAO can pause claims" , async () => {
@@ -165,9 +157,9 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // H-05: VaultInfrastructure + Execute Whitelist
 // ──────────────────────────────────────────────────────────────────────────────
-describe("UserVaultLegacy (H-05: execute whitelist)", () => {
+describe("UserVaultLegacy (H-05: execute whitelist)", { concurrency: 1 }, () => {
   async function userVaultLegacyFixture() {
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
     const [hubAddr, owner] = await ethers.getSigners();
 
     const TokenStub = await ethers.getContractFactory("TokenStub");
@@ -189,8 +181,7 @@ describe("UserVaultLegacy (H-05: execute whitelist)", () => {
   }
 
   async function deployUserVaultLegacyHarness() {
-    const { networkHelpers } = await getDefaultConnection();
-    return networkHelpers.loadFixture(userVaultLegacyFixture);
+    return userVaultLegacyFixture();
   }
 
   it("blocks execute to non-whitelisted targets by default", async () => {
@@ -220,9 +211,9 @@ describe("UserVaultLegacy (H-05: execute whitelist)", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // M-25: VFIDESecurity + PanicGuard Vault Registration Check
 // ──────────────────────────────────────────────────────────────────────────────
-describe("PanicGuard (M-25: vault registration check)", () => {
+describe("PanicGuard (M-25: vault registration check)", { concurrency: 1 }, () => {
   async function panicGuardFixture() {
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
     const [dao, user] = await ethers.getSigners();
 
     const VaultHubStub = await ethers.getContractFactory("VaultHubStub");
@@ -243,8 +234,7 @@ describe("PanicGuard (M-25: vault registration check)", () => {
   }
 
   async function deployPanicGuardHarness() {
-    const { networkHelpers } = await getDefaultConnection();
-    return networkHelpers.loadFixture(panicGuardFixture);
+    return panicGuardFixture();
   }
 
   it("selfPanic reverts if vault not registered", async () => {
@@ -263,9 +253,9 @@ describe("PanicGuard (M-25: vault registration check)", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // M-18: Seer + Circular Delta Guard
 // ──────────────────────────────────────────────────────────────────────────────
-describe("Seer (M-18: circular delta guard)", () => {
+describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
   async function seerFixture() {
-    const { ethers } = await getUnlimitedConnection();
+    const { ethers } = await getConnection();
     const [dao, operator, user, counterparty, sanctum, burn, eco] = await ethers.getSigners();
 
     const Seer = await ethers.getContractFactory("Seer");
@@ -289,8 +279,7 @@ describe("Seer (M-18: circular delta guard)", () => {
   }
 
   async function deploySeerHarness() {
-    const { networkHelpers } = await getUnlimitedConnection();
-    return networkHelpers.loadFixture(seerFixture);
+    return seerFixture();
   }
 
   it("setScore works and caches score", async () => {
@@ -415,9 +404,9 @@ describe("Seer (M-18: circular delta guard)", () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // L-08: VFIDEAccessControl + Atomic Admin Transfer
 // ──────────────────────────────────────────────────────────────────────────────
-describe("VFIDEAccessControl (L-08: atomic admin transfer)", () => {
+describe("VFIDEAccessControl (L-08: atomic admin transfer)", { concurrency: 1 }, () => {
   async function accessControlFixture() {
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
     const [initialAdmin, newAdmin, other] = await ethers.getSigners();
 
     const AccessControl = await ethers.getContractFactory("VFIDEAccessControl");
@@ -428,13 +417,12 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", () => {
   }
 
   async function deployAccessControlHarness() {
-    const { networkHelpers } = await getDefaultConnection();
-    return networkHelpers.loadFixture(accessControlFixture);
+    return accessControlFixture();
   }
 
   it("queues and applies DEFAULT_ADMIN_ROLE transfer after delay", async () => {
     const { initialAdmin, newAdmin, ac } = await deployAccessControlHarness();
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
 
     const DEFAULT_ADMIN_ROLE = await ac.DEFAULT_ADMIN_ROLE();
     assert.equal(await ac.hasRole(DEFAULT_ADMIN_ROLE, initialAdmin.address), true);
@@ -462,7 +450,7 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", () => {
 
   it("new admin can grant roles immediately after transfer", async () => {
     const { initialAdmin, newAdmin, other, ac } = await deployAccessControlHarness();
-    const { ethers } = await getDefaultConnection();
+    const { ethers } = await getConnection();
 
     // Queue and apply transfer
     await ac.connect(initialAdmin).transferAdminRole(newAdmin.address);
