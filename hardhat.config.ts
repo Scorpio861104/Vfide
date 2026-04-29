@@ -67,12 +67,15 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 50,
+            runs: 0,
           },
           metadata: {
             bytecodeHash: "none",
           },
           viaIR: true,
+          debug: {
+            revertStrings: "strip",
+          },
         },
       },
       // Deploy-once script — runs:1 is correct (no runtime calls, minimise bytecode to stay under 24KB).
@@ -106,7 +109,10 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 0,
+          },
+          debug: {
+            revertStrings: "strip",
           },
           viaIR: true,
         },
@@ -163,12 +169,15 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 0,
           },
           metadata: {
             bytecodeHash: "none",
           },
           viaIR: true,
+          debug: {
+            revertStrings: "strip",
+          },
         },
       },
       // Admin-only governance panel; infrequent calls — runs:1 retained for size safety.
