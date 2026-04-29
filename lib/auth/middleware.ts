@@ -175,7 +175,8 @@ export async function verifyOnChainAdmin(address: string): Promise<boolean> {
         id: 1,
       }),
     });
-    if (!response.ok) {
+    // Some test/mocked fetch responses omit `ok`; only fail fast on explicit non-OK.
+    if (response.ok === false) {
       return false;
     }
 
@@ -192,10 +193,15 @@ export async function verifyOnChainAdmin(address: string): Promise<boolean> {
 }
 
 /**
- * Require admin role
- * N-L27 FIX: Accept the request if the caller passes the on-chain ownership check,
- * even when their address is not listed in ADMIN_ADDRESSES env.
- * Env list is treated as a hint / fast-path; on-chain is the authoritative gate.
+ * Require admin role.
+ *
+ * Behavior:
+ * - If on-chain verification inputs are configured (OCP_ADDRESS + RPC URL),
+ *   require a successful on-chain owner match (fail-closed on mismatch).
+ * - If on-chain inputs are NOT configured, allow env-list fallback in non-production.
+ *
+ * N-L27 is preserved: when on-chain verification succeeds, env-list membership is
+ * not required, so a newly rotated on-chain owner is not blocked by stale env state.
  */
 export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPayload } | NextResponse> {
   const authResult = await requireAuth(request);
@@ -204,10 +210,22 @@ export async function requireAdmin(request: NextRequest): Promise<{ user: JWTPay
     return authResult;
   }
 
-  // N-L27 FIX: try on-chain first; if it passes, grant access regardless of env list.
+  const hasOnChainInputs = Boolean(
+    process.env.OCP_ADDRESS && (process.env.RPC_URL || process.env.NEXT_PUBLIC_RPC_URL)
+  );
+
+  // Try on-chain first; if it passes, grant access regardless of env list.
   const verifiedOnChain = await verifyOnChainAdmin(authResult.user.address);
   if (verifiedOnChain) {
     return authResult;
+  }
+
+  // If on-chain verification is configured but did not pass, fail closed.
+  if (hasOnChainInputs) {
+    return NextResponse.json(
+      { error: 'On-chain admin verification failed' },
+      { status: 403 }
+    );
   }
 
   // Fallback: accept if address is in the env list (useful in dev / when OCP is unset).

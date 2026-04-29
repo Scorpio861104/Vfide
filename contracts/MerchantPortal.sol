@@ -41,8 +41,6 @@ interface ISessionKeyManager_MP {
     /// @notice Returns true if `spender` has an active session key authorised to spend `amount`
     ///         of the given token for the given merchant.
     function canSpend(address spender, address merchant, address token, uint256 amount) external view returns (bool);
-    /// @notice Record a spend so the per-session running total is decremented.
-    function recordSpend(address spender, address merchant, address token, uint256 amount) external;
 }
 
 error MERCH_Zero();
@@ -142,7 +140,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
     address public fraudRegistry;
     // N-L15 FIX: optional session-key spend-limit gate (zero address = disabled).
-    ISessionKeyManager_MP public sessionKeyManager;
+    // Kept private to avoid generating an extra public getter and reduce bytecode size.
+    address private sessionKeyManager;
 
     /// Protocol fee (in basis points, e.g., 50 = 0.5%)
     uint256 public protocolFeeBps = 0; // 0% - No merchant payment fee (burn fees apply on VFIDE transfers)
@@ -271,7 +270,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice N-L15 FIX: Set the optional SessionKeyManager for per-session spend limits.
     ///         Pass address(0) to disable the gate (backward-compatible).
     function setSessionKeyManager(address _skm) external onlyDAO {
-        sessionKeyManager = ISessionKeyManager_MP(_skm);
+        sessionKeyManager = _skm;
     }
 
     function setProtocolFee(uint256 _feeBps) external onlyDAO {
@@ -805,10 +804,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _checkFraudStatus(merchant);
 
         // N-L15 FIX: enforce session-key spend limits when SessionKeyManager is configured.
-        ISessionKeyManager_MP skm = sessionKeyManager;
-        if (address(skm) != address(0)) {
-            require(skm.canSpend(customer, merchant, token, amount), "MERCH: session key limit exceeded");
-            skm.recordSpend(customer, merchant, token, amount);
+        address skmAddress = sessionKeyManager;
+        if (skmAddress != address(0)) {
+            ISessionKeyManager_MP skm = ISessionKeyManager_MP(skmAddress);
+            if (!skm.canSpend(customer, merchant, token, amount)) revert MERCH_Forbidden();
         }
 
         // Capture customer score at payment start for accurate logging

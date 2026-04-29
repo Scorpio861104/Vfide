@@ -189,7 +189,10 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 0,
+          },
+          debug: {
+            revertStrings: "strip",
           },
           metadata: {
             bytecodeHash: "none",
