@@ -146,12 +146,15 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 50,
+            runs: 0,
           },
           metadata: {
             bytecodeHash: "none",
           },
           viaIR: true,
+          debug: {
+            revertStrings: "strip",
+          },
         },
       },
       // EcosystemVault is the largest contract (1449 lines); runs:1 retained to stay under 24KB.

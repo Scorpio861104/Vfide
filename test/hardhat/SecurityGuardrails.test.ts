@@ -331,11 +331,12 @@ describe("MerchantPortal (NEW-05: auto-convert safety hold)", () => {
     await seer.setScore(merchant.address, 7000);
 
     const Placeholder = await ethers.getContractFactory("Placeholder");
+    const TokenStub = await ethers.getContractFactory("TokenStub");
     const vaultHub = await Placeholder.deploy();
     const ledger = await Placeholder.deploy();
     const feeSink = await Placeholder.deploy();
     const router = await Placeholder.deploy();
-    const stablecoin = await Placeholder.deploy();
+    const stablecoin = await TokenStub.deploy();
     await vaultHub.waitForDeployment();
     await ledger.waitForDeployment();
     await feeSink.waitForDeployment();

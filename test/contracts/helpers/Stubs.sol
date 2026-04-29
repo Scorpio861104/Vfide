@@ -49,6 +49,7 @@ contract TokenStub {
     function balanceOf(address) external pure returns (uint256) { return 1e18; }
     function allowance(address, address) external pure returns (uint256) { return type(uint256).max; }
     function approve(address, uint256) external pure returns (bool) { return true; }
+    function decimals() external pure returns (uint8) { return 18; }
 }
 
 /// @dev Mintable ERC20 stub for tests that require deterministic balances.

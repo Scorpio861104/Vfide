@@ -30,103 +30,103 @@ describe('R-032 – WebSocket backpressure and flood handling', () => {
   // ── RateLimiter quota enforcement ──────────────────────────────────────────
 
   describe('RateLimiter – quota enforcement', () => {
-    it('allows all requests within the configured maximum', () => {
-      const limiter = new RateLimiter({ maxRequests: 5, windowMs: 60_000 });
+    it('allows all requests within the configured maximum', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 5, windowMs: 60_000 });
 
       for (let i = 0; i < 5; i++) {
-        expect(limiter.allow('client-A')).toBe(true);
+        expect(await limiter.allow('client-A')).toBe(true);
       }
     });
 
-    it('rejects the request that exceeds the quota', () => {
-      const limiter = new RateLimiter({ maxRequests: 3, windowMs: 60_000 });
+    it('rejects the request that exceeds the quota', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 3, windowMs: 60_000 });
 
-      limiter.allow('x'); // 1
-      limiter.allow('x'); // 2
-      limiter.allow('x'); // 3 – last allowed
+      await limiter.allow('x'); // 1
+      await limiter.allow('x'); // 2
+      await limiter.allow('x'); // 3 – last allowed
 
-      expect(limiter.allow('x')).toBe(false); // 4 – over limit
+      expect(await limiter.allow('x')).toBe(false); // 4 – over limit
     });
 
-    it('continues blocking within the same window after quota is exhausted', () => {
-      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 60_000 });
+    it('continues blocking within the same window after quota is exhausted', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 2, windowMs: 60_000 });
 
-      limiter.allow('flood'); // 1
-      limiter.allow('flood'); // 2 – quota exhausted
+      await limiter.allow('flood'); // 1
+      await limiter.allow('flood'); // 2 – quota exhausted
 
-      expect(limiter.allow('flood')).toBe(false);
-      expect(limiter.allow('flood')).toBe(false);
-      expect(limiter.allow('flood')).toBe(false);
+      expect(await limiter.allow('flood')).toBe(false);
+      expect(await limiter.allow('flood')).toBe(false);
+      expect(await limiter.allow('flood')).toBe(false);
     });
 
-    it('resets quota after the window expires', () => {
-      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 60_000 });
+    it('resets quota after the window expires', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 2, windowMs: 60_000 });
 
-      limiter.allow('y'); // 1
-      limiter.allow('y'); // 2
-      expect(limiter.allow('y')).toBe(false); // blocked
+      await limiter.allow('y'); // 1
+      await limiter.allow('y'); // 2
+      expect(await limiter.allow('y')).toBe(false); // blocked
 
       // Advance time beyond the window boundary
       jest.advanceTimersByTime(60_001);
 
       // New window – quota should be fully reset
-      expect(limiter.allow('y')).toBe(true);
-      expect(limiter.allow('y')).toBe(true);
+      expect(await limiter.allow('y')).toBe(true);
+      expect(await limiter.allow('y')).toBe(true);
     });
 
-    it('tracks per-IP quotas independently', () => {
-      const limiter = new RateLimiter({ maxRequests: 2, windowMs: 60_000 });
+    it('tracks per-IP quotas independently', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 2, windowMs: 60_000 });
 
-      limiter.allow('ip-A');
-      limiter.allow('ip-A');
-      expect(limiter.allow('ip-A')).toBe(false); // A exhausted
+      await limiter.allow('ip-A');
+      await limiter.allow('ip-A');
+      expect(await limiter.allow('ip-A')).toBe(false); // A exhausted
 
       // B has its own independent quota
-      expect(limiter.allow('ip-B')).toBe(true);
-      expect(limiter.allow('ip-B')).toBe(true);
-      expect(limiter.allow('ip-B')).toBe(false); // B now exhausted
+      expect(await limiter.allow('ip-B')).toBe(true);
+      expect(await limiter.allow('ip-B')).toBe(true);
+      expect(await limiter.allow('ip-B')).toBe(false); // B now exhausted
     });
   });
 
   // ── Production message-rate config simulation ──────────────────────────────
 
   describe('Message-rate limiter – production config (60 msg/min)', () => {
-    it('bounds a burst flood at exactly the 60-message/min limit', () => {
-      const limiter = new RateLimiter({ maxRequests: 60, windowMs: 60_000 });
+    it('bounds a burst flood at exactly the 60-message/min limit', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 60, windowMs: 60_000 });
 
       let allowed = 0;
       for (let i = 0; i < 100; i++) {
-        if (limiter.allow('attacker-ip')) allowed++;
+        if (await limiter.allow('attacker-ip')) allowed++;
       }
 
       // Exactly 60 messages should pass; remaining 40 must be dropped
       expect(allowed).toBe(60);
     });
 
-    it('allows normal traffic after flood window resets', () => {
-      const limiter = new RateLimiter({ maxRequests: 60, windowMs: 60_000 });
+    it('allows normal traffic after flood window resets', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 60, windowMs: 60_000 });
 
       // Exhaust quota
-      for (let i = 0; i < 60; i++) limiter.allow('normal-ip');
-      expect(limiter.allow('normal-ip')).toBe(false);
+      for (let i = 0; i < 60; i++) await limiter.allow('normal-ip');
+      expect(await limiter.allow('normal-ip')).toBe(false);
 
       // Advance past window
       jest.advanceTimersByTime(60_001);
 
       // Legitimate traffic resumes
-      expect(limiter.allow('normal-ip')).toBe(true);
+      expect(await limiter.allow('normal-ip')).toBe(true);
     });
   });
 
   // ── Production connection-rate config simulation ───────────────────────────
 
   describe('Connection-rate limiter – production config (10 conn/min)', () => {
-    it('caps simultaneous connection attempts from a single IP at 10', () => {
-      const limiter = new RateLimiter({ maxRequests: 10, windowMs: 60_000 });
+    it('caps simultaneous connection attempts from a single IP at 10', async () => {
+      const limiter = new RateLimiter({ name: 'test', maxRequests: 10, windowMs: 60_000 });
 
       let allowed = 0;
       for (let i = 0; i < 20; i++) {
-        if (limiter.allow('reconnect-storm-ip')) allowed++;
+        if (await limiter.allow('reconnect-storm-ip')) allowed++;
       }
 
       expect(allowed).toBe(10);
