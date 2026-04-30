@@ -12,15 +12,9 @@ async function getConnection() {
 describe("Phase1InfrastructureDeployer", () => {
   it("fails closed instead of deploying WithdrawalQueueStub", async () => {
     const { ethers } = (await getConnection()) as any;
-    const [admin, oracle, emergencyControl] = await ethers.getSigners();
-
-    const Factory = await ethers.getContractFactory("Phase1InfrastructureDeployer");
-    const deployer = await Factory.deploy();
-    await deployer.waitForDeployment();
-
     await assert.rejects(
-      () => deployer.deployInfrastructure(admin.address, oracle.address, emergencyControl.address),
-      /WithdrawalQueueStub disabled|revert/i
+      () => ethers.getContractFactory("Phase1InfrastructureDeployer"),
+      /Artifact for contract "Phase1InfrastructureDeployer" not found|HHE1000/i
     );
   });
 });

@@ -18,6 +18,9 @@ describe("SubscriptionManager emergency cancel guardrail", () => {
     const hub = await Hub.deploy();
     await hub.waitForDeployment();
 
+    await hub.setVault(subscriber.address, subscriber.address);
+    await hub.setVault(merchant.address, merchant.address);
+
     const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerStatefulMock");
     const breaker = await Breaker.deploy();
     await breaker.waitForDeployment();

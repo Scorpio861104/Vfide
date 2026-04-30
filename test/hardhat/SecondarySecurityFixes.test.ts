@@ -70,7 +70,7 @@ describe("BridgeSecurityModule (BSM-01: flagged-user bypass closed)", { concurre
     );
   });
 
-  it("admin-cleared flag allows subsequent transfers", async () => {
+  it("disables manual admin flag clearing after a user is marked suspicious", async () => {
     const { bsm, bridge, owner, user, ethers } = await deployBSM();
     const userAddr = user.address;
     const smolAmount = ethers.parseEther("1");
@@ -80,13 +80,15 @@ describe("BridgeSecurityModule (BSM-01: flagged-user bypass closed)", { concurre
       await bsm.connect(bridge).checkRateLimit(userAddr, smolAmount);
     }
 
-    // Admin clears the flag
-    await bsm.connect(owner).clearSuspiciousFlags(userAddr);
+    await assert.rejects(
+      () => bsm.connect(owner).clearSuspiciousFlags(userAddr),
+      /BSM: clear flags disabled|revert/i
+    );
 
-    // Should succeed now
-    await bsm.connect(bridge).checkRateLimit(userAddr, smolAmount);
-    const flags = await bsm.suspiciousActivity(userAddr);
-    assert.ok(!flags.flagged, "Flag should be cleared");
+    await assert.rejects(
+      () => bsm.connect(bridge).checkRateLimit(userAddr, smolAmount),
+      /SuspiciousActivity/
+    );
   });
 });
 

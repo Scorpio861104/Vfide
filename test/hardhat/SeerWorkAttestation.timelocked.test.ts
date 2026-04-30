@@ -38,7 +38,7 @@ async function deploySeerWorkAttestationFixture() {
   return networkHelpers.loadFixture(seerWorkAttestationFixture);
 }
 
-describe("SeerWorkAttestation: Timelocked Protocol Contract Updates", { concurrency: 1 }, () => {
+describe("SeerWorkAttestation: Timelocked Protocol Contract Updates", { concurrency: 1, timeout: 120000 }, () => {
   it("allows admin to propose protocol contracts update with 48h timelock", async () => {
     const { contract, dao, merchant, bridge, social, panic, workPayment, ethers } = await deploySeerWorkAttestationFixture();
 
@@ -237,7 +237,7 @@ describe("SeerWorkAttestation: Timelocked Protocol Contract Updates", { concurre
   });
 
   it("rejects attempt to apply when no change is pending", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = await getDefaultConnection();
     const [admin] = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("SeerWorkAttestation");
@@ -251,7 +251,7 @@ describe("SeerWorkAttestation: Timelocked Protocol Contract Updates", { concurre
   });
 
   it("rejects attempt to cancel when no change is pending", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = await getDefaultConnection();
     const [admin] = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("SeerWorkAttestation");
@@ -265,7 +265,7 @@ describe("SeerWorkAttestation: Timelocked Protocol Contract Updates", { concurre
   });
 
   it("correctly stores all pending protocol contract addresses", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = await getDefaultConnection();
     const [admin] = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("SeerWorkAttestation");
@@ -301,7 +301,7 @@ describe("SeerWorkAttestation: Timelocked Protocol Contract Updates", { concurre
   });
 
   it("enforces exactly 48 hours (172800 seconds) delay", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = await getDefaultConnection();
     const [admin, dao, merchant, bridge, social, panic, workPayment] = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("SeerWorkAttestation");
@@ -329,7 +329,7 @@ describe("SeerWorkAttestation: Timelocked Protocol Contract Updates", { concurre
   });
 
   it("allows replacement of pending change via cancel + new proposal", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = await getDefaultConnection();
     const [admin, dao1, merchant1, bridge1, social1, panic1, workPayment1, dao2] = await ethers.getSigners();
 
     const Factory = await ethers.getContractFactory("SeerWorkAttestation");

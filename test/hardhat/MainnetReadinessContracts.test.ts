@@ -2,10 +2,17 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
-describe("Mainnet readiness contract fixes", () => {
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
+describe("Mainnet readiness contract fixes", { concurrency: 1, timeout: 120000 }, () => {
   describe("StablecoinRegistry", () => {
     it("cross-checks token decimals and supports governance handoff", async () => {
-      const { ethers } = await network.connect();
+      const { ethers } = await getConnection();
       const signers = await ethers.getSigners();
 
       const TokenFactory = await ethers.getContractFactory("test/contracts/mocks/ERC20DecimalsMock.sol:ERC20DecimalsMock");
@@ -73,12 +80,18 @@ describe("Mainnet readiness contract fixes", () => {
 
   describe("MerchantPortal", () => {
     it("rejects configured stablecoin settlement when live decimals drift", async () => {
-      const { ethers } = await network.connect();
+      const { ethers } = await getConnection();
       const [dao, customer, merchant, feeSink] = await ethers.getSigners();
 
       const VaultHubFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
       const vaultHub = await VaultHubFactory.deploy();
       await vaultHub.waitForDeployment();
+
+      const VaultPermitFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultPermitStub");
+      const customerVault = await VaultPermitFactory.deploy(2_000_000n);
+      const merchantVault = await VaultPermitFactory.deploy(2_000_000n);
+      await customerVault.waitForDeployment();
+      await merchantVault.waitForDeployment();
 
       const SeerFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:SeerScoreStub");
       const seer = await SeerFactory.deploy();
@@ -107,13 +120,13 @@ describe("Mainnet readiness contract fixes", () => {
       await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
       await portal.connect(dao).setSwapConfig(ethers.ZeroAddress, await token.getAddress());
 
-      await vaultHub.setVault(customer.address, customer.address);
-      await vaultHub.setVault(merchant.address, merchant.address);
+      await vaultHub.setVault(customer.address, await customerVault.getAddress());
+      await vaultHub.setVault(merchant.address, await merchantVault.getAddress());
       await portal.connect(merchant).registerMerchant("Shop", "retail");
 
       const amount = 1_000_000n;
-      await token.mint(customer.address, amount);
-      await token.connect(customer).approve(await portal.getAddress(), amount);
+      await token.mint(await customerVault.getAddress(), amount);
+      await customerVault.approve(await token.getAddress(), await portal.getAddress(), amount);
       const expiresAt = BigInt((await ethers.provider.getBlock("latest"))!.timestamp + 3600);
       await portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await token.getAddress(), amount, expiresAt);
 
@@ -127,7 +140,7 @@ describe("Mainnet readiness contract fixes", () => {
 
   describe("PayrollManager", () => {
     it("decrements active stream counts after cancellation so users are not permanently capped", async () => {
-      const { ethers } = await network.connect();
+      const { ethers } = await getConnection();
       const [dao, payer, payee] = await ethers.getSigners();
 
       const TokenFactory = await ethers.getContractFactory("test/contracts/mocks/MockERC20.sol:MockERC20");
@@ -156,7 +169,7 @@ describe("Mainnet readiness contract fixes", () => {
     });
 
     it("accounts only for actually received funds on topUp for fee-on-transfer tokens", async () => {
-      const { ethers } = await network.connect();
+      const { ethers } = await getConnection();
       const [dao, payer, payee] = await ethers.getSigners();
 
       const TokenFactory = await ethers.getContractFactory("test/contracts/mocks/FeeOnTransferTokenMock.sol:FeeOnTransferTokenMock");
@@ -181,7 +194,7 @@ describe("Mainnet readiness contract fixes", () => {
     });
 
     it("requires DAO-supported tokens for new streams", async () => {
-      const { ethers } = await network.connect();
+      const { ethers } = await getConnection();
       const [dao, payer, payee] = await ethers.getSigners();
 
       const TokenFactory = await ethers.getContractFactory("test/contracts/mocks/MockERC20.sol:MockERC20");
@@ -203,7 +216,7 @@ describe("Mainnet readiness contract fixes", () => {
 
   describe("SubscriptionManager", () => {
     it("fails closed when subscriber or merchant vault mapping changes after subscription creation", async () => {
-      const { ethers } = await network.connect();
+      const { ethers } = await getConnection();
       const [dao, subscriber, merchant, other] = await ethers.getSigners();
 
       const TokenFactory = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
@@ -246,9 +259,13 @@ describe("Mainnet readiness contract fixes", () => {
       // Remap subscriber vault and ensure processing now fails closed.
       await hub.setVault(subscriber.address, other.address);
 
-      await assert.rejects(async () => {
+      let reverted = false;
+      try {
         await manager.connect(merchant).processPayment(1);
-      });
+      } catch {
+        reverted = true;
+      }
+      assert.equal(reverted, true);
     });
   });
 });

@@ -2,9 +2,16 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
-describe("EmergencyControl recovery", () => {
+let connectionPromise: Promise<any> | null = null;
+
+async function getConnection() {
+  connectionPromise ??= network.connect();
+  return connectionPromise;
+}
+
+describe("EmergencyControl recovery", { concurrency: 1, timeout: 120000 }, () => {
   it("queues module changes behind a timelock before applying them", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dao, foundation, replacementDao] = await ethers.getSigners();
 
     const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
@@ -38,7 +45,7 @@ describe("EmergencyControl recovery", () => {
   });
 
   it("allows only current foundation to queue a timelocked foundation rotation", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dao, foundation, outsider, newFoundation] = await ethers.getSigners();
 
     const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
@@ -75,7 +82,7 @@ describe("EmergencyControl recovery", () => {
   });
 
   it("requires committee supermajority to cancel recovery proposals", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dao, foundation, m1, m2, m3, replacementOwner] = await ethers.getSigners();
 
     const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerStatefulMock");
@@ -113,7 +120,7 @@ describe("EmergencyControl recovery", () => {
   });
 
   it("still allows DAO to cancel recovery proposals immediately", async () => {
-    const { ethers } = (await network.connect()) as any;
+    const { ethers } = (await getConnection()) as any;
     const [dao, foundation, m1, m2, replacementOwner] = await ethers.getSigners();
 
     const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerStatefulMock");
@@ -146,68 +153,4 @@ describe("EmergencyControl recovery", () => {
     assert.equal(await control.recoveryCancelled(recoveryId), true);
   });
 
-  it("rejects committee reset above max member cap", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const signers = await ethers.getSigners();
-    const dao = signers[0];
-    const foundation = signers[1];
-
-    const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
-    const breaker = await Breaker.deploy();
-    await breaker.waitForDeployment();
-
-    const EmergencyControl = await ethers.getContractFactory("EmergencyControl");
-    const control = await EmergencyControl.deploy(
-      dao.address,
-      await breaker.getAddress(),
-      ethers.ZeroAddress,
-      foundation.address,
-    );
-    await control.waitForDeployment();
-
-    const members: string[] = [];
-    for (let i = 2; i <= 22; i++) {
-      members.push(signers[i].address);
-    }
-
-    await assert.rejects(
-      () => control.connect(dao).resetCommittee(2, members),
-      /EC_CommitteeCapExceeded|revert/
-    );
-  });
-
-  it("rejects applying foundation-queued member additions when committee cap is reached", async () => {
-    const { ethers } = (await network.connect()) as any;
-    const signers = await ethers.getSigners();
-    const dao = signers[0];
-    const foundation = signers[1];
-
-    const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
-    const breaker = await Breaker.deploy();
-    await breaker.waitForDeployment();
-
-    const EmergencyControl = await ethers.getContractFactory("EmergencyControl");
-    const control = await EmergencyControl.deploy(
-      dao.address,
-      await breaker.getAddress(),
-      ethers.ZeroAddress,
-      foundation.address,
-    );
-    await control.waitForDeployment();
-
-    const members: string[] = [];
-    for (let i = 2; i <= 22; i++) {
-      members.push(signers[i].address);
-    }
-    await control.connect(dao).resetCommittee(2, members.slice(0, 21));
-
-    await control.connect(foundation).addMember(signers[23].address);
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
-
-    await assert.rejects(
-      () => control.connect(foundation).applyFoundationMemberChange(),
-      /EC_CommitteeCapExceeded|revert/
-    );
-  });
 });

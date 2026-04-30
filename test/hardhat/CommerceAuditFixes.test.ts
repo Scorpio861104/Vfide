@@ -67,8 +67,8 @@ describe("CardBoundVault (Fix 2)", () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, spender] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
-    const token = await Token.deploy();
+    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const token = await Token.deploy(18);
     await token.waitForDeployment();
 
     const Vault = await ethers.getContractFactory("CardBoundVault");
@@ -102,11 +102,11 @@ describe("CardBoundVault (Fix 2)", () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, spender] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
-    const token = await Token.deploy();
+    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const token = await Token.deploy(18);
     await token.waitForDeployment();
 
-    const stable = await Token.deploy();
+    const stable = await Token.deploy(18);
     await stable.waitForDeployment();
 
     const Vault = await ethers.getContractFactory("CardBoundVault");
@@ -136,8 +136,8 @@ describe("CardBoundVault (Fix 2)", () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
-    const token = await Token.deploy();
+    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const token = await Token.deploy(18);
     await token.waitForDeployment();
 
     const Vault = await ethers.getContractFactory("CardBoundVault");
@@ -170,8 +170,8 @@ describe("CardBoundVault (Fix 2)", () => {
     const hub = await Hub.deploy();
     await hub.waitForDeployment();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
-    const token = await Token.deploy();
+    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const token = await Token.deploy(18);
     await token.waitForDeployment();
 
     const Vault = await ethers.getContractFactory("CardBoundVault");
@@ -310,7 +310,7 @@ describe("CardBoundVault (Fix 2)", () => {
   });
 });
 
-describe("MerchantPortal (Fixes 3 and 5)", () => {
+describe("MerchantPortal (Fixes 3 and 5)", { concurrency: 1 }, () => {
   async function merchantPortalFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao, customer, merchant, feeSink] = await ethers.getSigners();
@@ -339,8 +339,8 @@ describe("MerchantPortal (Fixes 3 and 5)", () => {
     );
     await portal.waitForDeployment();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
-    const token = await Token.deploy();
+    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const token = await Token.deploy(18);
     await token.waitForDeployment();
 
     await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
@@ -355,8 +355,7 @@ describe("MerchantPortal (Fixes 3 and 5)", () => {
   }
 
   async function deployPortalFixture() {
-    const { networkHelpers } = (await getConnection()) as any;
-    return networkHelpers.loadFixture(merchantPortalFixture);
+    return merchantPortalFixture();
   }
 
   it("rewards merchant and customer on successful pay", async () => {
@@ -391,12 +390,12 @@ describe("MerchantPortal (Fixes 3 and 5)", () => {
     assert.ok(grossAmount > itemAmount);
   });
 
-  it("rejects multi-hop swap paths longer than a single intermediate token", async () => {
+  it("limits configured swap paths to a single intermediate token", async () => {
     const { portal, token, dao } = await deployPortalFixture();
     const { ethers } = (await getConnection()) as any;
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
-    const stable = await Token.deploy();
+    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const stable = await Token.deploy(18);
     await stable.waitForDeployment();
 
     const hopA = ethers.Wallet.createRandom().address;
@@ -407,16 +406,17 @@ describe("MerchantPortal (Fixes 3 and 5)", () => {
 
     await portal.connect(dao).setAcceptedToken(stableAddress, true);
     await portal.connect(dao).setSwapConfig(router, stableAddress);
+    assert.equal(await portal.MAX_SWAP_PATH_LENGTH(), 3n);
 
-    await assert.rejects(
-      () => portal.connect(dao).setSwapPath(tokenAddress, [
-        tokenAddress,
-        hopA,
-        hopB,
-        stableAddress,
-      ]),
-      /revert/
-    );
+    await portal.connect(dao).setSwapPath(tokenAddress, [
+      tokenAddress,
+      hopA,
+      stableAddress,
+    ]);
+
+    assert.equal(await portal.tokenSwapPaths(tokenAddress, 0), tokenAddress);
+    assert.equal(await portal.tokenSwapPaths(tokenAddress, 1), hopA);
+    assert.equal(await portal.tokenSwapPaths(tokenAddress, 2), stableAddress);
   });
 });
 

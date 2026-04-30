@@ -19,7 +19,7 @@ async function trustVerifier(contract: any, verifier: string, ethers: any) {
 describe("VaultRecoveryClaim bootstrap fallback", { concurrency: 1 }, () => {
   it("allows trusted verifiers to approve claims for single-guardian bootstrap vaults", async () => {
     const { ethers } = (await getConnection()) as any;
-    const [deployer, originalOwner, claimant, guardian, verifierA, verifierB, verifierC] = await ethers.getSigners();
+    const [deployer, originalOwner, claimant, guardian, verifierA, verifierB, verifierC, verifierD, verifierE] = await ethers.getSigners();
 
     const Hub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
     const hub = await Hub.deploy();
@@ -52,16 +52,20 @@ describe("VaultRecoveryClaim bootstrap fallback", { concurrency: 1 }, () => {
     await trustVerifier(recovery, verifierA.address, ethers);
     await trustVerifier(recovery, verifierB.address, ethers);
     await trustVerifier(recovery, verifierC.address, ethers);
+    await trustVerifier(recovery, verifierD.address, ethers);
+    await trustVerifier(recovery, verifierE.address, ethers);
 
     await recovery.connect(claimant).initiateClaim(await vault.getAddress(), "", ethers.ZeroHash, "lost phone");
 
     await recovery.connect(verifierA).verifierVote(1, true);
     await recovery.connect(verifierB).verifierVote(1, true);
     await recovery.connect(verifierC).verifierVote(1, true);
+    await recovery.connect(verifierD).verifierVote(1, true);
+    await recovery.connect(verifierE).verifierVote(1, true);
 
     const claim = await recovery.claims(1);
     assert.equal(claim.status, 2n);
-    assert.equal(claim.verifierVotes, 3n);
+    assert.equal(claim.verifierVotes, 5n);
     assert.ok(claim.challengeEndsAt > 0n);
   });
 });

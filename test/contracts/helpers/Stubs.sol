@@ -116,6 +116,7 @@ contract VaultHubStub {
     mapping(address => address) public vaults;
     mapping(address => address) public vaultOwners;
     mapping(address => bool) public isVault;
+    mapping(address => bool) public guardianSetupComplete;
 
     function setVault(address owner, address vault) external {
         address existingVault = vaults[owner];
@@ -158,6 +159,10 @@ contract VaultHubStub {
         vaultOwners[vault] = newOwner;
         vaults[newOwner] = vault;
         isVault[vault] = true;
+    }
+
+    function setGuardianSetupComplete(address vault, bool complete) external {
+        guardianSetupComplete[vault] = complete;
     }
 }
 

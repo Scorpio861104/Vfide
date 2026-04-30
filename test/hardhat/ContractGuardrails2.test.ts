@@ -576,9 +576,11 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   }
 
   it("decrements remaining permit amount after each merchant pull", async () => {
-    const { portal, token, merchant, customer } = await deployPortal();
+    const { ethers, portal, token, merchant, customer } = await deployPortal();
 
-    await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, 0);
+    const latest = await ethers.provider.getBlock("latest");
+    const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
+    await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, expiresAt);
     await portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 400n, "order-1", { gasLimit: 3_000_000n });
 
     assert.equal(await portal.merchantPullRemaining(customer.address, merchant.address), 600n);
@@ -601,9 +603,11 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   });
 
   it("clears permit state on revoke and blocks further pulls", async () => {
-    const { portal, token, merchant, customer } = await deployPortal();
+    const { ethers, portal, token, merchant, customer } = await deployPortal();
 
-    await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, 0);
+    const latest = await ethers.provider.getBlock("latest");
+    const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
+    await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, expiresAt);
     await portal.connect(customer).setMerchantPullApproval(merchant.address, false);
 
     assert.equal(await portal.merchantPullApproved(customer.address, merchant.address), false);
@@ -617,10 +621,13 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   });
 
   it("rejects permit amount above vault daily transfer limit", async () => {
-    const { portal, merchant, customer } = await deployPortal();
+    const { ethers, portal, merchant, customer } = await deployPortal();
+
+    const latest = await ethers.provider.getBlock("latest");
+    const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
 
     await expectHardhatRevert(
-      async () => portal.connect(customer).setMerchantPullPermit(merchant.address, 1001n, 0),
+      async () => portal.connect(customer).setMerchantPullPermit(merchant.address, 1001n, expiresAt),
       /MERCH_CapExceeded|cap exceeded/
     );
   });
@@ -640,14 +647,17 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   it("enforces vault allowance when setting token-scoped pull permit", async () => {
     const { ethers, portal, merchant, customer } = await deployPortal();
 
-    const StrictToken = await ethers.getContractFactory("TestMintableToken");
-    const strictToken = await StrictToken.deploy();
+    const StrictToken = await ethers.getContractFactory("MutableDecimalsTokenStub");
+    const strictToken = await StrictToken.deploy(18);
     await strictToken.waitForDeployment();
     await portal.setAcceptedToken(await strictToken.getAddress(), true);
 
+    const latest = await ethers.provider.getBlock("latest");
+    const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
+
     await expectHardhatRevert(
-      async () => portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await strictToken.getAddress(), 100n, 0),
-      /merchant not approved by customer/
+      async () => portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await strictToken.getAddress(), 100n, expiresAt),
+      /MERCH_NotApproved|not approved/
     );
   });
 
@@ -659,7 +669,9 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
     await otherToken.waitForDeployment();
     await portal.setAcceptedToken(await otherToken.getAddress(), true);
 
-    await portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await token.getAddress(), 1000n, 0);
+    const latest = await ethers.provider.getBlock("latest");
+    const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
+    await portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await token.getAddress(), 1000n, expiresAt);
 
     await expectHardhatRevert(
       async () => portal.connect(merchant).processPayment(customer.address, await otherToken.getAddress(), 100n, "order-scoped-token"),

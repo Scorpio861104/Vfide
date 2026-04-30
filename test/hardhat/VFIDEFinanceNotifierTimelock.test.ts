@@ -40,6 +40,7 @@ describe("EcoTreasuryVault notifier timelock", () => {
     await ethers.provider.send("evm_mine", []);
 
     await treasury.connect(dao).applyNotifier();
+    await token.mint(await treasury.getAddress(), 100n);
     await treasury.connect(notifier).noteVFIDE(100n, notifier.address);
 
     const summary = await treasury.getTreasurySummary();
