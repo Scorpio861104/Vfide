@@ -108,11 +108,10 @@ export async function POST(request: NextRequest) {
       functionName: 'claim', args: [address as `0x${string}`, referrerAddr as `0x${string}`],
     });
 
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-
     return NextResponse.json({
-      success: true, txHash: hash, blockNumber: Number(receipt.blockNumber),
-      message: 'Testnet VFIDE + gas ETH sent to your wallet!',
+      success: true,
+      txHash: hash,
+      message: 'Faucet transaction submitted. Tokens and gas will arrive shortly.',
     });
   } catch (error: unknown) {
     const shortMessage = typeof (error as { shortMessage?: unknown })?.shortMessage === 'string'

@@ -68,30 +68,16 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Security headers — CSP applied statically here (nonce-based approach removed; nonce was never
-  // injected into layout.tsx script tags and was blocking Next.js bundles from loading)
+  // Security headers — CSP is applied per-request in middleware.ts with a nonce.
   async headers() {
     return [
       {
         source: '/:path*',
         headers: [
-          // Content-Security-Policy: restrict resource loading
+          // Strict fallback CSP for non-middleware paths.
           {
             key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: https: blob:",
-              "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://*.base.org https://*.polygon.technology https://*.zksync.io wss://*.zksync.dev",
-              "frame-src 'self' https://*.walletconnect.com",
-              "media-src 'self' blob:",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "frame-ancestors 'none'",
-            ].join('; '),
+            value: "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
           },
           // X-Frame-Options: prevent clickjacking
           {

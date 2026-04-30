@@ -177,14 +177,11 @@ async function authenticateWithProvider(
    *   return { address: address[0], ... };
    */
 
-  // Placeholder — simulates the flow
-  await new Promise(r => setTimeout(r, 1500));
-
-  return {
-    address: '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-    displayName: method === 'email' ? credential?.split('@')[0] ?? null : null,
-    email: method === 'email' ? credential ?? null : null,
-  };
+  throw new Error(
+    `Embedded wallet provider not configured. Install one of: ` +
+    `@privy-io/react-auth, @web3auth/modal, magic-sdk. ` +
+    `Then replace this stub with the real authenticate flow.`
+  );
 }
 
 async function ensureVaultExists(_address: string): Promise<{ vaultAddress: string }> {
@@ -196,10 +193,5 @@ async function ensureVaultExists(_address: string): Promise<{ vaultAddress: stri
    * Vault creation is invisible infrastructure that happens during signup.
    */
 
-  // Placeholder
-  await new Promise(r => setTimeout(r, 1000));
-
-  return {
-    vaultAddress: '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-  };
+  throw new Error('ensureVaultExists not implemented. Replace with VaultHub.ensureVault integration.');
 }

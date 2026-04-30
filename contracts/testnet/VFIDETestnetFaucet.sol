@@ -41,6 +41,8 @@ error Faucet_WithdrawTimelockActive();
 error Faucet_NoPendingOwner();
 error Faucet_OwnerTransferTimelockActive();
 error Faucet_InvalidConfig();
+error Faucet_NoPendingGasTopUp();
+error Faucet_GasRetryFailed();
 
 contract VFIDETestnetFaucet is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -58,6 +60,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     mapping(address => bool) public operators;      // Backend wallets that can trigger claims
     mapping(address => bool) public hasClaimed;     // One claim per address
     mapping(address => address) public referredBy;   // Who invited this user
+    mapping(address => uint256) public pendingGasTopUp;
     mapping(address => uint256) public operatorClaimsToday;
     mapping(address => uint256) public operatorDayStart;
     
@@ -91,6 +94,8 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     event OwnerTransferProposed(address indexed currentOwner, address indexed pendingOwner, uint64 executeAfter);
     event OwnerTransferCancelled(address indexed currentOwner, address indexed pendingOwner);
     event OwnerTransferred(address indexed oldOwner, address indexed newOwner);
+    event BatchClaimGasFailed(address indexed user);
+    event GasTopUpRetried(address indexed user, uint256 amount);
     
     modifier onlyOwner() {
         require(msg.sender == owner, "Faucet: not owner");
@@ -190,12 +195,29 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
             }
             
             vfideToken.safeTransfer(user, claimAmountVFIDE);
-            (bool sent, ) = user.call{value: claimAmountETH}("");
-            // F-50 FIX: Keep batch claim atomic per call.
-            // If ETH transfer fails, revert so user is not marked claimed without gas top-up.
-            if (!sent) revert Faucet_ETHTransferFailed();
-            emit BatchClaimProcessed(user, referrers[i], claimAmountVFIDE, claimAmountETH, false);
+            (bool sent, ) = user.call{value: claimAmountETH, gas: 30_000}("");
+            bool gasTransferFailed = !sent;
+            if (gasTransferFailed) {
+                pendingGasTopUp[user] += claimAmountETH;
+                emit BatchClaimGasFailed(user);
+            }
+            emit BatchClaimProcessed(user, referrers[i], claimAmountVFIDE, claimAmountETH, gasTransferFailed);
         }
+    }
+
+    function retryGasTopUp(address user) external nonReentrant {
+        uint256 amount = pendingGasTopUp[user];
+        if (amount == 0) revert Faucet_NoPendingGasTopUp();
+        if (address(this).balance < amount) revert Faucet_InsufficientETH();
+
+        delete pendingGasTopUp[user];
+        (bool sent, ) = user.call{value: amount, gas: 30_000}("");
+        if (!sent) {
+            pendingGasTopUp[user] = amount;
+            revert Faucet_GasRetryFailed();
+        }
+
+        emit GasTopUpRetried(user, amount);
     }
     
     // ── Admin ────────────────────────────────────────────────

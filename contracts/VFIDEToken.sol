@@ -933,6 +933,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (from == address(0) || to == address(0)) revert VF_ZERO();
         if (amount == 0) revert VF_ZERO();
 
+        address scoringFrom = _resolveFeeScoringAddress(from);
+
         if (address(emergencyBreaker) != address(0) && emergencyBreaker.halted()) {
             if (!(systemExempt[from] || systemExempt[to])) revert VF_EmergencyHalted();
         }
@@ -940,7 +942,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         address logicalTo = to;
         address custodyTo = to;
 
-        _enforceSeerAction(_resolveFeeScoringAddress(from), 0, amount, _resolveFeeScoringAddress(logicalTo));
+        _enforceSeerAction(scoringFrom, 0, amount, _resolveFeeScoringAddress(logicalTo));
 
 
         // Route EOA receipts into the recipient's vault without changing the fee/scoring context.
@@ -959,7 +961,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             }
         }
 
-        address fraudCheckAddr = _resolveFeeScoringAddress(from);
+        address fraudCheckAddr = scoringFrom;
         bool escrowTransferRequired =
             address(fraudRegistry) != address(0) &&
             !systemExempt[from] &&
@@ -1015,8 +1017,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             !isFeeBypassed() &&
             !(systemExempt[from] || systemExempt[logicalTo])
         ) {
-            address feeFrom = _resolveFeeScoringAddress(from);
-            try burnRouter.computeFeesAndReserve(feeFrom, logicalTo, amount) returns (
+            try burnRouter.computeFeesAndReserve(scoringFrom, logicalTo, amount) returns (
                 uint256 _burnAmt,
                 uint256 _sanctumAmt,
                 uint256 _ecoAmt,

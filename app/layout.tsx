@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 import '@/lib/ssr-animations.css';
 import { CoreProviders } from '@/lib/providers/CoreProviders';
@@ -12,9 +13,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#06b6d4' };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const nonce = (await headers()).get('x-nonce') ?? '';
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-csp-nonce={nonce || undefined}>
       <body className="bg-zinc-950 text-white antialiased">
         <CoreProviders>{children}</CoreProviders>
       </body>

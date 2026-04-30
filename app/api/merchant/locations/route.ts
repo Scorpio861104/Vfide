@@ -3,6 +3,7 @@ import { query } from '@/lib/db';
 import { requireOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
@@ -23,6 +24,16 @@ function serializeLocation(row: Record<string, unknown>) {
     active: row.active !== false,
   };
 }
+
+const createLocationSchema = z.object({
+  merchantAddress: z.string().regex(ADDRESS_REGEX),
+  name: z.string().trim().min(1).max(120),
+  address: z.string().trim().max(200).optional(),
+  city: z.string().trim().max(80).optional(),
+  country: z.string().trim().max(80).optional(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+});
 
 export async function GET(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
@@ -59,16 +70,15 @@ export async function POST(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const body = await request.json();
-    const merchantAddress = normalizeAddress(typeof body?.merchantAddress === 'string' ? body.merchantAddress : null);
-    const name = typeof body?.name === 'string' ? body.name.trim() : '';
-    const address = typeof body?.address === 'string' ? body.address.trim() : '';
-    const city = typeof body?.city === 'string' ? body.city.trim() : '';
-    const country = typeof body?.country === 'string' ? body.country.trim() : '';
-    const lat = body?.lat == null ? null : Number(body.lat);
-    const lng = body?.lng == null ? null : Number(body.lng);
+    const rawBody = await request.json();
+    const parsed = createLocationSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body', details: parsed.error.issues }, { status: 400 });
+    }
+    const body = parsed.data;
 
-    if (!merchantAddress || !name) {
+    const merchantAddress = normalizeAddress(body.merchantAddress);
+    if (!merchantAddress) {
       return NextResponse.json({ error: 'merchantAddress and name required' }, { status: 400 });
     }
 
@@ -82,12 +92,12 @@ export async function POST(request: NextRequest) {
        RETURNING id, name, address, city, country, lat, lng, active`,
       [
         merchantAddress,
-        name,
-        address || null,
-        city || null,
-        country || null,
-        Number.isFinite(lat ?? NaN) ? lat : null,
-        Number.isFinite(lng ?? NaN) ? lng : null,
+        body.name,
+        body.address ?? null,
+        body.city ?? null,
+        body.country ?? null,
+        body.lat ?? null,
+        body.lng ?? null,
       ],
     );
 

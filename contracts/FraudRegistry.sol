@@ -94,8 +94,12 @@ contract FraudRegistry is ReentrancyGuard {
 
     // target → complaints
     mapping(address => Complaint[]) public complaints;
-    // target → reporter → has complained
+    // target → reporter → has complained (legacy compatibility)
     mapping(address => mapping(address => bool)) public hasComplained;
+    // target → reporter → latest epoch marker (epoch + 1)
+    mapping(address => mapping(address => uint64)) public lastComplaintEpoch;
+    // target → current complaint epoch
+    mapping(address => uint64) public complaintEpoch;
     // target → total complaint count
     mapping(address => uint8) public complaintCount;
 
@@ -120,6 +124,7 @@ contract FraudRegistry is ReentrancyGuard {
         uint64 releaseAt;
         bool released;
         bool cancelled; // Only if flag is cleared before release
+        address recipientOwner;
     }
 
     EscrowedTransfer[] public escrowedTransfers;
@@ -148,6 +153,7 @@ contract FraudRegistry is ReentrancyGuard {
     event VaultHubProposed(address indexed newVaultHub, uint64 effectiveAt);
     event VaultHubChangeCancelled();
     event DismissedComplaintPenaltyProcessed(address indexed target, uint256 processedCount, uint256 nextCursor);
+    event DismissedComplaintPenaltyFailed(address indexed target, address indexed reporter, bytes reason);
 
     modifier onlyDAO() {
         if (msg.sender != dao) revert FR_NotDAO();
@@ -173,13 +179,15 @@ contract FraudRegistry is ReentrancyGuard {
         if (target == address(0)) revert FR_Zero();
         if (target == msg.sender) revert FR_SelfComplaint();
         if (address(vaultHub) != address(0) && vaultHub.isVault(target)) revert FR_InvalidTarget();
-        if (hasComplained[target][msg.sender]) revert FR_AlreadyComplained();
+        uint64 epoch = complaintEpoch[target];
+        if (lastComplaintEpoch[target][msg.sender] == epoch + 1) revert FR_AlreadyComplained();
         if (isPendingReview[target] || isFlagged[target] || isPermanentlyBanned[target]) revert FR_ReviewActive();
 
         // Reporter must have minimum trust
         uint16 reporterScore = seer.getScore(msg.sender);
         if (reporterScore < MIN_REPORTER_SCORE) revert FR_InsufficientScore();
 
+        lastComplaintEpoch[target][msg.sender] = epoch + 1;
         hasComplained[target][msg.sender] = true;
 
         // Cap complaints array to prevent unbounded growth
@@ -220,6 +228,17 @@ contract FraudRegistry is ReentrancyGuard {
         // After 30 days, anyone can call releaseEscrow to deliver them
         require(msg.sender == address(vfideToken), "FR: only token");
 
+        address recipientOwner = to;
+        if (address(vaultHub) != address(0)) {
+            try vaultHub.isVault(to) returns (bool isVaultAddr) {
+                if (isVaultAddr) {
+                    try vaultHub.ownerOfVault(to) returns (address owner) {
+                        if (owner != address(0)) recipientOwner = owner;
+                    } catch {}
+                }
+            } catch {}
+        }
+
         uint64 releaseAt = uint64(block.timestamp) + uint64(ESCROW_DURATION);
 
         escrowIndex = escrowedTransfers.length;
@@ -229,7 +248,8 @@ contract FraudRegistry is ReentrancyGuard {
             amount: amount,
             releaseAt: releaseAt,
             released: false,
-            cancelled: false
+            cancelled: false,
+            recipientOwner: recipientOwner
         }));
 
         require(userEscrowIndices[from].length < 500, "FR: escrow limit");
@@ -253,22 +273,12 @@ contract FraudRegistry is ReentrancyGuard {
         // H-3 FIX: Decrement active escrow counter before transfer
         totalActiveEscrowed -= e.amount;
 
-        // N-H3 FIX: Resolve current destination vault at release-time when possible.
-        // If the recipient rotated vaults during escrow, redirect to the recipient's current vault
-        // instead of the stale vault address captured at send-time.
+        // Resolve against the snapshot owner captured at escrow time.
         address releaseTarget = e.to;
-        if (address(vaultHub) != address(0)) {
-            try vaultHub.isVault(e.to) returns (bool wasVault) {
-                if (wasVault) {
-                    try vaultHub.ownerOfVault(e.to) returns (address owner) {
-                        if (owner != address(0)) {
-                            try vaultHub.vaultOf(owner) returns (address currentVault) {
-                                if (currentVault != address(0) && currentVault != e.to) {
-                                    releaseTarget = currentVault;
-                                }
-                            } catch {}
-                        }
-                    } catch {}
+        if (e.recipientOwner != address(0) && address(vaultHub) != address(0)) {
+            try vaultHub.vaultOf(e.recipientOwner) returns (address currentVault) {
+                if (currentVault != address(0)) {
+                    releaseTarget = currentVault;
                 }
             } catch {}
         }
@@ -398,14 +408,20 @@ contract FraudRegistry is ReentrancyGuard {
         }
 
         Complaint[] storage filed = complaints[target];
-        dismissedComplaintPenaltyCursor[target] = stop;
+        uint256 newCursor = cursor;
 
         for (uint256 i = cursor; i < stop; i++) {
-            try seer.punish(filed[i].reporter, COMPLAINT_REPORTER_PENALTY, "false_complaint_dismissed") {} catch {}
-            processed++;
+            try seer.punish(filed[i].reporter, COMPLAINT_REPORTER_PENALTY, "false_complaint_dismissed") {
+                processed++;
+                newCursor = i + 1;
+            } catch (bytes memory reason) {
+                emit DismissedComplaintPenaltyFailed(target, filed[i].reporter, reason);
+                break;
+            }
         }
 
-        emit DismissedComplaintPenaltyProcessed(target, processed, stop);
+        dismissedComplaintPenaltyCursor[target] = newCursor;
+        emit DismissedComplaintPenaltyProcessed(target, processed, newCursor);
     }
 
     /// @notice DAO clears a previously confirmed fraud flag (rehabilitation)
@@ -424,6 +440,7 @@ contract FraudRegistry is ReentrancyGuard {
         complaintCount[target] = 0;
         delete complaints[target];
         dismissedComplaintPenaltyCursor[target] = 0;
+        complaintEpoch[target] += 1;
 
         // N-H1 FIX: Escrow refunds are processed in bounded chunks via
         // processClearFlagEscrowRefunds() to prevent clearFlag gas exhaustion.

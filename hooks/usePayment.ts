@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { formatEther } from 'viem';
 import { useAccount, usePublicClient, useReadContract, useWriteContract } from 'wagmi';
-import { VFIDETokenABI, BurnRouterABI } from '@/lib/abis';
+import { VFIDETokenABI, ProofScoreBurnRouterABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, getContractConfigurationError, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
@@ -28,19 +28,11 @@ export function usePayment() {
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   const cardBoundMode = isCardBoundVaultMode();
-  const hasBurnRouterConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.BurnRouter);
+  const hasBurnRouterConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.ProofScoreBurnRouter);
   const hasTokenConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
   const [status, setStatus] = useState<PaymentStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
-
-  const { data: buyerFeeData } = useReadContract({
-    address: CONTRACT_ADDRESSES.BurnRouter as `0x${string}`,
-    abi: BurnRouterABI,
-    functionName: 'routeFor',
-    args: address ? [address] : undefined,
-    query: { enabled: Boolean(address) && hasBurnRouterConfig },
-  });
 
   const { data: balance } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken as `0x${string}`,
@@ -67,8 +59,17 @@ export function usePayment() {
         throw getContractConfigurationError('VFIDEToken');
       }
 
-      const feeBps = buyerFeeData ? Number(buyerFeeData) : 100;
-      const feeAmount = (amount * BigInt(feeBps)) / 10000n;
+      let feeAmount = 0n;
+      if (hasBurnRouterConfig) {
+        const feeData = await publicClient.readContract({
+          address: CONTRACT_ADDRESSES.ProofScoreBurnRouter as `0x${string}`,
+          abi: ProofScoreBurnRouterABI,
+          functionName: 'computeFees',
+          args: [address, merchantAddress, amount],
+        });
+        const [burnAmount, sanctumAmount, ecosystemAmount] = feeData as readonly [bigint, bigint, bigint, `0x${string}`, `0x${string}`, `0x${string}`];
+        feeAmount = burnAmount + sanctumAmount + ecosystemAmount;
+      }
       const totalRequired = amount + feeAmount;
 
       if (useVault && !vaultAddress) {
@@ -128,7 +129,7 @@ export function usePayment() {
       setStatus('error');
       return null;
     }
-  }, [address, publicClient, writeContractAsync, buyerFeeData, balance, cardBoundMode]);
+  }, [address, publicClient, writeContractAsync, balance, cardBoundMode, hasBurnRouterConfig]);
 
   const reset = useCallback(() => {
     setStatus('idle');
@@ -143,6 +144,6 @@ export function usePayment() {
     error,
     txHash,
     balance: typeof balance === 'bigint' ? formatEther(balance) : '0',
-    feeBps: buyerFeeData ? Number(buyerFeeData) : 100,
+    feeBps: 0,
   };
 }

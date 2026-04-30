@@ -6,6 +6,7 @@
  */
 import { isAddress } from 'viem'
 import { ZERO_ADDRESS } from './constants'
+import { CURRENT_CHAIN_ID } from './testnet'
 import {
   VFIDETokenABI,
   StablecoinRegistryABI,
@@ -95,7 +96,7 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   GuardianLock: 'NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS',
   PanicGuard: 'NEXT_PUBLIC_PANIC_GUARD_ADDRESS',
   EmergencyBreaker: 'NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS',
-  BurnRouter: 'NEXT_PUBLIC_BURN_ROUTER_ADDRESS',
+  BurnRouter: 'NEXT_PUBLIC_LEGACY_BURN_ROUTER_ADDRESS',
   ProofScoreBurnRouter: 'NEXT_PUBLIC_BURN_ROUTER_ADDRESS',
   ProofLedger: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS',
   LiquidityIncentives: 'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS',
@@ -121,6 +122,17 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   VFIDEFlashLoan: 'NEXT_PUBLIC_FLASH_LOAN_ADDRESS',
 };
 
+function resolveChainScopedAddress(name: string, fallbackAddress: string | undefined): { address: string | undefined; envVarName: string; chainScopedEnvVarName: string } {
+  const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
+  const chainScopedEnvVarName = `${envVarName}_${CURRENT_CHAIN_ID}`;
+  const chainScopedAddress = process.env[chainScopedEnvVarName];
+  return {
+    address: chainScopedAddress ?? fallbackAddress,
+    envVarName,
+    chainScopedEnvVarName,
+  };
+}
+
 /**
  * Validate contract address at runtime
  * Returns properly typed address, or zero address if invalid/missing
@@ -138,26 +150,27 @@ function validateContractAddress(address: string | undefined, name: string): `0x
   // Keep strictness for server/runtime checks, but never crash client render trees.
   const strictProduction = isProduction && !frontendOnly && isServer;
 
-  if (!address) {
-    const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
+  const resolved = resolveChainScopedAddress(name, address);
+
+  if (!resolved.address) {
     if (strictProduction) {
-      logContractAddressIssue('error', `[VFIDE] Missing contract address in production: ${name}. Set ${envVarName} in environment. All calls to this contract will fail.`)
+      logContractAddressIssue('error', `[VFIDE] Missing contract address in production: ${name}. Set ${resolved.chainScopedEnvVarName} (preferred) or ${resolved.envVarName} in environment. All calls to this contract will fail.`)
       throw new Error(`[VFIDE] Missing required contract address in production: ${name}`)
     } else {
       const runtimeHint = frontendOnly ? 'frontend-only mode' : 'non-production runtime';
       const level = frontendOnly ? 'info' : 'warn';
-      logContractAddressIssue(level, `[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS in ${runtimeHint}. Set ${envVarName} in environment.`)
+      logContractAddressIssue(level, `[VFIDE] Missing contract address: ${name}. Using ZERO_ADDRESS in ${runtimeHint}. Set ${resolved.chainScopedEnvVarName} (preferred) or ${resolved.envVarName} in environment.`)
     }
     return ZERO_ADDRESS
   }
-  if (!isAddress(address)) {
-    logContractAddressIssue('error', `[VFIDE] Invalid contract address for ${name}: ${address}. This is a configuration error!`)
+  if (!isAddress(resolved.address)) {
+    logContractAddressIssue('error', `[VFIDE] Invalid contract address for ${name}: ${resolved.address}. This is a configuration error!`)
     if (strictProduction) {
       throw new Error(`[VFIDE] Invalid contract address in production for ${name}`)
     }
     return ZERO_ADDRESS
   }
-  return address as `0x${string}`
+  return resolved.address as `0x${string}`
 }
 
 export function isConfiguredContractAddress(address: string | undefined | null): address is `0x${string}` {

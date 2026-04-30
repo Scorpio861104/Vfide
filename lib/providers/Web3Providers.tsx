@@ -37,6 +37,12 @@ export function Web3Providers({ children }: { children: ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
       <QueryClientProvider client={queryClient}>
+        {/*
+          Wallet stack intentionally remains RainbowKit.
+          Do not swap to VFIDEWalletProvider until:
+          1) authenticateWithProvider is wired to a real SDK
+          2) ensureVaultExists is implemented against VaultHub
+        */}
         <RainbowKitProvider>
           <SecurityProvider>
             <WalletPersistenceManager>{children}</WalletPersistenceManager>

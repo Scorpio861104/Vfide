@@ -1,7 +1,7 @@
 /**
  * Shared CSP utilities.
  *
- * `proxy.ts` is the single runtime enforcement point, while these helpers keep
+ * `middleware.ts` is the single runtime enforcement point, while these helpers keep
  * policy construction centralized for tests and deployment validation.
  */
 
@@ -61,9 +61,7 @@ export function buildCsp(nonce: string, env: NodeJS.ProcessEnv = process.env): s
 
   return [
     "default-src 'self'",
-    // Keep nonce for request correlation, but allow inline bootstrap scripts that
-    // Next injects for RSC hydration/runtime handoff.
-    `script-src 'self' 'unsafe-inline' 'unsafe-eval' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
+    `script-src 'self' 'nonce-${nonce}' https://vercel.live https://*.walletconnect.com https://*.walletconnect.org`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data: https://fonts.gstatic.com",

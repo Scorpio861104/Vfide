@@ -1220,7 +1220,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
         if (router == address(0)) return 0;
 
-        try IProofScoreBurnRouterToken(router).computeFees(customer, merchant, amount) returns (
+        address feeFrom = _resolveCustomerScoringAddress(customer);
+
+        try IProofScoreBurnRouterToken(router).computeFees(feeFrom, merchant, amount) returns (
             uint256 burnAmount,
             uint256 sanctumAmount,
             uint256 ecosystemAmount,
@@ -1231,6 +1233,20 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             return burnAmount + sanctumAmount + ecosystemAmount;
         } catch {
             return 0;
+        }
+    }
+
+    function _resolveCustomerScoringAddress(address customer) internal view returns (address) {
+        if (address(vaultHub) == address(0)) return customer;
+        try vaultHub.isVault(customer) returns (bool isVaultAddr) {
+            if (!isVaultAddr) return customer;
+            try vaultHub.ownerOfVault(customer) returns (address owner) {
+                return owner == address(0) ? customer : owner;
+            } catch {
+                return customer;
+            }
+        } catch {
+            return customer;
         }
     }
 

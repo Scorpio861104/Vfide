@@ -86,6 +86,7 @@ export class RateLimiter {
     const now = Date.now();
     const windowIndex = Math.floor(now / this.windowMs);
     const redisKey = `ws:rl:${this.name}:${key}:${windowIndex}`;
+    const ttlSeconds = Math.max(1, Math.ceil(this.windowMs / 1000) + 5);
 
     const incrUrl = `${this.redisUrl!.replace(/\/$/, '')}/incr/${encodeURIComponent(redisKey)}`;
     const incrResponse = await fetch(incrUrl, {
@@ -102,19 +103,17 @@ export class RateLimiter {
     const incrData = (await incrResponse.json()) as { result?: number };
     const count = Number(incrData.result ?? 0);
 
-    if (count === 1) {
-      const ttlSeconds = Math.max(1, Math.ceil(this.windowMs / 1000) + 5);
-      const expireUrl = `${this.redisUrl!.replace(/\/$/, '')}/expire/${encodeURIComponent(redisKey)}/${ttlSeconds}`;
-      const expireResponse = await fetch(expireUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.redisToken}`,
-        },
-      });
+    const expireUrl = `${this.redisUrl!.replace(/\/$/, '')}/expire/${encodeURIComponent(redisKey)}/${ttlSeconds}`;
+    const expireResponse = await fetch(expireUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.redisToken}`,
+      },
+    });
 
-      if (!expireResponse.ok) {
-        throw new Error(`Upstash EXPIRE failed: HTTP ${expireResponse.status}`);
-      }
+    if (!expireResponse.ok) {
+      // Do not permanently fail requests on transient EXPIRE failures.
+      console.warn(`[ws] Upstash EXPIRE failed for ${redisKey}: HTTP ${expireResponse.status}`);
     }
 
     return count <= this.maxRequests;

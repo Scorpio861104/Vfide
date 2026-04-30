@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { GET as activitiesGET } from '../route';
 
 const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
@@ -52,13 +53,12 @@ export async function GET(
       }
     }
 
-    // Make internal fetch to the query-based endpoint
-    const response = await fetch(newUrl.toString(), {
+    const synthRequest = new NextRequest(newUrl, {
       method: 'GET',
       headers: request.headers,
     });
 
-    return response;
+    return activitiesGET(synthRequest);
   } catch (error) {
     logger.error('Error fetching activities by address:', error);
     return NextResponse.json(

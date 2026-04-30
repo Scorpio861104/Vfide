@@ -12,7 +12,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
   const hasSeerConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
-  const hasBurnRouterConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.BurnRouter)
+  const hasBurnRouterConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.ProofScoreBurnRouter)
 
   const { data, isError, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.Seer,
@@ -25,7 +25,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
   })
 
   const { data: onChainFeeQuote } = useReadContract({
-    address: CONTRACT_ADDRESSES.BurnRouter,
+    address: CONTRACT_ADDRESSES.ProofScoreBurnRouter,
     abi: ProofScoreBurnRouterABI,
     functionName: 'computeFees',
     args: targetAddress ? [targetAddress, targetAddress, FEE_QUOTE_AMOUNT] : undefined,

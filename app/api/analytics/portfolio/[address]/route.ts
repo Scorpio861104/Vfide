@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { requireOwnership } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 
 const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -39,6 +40,9 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    const authResult = await requireOwnership(request, normalizedAddress);
+    if (authResult instanceof NextResponse) return authResult;
 
     // Query portfolio data for the address
     const result = await query(

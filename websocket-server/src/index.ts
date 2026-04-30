@@ -43,7 +43,8 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const TOPIC_ACL_ALLOW_MISSING = !IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
 
 if (IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true') {
-  console.warn('[ws] Ignoring WS_TOPIC_ACL_ALLOW_MISSING=true in production (topic ACL remains fail-closed).');
+  console.error('[ws] FATAL: WS_TOPIC_ACL_ALLOW_MISSING=true is not permitted in production.');
+  process.exit(1);
 }
 
 // WS-1 mitigation: Require explicit proxy configuration to use X-Forwarded-For
@@ -334,6 +335,10 @@ function ensureFreshTopicAclSnapshot(forceFileCheck: boolean): void {
 
 function startTopicAclRefresh(): void {
   if (!TOPIC_ACL_PATH) {
+    if (IS_PRODUCTION) {
+      console.error('[ws] FATAL: WS_TOPIC_ACL_PATH is required in production.');
+      process.exit(1);
+    }
     if (TOPIC_ACL_ALLOW_MISSING) {
       console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL in compatibility allow mode.');
     } else {
@@ -375,6 +380,25 @@ function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string, refres
     return false;
   }
 
+  if (!client.vfideAddress) {
+    return false;
+  }
+
+  if (topic.startsWith('chat.')) {
+    const participants = topic.slice('chat.'.length).split('_');
+    if (participants.length !== 2) return false;
+    const [a, b] = participants.map((entry) => entry.toLowerCase());
+    const addrRe = /^0x[a-f0-9]{40}$/;
+    if (!addrRe.test(a) || !addrRe.test(b) || a >= b) return false;
+    const me = client.vfideAddress.toLowerCase();
+    return me === a || me === b;
+  }
+
+  if (topic.startsWith('presence.')) {
+    const subject = topic.slice('presence.'.length).toLowerCase();
+    return /^0x[a-f0-9]{40}$/.test(subject) && subject === client.vfideAddress.toLowerCase();
+  }
+
   if (!TOPIC_ACL_PATH) {
     return TOPIC_ACL_ALLOW_MISSING;
   }
@@ -384,7 +408,7 @@ function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string, refres
   // synchronous fs.stat calls per message fanout.
   ensureFreshTopicAclSnapshot(refreshForSubscribe);
 
-  if (!topicAclSnapshot || !client.vfideAddress) {
+  if (!topicAclSnapshot) {
     return false;
   }
 

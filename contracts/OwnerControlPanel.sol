@@ -45,6 +45,11 @@ interface IEcosystemVaultAdmin {
     function autoUserReferralReward() external view returns (uint256);
 }
 
+interface IVFIDETokenEmergencyConfirm {
+    function confirmFeeBypass() external;
+    function confirmCircuitBreaker() external;
+}
+
 contract OwnerControlPanel {
     using SafeERC20 for IERC20;
 
@@ -1202,8 +1207,8 @@ contract OwnerControlPanel {
     
     /**
      * @notice Emergency pause all systems
-     * @dev H-02 FIX: Explicitly activates security+fee bypass (circuit breaker no longer does this implicitly).
-     *      Security and fee bypasses are instant; circuit breaker activation is queued (48h timelock).
+     * @dev Stage 1 only: proposes emergency flags on VFIDEToken.
+     *      Call emergency_confirmPauseAll() after timelock elapses.
      */
     // slither-disable-next-line reentrancy-events
     function emergency_pauseAll() external onlyOwner {
@@ -1213,6 +1218,17 @@ contract OwnerControlPanel {
         // Queue circuit breaker activation (requires confirmCircuitBreaker() after 48h)
         vfideToken.setCircuitBreaker(true, 1 days);
         
+        emit EmergencyAction("system_pause_proposed", address(this));
+    }
+
+    /**
+     * @notice Confirm emergency pause after timelock elapsed
+     */
+    // slither-disable-next-line reentrancy-events
+    function emergency_confirmPauseAll() external onlyOwner {
+        IVFIDETokenEmergencyConfirm(address(vfideToken)).confirmFeeBypass();
+        IVFIDETokenEmergencyConfirm(address(vfideToken)).confirmCircuitBreaker();
+
         emit EmergencyAction("system_paused", address(this));
     }
     
