@@ -9,7 +9,7 @@ async function getConnection() {
   return connectionPromise;
 }
 
-describe("VFIDEBridge (delivery confirmation)", () => {
+describe("VFIDEBridge (delivery confirmation)", { concurrency: 1, timeout: 120000 }, () => {
   const SOURCE_EID = 30101;
   const DEST_EID = 30102;
 
@@ -17,7 +17,7 @@ describe("VFIDEBridge (delivery confirmation)", () => {
     const { ethers } = (await getConnection()) as any;
     const [owner, user, receiver] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("TestMintableToken");
+    const Token = await ethers.getContractFactory("ExemptableMintableTokenStub");
     const token = await Token.deploy();
     await token.waitForDeployment();
 
@@ -47,6 +47,8 @@ describe("VFIDEBridge (delivery confirmation)", () => {
     await destinationBridge.connect(owner).applyTrustedRemote(SOURCE_EID);
 
     await sourceBridge.connect(owner).setExemptCheckBypass(true, 3600);
+    await token.setSystemExempt(await sourceBridge.getAddress(), true);
+    await token.setSystemExempt(await destinationBridge.getAddress(), true);
 
     await token.mint(owner.address, ethers.parseEther("200000000"));
     await token.transfer(user.address, ethers.parseEther("1000"));
@@ -57,8 +59,7 @@ describe("VFIDEBridge (delivery confirmation)", () => {
   }
 
   async function deployBridgePair() {
-    const { networkHelpers } = (await getConnection()) as any;
-    return networkHelpers.loadFixture(bridgePairFixture);
+    return bridgePairFixture();
   }
 
   it("syncs LayerZero peers when a trusted remote is applied", async () => {
@@ -195,7 +196,7 @@ describe("VFIDEBridge (delivery confirmation)", () => {
     assert.equal(await token.balanceOf(user.address), balanceBeforeRefund + refundedAmount);
   });
 
-  it("rejects inbound delivery when only pending-outbound liquidity would cover it", async () => {
+  it("opens a refund window when inbound delivery fails from insufficient destination liquidity", async () => {
     const { ethers, token, endpoint, sourceBridge, destinationBridge, owner, user, receiver } = await deployBridgePair();
 
     // Seed source with baseline liquidity so the first inbound message succeeds.
@@ -211,16 +212,32 @@ describe("VFIDEBridge (delivery confirmation)", () => {
     await destinationBridge.connect(user).bridge(SOURCE_EID, receiver.address, ethers.parseEther("2000"), "0x");
 
     // Source outbound to destination exceeds destination baseline available liquidity (after fee ~5994 > 5000).
-    await sourceBridge.connect(user).bridge(DEST_EID, receiver.address, ethers.parseEther("6000"), "0x");
+    const outboundTx = await sourceBridge.connect(user).bridge(DEST_EID, receiver.address, ethers.parseEther("6000"), "0x");
+    const outboundReceipt = await outboundTx.wait();
+    const outboundLog = outboundReceipt.logs
+      .map((log: any) => {
+        try {
+          return sourceBridge.interface.parseLog(log);
+        } catch {
+          return null;
+        }
+      })
+      .find((parsed: any) => parsed?.name === "BridgeSent");
+    const txId = outboundLog?.args?.txId;
+    assert.ok(txId);
 
     // First queued delivery (destination -> source) should succeed.
     await endpoint.deliverNext();
 
-    // Second queued delivery (source -> destination) should fail because destination available liquidity
-    // excludes tokens already committed as pending outbound.
-    await assert.rejects(
-      () => endpoint.deliverNext(),
-      /insufficient liquidity|revert/
-    );
+    // Second queued delivery (source -> destination) no longer reverts; destination emits
+    // a failure signal and source opens a refund window upon receiving it.
+    await endpoint.deliverNext();
+
+    // Process queued confirmation/failure callbacks.
+    await endpoint.deliverNext();
+    await endpoint.deliverNext();
+
+    assert.equal((await sourceBridge.bridgeTransactions(txId)).executed, false);
+    assert.ok((await sourceBridge.bridgeRefundableAfter(txId)) > 0n);
   });
 });

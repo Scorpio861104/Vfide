@@ -16,11 +16,7 @@ const H48 = 48 * 60 * 60; // 48 hours in seconds
 let connectionPromise: Promise<any> | null = null;
 
 async function getConnection() {
-  connectionPromise ??= network.connect({
-    override: {
-      allowUnlimitedContractSize: true,
-    },
-  });
+  connectionPromise ??= network.connect();
   return connectionPromise;
 }
 
@@ -29,25 +25,31 @@ async function deployTokenFixture() {
   const [owner, user1] = await ethers.getSigners();
 
   const Placeholder = await ethers.getContractFactory("Placeholder");
+  const TreasuryForwarder = await ethers.getContractFactory("TreasuryForwarder");
   const devVault = await Placeholder.deploy();
+  const treasury = await TreasuryForwarder.deploy();
   await devVault.waitForDeployment();
+  await treasury.waitForDeployment();
 
   const Token = await ethers.getContractFactory("VFIDEToken");
   const token = await Token.deploy(
     await devVault.getAddress(),
-    owner.address,
+    await treasury.getAddress(),
     ethers.ZeroAddress,
     ethers.ZeroAddress,
     ethers.ZeroAddress,
   );
   await token.waitForDeployment();
-  return { token, owner, user1, devVault, ethers };
+
+  // Treasury custody is contract-based; forward an owner test balance for transfer scenarios.
+  await treasury.sweep(await token.getAddress(), owner.address, 150_000_000n * 10n ** 18n);
+
+  return { token, owner, user1, devVault, treasury, ethers };
 }
 
 // ─── Deploy helper (call this inside tests) ──────────────────────────────
 async function deployToken() {
-  const { networkHelpers } = await getConnection();
-  return networkHelpers.loadFixture(deployTokenFixture);
+  return deployTokenFixture();
 }
 
 describe("VFIDEToken", () => {

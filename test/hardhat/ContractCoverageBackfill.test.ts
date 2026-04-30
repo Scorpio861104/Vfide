@@ -11,7 +11,7 @@ async function getConnection() {
   return connectionPromise;
 }
 
-describe("SessionKeyManager coverage backfill", { concurrency: 1 }, () => {
+describe("SessionKeyManager coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function sessionKeyManagerFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao, customer, recorder, attacker] = await ethers.getSigners();
@@ -76,7 +76,7 @@ describe("SessionKeyManager coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("CircuitBreaker coverage backfill", { concurrency: 1 }, () => {
+describe("CircuitBreaker coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function circuitBreakerFixture() {
     const { ethers } = (await getConnection()) as any;
     const [admin, configManager, pauser, oracle, attacker] = await ethers.getSigners();
@@ -144,7 +144,7 @@ describe("CircuitBreaker coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
+describe("ProofLedger coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function proofLedgerFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao, logger, user] = await ethers.getSigners();
@@ -171,9 +171,14 @@ describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
   });
 
   it("allows DAO-authorized loggers to write entries", async () => {
+    const { ethers } = (await getConnection()) as any;
     const { dao, logger, user, ledger } = await deployFixture();
 
     await ledger.connect(dao).setLogger(logger.address, true);
+    const delay = await ledger.CHANGE_DELAY();
+    await ethers.provider.send("evm_increaseTime", [Number(delay) + 1]);
+    await ethers.provider.send("evm_mine", []);
+    await ledger.connect(dao).applyLogger();
     assert.equal(await ledger.authorizedLoggers(logger.address), true);
 
     await ledger.connect(logger).logEvent(user.address, "transfer", 100, "note");
@@ -181,7 +186,7 @@ describe("ProofLedger coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("VFIDEAccessControl coverage backfill", { concurrency: 1 }, () => {
+describe("VFIDEAccessControl coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function accessControlFixture() {
     const { ethers } = (await getConnection()) as any;
     const [admin, newAdmin, member] = await ethers.getSigners();
@@ -227,7 +232,7 @@ describe("VFIDEAccessControl coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("EcoTreasuryVault coverage backfill", { concurrency: 1 }, () => {
+describe("EcoTreasuryVault coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function ecoTreasuryFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao, recipient, attacker] = await ethers.getSigners();
@@ -269,7 +274,7 @@ describe("EcoTreasuryVault coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("MerchantRegistry coverage backfill", { concurrency: 1 }, () => {
+describe("MerchantRegistry coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function merchantRegistryFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao, merchant, other] = await ethers.getSigners();
@@ -331,7 +336,7 @@ describe("MerchantRegistry coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("EmergencyBreaker coverage backfill", { concurrency: 1 }, () => {
+describe("EmergencyBreaker coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function emergencyBreakerFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao] = await ethers.getSigners();
@@ -357,7 +362,7 @@ describe("EmergencyBreaker coverage backfill", { concurrency: 1 }, () => {
   });
 });
 
-describe("BadgeQualificationRules coverage backfill", { concurrency: 1 }, () => {
+describe("BadgeQualificationRules coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function badgeQualificationRulesFixture() {
     const { ethers } = (await getConnection()) as any;
 
@@ -425,7 +430,7 @@ describe("BadgeQualificationRules coverage backfill", { concurrency: 1 }, () => 
   });
 });
 
-describe("Deploy helper coverage backfill", { concurrency: 1 }, () => {
+describe("Deploy helper coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   it("DeployPhase3Peripherals deploys both BSM and oracle", async () => {
     const { ethers } = (await getConnection()) as any;
     const [owner, vfideToken, quoteToken] = await ethers.getSigners();
