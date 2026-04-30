@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem } from 'viem';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { CONTRACT_ADDRESSES, StablecoinRegistryABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { query } from '@/lib/db';
@@ -224,15 +224,11 @@ async function verifyPaymentEventOnChain(params: {
   return { ok: false, error: 'Transaction receipt does not contain a matching payment event' };
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -295,4 +291,4 @@ export async function POST(request: NextRequest) {
   });
 
   return NextResponse.json({ success: true });
-}
+});

@@ -9,7 +9,7 @@ import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultBalance } from '@/lib/vfide-hooks';
 import { safeParseFloat } from '@/lib/validation';
 import { devLog } from '@/lib/utils';
-import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, VFIDETokenABI, UserVaultABI, ZERO_ADDRESS, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, VFIDETokenABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 
 export interface QueuedWithdrawal {
   index: bigint;
@@ -22,7 +22,6 @@ export function useVaultOperations() {
   const { address } = useAccount();
   const chainId = useChainId();
   const { signTypedDataAsync } = useSignTypedData();
-  const cardBoundMode = isCardBoundVaultMode();
   const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
   const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
 
@@ -70,14 +69,14 @@ export function useVaultOperations() {
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'nextNonce',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const { data: walletEpoch } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'walletEpoch',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const { data: isDestinationVault } = useReadContract({
@@ -85,53 +84,53 @@ export function useVaultOperations() {
     abi: VAULT_HUB_ABI,
     functionName: 'isVault',
     args: withdrawRecipient && isAddress(withdrawRecipient) ? [withdrawRecipient as `0x${string}`] : undefined,
-    query: { enabled: isVaultHubAvailable && !!withdrawRecipient && isAddress(withdrawRecipient) && cardBoundMode },
+    query: { enabled: isVaultHubAvailable && !!withdrawRecipient && isAddress(withdrawRecipient) },
   });
 
   const { data: pendingQueuedWithdrawalData, refetch: refetchPendingQueuedWithdrawals } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'getPendingQueuedWithdrawals',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const { data: activeQueuedWithdrawals } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'activeQueuedWithdrawals',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const { data: dailyTransferLimit } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'dailyTransferLimit',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const { data: maxPerTransfer } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'maxPerTransfer',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const { data: largeTransferThreshold } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'largeTransferThreshold',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const { data: remainingDailyCapacity, refetch: refetchRemainingDailyCapacity } = useReadContract({
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'viewRemainingDailyCapacity',
-    query: { enabled: hasVaultAddress && cardBoundMode },
+    query: { enabled: hasVaultAddress },
   });
 
   const queuedWithdrawals = useMemo<QueuedWithdrawal[]>(() => {
-    if (!cardBoundMode || !pendingQueuedWithdrawalData) {
+    if (!pendingQueuedWithdrawalData) {
       return [];
     }
 
@@ -142,67 +141,27 @@ export function useVaultOperations() {
       amount: amounts[position] ?? 0n,
       executeAfter: executeAfters[position] ?? 0n,
     }));
-  }, [cardBoundMode, pendingQueuedWithdrawalData]);
+  }, [pendingQueuedWithdrawalData]);
 
   const handleDeposit = async () => {
-    if (cardBoundMode) {
-      showToast('CardBound vaults do not support direct wallet deposits. Use vault-to-vault transfer.', 'error');
-      return;
-    }
+    showToast('Vault-only mode disables direct wallet deposits here. Use vault-to-vault transfer.', 'error');
+    return;
+  };
+
+  const handleWithdraw = async () => {
     if (!depositAmount || parseFloat(depositAmount) <= 0) {
       showToast('Enter a valid amount', 'error');
       return;
     }
-    if (!hasVaultAddress) {
-      showToast('No vault found. Create a vault first.', 'error');
-      return;
-    }
-    if (!isVfideTokenAvailable) {
-      showToast('VFIDE token contract is not configured.', 'error');
-      return;
-    }
-
-    const amountWei = parseUnits(depositAmount, 18);
-    setIsDepositing(true);
-    setDepositStep('deposit');
-    try {
-      showToast('Depositing to vault...', 'info');
-      await writeContractAsync({
-        address: CONTRACT_ADDRESSES.VFIDEToken,
-        abi: VFIDETokenABI,
-        functionName: 'transfer',
-        args: [vaultAddress, amountWei],
-      });
-      showToast('Deposit successful!', 'success');
-      setDepositAmount('');
-      setShowDepositModal(false);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      if (!message.includes('rejected') && !message.includes('denied')) {
-        showToast('Deposit failed: ' + message.slice(0, 50), 'error');
-      } else {
-        showToast('Transaction cancelled', 'info');
-      }
-    } finally {
-      setIsDepositing(false);
-      setDepositStep('approve');
-    }
-  };
-
-  const handleWithdraw = async () => {
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
-      showToast('Enter a valid amount', 'error');
-      return;
-    }
     if (!withdrawRecipient || !isAddress(withdrawRecipient)) {
-      showToast(cardBoundMode ? 'Enter a valid destination vault address' : 'Enter a valid recipient address', 'error');
+      showToast('Enter a valid destination vault address', 'error');
       return;
     }
     if (!hasVaultAddress) {
       showToast('No vault found', 'error');
       return;
     }
-    if (cardBoundMode && !isVaultHubAvailable) {
+    if (!isVaultHubAvailable) {
       showToast('Vault hub contract is not configured.', 'error');
       return;
     }
@@ -210,38 +169,54 @@ export function useVaultOperations() {
     const amountWei = parseUnits(withdrawAmount, 18);
     setIsWithdrawing(true);
     try {
-      if (cardBoundMode) {
-        if (transferNonce === undefined || walletEpoch === undefined) {
-          showToast('Vault transfer state unavailable. Please retry.', 'error');
-          return;
-        }
-        if (!isDestinationVault) {
-          showToast('Destination must be a registered vault address.', 'error');
-          return;
-        }
-        const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
-        const transferChainId = BigInt(chainId);
+      if (transferNonce === undefined || walletEpoch === undefined) {
+        showToast('Vault transfer state unavailable. Please retry.', 'error');
+        return;
+      }
+      if (!isDestinationVault) {
+        showToast('Destination must be a registered vault address.', 'error');
+        return;
+      }
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      const transferChainId = BigInt(chainId);
 
-        const signature = await signTypedDataAsync({
-          domain: {
-            name: 'CardBoundVault',
-            version: '1',
-            chainId,
-            verifyingContract: vaultAddress,
-          },
-          types: {
-            TransferIntent: [
-              { name: 'vault', type: 'address' },
-              { name: 'toVault', type: 'address' },
-              { name: 'amount', type: 'uint256' },
-              { name: 'nonce', type: 'uint256' },
-              { name: 'walletEpoch', type: 'uint64' },
-              { name: 'deadline', type: 'uint64' },
-              { name: 'chainId', type: 'uint256' },
-            ],
-          },
-          primaryType: 'TransferIntent',
-          message: {
+      const signature = await signTypedDataAsync({
+        domain: {
+          name: 'CardBoundVault',
+          version: '1',
+          chainId,
+          verifyingContract: vaultAddress,
+        },
+        types: {
+          TransferIntent: [
+            { name: 'vault', type: 'address' },
+            { name: 'toVault', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'walletEpoch', type: 'uint64' },
+            { name: 'deadline', type: 'uint64' },
+            { name: 'chainId', type: 'uint256' },
+          ],
+        },
+        primaryType: 'TransferIntent',
+        message: {
+          vault: vaultAddress,
+          toVault: withdrawRecipient as `0x${string}`,
+          amount: amountWei,
+          nonce: transferNonce as bigint,
+          walletEpoch: walletEpoch as bigint,
+          deadline,
+          chainId: transferChainId,
+        },
+      });
+
+      showToast('Signing and sending vault-to-vault transfer...', 'info');
+      await writeContractAsync({
+        address: vaultAddress,
+        abi: CARD_BOUND_VAULT_ABI,
+        functionName: 'executeVaultToVaultTransfer',
+        args: [
+          {
             vault: vaultAddress,
             toVault: withdrawRecipient as `0x${string}`,
             amount: amountWei,
@@ -250,37 +225,11 @@ export function useVaultOperations() {
             deadline,
             chainId: transferChainId,
           },
-        });
+          signature,
+        ],
+      });
 
-        showToast('Signing and sending vault-to-vault transfer...', 'info');
-        await writeContractAsync({
-          address: vaultAddress,
-          abi: CARD_BOUND_VAULT_ABI,
-          functionName: 'executeVaultToVaultTransfer',
-          args: [
-            {
-              vault: vaultAddress,
-              toVault: withdrawRecipient as `0x${string}`,
-              amount: amountWei,
-              nonce: transferNonce as bigint,
-              walletEpoch: walletEpoch as bigint,
-              deadline,
-              chainId: transferChainId,
-            },
-            signature,
-          ],
-        });
-      } else {
-        showToast('Transferring from vault...', 'info');
-        await writeContractAsync({
-          address: vaultAddress,
-          abi: UserVaultABI,
-          functionName: 'transferVFIDE',
-          args: [withdrawRecipient as `0x${string}`, amountWei],
-        });
-      }
-
-      showToast(cardBoundMode ? 'Vault transfer successful!' : 'Withdrawal successful!', 'success');
+      showToast('Vault transfer successful!', 'success');
       setWithdrawAmount('');
       setWithdrawRecipient('');
       setShowWithdrawModal(false);
@@ -306,7 +255,7 @@ export function useVaultOperations() {
   };
 
   const handleSetSpendLimits = async () => {
-    if (!hasVaultAddress || !cardBoundMode) {
+    if (!hasVaultAddress) {
       return;
     }
 
@@ -346,7 +295,7 @@ export function useVaultOperations() {
   };
 
   const handleSetLargeTransferThreshold = async () => {
-    if (!hasVaultAddress || !cardBoundMode) {
+    if (!hasVaultAddress) {
       return;
     }
 
@@ -379,7 +328,7 @@ export function useVaultOperations() {
   };
 
   const handleExecuteQueuedWithdrawal = async (queueIndex: bigint) => {
-    if (!hasVaultAddress || !cardBoundMode) {
+    if (!hasVaultAddress) {
       return;
     }
 
@@ -409,7 +358,7 @@ export function useVaultOperations() {
   };
 
   const handleCancelQueuedWithdrawal = async (queueIndex: bigint) => {
-    if (!hasVaultAddress || !cardBoundMode) {
+    if (!hasVaultAddress) {
       return;
     }
 
@@ -439,51 +388,21 @@ export function useVaultOperations() {
   };
 
   const handleSetNextOfKin = async () => {
-    if (cardBoundMode) {
-      showToast('Next of Kin is not available in CardBound vault mode.', 'error');
-      return;
-    }
-    if (!isAddress(newNextOfKinAddress)) {
-      showToast('Invalid address format', 'error');
-      return;
-    }
-    try {
-      await recovery.setNextOfKinAddress(newNextOfKinAddress as `0x${string}`);
-      setNewNextOfKinAddress('');
-      showToast('Next of Kin set successfully!', 'success');
-    } catch (error) {
-      devLog.error('Failed to set Next of Kin:', error);
-      showToast('Failed to set Next of Kin', 'error');
-    }
+    showToast('Next of Kin is not available in vault-only mode.', 'error');
+    return;
   };
 
   const handleAddGuardian = async () => {
-    if (cardBoundMode) {
-      showToast('Manage CardBound guardians from the Guardians dashboard.', 'error');
-      return;
-    }
-    if (!isAddress(newGuardianAddress)) {
-      showToast('Invalid address format', 'error');
-      return;
-    }
-    try {
-      await recovery.addGuardian(newGuardianAddress as `0x${string}`);
-      setNewGuardianAddress('');
-      showToast('Guardian added successfully!', 'success');
-    } catch (error) {
-      devLog.error('Failed to add guardian:', error);
-      showToast('Failed to add guardian', 'error');
-    }
+    showToast('Manage vault guardians from the Guardians dashboard.', 'error');
+    return;
   };
 
-  const hasNextOfKin = !cardBoundMode
-    && recovery.nextOfKin
-    && recovery.nextOfKin !== ZERO_ADDRESS;
+  const hasNextOfKin = false;
 
   return {
     // Identity
     address,
-    cardBoundMode,
+    cardBoundMode: true,
     // Vault hub
     ...vaultHub,
     // Balances

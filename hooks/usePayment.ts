@@ -2,10 +2,9 @@
 
 import { useCallback, useState } from 'react';
 import { formatEther } from 'viem';
-import { useAccount, usePublicClient, useReadContract, useWriteContract } from 'wagmi';
+import { useAccount, useChainId, usePublicClient, useReadContract, useWriteContract } from 'wagmi';
 import { VFIDETokenABI, ProofScoreBurnRouterABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES, getContractConfigurationError, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
-import { CURRENT_CHAIN_ID } from '@/lib/testnet';
+import { getContractAddresses, getContractConfigurationError, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
 
 export type PaymentStatus = 'idle' | 'sending' | 'confirming' | 'complete' | 'error';
 
@@ -25,17 +24,19 @@ interface UsePaymentOptions {
 
 export function usePayment() {
   const { address } = useAccount();
+  const chainId = useChainId();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
   const cardBoundMode = isCardBoundVaultMode();
-  const hasBurnRouterConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.ProofScoreBurnRouter);
-  const hasTokenConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
+  const contractAddresses = getContractAddresses(chainId);
+  const hasBurnRouterConfig = isConfiguredContractAddress(contractAddresses.ProofScoreBurnRouter);
+  const hasTokenConfig = isConfiguredContractAddress(contractAddresses.VFIDEToken);
   const [status, setStatus] = useState<PaymentStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
 
   const { data: balance } = useReadContract({
-    address: CONTRACT_ADDRESSES.VFIDEToken as `0x${string}`,
+    address: contractAddresses.VFIDEToken,
     abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
@@ -62,7 +63,7 @@ export function usePayment() {
       let feeAmount = 0n;
       if (hasBurnRouterConfig) {
         const feeData = await publicClient.readContract({
-          address: CONTRACT_ADDRESSES.ProofScoreBurnRouter as `0x${string}`,
+          address: contractAddresses.ProofScoreBurnRouter,
           abi: ProofScoreBurnRouterABI,
           functionName: 'computeFees',
           args: [address, merchantAddress, amount],
@@ -98,11 +99,11 @@ export function usePayment() {
         return null;
       } else {
         hash = await writeContractAsync({
-          address: CONTRACT_ADDRESSES.VFIDEToken as `0x${string}`,
+          address: contractAddresses.VFIDEToken,
           abi: VFIDETokenABI,
           functionName: 'transfer',
           args: [merchantAddress, amount],
-          chainId: CURRENT_CHAIN_ID,
+          chainId,
         });
       }
 
@@ -129,7 +130,7 @@ export function usePayment() {
       setStatus('error');
       return null;
     }
-  }, [address, publicClient, writeContractAsync, balance, cardBoundMode, hasBurnRouterConfig]);
+  }, [address, publicClient, writeContractAsync, balance, cardBoundMode, hasBurnRouterConfig, hasTokenConfig, chainId, contractAddresses]);
 
   const reset = useCallback(() => {
     setStatus('idle');

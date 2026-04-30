@@ -29,14 +29,10 @@ function parseLimit(value: string | null): number {
   return Math.min(parsed, 200)
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimited = await withRateLimit(request, 'read')
   if (rateLimited) return rateLimited
-
-  const authResult = await requireAuth(request)
-  if (authResult instanceof NextResponse) return authResult
-
-  const authAddress = normalizeAddress(authResult.user.address || '')
+  const authAddress = normalizeAddress(user.address || '')
   if (!ADDRESS_RE.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -51,16 +47,12 @@ export async function GET(request: NextRequest) {
     logger.error('[Flashloans GET] Error:', error)
     return NextResponse.json({ error: 'Failed to list lanes' }, { status: 500 })
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimited = await withRateLimit(request, 'write')
   if (rateLimited) return rateLimited
-
-  const authResult = await requireAuth(request)
-  if (authResult instanceof NextResponse) return authResult
-
-  const authAddress = normalizeAddress(authResult.user.address || '')
+  const authAddress = normalizeAddress(user.address || '')
   if (!ADDRESS_RE.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -122,4 +114,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Flashloans POST] Error:', error)
     return NextResponse.json({ error: 'Failed to create lane' }, { status: 500 })
   }
-}
+});

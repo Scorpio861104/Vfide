@@ -3,7 +3,8 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts, usePublicClient, useChainId } from 'wagmi'
 import { parseEther, formatEther, type Abi } from 'viem'
 import { useState, useEffect } from 'react'
-import { CONTRACT_ADDRESSES, ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI, isCardBoundVaultMode, isConfiguredContractAddress } from '../lib/contracts'
+import { ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI, isCardBoundVaultMode, isConfiguredContractAddress } from '../lib/contracts'
+import { useContractAddresses } from './useContractAddresses'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI } from '../lib/abis'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
@@ -29,6 +30,8 @@ const HUB_ABI = VaultHubABI
 const VAULT_ABI = ACTIVE_VAULT_ABI
 
 export function useUserVault() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { address } = useAccount()
   const hasVaultHubConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub)
   
@@ -54,6 +57,8 @@ export function useUserVault() {
 }
 
 export function useCreateVault() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { address } = useAccount()
@@ -95,6 +100,8 @@ export function useCreateVault() {
 }
 
 export function useVaultBalance() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
   const hasTokenConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
@@ -183,6 +190,8 @@ export function useVaultBalance() {
 }
 
 export function useTransferVFIDE() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const { vaultAddress } = useUserVault()
   const { writeContract, data, isPending } = useWriteContract()
@@ -239,6 +248,7 @@ export function useTransferVFIDE() {
  * Get vault's guardian info with maturity status
  */
 export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { data: guardianCount } = useReadContract({
     address: vaultAddress,
     abi: VAULT_ABI,
@@ -257,6 +267,7 @@ export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
  * Check if guardian is mature (past 7-day maturity period)
  */
 export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
 
   const { data: isMature } = useReadContract({
     address: vaultAddress,
@@ -280,6 +291,7 @@ export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddres
  * @param active True to add, false to remove
  */
 export function useSetGuardian(vaultAddress: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
@@ -350,6 +362,7 @@ export function useSetGuardian(vaultAddress: `0x${string}`) {
  * Get abnormal transaction threshold (dynamic based on settings)
  */
 export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
 
   const { data: threshold } = useReadContract({
     address: vaultAddress,
@@ -389,6 +402,7 @@ export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
  * Set balance snapshot mode for abnormal transaction detection
  */
 export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
@@ -433,6 +447,7 @@ export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
  * Update balance snapshot
  */
 export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
@@ -476,6 +491,7 @@ export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
  * Get balance snapshot info
  */
 export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
 
   const { data: useSnapshot } = useReadContract({
     address: vaultAddress,
@@ -505,6 +521,7 @@ export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
  * Get pending transaction details
  */
 export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: number) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
 
   const { data: pendingTx } = useReadContract({
     address: vaultAddress,
@@ -543,6 +560,7 @@ export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: numbe
  * Approve pending abnormal transaction
  */
 export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
@@ -587,6 +605,7 @@ export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
  * Execute approved pending transaction
  */
 export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
@@ -631,6 +650,7 @@ export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
  * Cleanup expired pending transaction
  */
 export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
@@ -675,6 +695,7 @@ export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
  * Guardian votes to cancel fraudulent inheritance request
  */
 export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient()
   const { writeContractAsync } = useWriteContract()
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
@@ -699,8 +720,8 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
       }
       setTxHash(hash)
       return { success: true, txHash: hash }
-    } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : 'Transaction failed' }
+    } catch {
+      return { success: false, error: 'Transaction failed' }
     }
   }
 
@@ -716,6 +737,7 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
  * Get inheritance request status with cancellation tracking
  */
 export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const cardBoundMode = isCardBoundVaultMode()
 
   const { data: nextOfKin } = useReadContract({

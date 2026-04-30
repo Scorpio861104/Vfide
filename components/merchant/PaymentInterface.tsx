@@ -79,7 +79,7 @@ export function PaymentInterface() {
           <CreditCard className="w-10 h-10 text-blue-400" />
           <div>
             <h2 className="text-2xl font-bold">Pay Merchant</h2>
-            <p className="text-gray-400">Escrow for online orders — instant for trusted in-person or QR code payments.</p>
+            <p className="text-gray-400">Protected direct settlement for online orders — instant for trusted in-person or QR code payments.</p>
           </div>
         </div>
       </div>
@@ -127,8 +127,8 @@ export function PaymentInterface() {
                 }`}
                 aria-pressed={isEscrowMode}
               >
-                <div className="font-semibold">Escrow Protection</div>
-                <div className="text-xs text-gray-400">Best for online orders and new merchant relationships.</div>
+                <div className="font-semibold">Protected Checkout</div>
+                <div className="text-xs text-gray-400">Legacy escrow mode now routes through v6 MerchantPortal settlement.</div>
               </button>
               <button
                 type="button"
@@ -150,7 +150,7 @@ export function PaymentInterface() {
             </div>
             {!canUseInstant && (
               <p className="text-xs text-amber-300 mt-2">
-                Build your trust score to unlock instant settlement. Escrow protects both parties for all transactions.
+                Build your trust score to unlock instant settlement. Protected checkout remains available for compatibility.
               </p>
             )}
           </div>
@@ -278,7 +278,7 @@ export function PaymentInterface() {
             >
               <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-2" />
               <div className="text-green-400 font-bold text-lg">
-                {isEscrowMode ? 'Escrow Created!' : 'Payment Successful!'}
+                {isEscrowMode ? 'Protected Checkout Submitted!' : 'Payment Successful!'}
               </div>
               <div className="text-sm text-gray-400 mt-1">Order ID: {orderId}</div>
             </motion.div>

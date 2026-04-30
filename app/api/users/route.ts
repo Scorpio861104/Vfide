@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { 
   parsePaginationParams, 
   createPaginatedResponse,
@@ -61,16 +61,13 @@ function isAddressLike(value: string): boolean {
 }
 
 // GET /api/users - Get all users
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const startTime = Date.now();
   
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+  if (!user?.address || !isAddressLike(user.address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -164,18 +161,16 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/users - Create or update user
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication (required - no test bypasses)
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+  if (!user?.address || !isAddressLike(user.address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -218,7 +213,7 @@ export async function POST(request: NextRequest) {
     // Use authenticated user's address (not from request body)
     const requestWallet = typeof body.wallet_address === 'string'
       ? body.wallet_address
-      : authResult.user.address;
+      : user.address;
     if (!requestWallet) {
       return NextResponse.json({ error: 'Wallet address is required' }, { status: 400 });
     }
@@ -229,7 +224,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify user is updating their own profile
-    if (wallet_address !== normalizeAddress(authResult.user.address)) {
+    if (wallet_address !== normalizeAddress(user.address)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -302,4 +297,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
@@ -22,19 +22,12 @@ function toNonEmptyString(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting: 20 requests per minute for write operations
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -126,4 +119,4 @@ export async function DELETE(request: NextRequest) {
     logger.error('[Message Delete] Error:', error);
     return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
   }
-}
+});

@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
 
-export async function GET() {
-  const authResult = await requireAuth();
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
+import type { NextRequest } from 'next/server';
 
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   try {
     const result = await query(
       `SELECT * FROM market_stories WHERE expires_at > NOW() ORDER BY posted_at DESC LIMIT 20`
@@ -16,4 +12,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ stories: [] });
   }
-}
+});

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -111,15 +111,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
     let body: z.infer<typeof logErrorSchema>;
     try {
@@ -136,11 +133,11 @@ export async function POST(request: NextRequest) {
 
     const { severity, message: rawMessage, stack: rawStack, metadata } = body;
 
-    if (!authResult.user?.address || typeof authResult.user.address !== 'string') {
+    if (!user?.address || typeof user.address !== 'string') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const authAddress = normalizeAddress(authResult.user.address);
+    const authAddress = normalizeAddress(user.address);
     if (!isAddressLike(authAddress)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -177,4 +174,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Errors POST] Error:', error);
     return NextResponse.json({ error: 'Failed to log error' }, { status: 500 });
   }
-}
+});

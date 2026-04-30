@@ -34,8 +34,10 @@ export function NextOfKinTab({ isConnected }: { isConnected: boolean }) {
   } = useVaultRecovery(vaultAddress);
 
   const inheritanceRequest = inheritanceStatus.isActive;
+  const nextOfKinValue = (nextOfKin as string | null | undefined) ?? null;
+  const normalizedNextOfKin = nextOfKinValue ? nextOfKinValue.toLowerCase() : null;
   const isOwner = !!address && !!vaultOwner && address.toLowerCase() === (vaultOwner as string).toLowerCase();
-  const isNextOfKin = !!address && !!nextOfKin && address.toLowerCase() === nextOfKin.toLowerCase();
+  const isNextOfKin = !!address && !!normalizedNextOfKin && address.toLowerCase() === normalizedNextOfKin;
 
   const clearNotices = () => { setActionError(null); setActionSuccess(null); };
 

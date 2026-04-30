@@ -45,7 +45,7 @@ const envSchema = z.object({
 
   // Vault Contracts
   NEXT_PUBLIC_VAULT_HUB_ADDRESS: optionalEthAddress,
-  NEXT_PUBLIC_VAULT_IMPLEMENTATION: z.enum(['cardbound', 'uservault']).default('cardbound'),
+  NEXT_PUBLIC_VAULT_IMPLEMENTATION: z.literal('cardbound').default('cardbound'),
   NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_DEV_VAULT_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS: optionalEthAddress,

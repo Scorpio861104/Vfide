@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '../lib/contracts'
+import { isConfiguredContractAddress } from '../lib/contracts'
+import { useContractAddresses } from './useContractAddresses'
 import { SeerABI, SeerSocialABI } from '../lib/abis'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
@@ -14,6 +15,7 @@ import { safeBigIntToNumber } from '@/lib/validation';
 // ============================================
 
 export function useProofScore(userAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
   const hasSeerConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
@@ -71,6 +73,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
 }
 
 export function useEndorse(targetAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -133,6 +136,7 @@ export function useEndorse(targetAddress?: `0x${string}`) {
  * Score breakdown hook - Breakdown of a user's proof score components
  */
 export function useScoreBreakdown(userAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { address: connectedAddress } = useAccount()
   const targetAddress = userAddress || connectedAddress
   const hasSeerConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)

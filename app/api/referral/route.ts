@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { isAddress } from 'viem';
 
 export async function GET(request: NextRequest) {
@@ -27,16 +27,10 @@ export async function GET(request: NextRequest) {
   });
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const address = authResult.user.address?.trim().toLowerCase() ?? '';
+  const address = user.address?.trim().toLowerCase() ?? '';
   if (!isAddress(address)) {
     return NextResponse.json({ error: 'Valid wallet address required' }, { status: 400 });
   }
@@ -49,4 +43,4 @@ export async function POST(request: NextRequest) {
     referrer: address,
     shareText: `Join VFIDE — zero-fee payments powered by trust. Get free testnet tokens: ${link}`,
   });
-}
+});

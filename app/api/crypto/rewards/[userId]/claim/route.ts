@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { isConfiguredContractAddress } from '@/lib/contracts';
@@ -43,7 +43,7 @@ async function verifyRewardOnChain(
   // return { status: 'verified', eligible: Boolean(eligible) };
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting - strict for claims
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
@@ -58,13 +58,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         { status: 400 }
       );
     }
-
-    // Require authentication and verify ownership via database mapping
-    const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) {
-      return authResult;
-    }
-
     const ownerResult = await query<{ wallet_address: string }>(
       'SELECT wallet_address FROM users WHERE id = $1',
       [userId]
@@ -75,8 +68,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const authAddress = typeof authResult.user?.address === 'string'
-      ? authResult.user.address.trim()
+    const authAddress = typeof user?.address === 'string'
+      ? user.address.trim()
       : '';
     if (!authAddress) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -180,4 +173,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       { status: 500 }
     );
   }
-}
+});

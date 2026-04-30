@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMessage } from 'viem';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+import { isAdmin } from '@/lib/auth/middleware';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -64,13 +64,9 @@ function normalizeTimestamp(value: unknown): number | null {
   return n;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   let body: unknown;
   try {
     body = await request.json();
@@ -96,7 +92,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid attestation payload' }, { status: 400 });
   }
 
-  if (authResult.user.address.toLowerCase() !== owner.toLowerCase()) {
+  if (user.address.toLowerCase() !== owner.toLowerCase()) {
     return NextResponse.json({ error: 'Authenticated user must match owner' }, { status: 403 });
   }
 
@@ -160,7 +156,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ success: true });
-}
+});
 
 function parsePositiveInt(value: string | null, fallback: number): number {
   if (!value || !/^\d+$/.test(value)) return fallback;
@@ -181,14 +177,11 @@ function getTopCounts(values: string[], limit: number): Array<{ key: string; cou
     .map(([key, count]) => ({ key, count }));
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const caller = authResult.user.address.toLowerCase();
-  const callerIsAdmin = isAdmin(authResult.user);
+  const caller = user.address.toLowerCase();
+  const callerIsAdmin = isAdmin(user);
 
   const params = request.nextUrl.searchParams;
   const mode = params.get('mode');
@@ -273,4 +266,4 @@ export async function GET(request: NextRequest) {
     total: active.length,
     attestations: active,
   });
-}
+});

@@ -750,10 +750,13 @@ contract CardBoundVault is ReentrancyGuard {
         _refreshDailyWindow();
         if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
 
-            // VAULT-01 FIX: Verify destination vault hasn't been replaced (e.g., self-destruct, CREATE2 reuse).
-            bytes32 currentCodeHash;
-            assembly { currentCodeHash := extcodehash(w.toVault) }
-            if (currentCodeHash != w.toVaultCodeHashAtQueue) revert CBV_ReceiverChanged();
+        // VAULT-01 FIX: Verify destination vault hasn't been replaced (e.g., self-destruct, CREATE2 reuse).
+        address destinationVault = w.toVault;
+        bytes32 currentCodeHash;
+        assembly {
+            currentCodeHash := extcodehash(destinationVault)
+        }
+        if (currentCodeHash != w.toVaultCodeHashAtQueue) revert CBV_ReceiverChanged();
 
         _enforceSeerAction(admin, 0, w.amount, w.toVault);
 

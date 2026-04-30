@@ -1,7 +1,8 @@
 'use client'
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '../lib/contracts'
+import { isConfiguredContractAddress } from '../lib/contracts'
+import { useContractAddresses } from './useContractAddresses'
 import { DAOABI } from '../lib/abis'
 
 // ============================================
@@ -9,10 +10,11 @@ import { DAOABI } from '../lib/abis'
 // ============================================
 
 export function useDAOProposals() {
-  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.DAO)
+  const addresses = useContractAddresses();
+  const isAvailable = isConfiguredContractAddress(addresses.DAO)
 
   const { data: proposalCount } = useReadContract({
-    address: CONTRACT_ADDRESSES.DAO,
+    address: addresses.DAO,
     abi: DAOABI,
     functionName: 'proposalCount',
     query: { enabled: isAvailable },
@@ -25,8 +27,9 @@ export function useDAOProposals() {
 }
 
 export function useVote() {
+  const addresses = useContractAddresses();
   const { writeContract, data, isPending } = useWriteContract()
-  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.DAO)
+  const isAvailable = isConfiguredContractAddress(addresses.DAO)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -35,7 +38,7 @@ export function useVote() {
   const vote = (proposalId: bigint, support: boolean) => {
     if (!isAvailable) return
     writeContract({
-      address: CONTRACT_ADDRESSES.DAO,
+      address: addresses.DAO,
       abi: DAOABI,
       functionName: 'vote',
       args: [proposalId, support],

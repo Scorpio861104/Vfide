@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient, query } from '@/lib/db';
 import { ensureGroupVisualColumns } from '@/lib/dbPatches';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
@@ -95,15 +95,11 @@ function mapGroupRowsToResponse(
  * GET /api/groups?limit=50&offset=0
  * Return groups for the authenticated user.
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'read');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
 
   if (!authAddress || !isAddress(authAddress)) {
@@ -180,21 +176,17 @@ export async function GET(request: NextRequest) {
     logger.error('[Groups GET API] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch groups' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/groups
  * Create a DB-backed group and add initial members.
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
 
   if (!authAddress || !isAddress(authAddress)) {
@@ -332,4 +324,4 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   }
-}
+});

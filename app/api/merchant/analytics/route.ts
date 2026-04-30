@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -15,13 +15,9 @@ function roundCurrency(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   const { searchParams } = new URL(request.url);
   const merchantAddress = (searchParams.get('address') || '').trim().toLowerCase();
   const period = (searchParams.get('period') || '30d') as '7d' | '30d' | '90d';
@@ -32,7 +28,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Valid merchant address required' }, { status: 400 });
   }
 
-  if (authResult.user.address.toLowerCase() !== merchantAddress) {
+  if (user.address.toLowerCase() !== merchantAddress) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -127,4 +123,4 @@ export async function GET(request: NextRequest) {
     logger.error('[Merchant Analytics GET] Error:', error);
     return NextResponse.json({ error: 'Failed to load merchant analytics' }, { status: 500 });
   }
-}
+});

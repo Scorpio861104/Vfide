@@ -5,7 +5,7 @@ import { createWalletClient, createPublicClient, http, isAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { VFIDETestnetFaucetABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 
@@ -24,17 +24,13 @@ function isUnsafeLocalSignerEnabled(): boolean {
   return process.env.FAUCET_ENABLE_UNSAFE_LOCAL_SIGNER === 'true' && process.env.NODE_ENV !== 'production';
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   if (!isTestnetEnvironment()) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
     const rawBody = await request.json().catch(() => null);
     const parsed = claimSchema.safeParse(rawBody);
@@ -49,7 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Valid wallet address required' }, { status: 400 });
     }
 
-    if (authResult.user.address.toLowerCase() !== address.toLowerCase()) {
+    if (user.address.toLowerCase() !== address.toLowerCase()) {
       return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
     }
 
@@ -124,7 +120,7 @@ export async function POST(request: NextRequest) {
     logger.error('[Faucet]', message);
     return NextResponse.json({ error: 'Claim failed. Try again.' }, { status: 500 });
   }
-}
+});
 
 export async function GET() {
   if (!isTestnetEnvironment()) {

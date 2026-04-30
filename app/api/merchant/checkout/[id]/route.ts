@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { logger } from '@/lib/logger';
 import { createPublicClient, http } from 'viem';
 import type { Hash } from 'viem';
@@ -99,10 +99,7 @@ export async function GET(
 }
 
 // ─────────────────────────── PATCH: Status updates
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -146,12 +143,8 @@ export async function PATCH(
       // N-H7 FIX: Only an authenticated, invoice-bound customer can move status to
       // pending_confirmation. This prevents arbitrary public-link callers from forcing
       // merchant invoices into pending states.
-      const authResult = await requireAuth(request);
-      if (authResult instanceof NextResponse) {
-        return authResult;
-      }
-      const authAddress = typeof authResult.user?.address === 'string'
-        ? authResult.user.address.trim().toLowerCase()
+      const authAddress = typeof user?.address === 'string'
+        ? user.address.trim().toLowerCase()
         : '';
       if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -219,4 +212,4 @@ export async function PATCH(
     logger.error('[Checkout PATCH] Error:', error);
     return NextResponse.json({ error: 'Failed to update checkout' }, { status: 500 });
   }
-}
+});

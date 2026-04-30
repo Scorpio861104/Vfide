@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+import { isAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -87,7 +87,7 @@ interface Activity {
  * GET /api/activities?userAddress=0x...&type=vote&limit=50&offset=0
  * Get activity feed
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
@@ -136,18 +136,15 @@ export async function GET(request: NextRequest) {
     }
 
     if (userAddress) {
-      const authResult = await requireAuth(request);
-      if (authResult instanceof NextResponse) return authResult;
-
-      const requesterAddress = typeof authResult.user?.address === 'string'
-        ? authResult.user.address.trim().toLowerCase()
+      const requesterAddress = typeof user?.address === 'string'
+        ? user.address.trim().toLowerCase()
         : '';
       if (!requesterAddress || !ETH_ADDRESS_REGEX.test(requesterAddress)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       const targetAddress = userAddress;
-      const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
+      const canAccess = requesterAddress === targetAddress || isAdmin(user);
       if (!canAccess) {
         return NextResponse.json(
           { error: 'You can only view your own activities' },
@@ -212,23 +209,20 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/activities
  * Create a new activity entry
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const requesterAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const requesterAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!requesterAddress || !ETH_ADDRESS_REGEX.test(requesterAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -318,4 +312,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

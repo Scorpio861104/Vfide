@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { buildGroupPayloadSignatureMessage } from '@/lib/messageEncryption';
 import { logger } from '@/lib/logger';
@@ -225,15 +225,11 @@ function emitGroupPayloadTamperEvent(params: {
  * GET /api/groups/messages?groupId=123&limit=50&offset=0
  * Return encrypted group messages for a group if the requester is a member.
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'read');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authAddress || !isAddress(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -371,21 +367,17 @@ export async function GET(request: NextRequest) {
     logger.error('[Group Messages GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch group messages' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/groups/messages
  * Persist an encrypted group message if requester belongs to the group.
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authAddress || !isAddress(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -514,4 +506,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Group Messages POST] Error:', error);
     return NextResponse.json({ error: 'Failed to send group message' }, { status: 500 });
   }
-}
+});

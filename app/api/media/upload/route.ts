@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 export const runtime = 'nodejs';
@@ -76,15 +76,9 @@ async function uploadToR2(key: string, body: Buffer, contentType: string): Promi
   return publicUrl ? `${publicUrl}/${key}` : `https://${bucket}.${accountId}.r2.dev/${key}`;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'upload');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
     const formData = await request.formData();
     const file = formData.get('file');
@@ -112,7 +106,7 @@ export async function POST(request: NextRequest) {
     const ext = getSafeExtension(file);
     const datePrefix = new Date().toISOString().slice(0, 10).replace(/-/g, '/');
     const purposeSegment = sanitizePathSegment(purpose, 'general');
-    const userSegment = sanitizePathSegment(authResult.user.address, 'user');
+    const userSegment = sanitizePathSegment(user.address, 'user');
     const key = `${typeConfig.folder}/${userSegment}/${purposeSegment}/${datePrefix}/${randomUUID()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
     const url = await uploadToR2(key, buffer, file.type);
@@ -128,4 +122,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Media Upload] Error:', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
   }
-}
+});

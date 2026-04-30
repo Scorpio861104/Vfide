@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { parseUnits, maxUint256 } from 'viem';
 import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
 import { SubscriptionManagerABI } from '@/lib/abis';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
@@ -83,7 +84,9 @@ export function SubscriptionManager({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
-  const isSubscriptionManagerConfigured = isConfiguredContractAddress(CONTRACT_ADDRESSES.SubscriptionManager);
+  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null;
+  const subscriptionManagerAddress = futureContracts?.SubscriptionManager;
+  const isSubscriptionManagerConfigured = isConfiguredContractAddress(subscriptionManagerAddress);
   const isVfideTokenConfigured = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
 
   const publicClient = usePublicClient();
@@ -120,7 +123,7 @@ export function SubscriptionManager({
         address: CONTRACT_ADDRESSES.VFIDEToken,
         abi: VFIDETokenABI,
         functionName: 'approve',
-        args: [CONTRACT_ADDRESSES.SubscriptionManager, maxUint256],
+        args: [subscriptionManagerAddress!, maxUint256],
       });
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash: approveHash });
@@ -128,7 +131,7 @@ export function SubscriptionManager({
 
       // Step 2: Create subscription on SubscriptionManager
       await writeContractAsync({
-        address: CONTRACT_ADDRESSES.SubscriptionManager,
+        address: subscriptionManagerAddress!,
         abi: SubscriptionManagerABI,
         functionName: 'createSubscription',
         args: [

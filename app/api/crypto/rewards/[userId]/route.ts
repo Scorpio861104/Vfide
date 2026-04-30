@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -14,19 +14,12 @@ function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -90,4 +83,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       { status: 500 }
     );
   }
-}
+});

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { isAdmin, requireAdmin, requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -81,7 +81,7 @@ interface UserBadge {
  * GET /api/badges?userAddress=0x...
  * Get all badges or user's earned badges
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userAddressParam = searchParams.get('userAddress');
@@ -94,14 +94,8 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      const authResult = await requireAuth(request);
-      if (authResult instanceof NextResponse) {
-        return authResult;
-      }
-
-      const requesterAddress = typeof authResult.user?.address === 'string'
-        ? authResult.user.address.trim().toLowerCase()
+      const requesterAddress = typeof user?.address === 'string'
+        ? user.address.trim().toLowerCase()
         : '';
       if (!requesterAddress || !isAddressLike(requesterAddress)) {
         return NextResponse.json(
@@ -110,7 +104,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const canRead = requesterAddress === targetAddress || isAdmin(authResult.user);
+      const canRead = requesterAddress === targetAddress || isAdmin(user);
       if (!canRead) {
         return NextResponse.json(
           { error: 'Unauthorized' },
@@ -166,7 +160,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/badges

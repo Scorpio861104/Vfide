@@ -1,40 +1,29 @@
 {
   "signoffVersion": 1,
   "scope": "frontend-abi-registry-placeholders",
-  "evaluatedAt": "2026-04-01T00:00:00.000Z",
-  "decision": "accepted-with-known-limitations",
+  "evaluatedAt": "2026-04-30T00:00:00.000Z",
+  "decision": "accepted-no-runtime-placeholders",
   "repository": "Scorpio861104/Vfide",
   "branch": "main",
   "evidence": {
     "registryFile": "lib/abis/index.ts",
-    "placeholderCommit": "ffb3819f",
-    "gapCheck": "direct-name ABI gap count = 0"
+    "placeholderCommit": "main",
+    "gapCheck": "legacy runtime placeholder ABIs removed from lib/abis"
   },
   "summary": {
-    "compiledAbiCount": 72,
-    "placeholderAbiCount": 10,
-    "notes": "Placeholder ABI files are intentionally empty arrays and are present only for naming/registry completeness where no matching build artifact exists."
+    "compiledAbiCount": 60,
+    "placeholderAbiCount": 0,
+    "notes": "Frontend runtime ABI placeholders were removed from lib/abis. Remaining special-case ABIs are managed through parity overrides/exemptions and are not empty placeholder registry files."
   },
-  "placeholders": [
-    "DeployPhase1",
-    "DeployPhase1Governance",
-    "DeployPhase1Infrastructure",
-    "DeployPhase1Token",
-    "DeployPhases3to6",
-    "Pools",
-    "SharedInterfaces",
-    "VFIDEFinance",
-    "VFIDESecurity",
-    "VFIDETrust"
-  ],
+  "placeholders": [],
   "risks": [
-    "Runtime calls against placeholder ABIs will fail if used as contract interaction ABIs.",
-    "Placeholders must be replaced with compiled ABIs when/if concrete deployable contract artifacts become available."
+    "ABI parity can still fail when frontend ABI fragments drift from compiled artifacts.",
+    "Synthetic/helper ABI exceptions must remain intentional and documented."
   ],
   "controls": [
-    "All placeholders are explicitly listed in this signoff document.",
-    "ABI registry validation allows empty arrays but warns on empty ABIs at runtime.",
-    "Future artifact generation should replace placeholders before production feature binding."
+    "No runtime placeholder ABI files remain in lib/abis.",
+    "ABI parity checks enforce artifact alignment during validation.",
+    "Any future placeholder introduction requires explicit signoff update."
   ],
   "approvers": [
     "engineering-lead",

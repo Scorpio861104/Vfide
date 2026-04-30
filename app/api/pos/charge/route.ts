@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -27,13 +27,9 @@ function normalizeAmount(value: string | number): string | null {
   return trimmed;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimited = await withRateLimit(request, 'write');
   if (rateLimited) return rateLimited;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
     const rawBody = await request.json();
     const parsed = createPosChargeSchema.safeParse(rawBody);
@@ -47,7 +43,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'amount must be a positive number' }, { status: 400 });
     }
 
-    if (parsed.data.merchantAddress.toLowerCase() !== authResult.user.address.toLowerCase()) {
+    if (parsed.data.merchantAddress.toLowerCase() !== user.address.toLowerCase()) {
       return NextResponse.json({ error: 'merchantAddress must match authenticated wallet' }, { status: 403 });
     }
 
@@ -71,4 +67,4 @@ export async function POST(request: NextRequest) {
     logger.error('[POS Charge API] Failed to process charge request', error);
     return NextResponse.json({ error: 'Failed to process POS charge' }, { status: 500 });
   }
-}
+});

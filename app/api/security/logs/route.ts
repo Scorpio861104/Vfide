@@ -4,7 +4,7 @@ import { lookup } from 'dns/promises';
 import { isIP } from 'node:net';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { getRequestCorrelationContext } from '@/lib/security/requestContext';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -396,17 +396,11 @@ async function notifyCriticalSecurityLog(params: {
   }
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
 
   if (!authAddress || !isAddressLike(authAddress)) {
@@ -452,19 +446,13 @@ export async function GET(request: NextRequest) {
     logger.error('[Security Logs GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch security logs' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
 
   if (!authAddress || !isAddressLike(authAddress)) {
@@ -542,19 +530,13 @@ export async function POST(request: NextRequest) {
     logger.error('[Security Logs POST] Error:', error);
     return NextResponse.json({ error: 'Failed to store security log' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
 
   if (!authAddress || !isAddressLike(authAddress)) {
@@ -570,4 +552,4 @@ export async function DELETE(request: NextRequest) {
     logger.error('[Security Logs DELETE] Error:', error);
     return NextResponse.json({ error: 'Failed to clear security logs' }, { status: 500 });
   }
-}
+});

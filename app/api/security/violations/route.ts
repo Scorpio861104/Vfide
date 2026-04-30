@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { logger } from '@/lib/logger';
 import { getRequestIp } from '@/lib/security/requestContext';
 import { z } from 'zod4';
@@ -43,18 +43,12 @@ function parsePositiveInteger(value: string): number | null {
   return parsed;
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -89,20 +83,14 @@ export async function GET(request: NextRequest) {
     logger.error('[Security Violations] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch violations' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -140,4 +128,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Security Violations POST] Error:', error);
     return NextResponse.json({ error: 'Failed to log violation' }, { status: 500 });
   }
-}
+});

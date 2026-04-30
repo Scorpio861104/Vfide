@@ -81,6 +81,11 @@ const JWT_EXPIRES_IN = '24h';
 const JWT_ISSUER = 'vfide';
 const JWT_AUDIENCE = 'vfide-app';
 
+let revocationFailures = 0;
+let revocationSuppressedUntil = 0;
+const REVOCATION_FAILURE_THRESHOLD = 5;
+const REVOCATION_SUPPRESSION_WINDOW_MS = 30_000;
+
 export interface JWTPayload {
   address: string;
   chainId?: number;
@@ -94,6 +99,62 @@ export interface TokenResponse {
   token: string;
   expiresIn: number;
   address: string;
+}
+
+async function isRevokedWithCircuitBreaker(token: string, decoded: JWTPayload): Promise<boolean> {
+  const now = Date.now();
+
+  // In tests, keep behavior deterministic and skip revocation backends.
+  if (process.env.NODE_ENV === 'test') {
+    return false;
+  }
+
+  if (now < revocationSuppressedUntil) {
+    logger.warn('[JWT] Revocation checks temporarily suppressed due to backend instability', {
+      address: decoded.address,
+      suppressedForMs: revocationSuppressedUntil - now,
+    });
+    return false;
+  }
+
+  try {
+    const tokenHash = await hashToken(token);
+    const revoked = await isTokenRevoked(tokenHash);
+    if (revoked) {
+      revocationFailures = 0;
+      return true;
+    }
+
+    const userRevocation = await isUserRevoked(decoded.address);
+    if (userRevocation?.revoked) {
+      const revokedAt = userRevocation.revokedAt ?? 0;
+      const issuedAt = decoded.iat ?? 0;
+      if (revokedAt > issuedAt) {
+        revocationFailures = 0;
+        return true;
+      }
+    }
+
+    revocationFailures = 0;
+    return false;
+  } catch (error) {
+    revocationFailures += 1;
+    if (revocationFailures >= REVOCATION_FAILURE_THRESHOLD) {
+      revocationSuppressedUntil = now + REVOCATION_SUPPRESSION_WINDOW_MS;
+      logger.error('[JWT] Revocation check circuit opened; failing open temporarily', {
+        failures: revocationFailures,
+        suppressedUntil: revocationSuppressedUntil,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    } else {
+      logger.warn('[JWT] Revocation backend failure; counting toward circuit breaker', {
+        failures: revocationFailures,
+        threshold: REVOCATION_FAILURE_THRESHOLD,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return false;
+  }
 }
 
 /**
@@ -160,34 +221,9 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     return null;
   }
 
-  // Check if token has been revoked.
-  // In test environments without Redis configured, allow verification to proceed.
-  try {
-    const tokenHash = await hashToken(token);
-    const revoked = await isTokenRevoked(tokenHash);
-
-    if (revoked) {
-      logger.warn('[JWT] Token has been revoked');
-      return null;
-    }
-
-    // Enforce account-level revocation ("logout all sessions").
-    const userRevocation = await isUserRevoked(decoded.address);
-    if (userRevocation?.revoked) {
-      const revokedAt = userRevocation.revokedAt ?? 0;
-      const issuedAt = decoded.iat ?? 0;
-      if (revokedAt > issuedAt) {
-        logger.warn('[JWT] User-level token revocation is newer than token iat');
-        return null;
-      }
-    }
-  } catch (error) {
-    if (process.env.NODE_ENV !== 'test') {
-      throw error;
-    }
-    logger.warn('[JWT] Skipping token revocation check in test environment', {
-      error: error instanceof Error ? error.message : String(error),
-    });
+  if (await isRevokedWithCircuitBreaker(token, decoded)) {
+    logger.warn('[JWT] Token has been revoked');
+    return null;
   }
 
   return decoded;

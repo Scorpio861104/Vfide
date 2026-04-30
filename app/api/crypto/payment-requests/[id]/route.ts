@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -67,14 +67,12 @@ async function verifyOwnership(
   return { userId };
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
   // Require authentication — only parties involved should read a payment request
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+  if (!user?.address || !isAddressLike(user.address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -102,7 +100,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const paymentRequest = result.rows[0]!;
-    const ownership = await verifyOwnership(normalizeAddress(authResult.user.address), paymentRequest);
+    const ownership = await verifyOwnership(normalizeAddress(user.address), paymentRequest);
     if (ownership instanceof NextResponse) return ownership;
 
     return NextResponse.json({ request: paymentRequest });
@@ -110,15 +108,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     logger.error('[Payment Request GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch request' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+  if (!user?.address || !isAddressLike(user.address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -156,7 +151,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (existing.rows.length === 0) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
-    const ownership = await verifyOwnership(normalizeAddress(authResult.user.address), existing.rows[0]!);
+    const ownership = await verifyOwnership(normalizeAddress(user.address), existing.rows[0]!);
     if (ownership instanceof NextResponse) return ownership;
 
     const result = await query(
@@ -172,15 +167,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     logger.error('[Payment Request PUT] Error:', error);
     return NextResponse.json({ error: 'Failed to update request' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+  if (!user?.address || !isAddressLike(user.address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -219,7 +211,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (existing.rows.length === 0) {
       return NextResponse.json({ error: 'Payment request not found' }, { status: 404 });
     }
-    const ownership = await verifyOwnership(normalizeAddress(authResult.user.address), existing.rows[0]!);
+    const ownership = await verifyOwnership(normalizeAddress(user.address), existing.rows[0]!);
     if (ownership instanceof NextResponse) return ownership;
 
     const result = await query(
@@ -239,4 +231,4 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       { status: 500 }
     );
   }
-}
+});

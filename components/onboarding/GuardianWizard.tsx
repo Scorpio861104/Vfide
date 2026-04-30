@@ -5,8 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { encodeFunctionData } from "viem";
 import { useSimpleVault } from "@/hooks/useSimpleVault";
 import { useVaultHub } from "@/hooks/useVaultHub";
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts";
-import GuardianRegistryABI from "@/lib/abis/GuardianRegistry.json";
+import { CARD_BOUND_VAULT_ABI } from "@/lib/contracts";
 import { Shield, Users, PenLine, CheckCircle } from "lucide-react";
 
 interface Step {
@@ -22,7 +21,6 @@ export function GuardianWizard({ onClose, onComplete }: { onClose: () => void; o
   const [guardians, setGuardians] = useState(['', '', '']);
   const { executeVaultAction, userMessage, actionStatus } = useSimpleVault();
   const { vaultAddress } = useVaultHub();
-  const isGuardianRegistryAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.GuardianRegistry)
 
   const steps: Step[] = [
     {
@@ -60,12 +58,7 @@ export function GuardianWizard({ onClose, onComplete }: { onClose: () => void; o
       return;
     }
 
-    // Encode guardian setup: call addGuardian for each valid guardian address
-    const guardianRegistryAddress = CONTRACT_ADDRESSES.GuardianRegistry;
-    if (!isGuardianRegistryAvailable) {
-      alert('Guardian registry contract not configured.');
-      return;
-    }
+    // Encode guardian setup via active CardBoundVault flow.
     if (!vaultAddress) {
       alert('No vault found. Please create a vault first.');
       return;
@@ -73,13 +66,13 @@ export function GuardianWizard({ onClose, onComplete }: { onClose: () => void; o
 
     for (const guardian of validGuardians) {
       const callData = encodeFunctionData({
-        abi: GuardianRegistryABI,
-        functionName: 'addGuardian',
-        args: [vaultAddress, guardian as `0x${string}`],
+        abi: CARD_BOUND_VAULT_ABI,
+        functionName: 'setGuardian',
+        args: [guardian as `0x${string}`, true],
       });
       await executeVaultAction(
         `Add Guardian ${guardian.slice(0, 6)}…`,
-        guardianRegistryAddress,
+        vaultAddress,
         callData
       );
     }

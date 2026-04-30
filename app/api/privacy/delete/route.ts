@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
@@ -10,17 +10,11 @@ const privacyDeleteSchema = z.object({
   reason: z.string().trim().max(2000).optional(),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const walletAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const walletAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!walletAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -59,4 +53,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Privacy Deletion Request] Failed to submit request', error);
     return NextResponse.json({ error: 'Failed to submit deletion request' }, { status: 500 });
   }
-}
+});

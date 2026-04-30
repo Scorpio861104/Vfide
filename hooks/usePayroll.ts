@@ -11,16 +11,11 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
 import { PayrollManagerABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
+import { ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
+import { useContractAddresses } from './useContractAddresses';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 
-// Contract addresses from environment
-const PAYROLL_MANAGER_ADDRESS = CONTRACT_ADDRESSES.PayrollManager;
-const VFIDE_TOKEN_ADDRESS = CONTRACT_ADDRESSES.VFIDEToken;
-
-// Check if contract is deployed
-const IS_DEPLOYED = isConfiguredContractAddress(PAYROLL_MANAGER_ADDRESS);
-const HAS_TOKEN_CONFIG = isConfiguredContractAddress(VFIDE_TOKEN_ADDRESS);
+// Contract addresses resolved per-chain inside hook (see useContractAddresses)
 
 export interface PayrollStream {
   id: bigint;
@@ -42,6 +37,11 @@ export interface PayrollStream {
 
 export function usePayroll() {
   const chainId = useChainId();
+  const contractAddresses = useContractAddresses();
+  const PAYROLL_MANAGER_ADDRESS = contractAddresses.PayrollManager;
+  const VFIDE_TOKEN_ADDRESS = contractAddresses.VFIDEToken;
+  const IS_DEPLOYED = isConfiguredContractAddress(PAYROLL_MANAGER_ADDRESS);
+  const HAS_TOKEN_CONFIG = isConfiguredContractAddress(VFIDE_TOKEN_ADDRESS);
   const publicClient = usePublicClient();
   const { address } = useAccount();
   const [streams, setStreams] = useState<PayrollStream[]>([]);

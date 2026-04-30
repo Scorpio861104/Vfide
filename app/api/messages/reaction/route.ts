@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
@@ -77,19 +77,12 @@ async function ensureConversationParticipant(
   return membershipResult.rows.length > 0;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting: 30 requests per minute for reactions
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -309,21 +302,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting: 30 requests per minute for reactions
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -391,4 +377,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

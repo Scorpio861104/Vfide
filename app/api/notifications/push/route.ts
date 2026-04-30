@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -28,17 +28,11 @@ function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -95,19 +89,13 @@ export async function POST(request: NextRequest) {
     logger.error('[Push Subscribe] Error:', error);
     return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -160,4 +148,4 @@ export async function DELETE(request: NextRequest) {
     logger.error('[Push Unsubscribe] Error:', error);
     return NextResponse.json({ error: 'Failed to unsubscribe' }, { status: 500 });
   }
-}
+});

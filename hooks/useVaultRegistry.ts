@@ -9,14 +9,12 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import { keccak256, toBytes, Address } from 'viem';
 import { useState, useCallback } from 'react';
 import { VaultRecoveryClaimABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES, VaultRegistryABI as SHARED_VAULT_REGISTRY_ABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { VaultRegistryABI as SHARED_VAULT_REGISTRY_ABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { useContractAddresses } from './useContractAddresses';
 
 const VAULT_RECOVERY_CLAIM_ABI = VaultRecoveryClaimABI;
 
-const getVaultRegistryAddress = () => CONTRACT_ADDRESSES.VaultRegistry as Address;
-const getVaultRecoveryClaimAddress = () => CONTRACT_ADDRESSES.VaultRecoveryClaim as Address;
-const isVaultRegistryDeployed = () => isConfiguredContractAddress(getVaultRegistryAddress());
-const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(getVaultRecoveryClaimAddress());
+// Address resolution is done per-hook via useContractAddresses()
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ABIs (minimal required functions)
@@ -286,6 +284,11 @@ export const ClaimStatusLabels: Record<number, string> = {
  * Search for a vault by recovery ID
  */
 export function useSearchByRecoveryId(recoveryId: string) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -311,6 +314,11 @@ export function useSearchByRecoveryId(recoveryId: string) {
  * Search for a vault by email (hashed client-side)
  */
 export function useSearchByEmail(email: string) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const emailHash = email ? keccak256(toBytes(email.toLowerCase())) : undefined;
   const isAvailable = isVaultRegistryDeployed();
   
@@ -337,6 +345,11 @@ export function useSearchByEmail(email: string) {
  * Search for a vault by username
  */
 export function useSearchByUsername(username: string) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -362,6 +375,11 @@ export function useSearchByUsername(username: string) {
  * Search for vaults by guardian address
  */
 export function useSearchByGuardian(guardianAddress: Address | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -387,6 +405,11 @@ export function useSearchByGuardian(guardianAddress: Address | undefined) {
  * Get vault info for search results
  */
 export function useVaultInfo(vaultAddress: Address | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -412,6 +435,11 @@ export function useVaultInfo(vaultAddress: Address | undefined) {
  * Combined vault search hook with multiple methods
  */
 export function useVaultSearch() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const [searchType, setSearchType] = useState<'recoveryId' | 'email' | 'username' | 'guardian'>('recoveryId');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<Address | null>(null);
@@ -455,6 +483,11 @@ export function useVaultSearch() {
  * User may have their old address saved in email confirmations, browser history, etc.
  */
 export function useSearchByWalletAddress(oldWallet: Address | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -484,6 +517,11 @@ export function useSearchByWalletAddress(oldWallet: Address | undefined) {
  * User may have their vault address saved from transaction history
  */
 export function useSearchByVaultAddress(vaultAddress: Address | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -510,6 +548,11 @@ export function useSearchByVaultAddress(vaultAddress: Address | undefined) {
  * Helps users who remember approximately when they created their vault
  */
 export function useSearchByCreationTime(startTime: bigint | undefined, endTime: bigint | undefined, limit: number = 20) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -535,6 +578,11 @@ export function useSearchByCreationTime(startTime: bigint | undefined, endTime: 
  * Get total number of vaults in registry
  */
 export function useTotalVaults() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error } = useReadContract({
@@ -558,6 +606,11 @@ export function useTotalVaults() {
  * Get vault by index for pagination/browsing
  */
 export function useVaultByIndex(index: number | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -590,6 +643,11 @@ export function useVaultByIndex(index: number | undefined) {
  * Set recovery ID for a vault
  */
 export function useSetRecoveryId() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -619,6 +677,11 @@ export function useSetRecoveryId() {
  * Set email recovery for a vault
  */
 export function useSetEmailRecovery() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -649,6 +712,11 @@ export function useSetEmailRecovery() {
  * Set username for a vault
  */
 export function useSetUsername() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRegistryDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -678,6 +746,11 @@ export function useSetUsername() {
  * Check if recovery ID is available
  */
 export function useIsRecoveryIdAvailable(recoveryId: string) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isRegistryAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading } = useReadContract({
@@ -701,6 +774,11 @@ export function useIsRecoveryIdAvailable(recoveryId: string) {
  * Check if username is available
  */
 export function useIsUsernameAvailable(username: string) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isRegistryAvailable = isVaultRegistryDeployed();
 
   const { data, isLoading } = useReadContract({
@@ -728,6 +806,11 @@ export function useIsUsernameAvailable(username: string) {
  * Initiate a recovery claim
  */
 export function useInitiateClaim() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -763,6 +846,11 @@ export function useInitiateClaim() {
  * Get claim details
  */
 export function useGetClaim(claimId: bigint | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -788,6 +876,11 @@ export function useGetClaim(claimId: bigint | undefined) {
  * Get active claim for a vault
  */
 export function useActiveClaimForVault(vaultAddress: Address | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
 
   const { data, isLoading, error, refetch } = useReadContract({
@@ -816,6 +909,11 @@ export function useActiveClaimForVault(vaultAddress: Address | undefined) {
  * Guardian vote on a claim
  */
 export function useGuardianVote() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -845,6 +943,11 @@ export function useGuardianVote() {
  * Challenge a claim (original owner only)
  */
 export function useChallengeClaim() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -874,6 +977,11 @@ export function useChallengeClaim() {
  * Finalize a claim after challenge period
  */
 export function useFinalizeClaim() {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
@@ -903,6 +1011,11 @@ export function useFinalizeClaim() {
  * Check if claim can be finalized
  */
 export function useCanFinalize(claimId: bigint | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
 
   const { data, isLoading } = useReadContract({
@@ -929,6 +1042,11 @@ export function useCanFinalize(claimId: bigint | undefined) {
  * Get challenge time remaining
  */
 export function useChallengeTimeRemaining(claimId: bigint | undefined) {
+  const { VaultRegistry: vaultRegistryAddr, VaultRecoveryClaim: vaultRecoveryAddr } = useContractAddresses();
+  const getVaultRegistryAddress = () => vaultRegistryAddr as Address;
+  const getVaultRecoveryClaimAddress = () => vaultRecoveryAddr as Address;
+  const isVaultRegistryDeployed = () => isConfiguredContractAddress(vaultRegistryAddr);
+  const isVaultRecoveryClaimDeployed = () => isConfiguredContractAddress(vaultRecoveryAddr);
   const isAvailable = isVaultRecoveryClaimDeployed();
 
   const { data, isLoading } = useReadContract({

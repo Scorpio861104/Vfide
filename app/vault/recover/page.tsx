@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useAccount, usePublicClient } from "wagmi";
 import { isAddress, keccak256, stringToHex, zeroAddress } from "viem";
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts";
+import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
 import { SeerABI, VFIDEBadgeNFTABI, VaultRegistryABI } from "@/lib/abis";
 
 import { AuroraBackground, FloatingParticles, VaultKeyVisualization, GlassCard } from "./components/VisualEffects";
@@ -35,7 +36,9 @@ export default function VaultRecoveryPage() {
   const publicClient = usePublicClient();
   const isVaultRegistryAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultRegistry)
   const isSeerAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
-  const isBadgeNftAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
+  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
+  const badgeNftAddress = futureContracts?.BadgeNFT
+  const isBadgeNftAvailable = isConfiguredContractAddress(badgeNftAddress)
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -84,7 +87,7 @@ export default function VaultRecoveryPage() {
       const [info, score, badges] = await Promise.all([
         publicClient.readContract({ address: CONTRACT_ADDRESSES.VaultRegistry, abi: VaultRegistryABI, functionName: "getVaultInfo", args: [resolvedVault] }),
         publicClient.readContract({ address: CONTRACT_ADDRESSES.Seer, abi: SeerABI, functionName: "getScore", args: [resolvedVault] }),
-        publicClient.readContract({ address: CONTRACT_ADDRESSES.BadgeNFT, abi: VFIDEBadgeNFTABI, functionName: "balanceOf", args: [resolvedVault] }),
+        publicClient.readContract({ address: badgeNftAddress!, abi: VFIDEBadgeNFTABI, functionName: "balanceOf", args: [resolvedVault] }),
       ]);
 
       const parsedInfo = Array.isArray(info)

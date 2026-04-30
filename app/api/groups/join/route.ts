@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
@@ -27,17 +27,14 @@ function normalizeInviteCode(value: string): string {
  * POST /api/groups/join
  * Join a group using an invite code
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -193,4 +190,4 @@ export async function POST(request: NextRequest) {
       client.release();
     }
   }
-}
+});

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestAuthToken, requireAuth } from '@/lib/auth/middleware';
+import { getRequestAuthToken } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
@@ -16,19 +16,12 @@ const revokeSchema = z.object({
  * POST /api/auth/revoke
  * Revoke the current authentication token
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting for revocation operations
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim()
+  const authAddress = typeof user?.address === 'string'
+    ? user.address.trim()
     : '';
   if (!authAddress) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -85,7 +78,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Revoke only the current token
       const tokenHash = await hashToken(token);
-      const expiresAt = authResult.user.exp || Math.floor(Date.now() / 1000) + 86400;
+      const expiresAt = user.exp || Math.floor(Date.now() / 1000) + 86400;
 
       await revokeToken(
         tokenHash,
@@ -105,4 +98,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

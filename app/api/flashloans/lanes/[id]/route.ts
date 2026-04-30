@@ -28,14 +28,10 @@ function canAccessLane(authAddress: string, lane: {
   )
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimited = await withRateLimit(request, 'read')
   if (rateLimited) return rateLimited
-
-  const authResult = await requireAuth(request)
-  if (authResult instanceof NextResponse) return authResult
-
-  const authAddress = normalizeAddress(authResult.user.address || '')
+  const authAddress = normalizeAddress(user.address || '')
   if (!ADDRESS_RE.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -62,4 +58,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     logger.error('[Flashloans GET lane] Error:', error)
     return NextResponse.json({ error: 'Failed to fetch lane' }, { status: 500 })
   }
-}
+});

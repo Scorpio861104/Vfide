@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+import { isAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -18,16 +18,12 @@ function isAddressLike(value: string): boolean {
  * GET /api/quests/weekly
  * Fetch weekly challenges with user progress
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const requesterAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const requesterAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!requesterAddress || !isAddressLike(requesterAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -46,7 +42,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
     }
 
-    const canAccess = requesterAddress === targetAddress || isAdmin(authResult.user);
+    const canAccess = requesterAddress === targetAddress || isAdmin(user);
     if (!canAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -120,4 +116,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

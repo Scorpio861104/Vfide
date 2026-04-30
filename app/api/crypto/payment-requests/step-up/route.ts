@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getStepUpAndCooldownPolicy } from '@/lib/security/accountProtection';
@@ -26,16 +26,12 @@ const stepUpRequestSchema = z.object({
   token: z.string().trim().optional(),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   try {
     const rateLimitResponse = await withRateLimit(request, 'write');
     if (rateLimitResponse) return rateLimitResponse;
-
-    const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) return authResult;
-
-    const authAddress = typeof authResult.user?.address === 'string'
-      ? authResult.user.address.trim().toLowerCase()
+    const authAddress = typeof user?.address === 'string'
+      ? user.address.trim().toLowerCase()
       : '';
     if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -116,4 +112,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Payment Step-up POST] Error issuing challenge', error);
     return NextResponse.json({ error: 'Failed to issue step-up challenge' }, { status: 500 });
   }
-}
+});

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -90,16 +90,10 @@ function isDatabaseUnavailableError(error: unknown): boolean {
   return false;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = normalizeAddress(authResult.user.address);
+  const authAddress = normalizeAddress(user.address);
   if (!ADDRESS_REGEX.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -139,4 +133,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Push Subscribe] Error:', error);
     return NextResponse.json({ error: 'Failed to save subscription' }, { status: 500 });
   }
-}
+});

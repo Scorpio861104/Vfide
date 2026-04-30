@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -41,15 +41,12 @@ const uploadAttachmentSchema = z.object({
   url: z.string().trim().min(1).max(MAX_URL_LENGTH),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
     let body: z.infer<typeof uploadAttachmentSchema>;
     try {
@@ -64,7 +61,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    if (!authResult.user?.address || typeof authResult.user.address !== 'string') {
+    if (!user?.address || typeof user.address !== 'string') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -137,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     const userResult = await query<{ id: number }>(
       'SELECT id FROM users WHERE LOWER(wallet_address) = LOWER($1)',
-      [authResult.user.address]
+      [user.address]
     );
 
     const uploaderId = userResult.rows[0]?.id;
@@ -157,4 +154,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Attachments Upload] Error:', error);
     return NextResponse.json({ error: 'Failed to upload attachment' }, { status: 500 });
   }
-}
+});

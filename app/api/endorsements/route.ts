@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -113,14 +113,11 @@ function isDatabaseUnavailableError(error: unknown): boolean {
  * GET /api/endorsements?endorsedAddress=0x...&proposalId=123&limit=50&offset=0
  * Get endorsements
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'api');
   if (rateLimitResponse) return rateLimitResponse;
 
   // F-08 FIX: Require authentication to prevent unauthenticated enumeration of wallet addresses
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
     const searchParams = request.nextUrl.searchParams;
     const rawEndorsedAddress = searchParams.get('endorsedAddress');
@@ -309,25 +306,18 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/endorsements
  * Create a new endorsement
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -475,25 +465,18 @@ export async function POST(request: NextRequest) {
   } finally {
     client.release();
   }
-}
+});
 
 /**
  * DELETE /api/endorsements?endorsementId=123
  * Delete an endorsement (only the endorser can delete)
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -565,4 +548,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

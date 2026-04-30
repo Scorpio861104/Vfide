@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -184,25 +184,15 @@ export async function GET(
  * PUT /api/users/:address
  * Update user profile
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ address: string }> }
-) {
+export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting for write operations
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
-    const authenticatedAddress = typeof authResult.user?.address === 'string'
-      ? normalizeAddress(authResult.user.address)
+    const authenticatedAddress = typeof user?.address === 'string'
+      ? normalizeAddress(user.address)
       : '';
 
     if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
@@ -325,31 +315,21 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * POST /api/users/:address/avatar
  * Upload user avatar
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ address: string }> }
-) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting for upload operations
   const rateLimitResponse = await withRateLimit(request, 'upload');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
     const resolvedParams = await params;
     const address = resolvedParams?.address;
-    const authenticatedAddress = typeof authResult.user?.address === 'string'
-      ? normalizeAddress(authResult.user.address)
+    const authenticatedAddress = typeof user?.address === 'string'
+      ? normalizeAddress(user.address)
       : '';
 
     if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
@@ -413,4 +393,4 @@ export async function POST(
       { status: 500 }
     );
   }
-}
+});

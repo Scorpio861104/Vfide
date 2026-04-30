@@ -2,6 +2,7 @@
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '../lib/contracts'
+import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts'
 import { VFIDEBadgeNFTABI } from '../lib/abis'
 
 // ============================================
@@ -33,10 +34,12 @@ export function useUserBadges(_address?: `0x${string}`) {
 export function useBadgeNFTs(address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
-  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
+  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
+  const badgeNftAddress = futureContracts?.BadgeNFT
+  const isAvailable = isConfiguredContractAddress(badgeNftAddress)
   
   const { data: tokenIds, isLoading, refetch } = useReadContract({
-    address: CONTRACT_ADDRESSES.BadgeNFT,
+    address: badgeNftAddress,
     abi: VFIDEBadgeNFTABI,
     functionName: 'getBadgesOfUser',
     args: targetAddress ? [targetAddress] : undefined,
@@ -56,16 +59,18 @@ export function useBadgeNFTs(address?: `0x${string}`) {
 
 export function useMintBadge() {
   const { writeContract, data, isPending } = useWriteContract()
-  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
+  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
+  const badgeNftAddress = futureContracts?.BadgeNFT
+  const isAvailable = isConfiguredContractAddress(badgeNftAddress)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
   
   const mintBadge = (badgeId: `0x${string}`) => {
-    if (!isAvailable) return
+    if (!isAvailable || !badgeNftAddress) return
     writeContract({
-      address: CONTRACT_ADDRESSES.BadgeNFT,
+      address: badgeNftAddress,
       abi: VFIDEBadgeNFTABI,
       functionName: 'mintBadge',
       args: [badgeId],
@@ -84,10 +89,12 @@ export function useMintBadge() {
 export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
-  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.BadgeNFT)
+  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
+  const badgeNftAddress = futureContracts?.BadgeNFT
+  const isAvailable = isConfiguredContractAddress(badgeNftAddress)
   
   const { data, isLoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.BadgeNFT,
+    address: badgeNftAddress,
     abi: VFIDEBadgeNFTABI,
     functionName: 'canMintBadge',
     args: targetAddress && badgeId ? [targetAddress, badgeId] : undefined,

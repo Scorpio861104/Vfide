@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+import { isAdmin } from '@/lib/auth/middleware';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -105,13 +105,9 @@ async function isVaultOwnerReporter(vault: string, reporter: string): Promise<bo
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   let payload: z.infer<typeof nextOfKinFraudEventSchema>;
   try {
     const rawBody = await request.json();
@@ -129,12 +125,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid vault address' }, { status: 400 });
   }
 
-  const reporter = authResult.user.address?.trim().toLowerCase() ?? 'unknown';
+  const reporter = user.address?.trim().toLowerCase() ?? 'unknown';
   if (!ADDRESS_REGEX.test(reporter)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const callerIsAdmin = isAdmin(authResult.user);
+  const callerIsAdmin = isAdmin(user);
   const allowedReporters = getAllowedNextOfKinFraudReporters();
   const reporterIsAllowed = allowedReporters.has(reporter);
   const reporterIsVault = reporter === vault;
@@ -169,7 +165,7 @@ export async function POST(request: NextRequest) {
   logger.warn('[Security][Next of Kin Fraud Event]', event);
 
   return NextResponse.json({ success: true });
-}
+});
 
 function parsePositiveInteger(value: string | null, fallback: number): number {
   if (!value || !/^\d+$/.test(value)) return fallback;
@@ -178,14 +174,11 @@ function parsePositiveInteger(value: string | null, fallback: number): number {
   return parsed;
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const caller = authResult.user.address.toLowerCase();
-  const callerIsAdmin = isAdmin(authResult.user);
+  const caller = user.address.toLowerCase();
+  const callerIsAdmin = isAdmin(user);
 
   const searchParams = request.nextUrl.searchParams;
   const sinceMinutes = parsePositiveInteger(searchParams.get('sinceMinutes'), 1440);
@@ -220,4 +213,4 @@ export async function GET(request: NextRequest) {
     },
     events,
   });
-}
+});

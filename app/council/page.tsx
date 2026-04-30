@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic';
 import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { CouncilElectionABI } from "@/lib/abis";
-import { CONTRACT_ADDRESSES, ZERO_ADDRESS } from "@/lib/contracts";
+import { ZERO_ADDRESS } from "@/lib/contracts";
+import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, DollarSign, Vote, Crown } from "lucide-react";
@@ -15,7 +16,9 @@ const MembersTab = lazy(() => import('./components/MembersTab').then(m => ({ def
 const SalaryTab = lazy(() => import('./components/SalaryTab').then(m => ({ default: m.SalaryTab })));
 const VotingTab = lazy(() => import('./components/VotingTab').then(m => ({ default: m.VotingTab })));
 
-const COUNCIL_ELECTION_ADDRESS = CONTRACT_ADDRESSES.CouncilElection;
+const COUNCIL_ELECTION_ADDRESS = isFutureFeaturesEnabled()
+  ? getFutureContractAddresses().CouncilElection
+  : ZERO_ADDRESS;
 const IS_COUNCIL_ELECTION_DEPLOYED = COUNCIL_ELECTION_ADDRESS !== ZERO_ADDRESS;
 
 type TabType = 'overview' | 'members' | 'salary' | 'voting';

@@ -1019,6 +1019,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @dev This clears stranded outbound accounting even when the original sender is inactive.
      */
     function finalizeStaleBridgeRefund(bytes32 txId) external nonReentrant whenNotPaused {
+        require(_bridgeIsSystemExempt(), "VFIDEBridge: configure token systemExempt for bridge");
         BridgeTransaction storage btx = bridgeTransactions[txId];
         require(btx.sender != address(0), "VFIDEBridge: unknown tx");
         require(!btx.executed, "VFIDEBridge: already executed");

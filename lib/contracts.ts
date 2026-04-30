@@ -18,19 +18,11 @@ import {
   VFIDEBadgeNFTABI,
   DAOABI,
   DAOTimelockABI,
-  GuardianRegistryABI,
-  GuardianLockABI,
-  PanicGuardABI,
-  EmergencyBreakerABI,
-  MerchantRegistryABI,
   MerchantPortalABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
-  CommerceEscrowABI,
   OwnerControlPanelABI,
   EscrowManagerABI,
-  UserVaultLiteABI,
-  BurnRouterABI,
   DutyDistributorABI,
   CouncilElectionABI,
   CouncilSalaryABI,
@@ -86,26 +78,20 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   VaultHub: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS',
   Seer: 'NEXT_PUBLIC_SEER_ADDRESS',
   SeerAutonomous: 'NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS',
-  SeerGuardian: 'NEXT_PUBLIC_SEER_GUARDIAN_ADDRESS',
   SeerView: 'NEXT_PUBLIC_SEER_VIEW_ADDRESS',
   DAO: 'NEXT_PUBLIC_DAO_ADDRESS',
   DAOTimelock: 'NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS',
   TrustGateway: 'NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS',
-  BadgeNFT: 'NEXT_PUBLIC_BADGE_NFT_ADDRESS',
   GuardianRegistry: 'NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS',
   GuardianLock: 'NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS',
   PanicGuard: 'NEXT_PUBLIC_PANIC_GUARD_ADDRESS',
   EmergencyBreaker: 'NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS',
-  BurnRouter: 'NEXT_PUBLIC_LEGACY_BURN_ROUTER_ADDRESS',
   ProofScoreBurnRouter: 'NEXT_PUBLIC_BURN_ROUTER_ADDRESS',
   ProofLedger: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS',
   LiquidityIncentives: 'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS',
   DutyDistributor: 'NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS',
   OwnerControlPanel: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS',
   PayrollManager: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS',
-  CouncilElection: 'NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS',
-  CouncilSalary: 'NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS',
-  SubscriptionManager: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS',
   SanctumVault: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS',
   DevReserveVesting: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS',
   EscrowManager: 'NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS',
@@ -122,9 +108,9 @@ const CONTRACT_ENV_VAR_MAP: Record<string, string> = {
   VFIDEFlashLoan: 'NEXT_PUBLIC_FLASH_LOAN_ADDRESS',
 };
 
-function resolveChainScopedAddress(name: string, fallbackAddress: string | undefined): { address: string | undefined; envVarName: string; chainScopedEnvVarName: string } {
+function resolveChainScopedAddress(name: string, fallbackAddress: string | undefined, chainId: number): { address: string | undefined; envVarName: string; chainScopedEnvVarName: string } {
   const envVarName = CONTRACT_ENV_VAR_MAP[name] ?? `NEXT_PUBLIC_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ADDRESS`;
-  const chainScopedEnvVarName = `${envVarName}_${CURRENT_CHAIN_ID}`;
+  const chainScopedEnvVarName = `${envVarName}_${chainId}`;
   const chainScopedAddress = process.env[chainScopedEnvVarName];
   return {
     address: chainScopedAddress ?? fallbackAddress,
@@ -138,7 +124,7 @@ function resolveChainScopedAddress(name: string, fallbackAddress: string | undef
  * Returns properly typed address, or zero address if invalid/missing
  * Runtime validation logs warnings for debugging
  */
-function validateContractAddress(address: string | undefined, name: string): `0x${string}` {
+function validateContractAddress(address: string | undefined, name: string, chainId: number = CURRENT_CHAIN_ID): `0x${string}` {
   const isProduction = process.env.NODE_ENV === 'production';
   const isServer = typeof window === 'undefined';
   const frontendOnlyEnv = process.env.FRONTEND_SELF_CONTAINED ?? process.env.NEXT_PUBLIC_FRONTEND_ONLY;
@@ -150,7 +136,7 @@ function validateContractAddress(address: string | undefined, name: string): `0x
   // Keep strictness for server/runtime checks, but never crash client render trees.
   const strictProduction = isProduction && !frontendOnly && isServer;
 
-  const resolved = resolveChainScopedAddress(name, address);
+  const resolved = resolveChainScopedAddress(name, address, chainId);
 
   if (!resolved.address) {
     if (strictProduction) {
@@ -182,49 +168,50 @@ export function getContractConfigurationError(name: string): Error {
   return new Error(`[VFIDE] ${name} contract not configured. Set ${envVarName} in the environment.`)
 }
 
-export const CONTRACT_ADDRESSES = {
-  VFIDEToken: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS, 'VFIDEToken'),
-  StablecoinRegistry: validateContractAddress(process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS, 'StablecoinRegistry'),
-  VFIDECommerce: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS, 'VFIDECommerce'),
-  MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal'),
-  VaultHub: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS, 'VaultHub'),
-  Seer: validateContractAddress(process.env.NEXT_PUBLIC_SEER_ADDRESS, 'Seer'),
-  SeerAutonomous: validateContractAddress(process.env.NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS, 'SeerAutonomous'),
-  SeerGuardian: validateContractAddress(process.env.NEXT_PUBLIC_SEER_GUARDIAN_ADDRESS, 'SeerGuardian'),
-  SeerView: validateContractAddress(process.env.NEXT_PUBLIC_SEER_VIEW_ADDRESS, 'SeerView'),
-  DAO: validateContractAddress(process.env.NEXT_PUBLIC_DAO_ADDRESS, 'DAO'),
-  DAOTimelock: validateContractAddress(process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS, 'DAOTimelock'),
-  TrustGateway: validateContractAddress(process.env.NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS, 'TrustGateway'),
-  BadgeNFT: validateContractAddress(process.env.NEXT_PUBLIC_BADGE_NFT_ADDRESS, 'BadgeNFT'),
-  GuardianRegistry: validateContractAddress(process.env.NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS, 'GuardianRegistry'),
-  GuardianLock: validateContractAddress(process.env.NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS, 'GuardianLock'),
-  PanicGuard: validateContractAddress(process.env.NEXT_PUBLIC_PANIC_GUARD_ADDRESS, 'PanicGuard'),
-  EmergencyBreaker: validateContractAddress(process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS, 'EmergencyBreaker'),
-  // Additional contracts
-  BurnRouter: validateContractAddress(process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS, 'BurnRouter'),
-  ProofScoreBurnRouter: validateContractAddress(process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS, 'ProofScoreBurnRouter'),
-  ProofLedger: validateContractAddress(process.env.NEXT_PUBLIC_PROOF_LEDGER_ADDRESS, 'ProofLedger'),
-  LiquidityIncentives: validateContractAddress(process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS, 'LiquidityIncentives'),
-  DutyDistributor: validateContractAddress(process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS, 'DutyDistributor'),
-  OwnerControlPanel: validateContractAddress(process.env.NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS, 'OwnerControlPanel'),
-  PayrollManager: validateContractAddress(process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS, 'PayrollManager'),
-  CouncilElection: validateContractAddress(process.env.NEXT_PUBLIC_COUNCIL_ELECTION_ADDRESS, 'CouncilElection'),
-  CouncilSalary: validateContractAddress(process.env.NEXT_PUBLIC_COUNCIL_SALARY_ADDRESS, 'CouncilSalary'),
-  SubscriptionManager: validateContractAddress(process.env.NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS, 'SubscriptionManager'),
-  SanctumVault: validateContractAddress(process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS, 'SanctumVault'),
-  DevReserveVesting: validateContractAddress(process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS, 'DevReserveVesting'),
-  EscrowManager: validateContractAddress(process.env.NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS, 'EscrowManager'),
-  FeeDistributor: validateContractAddress(process.env.NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS, 'FeeDistributor'),
-  SeerSocial: validateContractAddress(process.env.NEXT_PUBLIC_SEER_SOCIAL_ADDRESS, 'SeerSocial'),
-  EcosystemVault: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS, 'EcosystemVault'),
-  EcosystemVaultView: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS, 'EcosystemVaultView'),
-  VaultRegistry: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS, 'VaultRegistry'),
-  VaultRecoveryClaim: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS, 'VaultRecoveryClaim'),
-  CommerceEscrow: validateContractAddress(process.env.NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS, 'CommerceEscrow'),
-  FraudRegistry: validateContractAddress(process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS, 'FraudRegistry'),
-  VFIDETestnetFaucet: validateContractAddress(process.env.NEXT_PUBLIC_FAUCET_ADDRESS, 'VFIDETestnetFaucet'),
-  VFIDETermLoan: validateContractAddress(process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS, 'VFIDETermLoan'),
-  VFIDEFlashLoan: validateContractAddress(process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS, 'VFIDEFlashLoan'),
+function buildContractAddresses(chainId: number = CURRENT_CHAIN_ID) {
+  return {
+    VFIDEToken: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS, 'VFIDEToken', chainId),
+    StablecoinRegistry: validateContractAddress(process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS, 'StablecoinRegistry', chainId),
+    VFIDECommerce: validateContractAddress(process.env.NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS, 'VFIDECommerce', chainId),
+    MerchantPortal: validateContractAddress(process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS, 'MerchantPortal', chainId),
+    VaultHub: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS, 'VaultHub', chainId),
+    Seer: validateContractAddress(process.env.NEXT_PUBLIC_SEER_ADDRESS, 'Seer', chainId),
+    SeerAutonomous: validateContractAddress(process.env.NEXT_PUBLIC_SEER_AUTONOMOUS_ADDRESS, 'SeerAutonomous', chainId),
+    SeerView: validateContractAddress(process.env.NEXT_PUBLIC_SEER_VIEW_ADDRESS, 'SeerView', chainId),
+    DAO: validateContractAddress(process.env.NEXT_PUBLIC_DAO_ADDRESS, 'DAO', chainId),
+    DAOTimelock: validateContractAddress(process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS, 'DAOTimelock', chainId),
+    TrustGateway: validateContractAddress(process.env.NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS, 'TrustGateway', chainId),
+    GuardianRegistry: validateContractAddress(process.env.NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS, 'GuardianRegistry', chainId),
+    GuardianLock: validateContractAddress(process.env.NEXT_PUBLIC_GUARDIAN_LOCK_ADDRESS, 'GuardianLock', chainId),
+    PanicGuard: validateContractAddress(process.env.NEXT_PUBLIC_PANIC_GUARD_ADDRESS, 'PanicGuard', chainId),
+    EmergencyBreaker: validateContractAddress(process.env.NEXT_PUBLIC_EMERGENCY_BREAKER_ADDRESS, 'EmergencyBreaker', chainId),
+    // Additional contracts
+    ProofScoreBurnRouter: validateContractAddress(process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS, 'ProofScoreBurnRouter', chainId),
+    ProofLedger: validateContractAddress(process.env.NEXT_PUBLIC_PROOF_LEDGER_ADDRESS, 'ProofLedger', chainId),
+    LiquidityIncentives: validateContractAddress(process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS, 'LiquidityIncentives', chainId),
+    DutyDistributor: validateContractAddress(process.env.NEXT_PUBLIC_DUTY_DISTRIBUTOR_ADDRESS, 'DutyDistributor', chainId),
+    OwnerControlPanel: validateContractAddress(process.env.NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS, 'OwnerControlPanel', chainId),
+    PayrollManager: validateContractAddress(process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS, 'PayrollManager', chainId),
+    SanctumVault: validateContractAddress(process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS, 'SanctumVault', chainId),
+    DevReserveVesting: validateContractAddress(process.env.NEXT_PUBLIC_DEV_VAULT_ADDRESS, 'DevReserveVesting', chainId),
+    EscrowManager: validateContractAddress(process.env.NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS, 'EscrowManager', chainId),
+    FeeDistributor: validateContractAddress(process.env.NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS, 'FeeDistributor', chainId),
+    SeerSocial: validateContractAddress(process.env.NEXT_PUBLIC_SEER_SOCIAL_ADDRESS, 'SeerSocial', chainId),
+    EcosystemVault: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS, 'EcosystemVault', chainId),
+    EcosystemVaultView: validateContractAddress(process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS, 'EcosystemVaultView', chainId),
+    VaultRegistry: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS, 'VaultRegistry', chainId),
+    VaultRecoveryClaim: validateContractAddress(process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS, 'VaultRecoveryClaim', chainId),
+    FraudRegistry: validateContractAddress(process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS, 'FraudRegistry', chainId),
+    VFIDETestnetFaucet: validateContractAddress(process.env.NEXT_PUBLIC_FAUCET_ADDRESS, 'VFIDETestnetFaucet', chainId),
+    VFIDETermLoan: validateContractAddress(process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS, 'VFIDETermLoan', chainId),
+    VFIDEFlashLoan: validateContractAddress(process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS, 'VFIDEFlashLoan', chainId),
+  };
+}
+
+export const CONTRACT_ADDRESSES = buildContractAddresses(CURRENT_CHAIN_ID)
+
+export function getContractAddresses(chainId: number) {
+  return buildContractAddresses(chainId);
 }
 
 // Legacy ABI alias names for compatibility with existing hooks
@@ -241,20 +228,6 @@ export const USER_VAULT_ABI = UserVaultABI;
 export type VaultImplementation = 'cardbound';
 
 function resolveVaultImplementation(): VaultImplementation {
-  const configured = process.env.NEXT_PUBLIC_VAULT_IMPLEMENTATION;
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isServer = typeof window === 'undefined';
-
-  if (!configured || configured.trim() === '' || configured === 'cardbound') {
-    return 'cardbound';
-  }
-
-  const message = `[VFIDE] Invalid NEXT_PUBLIC_VAULT_IMPLEMENTATION value: ${configured}. Expected "cardbound" (legacy "uservault" is no longer supported).`;
-  if (isProduction && isServer) {
-    throw new Error(message);
-  }
-
-  logger.warn(`${message} Using "cardbound" vault implementation.`);
   return 'cardbound';
 }
 
@@ -276,19 +249,11 @@ export {
   VFIDEBadgeNFTABI,
   DAOABI,
   DAOTimelockABI,
-  GuardianRegistryABI,
-  GuardianLockABI,
-  PanicGuardABI,
-  EmergencyBreakerABI,
-  MerchantRegistryABI,
   MerchantPortalABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
-  CommerceEscrowABI,
   OwnerControlPanelABI,
   EscrowManagerABI,
-  UserVaultLiteABI,
-  BurnRouterABI,
   DutyDistributorABI,
   CouncilElectionABI,
   CouncilSalaryABI,

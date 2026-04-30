@@ -7,11 +7,8 @@ const artifactsRoot = path.join(root, 'artifacts/contracts');
 const placeholderSignoffPath = path.join(root, 'audit/frontend-abi-placeholder.signoff.json');
 
 const ARTIFACT_OVERRIDES: Record<string, string> = {
-  'BurnRouter.json': 'artifacts/contracts/ProofScoreBurnRouter.sol/ProofScoreBurnRouter.json',
   'DevReserveVesting.json': 'artifacts/contracts/DevReserveVestingVault.sol/DevReserveVestingVault.json',
   'ERC20.json': 'artifacts/contracts/SharedInterfaces.sol/IERC20.json',
-  'UserVault.json': 'artifacts/contracts/VaultInfrastructure.sol/UserVaultLegacy.json',
-  'UserVaultLite.json': 'artifacts/contracts/VaultInfrastructure.sol/UserVaultLegacy.json',
 };
 
 type PlaceholderSignoff = {
@@ -31,10 +28,8 @@ const MANUAL_ABI_EXCEPTIONS = new Set<string>(getPlaceholderExceptions());
 
 const PARITY_EXEMPTIONS = new Set<string>([
   // Intentional synthetic/helper ABIs not expected to byte-for-byte match one compiled artifact.
-  'BurnRouter.json',
   'ERC20.json',
   'MainstreamPayments.json',
-  'UserVaultLite.json',
   'VFIDECommerce.json',
 ]);
 

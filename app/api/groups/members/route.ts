@@ -82,17 +82,14 @@ function canManageTarget(actorRole: string, targetRole: string): boolean {
   return getRoleRank(actorRole) > getRoleRank(targetRole);
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -165,17 +162,14 @@ export async function GET(request: NextRequest) {
     logger.error('[Group Members GET] Error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
     let body: z.infer<typeof addGroupMemberSchema>;
     try {
@@ -191,8 +185,8 @@ export async function POST(request: NextRequest) {
     }
 
     const { groupId, userAddress, role = 'member', actorAddress } = body;
-    const authenticatedAddress = typeof authResult.user?.address === 'string'
-      ? authResult.user.address.trim().toLowerCase()
+    const authenticatedAddress = typeof user?.address === 'string'
+      ? user.address.trim().toLowerCase()
       : '';
     if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -254,17 +248,14 @@ export async function POST(request: NextRequest) {
     logger.error('[Group Members POST] Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to add member' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
     let body: z.infer<typeof patchGroupMemberSchema>;
     try {
@@ -280,8 +271,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { groupId, userAddress, role, actorAddress } = body;
-    const authenticatedAddress = typeof authResult.user?.address === 'string'
-      ? authResult.user.address.trim().toLowerCase()
+    const authenticatedAddress = typeof user?.address === 'string'
+      ? user.address.trim().toLowerCase()
       : '';
     if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -351,7 +342,7 @@ export async function PATCH(request: NextRequest) {
     logger.error('[Group Members PATCH] Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to update member' }, { status: 500 });
   }
-}
+});
 
 export async function DELETE(request: NextRequest) {
   // Rate limiting

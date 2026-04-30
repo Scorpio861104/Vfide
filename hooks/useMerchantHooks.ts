@@ -3,7 +3,8 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi'
 import { parseEther, formatEther, isAddress } from 'viem'
 import { useState } from 'react'
-import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts'
+import { ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts'
+import { useContractAddresses } from './useContractAddresses'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
 import { MerchantPortalABI } from '../lib/abis'
 import { parseContractError, logError } from '@/lib/errorHandling';
@@ -18,6 +19,7 @@ import { safeBigIntToNumber } from '@/lib/validation';
 type MerchantInfo = [boolean, boolean, string, string, bigint, bigint, bigint]
 
 export function useIsMerchant(address?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
@@ -49,6 +51,8 @@ export function useIsMerchant(address?: `0x${string}`) {
 }
 
 export function useRegisterMerchant() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -105,6 +109,8 @@ export function useRegisterMerchant() {
  * Process payment from customer to merchant (merchant-initiated)
  */
 export function useProcessPayment() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -175,6 +181,8 @@ export function useProcessPayment() {
  * Set a scoped merchant pull permit for merchant-initiated payments.
  */
 export function useSetMerchantPullPermit() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -238,6 +246,8 @@ export function useSetMerchantPullPermit() {
  * Pay merchant (customer-initiated)
  */
 export function usePayMerchant() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -312,6 +322,7 @@ type CustomerTrustInfo = [bigint, boolean, boolean, boolean]
  * Get customer trust assessment for merchants
  */
 export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
 
   const { data, isLoading } = useReadContract({
@@ -340,6 +351,8 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
  * Enable/disable auto-conversion to stablecoins (STABLE-PAY)
  */
 export function useSetAutoConvert() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { writeContract, data, isPending } = useWriteContract()
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
@@ -370,6 +383,8 @@ export function useSetAutoConvert() {
  * Set custom payout address for merchant
  */
 export function useSetPayoutAddress() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { writeContract, data, isPending } = useWriteContract()
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   

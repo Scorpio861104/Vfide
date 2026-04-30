@@ -3,7 +3,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const REPLAY_THRESHOLD_1H_ENV = 'SECURITY_WEBHOOK_REPLAY_REJECT_THRESHOLD_1H';
@@ -71,20 +71,15 @@ function isMachineTokenAuthorized(request: NextRequest): boolean {
   return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
   const machineAuthorized = isMachineTokenAuthorized(request);
 
   if (!machineAuthorized) {
-    const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) {
-      return authResult;
-    }
-
-    const authAddress = typeof authResult.user?.address === 'string'
-      ? normalizeAddress(authResult.user.address)
+    const authAddress = typeof user?.address === 'string'
+      ? normalizeAddress(user.address)
       : '';
 
     if (!authAddress || !isAddressLike(authAddress)) {
@@ -173,4 +168,4 @@ export async function GET(request: NextRequest) {
     logger.error('Failed to get webhook replay metrics', error);
     return NextResponse.json({ error: 'Failed to fetch webhook replay metrics' }, { status: 500 });
   }
-}
+});

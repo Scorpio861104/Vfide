@@ -1,6 +1,7 @@
 import { useAccount, useReadContract, useWriteContract, useChainId, usePublicClient } from 'wagmi';
 import { isAddress } from 'viem';
-import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts';
+import { VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '../lib/contracts';
+import { useContractAddresses } from './useContractAddresses';
 import { CURRENT_CHAIN_ID } from '../lib/testnet';
 import { getChainByChainId, isTestnetChainId } from '../lib/chains';
 import { devLog } from '../lib/utils';
@@ -8,9 +9,6 @@ import { devLog } from '../lib/utils';
 
 // Parse the ABI for proper type inference
 const PARSED_VAULT_HUB_ABI = VAULT_HUB_ABI;
-
-// VaultHub contract address from environment
-const VAULT_HUB_ADDRESS = CONTRACT_ADDRESSES.VaultHub;
 
 // Expected chain ID for the vault operations - use configured chain
 // Type assertion for wagmi's strict chain ID type system
@@ -89,6 +87,7 @@ function parseContractError(error: unknown): string {
 export function useVaultHub() {
   const { address: userAddress } = useAccount();
   const chainId = useChainId();
+  const { VaultHub: VAULT_HUB_ADDRESS } = useContractAddresses();
   const publicClient = usePublicClient({ chainId: EXPECTED_CHAIN_ID });
   const { writeContractAsync, isPending: isCreatingVault } = useWriteContract();
 

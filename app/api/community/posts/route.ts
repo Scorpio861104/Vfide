@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -28,15 +28,9 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
     const rawBody = await request.json().catch(() => null);
     const parsed = createPostSchema.safeParse(rawBody);
@@ -45,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { authorAddress, content, imageUrl } = parsed.data;
-    const authenticatedAddress = authResult.user.address.toLowerCase();
+    const authenticatedAddress = user.address.toLowerCase();
 
     if (authorAddress && authorAddress.toLowerCase() !== authenticatedAddress) {
       return NextResponse.json({ error: 'You can only post as your authenticated wallet' }, { status: 403 });
@@ -60,4 +54,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Community Posts POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
   }
-}
+});

@@ -3,6 +3,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 
+/**
+ * Return the canonical chat topic for a DM between two participants.
+ * Addresses are lower-cased and sorted lexicographically so both participants
+ * resolve to the same topic string regardless of argument order.
+ */
+export function chatTopic(addrA: string, addrB: string): string {
+  const sorted = [addrA.toLowerCase(), addrB.toLowerCase()].sort();
+  return `chat.${sorted[0]}_${sorted[1]}`;
+}
+
 export type WSMessageType =
   | 'authenticated'
   | 'auth_error'
@@ -161,6 +171,9 @@ export class WebSocketManager {
     } else if (event === 'notifications:subscribe') {
       outbound = { type: 'subscribe', payload: { topic: 'notifications' } };
     } else if (event === 'chat:channel:join' && typeof data === 'string') {
+      // data must be a canonical chat topic suffix (e.g. "0xaaa..._0xbbb..." sorted).
+      // Use chatTopic(addrA, addrB) to construct it; raw topics like "chat.X_Y" where X > Y
+      // are rejected by the server's isAuthorizedForTopic guard.
       outbound = { type: 'subscribe', payload: { topic: `chat.${data}` } };
     } else if (event === 'leave' && typeof data === 'string') {
       outbound = { type: 'unsubscribe', payload: { topic: data } };

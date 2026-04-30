@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -22,18 +22,12 @@ function parsePositiveInteger(value: string): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ userId: string }> }) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting: 100 requests per minute
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authAddress || !ADDRESS_LIKE_REGEX.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -126,4 +120,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       { status: 500 }
     );
   }
-}
+});

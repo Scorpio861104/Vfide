@@ -1,7 +1,5 @@
 // components/social/index.ts
 export { ShareProductToFeed } from './ShareProductToFeed';
-export { ShoppablePost } from './ShoppablePost';
-export { PurchaseProofEvent } from './PurchaseProofEvent';
 export { TrustEventCard, TrustFeed } from './TrustEventCard';
 export { MarketStory, MarketStoriesRow } from './MarketStory';
 export { MerchantReview, ReviewSummary, CommunityBoard } from './MerchantReview';

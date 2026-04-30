@@ -16,9 +16,13 @@
  * The key insight: the user NEVER needs to know they have a wallet.
  * They have a "VFIDE account." The wallet is infrastructure.
  * 
- * Integration:
- *   Replace RainbowKitProvider in Web3Providers with VFIDEWalletProvider.
- *   Replace <ConnectButton /> with <AccountButton />.
+ * Integration Status:
+ *   DO NOT replace RainbowKitProvider in Web3Providers yet.
+ *   Prerequisites before any swap:
+ *   1) Install and wire a production SDK (Privy/Web3Auth/Magic)
+ *   2) Replace authenticateWithProvider with real provider auth
+ *   3) Replace ensureVaultExists with VaultHub-backed implementation
+ *   4) Validate sign-in + vault creation end-to-end
  */
 'use client';
 
@@ -151,7 +155,20 @@ export function VFIDEWalletProvider({ children }: { children: ReactNode }) {
 
 export function useVFIDEWallet(): WalletContextValue {
   const ctx = useContext(WalletContext);
-  if (!ctx) throw new Error('useVFIDEWallet must be used within VFIDEWalletProvider');
+  if (!ctx) {
+    // WALLET-02 FIX: fail closed without crashing render trees when the provider is unmounted.
+    return {
+      account: null,
+      status: 'disconnected',
+      isEmbedded: false,
+      signIn: async () => {
+        throw new Error('Embedded wallet provider is not mounted. Use RainbowKit wallet flow or mount VFIDEWalletProvider first.');
+      },
+      signOut: async () => {
+        // no-op
+      },
+    };
+  }
   return ctx;
 }
 

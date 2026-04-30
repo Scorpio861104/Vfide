@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -314,17 +314,10 @@ export async function GET(request: NextRequest) {
  * POST /api/leaderboard/monthly
  * Update user's monthly stats
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting for write operations
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
     let body: z.infer<typeof updateMonthlyLeaderboardSchema>;
     try {
@@ -379,12 +372,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+    if (!user?.address || !isAddressLike(user.address)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Users may only update their own leaderboard stats
-    if (normalizeAddress(authResult.user.address) !== userAddress) {
+    if (normalizeAddress(user.address) !== userAddress) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -464,4 +457,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

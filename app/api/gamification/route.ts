@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -25,13 +25,10 @@ function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authAddress || !isAddressLike(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -157,7 +154,7 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 export async function POST(request: NextRequest) {
   // Rate limiting

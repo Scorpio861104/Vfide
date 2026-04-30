@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { logger } from '@/lib/logger';
 
 const DEFAULT_WINDOW_HOURS = 24 * 7;
@@ -60,15 +60,9 @@ function parseWindowHours(raw: string | null): number | null {
   return Math.min(parsed, MAX_WINDOW_HOURS);
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   try {
     const { searchParams } = new URL(request.url);
     const windowHours = parseWindowHours(searchParams.get('windowHours'));
@@ -427,4 +421,4 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: 'Failed to fetch Seer analytics aggregates' }, { status: 500 });
   }
-}
+});

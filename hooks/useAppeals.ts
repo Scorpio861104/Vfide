@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
+import { isConfiguredContractAddress } from '@/lib/contracts'
+import { useContractAddresses } from './useContractAddresses'
 import { SeerSocialABI } from '@/lib/abis'
 
 type AppealStatus = {
@@ -15,6 +16,7 @@ type AppealStatus = {
 }
 
 export function useAppealStatus(address?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses()
   const { data, isLoading, error, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.SeerSocial,
     abi: SeerSocialABI,
@@ -44,6 +46,7 @@ export function useAppealStatus(address?: `0x${string}`) {
 }
 
 export function useFileAppeal() {
+  const CONTRACT_ADDRESSES = useContractAddresses()
   const { address } = useAccount()
   const { writeContract, data: hash, isPending, error } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })

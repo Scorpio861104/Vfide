@@ -237,6 +237,15 @@ function sendError(ws: WebSocket, code: string, message: string): void {
   }
 }
 
+/**
+ * Return the canonical chat topic for two participants.
+ * Addresses are lower-cased and sorted so the same pair always maps to the same topic.
+ */
+export function chatTopic(addrA: string, addrB: string): string {
+  const sorted = [addrA.toLowerCase(), addrB.toLowerCase()].sort();
+  return `chat.${sorted[0]}_${sorted[1]}`;
+}
+
 function isAllowedTopic(topic: string): boolean {
   if (topic === 'governance' || topic === 'notifications') {
     return true;

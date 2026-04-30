@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { runWithDbUserAddressContext } from '@/lib/db';
 import { query } from '@/lib/db';
@@ -149,25 +149,21 @@ async function listSubscriptions(address: string) {
   return result.rows.map(toRecord);
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   const address = request.nextUrl.searchParams.get('address');
 
   if (!address || !ADDRESS_REGEX.test(address)) {
     return NextResponse.json({ error: 'Valid address query parameter is required' }, { status: 400 });
   }
 
-  if (normalizeAddress(address) !== normalizeAddress(authResult.user.address)) {
+  if (normalizeAddress(address) !== normalizeAddress(user.address)) {
     return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
   }
 
   try {
-    const subscriptions = await runWithDbUserAddressContext(authResult.user.address, () => listSubscriptions(address));
+    const subscriptions = await runWithDbUserAddressContext(user.address, () => listSubscriptions(address));
 
     return NextResponse.json({
       subscriptions,
@@ -177,15 +173,11 @@ export async function GET(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to load subscriptions' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   const body = await request.json().catch(() => null) as {
     address?: string;
     recipient?: string;
@@ -199,7 +191,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Valid address is required' }, { status: 400 });
   }
 
-  if (normalizeAddress(body.address) !== normalizeAddress(authResult.user.address)) {
+  if (normalizeAddress(body.address) !== normalizeAddress(user.address)) {
     return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
   }
 
@@ -222,7 +214,7 @@ export async function POST(request: NextRequest) {
     : 'Stored in the VFIDE backend schedule until production contract addresses are restored.';
 
   try {
-    const result = await runWithDbUserAddressContext(authResult.user.address, async () => {
+    const result = await runWithDbUserAddressContext(user.address, async () => {
       const userId = await ensureUserId(userAddress);
       return query<SubscriptionRow>(
       `INSERT INTO subscriptions (
@@ -264,7 +256,7 @@ export async function POST(request: NextRequest) {
     );
     });
 
-    const subscriptions = await runWithDbUserAddressContext(authResult.user.address, () => listSubscriptions(userAddress));
+    const subscriptions = await runWithDbUserAddressContext(user.address, () => listSubscriptions(userAddress));
 
     return NextResponse.json(
       {
@@ -278,15 +270,11 @@ export async function POST(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   const body = await request.json().catch(() => null) as {
     address?: string;
     id?: string;
@@ -297,7 +285,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'address, id, and action are required' }, { status: 400 });
   }
 
-  if (normalizeAddress(body.address) !== normalizeAddress(authResult.user.address)) {
+  if (normalizeAddress(body.address) !== normalizeAddress(user.address)) {
     return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
   }
 
@@ -310,12 +298,12 @@ export async function PATCH(request: NextRequest) {
       : 'active';
 
   try {
-    const userId = await runWithDbUserAddressContext(authResult.user.address, () => findUserId(userAddress));
+    const userId = await runWithDbUserAddressContext(user.address, () => findUserId(userAddress));
     if (!userId) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
 
-    const result = await runWithDbUserAddressContext(authResult.user.address, () => query<SubscriptionRow>(
+    const result = await runWithDbUserAddressContext(user.address, () => query<SubscriptionRow>(
       `UPDATE subscriptions
           SET status = $1,
               next_payment = CASE WHEN $1 = 'cancelled' THEN NULL ELSE next_payment END,
@@ -341,7 +329,7 @@ export async function PATCH(request: NextRequest) {
     }
     const updated = result.rows[0]!;
 
-    const subscriptions = await runWithDbUserAddressContext(authResult.user.address, () => listSubscriptions(userAddress));
+    const subscriptions = await runWithDbUserAddressContext(user.address, () => listSubscriptions(userAddress));
 
     return NextResponse.json({
       record: toRecord(updated),
@@ -352,4 +340,4 @@ export async function PATCH(request: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
   }
-}
+});

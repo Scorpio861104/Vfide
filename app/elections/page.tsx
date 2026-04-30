@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { SEED_CANDIDATES } from '@/lib/data/seed';
-import { CONTRACT_ADDRESSES, CouncilElectionABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { CouncilElectionABI, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
+import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
 
 interface Candidate {
   address: string;
@@ -57,29 +58,32 @@ export default function ElectionsPage() {
   const [showRegister, setShowRegister] = useState(false);
   const [platform, setPlatform] = useState('');
   const [tab, setTab] = useState<'candidates' | 'council' | 'rules'>('candidates');
+  const electionAddress = isFutureFeaturesEnabled()
+    ? getFutureContractAddresses().CouncilElection
+    : ZERO_ADDRESS;
 
-  const isElectionAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.CouncilElection);
+  const isElectionAvailable = isConfiguredContractAddress(electionAddress);
 
   const { data: councilSizeData } = useReadContract({
-    address: CONTRACT_ADDRESSES.CouncilElection,
+    address: electionAddress,
     abi: CouncilElectionABI,
     functionName: 'councilSize',
     query: { enabled: isElectionAvailable },
   });
   const { data: minScoreData } = useReadContract({
-    address: CONTRACT_ADDRESSES.CouncilElection,
+    address: electionAddress,
     abi: CouncilElectionABI,
     functionName: 'minCouncilScore',
     query: { enabled: isElectionAvailable },
   });
   const { data: termSecondsData } = useReadContract({
-    address: CONTRACT_ADDRESSES.CouncilElection,
+    address: electionAddress,
     abi: CouncilElectionABI,
     functionName: 'termSeconds',
     query: { enabled: isElectionAvailable },
   });
   const { data: electionStatusData } = useReadContract({
-    address: CONTRACT_ADDRESSES.CouncilElection,
+    address: electionAddress,
     abi: CouncilElectionABI,
     functionName: 'getElectionStatus',
     query: { enabled: isElectionAvailable },

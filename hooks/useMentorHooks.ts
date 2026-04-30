@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts'
+import { isConfiguredContractAddress } from '@/lib/contracts'
+import { useContractAddresses } from './useContractAddresses'
 import { SeerSocialABI, SeerViewABI } from '@/lib/abis'
 
 type MentorInfo = {
@@ -17,6 +18,7 @@ type MentorInfo = {
 }
 
 export function useMentorInfo(address?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses()
   const hasSeerViewConfig =
     isConfiguredContractAddress(CONTRACT_ADDRESSES.SeerView) &&
     isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
@@ -74,6 +76,7 @@ export function useIsMentor(address?: `0x${string}`) {
 }
 
 export function useBecomeMentor() {
+  const CONTRACT_ADDRESSES = useContractAddresses()
   const { address } = useAccount()
   const { writeContract, data: hash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({ hash })
@@ -93,6 +96,7 @@ export function useBecomeMentor() {
 }
 
 export function useSponsorMentee(menteeAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses()
   const { address } = useAccount()
   const { writeContract, data: hash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess, error } = useWaitForTransactionReceipt({ hash })

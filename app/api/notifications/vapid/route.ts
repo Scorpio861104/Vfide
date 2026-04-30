@@ -9,20 +9,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAuth } from '@/lib/auth/middleware';
+
 
 // VAPID public key from environment - required for production
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
 
   // F-12 FIX: Require authentication — VAPID key exposes push notification infrastructure
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   if (!VAPID_PUBLIC_KEY) {
     return NextResponse.json({
       success: false,
@@ -36,4 +33,4 @@ export async function GET(request: NextRequest) {
     publicKey: VAPID_PUBLIC_KEY,
     configured: true,
   });
-}
+});

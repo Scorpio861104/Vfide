@@ -8,10 +8,8 @@ import { useReadContract, useWriteContract, useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { parseEther, formatEther } from 'viem';
 import { EcosystemVaultABI, EcosystemVaultViewABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress, getContractConfigurationError } from '@/lib/contracts';
-
-const ECOSYSTEM_VAULT_ADDRESS = CONTRACT_ADDRESSES.EcosystemVault;
-const ECOSYSTEM_VAULT_VIEW_ADDRESS = CONTRACT_ADDRESSES.EcosystemVaultView || CONTRACT_ADDRESSES.EcosystemVault;
+import { ZERO_ADDRESS, isConfiguredContractAddress, getContractConfigurationError } from '@/lib/contracts';
+import { useContractAddresses } from './useContractAddresses';
 
 export interface HeadhunterStats {
   currentYearPoints: number;
@@ -57,6 +55,9 @@ export interface ReferralLevelStatus {
  * Get headhunter stats for current user
  */
 export function useHeadhunterStats(): HeadhunterStats {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { address } = useAccount();
   const contractConfigured = isConfiguredContractAddress(ECOSYSTEM_VAULT_VIEW_ADDRESS);
   
@@ -114,6 +115,9 @@ export function useHeadhunterStats(): HeadhunterStats {
  * Preview headhunter reward for a specific quarter
  */
 export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterReward {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { address } = useAccount();
 
   const { data, isLoading, error } = useReadContract({
@@ -196,6 +200,9 @@ export function usePendingReferral(referred: `0x${string}` | undefined): Pending
  * Get referral level progress for a referrer and year.
  */
 export function useReferralLevelStatus(year?: bigint): ReferralLevelStatus {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { address } = useAccount();
   const selectedYear = year ?? 1n;
 
@@ -242,6 +249,9 @@ export function useReferralLevelStatus(year?: bigint): ReferralLevelStatus {
  * Claim headhunter reward for a completed quarter
  */
 export function useClaimHeadhunterReward() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { isPending, isSuccess, error } = useWriteContract();
   const [txHash] = useState<`0x${string}` | null>(null);
 
@@ -262,6 +272,9 @@ export function useClaimHeadhunterReward() {
  * Manager hook: pay fixed referral work reward from referral pool.
  */
 export function usePayReferralWorkReward() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { writeContract, isPending, isSuccess, error } = useWriteContract();
 
   const payReferralWorkReward = async (
@@ -292,6 +305,9 @@ export function usePayReferralWorkReward() {
  * Manager hook: pay next unlocked referral level reward (milestone-based).
  */
 export function usePayReferralLevelReward() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { writeContract, isPending, isSuccess, error } = useWriteContract();
 
   const payReferralLevelReward = async (
@@ -319,6 +335,9 @@ export function usePayReferralLevelReward() {
  * Self-claim hook: claim all currently unlocked referral level rewards for the connected wallet.
  */
 export function useClaimReferralLevelRewards() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { writeContract, isPending, isSuccess, error } = useWriteContract();
 
   const claimReferralLevelRewards = async (year: bigint, reason: string) => {
@@ -342,6 +361,9 @@ export function useClaimReferralLevelRewards() {
  * Manager hook: pay fixed merchant work reward from merchant pool.
  */
 export function usePayMerchantWorkReward() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { writeContract, isPending, isSuccess, error } = useWriteContract();
 
   const payMerchantWorkReward = async (
@@ -369,6 +391,9 @@ export function usePayMerchantWorkReward() {
  * Hook to get referral link for current user
  */
 export function useReferralLink() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { address } = useAccount();
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.com';
   
@@ -382,6 +407,9 @@ export function useReferralLink() {
  * Calculate estimated quarterly pool size
  */
 export function useQuarterlyPoolEstimate() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const [poolEstimate, setPoolEstimate] = useState<bigint>(0n);
   
   useEffect(() => {
@@ -414,6 +442,9 @@ export interface ReferralActivity {
 }
 
 export function useReferralActivity() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { address } = useAccount();
   const [activity, setActivity] = useState<ReferralActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -453,6 +484,9 @@ export interface LeaderboardEntry {
 }
 
 export function useLeaderboard(year: bigint, quarter: bigint) {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { address } = useAccount();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -492,6 +526,9 @@ export function useLeaderboard(year: bigint, quarter: bigint) {
  * payReferralWorkReward / claimReferralLevelRewards all draw from this reserve.
  */
 export function useDepositStablecoinReserve() {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
   const { writeContractAsync, isPending, isSuccess, error } = useWriteContract();
 
   const depositStablecoinReserve = async (stablecoin: `0x${string}`, amount: bigint) => {

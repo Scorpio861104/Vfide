@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { runWithDbUserAddressContext } from '@/lib/db';
 import { query } from '@/lib/db';
@@ -47,22 +47,18 @@ function isDatabaseUnavailableError(error: unknown): boolean {
   return false;
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   const address = request.nextUrl.searchParams.get('address');
   if (!address) return NextResponse.json({ error: 'address required' }, { status: 400 });
 
-  if (address.toLowerCase() !== authResult.user.address.toLowerCase()) {
+  if (address.toLowerCase() !== user.address.toLowerCase()) {
     return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });
   }
 
   try {
-    const [user, merchant, loans] = await runWithDbUserAddressContext(authResult.user.address, () => Promise.all([
+    const [user, merchant, loans] = await runWithDbUserAddressContext(user.address, () => Promise.all([
       query('SELECT proof_score, badges FROM users WHERE wallet_address = $1', [address.toLowerCase()]),
       query('SELECT id FROM merchants WHERE owner_address = $1 AND active = true', [address.toLowerCase()]),
       query('SELECT COUNT(*) as count FROM loans WHERE borrower_address = $1 AND status = $2', [address.toLowerCase(), 'active']),
@@ -84,4 +80,4 @@ export async function GET(request: NextRequest) {
     logger.error('[User State] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch user state' }, { status: 500 });
   }
-}
+});

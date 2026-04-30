@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAdmin, requireAuth } from '@/lib/auth/middleware';
+import { requireAdmin } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -93,7 +93,7 @@ const analyticsSingleSchema = z.object({
   eventData: z.record(z.string(), z.unknown()).optional(),
 });
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
@@ -141,12 +141,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (userId) {
-      const authResult = await requireAuth(request);
-      if (authResult instanceof NextResponse) return authResult;
-      if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+      if (!user?.address || !isAddressLike(user.address)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      if (normalizeAddress(authResult.user.address) !== userId) {
+      if (normalizeAddress(user.address) !== userId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
 
@@ -171,18 +169,15 @@ export async function GET(request: NextRequest) {
     logger.error('[Analytics] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   try {
     // Require authentication
-    const authResult = await requireAuth(request);
-    if (authResult instanceof NextResponse) return authResult;
-
     let body: z.infer<typeof analyticsBatchSchema> | z.infer<typeof analyticsSingleSchema>;
     try {
       const rawBody = await request.json();
@@ -286,7 +281,7 @@ export async function POST(request: NextRequest) {
 
         const baseIndex = index * 4;
         values.push(
-          normalizeAddress(authResult.user.address),
+          normalizeAddress(user.address),
           String(metric.event || 'performance').trim().toLowerCase(),
           serializedEventData,
           new Date(metric.timestamp || Date.now()).toISOString()
@@ -342,15 +337,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+    if (!user?.address || !isAddressLike(user.address)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (normalizedUserId && normalizeAddress(authResult.user.address) !== normalizedUserId) {
+    if (normalizedUserId && normalizeAddress(user.address) !== normalizedUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const resolvedUserId = normalizeAddress(authResult.user.address) || normalizedUserId || null;
+    const resolvedUserId = normalizeAddress(user.address) || normalizedUserId || null;
 
     const result = await query(
       `INSERT INTO analytics_events (user_id, event_type, event_data, timestamp)
@@ -364,4 +359,4 @@ export async function POST(request: NextRequest) {
     logger.error('[Analytics POST] Error:', error);
     return NextResponse.json({ error: 'Failed to log event' }, { status: 500 });
   }
-}
+});

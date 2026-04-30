@@ -5,25 +5,16 @@ import VFIDETokenRaw from './VFIDEToken.json'
 import StablecoinRegistryABI from './StablecoinRegistry.json'
 import VaultInfrastructureABI from './VaultInfrastructure.json'
 import VaultHubFullRaw from './VaultHub.json'
-import UserVaultLiteABI from './UserVaultLite.json'
-import UserVaultABI from './UserVault.json'
 import CardBoundVaultABI from './CardBoundVault.json'
 import SeerRaw from './Seer.json'
 import SeerAutonomousABI from './SeerAutonomous.json'
 import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
 import DAOTimelockABI from './DAOTimelock.json'
-import GuardianRegistryABI from './GuardianRegistry.json'
-import GuardianLockABI from './GuardianLock.json'
-import PanicGuardABI from './PanicGuard.json'
-import EmergencyBreakerABI from './EmergencyBreaker.json'
-import MerchantRegistryABI from './MerchantRegistry.json'
 import MerchantPortalABI from './MerchantPortal.json'
 import ProofScoreBurnRouterABI from './ProofScoreBurnRouter.json'
 import ProofLedgerABI from './ProofLedger.json'
-import CommerceEscrowABI from './CommerceEscrow.json'
 // New consolidated ABIs
-import BurnRouterABI from './BurnRouter.json'
 import DutyDistributorABI from './DutyDistributor.json'
 import CouncilElectionABI from './CouncilElection.json'
 import CouncilSalaryABI from './CouncilSalary.json'
@@ -59,10 +50,8 @@ import BadgeQualificationRulesABI from './BadgeQualificationRules.json'
 import BridgeSecurityModuleABI from './BridgeSecurityModule.json'
 import DeployPhase3PeripheralsABI from './DeployPhase3Peripherals.json'
 import DevReserveVestingVaultABI from './DevReserveVestingVault.json'
-import EcosystemVaultLibABI from './EcosystemVaultLib.json'
 import LiquidityIncentivesABI from './LiquidityIncentives.json'
 import RevenueSplitterABI from './RevenueSplitter.json'
-import SeerAutonomousLibABI from './SeerAutonomousLib.json'
 import SeerWorkAttestationABI from './SeerWorkAttestation.json'
 import ServicePoolABI from './ServicePool.json'
 import VFIDEAccessControlABI from './VFIDEAccessControl.json'
@@ -75,16 +64,7 @@ import { logger } from '@/lib/logger';
 
 const KNOWN_EMPTY_ABIS = new Set([
   'DeployPhase3Peripherals',
-  'DeployPhase1',
-  'DeployPhase1Governance',
-  'DeployPhase1Infrastructure',
-  'DeployPhase1Token',
-  'DeployPhases3to6',
   'DevReserveVestingVault',
-  'EcosystemVaultLib',
-  'SeerAutonomousLib',
-  'Pools',
-  'VFIDETrust',
 ]);
 
 const abiWarningState = ((globalThis as typeof globalThis & {
@@ -125,7 +105,9 @@ function validateABI(abi: unknown, name: string): unknown[] {
 validateABI(VFIDETokenABI, 'VFIDEToken');
 validateABI(StablecoinRegistryABI, 'StablecoinRegistry');
 validateABI(VaultInfrastructureABI, 'VaultInfrastructure');
-validateABI(UserVaultLiteABI, 'UserVaultLite');
+// Legacy ABI alias: UserVault was removed in vault-only mode.
+// Keep exports mapped to CardBoundVault ABI for compile-time compatibility.
+const UserVaultABI = CardBoundVaultABI;
 validateABI(UserVaultABI, 'UserVault');
 validateABI(CardBoundVaultABI, 'CardBoundVault');
 validateABI(SeerABI, 'Seer');
@@ -133,17 +115,10 @@ validateABI(SeerAutonomousABI, 'SeerAutonomous');
 validateABI(VFIDEBadgeNFTABI, 'VFIDEBadgeNFT');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
-validateABI(GuardianRegistryABI, 'GuardianRegistry');
-validateABI(GuardianLockABI, 'GuardianLock');
-validateABI(PanicGuardABI, 'PanicGuard');
-validateABI(EmergencyBreakerABI, 'EmergencyBreaker');
-validateABI(MerchantRegistryABI, 'MerchantRegistry');
 validateABI(MerchantPortalABI, 'MerchantPortal');
 validateABI(ProofScoreBurnRouterABI, 'ProofScoreBurnRouter');
 validateABI(ProofLedgerABI, 'ProofLedger');
-validateABI(CommerceEscrowABI, 'CommerceEscrow');
 // Validate new ABIs
-validateABI(BurnRouterABI, 'BurnRouter');
 validateABI(DutyDistributorABI, 'DutyDistributor');
 validateABI(CouncilElectionABI, 'CouncilElection');
 validateABI(CouncilSalaryABI, 'CouncilSalary');
@@ -184,13 +159,9 @@ validateABI(DeployPhase3PeripheralsABI, 'DeployPhase3Peripherals');
 
 validateABI(DevReserveVestingVaultABI, 'DevReserveVestingVault');
 
-validateABI(EcosystemVaultLibABI, 'EcosystemVaultLib');
-
 validateABI(LiquidityIncentivesABI, 'LiquidityIncentives');
 
 validateABI(RevenueSplitterABI, 'RevenueSplitter');
-
-validateABI(SeerAutonomousLibABI, 'SeerAutonomousLib');
 
 validateABI(SeerWorkAttestationABI, 'SeerWorkAttestation');
 
@@ -213,7 +184,6 @@ export {
   StablecoinRegistryABI,
   VaultInfrastructureABI,
   VaultHubABI,
-  UserVaultLiteABI,
   UserVaultABI,
   CardBoundVaultABI,
   SeerABI,
@@ -221,17 +191,10 @@ export {
   VFIDEBadgeNFTABI,
   DAOABI,
   DAOTimelockABI,
-  GuardianRegistryABI,
-  GuardianLockABI,
-  PanicGuardABI,
-  EmergencyBreakerABI,
-  MerchantRegistryABI,
   MerchantPortalABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
-  CommerceEscrowABI,
   // New consolidated exports
-  BurnRouterABI,
   DutyDistributorABI,
   CouncilElectionABI,
   CouncilSalaryABI,
@@ -267,10 +230,8 @@ export {
   BridgeSecurityModuleABI,
   DeployPhase3PeripheralsABI,
   DevReserveVestingVaultABI,
-  EcosystemVaultLibABI,
   LiquidityIncentivesABI,
   RevenueSplitterABI,
-  SeerAutonomousLibABI,
   SeerWorkAttestationABI,
   ServicePoolABI,
   VFIDEAccessControlABI,

@@ -28,12 +28,12 @@ const settlementMessaging = (settlement: 'instant' | 'escrow') => {
   }
 
   return {
-    banner: 'Escrow protection enabled',
+    banner: 'Protected checkout mode',
     badge: 'ESCROW',
-    summary: 'Funds remain escrow-protected until the order is fulfilled or released.',
-    method: 'Escrow protected',
+    summary: 'Escrow contract is deprecated in v6; this route settles through MerchantPortal with guarded vault checks.',
+    method: 'Protected direct settlement',
     noticeTitle: 'Protected settlement path',
-    noticeText: 'Recommended for higher-trust purchases or deliveries that require a release step.',
+    noticeText: 'Use for checkout flows that require compatibility with legacy escrow links.',
   };
 };
 
@@ -221,13 +221,13 @@ export function PayContent() {
     setIsProcessing(true);
     try {
       if (settlement === 'escrow') {
-        showToast('Escrow-protected payment initiated - confirm in your wallet', 'info');
+        showToast('Protected checkout initiated (v6 direct settlement) - confirm in your wallet', 'info');
         await createEscrow(
           merchantAddress as `0x${string}`,
           requestedAmount,
           orderId
         );
-        showToast(`Escrow created successfully (${orderId})`, 'success');
+        showToast(`Protected payment submitted successfully (${orderId})`, 'success');
       } else {
         showToast('Instant settlement payment initiated - confirm in your wallet', 'info');
         await payMerchant(

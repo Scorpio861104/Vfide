@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
@@ -83,17 +83,14 @@ function normalizeAddress(value: string): string {
   return value.trim().toLowerCase();
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -161,9 +158,9 @@ export async function POST(request: NextRequest) {
     logger.error('[Group Invites POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
-}
+});
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting only - public endpoint to validate invite codes
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
@@ -213,12 +210,8 @@ export async function GET(request: NextRequest) {
       if (groupId === null) {
         return NextResponse.json({ error: 'Invalid groupId' }, { status: 400 });
       }
-
-      const authResult = await requireAuth(request);
-      if (authResult instanceof NextResponse) return authResult;
-
-      const authenticatedAddress = typeof authResult.user?.address === 'string'
-        ? normalizeAddress(authResult.user.address)
+      const authenticatedAddress = typeof user?.address === 'string'
+        ? normalizeAddress(user.address)
         : '';
       if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -259,23 +252,20 @@ export async function GET(request: NextRequest) {
     logger.error('[Group Invites GET] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
   }
-}
+});
 
 /**
  * PATCH /api/groups/invites
  * Update invite link (revoke, etc.)
  */
-export async function PATCH(request: NextRequest) {
+export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -357,23 +347,20 @@ export async function PATCH(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 /**
  * DELETE /api/groups/invites?code=xxx
  * Delete an invite link
  */
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
 
   // Authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? normalizeAddress(authResult.user.address)
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -439,4 +426,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

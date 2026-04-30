@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -353,17 +353,10 @@ function getContentType(format: string): string {
 
 // ==================== ROUTE HANDLER ====================
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting: 10 exports per hour
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
   let body: z.infer<typeof exportRequestSchema>;
   try {
     const rawBody = await request.json();
@@ -402,7 +395,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!authResult.user?.address || !isAddressLike(authResult.user.address)) {
+    if (!user?.address || !isAddressLike(user.address)) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -462,7 +455,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Validate address matches authenticated user
-    if (address !== normalizeAddress(authResult.user.address)) {
+    if (address !== normalizeAddress(user.address)) {
       return NextResponse.json(
         { error: 'You can only export your own transactions' },
         { status: 403 }
@@ -574,4 +567,4 @@ export async function POST(request: NextRequest) {
       error instanceof Error ? error.message : 'Failed to export transactions';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
-}
+});

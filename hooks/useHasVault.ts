@@ -2,10 +2,9 @@
 
 import { useAccount, useReadContract } from 'wagmi';
 import { useMemo } from 'react';
-import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
+import { VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { logger } from '@/lib/logger';
-
-const VAULT_HUB_ADDRESS = CONTRACT_ADDRESSES.VaultHub;
+import { useContractAddresses } from './useContractAddresses';
 
 /**
  * Hook to check if the connected user has a vault
@@ -13,10 +12,11 @@ const VAULT_HUB_ADDRESS = CONTRACT_ADDRESSES.VaultHub;
  */
 export function useHasVault() {
   const { address, isConnected } = useAccount();
-  const isAvailable = isConfiguredContractAddress(VAULT_HUB_ADDRESS);
+  const contractAddresses = useContractAddresses();
+  const isAvailable = isConfiguredContractAddress(contractAddresses.VaultHub);
 
   const { data: vaultAddress, isLoading, isError, error } = useReadContract({
-    address: VAULT_HUB_ADDRESS,
+    address: contractAddresses.VaultHub,
     abi: VAULT_HUB_ABI,
     functionName: 'vaultOf',
     args: address ? [address] : undefined,

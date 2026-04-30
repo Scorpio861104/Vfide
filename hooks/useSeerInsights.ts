@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useReadContract, usePublicClient } from 'wagmi';
 import { parseAbiItem } from 'viem';
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
+import { isConfiguredContractAddress } from '@/lib/contracts'
+import { useContractAddresses } from './useContractAddresses';
+import { ZERO_ADDRESS } from '@/lib/constants';
+import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
 import { SeerSocialABI } from '@/lib/abis';
 
 type TimelineEvent = {
@@ -90,6 +93,7 @@ function clampFromBlock(blockNumber: bigint): bigint {
 }
 
 export function useSeerTimeline(address?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient();
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -165,6 +169,7 @@ export function useSeerTimeline(address?: `0x${string}`) {
 }
 
 export function useSeerSystemStats(address?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient();
   const [stats, setStats] = useState<SeerSystemStats>({
     recentScoreUpdates: 0,
@@ -261,6 +266,7 @@ export function useSeerSystemStats(address?: `0x${string}`) {
 }
 
 export function useSeerReasonCodeTimeline(address?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const publicClient = usePublicClient();
   const [events, setEvents] = useState<SeerReasonCodeEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -276,7 +282,9 @@ export function useSeerReasonCodeTimeline(address?: `0x${string}`) {
       }
 
       const seerAutonomous = CONTRACT_ADDRESSES.SeerAutonomous;
-      const seerGuardian = CONTRACT_ADDRESSES.SeerGuardian;
+      const seerGuardian = isFutureFeaturesEnabled()
+        ? getFutureContractAddresses().SeerGuardian
+        : ZERO_ADDRESS;
 
       if (
         !isConfiguredContractAddress(seerAutonomous) &&

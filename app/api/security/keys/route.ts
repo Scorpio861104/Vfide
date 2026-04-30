@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { verifyMessage, isAddress } from 'viem';
 import {
@@ -70,16 +70,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authenticatedAddress = authResult.user.address.toLowerCase();
+  const authenticatedAddress = user.address.toLowerCase();
   const { ip: requesterIp } = getRequestIp(request.headers);
   const lock = await getAccountLock(authenticatedAddress);
   if (lock) {
@@ -170,4 +164,4 @@ export async function PUT(request: NextRequest) {
     logger.error('[Key Directory PUT] Error:', error);
     return NextResponse.json({ error: 'Failed to publish encryption key' }, { status: 500 });
   }
-}
+});

@@ -8,7 +8,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { usePublicClient, useAccount, useReadContract } from 'wagmi';
-import { CONTRACT_ADDRESSES, SeerABI, getContractConfigurationError, isConfiguredContractAddress } from '@/lib/contracts';
+import { SeerABI, getContractConfigurationError, isConfiguredContractAddress } from '@/lib/contracts'
+import { useContractAddresses } from './useContractAddresses';
 import { getScoreTier as _getScoreTier } from './useProofScore';
 import { parseAbiItem } from 'viem';
 import { safeGetJSON, safeSetJSON, safeRemoveItem } from '@/lib/storage';
@@ -90,6 +91,8 @@ function setCachedLeaderboard(entries: LeaderboardEntry[]): void {
 // ============================================================================
 
 export function useLeaderboard(limit: number = 50): LeaderboardState & {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   refetch: () => Promise<void>;
 } {
   const publicClient = usePublicClient();
@@ -265,6 +268,8 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & {
 // ============================================================================
 
 export function useUserRank() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const CONTRACT_ADDRESSES = useContractAddresses();
   const { address } = useAccount();
   const { entries, userRank, totalParticipants, isLoading } = useLeaderboard(100);
   

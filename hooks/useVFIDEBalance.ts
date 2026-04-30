@@ -1,11 +1,13 @@
 import { useReadContract } from 'wagmi'
-import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts'
+import { VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts'
+import { useContractAddresses } from './useContractAddresses'
 
 export function useVFIDEBalance(address?: `0x${string}`) {
-  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
+  const addresses = useContractAddresses();
+  const isAvailable = isConfiguredContractAddress(addresses.VFIDEToken)
 
   const { data, isError, isLoading } = useReadContract({
-    address: CONTRACT_ADDRESSES.VFIDEToken,
+    address: addresses.VFIDEToken,
     abi: VFIDETokenABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,

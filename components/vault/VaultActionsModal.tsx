@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowDownToLine, ArrowUpFromLine, RefreshCw, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract, useChainId, useSignTypedData } from 'wagmi';
 import { parseEther, formatEther, isAddress } from 'viem';
-import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
-import { VFIDETokenABI, UserVaultABI } from '@/lib/abis';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
+import { VFIDETokenABI } from '@/lib/abis';
 import { useVaultBalance } from '@/hooks/useVaultHooks';
 import { useToast } from '@/components/ui/toast';
 
@@ -24,7 +24,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
   const chainId = useChainId();
   const { signTypedDataAsync } = useSignTypedData();
   const { showToast } = useToast();
-  const cardBoundMode = isCardBoundVaultMode();
+  const cardBoundMode = true;
   const isTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
   const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress);
   const [amount, setAmount] = useState('');
@@ -98,11 +98,10 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
   }, [isPending, isConfirming, txSuccess, txError, writeError, showToast, actionType]);
 
   const getActionTitle = () => {
-    if (cardBoundMode && actionType === 'transfer') return 'CardBound Vault Transfer';
+    if (actionType === 'transfer') return 'CardBound Vault Transfer';
     switch (actionType) {
       case 'deposit': return 'Deposit to Vault';
       case 'withdraw': return 'Withdraw from Vault';
-      case 'transfer': return 'Transfer to Another Vault';
     }
   };
 
@@ -126,7 +125,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
   };
 
   const validateInput = (): boolean => {
-    if (cardBoundMode && (actionType === 'deposit' || actionType === 'withdraw')) {
+    if (actionType === 'deposit' || actionType === 'withdraw') {
       setErrorMessage('CardBound mode disables direct wallet deposit and withdrawal in this modal.');
       return false;
     }
@@ -138,16 +137,9 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
 
     const amountBigInt = parseEther(amount);
     
-    if (actionType === 'deposit') {
-      if (!walletBalance || amountBigInt > (walletBalance as bigint)) {
-        setErrorMessage('Insufficient wallet balance');
-        return false;
-      }
-    } else {
-      if (amountBigInt > vaultBalance) {
-        setErrorMessage('Insufficient vault balance');
-        return false;
-      }
+    if (amountBigInt > vaultBalance) {
+      setErrorMessage('Insufficient vault balance');
+      return false;
     }
 
     if (actionType === 'transfer' && !isAddress(recipientAddress)) {
@@ -175,7 +167,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
     const amountBigInt = parseEther(amount);
 
     try {
-      if (cardBoundMode && actionType === 'transfer') {
+      if (actionType === 'transfer') {
         if (transferNonce === undefined || walletEpoch === undefined) {
           setErrorMessage('Vault transfer state unavailable. Please retry.');
           setStep('error');
@@ -232,35 +224,10 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
             signature,
           ],
         });
-      } else if (actionType === 'deposit') {
-        if (!isTokenAvailable) {
-          setErrorMessage('VFIDE token contract is not configured');
-          setStep('error');
-          return;
-        }
-        // Transfer VFIDE from wallet to vault (standard ERC20 transfer)
-        writeContract({
-          address: CONTRACT_ADDRESSES.VFIDEToken,
-          abi: VFIDETokenABI,
-          functionName: 'transfer',
-          args: [vaultAddress, amountBigInt],
-        });
-      } else if (actionType === 'withdraw') {
-        // Transfer VFIDE from vault back to wallet using vault's transferVFIDE
-        writeContract({
-          address: vaultAddress,
-          abi: UserVaultABI,
-          functionName: 'transferVFIDE',
-          args: [address as `0x${string}`, amountBigInt],
-        });
-      } else if (actionType === 'transfer') {
-        // Transfer to another vault using vault's transferVFIDE
-        writeContract({
-          address: vaultAddress,
-          abi: UserVaultABI,
-          functionName: 'transferVFIDE',
-          args: [recipientAddress as `0x${string}`, amountBigInt],
-        });
+      } else {
+        setErrorMessage('Only vault-to-vault transfers are supported in CardBound mode.');
+        setStep('error');
+        return;
       }
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Transaction failed');
@@ -360,7 +327,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
                 </div>
               )}
 
-              {cardBoundMode && (actionType === 'deposit' || actionType === 'withdraw') && (
+              {(actionType === 'deposit' || actionType === 'withdraw') && (
                 <div className="flex items-center gap-2 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-300 text-sm">
                   <AlertCircle size={16} />
                   CardBound mode supports signed vault-to-vault transfer only.
@@ -370,7 +337,7 @@ export function VaultActionsModal({ isOpen, onClose, actionType, vaultAddress }:
               {/* Action Button */}
               <button
                 onClick={handleConfirm}
-                disabled={!amount || parseFloat(amount) <= 0 || (cardBoundMode && (actionType === 'deposit' || actionType === 'withdraw'))}
+                disabled={!amount || parseFloat(amount) <= 0 || (actionType === 'deposit' || actionType === 'withdraw')}
                 className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
                   actionType === 'deposit' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700' :
                   actionType === 'withdraw' ? 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700' :

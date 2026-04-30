@@ -79,14 +79,10 @@ function toUserSafeActionError(message: string): string {
   return 'Action failed validation.'
 }
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimited = await withRateLimit(request, 'write')
   if (rateLimited) return rateLimited
-
-  const authResult = await requireAuth(request)
-  if (authResult instanceof NextResponse) return authResult
-
-  const authAddress = normalizeAddress(authResult.user.address || '')
+  const authAddress = normalizeAddress(user.address || '')
   if (!ADDRESS_RE.test(authAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -166,4 +162,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error('[Flashloans POST action] Error:', error)
     return NextResponse.json({ error: 'Failed to apply action' }, { status: 500 })
   }
-}
+});
