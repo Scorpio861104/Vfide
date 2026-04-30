@@ -249,6 +249,17 @@ export async function optionalAuth(request: NextRequest): Promise<JWTPayload | n
 
 type AuthenticatedHandler<T = Promise<NextResponse>> = (request: NextRequest, user: JWTPayload) => T;
 
+type OwnershipExtractor<TCtx = unknown> = (
+  request: NextRequest,
+  context: TCtx
+) => string | Promise<string>;
+
+type OwnershipHandler<TCtx = unknown, T = Promise<NextResponse>> = (
+  request: NextRequest,
+  user: JWTPayload,
+  context: TCtx
+) => T;
+
 /**
  * Wrap an API handler and require authentication before invoking it.
  */
@@ -260,5 +271,44 @@ export function withAuth(handler: AuthenticatedHandler) {
     }
     const { runWithDbUserAddressContext } = await import('@/lib/db');
     return runWithDbUserAddressContext(authResult.user.address, () => handler(request, authResult.user));
+  };
+}
+
+/**
+ * Wrap an API handler and require ownership of a target address before invoking it.
+ * Supports route handlers that accept an additional context argument (e.g. params).
+ */
+export function withOwnership<TCtx = unknown>(
+  extractAddress: OwnershipExtractor<TCtx>,
+  handler: OwnershipHandler<TCtx>
+) {
+  return async (request: NextRequest, context: TCtx): Promise<NextResponse> => {
+    let targetAddress: string;
+    try {
+      const extracted = await extractAddress(request, context);
+      targetAddress = (extracted ?? '').trim().toLowerCase();
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid ownership target' },
+        { status: 400 }
+      );
+    }
+
+    if (!targetAddress) {
+      return NextResponse.json(
+        { error: 'Invalid ownership target' },
+        { status: 400 }
+      );
+    }
+
+    const authResult = await requireOwnership(request, targetAddress);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+
+    const { runWithDbUserAddressContext } = await import('@/lib/db');
+    return runWithDbUserAddressContext(authResult.user.address, () =>
+      handler(request, authResult.user, context)
+    );
   };
 }

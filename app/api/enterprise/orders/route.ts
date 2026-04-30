@@ -10,7 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAddress } from 'viem';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -21,11 +22,9 @@ const createOrderSchema = z.object({
   metadata: z.string().trim().max(1000).optional(),
 });
 
-async function resolveAddress(request: NextRequest): Promise<string | NextResponse> {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const addr = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+function resolveAddress(user: JWTPayload): string | NextResponse {
+  const addr = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!addr || !isAddress(addr)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -33,11 +32,11 @@ async function resolveAddress(request: NextRequest): Promise<string | NextRespon
   return addr;
 }
 
-async function postHandler(request: NextRequest): Promise<NextResponse> {
+async function postHandler(request: NextRequest, user: JWTPayload): Promise<NextResponse> {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const address = await resolveAddress(request);
+  const address = resolveAddress(user);
   if (address instanceof NextResponse) return address;
 
   let body: unknown;
@@ -81,11 +80,11 @@ async function postHandler(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-async function getHandler(request: NextRequest): Promise<NextResponse> {
+async function getHandler(request: NextRequest, user: JWTPayload): Promise<NextResponse> {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const address = await resolveAddress(request);
+  const address = resolveAddress(user);
   if (address instanceof NextResponse) return address;
 
   try {
@@ -112,4 +111,5 @@ async function getHandler(request: NextRequest): Promise<NextResponse> {
   }
 }
 
-export { postHandler as POST, getHandler as GET };
+export const POST = withAuth(postHandler);
+export const GET = withAuth(getHandler);

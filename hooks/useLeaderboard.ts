@@ -90,11 +90,8 @@ function setCachedLeaderboard(entries: LeaderboardEntry[]): void {
 // MAIN HOOK
 // ============================================================================
 
-export function useLeaderboard(limit: number = 50): LeaderboardState & {
+export function useLeaderboard(limit: number = 50): LeaderboardState & { refetch: () => Promise<void> } {
   const CONTRACT_ADDRESSES = useContractAddresses();
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  refetch: () => Promise<void>;
-} {
   const publicClient = usePublicClient();
   const { address: userAddress } = useAccount();
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
@@ -268,7 +265,6 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & {
 // ============================================================================
 
 export function useUserRank() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { address } = useAccount();
   const { entries, userRank, totalParticipants, isLoading } = useLeaderboard(100);

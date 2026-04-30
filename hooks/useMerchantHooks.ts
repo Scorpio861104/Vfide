@@ -52,7 +52,6 @@ export function useIsMerchant(address?: `0x${string}`) {
 
 export function useRegisterMerchant() {
   const CONTRACT_ADDRESSES = useContractAddresses();
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -109,7 +108,6 @@ export function useRegisterMerchant() {
  * Process payment from customer to merchant (merchant-initiated)
  */
 export function useProcessPayment() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
@@ -182,7 +180,6 @@ export function useProcessPayment() {
  */
 export function useSetMerchantPullPermit() {
   const CONTRACT_ADDRESSES = useContractAddresses();
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
@@ -246,7 +243,6 @@ export function useSetMerchantPullPermit() {
  * Pay merchant (customer-initiated)
  */
 export function usePayMerchant() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
@@ -352,7 +348,6 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
  */
 export function useSetAutoConvert() {
   const CONTRACT_ADDRESSES = useContractAddresses();
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const { writeContract, data, isPending } = useWriteContract()
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
   
@@ -383,7 +378,6 @@ export function useSetAutoConvert() {
  * Set custom payout address for merchant
  */
 export function useSetPayoutAddress() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { writeContract, data, isPending } = useWriteContract()
   const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)

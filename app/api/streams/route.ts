@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
-import { requireOwnership } from '@/lib/auth/middleware';
+import { withOwnership } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 
@@ -82,7 +82,7 @@ type StreamRow = {
   created_at: string;
 };
 
-export async function GET(request: NextRequest) {
+const getHandler = async (request: NextRequest) => {
   const rl = await withRateLimit(request, 'read');
   if (rl) return rl;
 
@@ -94,10 +94,6 @@ export async function GET(request: NextRequest) {
   }
 
   const normalized = address.trim().toLowerCase();
-  const authResult = await requireOwnership(request, normalized);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
 
   try {
     let rows: StreamRow[];
@@ -134,7 +130,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+const postHandler = async (request: NextRequest) => {
   const rl = await withRateLimit(request, 'write');
   if (rl) return rl;
 
@@ -152,11 +148,6 @@ export async function POST(request: NextRequest) {
 
   const { senderAddress, recipientAddress, token, totalAmount, ratePerSecond, startTime, endTime } = parsed.data;
   const normalized = senderAddress.trim().toLowerCase();
-
-  const authResult = await requireOwnership(request, normalized);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
 
   try {
     const result = await query<StreamRow>(
@@ -180,3 +171,27 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create stream' }, { status: 500 });
   }
 }
+
+export const GET = withOwnership(
+  (request) => request.nextUrl.searchParams.get('address') ?? '',
+  async (request) => getHandler(request)
+);
+
+export const POST = withOwnership(
+  async (request) => {
+    let body: unknown;
+    try {
+      body = await request.clone().json();
+    } catch {
+      return '';
+    }
+
+    const parsed = createStreamSchema.safeParse(body);
+    if (!parsed.success) {
+      return '';
+    }
+
+    return parsed.data.senderAddress;
+  },
+  async (request) => postHandler(request)
+);

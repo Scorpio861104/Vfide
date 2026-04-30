@@ -33,7 +33,7 @@
     },
     "baseUrl": "/workspaces/Vfide",
     "ignoreDeprecations": "6.0",
-    "tsBuildInfoFile": "/workspaces/Vfide/.typecheck-temp/shard-MncRAJ/app-01.tsbuildinfo"
+    "tsBuildInfoFile": "/workspaces/Vfide/.typecheck-temp/shard-oMrL90/app-01.tsbuildinfo"
   },
   "include": [
     "/workspaces/Vfide/next-env.d.ts",

@@ -9,7 +9,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -32,11 +33,9 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 100);
 }
 
-async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const address = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase() : '';
+function getAuthAddress(user: JWTPayload): string | NextResponse {
+  const address = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase() : '';
   if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -73,11 +72,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+const postHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = getAuthAddress(user);
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -118,11 +117,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+const patchHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = getAuthAddress(user);
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -169,11 +168,11 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+const deleteHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = getAuthAddress(user);
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -200,3 +199,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to delete category' }, { status: 500 });
   }
 }
+
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);
+export const DELETE = withAuth(deleteHandler);

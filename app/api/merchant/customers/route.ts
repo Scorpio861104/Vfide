@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -13,12 +14,9 @@ const updateCustomerNoteSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional().default([]),
 });
 
-async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const address = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+function getAuthAddress(user: JWTPayload): string | NextResponse {
+  const address = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
 
   if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
@@ -34,11 +32,11 @@ function computeProofScore(totalSpent: number, orderCount: number): number {
   return Math.round(spendScore + repeatScore);
 }
 
-export async function GET(request: NextRequest) {
+const getHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = getAuthAddress(user);
   if (authAddress instanceof NextResponse) return authAddress;
 
   const { searchParams } = new URL(request.url);
@@ -193,11 +191,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+const patchHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = getAuthAddress(user);
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -237,3 +235,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to save customer notes' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getHandler);
+export const PATCH = withAuth(patchHandler);

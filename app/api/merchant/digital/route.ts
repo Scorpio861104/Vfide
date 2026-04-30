@@ -9,7 +9,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -32,11 +33,8 @@ const fulfillDigitalDeliverySchema = z.object({
   product_id: z.number().int().positive(),
 });
 
-async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const address = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase() : '';
+function getAuthAddress(user: JWTPayload): string | NextResponse {
+  const address = typeof user?.address === 'string' ? user.address.trim().toLowerCase() : '';
   if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
@@ -44,7 +42,7 @@ async function getAuthAddress(request: NextRequest): Promise<string | NextRespon
 }
 
 // ─────────────────────────── GET: Retrieve download via token
-export async function GET(request: NextRequest) {
+const getHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -104,7 +102,7 @@ export async function GET(request: NextRequest) {
 
   // Merchant: view assets for a product
   if (assetView) {
-    const authAddress = await getAuthAddress(request);
+    const authAddress = getAuthAddress(user);
     if (authAddress instanceof NextResponse) return authAddress;
 
     try {
@@ -126,11 +124,11 @@ export async function GET(request: NextRequest) {
 }
 
 // ─────────────────────────── POST: Register digital asset
-export async function POST(request: NextRequest) {
+const postHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = getAuthAddress(user);
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -183,11 +181,11 @@ export async function POST(request: NextRequest) {
 }
 
 // ─────────────────────────── PATCH: Fulfill digital delivery (auto or manual)
-export async function PATCH(request: NextRequest) {
+const patchHandler = async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
+  const authAddress = getAuthAddress(user);
   if (authAddress instanceof NextResponse) return authAddress;
 
   try {
@@ -268,3 +266,15 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fulfill delivery' }, { status: 500 });
   }
 }
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const hasDownloadToken = typeof searchParams.get('token') === 'string';
+  if (hasDownloadToken) {
+    return getHandler(request, { address: '' } as JWTPayload);
+  }
+  return withAuth(getHandler)(request);
+}
+
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);

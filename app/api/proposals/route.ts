@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { withAuth, checkOwnership } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { createPublicClient, http, isAddress } from 'viem';
 import { logger } from '@/lib/logger';
@@ -317,19 +318,13 @@ export async function GET(request: NextRequest) {
  * - Rate limited
  * - Proposer must match authenticated user
  */
-export async function POST(request: NextRequest) {
+const postHandler = async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const authenticatedAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -358,7 +353,7 @@ export async function POST(request: NextRequest) {
     const { proposerAddress, title, description, endsAt } = body;
 
     // Verify user is creating proposal for themselves
-    if (!checkOwnership(authResult.user, proposerAddress)) {
+    if (!checkOwnership(user, proposerAddress)) {
       return NextResponse.json(
         { error: 'You can only create proposals for yourself' },
         { status: 403 }
@@ -425,6 +420,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withAuth(postHandler);
 
 /**
  * GET /api/proposals/:id

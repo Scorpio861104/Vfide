@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireOwnership } from '@/lib/auth/middleware';
+import { withOwnership } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { logger } from '@/lib/logger';
 
 const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -11,14 +12,23 @@ const ETH_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
  * Get portfolio analytics for a specific address (path-based wrapper)
  * Forwards to the query-based endpoint
  */
-export async function GET(
+type RouteContext = {
+  params: Promise<{ address: string }>;
+};
+
+async function extractOwnerAddress(
+  _request: NextRequest,
+  { params }: RouteContext
+): Promise<string> {
+  const { address } = await params;
+  return typeof address === 'string' ? address.trim().toLowerCase() : '';
+}
+
+const getHandler = async (
   request: NextRequest,
-  {
-    params,
-  }: {
-    params: Promise<{ address: string }>;
-  }
-) {
+  _user: JWTPayload,
+  { params }: RouteContext
+) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
@@ -40,9 +50,6 @@ export async function GET(
         { status: 400 }
       );
     }
-
-    const authResult = await requireOwnership(request, normalizedAddress);
-    if (authResult instanceof NextResponse) return authResult;
 
     // Query portfolio data for the address
     const result = await query(
@@ -74,3 +81,5 @@ export async function GET(
     );
   }
 }
+
+export const GET = withOwnership<RouteContext>(extractOwnerAddress, getHandler);
