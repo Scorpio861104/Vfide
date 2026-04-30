@@ -90,6 +90,7 @@ contract CardBoundVault is ReentrancyGuard {
         bool executed;
         bool cancelled;
         uint256 intentNonce; // Links back to the signed intent
+           bytes32 toVaultCodeHashAtQueue; // VAULT-01 FIX: snapshot to detect vault replacement
     }
 
     QueuedWithdrawal[] public withdrawalQueue;
@@ -238,6 +239,9 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_SeerBlocked();
     /// @notice C-7 FIX: Destination vault cannot receive transfer (unguarded and cap would be exceeded).
     error CBV_ReceiverNeedsGuardian();
+
+        /// @notice VAULT-01 FIX: Destination vault code has changed (replaced/self-destructed).
+        error CBV_ReceiverChanged();
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert CBV_NotAdmin();
@@ -746,6 +750,11 @@ contract CardBoundVault is ReentrancyGuard {
         _refreshDailyWindow();
         if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
 
+            // VAULT-01 FIX: Verify destination vault hasn't been replaced (e.g., self-destruct, CREATE2 reuse).
+            bytes32 currentCodeHash;
+            assembly { currentCodeHash := extcodehash(w.toVault) }
+            if (currentCodeHash != w.toVaultCodeHashAtQueue) revert CBV_ReceiverChanged();
+
         _enforceSeerAction(admin, 0, w.amount, w.toVault);
 
         w.executed = true;
@@ -867,6 +876,10 @@ contract CardBoundVault is ReentrancyGuard {
 
         uint64 executeAfter = uint64(block.timestamp) + uint64(WITHDRAWAL_DELAY);
 
+        // VAULT-01 FIX: snapshot the destination vault's code hash at queue time.
+        bytes32 codeHash;
+        assembly { codeHash := extcodehash(toVault) }
+
         withdrawalQueue.push(QueuedWithdrawal({
             toVault: toVault,
             amount: amount,
@@ -874,7 +887,8 @@ contract CardBoundVault is ReentrancyGuard {
             executeAfter: executeAfter,
             executed: false,
             cancelled: false,
-            intentNonce: intentNonce
+            intentNonce: intentNonce,
+            toVaultCodeHashAtQueue: codeHash
         }));
         activeQueuedWithdrawals += 1;
 
