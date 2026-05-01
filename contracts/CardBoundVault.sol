@@ -512,7 +512,9 @@ contract CardBoundVault is ReentrancyGuard {
         return addedAt != 0 && block.timestamp >= addedAt + GUARDIAN_MATURITY_PERIOD;
     }
 
-    /// @notice Approve a spender to pull VFIDE from this vault (e.g., MerchantPortal).
+    /// @notice Approve a spender to pull VFIDE from this vault (e.g., long-running integrations).
+    /// @dev This path is timelocked and NOT the real-time merchant payment flow.
+    ///      Merchant checkout uses signed PayIntent/EscrowIntent-style execution.
     // slither-disable-next-line reentrancy-events
     function approveVFIDE(address spender, uint256 amount) external onlyAdmin whenNotPaused {
         require(spender != address(0), "CBV: zero spender");
@@ -523,7 +525,8 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     /// @notice F-6 FIX: Approve a spender to pull any ERC20 from this vault.
-    /// @dev Required for stablecoin payments through MerchantPortal.
+    /// @dev Timelocked helper for explicit long-lived approvals.
+    ///      Not intended for real-time merchant checkout flows.
     ///      Cannot approve VFIDE — use approveVFIDE for that.
     event ERC20Approve(address indexed token, address indexed spender, uint256 amount);
 

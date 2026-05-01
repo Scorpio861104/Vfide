@@ -1,8 +1,8 @@
 /**
- * useEscrow - v6 compatibility shim
+ * useEscrow - legacy-name compatibility shim
  *
- * CommerceEscrow was removed in v6. This hook preserves the previous API
- * surface for call sites while routing createEscrow through MerchantPortal pay.
+ * The legacy CommerceEscrow contract was removed in v6. This hook keeps
+ * the existing API surface for call sites while routing to current payment flows.
  */
 
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId, useSignTypedData } from 'wagmi';
@@ -304,7 +304,7 @@ export function useEscrow() {
 
     try {
       void id;
-      throw new Error('Timeout claim is not supported by CommerceEscrow. Use release, refund, or dispute resolution.');
+      throw new Error('Timeout claim is not supported by the current escrow shim. Use release, refund, or dispute resolution.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to claim timeout');
       throw err;
@@ -354,7 +354,7 @@ export function useEscrow() {
     try {
       void id;
       void buyerShareBps;
-      throw new Error('Partial dispute resolution is not supported by CommerceEscrow.');
+      throw new Error('Partial dispute resolution is not supported by the current escrow shim.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to resolve dispute with split payout');
       throw err;
@@ -370,7 +370,7 @@ export function useEscrow() {
 
     try {
       void id;
-      throw new Error('Timeout notifications are not supported by CommerceEscrow.');
+      throw new Error('Timeout notifications are not supported by the current escrow shim.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to notify timeout');
       throw err;

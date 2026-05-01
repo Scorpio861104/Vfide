@@ -16,6 +16,17 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
+function isEnterpriseEnabled(): boolean {
+  return process.env.ENTERPRISE_ENABLED === 'true';
+}
+
+function enterpriseDisabledResponse(): NextResponse {
+  return NextResponse.json(
+    { error: 'Enterprise API is disabled in this environment' },
+    { status: 503 },
+  );
+}
+
 const createOrderSchema = z.object({
   orderId: z.string().trim().min(1).max(100),
   amount: z.coerce.number().positive().finite(),
@@ -33,6 +44,10 @@ function resolveAddress(user: JWTPayload): string | NextResponse {
 }
 
 async function postHandler(request: NextRequest, user: JWTPayload): Promise<NextResponse> {
+  if (!isEnterpriseEnabled()) {
+    return enterpriseDisabledResponse();
+  }
+
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -81,6 +96,10 @@ async function postHandler(request: NextRequest, user: JWTPayload): Promise<Next
 }
 
 async function getHandler(request: NextRequest, user: JWTPayload): Promise<NextResponse> {
+  if (!isEnterpriseEnabled()) {
+    return enterpriseDisabledResponse();
+  }
+
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
