@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { SEED_CANDIDATES } from '@/lib/data/seed';
-import { CouncilElectionABI, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
+import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
+import { CouncilElectionABI } from '@/lib/abis/future';
 import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
 
 interface Candidate {

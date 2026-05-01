@@ -281,10 +281,9 @@ export function useSeerReasonCodeTimeline(address?: `0x${string}`) {
         return;
       }
 
-      const seerAutonomous = CONTRACT_ADDRESSES.SeerAutonomous;
-      const seerGuardian = isFutureFeaturesEnabled()
-        ? getFutureContractAddresses().SeerGuardian
-        : ZERO_ADDRESS;
+      const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null;
+      const seerAutonomous = futureContracts?.SeerAutonomous ?? ZERO_ADDRESS;
+      const seerGuardian = futureContracts?.SeerGuardian ?? ZERO_ADDRESS;
 
       if (
         !isConfiguredContractAddress(seerAutonomous) &&

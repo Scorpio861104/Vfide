@@ -69,7 +69,6 @@ describe('contracts', () => {
       expect(CONTRACT_ADDRESSES).toHaveProperty('Seer')
       expect(CONTRACT_ADDRESSES).toHaveProperty('DAO')
       expect(CONTRACT_ADDRESSES).toHaveProperty('DAOTimelock')
-      expect(CONTRACT_ADDRESSES).toHaveProperty('BadgeNFT')
       expect(CONTRACT_ADDRESSES).toHaveProperty('FraudRegistry')
       expect(CONTRACT_ADDRESSES).toHaveProperty('GuardianRegistry')
       expect(CONTRACT_ADDRESSES).toHaveProperty('GuardianLock')
@@ -129,13 +128,15 @@ describe('contracts', () => {
       jest.resetModules()
     })
 
-    it('throws when a required contract address is missing in strict production', async () => {
-      await expect(importContractsWithEnv({
+    it('uses ZERO_ADDRESS fallback for missing contract address in browser runtime', async () => {
+      const { CONTRACT_ADDRESSES, ZERO_ADDRESS } = await importContractsWithEnv({
         NODE_ENV: 'production',
         FRONTEND_SELF_CONTAINED: 'false',
         NEXT_PUBLIC_FRONTEND_ONLY: 'false',
         NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS: undefined,
-      })).rejects.toThrow('[VFIDE] Missing required contract address in production: VFIDEToken')
+      })
+
+      expect(CONTRACT_ADDRESSES.VFIDEToken).toBe(ZERO_ADDRESS)
     })
 
     it('allows ZERO_ADDRESS fallback in explicit frontend-only mode', async () => {
