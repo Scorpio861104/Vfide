@@ -6,7 +6,6 @@ cd "$(dirname "$0")/.."
 KNOWN_ORPHAN_ABIS=(
   DevReserveVesting
   ERC20
-  VFIDEReentrancyGuard
 )
 
 contracts=$(
