@@ -12,7 +12,6 @@ jest.mock('wagmi', () => ({
 jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: {
     Seer: '0x1234567890123456789012345678901234567890',
-    BadgeNFT: '0x1234567890123456789012345678901234567891',
   },
   isConfiguredContractAddress: (address?: string | null) =>
     typeof address === 'string' &&
@@ -21,10 +20,16 @@ jest.mock('@/lib/contracts', () => ({
     address.length === 42,
 }))
 
+jest.mock('@/lib/contracts/future-contracts', () => ({
+  getFutureContractAddresses: jest.fn(() => ({
+    BadgeNFT: '0x1234567890123456789012345678901234567891',
+  })),
+  isFutureFeaturesEnabled: jest.fn(() => true),
+}))
+
 // Mock ABIs
-jest.mock('@/lib/abis', () => ({
+jest.mock('@/lib/abis/future', () => ({
   VFIDEBadgeNFTABI: [],
-  SeerABI: [],
 }))
 
 import { useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
@@ -33,6 +38,15 @@ import { useUserBadges, useBadgeNFTs, useMintBadge, useCanMintBadge } from '@/ho
 describe('useBadgeHooks', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    const futureContracts = jest.requireMock('@/lib/contracts/future-contracts') as {
+      getFutureContractAddresses: jest.Mock
+      isFutureFeaturesEnabled: jest.Mock
+    }
+
+    futureContracts.getFutureContractAddresses.mockReturnValue({
+      BadgeNFT: '0x1234567890123456789012345678901234567891',
+    })
+    futureContracts.isFutureFeaturesEnabled.mockReturnValue(true)
     // Reset all mocks to default values
     jest.mocked(useReadContract).mockReturnValue({
       data: null,
@@ -129,10 +143,12 @@ describe('useBadgeHooks', () => {
     })
 
     it('does not write when BadgeNFT is not configured', () => {
-      const contracts = jest.requireMock('@/lib/contracts') as {
-        CONTRACT_ADDRESSES: { BadgeNFT: string }
+      const futureContracts = jest.requireMock('@/lib/contracts/future-contracts') as {
+        getFutureContractAddresses: jest.Mock
       }
-      contracts.CONTRACT_ADDRESSES.BadgeNFT = '0x0000000000000000000000000000000000000000'
+      futureContracts.getFutureContractAddresses.mockReturnValue({
+        BadgeNFT: '0x0000000000000000000000000000000000000000',
+      })
 
       const mockWriteContract = jest.fn()
       jest.mocked(useWriteContract).mockReturnValue({
@@ -220,10 +236,12 @@ describe('useBadgeHooks', () => {
     })
 
     it('reports unavailable when BadgeNFT is not configured', () => {
-      const contracts = jest.requireMock('@/lib/contracts') as {
-        CONTRACT_ADDRESSES: { BadgeNFT: string }
+      const futureContracts = jest.requireMock('@/lib/contracts/future-contracts') as {
+        getFutureContractAddresses: jest.Mock
       }
-      contracts.CONTRACT_ADDRESSES.BadgeNFT = '0x0000000000000000000000000000000000000000'
+      futureContracts.getFutureContractAddresses.mockReturnValue({
+        BadgeNFT: '0x0000000000000000000000000000000000000000',
+      })
 
       const { isAvailable } = useCanMintBadge('0xbadge123456789012345678901234567890123456789012345678901234567890' as `0x${string}`)
       expect(isAvailable).toBe(false)

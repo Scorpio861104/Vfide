@@ -43,6 +43,12 @@ import {
   VFIDETermLoanABI,
   VFIDEFlashLoanABI,
 } from './abis'
+import {
+  VFIDEBadgeNFTABI,
+  CouncilElectionABI,
+  CouncilSalaryABI,
+  SubscriptionManagerABI,
+} from './abis/future'
 import { logger } from '@/lib/logger';
 
 export { ZERO_ADDRESS }

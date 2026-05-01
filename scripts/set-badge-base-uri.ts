@@ -1,6 +1,6 @@
 import { createPublicClient, createWalletClient, encodeFunctionData, http } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { VFIDEBadgeNFTABI } from '../lib/abis'
+import { VFIDEBadgeNFTABI } from '../lib/abis/future'
 
 type Address = `0x${string}`
 

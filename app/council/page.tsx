@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
-import { CouncilElectionABI } from "@/lib/abis";
+import { CouncilElectionABI } from "@/lib/abis/future";
 import { ZERO_ADDRESS } from "@/lib/contracts";
 import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";

@@ -15,7 +15,8 @@ import { useAccount, usePublicClient } from "wagmi";
 import { isAddress, keccak256, stringToHex, zeroAddress } from "viem";
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts";
 import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
-import { SeerABI, VFIDEBadgeNFTABI, VaultRegistryABI } from "@/lib/abis";
+import { SeerABI, VaultRegistryABI } from "@/lib/abis";
+import { VFIDEBadgeNFTABI } from "@/lib/abis/future";
 
 import { AuroraBackground, FloatingParticles, VaultKeyVisualization, GlassCard } from "./components/VisualEffects";
 import { SearchMethodButton, SearchResultCard } from "./components/SearchComponents";

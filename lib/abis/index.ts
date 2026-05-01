@@ -7,8 +7,6 @@ import VaultInfrastructureABI from './VaultInfrastructure.json'
 import VaultHubFullRaw from './VaultHub.json'
 import CardBoundVaultABI from './CardBoundVault.json'
 import SeerRaw from './Seer.json'
-import SeerAutonomousABI from './SeerAutonomous.json'
-import VFIDEBadgeNFTABI from './VFIDEBadgeNFT.json'
 import DAOABI from './DAO.json'
 import DAOTimelockABI from './DAOTimelock.json'
 import MerchantPortalABI from './MerchantPortal.json'
@@ -16,9 +14,6 @@ import ProofScoreBurnRouterABI from './ProofScoreBurnRouter.json'
 import ProofLedgerABI from './ProofLedger.json'
 // New consolidated ABIs
 import DutyDistributorABI from './DutyDistributor.json'
-import CouncilElectionABI from './CouncilElection.json'
-import CouncilSalaryABI from './CouncilSalary.json'
-import SubscriptionManagerABI from './SubscriptionManager.json'
 import SanctumVaultABI from './SanctumVault.json'
 import DevReserveVestingABI from './DevReserveVesting.json'
 import PayrollManagerABI from './PayrollManager.json'
@@ -45,7 +40,6 @@ import BadgeRegistryABI from './BadgeRegistry.json'
 import SeerGuardianABI from './SeerGuardian.json'
 import SeerPolicyGuardABI from './SeerPolicyGuard.json'
 import MainstreamPaymentsABI from './MainstreamPayments.json'
-import VFIDECommerceABI from './VFIDECommerce.json'
 import BadgeQualificationRulesABI from './BadgeQualificationRules.json'
 import BridgeSecurityModuleABI from './BridgeSecurityModule.json'
 import DeployPhase3PeripheralsABI from './DeployPhase3Peripherals.json'
@@ -111,8 +105,6 @@ const UserVaultABI = CardBoundVaultABI;
 validateABI(UserVaultABI, 'UserVault');
 validateABI(CardBoundVaultABI, 'CardBoundVault');
 validateABI(SeerABI, 'Seer');
-validateABI(SeerAutonomousABI, 'SeerAutonomous');
-validateABI(VFIDEBadgeNFTABI, 'VFIDEBadgeNFT');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
 validateABI(MerchantPortalABI, 'MerchantPortal');
@@ -120,9 +112,6 @@ validateABI(ProofScoreBurnRouterABI, 'ProofScoreBurnRouter');
 validateABI(ProofLedgerABI, 'ProofLedger');
 // Validate new ABIs
 validateABI(DutyDistributorABI, 'DutyDistributor');
-validateABI(CouncilElectionABI, 'CouncilElection');
-validateABI(CouncilSalaryABI, 'CouncilSalary');
-validateABI(SubscriptionManagerABI, 'SubscriptionManager');
 validateABI(SanctumVaultABI, 'SanctumVault');
 validateABI(DevReserveVestingABI, 'DevReserveVesting');
 validateABI(PayrollManagerABI, 'PayrollManager');
@@ -149,7 +138,6 @@ validateABI(BadgeRegistryABI, 'BadgeRegistry');
 validateABI(SeerGuardianABI, 'SeerGuardian');
 validateABI(SeerPolicyGuardABI, 'SeerPolicyGuard');
 validateABI(MainstreamPaymentsABI, 'MainstreamPayments');
-validateABI(VFIDECommerceABI, 'VFIDECommerce');
 
 validateABI(BadgeQualificationRulesABI, 'BadgeQualificationRules');
 
@@ -187,8 +175,6 @@ export {
   UserVaultABI,
   CardBoundVaultABI,
   SeerABI,
-  SeerAutonomousABI,
-  VFIDEBadgeNFTABI,
   DAOABI,
   DAOTimelockABI,
   MerchantPortalABI,
@@ -196,9 +182,6 @@ export {
   ProofLedgerABI,
   // New consolidated exports
   DutyDistributorABI,
-  CouncilElectionABI,
-  CouncilSalaryABI,
-  SubscriptionManagerABI,
   SanctumVaultABI,
   DevReserveVestingABI,
   PayrollManagerABI,
@@ -225,7 +208,6 @@ export {
   SeerGuardianABI,
   SeerPolicyGuardABI,
   MainstreamPaymentsABI,
-  VFIDECommerceABI,
   BadgeQualificationRulesABI,
   BridgeSecurityModuleABI,
   DeployPhase3PeripheralsABI,

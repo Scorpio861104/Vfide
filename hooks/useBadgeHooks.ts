@@ -3,7 +3,7 @@
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '../lib/contracts'
 import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts'
-import { VFIDEBadgeNFTABI } from '../lib/abis'
+import { VFIDEBadgeNFTABI } from '@/lib/abis/future'
 
 // ============================================
 // BADGE HOOKS - Badge system integration

@@ -5,7 +5,7 @@ import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicCl
 import { parseUnits, maxUint256 } from 'viem';
 import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
-import { SubscriptionManagerABI } from '@/lib/abis';
+import { SubscriptionManagerABI } from '@/lib/abis/future';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Check, Sparkles, Crown, Zap, Star } from 'lucide-react';
