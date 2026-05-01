@@ -39,7 +39,6 @@ export const CONTRACT_ADDRESSES = {
   EcosystemVault: addr(28),
   EcosystemVaultView: addr(29),
   VaultRegistry: addr(30),
-  CommerceEscrow: addr(31),
   FraudRegistry: addr(32),
   VFIDETestnetFaucet: addr(33),
   ProofLedger: addr(34),

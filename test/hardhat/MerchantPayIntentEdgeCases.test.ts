@@ -2,6 +2,9 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "hardhat";
 
+// NOTE: This suite uses node:test, not Hardhat's built-in test runner.
+// Run with: NODE_OPTIONS='--import tsx' node --test test/hardhat/MerchantPayIntentEdgeCases.test.ts
+
 let connectionPromise: Promise<any> | null = null;
 
 async function getConnection() {
