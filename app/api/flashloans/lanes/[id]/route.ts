@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/middleware'
+import { requireAuth, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit'
 import { getLaneById, getLaneEvents } from '@/lib/flashloans/repository'
 import { logger } from '@/lib/logger';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 
@@ -28,7 +29,7 @@ function canAccessLane(authAddress: string, lane: {
   )
 }
 
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimited = await withRateLimit(request, 'read')
   if (rateLimited) return rateLimited
   const authAddress = normalizeAddress(user.address || '')
@@ -36,8 +37,8 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const resolved = await params
-  const laneId = parseLaneId(resolved.id)
+  const resolved = await context!.params
+  const laneId = parseLaneId(resolved.id ?? '')
   if (!laneId) {
     return NextResponse.json({ error: 'Invalid lane id' }, { status: 400 })
   }

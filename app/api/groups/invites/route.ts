@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
+import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';

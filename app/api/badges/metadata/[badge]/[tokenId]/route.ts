@@ -20,7 +20,7 @@ export async function GET(
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { badge, tokenId } = await context.params
+  const { badge, tokenId } = await context!.params
 
   const badgeMeta = getBadgeByPath(badge)
   if (!badgeMeta) {

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { isAdmin, requireAuth } from '@/lib/auth/middleware';
+import { isAdmin, requireAuth, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const VALID_ONBOARDING_STEPS = new Set([
   'connectWallet',

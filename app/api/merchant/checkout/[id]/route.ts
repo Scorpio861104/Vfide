@@ -1,3 +1,4 @@
+import type { JWTPayload } from '@/lib/auth/jwt';
 /**
  * Hosted Checkout API
  * 
@@ -6,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -99,11 +101,11 @@ export async function GET(
 }
 
 // ─────────────────────────── PATCH: Status updates
-export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const { id: paymentLinkId } = await params;
+  const { id: paymentLinkId } = await context!.params;
 
   if (!paymentLinkId || paymentLinkId.length > 40) {
     return NextResponse.json({ error: 'Invalid payment link' }, { status: 400 });

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/middleware'
+import { requireAuth, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit'
 import { createLane, listLanesForAddress } from '@/lib/flashloans/repository'
 import { sanitizeTerms, validateSimulationState, type LoanSimulationState, type LoanTerms } from '@/lib/flashloans/engine'
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 

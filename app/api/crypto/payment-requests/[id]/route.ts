@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
+import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
@@ -67,7 +69,7 @@ async function verifyOwnership(
   return { userId };
 }
 
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -77,7 +79,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   }
 
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const id =
       typeof resolvedParams?.id === 'string'
         ? parsePositiveInteger(resolvedParams.id.trim())
@@ -110,7 +112,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   }
 });
 
-export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const PUT = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
   if (!user?.address || !isAddressLike(user.address)) {
@@ -131,7 +133,7 @@ export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
   }
 
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const id =
       typeof resolvedParams?.id === 'string'
         ? parsePositiveInteger(resolvedParams.id.trim())
@@ -169,7 +171,7 @@ export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
   }
 });
 
-export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
   if (!user?.address || !isAddressLike(user.address)) {
@@ -190,7 +192,7 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => 
   }
 
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const id =
       typeof resolvedParams?.id === 'string'
         ? parsePositiveInteger(resolvedParams.id.trim())

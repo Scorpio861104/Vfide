@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { requireAdmin } from '@/lib/auth/middleware';
+import { requireAdmin, withAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const MAX_ERROR_LOG_LIMIT = 200;
 const DEFAULT_ERROR_LOG_LIMIT = 100;

@@ -42,6 +42,11 @@
   },
   {
     "inputs": [],
+    "name": "SOCIAL_PolicyGuardNotSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "SOCIAL_Zero",
     "type": "error"
   },
@@ -93,6 +98,56 @@
     "anonymous": false,
     "inputs": [],
     "name": "EndorsementPolicySet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "endorser",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "weight",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "EndorsementRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "endorser",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "endorsementsCleaned",
+        "type": "uint256"
+      }
+    ],
+    "name": "EndorserPruned",
     "type": "event"
   },
   {
@@ -176,6 +231,19 @@
       }
     ],
     "name": "MentorRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newPolicyGuard",
+        "type": "address"
+      }
+    ],
+    "name": "PolicyGuardSet",
     "type": "event"
   },
   {
@@ -366,6 +434,44 @@
     "name": "becomeMentor",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "cachedEndorsementBonus",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "cachedEndorsementExpiry",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -825,6 +931,30 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "hasEndorsed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "name": "lastActivity",
@@ -1013,6 +1143,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "policyGuard",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1035,6 +1178,19 @@
     ],
     "name": "pruneEndorsements",
     "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pruneOwnEndorsements",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "cleaned",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1106,6 +1262,24 @@
       }
     ],
     "name": "resolveScoreDispute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "revokeEndorsement",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1237,6 +1411,19 @@
       }
     ],
     "name": "setMentorConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_policyGuard",
+        "type": "address"
+      }
+    ],
+    "name": "setPolicyGuard",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -184,12 +186,12 @@ export async function GET(
  * PUT /api/users/:address
  * Update user profile
  */
-export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const PUT = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   // Rate limiting for write operations
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const address = resolvedParams?.address;
     const authenticatedAddress = typeof user?.address === 'string'
       ? normalizeAddress(user.address)
@@ -321,12 +323,12 @@ export const PUT = withAuth(async (request: NextRequest, user: JWTPayload) => {
  * POST /api/users/:address/avatar
  * Upload user avatar
  */
-export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   // Rate limiting for upload operations
   const rateLimitResponse = await withRateLimit(request, 'upload');
   if (rateLimitResponse) return rateLimitResponse;
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const address = resolvedParams?.address;
     const authenticatedAddress = typeof user?.address === 'string'
       ? normalizeAddress(user.address)

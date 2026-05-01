@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { runWithDbUserAddressContext } from '@/lib/db';
@@ -58,7 +60,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   }
 
   try {
-    const [user, merchant, loans] = await runWithDbUserAddressContext(user.address, () => Promise.all([
+    const [userRow, merchant, loans] = await runWithDbUserAddressContext(user.address, () => Promise.all([
       query('SELECT proof_score, badges FROM users WHERE wallet_address = $1', [address.toLowerCase()]),
       query('SELECT id FROM merchants WHERE owner_address = $1 AND active = true', [address.toLowerCase()]),
       query('SELECT COUNT(*) as count FROM loans WHERE borrower_address = $1 AND status = $2', [address.toLowerCase(), 'active']),
@@ -66,9 +68,9 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
 
     return NextResponse.json({
       address,
-      proofScore: Number(user.rows[0]?.proof_score || 5000),
+      proofScore: Number(userRow.rows[0]?.proof_score || 5000),
       isMerchant: (merchant.rows?.length || 0) > 0,
-      badges: user.rows[0]?.badges || [],
+      badges: userRow.rows[0]?.badges || [],
       activeLoanCount: Number(loans.rows[0]?.count || 0),
       unresolvedDefaults: 0,
     });

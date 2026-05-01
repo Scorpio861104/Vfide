@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { isAdmin } from '@/lib/auth/middleware';
+import { isAdmin, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const STREAK_TYPE_REGEX = /^[a-z_]{1,32}$/;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;

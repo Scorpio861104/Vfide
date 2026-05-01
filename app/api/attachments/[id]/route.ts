@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
+import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
@@ -17,7 +19,7 @@ function parsePositiveInteger(value: string): number | null {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
@@ -29,7 +31,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   }
 
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const parsedParams = attachmentParamsSchema.safeParse(resolvedParams ?? {});
     if (!parsedParams.success) {
       return NextResponse.json(
@@ -66,7 +68,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
   }
 });
 
-export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'write');
   if (rateLimit) return rateLimit;
@@ -78,7 +80,7 @@ export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) =>
   }
 
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const parsedParams = attachmentParamsSchema.safeParse(resolvedParams ?? {});
     if (!parsedParams.success) {
       return NextResponse.json(

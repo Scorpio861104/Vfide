@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { isAdmin } from '@/lib/auth/middleware';
+import { isAdmin, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const MILESTONE_KEY_REGEX = /^[a-z0-9_:-]{1,64}$/;
 const MAX_PROGRESS_VALUE = 1000000000;

@@ -1,3 +1,4 @@
+import type { JWTPayload } from '@/lib/auth/jwt';
 /**
  * Referral Link API
  *
@@ -6,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 import { isAddress } from 'viem';

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit } from '@/lib/auth/rateLimit';
-import { isAdmin } from '@/lib/auth/middleware';
+import { isAdmin, withAuth } from '@/lib/auth/middleware';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const EVENT_TYPES = ['missing', 'invalid', 'expired'] as const;
 const SOURCE_TYPES = ['qr', 'checkout', 'unknown'] as const;

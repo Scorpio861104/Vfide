@@ -32,6 +32,11 @@
   },
   {
     "inputs": [],
+    "name": "SM_FraudBlocked",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "SM_GracePeriodExpired",
     "type": "error"
   },
@@ -152,6 +157,19 @@
       }
     ],
     "name": "EmergencyCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "fraudRegistry",
+        "type": "address"
+      }
+    ],
+    "name": "FraudRegistrySet",
     "type": "event"
   },
   {
@@ -612,6 +630,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "fraudRegistry",
+    "outputs": [
+      {
+        "internalType": "contract IFraudRegistry_SM",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1060,6 +1091,19 @@
       }
     ],
     "name": "setEmergencyBreaker",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_fraudRegistry",
+        "type": "address"
+      }
+    ],
+    "name": "setFraudRegistry",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

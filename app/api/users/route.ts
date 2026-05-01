@@ -1,7 +1,9 @@
+import type { JWTPayload } from '@/lib/auth/jwt';
 // User API - REAL Database Implementation
 // NO MOCKS - All data from PostgreSQL
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
@@ -234,7 +236,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
       [wallet_address]
     );
 
-    let user: User;
+    let userRecord: User;
 
     if (existingUser.rows.length > 0) {
       // Update existing user
@@ -266,7 +268,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
           githubValue,
         ]
       );
-      user = updateResult.rows[0]!;
+      userRecord = updateResult.rows[0]!;
     } else {
       // Create new user
       const insertResult = await query<User>(
@@ -286,10 +288,10 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
           githubValue,
         ]
       );
-      user = insertResult.rows[0]!;
+      userRecord = insertResult.rows[0]!;
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({ user: userRecord });
   } catch (error: unknown) {
     logger.error('Error creating/updating user:', error);
     return NextResponse.json(

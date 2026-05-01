@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
+import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
@@ -14,7 +16,7 @@ function isAddressLike(value: string): boolean {
   return ADDRESS_PATTERN.test(value);
 }
 
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   // Rate limiting
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
@@ -25,7 +27,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const userId = resolvedParams?.userId;
 
     if (!userId || typeof userId !== 'string') {

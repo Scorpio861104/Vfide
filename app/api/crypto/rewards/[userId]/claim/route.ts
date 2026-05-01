@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
+import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
@@ -43,13 +45,13 @@ async function verifyRewardOnChain(
   // return { status: 'verified', eligible: Boolean(eligible) };
 }
 
-export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   // Rate limiting - strict for claims
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const resolvedParams = await params;
+    const resolvedParams = await context!.params;
     const userId = resolvedParams?.userId;
 
     if (!userId || typeof userId !== 'string') {

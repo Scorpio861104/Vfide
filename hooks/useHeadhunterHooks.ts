@@ -163,6 +163,10 @@ export function useHeadhunterReward(year: bigint, quarter: bigint): HeadhunterRe
  * Get pending referral info for an address
  */
 export function usePendingReferral(referred: `0x${string}` | undefined): PendingReferral {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
+  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
+  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
+
   const { data, isLoading, error } = useReadContract({
     address: ECOSYSTEM_VAULT_VIEW_ADDRESS,
     abi: EcosystemVaultViewABI,
@@ -552,8 +556,10 @@ export function useDepositStablecoinReserve() {
  * Read the current stablecoin reserve balance for a given token.
  */
 export function useStablecoinReserveBalance(stablecoin: `0x${string}` | undefined) {
+  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_ } = useContractAddresses();
+
   return useReadContract({
-    address: ECOSYSTEM_VAULT_ADDRESS,
+    address: ECOSYSTEM_VAULT_ADDRESS_,
     abi: EcosystemVaultABI,
     functionName: 'stablecoinReserves',
     args: stablecoin ? [stablecoin] : undefined,

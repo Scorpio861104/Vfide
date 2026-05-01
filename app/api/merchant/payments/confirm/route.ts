@@ -1,3 +1,4 @@
+import type { JWTPayload } from '@/lib/auth/jwt';
 /**
  * Merchant Payment Confirmation API
  * 
@@ -6,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem } from 'viem';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
@@ -224,7 +226,7 @@ async function verifyPaymentEventOnChain(params: {
   return { ok: false, error: 'Transaction receipt does not contain a matching payment event' };
 }
 
-export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
   const authAddress = typeof user?.address === 'string'

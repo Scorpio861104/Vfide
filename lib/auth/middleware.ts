@@ -247,7 +247,11 @@ export async function optionalAuth(request: NextRequest): Promise<JWTPayload | n
   return result.user;
 }
 
-type AuthenticatedHandler<T = Promise<NextResponse>> = (request: NextRequest, user: JWTPayload) => T;
+type AuthenticatedHandler<TCtx = unknown, T = Promise<Response>> = (
+  request: NextRequest,
+  user: JWTPayload,
+  context?: TCtx
+) => T;
 
 type OwnershipExtractor<TCtx = unknown> = (
   request: NextRequest,
@@ -263,14 +267,14 @@ type OwnershipHandler<TCtx = unknown, T = Promise<NextResponse>> = (
 /**
  * Wrap an API handler and require authentication before invoking it.
  */
-export function withAuth(handler: AuthenticatedHandler) {
-  return async (request: NextRequest): Promise<NextResponse> => {
+export function withAuth<TCtx = unknown>(handler: AuthenticatedHandler<TCtx>) {
+  return async (request: NextRequest, context?: TCtx): Promise<Response> => {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
     const { runWithDbUserAddressContext } = await import('@/lib/db');
-    return runWithDbUserAddressContext(authResult.user.address, () => handler(request, authResult.user));
+    return runWithDbUserAddressContext(authResult.user.address, () => handler(request, authResult.user, context));
   };
 }
 

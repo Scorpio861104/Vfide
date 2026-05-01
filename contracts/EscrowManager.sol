@@ -140,11 +140,12 @@ contract EscrowManager is ReentrancyGuard {
      * @return id Newly created escrow identifier.
      */
     function createEscrow(
-        address,
-        address,
-        uint256,
-        string calldata
+        address merchant,
+        address token,
+        uint256 amount,
+        string calldata orderId
     ) external pure returns (uint256) {
+        merchant; token; amount; orderId;
         revert ESC_Deprecated();
     }
 

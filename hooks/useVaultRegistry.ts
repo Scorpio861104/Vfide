@@ -652,6 +652,7 @@ export function useSetRecoveryId() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const setRecoveryId = useCallback((vault: Address, recoveryId: string) => {
     if (!isAvailable) {
       throw new Error('Vault registry contract is not deployed. Set NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS.');
@@ -686,6 +687,7 @@ export function useSetEmailRecovery() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const setEmailRecovery = useCallback((vault: Address, email: string) => {
     if (!isAvailable) {
       throw new Error('Vault registry contract is not deployed. Set NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS.');
@@ -721,6 +723,7 @@ export function useSetUsername() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const setUsername = useCallback((vault: Address, username: string) => {
     if (!isAvailable) {
       throw new Error('Vault registry contract is not deployed. Set NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS.');
@@ -815,6 +818,7 @@ export function useInitiateClaim() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const initiateClaim = useCallback((
     vault: Address,
     recoveryId: string,
@@ -918,6 +922,7 @@ export function useGuardianVote() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const vote = useCallback((claimId: bigint, approve: boolean) => {
     if (!isAvailable) {
       throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
@@ -952,6 +957,7 @@ export function useChallengeClaim() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const challenge = useCallback((claimId: bigint, reason: string) => {
     if (!isAvailable) {
       throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');
@@ -986,6 +992,7 @@ export function useFinalizeClaim() {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const finalize = useCallback((claimId: bigint) => {
     if (!isAvailable) {
       throw new Error('Vault recovery claim contract is not deployed. Set NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS.');

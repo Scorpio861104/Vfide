@@ -1,10 +1,12 @@
 import { logger } from '@/lib/logger';
+import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { createWalletClient, createPublicClient, http, isAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { VFIDETestnetFaucetABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';

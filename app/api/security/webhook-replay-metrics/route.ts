@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { timingSafeEqual } from 'node:crypto';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { getClient, query } from '@/lib/db';
 import { ensureGroupVisualColumns } from '@/lib/dbPatches';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/auth/middleware'
+import { requireAuth, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit'
+import type { JWTPayload } from '@/lib/auth/jwt';
 import {
   appendLaneEvent,
   getLaneById,
@@ -79,7 +80,7 @@ function toUserSafeActionError(message: string): string {
   return 'Action failed validation.'
 }
 
-export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => {
   const rateLimited = await withRateLimit(request, 'write')
   if (rateLimited) return rateLimited
   const authAddress = normalizeAddress(user.address || '')
@@ -87,8 +88,8 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const resolved = await params
-  const laneId = parseLaneId(resolved.id)
+  const resolved = await context!.params
+  const laneId = parseLaneId(resolved.id ?? '')
   if (!laneId) {
     return NextResponse.json({ error: 'Invalid lane id' }, { status: 400 })
   }

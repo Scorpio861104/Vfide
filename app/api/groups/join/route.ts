@@ -1,3 +1,4 @@
+import type { JWTPayload } from '@/lib/auth/jwt';
 /**
  * Join Group via Invite API Route
  * 
@@ -5,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { getClient } from '@/lib/db';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';

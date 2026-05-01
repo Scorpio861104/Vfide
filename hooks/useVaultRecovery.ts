@@ -1,7 +1,7 @@
 import { useAccount, useWriteContract, useReadContract, useWatchContractEvent, useChainId } from 'wagmi';
 import { useMemo, useEffect, useState } from 'react';
 import { isAddress } from 'viem';
-import { CARD_BOUND_VAULT_ABIVAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts'
+import { CARD_BOUND_VAULT_ABI, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses';
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';

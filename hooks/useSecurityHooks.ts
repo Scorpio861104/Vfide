@@ -1,7 +1,7 @@
 'use client'
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
-import { ACTIVE_VAULT_ABI, CARD_BOUND_VAULT_ABIVAULT_HUB_ABI } from '../lib/contracts'
+import { ACTIVE_VAULT_ABI, CARD_BOUND_VAULT_ABI, VAULT_HUB_ABI } from '../lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
 import { logger } from '@/lib/logger';
 
@@ -50,7 +50,6 @@ export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
  */
 export function useCanSelfPanic() {
   const CONTRACT_ADDRESSES = useContractAddresses();
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const { address } = useAccount()
   
   const { data: vaultAddress } = useReadContract({
@@ -85,7 +84,6 @@ export function useCanSelfPanic() {
  * NOTE: Returns isAvailable=false if PanicGuard is not deployed
  */
 export function useSelfPanic() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { address } = useAccount()
   const { writeContract, data, isPending } = useWriteContract()
@@ -239,7 +237,6 @@ export function useCastGuardianLock(vaultAddress: `0x${string}`) {
  * Check global emergency breaker status
  */
 export function useEmergencyStatus() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   return {
     isHalted: false,

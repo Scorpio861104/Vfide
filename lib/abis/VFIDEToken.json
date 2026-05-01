@@ -47,6 +47,16 @@
   },
   {
     "inputs": [],
+    "name": "VF_EmergencyHalted",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_FeeBypassCooldown",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "VF_FeesExceedAmount",
     "type": "error"
   },
@@ -123,6 +133,11 @@
   {
     "inputs": [],
     "name": "VF_RouterRequired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "VF_SeerBlocked",
     "type": "error"
   },
   {
@@ -348,6 +363,38 @@
   },
   {
     "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "breaker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "EmergencyBreakerScheduled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "breaker",
+        "type": "address"
+      }
+    ],
+    "name": "EmergencyBreakerSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
     "inputs": [],
     "name": "EmergencyControllerCancelled",
     "type": "event"
@@ -388,6 +435,25 @@
       }
     ],
     "name": "EmergencyControllerSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "validFrom",
+        "type": "uint64"
+      }
+    ],
+    "name": "EmergencyOwnershipProposed",
     "type": "event"
   },
   {
@@ -686,6 +752,19 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "seerAutonomous",
+        "type": "address"
+      }
+    ],
+    "name": "SeerAutonomousSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "who",
         "type": "address"
       },
@@ -974,6 +1053,32 @@
   },
   {
     "inputs": [],
+    "name": "EMERGENCY_OWNERSHIP_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "FEE_BYPASS_COOLDOWN",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_CIRCUIT_BREAKER_DURATION",
     "outputs": [
       {
@@ -1026,6 +1131,13 @@
   },
   {
     "inputs": [],
+    "name": "acceptEmergencyOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "acceptOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1072,6 +1184,13 @@
   {
     "inputs": [],
     "name": "applyEcosystemDistributor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyEmergencyBreaker",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1258,6 +1377,13 @@
   {
     "inputs": [],
     "name": "cancelEcosystemDistributor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelEmergencyBreaker",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1521,6 +1647,19 @@
   },
   {
     "inputs": [],
+    "name": "emergencyBreaker",
+    "outputs": [
+      {
+        "internalType": "contract IEmergencyBreaker",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "emergencyController",
     "outputs": [
       {
@@ -1543,6 +1682,19 @@
     "name": "emergencyTransferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyTransferValidFrom",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1931,6 +2083,32 @@
   },
   {
     "inputs": [],
+    "name": "pendingEmergencyBreaker",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingEmergencyBreakerAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "pendingEmergencyController",
     "outputs": [
       {
@@ -1950,6 +2128,19 @@
         "internalType": "uint64",
         "name": "",
         "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingEmergencyOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -2468,6 +2659,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "seerAutonomous",
+    "outputs": [
+      {
+        "internalType": "contract ISeerAutonomousToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -2543,6 +2747,19 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "_breaker",
+        "type": "address"
+      }
+    ],
+    "name": "setEmergencyBreaker",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "controller",
         "type": "address"
       }
@@ -2605,6 +2822,19 @@
       }
     ],
     "name": "setSanctumSink",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_seerAutonomous",
+        "type": "address"
+      }
+    ],
+    "name": "setSeerAutonomous",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

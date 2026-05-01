@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRequestAuthToken } from '@/lib/auth/middleware';
+import { getRequestAuthToken, withAuth } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { extractToken } from '@/lib/auth/jwt';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { z } from 'zod4';
 
 const MAX_REVOKE_REASON_LENGTH = 200;

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { isAdmin } from '@/lib/auth/middleware';
+import { isAdmin, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 

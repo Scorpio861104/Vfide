@@ -1,7 +1,9 @@
 import { logger } from '@/lib/logger';
+import { withAuth } from '@/lib/auth/middleware';
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { NextRequest, NextResponse } from 'next/server';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 

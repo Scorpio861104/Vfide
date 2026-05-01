@@ -62,6 +62,16 @@
   },
   {
     "inputs": [],
+    "name": "MERCH_IntentInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_IntentRecipientMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MERCH_InvalidConfig",
     "type": "error"
   },
@@ -937,6 +947,25 @@
         "type": "address"
       }
     ],
+    "name": "acceptedTokenDecimals",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "name": "acceptedTokens",
     "outputs": [
       {
@@ -1060,6 +1089,19 @@
       }
     ],
     "name": "completeRefund",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "refundId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "completeRefundFromVault",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1754,6 +1796,87 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "vault",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "merchantPortal",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "merchant",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "recipient",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "walletEpoch",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "deadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ICardBoundVaultPay.PayIntent",
+        "name": "intent",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      },
+      {
+        "internalType": "string",
+        "name": "orderId",
+        "type": "string"
+      }
+    ],
+    "name": "payWithIntent",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "netAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "pendingDAO",
     "outputs": [
@@ -2206,6 +2329,19 @@
       }
     ],
     "name": "setProtocolFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_skm",
+        "type": "address"
+      }
+    ],
+    "name": "setSessionKeyManager",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

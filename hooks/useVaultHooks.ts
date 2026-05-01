@@ -31,7 +31,6 @@ const VAULT_ABI = ACTIVE_VAULT_ABI
 
 export function useUserVault() {
   const CONTRACT_ADDRESSES = useContractAddresses();
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const { address } = useAccount()
   const hasVaultHubConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub)
   
@@ -57,7 +56,6 @@ export function useUserVault() {
 }
 
 export function useCreateVault() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const publicClient = usePublicClient()
@@ -100,7 +98,6 @@ export function useCreateVault() {
 }
 
 export function useVaultBalance() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
@@ -190,7 +187,6 @@ export function useVaultBalance() {
 }
 
 export function useTransferVFIDE() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
   const CONTRACT_ADDRESSES = useContractAddresses();
   const chainId = useChainId()
   const { vaultAddress } = useUserVault()

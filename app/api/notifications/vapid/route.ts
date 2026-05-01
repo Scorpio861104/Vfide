@@ -1,3 +1,4 @@
+import type { JWTPayload } from '@/lib/auth/jwt';
 /**
  * VAPID API
  * 
@@ -8,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 
 

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
 import { createHash, createHmac } from 'node:crypto';
 import { lookup } from 'dns/promises';
 import { isIP } from 'node:net';
 import { query } from '@/lib/db';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { getRequestCorrelationContext } from '@/lib/security/requestContext';
 import { logger } from '@/lib/logger';
