@@ -82,7 +82,9 @@ contract DAO is ReentrancyGuard {
     ISeerGuardian_DAO public guardian; // SeerGuardian for mutual oversight
     ISeerAutonomous_DAO public seerAutonomous; // optional proactive Seer automation checks
 
-    uint64 public votingPeriod = 3 days;
+    uint64 public votingPeriod = 7 days;
+    uint64 public constant MIN_VOTING_PERIOD = 1 hours;
+    uint64 public constant MAX_VOTING_PERIOD = 30 days;
     uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
     uint64 public constant VOTE_GRACE_PERIOD = 30 minutes; // Anti-front-running: voting closes early
     uint64 public proposalCooldown = 1 hours;
@@ -271,8 +273,8 @@ contract DAO is ReentrancyGuard {
         breakGlassAdmin = _bga;
     }
     function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
-        if(_period<1 hours)_period=1 hours;
-        require(_period <= 30 days, "DAO: voting period too long");
+        require(_period >= MIN_VOTING_PERIOD, "DAO: voting period too short");
+        require(_period <= MAX_VOTING_PERIOD, "DAO: voting period too long");
         require(_minVotes >= 100 && _minVotes <= 1_000_000, "DAO: minVotes out of range");
         votingPeriod=_period;
         minVotesRequired=_minVotes;

@@ -115,8 +115,8 @@ describe('contracts', () => {
       expect(Array.isArray(MERCHANT_PORTAL_ABI)).toBe(true)
     })
 
-    it('exports VFIDEBadgeNFTABI', async () => {
-      const { VFIDEBadgeNFTABI } = await import('@/lib/contracts')
+    it('exports VFIDEBadgeNFTABI from future ABI module', async () => {
+      const { VFIDEBadgeNFTABI } = await import('@/lib/abis/future')
       expect(VFIDEBadgeNFTABI).toBeDefined()
       expect(Array.isArray(VFIDEBadgeNFTABI)).toBe(true)
     })

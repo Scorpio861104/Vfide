@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { query } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { requireAuth, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { normalizeStaffPermissions, type StaffRole } from '@/lib/merchantStaff';
@@ -88,7 +88,7 @@ function serializeStaffRow(row: Record<string, unknown>, sessionToken?: string, 
   };
 }
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+async function patchHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -298,7 +298,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+async function deleteHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -337,3 +337,8 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to revoke staff session' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getHandler);
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);
+export const DELETE = withAuth(deleteHandler);

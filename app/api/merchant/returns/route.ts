@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth, requireOwnership } from '@/lib/auth/middleware';
+import { requireAuth, requireOwnership, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -39,7 +39,7 @@ function serializeReturn(row: Record<string, unknown>) {
   };
 }
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+async function patchHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -180,3 +180,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to update return' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getHandler);
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);

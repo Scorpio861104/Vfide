@@ -154,6 +154,30 @@ contract CouncilElection {
         emit ParamsSet(_size,_minScore,_term,_refresh); _log("ce_params_set");
     }
 
+    function recommendedCouncilSize() public view returns (uint8) {
+        if (address(vaultHub) == address(0)) {
+            return councilSize;
+        }
+
+        uint256 users = vaultHub.totalVaultsCreated();
+        if (users < 1_000) return 7;
+        if (users < 10_000) return 9;
+        if (users < 100_000) return 12;
+        if (users < 1_000_000) return 15;
+        return 21;
+    }
+
+    function applyRecommendedCouncilSize() external onlyDAO {
+        uint8 newSize = recommendedCouncilSize();
+        if (newSize == councilSize) {
+            return;
+        }
+        if (newSize < MIN_COUNCIL_SIZE || newSize > MAX_COUNCIL_SIZE) revert CE_BadSize();
+        councilSize = newSize;
+        emit ParamsSet(newSize, minCouncilScore, termSeconds, refreshInterval);
+        _log("ce_recommended_size_applied");
+    }
+
     function setTermLimits(uint8 _maxConsecutive, uint64 _cooldown) external onlyDAO {
         require(_maxConsecutive == FIXED_MAX_CONSECUTIVE_TERMS, "CE: max terms fixed");
         require(_cooldown == FIXED_REELECTION_COOLDOWN, "CE: cooldown fixed");

@@ -681,10 +681,10 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// F-18: EscrowManager minimum lock period ≥ 3 days
-// Even for the highest-trust merchants the lock period must be at least 3 days.
+// EscrowManager deprecation guardrail
+// New escrow creation is intentionally disabled in v8.
 // ─────────────────────────────────────────────────────────────────────────────
-describe("EscrowManager (F-18: minimum lock period)", () => {
+describe("EscrowManager (deprecated creation path)", () => {
   async function escrowFixture() {
     const { ethers } = (await getDefaultConnection()) as any;
     const [arbiter, buyer, merchant] = await ethers.getSigners();
@@ -706,7 +706,7 @@ describe("EscrowManager (F-18: minimum lock period)", () => {
     await ethers.provider.send("evm_mine", []);
     await escrow.connect(arbiter).applyTokenWhitelist(await token.getAddress());
 
-    return { ethers, escrow, seer, token, buyer, merchant };
+    return { ethers, escrow, token, buyer, merchant };
   }
 
   async function deployEscrow() {
@@ -714,44 +714,14 @@ describe("EscrowManager (F-18: minimum lock period)", () => {
     return networkHelpers.loadFixture(escrowFixture);
   }
 
-  it("high-trust merchant (score 9000) gets exactly 3-day lock", async () => {
-    const { escrow, seer, token, buyer, merchant } = await deployEscrow();
-
-    // Set merchant score above highTrustThreshold (8000) so code takes the 3-day branch
-    await seer.setScore(merchant.address, 9000);
-
-    const tx = await escrow
-      .connect(buyer)
-      .createEscrow(merchant.address, await token.getAddress(), 1000n, "order-1");
-    const receipt = await tx.wait();
-
-    const id = 1n;
-    const e = await escrow.escrows(id);
-    const lockPeriod = e.releaseTime - e.createdAt;
-    const threeDays = 3n * 24n * 60n * 60n;
-
-    assert.equal(lockPeriod, threeDays, "high-trust lock should be exactly 3 days");
-  });
-
-  it("zero-score (untrusted) merchant gets 14-day default lock", async () => {
+  it("createEscrow reverts with ESC_Deprecated", async () => {
     const { escrow, token, buyer, merchant } = await deployEscrow();
-    // score defaults to 0 — takes the default 14-day branch
 
-    await escrow
-      .connect(buyer)
-      .createEscrow(merchant.address, await token.getAddress(), 1000n, "order-2");
-
-    const e = await escrow.escrows(1n);
-    const lockPeriod = e.releaseTime - e.createdAt;
-    const fourteenDays = 14n * 24n * 60n * 60n;
-
-    assert.equal(lockPeriod, fourteenDays, "low-trust lock should be 14 days");
-  });
-
-  it("MIN_LOCK_PERIOD constant is exactly 3 days", async () => {
-    const { escrow } = await deployEscrow();
-    const threeDays = 3n * 24n * 60n * 60n;
-    assert.equal(await escrow.MIN_LOCK_PERIOD(), threeDays);
+    await expect(
+      escrow
+        .connect(buyer)
+        .createEscrow(merchant.address, await token.getAddress(), 1000n, "order-1")
+    ).to.be.revertedWithCustomError(escrow, "ESC_Deprecated");
   });
 });
 

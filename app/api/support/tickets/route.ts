@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
-import { requireOwnership } from '@/lib/auth/middleware';
+import { requireOwnership, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -66,7 +66,7 @@ async function writeStore(store: SupportStore) {
   await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2), 'utf8');
 }
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+async function patchHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -231,3 +231,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to update ticket' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getHandler);
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireOwnership } from '@/lib/auth/middleware';
+import { requireOwnership, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -35,7 +35,7 @@ const createLocationSchema = z.object({
   lng: z.number().min(-180).max(180).optional(),
 });
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -110,3 +110,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to create location' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getHandler);
+export const POST = withAuth(postHandler);

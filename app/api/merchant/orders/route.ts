@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { query, getClient } from '@/lib/db';
-import { requireAuth } from '@/lib/auth/middleware';
+import { requireAuth, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -91,7 +91,7 @@ async function getAuthAddress(request: NextRequest): Promise<string | NextRespon
 }
 
 // ─────────────────────────── GET: List orders
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
 }
 
 // ─────────────────────────── POST: Create order
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
 }
 
 // ─────────────────────────── PATCH: Update order status / fulfillment
-export async function PATCH(request: NextRequest) {
+async function patchHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -392,3 +392,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getHandler);
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);

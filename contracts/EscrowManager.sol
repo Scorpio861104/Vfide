@@ -18,7 +18,6 @@ pragma solidity 0.8.30;
  */
 
 import "./SharedInterfaces.sol";
-import "./lib/ScoringConstants.sol";
 
 interface ISeerAutonomous_ESC {
     function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
@@ -32,9 +31,9 @@ error ESC_NotMerchant();
 error ESC_TooEarly();
 error ESC_HighValueRequiresDAO();
 error ESC_ActionBlocked(uint8 result);
+error ESC_Deprecated();
 
 contract EscrowManager is ReentrancyGuard {
-        uint256 public constant MIN_LOCK_PERIOD = 3 days; // F-18 FIX: Enforce minimum lock period regardless of score
     using SafeERC20 for IERC20;
 
     uint64 public constant TOKEN_WHITELIST_DELAY = 48 hours;
@@ -141,48 +140,12 @@ contract EscrowManager is ReentrancyGuard {
      * @return id Newly created escrow identifier.
      */
     function createEscrow(
-        address merchant,
-        address token,
-        uint256 amount,
-        string calldata orderId
-    ) external nonReentrant returns (uint256) {
-        require(merchant != address(0) && token != address(0), "zero address");
-        require(whitelistedTokens[token], "ESC: token not whitelisted");
-        require(msg.sender != address(0), "buyer zero address");
-        require(amount > 0, "zero amount");
-
-        // Calculate Release Time based on Trust (0-10000 scale)
-        uint256 lockPeriod = 14 days; // Default
-        if (address(seer) != address(0)) {
-            // F-18 FIX: Use getCachedScore (reflects longer-term cached behavior) instead of live getScore
-            // to reduce the impact of temporary score pump-and-dump attacks.
-            uint16 score = seer.getCachedScore(merchant);
-            if (score >= ScoringConstants.TIER_4) lockPeriod = 3 days;       // High Trust (80%+)
-            else if (score >= ScoringConstants.TIER_2) lockPeriod = 7 days;  // Medium Trust (60%+)
-        }
-        // F-18 FIX: Enforce minimum lock period as a safety net
-        require(lockPeriod >= MIN_LOCK_PERIOD, "ESC: lock period too short");
-        // M-5 FIX: Enforce maximum lock period ceiling to prevent runaway escrow times
-        require(lockPeriod <= 30 days, "ESC: lock period ceiling");
-
-        uint256 id = ++escrowCount;
-        escrows[id] = Escrow({
-            buyer: msg.sender,
-            merchant: merchant,
-            token: token,
-            amount: amount,
-            createdAt: block.timestamp,
-            releaseTime: block.timestamp + lockPeriod,
-            state: State.CREATED,
-            orderId: orderId
-        });
-
-        _enforceSeerAction(msg.sender, 7, amount, merchant); // Trade
-
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-
-        emit EscrowCreated(id, msg.sender, merchant, amount, escrows[id].releaseTime, lockPeriod, block.timestamp);
-        return id;
+        address,
+        address,
+        uint256,
+        string calldata
+    ) external pure returns (uint256) {
+        revert ESC_Deprecated();
     }
 
     /**

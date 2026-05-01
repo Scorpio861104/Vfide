@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { sendReceiptSMS } from '@/lib/sms';
-import { requireOwnership } from '@/lib/auth/middleware';
+import { requireOwnership, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -21,7 +21,7 @@ const receiptSmsSchema = z.object({
   path: ['to'],
 });
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -67,3 +67,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withAuth(postHandler);

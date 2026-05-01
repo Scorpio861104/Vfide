@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth, checkOwnership } from '@/lib/auth/middleware';
+import { requireAuth, checkOwnership, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -31,7 +31,7 @@ function parsePositiveInteger(value: unknown): number | null {
  * - Rate limited (5 claims per hour)
  * - User can only claim their own rewards
  */
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   // Rate limit - strict for claiming rewards
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
@@ -203,3 +203,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withAuth(postHandler);
