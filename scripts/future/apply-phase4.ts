@@ -1,13 +1,13 @@
 /**
  * VFIDE Wiring Finalization — Phase 4 (Seer Modules)
  *
- * Run AFTER deploy-phase4.ts.
+ * Run AFTER scripts/future/deploy-phase4.ts.
  * Registers SeerAutonomous, SeerGuardian, and SeerSocial with the core Seer
  * contract, authorizes them as operators, and proposes SeerGuardian as a
  * recovery approver on VaultHub (48h timelock — call applyRecoveryApprover()
  * after 48h).
  *
- * Run: npx hardhat run scripts/apply-phase4.ts --network baseSepolia
+ * Run: npx hardhat run scripts/future/apply-phase4.ts --network baseSepolia
  */
 
 import hre from "hardhat";

@@ -3,9 +3,9 @@
  * 
  * Run 48 hours after apply-all.ts (Phase 1).
  * Confirms FraudRegistry exemption, proposes FlashLoan exemption.
- * Wait 48h then run apply-phase3.ts.
+ * Wait 48h then run scripts/future/apply-phase3.ts.
  * 
- * Run: npx hardhat run scripts/apply-phase2.ts --network baseSepolia
+ * Run: npx hardhat run scripts/future/apply-phase2.ts --network baseSepolia
  */
 
 import hre from "hardhat";
@@ -54,7 +54,7 @@ async function main() {
   // 2. Propose FlashLoan systemExempt
   if (flashLoanAddr) {
     await safeApply(
-      "FlashLoan systemExempt proposed → confirm in apply-phase3.ts (48h)",
+      "FlashLoan systemExempt proposed → confirm in scripts/future/apply-phase3.ts (48h)",
       async () => token.proposeSystemExempt(flashLoanAddr, true)
     );
   } else {
@@ -65,7 +65,7 @@ async function main() {
     throw new Error(`apply-phase2 encountered ${hardFailures} non-benign failure(s)`);
   }
 
-  console.log("\n✅ Phase 2 complete. Wait 48h then run apply-phase3.ts.");
+  console.log("\n✅ Phase 2 complete. Wait 48h then run scripts/future/apply-phase3.ts.");
 }
 
 main().catch(console.error);

@@ -2,7 +2,7 @@
  * VFIDE Governance Transfer Script
  * 
  * Transfers all admin/dao roles from deployer to correct governance addresses.
- * Run AFTER apply-phase3.ts (all module wiring complete).
+ * Run AFTER scripts/future/apply-phase3.ts (all module wiring complete).
  * 
  * CRITICAL: This is the most important post-deploy script. Without it:
  * - All fees go to deployer wallet (not FeeDistributor)

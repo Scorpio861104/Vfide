@@ -5,7 +5,7 @@
  * 
  * System exemptions can only be proposed ONE AT A TIME on VFIDEToken.
  * This script confirms FeeDistributor (proposed in deploy-all) and
- * proposes FraudRegistry. Wait 48h then run apply-phase2.ts.
+ * proposes FraudRegistry. Wait 48h then run scripts/future/apply-phase2.ts.
  * 
  * Run: npx hardhat run scripts/apply-all.ts --network baseSepolia
  */
@@ -71,7 +71,7 @@ async function main() {
   // 2. Propose FraudRegistry (CRITICAL — without this, releaseEscrow charges fees + re-escrows)
   if (fraudAddr) {
     await safeApply(
-      "FraudRegistry systemExempt proposed → confirm in apply-phase2.ts (48h)",
+      "FraudRegistry systemExempt proposed → confirm in scripts/future/apply-phase2.ts (48h)",
       async () => token.proposeSystemExempt(fraudAddr, true)
     );
   } else {
@@ -94,7 +94,7 @@ async function main() {
   }
 
   console.log("\n✅ Phase 1 complete.");
-  console.log("⚠️  Wait 48h then run: npx hardhat run scripts/apply-phase2.ts");
+  console.log("⚠️  Wait 48h then run: npx hardhat run scripts/future/apply-phase2.ts");
 }
 
 main().catch(console.error);

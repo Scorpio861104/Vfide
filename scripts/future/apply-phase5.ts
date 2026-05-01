@@ -1,12 +1,12 @@
 /**
  * VFIDE Wiring Finalization — Phase 5 (Commerce)
  *
- * Run AFTER deploy-phase5.ts.
+ * Run AFTER scripts/future/deploy-phase5.ts.
  * Wires CommerceEscrow with MerchantRegistry, registers commerce contracts as
  * ProofLedger loggers, and transfers DAO role on SubscriptionManager to the
  * live DAO contract.
  *
- * Run: npx hardhat run scripts/apply-phase5.ts --network baseSepolia
+ * Run: npx hardhat run scripts/future/apply-phase5.ts --network baseSepolia
  */
 
 import hre from "hardhat";

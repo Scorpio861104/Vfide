@@ -49,14 +49,14 @@ Run only the phases that are needed for the target deployment tier:
 
 ```bash
 # Deploy
-npx hardhat run scripts/deploy-phase2.ts --network baseSepolia
-npx hardhat run scripts/deploy-phase3.ts --network baseSepolia
-npx hardhat run scripts/deploy-phase4.ts --network baseSepolia
-npx hardhat run scripts/deploy-phase5.ts --network baseSepolia
+npx hardhat run scripts/future/deploy-phase2.ts --network baseSepolia
+npx hardhat run scripts/future/deploy-phase3.ts --network baseSepolia
+npx hardhat run scripts/future/deploy-phase4.ts --network baseSepolia
+npx hardhat run scripts/future/deploy-phase5.ts --network baseSepolia
 
 # Apply (after 48 h each)
-npx hardhat run scripts/apply-phase2.ts --network baseSepolia
-npx hardhat run scripts/apply-phase3.ts --network baseSepolia
+npx hardhat run scripts/future/apply-phase2.ts --network baseSepolia
+npx hardhat run scripts/future/apply-phase3.ts --network baseSepolia
 ```
 
 See [DEPLOYMENT_MANIFEST.md](./DEPLOYMENT_MANIFEST.md) for which contracts each phase deploys.

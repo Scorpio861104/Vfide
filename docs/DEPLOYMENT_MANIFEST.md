@@ -8,7 +8,7 @@ This document maps every production Solidity contract to its deployment mechanis
 |-----------|--------|-------------|
 | **deploy-solo** | `scripts/deploy-solo.ts` | 9 core contracts + post-deploy wiring |
 | **phase-1** | `scripts/deploy-phase1.ts` | Access control, token, governance via factory deployers |
-| **phase-3** | `scripts/deploy-phase3.ts` | Bridge and peripherals via factory deployers |
+| **phase-3** | `scripts/future/deploy-phase3.ts` | Bridge and peripherals via factory deployers |
 | **factory** | Deployed by Phase1/Phase3 factory contracts | Sub-deployed on-chain |
 | **deploy-wizard** | `scripts/deploy-wizard.sh` | Interactive wrapper around deploy-solo |
 | **manual** | Owner calls after core deploy | Wired by OwnerControlPanel or direct calls |
@@ -36,7 +36,7 @@ This document maps every production Solidity contract to its deployment mechanis
 | Phase1GovernanceDeployer | AdminMultiSig, EmergencyControl | Governance primitives |
 | Phase1InfrastructureDeployer | CircuitBreaker, WithdrawalQueueStub | Safety infrastructure |
 
-## Phase 3 Factory Contracts (deploy-phase3.ts)
+## Phase 3 Factory Contracts (scripts/future/deploy-phase3.ts)
 
 | Deployer | Sub-deploys | Notes |
 |----------|-------------|-------|

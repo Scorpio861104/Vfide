@@ -235,7 +235,7 @@ BASESCAN_API_KEY=your_key
 
 For current deployments, use:
 - **Phase 1 (Token + Security):** `contracts/scripts/deploy-phase1.ts`
-- **Phase 3 (Bridge + Oracle):** `contracts/scripts/deploy-phase3.ts`
+- **Phase 3 (Bridge + Oracle):** `scripts/future/deploy-phase3.ts`
 
 Phases 4-6 (Staking, Liquidity Mining, Advanced DeFi) were removed for Howey Test compliance.
 

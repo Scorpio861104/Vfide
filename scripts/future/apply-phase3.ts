@@ -1,10 +1,10 @@
 /**
  * VFIDE Wiring Finalization — Phase 3 (Final)
  * 
- * Run 48 hours after apply-phase2.ts.
+ * Run 48 hours after scripts/future/apply-phase2.ts.
  * Confirms FlashLoan exemption. All wiring complete.
  * 
- * Run: npx hardhat run scripts/apply-phase3.ts --network baseSepolia
+ * Run: npx hardhat run scripts/future/apply-phase3.ts --network baseSepolia
  */
 
 import hre from "hardhat";
