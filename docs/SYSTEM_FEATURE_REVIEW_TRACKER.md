@@ -147,12 +147,12 @@ Notes:
   - outgoing bridge `txId` derivation now includes a monotonic nonce (`bridgeTxNonce`), preventing same-second hash collisions for repeated identical bridge params.
 - Additional bridge hardening (2026-03-12):
   - `contracts/VFIDEBridge.sol` constructor now rejects zero `endpoint` and zero `owner` addresses in addition to existing token guard, preventing invalid deployment wiring for omnichain messaging/ownership.
-  - intentional behavior documented: `setSecurityModule(address(0))` remains allowed by design to disable external module checks through the existing 48h timelock path.
+  - N-L33 (by-design) documented: `setSecurityModule(address(0))` remains allowed by design to disable external module checks through the existing 48h timelock path.
   - validation run: `npm run -s contract:verify:bridge-governance:local` passed after patch.
 - Unintended issue fixed in `contracts/VFIDEEnterpriseGateway.sol`:
   - `_swapToStable(...)` now handles quote (`getAmountsOut`) failures gracefully by revoking approval and returning `0`, preserving intended fallback-to-VFIDE settlement instead of reverting order settlement.
 - Intentional behavior explicitly documented in `contracts/DAO.sol`:
-  - proportional time-based governance fatigue recovery is by design (boundary-gaming resistance) and now inline-commented in both execution and preview paths.
+  - N-L34 (by-design) documented: proportional time-based governance fatigue recovery is by design (boundary-gaming resistance) and now inline-commented in both execution and preview paths.
 - Unintended issue fixed in `contracts/AdminMultiSig.sol`:
   - `executeProposal(...)` now uses `nonReentrant` (shared `ReentrancyGuard`), preventing nested proposal execution paths during external target call execution.
   - intentional emergency self-call execution context is now inline-documented at the target call site to distinguish expected behavior from non-intentional reentrancy risk.
