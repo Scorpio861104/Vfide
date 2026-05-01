@@ -43,6 +43,23 @@ interface ISessionKeyManager_MP {
     function canSpend(address spender, address merchant, address token, uint256 amount) external view returns (bool);
 }
 
+interface ICardBoundVaultPay {
+    struct PayIntent {
+        address vault;
+        address merchantPortal;
+        address token;
+        address merchant;
+        address recipient;
+        uint256 amount;
+        uint256 nonce;
+        uint64 walletEpoch;
+        uint64 deadline;
+        uint256 chainId;
+    }
+
+    function executePayMerchant(PayIntent calldata intent, bytes calldata signature) external;
+}
+
 error MERCH_Zero();
 error MERCH_NotDAO();
 error MERCH_NotMerchant();
@@ -67,6 +84,8 @@ error MERCH_NotConfigured();
 error MERCH_ApproveFailed();
 error MERCH_RevokeFailed();
 error MERCH_VFIDESettlementDisabled();
+error MERCH_IntentInvalid();
+error MERCH_IntentRecipientMismatch();
 
 // Removed local Ownable to use SharedInterfaces.sol
 
@@ -789,6 +808,68 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _checkMerchantScore(merchant);
         
         return _processPaymentInternal(msg.sender, merchant, token, amount, orderId);
+    }
+
+    /**
+     * Signed-intent payment path: customer signs an intent and merchant/relayer submits it.
+     * Avoids requiring standing ERC20 approvals from the customer vault to this portal.
+     */
+    function payWithIntent(
+        ICardBoundVaultPay.PayIntent calldata intent,
+        bytes calldata signature,
+        string calldata orderId
+    ) external nonReentrant returns (uint256 netAmount) {
+        if (intent.merchantPortal != address(this)) revert MERCH_IntentInvalid();
+        if (intent.merchant == address(0) || intent.token == address(0)) revert MERCH_IntentInvalid();
+        if (intent.amount == 0) revert MERCH_IntentInvalid();
+        if (!merchants[intent.merchant].registered) revert MERCH_NotRegistered();
+        if (merchants[intent.merchant].suspended) revert MERCH_Suspended();
+        if (intent.deadline < block.timestamp) revert MERCH_IntentInvalid();
+
+        _validateSettlementToken(intent.token);
+        _checkMerchantScore(intent.merchant);
+
+        address customer = vaultHub.ownerOfVault(intent.vault);
+        if (customer == address(0)) revert MERCH_NoVault();
+        if (vaultHub.vaultOf(customer) != intent.vault) revert MERCH_IntentInvalid();
+
+        _checkFraudStatus(customer);
+        _checkFraudStatus(intent.merchant);
+
+        address skmAddress = sessionKeyManager;
+        if (skmAddress != address(0)) {
+            ISessionKeyManager_MP skm = ISessionKeyManager_MP(skmAddress);
+            if (!skm.canSpend(customer, intent.merchant, intent.token, intent.amount)) revert MERCH_Forbidden();
+        }
+
+        address resolvedRecipient = merchants[intent.merchant].payoutAddress;
+        if (resolvedRecipient == address(0)) {
+            resolvedRecipient = vaultHub.ensureVault(intent.merchant);
+        }
+        if (intent.recipient != resolvedRecipient) revert MERCH_IntentRecipientMismatch();
+
+        uint16 customerScore = address(seer) != address(0) ? seer.getScore(customer) : 500;
+
+        _recordMerchantStats(intent.merchant, intent.amount);
+
+        ICardBoundVaultPay(intent.vault).executePayMerchant(intent, signature);
+
+        // Intent path settles a direct vault transfer; protocol fee remains governed by token-level fee mechanics.
+        netAmount = intent.amount;
+
+        emit PaymentProcessed(
+            customer,
+            intent.merchant,
+            intent.token,
+            intent.amount,
+            0,
+            orderId,
+            customerScore,
+            PaymentChannel.IN_PERSON
+        );
+
+        _rewardPaymentParticipants(customer, intent.merchant);
+        _logEv(customer, "merchant_payment", intent.amount, orderId);
     }
 
     function _processPaymentInternal(

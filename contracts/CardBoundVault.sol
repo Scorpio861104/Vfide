@@ -37,6 +37,9 @@ contract CardBoundVault is ReentrancyGuard {
     bytes32 private constant TRANSFER_INTENT_TYPEHASH = keccak256(
         "TransferIntent(address vault,address toVault,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)"
     );
+    bytes32 private constant PAY_INTENT_TYPEHASH = keccak256(
+        "PayIntent(address vault,address merchantPortal,address token,address merchant,address recipient,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)"
+    );
 
     // secp256k1n / 2
     uint256 private constant ECDSA_S_UPPER_BOUND =
@@ -163,6 +166,19 @@ contract CardBoundVault is ReentrancyGuard {
         uint256 chainId;
     }
 
+    struct PayIntent {
+        address vault;
+        address merchantPortal;
+        address token;
+        address merchant;
+        address recipient;
+        uint256 amount;
+        uint256 nonce;
+        uint64 walletEpoch;
+        uint64 deadline;
+        uint256 chainId;
+    }
+
     event AdminTransferStarted(address indexed oldAdmin, address indexed newAdmin);
     event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
 
@@ -237,6 +253,8 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_QueueNotReady();
     error CBV_QueueAlreadyProcessed();
     error CBV_SeerBlocked();
+    error CBV_NotMerchantPortal();
+    error CBV_PayIntentInvalid();
     /// @notice C-7 FIX: Destination vault cannot receive transfer (unguarded and cap would be exceeded).
     error CBV_ReceiverNeedsGuardian();
 
@@ -686,6 +704,44 @@ contract CardBoundVault is ReentrancyGuard {
         _logTransfer(intent.toVault, amount);
     }
 
+    /// @notice Execute a signed merchant payment intent from this vault.
+    /// @param intent Structured payment intent signed by active wallet.
+    /// @param signature ECDSA signature over the pay intent digest.
+    function executePayMerchant(PayIntent calldata intent, bytes calldata signature)
+        external
+        nonReentrant
+        whenNotPaused
+    {
+        if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
+            revert CBV_GuardianSetupRequired();
+        }
+        if (msg.sender != intent.merchantPortal) revert CBV_NotMerchantPortal();
+        if (intent.vault != address(this)) revert CBV_PayIntentInvalid();
+        if (intent.merchantPortal == address(0)) revert CBV_PayIntentInvalid();
+        if (intent.token == address(0) || intent.merchant == address(0)) revert CBV_PayIntentInvalid();
+        if (intent.recipient == address(0) || intent.recipient == address(this)) revert CBV_PayIntentInvalid();
+        if (intent.chainId != block.chainid) revert CBV_InvalidChain();
+        if (intent.walletEpoch != walletEpoch) revert CBV_InvalidEpoch();
+        if (intent.deadline < block.timestamp) revert CBV_Expired();
+        if (intent.nonce != nextNonce) revert CBV_InvalidNonce();
+
+        uint256 amount = intent.amount;
+        if (amount == 0 || amount > maxPerTransfer) revert CBV_TransferLimit();
+
+        _refreshDailyWindow();
+        if (spentToday + amount > dailyTransferLimit) revert CBV_DailyLimit();
+
+        address signer = _recoverPaySigner(intent, signature);
+        if (signer != activeWallet) revert CBV_InvalidSigner();
+
+        _enforceSeerAction(admin, 0, amount, intent.recipient);
+
+        nextNonce += 1;
+        spentToday += amount;
+
+        IERC20(intent.token).safeTransfer(intent.recipient, amount);
+    }
+
     // ═══════════════════════════════════════════════════════════════
     //  WITHDRAWAL QUEUE — Large transfer protection
     // ═══════════════════════════════════════════════════════════════
@@ -933,6 +989,12 @@ contract CardBoundVault is ReentrancyGuard {
         return _transferDigest(intent);
     }
 
+    /// @notice Compute typed-data digest for a pay intent.
+    /// @param intent Pay intent payload.
+    function payDigest(PayIntent calldata intent) external view returns (bytes32) {
+        return _payDigest(intent);
+    }
+
     /// @notice Return remaining daily transfer capacity under current spend limits.
     function viewRemainingDailyCapacity() external view returns (uint256) {
         if (block.timestamp >= dayStart + 1 days) {
@@ -977,12 +1039,58 @@ contract CardBoundVault is ReentrancyGuard {
         return recovered;
     }
 
+    function _recoverPaySigner(PayIntent calldata intent, bytes calldata signature)
+        internal
+        view
+        returns (address)
+    {
+        if (signature.length != 65) revert CBV_InvalidSignature();
+
+        bytes32 digest = _payDigest(intent);
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := calldataload(signature.offset)
+            s := calldataload(add(signature.offset, 32))
+            v := byte(0, calldataload(add(signature.offset, 64)))
+        }
+
+        if (v != 27 && v != 28) revert CBV_InvalidSignature();
+        if (uint256(s) > ECDSA_S_UPPER_BOUND) revert CBV_InvalidSignature();
+
+        address recovered = ecrecover(digest, v, r, s);
+        if (recovered == address(0)) revert CBV_InvalidSignature();
+        return recovered;
+    }
+
     function _transferDigest(TransferIntent calldata intent) internal view returns (bytes32) {
         bytes32 structHash = keccak256(
             abi.encode(
                 TRANSFER_INTENT_TYPEHASH,
                 intent.vault,
                 intent.toVault,
+                intent.amount,
+                intent.nonce,
+                intent.walletEpoch,
+                intent.deadline,
+                intent.chainId
+            )
+        );
+
+        return keccak256(abi.encodePacked("\x19\x01", domainSeparator(), structHash));
+    }
+
+    function _payDigest(PayIntent calldata intent) internal view returns (bytes32) {
+        bytes32 structHash = keccak256(
+            abi.encode(
+                PAY_INTENT_TYPEHASH,
+                intent.vault,
+                intent.merchantPortal,
+                intent.token,
+                intent.merchant,
+                intent.recipient,
                 intent.amount,
                 intent.nonce,
                 intent.walletEpoch,

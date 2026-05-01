@@ -5,11 +5,56 @@
  * surface for call sites while routing createEscrow through MerchantPortal pay.
  */
 
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId, useSignTypedData } from 'wagmi';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { parseUnits, formatUnits, isAddress } from 'viem';
 import { ZERO_ADDRESS, getContractAddresses, isConfiguredContractAddress } from '@/lib/contracts';
-import { MerchantPortalABI } from '@/lib/abis';
+import { MerchantPortalABI, VaultHubABI, CardBoundVaultABI } from '@/lib/abis';
+
+const MerchantPortalIntentABI = [
+  {
+    type: 'function',
+    name: 'payWithIntent',
+    stateMutability: 'nonpayable',
+    inputs: [
+      {
+        name: 'intent',
+        type: 'tuple',
+        components: [
+          { name: 'vault', type: 'address' },
+          { name: 'merchantPortal', type: 'address' },
+          { name: 'token', type: 'address' },
+          { name: 'merchant', type: 'address' },
+          { name: 'recipient', type: 'address' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'nonce', type: 'uint256' },
+          { name: 'walletEpoch', type: 'uint64' },
+          { name: 'deadline', type: 'uint64' },
+          { name: 'chainId', type: 'uint256' },
+        ],
+      },
+      { name: 'signature', type: 'bytes' },
+      { name: 'orderId', type: 'string' },
+    ],
+    outputs: [{ name: 'netAmount', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'merchants',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'address' }],
+    outputs: [
+      { name: 'registered', type: 'bool' },
+      { name: 'suspended', type: 'bool' },
+      { name: 'businessName', type: 'string' },
+      { name: 'category', type: 'string' },
+      { name: 'registeredAt', type: 'uint64' },
+      { name: 'totalVolume', type: 'uint256' },
+      { name: 'txCount', type: 'uint256' },
+      { name: 'payoutAddress', type: 'address' },
+    ],
+  },
+] as const;
 
 export interface Escrow {
   id: bigint;
@@ -37,6 +82,7 @@ const STATE_MAP: Record<number, EscrowState> = {
 export function useEscrow() {
   const { address } = useAccount();
   const chainId = useChainId();
+  const { signTypedDataAsync } = useSignTypedData();
   const contractAddresses = getContractAddresses(chainId);
   const publicClient = usePublicClient();
   const [escrows, setEscrows] = useState<Escrow[]>([]);
@@ -128,13 +174,101 @@ export function useEscrow() {
     setError(null);
 
     try {
+      if (!isConfiguredContractAddress(contractAddresses.VaultHub)) {
+        throw new Error('VaultHub is not configured');
+      }
+
+      const customerVault = await publicClient.readContract({
+        address: contractAddresses.VaultHub,
+        abi: VaultHubABI,
+        functionName: 'vaultOf',
+        args: [address],
+      }) as `0x${string}`;
+
+      if (!isAddress(customerVault) || customerVault.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('No customer vault found. Please initialize your vault first.');
+      }
+
+      const merchantInfo = await publicClient.readContract({
+        address: portalAddress,
+        abi: MerchantPortalIntentABI,
+        functionName: 'merchants',
+        args: [merchant],
+      }) as readonly [boolean, boolean, string, string, bigint, bigint, bigint, `0x${string}`];
+
+      const payoutAddress = merchantInfo[7];
+      const merchantVault = await publicClient.readContract({
+        address: contractAddresses.VaultHub,
+        abi: VaultHubABI,
+        functionName: 'vaultOf',
+        args: [merchant],
+      }) as `0x${string}`;
+
+      const recipient = payoutAddress && payoutAddress.toLowerCase() !== ZERO_ADDRESS
+        ? payoutAddress
+        : merchantVault;
+
+      if (!isAddress(recipient) || recipient.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Merchant recipient vault is not initialized yet.');
+      }
+
+      const nonce = await publicClient.readContract({
+        address: customerVault,
+        abi: CardBoundVaultABI,
+        functionName: 'nextNonce',
+      }) as bigint;
+
+      const walletEpoch = await publicClient.readContract({
+        address: customerVault,
+        abi: CardBoundVaultABI,
+        functionName: 'walletEpoch',
+      }) as bigint;
+
       const amountWei = parseUnits(amount, 18);
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
+      const intent = {
+        vault: customerVault,
+        merchantPortal: portalAddress,
+        token: tokenAddress,
+        merchant,
+        recipient,
+        amount: amountWei,
+        nonce,
+        walletEpoch,
+        deadline,
+        chainId: BigInt(chainId),
+      };
+
+      const signature = await signTypedDataAsync({
+        domain: {
+          name: 'CardBoundVault',
+          version: '1',
+          chainId,
+          verifyingContract: customerVault,
+        },
+        types: {
+          PayIntent: [
+            { name: 'vault', type: 'address' },
+            { name: 'merchantPortal', type: 'address' },
+            { name: 'token', type: 'address' },
+            { name: 'merchant', type: 'address' },
+            { name: 'recipient', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'walletEpoch', type: 'uint64' },
+            { name: 'deadline', type: 'uint64' },
+            { name: 'chainId', type: 'uint256' },
+          ],
+        },
+        primaryType: 'PayIntent',
+        message: intent,
+      });
 
       const paymentHash = await writeContractAsync({
         address: portalAddress,
-        abi: MerchantPortalABI,
-        functionName: 'pay',
-        args: [merchant, tokenAddress, amountWei, orderId || `order-${Date.now()}`],
+        abi: MerchantPortalIntentABI,
+        functionName: 'payWithIntent',
+        args: [intent, signature, orderId || `order-${Date.now()}`],
         chainId,
       });
 
@@ -149,7 +283,7 @@ export function useEscrow() {
     } finally {
       setLoading(false);
     }
-  }, [address, hasEscrowConfig, portalAddress, publicClient, tokenAddress, writeContractAsync, chainId]);
+  }, [address, hasEscrowConfig, portalAddress, publicClient, tokenAddress, writeContractAsync, chainId, signTypedDataAsync, contractAddresses.VaultHub]);
 
   // Release funds to merchant
   const releaseEscrow = useCallback(async (id: bigint) => {
