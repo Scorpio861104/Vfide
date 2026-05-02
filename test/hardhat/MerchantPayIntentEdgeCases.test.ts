@@ -33,6 +33,10 @@ describe("MerchantPortal.payWithIntent edge cases", () => {
     const securityHub = await SecurityHub.deploy();
     await securityHub.waitForDeployment();
 
+    const SessionKeyManager = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:SessionKeyManagerStub");
+    const sessionKeyManager = await SessionKeyManager.deploy();
+    await sessionKeyManager.waitForDeployment();
+
     const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
     const token = await Token.deploy(18);
     await token.waitForDeployment();
@@ -124,8 +128,10 @@ describe("MerchantPortal.payWithIntent edge cases", () => {
 
     return {
       ethers,
+      dao,
       portal,
       token,
+      sessionKeyManager,
       customerVault,
       customer,
       merchant,
@@ -214,6 +220,21 @@ describe("MerchantPortal.payWithIntent edge cases", () => {
     await assert.rejects(
       () => portal.connect(merchant).payWithIntent(intent, signature, "order-bad-signer"),
       /CBV_InvalidSigner|revert/i,
+    );
+  });
+
+  it("enforces SessionKeyManager spend gate when configured", async () => {
+    const { portal, sessionKeyManager, dao, merchant, buildIntent, signIntent } = await deployFixture() as any;
+
+    await portal.connect(dao).setSessionKeyManager(await sessionKeyManager.getAddress());
+    await sessionKeyManager.setAllowSpends(false);
+
+    const intent = await buildIntent();
+    const signature = await signIntent(intent);
+
+    await assert.rejects(
+      () => portal.connect(merchant).payWithIntent(intent, signature, "order-session-denied"),
+      /MERCH_Forbidden|revert/i,
     );
   });
 

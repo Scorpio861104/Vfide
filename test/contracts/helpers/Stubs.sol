@@ -286,6 +286,19 @@ contract CouncilStub {
     }
 }
 
+/// @dev Minimal SessionKeyManager stub used by MerchantPortal session-gate tests.
+contract SessionKeyManagerStub {
+    bool public allowSpends = true;
+
+    function setAllowSpends(bool allowed) external {
+        allowSpends = allowed;
+    }
+
+    function canSpend(address, address, address, uint256) external view returns (bool) {
+        return allowSpends;
+    }
+}
+
 /// @dev ISeerAutonomous stub that tries to call back into Seer to trigger circular delta guard.
 interface ISeer_SetScore {
     function setScore(address subject, uint16 newScore, string calldata reason) external;
