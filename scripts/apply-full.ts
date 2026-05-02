@@ -203,7 +203,7 @@ async function main() {
     console.log("║                                                              ║");
     console.log("║  Next steps:                                                 ║");
     console.log("║    1. Transfer all contract ownership to multisig            ║");
-    console.log("║    2. Transfer VFIDEToken ownership → OwnerControlPanel      ║");
+    console.log("║    2. Verify AdminMultiSig is owner of governed contracts    ║");
     console.log("║    3. Run scripts/transfer-governance.ts                     ║");
     console.log("║    4. Run SystemHandover after 6 months to burn dev keys     ║");
     console.log("╚══════════════════════════════════════════════════════════════╝\n");

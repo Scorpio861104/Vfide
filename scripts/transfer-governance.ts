@@ -45,6 +45,10 @@ async function main() {
     merchantPool: process.env.NEXT_PUBLIC_MERCHANT_POOL_ADDRESS || "",
     headhunterPool: process.env.NEXT_PUBLIC_HEADHUNTER_POOL_ADDRESS || "",
     termLoan: process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS || "",
+    adminMultisig:
+      process.env.NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS ||
+      process.env.ADMIN_MULTISIG_ADDRESS ||
+      "",
   };
 
   const allowCommingledFeeDestinations =
@@ -258,20 +262,30 @@ async function main() {
   }
 
   // ══════════════════════════════════════════════
-  //  6. TOKEN OWNERSHIP → OCP (when deployed)
+  //  6. OWNERSHIP TRANSFERS → ADMIN MULTISIG
   // ══════════════════════════════════════════════
-  console.log("\n═══ 6. Token Ownership ═══");
+  console.log("\n═══ 6. Ownership → AdminMultiSig ═══");
+
+  async function transferOwnershipIfPossible(label: string, contractName: string, addr?: string) {
+    if (!addr) return;
+    try {
+      const c = await ethers.getContractAt(contractName, addr);
+      await c.transferOwnership(addrs.adminMultisig);
+      console.log(`  ✅ ${label}.transferOwnership → AdminMultiSig`);
+    } catch (e: any) {
+      console.log(`  ⏭️  ${label}.transferOwnership: ${e.reason || e.message}`);
+    }
+  }
+
+  await transferOwnershipIfPossible("VFIDEToken", "VFIDEToken", addrs.token);
+  await transferOwnershipIfPossible("VaultHub", "VaultHub", addrs.vaultHub);
+  await transferOwnershipIfPossible("ProofScoreBurnRouter", "ProofScoreBurnRouter", addrs.burnRouter);
+  await transferOwnershipIfPossible("EcosystemVault", "EcosystemVault", addrs.ecosystemVault);
+  await transferOwnershipIfPossible("SanctumVault", "SanctumVault", addrs.sanctumVault);
+  await transferOwnershipIfPossible("FeeDistributor", "FeeDistributor", addrs.feeDistributor);
 
   if (addrs.ocp) {
-    try {
-      await token.transferOwnership(addrs.ocp);
-      console.log("  ✅ VFIDEToken.transferOwnership → OCP initiated (7-day accept window)");
-      console.log("     OCP must call token.acceptOwnership() within 7 days");
-    } catch (e: any) {
-      console.log("  ⏭️  transferOwnership:", e.reason || e.message);
-    }
-  } else {
-    console.log("  ⚠️  OCP not deployed yet — token remains deployer-owned");
+    console.log("  ℹ️  OCP is optional in this flow; AdminMultiSig is the canonical ownership target.");
   }
 
   // ══════════════════════════════════════════════
@@ -329,7 +343,7 @@ async function main() {
   console.log("  - timelock.execute(setAdmin txId)");
   console.log("");
   console.log("⚠️  BEFORE MAINNET:");
-  console.log("  - Deploy OwnerControlPanel → transfer token ownership");
+  console.log("  - Ensure all ownership transfers above are accepted/finalized by AdminMultiSig");
   console.log("  - Deploy VaultRecoveryClaim → register as recovery approver");
   console.log("  - Deploy SanctumVault, EcosystemVault → update FeeDistributor destinations");
   console.log("  - Run SystemHandover after 6 months");
