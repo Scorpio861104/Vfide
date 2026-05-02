@@ -11,7 +11,7 @@ import { ReentrancyGuard, IERC20, ISeer } from "./SharedInterfaces.sol";
 contract AdminMultiSig is ReentrancyGuard {
     uint256 public constant COUNCIL_SIZE = 5;
     uint256 public constant REQUIRED_APPROVALS = 3;
-    uint256 public constant EMERGENCY_APPROVALS = 5;
+    uint256 public constant EMERGENCY_APPROVALS = 4;
     
     uint256 public constant CONFIG_DELAY = 24 hours;
     uint256 public constant CRITICAL_DELAY = 48 hours;
