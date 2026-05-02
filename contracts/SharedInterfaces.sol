@@ -163,6 +163,10 @@ interface IVFIDEToken is IERC20 {
     function setVaultHub(address hub) external;
     function applyVaultHub() external;
     function cancelVaultHub() external;
+    function setEmergencyBreaker(address breaker) external;
+    function applyEmergencyBreaker() external;
+    function cancelEmergencyBreaker() external;
+    function setSeerAutonomous(address seerAutonomous) external;
     function setLedger(address ledger) external;
     function applyLedger() external;
     function cancelLedger() external;
@@ -175,6 +179,12 @@ interface IVFIDEToken is IERC20 {
     function setSanctumSink(address sanctum) external;
     function applySanctumSink() external;
     function cancelSanctumSink() external;
+    function setEcosystemDistributor(address distributor) external;
+    function applyEcosystemDistributor() external;
+    function cancelEcosystemDistributor() external;
+    function setFraudRegistry(address registry) external;
+    function applyFraudRegistry() external;
+    function cancelFraudRegistry() external;
     function proposeSystemExempt(address who, bool isExempt) external;
     function cancelPendingExempt() external;
     function confirmSystemExempt() external;
@@ -195,7 +205,10 @@ interface IVFIDEToken is IERC20 {
     function circuitBreakerExpiry() external view returns (uint256);
     // Anti-whale functions
     function setAntiWhale(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown) external;
+    function applyAntiWhale() external;
     function setWhaleLimitExempt(address addr, bool exempt) external;
+    function applyWhaleLimitExempt(address addr) external;
+    function applyVaultOnlyDisable() external;
     function maxTransferAmount() external view returns (uint256);
     function maxWalletBalance() external view returns (uint256);
     function dailyTransferLimit() external view returns (uint256);

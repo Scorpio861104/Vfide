@@ -306,6 +306,22 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("token_setModules", hub, ledger, router));
     }
 
+    function actionId_token_setEmergencyBreaker(address breaker) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_setEmergencyBreaker", breaker));
+    }
+
+    function actionId_token_setFraudRegistry(address registry) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_setFraudRegistry", registry));
+    }
+
+    function actionId_token_setEcosystemDistributor(address distributor) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_setEcosystemDistributor", distributor));
+    }
+
+    function actionId_token_setSeerAutonomous(address seerAutonomous) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_setSeerAutonomous", seerAutonomous));
+    }
+
     function actionId_token_setSinks(address treasury, address sanctum) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setSinks", treasury, sanctum));
     }
@@ -478,6 +494,45 @@ contract OwnerControlPanel {
         emit EmergencyAction("token_modules_applied", address(vfideToken));
     }
 
+    function token_setEmergencyBreaker(address breaker) external onlyOwner nonReentrant {
+        _consumeQueuedAction(actionId_token_setEmergencyBreaker(breaker));
+        vfideToken.setEmergencyBreaker(breaker);
+        emit EmergencyAction("token_emergency_breaker_set", breaker);
+    }
+
+    function token_applyEmergencyBreaker() external onlyOwner nonReentrant {
+        vfideToken.applyEmergencyBreaker();
+        emit EmergencyAction("token_emergency_breaker_applied", address(vfideToken));
+    }
+
+    function token_setFraudRegistry(address registry) external onlyOwner nonReentrant {
+        _consumeQueuedAction(actionId_token_setFraudRegistry(registry));
+        vfideToken.setFraudRegistry(registry);
+        emit EmergencyAction("token_fraud_registry_set", registry);
+    }
+
+    function token_applyFraudRegistry() external onlyOwner nonReentrant {
+        vfideToken.applyFraudRegistry();
+        emit EmergencyAction("token_fraud_registry_applied", address(vfideToken));
+    }
+
+    function token_setEcosystemDistributor(address distributor) external onlyOwner nonReentrant {
+        _consumeQueuedAction(actionId_token_setEcosystemDistributor(distributor));
+        vfideToken.setEcosystemDistributor(distributor);
+        emit EmergencyAction("token_eco_distributor_set", distributor);
+    }
+
+    function token_applyEcosystemDistributor() external onlyOwner nonReentrant {
+        vfideToken.applyEcosystemDistributor();
+        emit EmergencyAction("token_eco_distributor_applied", address(vfideToken));
+    }
+
+    function token_setSeerAutonomous(address seerAutonomous) external onlyOwner nonReentrant {
+        _consumeQueuedAction(actionId_token_setSeerAutonomous(seerAutonomous));
+        vfideToken.setSeerAutonomous(seerAutonomous);
+        emit EmergencyAction("token_seer_autonomous_set", seerAutonomous);
+    }
+
     function token_cancelModules() external onlyOwner nonReentrant {
         // Best-effort: cancel each pending module change if present.
         try vfideToken.cancelVaultHub() {} catch {}
@@ -497,6 +552,12 @@ contract OwnerControlPanel {
         if (treasury != address(0)) vfideToken.setTreasurySink(treasury);
         if (sanctum != address(0)) vfideToken.setSanctumSink(sanctum);
         emit EmergencyAction("token_sinks_set", address(vfideToken));
+    }
+
+    function token_applySinks() external onlyOwner nonReentrant {
+        vfideToken.applyTreasurySink();
+        vfideToken.applySanctumSink();
+        emit EmergencyAction("token_sinks_applied", address(vfideToken));
     }
     
     /**
@@ -645,6 +706,21 @@ contract OwnerControlPanel {
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);
         }
         emit EmergencyAction(exempt ? "token_batch_whale_exempt_added" : "token_batch_whale_exempt_removed", address(vfideToken));
+    }
+
+    function token_applyAntiWhale() external onlyOwner nonReentrant {
+        vfideToken.applyAntiWhale();
+        emit EmergencyAction("token_anti_whale_applied", address(vfideToken));
+    }
+
+    function token_applyWhaleLimitExempt(address addr) external onlyOwner nonReentrant {
+        vfideToken.applyWhaleLimitExempt(addr);
+        emit EmergencyAction("token_whale_exempt_applied", addr);
+    }
+
+    function token_applyVaultOnlyDisable() external onlyOwner nonReentrant {
+        vfideToken.applyVaultOnlyDisable();
+        emit EmergencyAction("token_vault_only_disable_applied", address(vfideToken));
     }
     
     // ═══════════════════════════════════════════════════════════════════════
