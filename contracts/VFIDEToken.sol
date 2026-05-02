@@ -349,7 +349,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // F-01 FIX: Reject malleable signatures (EIP-2 / secp256k1 upper bound on s)
         if (uint256(s) > ECDSA_S_UPPER_BOUND) revert VF_InvalidPermit();
         if (v != 27 && v != 28) revert VF_InvalidPermit();
-        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++));
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline));
         bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
         address signer = ecrecover(hash, v, r, s);
         if (signer == address(0) || signer != owner) revert VF_InvalidPermit();
