@@ -368,7 +368,15 @@ contract AdminMultiSig is ReentrancyGuard {
         require(!proposal.hasVetoed[msg.sender], "AdminMultiSig: already vetoed");
 
         proposal.hasVetoed[msg.sender] = true;
-        proposal.status = ProposalStatus.Vetoed;
+        proposal.vetoCount++;
+
+        uint256 requiredVetos = proposal.proposalType == ProposalType.EMERGENCY
+            ? EMERGENCY_APPROVALS
+            : REQUIRED_APPROVALS;
+
+        if (proposal.vetoCount >= requiredVetos) {
+            proposal.status = ProposalStatus.Vetoed;
+        }
 
         emit ProposalVetoed(_proposalId, msg.sender);
     }
