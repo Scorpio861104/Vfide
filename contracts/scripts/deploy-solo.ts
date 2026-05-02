@@ -259,6 +259,7 @@ async function deployContracts(config: SoloConfig): Promise<{
       config.sanctumSink,
       config.burnSink,
       config.ecosystemSink,
+      tokenAddr,
     ];
     const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
     burnRouter = await Router.deploy(...constructorArgs.ProofScoreBurnRouter);

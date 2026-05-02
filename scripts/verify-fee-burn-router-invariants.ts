@@ -48,6 +48,7 @@ async function main() {
   const tokenFactory = new ContractFactory(tokenArtifact.abi as any, tokenArtifact.bytecode, owner);
   const token = (await tokenFactory.deploy()) as any;
   await token.waitForDeployment();
+  const tokenAddress = await token.getAddress();
 
   const routerFactory = new ContractFactory(
     routerArtifact.abi as any,
@@ -58,11 +59,10 @@ async function main() {
     await seer.getAddress(),
     sanctumSinkAddress,
     burnSinkAddress,
-    ecosystemSinkAddress
+    ecosystemSinkAddress,
+    tokenAddress
   )) as any;
   await router.waitForDeployment();
-
-  await (await router.setToken(await token.getAddress())).wait();
 
   const amount = 1_000_000_000_000_000_000n;
 

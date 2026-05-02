@@ -355,10 +355,6 @@ contract OwnerControlPanel {
         );
     }
 
-    function actionId_sustainability_setTokenReference(address token) private pure returns (bytes32) {
-        return keccak256(abi.encode("sustainability_setTokenReference", token));
-    }
-
     function actionId_seer_setThresholds(
         uint16 lowTrust,
         uint16 highTrust,
@@ -798,15 +794,6 @@ contract OwnerControlPanel {
             enabled
         );
         emit AdaptiveFeesUpdated(lowVolumeThreshold, highVolumeThreshold, lowVolMultiplier, highVolMultiplier, enabled);
-    }
-    
-    /**
-     * @notice Set token reference on burn router (required for supply checks)
-     */
-    function sustainability_setTokenReference(address token) external onlyOwner nonReentrant {
-        _consumeQueuedAction(actionId_sustainability_setTokenReference(token));
-        burnRouter.setToken(token);
-        emit EmergencyAction("sustainability_token_reference_set", token);
     }
     
     // ═══════════════════════════════════════════════════════════════════════

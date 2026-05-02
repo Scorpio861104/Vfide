@@ -163,12 +163,13 @@ async function main() {
     ethers.ZeroAddress,           // _hub (set after VaultHub)
   );
   
-  // ProofScoreBurnRouter(seer, sanctumSink, burnSink, ecosystemSink)
+  // ProofScoreBurnRouter(seer, sanctumSink, burnSink, ecosystemSink, token)
   await deploy("ProofScoreBurnRouter",
     deployed.Seer,                // _seer
     deployer.address,             // _sanctumSink (temp)
     deployer.address,             // _burnSink (temp)
     deployer.address,             // _ecosystemSink (temp)
+    deployed.VFIDEToken,          // _token
   );
   
   // ══════════════════════════════════════════════

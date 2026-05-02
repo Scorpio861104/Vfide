@@ -227,6 +227,7 @@ function validateConstructorArgs(): boolean {
       ZERO_ADDR,
       ZERO_ADDR,
       ZERO_ADDR,
+      deployed.VFIDEToken || ZERO_ADDR,
     ],
     VaultHub: (deployed) => [
       deployed.VFIDEToken || ZERO_ADDR,

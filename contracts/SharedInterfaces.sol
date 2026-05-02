@@ -117,7 +117,6 @@ interface IProofScoreBurnRouter {
     function previewFees(address user, uint256 amount) external view returns (uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint256 netAmount, uint16 score);
     
     // Sustainability controls
-    function setToken(address token) external;
     function setSustainability(uint256 _dailyBurnCap, uint256 _minimumSupplyFloor, uint16 _ecosystemMinBps) external;
     function setAdaptiveFees(uint256 lowVolumeThreshold, uint256 highVolumeThreshold, uint16 lowVolMultiplier, uint16 highVolMultiplier, bool enabled) external;
     function recordBurn(uint256 burnAmount) external;

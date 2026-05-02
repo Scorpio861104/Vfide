@@ -99,8 +99,8 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     uint256 public currentDayStart;
     uint256 public dailyBurnedAmount;
     
-    // Reference to token for supply checking
-    address public token;
+    // Reference to token for supply checking (immutable once deployed)
+    address public immutable token;
     
     // ═══════════════════════════════════════════════════════════════════════════
     // VOLUME-ADAPTIVE FEES - Adjusts fees based on market activity
@@ -140,23 +140,24 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         return (timestamp / 1 days) * 1 days;
     }
 
-    // slither-disable-next-line missing-zero-check
-    constructor(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) {
+    constructor(
+        address _seer,
+        address _sanctumSink,
+        address _burnSink,
+        address _ecosystemSink,
+        address _token
+    ) {
         _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
+        if (_token == address(0)) {
+            revert BURN_Zero();
+        }
         seer = ISeer(_seer);
         sanctumSink = _sanctumSink;
         burnSink = _burnSink;
         ecosystemSink = _ecosystemSink;
+        token = _token;
         currentDayStart = _dayStart(block.timestamp);
         emit ModulesSet(_seer, _sanctumSink, _burnSink, _ecosystemSink);
-    }
-    
-    /**
-     * @notice Set token reference for supply checking
-     */
-    function setToken(address _token) external onlyOwner nonReentrant {
-        require(_token != address(0), "zero token");
-        token = _token;
     }
     
     /**

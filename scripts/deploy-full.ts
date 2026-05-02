@@ -159,6 +159,7 @@ async function main() {
     deployer.address, // _sanctumSink (temp)
     deployer.address, // _burnSink (temp)
     deployer.address, // _ecosystemSink (temp)
+    book.VFIDEToken,  // _token
   );
 
   // ══════════════════════════════════════════════════════════════════════════
