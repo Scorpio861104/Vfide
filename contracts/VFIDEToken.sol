@@ -105,8 +105,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Policy settings
     bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
     bool public policyLocked = false;             // once locked, cannot disable vault-only
-    bool public circuitBreaker = false;           // H-02 FIX: emergency status flag; does NOT implicitly bypass fees (use setFeeBypass separately)
-    uint256 public circuitBreakerExpiry = 0;      // auto-disable timestamp (0 = indefinite)
     uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
     bool public feeBypass = false;                // bypass BurnRouter fee calculation only
     uint256 public feeBypassExpiry = 0;
@@ -151,11 +149,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     address public pendingWhitelistAddr;
     bool    public pendingWhitelistStatus;
     uint64  public pendingWhitelistAt;
-
-    /// H-01 FIX: Timelock for circuit-breaker activation (48-hour delay to prevent surprise bypass).
-    bool    public pendingCircuitBreakerActive;
-    uint256 public pendingCircuitBreakerDuration;
-    uint64  public pendingCircuitBreakerAt;
 
     /// H-2 FIX: Timelock for vault-only disablement (48-hour delay; re-enabling is always instant).
     uint64  public pendingVaultOnlyDisableAt;
@@ -205,8 +198,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event VaultOnlyDisableCancelled();
     event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
-    event CircuitBreakerSet(bool active, uint256 expiry);
-    event CircuitBreakerProposed(bool active, uint256 duration, uint64 effectiveAt); // H-01 FIX
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
     event FeeBypassProposed(bool active, uint256 duration, uint64 effectiveAt); // H-6 FIX
     event ExternalCallFailed(string indexed context, bytes reason);
@@ -239,7 +230,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     error VF_InvalidFeeSink();
     error VF_RouterRequired();
     error VF_FeeBypassCooldown();
-    error VF_EmergencyHalted();
     error VF_SeerBlocked();
 
     /// Constructor: mint full supply and distribute at genesis
@@ -722,47 +712,17 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("plk");
     }
 
-    /// Emergency switch to bypass external calls (SecurityHub/BurnRouter) if they fail.
-    /// Can be toggled even if policyLocked is true, to ensure liveness.
-    /**
-     * @notice H-01 FIX: Propose activating the circuit breaker with a 48-hour timelock.
-     * @dev Deactivation remains instant for liveness. Only activation requires a timelock.
-     * @param _active True to propose enabling; false to immediately disable.
-     * @param _duration Duration in seconds (max 7 days). Ignored when disabling.
-     */
     function setCircuitBreaker(bool _active, uint256 _duration) external onlyOwner {
-        _syncEmergencyFlags();
-        if (!_active) {
-            // Immediate disable is always allowed for liveness
-            circuitBreaker = false;
-            circuitBreakerExpiry = 0;
-            pendingCircuitBreakerAt = 0;
-            emit CircuitBreakerSet(false, 0);
-            _log("cb-");
-        } else {
-            // Activation requires a 48-hour timelock
-            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
-            pendingCircuitBreakerActive = true;
-            pendingCircuitBreakerDuration = _duration;
-            pendingCircuitBreakerAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
-            emit CircuitBreakerProposed(true, _duration, pendingCircuitBreakerAt);
-            _log("cbp");
-        }
+        // #311: Circuit-breaker transfer halts were removed from token policy.
+        // Keep this ABI method as a no-op for backward compatibility with existing tooling.
+        _active;
+        _duration;
     }
 
-    /// @notice Apply a pending circuit breaker activation after the 48-hour timelock.
     function confirmCircuitBreaker() external onlyOwner {
-        if (pendingCircuitBreakerAt == 0) revert VF_NoPending();
-        if (block.timestamp < pendingCircuitBreakerAt) revert VF_TimelockActive();
-        _syncEmergencyFlags();
-        circuitBreaker = true;
-        circuitBreakerExpiry = block.timestamp + pendingCircuitBreakerDuration;
-        pendingCircuitBreakerAt = 0;
-        emit CircuitBreakerSet(true, circuitBreakerExpiry);
-        _log("cb+");
+        // #311: No pending circuit-breaker state exists after removing token-side halts.
+        revert VF_NoPending();
     }
-
-    // ── setSecurityBypass REMOVED — no SecurityHub lock checks to bypass ──
 
     /// @notice Propose or immediately deactivate BurnRouter fee bypass.
     /// @dev H-6 FIX: Activation now requires a 48-hour timelock (same as circuit breaker).
@@ -803,14 +763,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("fb+");
     }
     
-    /**
-     * @notice Check if circuit breaker is currently active (respects expiry)
-     * @return True if circuit breaker is active and not expired
-     */
     function isCircuitBreakerActive() public view returns (bool) {
-        if (!circuitBreaker) return false;
-        if (circuitBreakerExpiry > 0 && block.timestamp >= circuitBreakerExpiry) return false;
-        return true;
+        return false;
     }
 
     /// @notice Check if fee bypass is active (independent of circuit breaker).
@@ -935,10 +889,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         address scoringFrom = _resolveFeeScoringAddress(from);
 
-        if (address(emergencyBreaker) != address(0) && emergencyBreaker.halted()) {
-            if (!(systemExempt[from] || systemExempt[to])) revert VF_EmergencyHalted();
-        }
-
         address logicalTo = to;
         address custodyTo = to;
 
@@ -1059,13 +1009,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     _balances[sink3] += _ecoAmt;
                     emit Transfer(from, sink3, _ecoAmt);
                     remaining -= _ecoAmt;
-                    // C-5 FIX: Notify FeeDistributor so it can track incoming revenue.
-                    // Tokens are already credited to sink3 above; the receiveFee() call is a
-                    // required accounting notification — do NOT silently swallow failures.
-                    // If FeeDistributor reverts the entire transfer reverts so accounting stays
-                    // in sync and fees can never be credited without FeeDistributor consent.
+                    // #311 (cross): FeeDistributor notification must not halt transfers.
+                    // Emit telemetry on failures and continue transfer execution.
                     if (sink3 == ecosystemDistributor) {
-                        IEcosystemDistributor(sink3).receiveFee(_ecoAmt);
+                        try IEcosystemDistributor(sink3).receiveFee(_ecoAmt) {} catch (bytes memory reason) {
+                            emit ExternalCallFailed("fd", reason);
+                        }
                     }
                 }
 
@@ -1207,18 +1156,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     // _locked() REMOVED — no third-party locking of user vaults
 
     function _syncEmergencyFlags() internal {
-        if (circuitBreaker && circuitBreakerExpiry > 0 && block.timestamp >= circuitBreakerExpiry) {
-            circuitBreaker = false;
-            circuitBreakerExpiry = 0;
-        }
         if (feeBypass && feeBypassExpiry > 0 && block.timestamp >= feeBypassExpiry) {
             feeBypass = false;
             feeBypassExpiry = 0;
         }
     }
 
-    /// @notice T-07 FIX: Permissionless state cleanup — clears stale circuit breaker / bypass
-    ///         storage flags so that off-chain reads of the public variables reflect reality.
+    /// @notice T-07 FIX: Permissionless state cleanup for time-bounded emergency policy flags.
     ///         Safe to call by anyone; no funds are moved and no access is granted.
     function syncEmergencyFlags() external {
         _syncEmergencyFlags();
