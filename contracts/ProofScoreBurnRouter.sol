@@ -18,7 +18,7 @@ import "./lib/ScoringConstants.sol";
 error BURN_Zero();
 error BURN_NotDAO();
 
-contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
+contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     event ModulesSet(address seer, address sanctumSink, address burnSink, address ecosystemSink);
     event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 baseEcosystemBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
     // H-6 FIX: Emit effective ecosystem allocations at representative score tiers whenever fee
@@ -668,7 +668,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         address from,
         address to,
         uint256 amount
-    ) external whenNotPaused nonReentrant returns (
+    ) external nonReentrant returns (
         uint256 burnAmount,
         uint256 sanctumAmount,
         uint256 ecosystemAmount,
@@ -696,7 +696,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
      * @notice Update daily burn tracking (called by token after transfer)
      * @dev This allows accurate daily cap enforcement
      */
-    function recordBurn(uint256 burnAmount) external whenNotPaused nonReentrant {
+    function recordBurn(uint256 burnAmount) external nonReentrant {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
         dailyBurnedAmount += burnAmount;
@@ -706,7 +706,7 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
      * @notice Record transfer volume (called by token after transfer)
      * @dev Used for adaptive fee calculations
      */
-    function recordVolume(uint256 amount) external whenNotPaused nonReentrant {
+    function recordVolume(uint256 amount) external nonReentrant {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
         dailyVolumeTracked += amount;
@@ -891,9 +891,6 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         // Return as percentage with 2 decimal precision (e.g., 175 = 1.75%)
         feePercent = totalBps;
     }
-
-    function pause() external onlyOwner nonReentrant { _pause(); }
-    function unpause() external onlyOwner nonReentrant { _unpause(); }
 
     /**
      * Calculate split ratio (for transparency)
