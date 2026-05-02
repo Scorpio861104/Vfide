@@ -54,6 +54,7 @@ async function main() {
   const allowCommingledFeeDestinations =
     process.env.ALLOW_COMMINGLED_FEE_DESTINATIONS === "true";
   const requireSystemHandover = process.env.REQUIRE_SYSTEM_HANDOVER !== "false";
+  const finalizeOwnershipTransfer = process.env.FINALIZE_OWNERSHIP_TRANSFER === "true";
 
   for (const [name, addr] of Object.entries(addrs)) {
     if (!addr && ![
@@ -266,7 +267,12 @@ async function main() {
   // ══════════════════════════════════════════════
   console.log("\n═══ 6. Ownership → AdminMultiSig ═══");
 
+  if (!finalizeOwnershipTransfer) {
+    console.log("  ⏭️  Skipped ownership transfer. Set FINALIZE_OWNERSHIP_TRANSFER=true only after all 48h applies are complete.");
+  }
+
   async function transferOwnershipIfPossible(label: string, contractName: string, addr?: string) {
+    if (!finalizeOwnershipTransfer) return;
     if (!addr) return;
     try {
       const c = await ethers.getContractAt(contractName, addr);
