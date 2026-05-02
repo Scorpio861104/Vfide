@@ -22,7 +22,7 @@
  *   - Authorises Seer + VaultHub as ProofLedger loggers
  *
  * Required env vars:
- *   PRIVATE_KEY, OWNER_ADDRESS, TREASURY_ADDRESS (or OWNER_ADDRESS is used for both)
+ *   PRIVATE_KEY, OWNER_ADDRESS, TREASURY_ADDRESS
  *
  * Optional env vars for ProofScoreBurnRouter (all three required together):
  *   SANCTUM_SINK, BURN_SINK, ECOSYSTEM_SINK
@@ -90,9 +90,7 @@ function optional(value: string | undefined): string {
 function getConfig(): SoloConfig {
   const network = process.env.HARDHAT_NETWORK || 'hardhat';
   const owner = required('OWNER_ADDRESS', process.env.OWNER_ADDRESS);
-  const treasury = optional(process.env.TREASURY_ADDRESS) !== ethers.ZeroAddress
-    ? process.env.TREASURY_ADDRESS!
-    : owner;
+  const treasury = required('TREASURY_ADDRESS', process.env.TREASURY_ADDRESS);
 
   const sanctumSink  = process.env.SANCTUM_SINK   || null;
   const burnSink     = process.env.BURN_SINK       || null;
@@ -122,6 +120,13 @@ function getConfig(): SoloConfig {
     ecosystemSink,
     verify: process.env.VERIFY_CONTRACTS === 'true',
   };
+}
+
+async function assertContractAddress(label: string, address: string): Promise<void> {
+  const code = await ethers.provider.getCode(address);
+  if (!code || code === '0x') {
+    throw new Error(`${label} must be a deployed contract address. Received non-contract: ${address}`);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -432,6 +437,9 @@ async function main() {
   console.log('🚀 Starting VFIDE Solo Deployment…\n');
 
   const config = getConfig();
+
+  // #306 guard: VFIDEToken constructor requires treasury to be a deployed contract.
+  await assertContractAddress('TREASURY_ADDRESS', config.treasury);
 
   console.log('📋 Configuration:');
   console.log(`   Network:     ${config.network}`);

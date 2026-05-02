@@ -69,6 +69,14 @@ function parseBooleanEnv(value: string | undefined): boolean {
   return (value || '').trim().toLowerCase() === 'true';
 }
 
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value || value.trim() === '') {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+  return value;
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
@@ -86,6 +94,13 @@ async function main() {
   console.log("Deploying with:", deployer.address);
   console.log("Chain ID:", chainId);
   console.log("Balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)));
+
+  // #306 guard: VFIDEToken constructor requires treasury to be a deployed contract.
+  const treasuryAddress = requiredEnv('TREASURY_ADDRESS');
+  const treasuryCode = await ethers.provider.getCode(treasuryAddress);
+  if (!treasuryCode || treasuryCode === '0x') {
+    throw new Error(`TREASURY_ADDRESS must be a deployed contract address. Received non-contract: ${treasuryAddress}`);
+  }
 
   const contractSet = deployTestnetFaucet
     ? DEPLOYMENT_CONTRACTS
@@ -130,7 +145,7 @@ async function main() {
   // VFIDEToken(devReserve, treasury, vaultHub, ledger, treasurySink)
   await deploy("VFIDEToken",
     deployed.DevReserveVestingVault, // devReserveVestingVault
-    deployer.address,                // treasury (receives 150M)
+    treasuryAddress,                 // treasury (receives 150M)
     ethers.ZeroAddress,              // _vaultHub (set after via timelock)
     deployed.ProofLedger,            // _ledger
     deployer.address,                // _treasurySink (temp, update later)

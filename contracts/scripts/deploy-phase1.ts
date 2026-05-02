@@ -125,6 +125,13 @@ function getDeploymentConfig(): DeploymentConfig {
   return config;
 }
 
+async function assertContractAddress(label: string, address: string): Promise<void> {
+  const code = await ethers.provider.getCode(address);
+  if (!code || code === '0x') {
+    throw new Error(`${label} must be a deployed contract address. Received non-contract: ${address}`);
+  }
+}
+
 /**
  * Deploy all Phase 1 contracts
  */
@@ -134,6 +141,10 @@ async function deployContracts(config: DeploymentConfig): Promise<DeployedContra
     throw new Error('No deployer signer available');
   }
   console.log(`📝 Deploying from: ${deployer.address}\n`);
+
+  // #306 guard: treasury must be a contract because VFIDEToken constructor enforces VF_NotContract on EOAs.
+  await assertContractAddress('TREASURY_ADDRESS', config.treasury);
+  await assertContractAddress('DEV_RESERVE_VESTING_VAULT', config.devReserveVestingVault);
 
   // 1. Deploy VFIDEAccessControl
   console.log('1️⃣  Deploying VFIDEAccessControl...');

@@ -59,10 +59,25 @@ function poolArgs(contractName: "DAOPayrollPool" | "MerchantCompetitionPool" | "
   return [tokenAddress, admin, ethers.parseEther("250000")];
 }
 
+function requiredEnv(name: string): string {
+  const value = process.env[name];
+  if (!value || value.trim() === '') {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+  return value;
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const network = process.env.HARDHAT_NETWORK ?? "hardhat";
   const book = readBook(network);
+
+  // #306 guard: VFIDEToken constructor requires treasury to be a deployed contract.
+  const treasuryAddress = requiredEnv('TREASURY_ADDRESS');
+  const treasuryCode = await ethers.provider.getCode(treasuryAddress);
+  if (!treasuryCode || treasuryCode === '0x') {
+    throw new Error(`TREASURY_ADDRESS must be a deployed contract address. Received non-contract: ${treasuryAddress}`);
+  }
 
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║  VFIDE Full System Deployment             ║");
@@ -120,7 +135,7 @@ async function main() {
   await deploy(
     "VFIDEToken",
     book.DevReserveVestingVault,
-    deployer.address,   // treasury (receives 150 M)
+    treasuryAddress,    // treasury (receives 150 M)
     ethers.ZeroAddress, // _vaultHub (wired via timelock)
     book.ProofLedger,
     deployer.address,   // _treasurySink (temp)

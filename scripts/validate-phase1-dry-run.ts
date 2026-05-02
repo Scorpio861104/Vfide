@@ -48,7 +48,7 @@ const PHASE1_CONTRACTS: ContractSpec[] = [
     dependencies: ["ProofLedger", "DevReserveVestingVault"],
     constructorArgs: (deployed) => [
       deployed.DevReserveVestingVault,
-      ZERO_ADDRESS, // treasury (deployer)
+      deployed.ProofLedger, // treasury (must be contract)
       ZERO_ADDRESS, // _vaultHub (set via timelock)
       deployed.ProofLedger,
       ZERO_ADDRESS, // _treasurySink (temp, set later)
@@ -212,7 +212,7 @@ function validateConstructorArgs(): boolean {
     ],
     VFIDEToken: (deployed) => [
       deployed.DevReserveVestingVault || ZERO_ADDR,
-      ZERO_ADDR, // treasury
+      deployed.ProofLedger || ZERO_ADDR, // treasury (must be contract)
       ZERO_ADDR, // _vaultHub
       deployed.ProofLedger || ZERO_ADDR,
       ZERO_ADDR, // _treasurySink
