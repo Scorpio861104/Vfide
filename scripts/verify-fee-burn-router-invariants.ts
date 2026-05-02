@@ -1,4 +1,4 @@
-import { ContractFactory, JsonRpcProvider, ZeroAddress } from 'ethers';
+import { ContractFactory, JsonRpcProvider } from 'ethers';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -21,9 +21,15 @@ async function main() {
 
   const owner = await provider.getSigner(0);
   const user = await provider.getSigner(1);
+  const sinkA = await provider.getSigner(2);
+  const sinkB = await provider.getSigner(3);
+  const sinkC = await provider.getSigner(4);
 
   const ownerAddress = await owner.getAddress();
   const userAddress = await user.getAddress();
+  const sanctumSinkAddress = await sinkA.getAddress();
+  const burnSinkAddress = await sinkB.getAddress();
+  const ecosystemSinkAddress = await sinkC.getAddress();
 
   const seerArtifact = loadArtifact(
     'artifacts/contracts/mocks/ProofScoreBurnRouterVerifierMocks.sol/MockSeerForBurnRouter.json'
@@ -50,9 +56,9 @@ async function main() {
   );
   const router = (await routerFactory.deploy(
     await seer.getAddress(),
-    ownerAddress,
-    ZeroAddress,
-    ownerAddress
+    sanctumSinkAddress,
+    burnSinkAddress,
+    ecosystemSinkAddress
   )) as any;
   await router.waitForDeployment();
 
@@ -61,8 +67,6 @@ async function main() {
   const amount = 1_000_000_000_000_000_000n;
 
   await (await seer.setScore(userAddress, 8000)).wait();
-  await (await router.updateScore(userAddress)).wait();
-
   await (await seer.setScore(userAddress, 4000)).wait();
   await increaseTime(provider, 8 * 24 * 60 * 60);
 
@@ -117,6 +121,31 @@ async function main() {
   const split = (await router.getSplitRatio()) as readonly [bigint, bigint, bigint];
   if (split[0] !== 40n || split[1] !== 10n || split[2] !== 50n) {
     throw new Error(`Expected split ratio 40/10/50, got ${split.join('/')}`);
+  }
+
+  // #345: ecosystem minimum top-up must not increase total fees above the original totalFee.
+  await (await router.setSustainability(0n, 0n, 100)).wait();
+  await (await seer.setScore(userAddress, 8000)).wait();
+  const largeAmount = 100n * amount;
+  const cappedMinFees = (await router.computeFees(userAddress, ownerAddress, largeAmount)) as readonly [
+    bigint,
+    bigint,
+    bigint,
+    string,
+    string,
+    string,
+  ];
+  const cappedMinTotal = cappedMinFees[0] + cappedMinFees[1] + cappedMinFees[2];
+  const expectedBaseTotalFee = (largeAmount * 25n) / 10000n; // score 8000 => 25 bps
+  if (cappedMinTotal !== expectedBaseTotalFee) {
+    throw new Error(
+      `Expected total fee to remain capped at original totalFee=${expectedBaseTotalFee}, got ${cappedMinTotal}`
+    );
+  }
+  if (cappedMinFees[0] !== 0n || cappedMinFees[1] !== 0n || cappedMinFees[2] !== expectedBaseTotalFee) {
+    throw new Error(
+      `Expected full capped fee to route to ecosystem; got burn=${cappedMinFees[0]} sanctum=${cappedMinFees[1]} ecosystem=${cappedMinFees[2]}`
+    );
   }
 
   console.log('Fee/Burn Router invariant checks passed');

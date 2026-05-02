@@ -11,6 +11,10 @@ contract MockSeerForBurnRouter {
     function getScore(address user) external view returns (uint16) {
         return scoreOf[user];
     }
+
+    function getCachedScore(address user) external view returns (uint16) {
+        return scoreOf[user];
+    }
 }
 
 interface IRouterRecordBurn {

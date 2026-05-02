@@ -600,18 +600,24 @@ contract ProofScoreBurnRouter is Ownable, Pausable, ReentrancyGuard {
         uint256 minEcosystemAmount = (amount * ecosystemMinBps) / 10000;
         if (ecosystemAmount < minEcosystemAmount) {
             uint256 shortfall = minEcosystemAmount - ecosystemAmount;
-            ecosystemAmount = minEcosystemAmount;
+            uint256 availableToShift = burnAmount + sanctumAmount;
 
-            // Preserve total fee by reducing burn first, then sanctum if needed.
-            if (burnAmount >= shortfall) {
-                burnAmount -= shortfall;
-            } else {
-                uint256 remaining = shortfall - burnAmount;
+            // Never increase total fees above the originally computed totalFee.
+            // If min ecosystem exceeds available shift, route the full totalFee to ecosystem.
+            if (shortfall >= availableToShift) {
+                ecosystemAmount = totalFee;
                 burnAmount = 0;
-                if (sanctumAmount >= remaining) {
-                    sanctumAmount -= remaining;
+                sanctumAmount = 0;
+            } else {
+                ecosystemAmount = minEcosystemAmount;
+
+                // Preserve total fee by reducing burn first, then sanctum if needed.
+                if (burnAmount >= shortfall) {
+                    burnAmount -= shortfall;
                 } else {
-                    sanctumAmount = 0;
+                    uint256 remaining = shortfall - burnAmount;
+                    burnAmount = 0;
+                    sanctumAmount -= remaining;
                 }
             }
         }
