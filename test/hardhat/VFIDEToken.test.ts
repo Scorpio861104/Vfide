@@ -243,6 +243,91 @@ describe("VFIDEToken", () => {
   });
 
   // ─── Core: vaultOnly mode ──────────────────────────────────────────────────
+  describe("permit", () => {
+    it("accepts a valid EIP-2612 signature", async () => {
+      const { token, owner, user1, ethers } = await deployToken();
+
+      const amount = 1234n;
+      const nonce = await token.nonces(owner.address);
+      const latest = await ethers.provider.getBlock("latest");
+      const deadline = BigInt((latest?.timestamp ?? 0) + 3600);
+      const network = await ethers.provider.getNetwork();
+
+      const domain = {
+        name: await token.name(),
+        version: "1",
+        chainId: network.chainId,
+        verifyingContract: await token.getAddress(),
+      };
+
+      const types = {
+        Permit: [
+          { name: "owner", type: "address" },
+          { name: "spender", type: "address" },
+          { name: "value", type: "uint256" },
+          { name: "nonce", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+        ],
+      };
+
+      const signature = await owner.signTypedData(domain, types, {
+        owner: owner.address,
+        spender: user1.address,
+        value: amount,
+        nonce,
+        deadline,
+      });
+      const { v, r, s } = ethers.Signature.from(signature);
+
+      await token.permit(owner.address, user1.address, amount, deadline, v, r, s);
+
+      const allowance = await token.allowance(owner.address, user1.address);
+      assert.equal(allowance, amount);
+    });
+
+    it("rejects a signature when the submitted deadline differs from the signed deadline", async () => {
+      const { token, owner, user1, ethers } = await deployToken();
+
+      const amount = 999n;
+      const nonce = await token.nonces(owner.address);
+      const latest = await ethers.provider.getBlock("latest");
+      const signedDeadline = BigInt((latest?.timestamp ?? 0) + 3600);
+      const submittedDeadline = signedDeadline + 1n;
+      const network = await ethers.provider.getNetwork();
+
+      const domain = {
+        name: await token.name(),
+        version: "1",
+        chainId: network.chainId,
+        verifyingContract: await token.getAddress(),
+      };
+
+      const types = {
+        Permit: [
+          { name: "owner", type: "address" },
+          { name: "spender", type: "address" },
+          { name: "value", type: "uint256" },
+          { name: "nonce", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+        ],
+      };
+
+      const signature = await owner.signTypedData(domain, types, {
+        owner: owner.address,
+        spender: user1.address,
+        value: amount,
+        nonce,
+        deadline: signedDeadline,
+      });
+      const { v, r, s } = ethers.Signature.from(signature);
+
+      await assert.rejects(
+        () => token.permit(owner.address, user1.address, amount, submittedDeadline, v, r, s),
+        /revert/
+      );
+    });
+  });
+
   describe("vaultOnly mode", () => {
     it("owner can enable vaultOnly mode", async () => {
       const { token, owner } = await deployToken();

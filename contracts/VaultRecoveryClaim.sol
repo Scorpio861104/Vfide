@@ -54,8 +54,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     uint64 public constant CHALLENGE_PERIOD = 7 days;      // Time for original owner to cancel (guardian path)
-    // F-41 FIX: verifier-only path (no guardians) gets a longer challenge window and higher quorum.
-    uint64 public constant VERIFIER_ONLY_CHALLENGE_PERIOD = 14 days; // doubled window when no guardians
     uint64 public constant FINALIZATION_GRACE_PERIOD = 1 days;
     uint64 public constant GUARDIAN_VOTE_WINDOW = 14 days; // Time for guardians to vote
     uint64 public constant CLAIM_EXPIRY = 30 days;         // Max time for claim process
@@ -63,7 +61,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
     uint8 public constant MIN_GUARDIAN_APPROVALS = 2;      // Minimum guardian approvals needed
     uint8 public constant MIN_VERIFIER_VOTES = 3;          // Minimum trusted verifier votes (guardian path)
-    uint8 public constant MIN_VERIFIER_VOTES_NO_GUARDIAN = 5; // F-41 FIX: raised quorum for verifier-only path
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // STORAGE
@@ -336,12 +333,12 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         
         // F-54 FIX: Extend challenge period to 14 days when vault had activity within 30 days.
         // C-4 FIX: If guardian setup is not yet complete the vault has weaker access controls;
-        //           apply the maximum challenge window to give the owner maximum reaction time.
+        //           use the extended challenge window to give the owner maximum reaction time.
         bool setupComplete = vaultHub.guardianSetupComplete(vault);
         uint64 effectiveChallengePeriod;
         if (!setupComplete) {
-            // Guardian setup incomplete → use the longest available window.
-            effectiveChallengePeriod = VERIFIER_ONLY_CHALLENGE_PERIOD; // 14 days
+            // Guardian setup incomplete → use the extended window.
+            effectiveChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
         } else if (vaultLastActivity[vault] != 0 &&
             block.timestamp - vaultLastActivity[vault] <= VAULT_ACTIVITY_WINDOW) {
             effectiveChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
@@ -459,23 +456,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         
         emit VerifierVoteCast(claimId, msg.sender, approve, claim.verifierVotes);
         
-        IUserVaultRecovery userVault = IUserVaultRecovery(claim.vault);
-        // F-41 FIX: verifier-only path requires higher quorum (5 instead of 3) and a 14-day challenge window.
-        // H-5 FIX: Use snapshot to decide verifier-fallback eligibility — prevents guardians from
-        // self-removing after initiation to enable the weaker verifier path.
-        if (_verifierFallbackAvailableSnapshot(claim.guardianCountSnapshot) && claim.verifierVotes >= MIN_VERIFIER_VOTES_NO_GUARDIAN) {
-            claim.status = ClaimStatus.GuardianApproved;
-            claim.challengeEndsAt = uint64(block.timestamp + VERIFIER_ONLY_CHALLENGE_PERIOD);
-        }
-    }
-
-    function _verifierFallbackAvailable(IUserVaultRecovery userVault) internal view returns (bool) {
-        return userVault.guardianCount() < MIN_GUARDIAN_APPROVALS;
-    }
-
-    // H-5 FIX: Snapshot-based version used inside claim adjudication so runtime removal has no effect.
-    function _verifierFallbackAvailableSnapshot(uint8 snapshotCount) internal pure returns (bool) {
-        return snapshotCount < MIN_GUARDIAN_APPROVALS;
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

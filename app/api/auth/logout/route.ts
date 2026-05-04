@@ -3,6 +3,7 @@ import { clearAuthCookies } from '@/lib/auth/cookieAuth';
 import { revokeToken, hashToken } from '@/lib/auth/tokenRevocation';
 import { getRequestAuthToken, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { clearActivityHistory } from '@/lib/security/anomalyDetection';
 import { logger } from '@/lib/logger';
 
 /**
@@ -42,6 +43,14 @@ export const POST = withAuth(async (request: NextRequest, user) => {
     } else if (token !== null && token !== undefined) {
       // Do not fail logout for malformed token shapes from upstream extraction.
       logger.warn('[Logout] Ignoring malformed token payload');
+    }
+
+    // Clear activity history so post-logout logins don't trigger false anomaly alerts
+    const userAddress = typeof user?.address === 'string' ? user.address.trim() : '';
+    if (userAddress) {
+      clearActivityHistory(userAddress).catch((err) =>
+        logger.warn('[Logout] clearActivityHistory failed:', err)
+      );
     }
 
     // Clear cookies

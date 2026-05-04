@@ -62,7 +62,7 @@ async function postHandler(request: NextRequest) {
   } catch (error) {
     logger.error('[Merchant Receipt SMS] Error:', error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Unexpected SMS receipt error.' },
+      { success: false, error: 'Failed to send SMS receipt' },
       { status: 500 }
     );
   }

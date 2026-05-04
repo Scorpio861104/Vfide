@@ -5,11 +5,22 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { runWithDbUserAddressContext } from '@/lib/db';
 import { query } from '@/lib/db';
+import { z } from 'zod4';
 
 export const runtime = 'nodejs';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const INTERVALS = new Set(['weekly', 'monthly', 'quarterly', 'yearly']);
+const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
+
+const createSubscriptionSchema = z.object({
+  address: z.string().trim().regex(ADDRESS_REGEX),
+  recipient: z.string().trim().regex(ADDRESS_REGEX),
+  amount: z.string().trim().regex(DECIMAL_AMOUNT_REGEX),
+  label: z.string().max(200).optional(),
+  interval: z.enum(['weekly', 'monthly', 'quarterly', 'yearly']).optional(),
+  contractsReady: z.boolean().optional(),
+});
 
 type BillingInterval = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 type SubscriptionStatus = 'active' | 'paused' | 'cancelled';
@@ -180,18 +191,12 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
 export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-  const body = await request.json().catch(() => null) as {
-    address?: string;
-    recipient?: string;
-    amount?: string;
-    label?: string;
-    interval?: BillingInterval;
-    contractsReady?: boolean;
-  } | null;
-
-  if (!body?.address || !ADDRESS_REGEX.test(body.address)) {
+  const parsedBody = createSubscriptionSchema.safeParse(await request.json().catch(() => null));
+  if (!parsedBody.success) {
     return NextResponse.json({ error: 'Valid address is required' }, { status: 400 });
   }
+
+  const body = parsedBody.data;
 
   if (normalizeAddress(body.address) !== normalizeAddress(user.address)) {
     return NextResponse.json({ error: 'Address must match authenticated wallet' }, { status: 403 });

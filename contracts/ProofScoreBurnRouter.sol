@@ -30,6 +30,11 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
     event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
     event MicroTxUsdCapSet(address indexed priceOracle, uint256 maxUsd6);
+        event SustainabilityProposed(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps, uint64 effectiveAt);
+        event SustainabilityCancelled();
+        event MicroTxFeeCeilingProposed(uint16 maxBps, uint256 maxAmount, uint64 effectiveAt);
+        event MicroTxUsdCapProposed(address indexed priceOracle, uint256 maxUsd6, uint64 effectiveAt);
+        event MicroTxFeeCancelled();
     event BurnCapReached(uint256 dailyBurned, uint256 dailyCap, uint256 redirectedToEcosystem);
     // L-03: Emitted when seer returns score 0 for a user, which silently applies max fees.
     // Monitoring systems should alert on this — it may indicate a misconfigured seer address.
@@ -42,6 +47,26 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     // BR-04 FIX: Pending modules with timelock to prevent instant sink replacement
     uint64 public constant MODULE_CHANGE_DELAY = 7 days;
+        // TL-348/349 FIX: 24h timelock for sustainability + micro-tx fee admin params (#348, #349)
+        uint64 public constant SUSTAINABILITY_CHANGE_DELAY = 24 hours;
+        struct PendingSustainability {
+            uint256 dailyBurnCap;
+            uint256 minimumSupplyFloor;
+            uint16 ecosystemMinBps;
+            uint64 effectiveAt;
+            bool pending;
+        }
+        PendingSustainability public pendingSustainability;
+        struct PendingMicroTxFee {
+            uint16 maxBps;
+            uint256 maxAmount;
+            address priceOracle;
+            uint256 maxUsd6;
+            uint64 effectiveAt;
+            bool pendingCeiling;
+            bool pendingUsdCap;
+        }
+        PendingMicroTxFee public pendingMicroTxFee;
     struct PendingModules {
         address seer_;
         address sanctumSink_;
@@ -166,16 +191,40 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @param _minimumSupplyFloor Supply floor below which burns pause (0 = no floor)
      * @param _ecosystemMinBps Minimum ecosystem fee in basis points
      */
+    /// @notice TL-348 FIX: Propose sustainability parameter change (24h timelock). (#348)
     function setSustainability(
         uint256 _dailyBurnCap,
         uint256 _minimumSupplyFloor,
         uint16 _ecosystemMinBps
     ) external onlyOwner nonReentrant {
-        require(_ecosystemMinBps <= 100, "eco min too high"); // Max 1% minimum
-        dailyBurnCap = _dailyBurnCap;
-        minimumSupplyFloor = _minimumSupplyFloor;
-        ecosystemMinBps = _ecosystemMinBps;
-        emit SustainabilitySet(_dailyBurnCap, _minimumSupplyFloor, _ecosystemMinBps);
+        require(_ecosystemMinBps <= 100, "eco min too high");
+        require(!pendingSustainability.pending, "BR: sustainability pending");
+        uint64 effectiveAt = uint64(block.timestamp) + SUSTAINABILITY_CHANGE_DELAY;
+        pendingSustainability = PendingSustainability({
+            dailyBurnCap: _dailyBurnCap,
+            minimumSupplyFloor: _minimumSupplyFloor,
+            ecosystemMinBps: _ecosystemMinBps,
+            effectiveAt: effectiveAt,
+            pending: true
+        });
+        emit SustainabilityProposed(_dailyBurnCap, _minimumSupplyFloor, _ecosystemMinBps, effectiveAt);
+    }
+
+    /// @notice Apply pending sustainability change after the 24h timelock.
+    function applySustainability() external onlyOwner nonReentrant {
+        require(pendingSustainability.pending && block.timestamp >= pendingSustainability.effectiveAt, "BR: timelock");
+        dailyBurnCap = pendingSustainability.dailyBurnCap;
+        minimumSupplyFloor = pendingSustainability.minimumSupplyFloor;
+        ecosystemMinBps = pendingSustainability.ecosystemMinBps;
+        delete pendingSustainability;
+        emit SustainabilitySet(dailyBurnCap, minimumSupplyFloor, ecosystemMinBps);
+    }
+
+    /// @notice Cancel a pending sustainability change.
+    function cancelSustainability() external onlyOwner nonReentrant {
+        require(pendingSustainability.pending, "BR: no pending");
+        delete pendingSustainability;
+        emit SustainabilityCancelled();
     }
     
     /**
@@ -509,22 +558,55 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         emit EcosystemAllocationImpact(bpsLow, bpsNeutral, bpsHigh);
     }
 
+    /// @notice TL-349 FIX: Propose micro-tx fee ceiling change (24h timelock). (#349)
     function setMicroTxFeeCeiling(uint16 _maxBps, uint256 _maxAmount) external onlyOwner nonReentrant {
         require(_maxBps <= 500, "BURN: micro ceiling too high");
-        microTxFeeCeilingBps = _maxBps;
-        microTxMaxAmount = _maxAmount;
-        emit MicroTxFeeCeilingSet(_maxBps, _maxAmount);
+        require(!pendingMicroTxFee.pendingCeiling, "BR: ceiling pending");
+        uint64 effectiveAt = uint64(block.timestamp) + SUSTAINABILITY_CHANGE_DELAY;
+        pendingMicroTxFee.maxBps = _maxBps;
+        pendingMicroTxFee.maxAmount = _maxAmount;
+        pendingMicroTxFee.effectiveAt = effectiveAt;
+        pendingMicroTxFee.pendingCeiling = true;
+        emit MicroTxFeeCeilingProposed(_maxBps, _maxAmount, effectiveAt);
     }
 
+    /// @notice Apply pending micro-tx fee ceiling after the 24h timelock.
+    function applyMicroTxFeeCeiling() external onlyOwner nonReentrant {
+        require(pendingMicroTxFee.pendingCeiling && block.timestamp >= pendingMicroTxFee.effectiveAt, "BR: timelock");
+        microTxFeeCeilingBps = pendingMicroTxFee.maxBps;
+        microTxMaxAmount = pendingMicroTxFee.maxAmount;
+        pendingMicroTxFee.pendingCeiling = false;
+        emit MicroTxFeeCeilingSet(microTxFeeCeilingBps, microTxMaxAmount);
+    }
+
+    /// @notice TL-349 FIX: Propose micro-tx USD cap change (24h timelock). (#349)
     // slither-disable-next-line missing-zero-check
     function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner nonReentrant {
-        // L-2 FIX: Bound the USD cap to prevent accidentally disabling it with an absurd value
-        // or setting it to 0 unexpectedly. 0 = disable the cap; max = $10,000 (10_000e6).
         require(_maxUsd6 == 0 || (_maxUsd6 >= 1e6 && _maxUsd6 <= 10_000e6), "BR: invalid usd cap");
         if (_maxUsd6 > 0) require(_priceOracle != address(0), "BR: oracle required with cap");
-        microTxPriceOracle = _priceOracle;
-        microTxMaxUsd6 = _maxUsd6;
-        emit MicroTxUsdCapSet(_priceOracle, _maxUsd6);
+        require(!pendingMicroTxFee.pendingUsdCap, "BR: usd cap pending");
+        uint64 effectiveAt = uint64(block.timestamp) + SUSTAINABILITY_CHANGE_DELAY;
+        pendingMicroTxFee.priceOracle = _priceOracle;
+        pendingMicroTxFee.maxUsd6 = _maxUsd6;
+        pendingMicroTxFee.effectiveAt = effectiveAt;
+        pendingMicroTxFee.pendingUsdCap = true;
+        emit MicroTxUsdCapProposed(_priceOracle, _maxUsd6, effectiveAt);
+    }
+
+    /// @notice Apply pending micro-tx USD cap after the 24h timelock.
+    function applyMicroTxUsdCap() external onlyOwner nonReentrant {
+        require(pendingMicroTxFee.pendingUsdCap && block.timestamp >= pendingMicroTxFee.effectiveAt, "BR: timelock");
+        microTxPriceOracle = pendingMicroTxFee.priceOracle;
+        microTxMaxUsd6 = pendingMicroTxFee.maxUsd6;
+        pendingMicroTxFee.pendingUsdCap = false;
+        emit MicroTxUsdCapSet(microTxPriceOracle, microTxMaxUsd6);
+    }
+
+    /// @notice Cancel all pending micro-tx fee changes.
+    function cancelMicroTxFee() external onlyOwner nonReentrant {
+        require(pendingMicroTxFee.pendingCeiling || pendingMicroTxFee.pendingUsdCap, "BR: no pending");
+        delete pendingMicroTxFee;
+        emit MicroTxFeeCancelled();
     }
 
     function _isWithinMicroTxUsdCap(uint256 amount) internal view returns (bool) {

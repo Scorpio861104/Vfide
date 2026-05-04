@@ -104,7 +104,7 @@ describe("AdminMultiSig", function () {
       expect(await multiSig.executionGasLimit()).to.equal(newGasLimit);
     });
 
-    it("requires 5 approvals for emergency proposal", async function () {
+    it("requires 4 approvals for emergency proposal", async function () {
       const data = multiSig.interface.encodeFunctionData("setVetoMinStake", [3333n]);
       await multiSig.connect(council[0]!).createProposal(2, multiSig.address, data, "emergency change");
 
@@ -114,19 +114,47 @@ describe("AdminMultiSig", function () {
 
       const proposal = await multiSig.getProposal(0);
       expect(proposal.approvalCount).to.equal(4);
-      expect(proposal.status).to.equal(0); // still Pending
+      expect(proposal.status).to.equal(1); // Approved
     });
 
     it("blocks direct setExecutionGasLimit unless called via active proposal", async function () {
       await expectRevert(multiSig.connect(council[0]!).setExecutionGasLimit(700000));
     });
 
-    it("allows council veto of pending or approved proposal", async function () {
+    it("requires veto quorum for config proposals", async function () {
       const data = multiSig.interface.encodeFunctionData("setVetoMinStake", [4444n]);
       await multiSig.connect(council[0]!).createProposal(0, multiSig.address, data, "veto me");
-      await multiSig.connect(council[1]!).vetoProposal(0);
 
-      const proposal = await multiSig.getProposal(0);
+      await multiSig.connect(council[1]!).vetoProposal(0);
+      let proposal = await multiSig.getProposal(0);
+      expect(proposal.vetoCount).to.equal(1);
+      expect(proposal.status).to.equal(0); // Pending
+
+      await multiSig.connect(council[2]!).vetoProposal(0);
+      proposal = await multiSig.getProposal(0);
+      expect(proposal.vetoCount).to.equal(2);
+      expect(proposal.status).to.equal(0); // Pending
+
+      await multiSig.connect(council[3]!).vetoProposal(0);
+      proposal = await multiSig.getProposal(0);
+      expect(proposal.status).to.equal(3); // Vetoed
+    });
+
+    it("requires veto quorum of 4 for emergency proposals", async function () {
+      const data = multiSig.interface.encodeFunctionData("setVetoMinStake", [5555n]);
+      await multiSig.connect(council[0]!).createProposal(2, multiSig.address, data, "emergency veto quorum");
+
+      await multiSig.connect(council[1]!).vetoProposal(0);
+      await multiSig.connect(council[2]!).vetoProposal(0);
+      await multiSig.connect(council[3]!).vetoProposal(0);
+
+      let proposal = await multiSig.getProposal(0);
+      expect(proposal.vetoCount).to.equal(3);
+      expect(proposal.status).to.equal(0); // Pending
+
+      await multiSig.connect(council[4]!).vetoProposal(0);
+      proposal = await multiSig.getProposal(0);
+      expect(proposal.vetoCount).to.equal(4);
       expect(proposal.status).to.equal(3); // Vetoed
     });
   });

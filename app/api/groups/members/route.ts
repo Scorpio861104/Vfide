@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, withAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
@@ -345,22 +345,18 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => 
   }
 });
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimitDelete = await withRateLimit(request, 'write');
   if (rateLimitDelete) return rateLimitDelete;
-
-  // Authentication
-  const authResultDelete = await requireAuth(request);
-  if (authResultDelete instanceof NextResponse) return authResultDelete;
 
   try {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get('groupId');
     const userAddress = searchParams.get('userAddress');
     const actorAddress = searchParams.get('actorAddress');
-    const authenticatedAddress = typeof authResultDelete.user?.address === 'string'
-      ? authResultDelete.user.address.trim().toLowerCase()
+    const authenticatedAddress = typeof user.address === 'string'
+      ? user.address.trim().toLowerCase()
       : '';
     if (!authenticatedAddress || !isAddress(authenticatedAddress)) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -439,4 +435,4 @@ export async function DELETE(request: NextRequest) {
     logger.error('[Group Members DELETE] Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to remove member' }, { status: 500 });
   }
-}
+});

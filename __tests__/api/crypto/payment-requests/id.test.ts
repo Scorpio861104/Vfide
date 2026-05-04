@@ -10,6 +10,19 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler: (request: NextRequest, user: { address: string }, context?: { params: Promise<Record<string, string>> | Record<string, string> }) => Promise<NextResponse>) => {
+    return async (
+      request: NextRequest,
+      context?: { params: Promise<Record<string, string>> | Record<string, string> }
+    ) => {
+      const { requireAuth } = require('@/lib/auth/middleware');
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+      return handler(request, authResult.user, context);
+    };
+  },
   requireAuth: jest.fn(),
 }));
 
@@ -113,7 +126,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid JSON');
+      expect(data.error).toContain('Invalid JSON body');
     });
 
     it('should return 400 for non-object body in PUT', async () => {
@@ -200,7 +213,7 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid JSON');
+      expect(data.error).toContain('Invalid JSON body');
     });
 
     it('should return 400 for non-object body in PATCH', async () => {
@@ -227,7 +240,23 @@ describe('/api/crypto/payment-requests/[id]', () => {
       // Second query: user lookup (user is to_user_id=99)
       query.mockResolvedValueOnce({ rows: [{ id: 99 }] });
       // Third query: update
-      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'completed', tx_hash: '0x' + 'a'.repeat(64) }] });
+      query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'accepted', tx_hash: '0x' + 'a'.repeat(64) }] });
+
+      const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'accepted', txHash: '0x' + 'a'.repeat(64) }),
+      });
+
+      const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('should fail closed for completed status when txHash cannot be verified on-chain', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockResolvedValue({ user: mockUser });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/payment-requests/1', {
         method: 'PATCH',
@@ -237,8 +266,9 @@ describe('/api/crypto/payment-requests/[id]', () => {
       const response = await PATCH(request, { params: Promise.resolve({ id: '1' }) });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
+      expect(response.status).toBe(503);
+      expect(data.error).toContain('Unable to verify transaction on-chain');
+      expect(query).not.toHaveBeenCalled();
     });
 
     it('should return 401 for unauthenticated PATCH', async () => {

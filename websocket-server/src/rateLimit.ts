@@ -88,33 +88,27 @@ export class RateLimiter {
     const redisKey = `ws:rl:${this.name}:${key}:${windowIndex}`;
     const ttlSeconds = Math.max(1, Math.ceil(this.windowMs / 1000) + 5);
 
-    const incrUrl = `${this.redisUrl!.replace(/\/$/, '')}/incr/${encodeURIComponent(redisKey)}`;
-    const incrResponse = await fetch(incrUrl, {
+    // WS-01 FIX: use a single Upstash pipeline request so INCR and EXPIRE
+    // are applied together by Redis and cannot be split by network races.
+    const pipelineUrl = `${this.redisUrl!.replace(/\/$/, '')}/pipeline`;
+    const pipelineResponse = await fetch(pipelineUrl, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.redisToken}`,
+        'content-type': 'application/json',
       },
+      body: JSON.stringify([
+        ['INCR', redisKey],
+        ['EXPIRE', redisKey, String(ttlSeconds), 'NX'],
+      ]),
     });
 
-    if (!incrResponse.ok) {
-      throw new Error(`Upstash INCR failed: HTTP ${incrResponse.status}`);
+    if (!pipelineResponse.ok) {
+      throw new Error(`Upstash pipeline failed: HTTP ${pipelineResponse.status}`);
     }
 
-    const incrData = (await incrResponse.json()) as { result?: number };
-    const count = Number(incrData.result ?? 0);
-
-    const expireUrl = `${this.redisUrl!.replace(/\/$/, '')}/expire/${encodeURIComponent(redisKey)}/${ttlSeconds}`;
-    const expireResponse = await fetch(expireUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.redisToken}`,
-      },
-    });
-
-    if (!expireResponse.ok) {
-      // Do not permanently fail requests on transient EXPIRE failures.
-      console.warn(`[ws] Upstash EXPIRE failed for ${redisKey}: HTTP ${expireResponse.status}`);
-    }
+    const pipelineData = (await pipelineResponse.json()) as Array<{ result?: number | string }>;
+    const count = Number(pipelineData?.[0]?.result ?? 0);
 
     return count <= this.maxRequests;
   }

@@ -53,6 +53,7 @@ contract DAO is ReentrancyGuard {
     event ProposalTypeTargetPolicySet(ProposalType indexed ptype, address indexed target, bool allowed);
     event ProposalTypeSelectorPolicySet(ProposalType indexed ptype, bytes4 indexed selector, bool allowed);
     event SeerAutonomousSet(address seerAutonomous);
+    event ExternalCallFailed(string indexed context, bytes reason);
     event RequireProposalPoliciesSet(bool required);
     event EmergencyQuorumRescueInitiated(uint256 readyAt);
     event EmergencyQuorumRescueApproved(); // DAO-03 FIX: Track secondary approval
@@ -1092,8 +1093,11 @@ contract DAO is ReentrancyGuard {
         uint8 result = 0;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
             result = r;
-        } catch {
-            revert DAO_ActionBlocked(type(uint8).max);
+        } catch (bytes memory reason) {
+            // SEER-04 FIX (#179): Unexpected SeerAutonomous failures must not brick DAO actions.
+            // Fail open on hook failure, but still honor explicit delayed/blocked responses.
+            emit ExternalCallFailed("seerAutonomous.beforeAction", reason);
+            return;
         }
 
         // Allowed (0) and Warned (1) may proceed; delayed/blocked/penalized are denied.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getRequestAuthToken, withAuth } from '@/lib/auth/middleware';
 import { revokeToken, revokeUserTokens, hashToken } from '@/lib/auth/tokenRevocation';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import { clearActivityHistory } from '@/lib/security/anomalyDetection';
 import { logger } from '@/lib/logger';
 import { extractToken } from '@/lib/auth/jwt';
 import type { JWTPayload } from '@/lib/auth/jwt';
@@ -70,6 +71,11 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
       await revokeUserTokens(
         authAddress,
         normalizedReason
+      );
+
+      // Clear activity history so fresh logins after full revocation don't fire anomaly alerts
+      clearActivityHistory(authAddress).catch((err) =>
+        logger.warn('[Token Revocation API] clearActivityHistory failed:', err)
       );
 
       return NextResponse.json({

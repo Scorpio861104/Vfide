@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS user_portfolios (
   UNIQUE (LOWER(wallet_address))
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_portfolios_wallet ON user_portfolios (LOWER(wallet_address));
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_portfolios_wallet ON user_portfolios (LOWER(wallet_address));
 
 ALTER TABLE user_portfolios ENABLE ROW LEVEL SECURITY;
 

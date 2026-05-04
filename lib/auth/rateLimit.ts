@@ -241,7 +241,22 @@ export async function rateLimit(
     
     return { success: true };
   } catch (error) {
-    logger.error('[RateLimit] Error:', error as Error);
+    logger.error('[RateLimit] Redis error in production:', error as Error);
+    
+    // In production, fail-closed when Redis is configured but unavailable.
+    // Per-process memory fallback is insufficient in serverless (each process has independent counters).
+    if (process.env.NODE_ENV === 'production' && hasRedisConfiguration()) {
+      logger.error('[RateLimit] Redis was configured but failed; rejecting request to prevent bypass');
+      return {
+        success: false,
+        response: NextResponse.json(
+          { error: 'Service temporarily unavailable' },
+          { status: 503 }
+        ),
+      };
+    }
+    
+    // In non-production or when Redis was never configured, use per-process memory fallback
     const fallback = memoryRateLimit(identifier, type);
     if (!fallback.success) {
       const retryAfter = Math.ceil((fallback.reset - Date.now()) / 1000);

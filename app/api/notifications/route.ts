@@ -173,9 +173,8 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
     });
   } catch (error) {
     logger.error('[Notifications GET API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notifications';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Failed to fetch notifications' },
       { status: 500 }
     );
   }
@@ -263,7 +262,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
     }, { status: 201 });
   } catch (error) {
     logger.error('[Notifications POST API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create notification';
+    const errorMessage = 'Failed to create notification';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -402,7 +401,7 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => 
     }
   } catch (error) {
     logger.error('[Notifications PATCH API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update notifications';
+    const errorMessage = 'Failed to update notifications';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -537,7 +536,7 @@ export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) =>
     }
   } catch (error) {
     logger.error('[Notifications DELETE API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to delete notifications';
+    const errorMessage = 'Failed to delete notifications';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

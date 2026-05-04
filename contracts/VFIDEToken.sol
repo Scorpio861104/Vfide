@@ -142,6 +142,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// F-05 FIX: Add timelock state for ledger changes (matches other module setters)
     address public pendingLedger;
     uint64  public pendingLedgerAt;
+    // TL-308 FIX: Timelocked seerAutonomous setter (#308)
+    address public pendingSeerAutonomous;
+    uint64  public pendingSeerAutonomousAt;
 
     address public pendingExemptAddr;
     bool    public pendingExemptStatus;
@@ -217,6 +220,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     error VF_TransferCooldown();
     error VF_ZeroAddress();
     error VF_NoPending();
+        error VF_Timelock();
     error VF_TimelockActive();
     error VF_InvalidDuration();
     error VF_InsufficientBalance();
@@ -431,9 +435,29 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("ebx");
     }
 
+    /// @notice TL-308 FIX: Propose a seerAutonomous change (48h timelock). (#308)
     function setSeerAutonomous(address _seerAutonomous) external onlyOwner {
-        seerAutonomous = ISeerAutonomousToken(_seerAutonomous);
-        emit SeerAutonomousSet(_seerAutonomous);
+        if (pendingSeerAutonomousAt != 0) revert VF_PendingExists();
+        uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
+        pendingSeerAutonomous = _seerAutonomous;
+        pendingSeerAutonomousAt = effectiveAt;
+        emit SeerAutonomousSet(_seerAutonomous); // proposal event reuses existing event
+    }
+
+    /// @notice Apply a pending seerAutonomous change after the 48h timelock.
+    function applySeerAutonomous() external onlyOwner {
+        if (pendingSeerAutonomousAt == 0 || block.timestamp < pendingSeerAutonomousAt) revert VF_Timelock();
+        seerAutonomous = ISeerAutonomousToken(pendingSeerAutonomous);
+        delete pendingSeerAutonomous;
+        delete pendingSeerAutonomousAt;
+        _log("seer_auto_applied");
+    }
+
+    /// @notice Cancel a pending seerAutonomous change.
+    function cancelSeerAutonomous() external onlyOwner {
+        if (pendingSeerAutonomousAt == 0) revert VF_NoPending();
+        delete pendingSeerAutonomous;
+        delete pendingSeerAutonomousAt;
     }
 
     // ── SecurityHub functions REMOVED — non-custodial, no third-party locks ──
@@ -1024,6 +1048,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
                 // Record volume for adaptive fee tracking (sustainability)
                 try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("rv", reason); }
+                // #353 FIX: Record burn amount for daily cap tracking
+                if (_burnAmt > 0) {
+                    try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch (bytes memory reason) { emit ExternalCallFailed("rb", reason); }
+                }
             } catch (bytes memory reason) {
                 emit ExternalCallFailed("cfr", reason);
                 // C-2 FIX: When policy is locked and the router reverts, the transfer must also
@@ -1073,8 +1101,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (address(seerAutonomous) == address(0)) return;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
             if (r != 0) revert VF_SeerBlocked();
-        } catch {
-            revert VF_SeerBlocked();
+        } catch (bytes memory reason) {
+            // SEER-04 FIX (#179): Unexpected SeerAutonomous failures should fail open.
+            emit ExternalCallFailed("seerAutonomous.beforeAction", reason);
+            return;
         }
     }
 

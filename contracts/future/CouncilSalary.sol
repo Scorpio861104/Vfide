@@ -28,6 +28,11 @@ contract CouncilSalary {
     event DAOSet(address indexed oldDAO, address indexed newDAO);
     event DAOChangeQueued(address indexed oldDAO, address indexed newDAO, uint64 executeAfter);
     event DAOChangeCancelled(address indexed oldDAO, address indexed newDAO);
+    event CouncilElectionChangeQueued(address indexed oldElection, address indexed newElection, uint64 executeAfter);
+    event CouncilElectionChangeApplied(address indexed oldElection, address indexed newElection);
+    event CouncilElectionChangeCancelled(address indexed pendingElection);
+    event ReinstateQueued(address indexed member, uint64 executeAfter);
+    event ReinstateCancelled(address indexed member);
 
     uint256 private _reentrancyStatus = 1;
     modifier nonReentrant() {
@@ -58,6 +63,12 @@ contract CouncilSalary {
     address public pendingDAO;
     uint64 public pendingDAOAt;
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
+    address public pendingCouncilElection;
+    uint64 public pendingCouncilElectionAt;
+    uint64 public constant COUNCIL_ELECTION_CHANGE_DELAY = 48 hours;
+    address public pendingReinstate;
+    uint64 public pendingReinstateAt;
+    uint64 public constant REINSTATE_DELAY = 7 days;
     
     // C-1 FIX: Authorized keepers for distribution
     mapping(address => bool) public isKeeper;
@@ -107,7 +118,34 @@ contract CouncilSalary {
 
     function setCouncilElection(address _election) external {
         require(msg.sender == dao, "not dao");
-        councilElection = _election;
+        require(_election != address(0), "zero election");
+        require(pendingCouncilElectionAt == 0, "election change pending");
+        pendingCouncilElection = _election;
+        pendingCouncilElectionAt = uint64(block.timestamp) + COUNCIL_ELECTION_CHANGE_DELAY;
+        emit CouncilElectionChangeQueued(councilElection, _election, pendingCouncilElectionAt);
+    }
+
+    function applyCouncilElection() external {
+        require(msg.sender == dao, "not dao");
+        require(pendingCouncilElectionAt != 0 && pendingCouncilElection != address(0), "no pending election");
+        require(block.timestamp >= pendingCouncilElectionAt, "election timelock active");
+
+        address oldElection = councilElection;
+        councilElection = pendingCouncilElection;
+
+        delete pendingCouncilElection;
+        delete pendingCouncilElectionAt;
+        emit CouncilElectionChangeApplied(oldElection, councilElection);
+    }
+
+    function cancelCouncilElectionChange() external {
+        require(msg.sender == dao, "not dao");
+        require(pendingCouncilElectionAt != 0 && pendingCouncilElection != address(0), "no pending election");
+
+        address queued = pendingCouncilElection;
+        delete pendingCouncilElection;
+        delete pendingCouncilElectionAt;
+        emit CouncilElectionChangeCancelled(queued);
     }
     
     function setDAO(address _dao) external {
@@ -234,7 +272,32 @@ contract CouncilSalary {
     function reinstate(address target) external {
         require(msg.sender == dao, "not dao");
         require(isBlacklisted[target], "not blacklisted");
+        require(pendingReinstateAt == 0, "reinstate pending");
+        pendingReinstate = target;
+        pendingReinstateAt = uint64(block.timestamp) + REINSTATE_DELAY;
+        emit ReinstateQueued(target, pendingReinstateAt);
+    }
+
+    function applyReinstate() external {
+        require(msg.sender == dao, "not dao");
+        require(pendingReinstateAt != 0 && pendingReinstate != address(0), "no pending reinstate");
+        require(block.timestamp >= pendingReinstateAt, "reinstate timelock active");
+
+        address target = pendingReinstate;
+        require(isBlacklisted[target], "not blacklisted");
+
         isBlacklisted[target] = false;
+        delete pendingReinstate;
+        delete pendingReinstateAt;
         emit MemberReinstated(target);
+    }
+
+    function cancelReinstate() external {
+        require(msg.sender == dao, "not dao");
+        require(pendingReinstateAt != 0 && pendingReinstate != address(0), "no pending reinstate");
+        address queued = pendingReinstate;
+        delete pendingReinstate;
+        delete pendingReinstateAt;
+        emit ReinstateCancelled(queued);
     }
 }

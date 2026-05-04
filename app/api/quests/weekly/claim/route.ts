@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { requireAuth, checkOwnership, withAuth } from '@/lib/auth/middleware';
+import { checkOwnership, withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -31,19 +32,13 @@ function parsePositiveInteger(value: unknown): number | null {
  * - Rate limited (5 claims per hour)
  * - User can only claim their own rewards
  */
-async function postHandler(request: NextRequest) {
+async function postHandler(request: NextRequest, user: JWTPayload) {
   // Rate limit - strict for claiming rewards
   const rateLimitResponse = await withRateLimit(request, 'claim');
   if (rateLimitResponse) return rateLimitResponse;
 
-  // Require authentication
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-
-  const requesterAddress = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+  const requesterAddress = typeof user.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
   if (!requesterAddress || !ADDRESS_LIKE_REGEX.test(requesterAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -95,7 +90,7 @@ async function postHandler(request: NextRequest) {
     }
 
     // Verify user is claiming their own rewards
-    if (!checkOwnership(authResult.user, normalizedUserAddress)) {
+    if (!checkOwnership(user, normalizedUserAddress)) {
       return NextResponse.json(
         { error: 'You can only claim your own rewards' },
         { status: 403 }

@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
 
   // Type checking runs in dedicated CI scripts; avoid blocking deployments on Next's in-build checker.
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
   // Ensure Turbopack treats `frontend/` as the workspace root.

@@ -459,8 +459,8 @@ export function useWallet() {
     try {
       const connectedWallet = await connectWallet();
       setWallet(connectedWallet);
-      localStorage.setItem('wallet_address', connectedWallet.address);
-      localStorage.setItem('wallet_connected', 'true');
+      localStorage.setItem('vfide_wallet_address', connectedWallet.address);
+      localStorage.setItem('vfide_wallet_connected', 'true');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Connection failed';
       setError(message);
@@ -476,7 +476,7 @@ export function useWallet() {
 
   // Auto-connect if previously connected
   useEffect(() => {
-    const wasConnected = localStorage.getItem('wallet_connected');
+    const wasConnected = localStorage.getItem('vfide_wallet_connected');
     if (wasConnected === 'true') {
       connect();
     }

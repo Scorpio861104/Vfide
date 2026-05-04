@@ -1,7 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth, requireOwnership, withAuth } from '@/lib/auth/middleware';
+import { requireOwnership, withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -96,12 +97,9 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
 
   try {
     const body = await request.json();
@@ -115,9 +113,13 @@ async function postHandler(request: NextRequest) {
       return NextResponse.json({ error: 'merchantAddress and positive amount required' }, { status: 400 });
     }
 
-    const purchaserAddress = typeof authResult.user?.address === 'string'
-      ? authResult.user.address.trim().toLowerCase()
+    const purchaserAddress = typeof user.address === 'string'
+      ? user.address.trim().toLowerCase()
       : '';
+
+    if (!purchaserAddress || !ADDRESS_REGEX.test(purchaserAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const code = generateGiftCardCode();
     const expiresAt = Number.isFinite(expiresInDays) && expiresInDays > 0

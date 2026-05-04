@@ -116,7 +116,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload, conte
     return NextResponse.json({ transactions: result.rows, total: result.rows.length });
   } catch (error) {
     logger.error('[Transactions API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions';
+    const errorMessage = 'Failed to fetch transactions';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

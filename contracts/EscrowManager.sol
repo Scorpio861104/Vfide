@@ -250,6 +250,7 @@ contract EscrowManager is ReentrancyGuard {
     // L-1 FIX: Add event for arbiter change
     event ArbiterChanged(address indexed oldArbiter, address indexed newArbiter);
     event SeerAutonomousSet(address indexed seerAutonomous);
+    event ExternalCallFailed(string indexed context, bytes reason);
     
     function setDAO(address newDAO) external {
         require(msg.sender == dao, "only DAO");
@@ -290,8 +291,10 @@ contract EscrowManager is ReentrancyGuard {
         uint8 result = 0;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
             result = r;
-        } catch {
-            revert ESC_ActionBlocked(255);
+        } catch (bytes memory reason) {
+            // SEER-04 FIX (#179): Hook outages must not hard-stop escrow operations.
+            emit ExternalCallFailed("seerAutonomous.beforeAction", reason);
+            return;
         }
 
         // 0=Allowed,1=Warned,2=Delayed,3=Blocked,4=Penalized

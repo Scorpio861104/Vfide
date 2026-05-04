@@ -28,7 +28,17 @@ export function runWithDbUserAddressContext<T>(
 
 async function applyDbUserAddressContext(client: PoolClient, userAddress: string | null) {
   if (!userAddress) return;
-  await client.query("SELECT set_config('app.current_user_address', $1, true)", [userAddress]);
+  // #32/#33 FIX: use session-level context on a dedicated client instead of
+  // wrapping every query in BEGIN/COMMIT or monkey-patching client.query.
+  await client.query("SELECT set_config('app.current_user_address', $1, false)", [userAddress]);
+}
+
+async function resetDbUserAddressContext(client: PoolClient) {
+  try {
+    await client.query('RESET app.current_user_address');
+  } catch {
+    // Best-effort cleanup only; do not mask original query/release errors.
+  }
 }
 
 async function resolveRequestDbUserAddress(): Promise<string | null> {
@@ -56,6 +66,55 @@ async function resolveActiveDbUserAddress(): Promise<string | null> {
   }
 
   return resolveRequestDbUserAddress();
+}
+
+/**
+ * Verify that RLS cannot be bypassed by the current connecting role.
+ * This check ensures the application role has NOBYPASSRLS privilege enforced.
+ * The check must pass before accepting database queries in production.
+ */
+async function verifyRlsEnforcement(): Promise<void> {
+  const pool = _pool;
+  if (!pool) {
+    return; // Pool not yet initialized; check will run when pool is first created
+  }
+
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT current_user, 
+              (SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user) as bypassrls`
+    );
+
+    const { current_user: currentUser, bypassrls } = result.rows[0];
+
+    logger.info('RLS enforcement check', {
+      current_user: currentUser,
+      bypassrls,
+      message: 'Database role verified for RLS enforcement',
+    });
+
+    // In production, enforce that the connecting role does not have BYPASSRLS
+    if (process.env.NODE_ENV === 'production' && bypassrls === true) {
+      throw new Error(
+        `RLS enforcement violation: Connected as "${currentUser}" which has BYPASSRLS privilege. ` +
+        `In production, the application must connect as a role with NOBYPASSRLS (e.g., "vfide_app"). ` +
+        `Update DATABASE_URL to use the dedicated application role.`
+      );
+    }
+
+    // Log a warning in non-production environments when BYPASSRLS is enabled
+    if (bypassrls === true) {
+      logger.warn('RLS enforcement warning', {
+        current_user: currentUser,
+        message: `Connected as "${currentUser}" which has BYPASSRLS privilege. ` +
+                 `RLS is ineffective with this role. For development, this is acceptable, ` +
+                 `but production must use a role with NOBYPASSRLS enforced.`,
+      });
+    }
+  } finally {
+    client.release();
+  }
 }
 
 function getPool(): Pool {
@@ -100,6 +159,17 @@ function getPool(): Pool {
         logger.warn('Database connection lost. Pool will attempt to reconnect automatically.');
       }
     });
+
+    // Schedule RLS enforcement check after pool is created
+    setImmediate(() => {
+      verifyRlsEnforcement().catch((err) => {
+        logger.error('RLS enforcement check failed', err);
+        if (process.env.NODE_ENV === 'production') {
+          // In production, RLS enforcement is critical. Fail startup if check fails.
+          throw err;
+        }
+      });
+    });
   }
   return _pool;
 }
@@ -117,24 +187,10 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
     if (userAddress) {
       const client = await pool.connect();
       try {
-        await client.query('BEGIN');
-        try {
-          await applyDbUserAddressContext(client, userAddress);
-          res = await client.query<T>(text, params);
-          await client.query('COMMIT');
-        } finally {
-          if ((client as unknown as { _ending?: boolean })._ending !== true) {
-            // No-op path after COMMIT. Rollback is handled in catch.
-          }
-        }
-      } catch (error) {
-        try {
-          await client.query('ROLLBACK');
-        } catch {
-          // Ignore rollback errors and rethrow original failure.
-        }
-        throw error;
+        await applyDbUserAddressContext(client, userAddress);
+        res = await client.query<T>(text, params);
       } finally {
+        await resetDbUserAddressContext(client);
         client.release();
       }
     } else {
@@ -214,52 +270,12 @@ export async function getClient(): Promise<PoolClient> {
   const userAddress = await resolveActiveDbUserAddress();
 
   if (userAddress) {
+    await applyDbUserAddressContext(client, userAddress);
     const originalRelease = client.release.bind(client);
-    const originalQuery = client.query.bind(client);
-    let manualTransactionActive = false;
-
-    client.query = (async (...args: Parameters<PoolClient['query']>) => {
-      const firstArg = args[0];
-      const sql = typeof firstArg === 'string' ? firstArg.trim().toUpperCase() : '';
-
-      if (sql === 'BEGIN') {
-        const result = await originalQuery(...args);
-        await applyDbUserAddressContext(client, userAddress);
-        manualTransactionActive = true;
-        return result;
-      }
-
-      if (sql === 'COMMIT' || sql === 'ROLLBACK') {
-        try {
-          return await originalQuery(...args);
-        } finally {
-          manualTransactionActive = false;
-        }
-      }
-
-      if (manualTransactionActive) {
-        return originalQuery(...args);
-      }
-
-      await originalQuery('BEGIN');
-      try {
-        await applyDbUserAddressContext(client, userAddress);
-        const result = await originalQuery(...args);
-        await originalQuery('COMMIT');
-        return result;
-      } catch (error) {
-        try {
-          await originalQuery('ROLLBACK');
-        } catch {
-          // Ignore rollback errors and preserve the triggering error.
-        }
-        throw error;
-      }
-    }) as PoolClient['query'];
-
     client.release = ((err?: Error | boolean) => {
-      client.query = originalQuery;
-      originalRelease(err);
+      void resetDbUserAddressContext(client).finally(() => {
+        originalRelease(err);
+      });
     }) as PoolClient['release'];
   }
 

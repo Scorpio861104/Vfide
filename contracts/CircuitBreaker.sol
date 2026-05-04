@@ -3,10 +3,6 @@ pragma solidity 0.8.30;
 
 import "./VFIDEAccessControl.sol";
 
-interface IEmergencyController {
-    function emergencyPause() external;
-}
-
 interface ITVLSource_CB {
     function getTotalValueLocked() external view returns (uint256);
 }
@@ -66,6 +62,10 @@ contract CircuitBreaker is VFIDEAccessControl {
     
     TriggerEvent[] public triggerHistory;
     uint256 public constant MAX_TRIGGER_HISTORY = 1000;
+    // TL-376 FIX: 24h timelock for price oracle changes (#376)
+    uint256 public constant ORACLE_CHANGE_DELAY = 24 hours;
+    address public pendingPriceOracle;
+    uint256 public pendingPriceOracleAt;
 
     event CircuitBreakerConfigured(
         uint256 dailyVolumeThreshold,
@@ -82,6 +82,8 @@ contract CircuitBreaker is VFIDEAccessControl {
     
     event CircuitBreakerReset(address indexed resetBy, uint256 timestamp);
     event PriceOracleUpdated(address indexed newOracle);
+        event PriceOracleProposed(address indexed newOracle, uint256 effectiveAt);
+        event PriceOracleCancelled();
     event EmergencyControllerUpdated(address indexed newController);
     event VolumeRecorded(uint256 amount, uint256 totalDaily);
     event SuspiciousActivityRecorded(uint256 count24h);
@@ -363,10 +365,31 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Update price oracle address
      * @param _newOracle New oracle address
      */
+    /// @notice TL-376 FIX: Propose a price oracle change (24h timelock). (#376)
     function updatePriceOracle(address _newOracle) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         require(_newOracle != address(0), "CircuitBreaker: zero address");
-        priceOracle = _newOracle;
-        emit PriceOracleUpdated(_newOracle);
+        require(pendingPriceOracleAt == 0, "CircuitBreaker: oracle change pending");
+        pendingPriceOracle = _newOracle;
+        pendingPriceOracleAt = block.timestamp + ORACLE_CHANGE_DELAY;
+        emit PriceOracleProposed(_newOracle, pendingPriceOracleAt);
+    }
+
+    /// @notice Apply a pending price oracle change after the 24h timelock.
+    function applyPriceOracle() external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+        require(pendingPriceOracleAt != 0 && block.timestamp >= pendingPriceOracleAt, "CircuitBreaker: timelock");
+        address newOracle = pendingPriceOracle;
+        delete pendingPriceOracle;
+        delete pendingPriceOracleAt;
+        priceOracle = newOracle;
+        emit PriceOracleUpdated(newOracle);
+    }
+
+    /// @notice Cancel a pending price oracle change.
+    function cancelPriceOracle() external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+        require(pendingPriceOracleAt != 0, "CircuitBreaker: no pending oracle");
+        delete pendingPriceOracle;
+        delete pendingPriceOracleAt;
+        emit PriceOracleCancelled();
     }
 
     /**
@@ -480,14 +503,9 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         emit CircuitBreakerTriggered(_reason, _metricValue, block.timestamp, msg.sender);
 
-        // Call emergency controller to pause contracts
-        if (emergencyController != address(0)) {
-            try IEmergencyController(emergencyController).emergencyPause() {
-            } catch {
-                // Don't revert if emergency controller call fails
-                // Circuit breaker should still trigger
-            }
-        }
+        // HALT-01: CircuitBreaker is signal-only.
+        // Triggering updates breaker state and emits events for off-chain/on-chain responders,
+        // but does not directly pause downstream contracts.
     }
 
     /// @dev Compute median from the current rolling price samples.

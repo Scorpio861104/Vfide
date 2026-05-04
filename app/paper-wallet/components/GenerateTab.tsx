@@ -30,6 +30,19 @@ export function GenerateTab() {
   function copy(value: string, key: string) {
     navigator.clipboard.writeText(value).then(() => {
       setCopied(key);
+      // Best-effort clipboard hygiene: clear copied value after 30 seconds.
+      setTimeout(() => {
+        navigator.clipboard.readText()
+          .then((current) => {
+            if (current === value) {
+              return navigator.clipboard.writeText('');
+            }
+            return Promise.resolve();
+          })
+          .catch(() => {
+            // Ignore clipboard permission/runtime errors in hardened browser contexts.
+          });
+      }, 30_000);
       setTimeout(() => setCopied(null), 2000);
     });
   }
@@ -42,8 +55,10 @@ export function GenerateTab() {
           <p className="text-red-400 text-xs font-semibold">Security Warning</p>
         </div>
         <p className="text-xs text-gray-400">
-          Only generate paper wallets on a trusted, offline device. Never share your private key or seed phrase. 
-          VFIDE does not store this data — if you lose it, the funds cannot be recovered.
+          This page generates keys inside your browser. Keys are never sent to VFIDE servers.
+          However, this page is delivered over the internet — if your browser, device, or network is compromised, generated keys could be exposed.
+          For real funds, use a hardware wallet (Ledger, Trezor) or generate keys on a fully offline machine using a downloadable tool.
+          Never share your private key or seed phrase. VFIDE does not store this data — if you lose it, the funds cannot be recovered.
         </p>
       </div>
 
@@ -71,7 +86,11 @@ export function GenerateTab() {
                   <Copy size={13} />
                 </button>
               </div>
-              {copied === 'address' && <p className="text-xs text-green-400 mt-1">Copied!</p>}
+              {copied === 'address' && (
+                <p className="text-xs text-amber-300 mt-1">
+                  Copied. Clipboard will be auto-cleared in ~30 seconds (best effort).
+                </p>
+              )}
             </div>
 
             {/* Private key */}

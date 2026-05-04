@@ -23,12 +23,17 @@ jest.mock('viem', () => ({
   isAddress: jest.fn(),
 }));
 
+jest.mock('@/lib/server/websocketBridge', () => ({
+  publishWebsocketEvent: jest.fn().mockResolvedValue(true),
+}));
+
 describe('/api/messages', () => {
   const { query, getClient } = require('@/lib/db');
   const { requireAuth } = require('@/lib/auth/middleware');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
   const { validateBody } = require('@/lib/auth/validation');
   const { isAddress } = require('viem');
+  const { publishWebsocketEvent } = require('@/lib/server/websocketBridge');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -237,6 +242,30 @@ describe('/api/messages', () => {
 
       expect(response.status).toBe(201);
       expect(data.message).toBeDefined();
+      expect(publishWebsocketEvent).toHaveBeenCalledTimes(2);
+      expect(publishWebsocketEvent).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          type: 'message',
+          payload: expect.objectContaining({
+            topic: `chat.${mockRecipientAddress.toLowerCase()}_${mockUserAddress.toLowerCase()}`,
+            from: mockUserAddress.toLowerCase(),
+            to: mockRecipientAddress.toLowerCase(),
+          }),
+        })
+      );
+      expect(publishWebsocketEvent).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          type: 'notification',
+          payload: expect.objectContaining({
+            topic: 'notifications',
+            category: 'message',
+            recipient: mockRecipientAddress.toLowerCase(),
+            sender: mockUserAddress.toLowerCase(),
+          }),
+        })
+      );
       expect(mockClient.release).toHaveBeenCalled();
     });
 

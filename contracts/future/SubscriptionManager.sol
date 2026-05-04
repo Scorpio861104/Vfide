@@ -61,6 +61,9 @@ contract SubscriptionManager is ReentrancyGuard {
     event EmergencyBreakerChangeApplied(address indexed breaker);
     event EmergencyBreakerChangeCancelled(address indexed breaker);
     event FraudRegistrySet(address indexed fraudRegistry);
+    event FraudRegistryChangeQueued(address indexed fraudRegistry, uint64 effectiveAt);
+    event FraudRegistryChangeApplied(address indexed fraudRegistry);
+    event FraudRegistryChangeCancelled(address indexed fraudRegistry);
 
     struct Subscription {
         address subscriber;
@@ -97,6 +100,9 @@ contract SubscriptionManager is ReentrancyGuard {
     address public pendingEmergencyBreaker;
     uint64 public pendingEmergencyBreakerAt;
     uint64 public constant BREAKER_CHANGE_DELAY = 48 hours;
+    address public pendingFraudRegistry;
+    uint64 public pendingFraudRegistryAt;
+    uint64 public constant FRAUD_REGISTRY_CHANGE_DELAY = 24 hours;
     
     IVaultHub public vaultHub;
     
@@ -127,8 +133,31 @@ contract SubscriptionManager is ReentrancyGuard {
     }
 
     function setFraudRegistry(address _fraudRegistry) external onlyDAO {
-        fraudRegistry = IFraudRegistry_SM(_fraudRegistry);
-        emit FraudRegistrySet(_fraudRegistry);
+        require(_fraudRegistry != address(0), "SM: zero fraud registry");
+        require(pendingFraudRegistryAt == 0, "SM: pending fraud registry");
+
+        pendingFraudRegistry = _fraudRegistry;
+        pendingFraudRegistryAt = uint64(block.timestamp) + FRAUD_REGISTRY_CHANGE_DELAY;
+        emit FraudRegistryChangeQueued(_fraudRegistry, pendingFraudRegistryAt);
+    }
+
+    function applyFraudRegistry() external onlyDAO {
+        require(pendingFraudRegistryAt != 0, "SM: no pending fraud registry");
+        require(block.timestamp >= pendingFraudRegistryAt, "SM: fraud registry timelock");
+
+        fraudRegistry = IFraudRegistry_SM(pendingFraudRegistry);
+        emit FraudRegistrySet(pendingFraudRegistry);
+        emit FraudRegistryChangeApplied(pendingFraudRegistry);
+
+        delete pendingFraudRegistry;
+        delete pendingFraudRegistryAt;
+    }
+
+    function cancelFraudRegistryChange() external onlyDAO {
+        require(pendingFraudRegistryAt != 0, "SM: no pending fraud registry");
+        emit FraudRegistryChangeCancelled(pendingFraudRegistry);
+        delete pendingFraudRegistry;
+        delete pendingFraudRegistryAt;
     }
     
     /**

@@ -40,6 +40,7 @@ export function PaymentInterface() {
     if (!isEscrowMode && !isVfideTokenAvailable) return
     
     try {
+      let txHash: string | undefined;
       if (isEscrowMode) {
         await createEscrow(
           merchantAddress as `0x${string}`,
@@ -47,14 +48,32 @@ export function PaymentInterface() {
           orderId
         )
       } else {
-        await payMerchant(
+        const result = await payMerchant(
           merchantAddress as `0x${string}`,
           CONTRACT_ADDRESSES.VFIDEToken,
           amount,
           orderId
         )
+        if (result && 'hash' in result && typeof result.hash === 'string') {
+          txHash = result.hash;
+        }
       }
-      
+
+      // #421 FIX: Record confirmed on-chain payment to merchant DB so the payment
+      // is tracked off-chain for reconciliation, webhooks, and receipts.
+      if (txHash && address) {
+        void fetch('/api/merchant/payments/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_address: address,
+            amount,
+            token: CONTRACT_ADDRESSES.VFIDEToken,
+            order_id: orderId,
+            tx_hash: txHash,
+          }),
+        });
+      }
     } catch {
       // Errors are surfaced via hook state (combinedError); this prevents unhandled rejections.
     }

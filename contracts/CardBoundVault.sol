@@ -63,6 +63,11 @@ contract CardBoundVault is ReentrancyGuard {
     uint256 public nextNonce;
 
     bool public paused;
+    uint64 public pauseUntil;
+    uint64 public constant MAX_PAUSE_WINDOW = 7 days;
+    uint256 public pauseNonce;
+    mapping(address => mapping(uint256 => bool)) public pauseApprovalByGuardian;
+    mapping(uint256 => uint8) public pauseApprovalCount;
 
     mapping(address => bool) public isGuardian;
     mapping(address => uint64) public guardianAddedAt;
@@ -204,6 +209,7 @@ contract CardBoundVault is ReentrancyGuard {
         uint256 indexed proposalNonce
     );
     event WalletRotationApproved(address indexed guardian, uint256 indexed proposalNonce, uint8 approvals);
+    event GuardianPauseApproved(address indexed guardian, uint256 indexed pauseNonce, uint8 approvals);
     event WalletRotated(address indexed oldWallet, address indexed newWallet, uint64 indexed newEpoch);
 
     event VaultTransferAuthorized(
@@ -216,6 +222,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     event PauseSet(bool paused, address indexed by);
     event SeerAutonomousSet(address indexed seerAutonomous);
+    event ExternalCallFailed(string indexed context, bytes reason);
     event SpendLimitsSet(uint256 maxPerTransfer, uint256 dailyTransferLimit);
     event VaultApprove(address indexed spender, uint256 amount);
     event NativeRescue(address indexed to, uint256 amount);
@@ -252,6 +259,7 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_QueueInvalidIndex();
     error CBV_QueueNotReady();
     error CBV_QueueAlreadyProcessed();
+    error CBV_PauseAlreadyApproved();
     error CBV_SeerBlocked();
     error CBV_NotMerchantPortal();
     error CBV_PayIntentInvalid();
@@ -279,6 +287,12 @@ contract CardBoundVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     modifier whenNotPaused() {
+        // VAULT-EXT-01: Emergency pause expires automatically after 7 days.
+        if (paused && pauseUntil != 0 && block.timestamp >= pauseUntil) {
+            paused = false;
+            pauseUntil = 0;
+            emit PauseSet(false, address(0));
+        }
         if (paused) revert CBV_Paused();
         _;
     }
@@ -569,13 +583,35 @@ contract CardBoundVault is ReentrancyGuard {
         if (msg.sender != admin && !isGuardian[msg.sender]) {
             revert CBV_NotGuardian();
         }
+
+        if (msg.sender == admin) {
+            paused = true;
+            pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
+            emit PauseSet(true, msg.sender);
+            return;
+        }
+
+        uint256 currentPauseNonce = pauseNonce;
+        if (pauseApprovalByGuardian[msg.sender][currentPauseNonce]) revert CBV_PauseAlreadyApproved();
+        pauseApprovalByGuardian[msg.sender][currentPauseNonce] = true;
+        uint8 approvals = pauseApprovalCount[currentPauseNonce] + 1;
+        pauseApprovalCount[currentPauseNonce] = approvals;
+        emit GuardianPauseApproved(msg.sender, currentPauseNonce, approvals);
+
+        if (approvals < guardianThreshold) {
+            return;
+        }
+
         paused = true;
+        pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
+        pauseNonce = currentPauseNonce + 1;
         emit PauseSet(true, msg.sender);
     }
 
     /// @notice Unpause vault operations (admin only).
     function unpause() external onlyAdmin {
         paused = false;
+        pauseUntil = 0;
         emit PauseSet(false, msg.sender);
     }
 
@@ -1115,8 +1151,10 @@ contract CardBoundVault is ReentrancyGuard {
         if (address(seerAutonomous) == address(0)) return;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
             if (r != 0) revert CBV_SeerBlocked();
-        } catch {
-            revert CBV_SeerBlocked();
+        } catch (bytes memory reason) {
+            // SEER-04 FIX (#179): Hook outages must not brick vault operations.
+            emit ExternalCallFailed("seerAutonomous.beforeAction", reason);
+            return;
         }
     }
 
@@ -1190,6 +1228,12 @@ contract CardBoundVault is ReentrancyGuard {
         require(msg.sender == hub, "CBV: only hub");
         require(newWallet != address(0), "CBV: zero wallet");
 
+        // VAULT-EXT-02: Hub-triggered recovery must be pre-approved by vault guardians.
+        WalletRotation memory staged = pendingRotation;
+        require(staged.newWallet == newWallet, "CBV: recovery rotation not staged");
+        require(staged.approvals >= guardianThreshold, "CBV: guardian approvals required");
+        require(staged.activateAt != 0 && block.timestamp >= staged.activateAt, "CBV: recovery timelock");
+
         address oldWallet = activeWallet;
         address oldAdmin = admin;
 
@@ -1210,6 +1254,7 @@ contract CardBoundVault is ReentrancyGuard {
         delete pendingTokenApproval;
         delete withdrawalQueue;
         activeQueuedWithdrawals = 0;
+        pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
 
         emit RecoveryRotationExecuted(oldWallet, newWallet, oldAdmin, newWallet);
         emit WalletRotated(oldWallet, newWallet, walletEpoch);

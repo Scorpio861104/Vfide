@@ -10,6 +10,16 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler: (request: NextRequest, user: { address?: string }) => Promise<NextResponse>) => {
+    return async (request: NextRequest) => {
+      const { requireAuth } = require('@/lib/auth/middleware');
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+      return handler(request, authResult.user);
+    };
+  },
   requireAuth: jest.fn(),
 }));
 
@@ -100,7 +110,7 @@ describe('/api/crypto/payment-requests', () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toContain('Invalid JSON');
+      expect(data.error).toContain('Invalid JSON body');
     });
 
     it('should return 400 for non-object body', async () => {
@@ -179,7 +189,7 @@ describe('/api/crypto/payment-requests', () => {
       expect(response.status).toBe(403);
     });
 
-    it('requires delay acknowledgement for high-risk amounts even after step-up', async () => {
+    it('still requires a valid step-up challenge payload for high-risk amounts', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
       query.mockResolvedValueOnce({ rows: [{ id: 1 }] });
@@ -197,7 +207,7 @@ describe('/api/crypto/payment-requests', () => {
       });
 
       const response = await POST(request);
-      expect(response.status).toBe(409);
+      expect(response.status).toBe(403);
     });
   });
 });

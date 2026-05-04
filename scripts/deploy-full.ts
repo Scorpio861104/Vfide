@@ -18,7 +18,19 @@ import fs from "node:fs";
 import path from "node:path";
 import hre from "hardhat";
 
-const ethers = (hre as any).ethers;
+async function resolveEthers(): Promise<any> {
+  const runtime = hre as any;
+  if (runtime.ethers) {
+    return runtime.ethers;
+  }
+  if (runtime.network?.connect) {
+    const connection = await runtime.network.connect();
+    if (connection?.ethers) {
+      return connection.ethers;
+    }
+  }
+  throw new Error("Hardhat ethers runtime is unavailable. Ensure @nomicfoundation/hardhat-ethers is enabled.");
+}
 
 type Book = Record<string, string>;
 
@@ -46,7 +58,12 @@ function envArgs(contractName: string): unknown[] {
   return parsed;
 }
 
-function poolArgs(contractName: "DAOPayrollPool" | "MerchantCompetitionPool" | "HeadhunterCompetitionPool", tokenAddress: string, admin: string): unknown[] {
+function poolArgs(
+  ethers: any,
+  contractName: "DAOPayrollPool" | "MerchantCompetitionPool" | "HeadhunterCompetitionPool",
+  tokenAddress: string,
+  admin: string,
+): unknown[] {
   const fromEnv = envArgs(contractName);
   if (fromEnv.length > 0) return fromEnv;
 
@@ -59,25 +76,42 @@ function poolArgs(contractName: "DAOPayrollPool" | "MerchantCompetitionPool" | "
   return [tokenAddress, admin, ethers.parseEther("250000")];
 }
 
-function requiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value || value.trim() === '') {
-    throw new Error(`Missing required env var: ${name}`);
-  }
-  return value;
+function isLocalBootstrapNetwork(network: string): boolean {
+  return network === "hardhat" || network === "localhost" || network === "local";
 }
 
 async function main() {
+  const ethers = await resolveEthers();
   const [deployer] = await ethers.getSigners();
   const network = process.env.HARDHAT_NETWORK ?? "hardhat";
   const book = readBook(network);
+  const allowTemporaryDeployerBootstrap =
+    process.env.ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP === "true" ||
+    isLocalBootstrapNetwork(network);
 
-  // #306 guard: VFIDEToken constructor requires treasury to be a deployed contract.
-  const treasuryAddress = requiredEnv('TREASURY_ADDRESS');
-  const treasuryCode = await ethers.provider.getCode(treasuryAddress);
-  if (!treasuryCode || treasuryCode === '0x') {
-    throw new Error(`TREASURY_ADDRESS must be a deployed contract address. Received non-contract: ${treasuryAddress}`);
+  function bootstrapAddress(envKey: string, label: string): string {
+    const configured = process.env[envKey]?.trim();
+    if (configured) return configured;
+    if (allowTemporaryDeployerBootstrap) return deployer.address;
+    throw new Error(
+      `${label} is required for non-local deployment. Set ${envKey} explicitly, or set ` +
+      `ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP=true only for deliberate local/testing exceptions.`
+    );
   }
+
+  const bootstrap = {
+    admin: bootstrapAddress("BOOTSTRAP_ADMIN_ADDRESS", "Bootstrap admin address"),
+    dao: bootstrapAddress("BOOTSTRAP_DAO_ADDRESS", "Bootstrap DAO address"),
+    beneficiary: bootstrapAddress("BOOTSTRAP_BENEFICIARY_ADDRESS", "Dev reserve beneficiary"),
+    treasurySink: bootstrapAddress("BOOTSTRAP_TREASURY_SINK_ADDRESS", "Bootstrap treasury sink"),
+    sanctumSink: bootstrapAddress("BOOTSTRAP_SANCTUM_SINK_ADDRESS", "Bootstrap sanctum sink"),
+    burnSink: bootstrapAddress("BOOTSTRAP_BURN_SINK_ADDRESS", "Bootstrap burn sink"),
+    ecosystemSink: bootstrapAddress("BOOTSTRAP_ECOSYSTEM_SINK_ADDRESS", "Bootstrap ecosystem sink"),
+    feeSink: bootstrapAddress("BOOTSTRAP_FEE_SINK_ADDRESS", "Bootstrap merchant fee sink"),
+    poolAdmin: bootstrapAddress("BOOTSTRAP_POOL_ADMIN_ADDRESS", "Bootstrap pool admin"),
+    faucetOwner: bootstrapAddress("BOOTSTRAP_FAUCET_OWNER_ADDRESS", "Bootstrap faucet owner"),
+    ledgerAdmin: bootstrapAddress("BOOTSTRAP_LEDGER_ADMIN_ADDRESS", "Bootstrap ProofLedger admin"),
+  };
 
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║  VFIDE Full System Deployment             ║");
@@ -120,25 +154,28 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 1: Foundation ═══");
 
-  await deploy("ProofLedger", deployer.address);
+  // #415: Deploy AdminMultiSig before VFIDEToken so token treasury is contract-custodied at genesis.
+  await deploy("AdminMultiSig", ...envArgs("AdminMultiSig"));
+
+  await deploy("ProofLedger", bootstrap.ledgerAdmin);
 
   await deploy(
     "DevReserveVestingVault",
     ethers.ZeroAddress,            // _vfide  (wired after token)
-    deployer.address,              // _beneficiary
+    bootstrap.beneficiary,
     ethers.ZeroAddress,            // _vaultHub (wired after)
     ethers.ZeroAddress,            // _ledger   (wired after)
     ethers.parseEther("50000000"), // _allocation: 50 M VFIDE
-    deployer.address,              // _dao (temp; transfer to DAO later)
+    bootstrap.dao,
   );
 
   await deploy(
     "VFIDEToken",
     book.DevReserveVestingVault,
-    treasuryAddress,    // treasury (receives 150 M)
+    book.AdminMultiSig, // treasury (receives 150 M)
     ethers.ZeroAddress, // _vaultHub (wired via timelock)
     book.ProofLedger,
-    deployer.address,   // _treasurySink (temp)
+    bootstrap.treasurySink,
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -148,7 +185,7 @@ async function main() {
 
   await deploy(
     "Seer",
-    deployer.address,    // _dao (temp)
+    bootstrap.dao,
     book.ProofLedger,
     ethers.ZeroAddress,  // _hub (wired after VaultHub)
   );
@@ -156,9 +193,9 @@ async function main() {
   await deploy(
     "ProofScoreBurnRouter",
     book.Seer,
-    deployer.address, // _sanctumSink (temp)
-    deployer.address, // _burnSink (temp)
-    deployer.address, // _ecosystemSink (temp)
+    bootstrap.sanctumSink,
+    bootstrap.burnSink,
+    bootstrap.ecosystemSink,
     book.VFIDEToken,  // _token
   );
 
@@ -171,7 +208,7 @@ async function main() {
     "VaultHub",
     book.VFIDEToken,
     book.ProofLedger,
-    deployer.address, // _dao (temp)
+    bootstrap.dao,
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -184,37 +221,37 @@ async function main() {
 
   await deploy(
     "DAOPayrollPool",
-    ...poolArgs("DAOPayrollPool", book.VFIDEToken, deployer.address),
+    ...poolArgs(ethers, "DAOPayrollPool", book.VFIDEToken, bootstrap.poolAdmin),
   );
 
   await deploy(
     "MerchantCompetitionPool",
-    ...poolArgs("MerchantCompetitionPool", book.VFIDEToken, deployer.address),
+    ...poolArgs(ethers, "MerchantCompetitionPool", book.VFIDEToken, bootstrap.poolAdmin),
   );
 
   await deploy(
     "HeadhunterCompetitionPool",
-    ...poolArgs("HeadhunterCompetitionPool", book.VFIDEToken, deployer.address),
+    ...poolArgs(ethers, "HeadhunterCompetitionPool", book.VFIDEToken, bootstrap.poolAdmin),
   );
 
   await deploy(
     "FeeDistributor",
     book.VFIDEToken,
-    deployer.address, // _burn (temp)
-    deployer.address, // _sanctum (temp)
+    bootstrap.burnSink,
+    bootstrap.sanctumSink,
     book.DAOPayrollPool,
     book.MerchantCompetitionPool,
     book.HeadhunterCompetitionPool,
-    deployer.address, // _admin
+    bootstrap.admin,
   );
 
   await deploy(
     "MerchantPortal",
-    deployer.address, // _dao (temp)
+    bootstrap.dao,
     book.VaultHub,
     book.Seer,
     book.ProofLedger,
-    deployer.address, // _feeSink (temp)
+    bootstrap.feeSink,
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -222,18 +259,18 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 5: Governance ═══");
 
-  await deploy("DAOTimelock", deployer.address);
+  await deploy("DAOTimelock", bootstrap.admin);
 
   await deploy(
     "GovernanceHooks",
     book.ProofLedger,
     book.Seer,
-    deployer.address, // _dao (temp)
+    bootstrap.dao,
   );
 
   await deploy(
     "DAO",
-    deployer.address, // _admin (temp)
+    bootstrap.admin,
     book.DAOTimelock,
     book.Seer,
     book.VaultHub,
@@ -248,7 +285,7 @@ async function main() {
   await deploy(
     "VFIDEFlashLoan",
     book.VFIDEToken,
-    deployer.address, // _dao (temp)
+    bootstrap.dao,
     book.Seer,
     book.FeeDistributor,
   );
@@ -256,7 +293,7 @@ async function main() {
   await deploy(
     "VFIDETermLoan",
     book.VFIDEToken,
-    deployer.address, // _dao (temp)
+    bootstrap.dao,
     book.Seer,
     book.VaultHub,
     book.FeeDistributor,
@@ -269,7 +306,7 @@ async function main() {
 
   await deploy(
     "FraudRegistry",
-    deployer.address, // _dao (temp)
+    bootstrap.dao,
     book.Seer,
     book.VFIDEToken,
   );
@@ -277,7 +314,7 @@ async function main() {
   await deploy(
     "VFIDETestnetFaucet",
     book.VFIDEToken,
-    deployer.address,
+    bootstrap.faucetOwner,
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -290,7 +327,6 @@ async function main() {
     "VaultRecoveryClaim",
     "SystemHandover",
     "EmergencyControl",
-    "AdminMultiSig",
   ] as const) {
     await deploy(name, ...envArgs(name));
   }

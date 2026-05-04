@@ -164,16 +164,12 @@ describe('Authentication Security Tests', () => {
     it('rejects malformed Authorization headers', () => {
       // Null header returns null
       expect(extractToken(null)).toBeNull();
-      
-      // "Bearer" without a space is treated as the token itself (not ideal but that's the implementation)
-      expect(extractToken('Bearer')).toBe('Bearer');
-      
-      // Non-Bearer headers are returned as-is
-      expect(extractToken('Token abc123')).toBe('Token abc123');
-      expect(extractToken('abc123')).toBe('abc123');
-      
-      // "Bearer " with empty token returns empty string
-      expect(extractToken('Bearer ')).toBe('');
+
+      // Strict Bearer parsing rejects malformed and non-Bearer formats.
+      expect(extractToken('Bearer')).toBeNull();
+      expect(extractToken('Token abc123')).toBeNull();
+      expect(extractToken('abc123')).toBeNull();
+      expect(extractToken('Bearer ')).toBeNull();
     });
   });
 

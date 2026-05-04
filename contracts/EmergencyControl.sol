@@ -76,6 +76,10 @@ contract EmergencyControl is ReentrancyGuard {
     uint64 public unhaltVotingStartTime;
 
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
+        // TL-365 FIX: 24h timelock for threshold changes (#365)
+        uint64 public constant THRESHOLD_CHANGE_DELAY = 24 hours;
+        uint8 public pendingThreshold;
+        uint64 public pendingThresholdAt;
     struct PendingModules {
         address dao;
         address breaker;
@@ -313,10 +317,32 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_member_remove");
     }
 
+    /// @notice TL-365 FIX: Propose a threshold change (24h timelock). (#365)
     function setThreshold(uint8 _threshold) external onlyDAO nonReentrant {
         if (_threshold == 0 || _threshold > memberCount) revert EC_BadThreshold();
-        threshold = _threshold;
+        require(pendingThresholdAt == 0, "EC: threshold pending");
+        pendingThreshold = _threshold;
+        pendingThresholdAt = uint64(block.timestamp) + THRESHOLD_CHANGE_DELAY;
+        _log("ec_threshold_queued");
+    }
+
+    /// @notice Apply a pending threshold change after the 24h timelock.
+    function applyThreshold() external onlyDAO nonReentrant {
+        require(pendingThresholdAt != 0 && block.timestamp >= pendingThresholdAt, "EC: timelock");
+        uint8 newThreshold = pendingThreshold;
+        if (newThreshold == 0 || newThreshold > memberCount) revert EC_BadThreshold();
+        threshold = newThreshold;
+        delete pendingThreshold;
+        delete pendingThresholdAt;
         _log("ec_threshold_set");
+    }
+
+    /// @notice Cancel a pending threshold change.
+    function cancelThreshold() external onlyDAO nonReentrant {
+        require(pendingThresholdAt != 0, "EC: no pending threshold");
+        delete pendingThreshold;
+        delete pendingThresholdAt;
+        _log("ec_threshold_cancelled");
     }
 
     /// @notice Propose rotating the foundation address (48h timelock).

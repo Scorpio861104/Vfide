@@ -7,6 +7,7 @@ interface IVaultHub_COM {
 }
 interface ISeer_COM {
     function getScore(address) external view returns (uint16);
+    function getCachedScore(address) external view returns (uint16);
     function minForMerchant() external view returns (uint16);
 }
 interface IProofLedger_COM {
@@ -75,7 +76,7 @@ contract MerchantRegistry {
         if (merchants[msg.sender].status != Status.NONE) revert COM_AlreadyMerchant();
         address v = vaultHub.vaultOf(msg.sender);
         if (v == address(0)) revert COM_NotAllowed();
-        uint16 score = seer.getScore(msg.sender);
+        uint16 score = seer.getCachedScore(msg.sender);
         if (score < minScore) revert COM_NotAllowed();
 
         merchants[msg.sender] = Merchant({

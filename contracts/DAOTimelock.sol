@@ -14,6 +14,11 @@ interface IDAOExecutionTracker {
     function markExecuted(uint256 id) external;
 }
 
+/// @dev #454/#455: Interface for notifying DAO of cancellation/expiry
+interface IDAOCancellationTracker {
+    function expireQueuedProposal(uint256 id) external;
+}
+
 contract DAOTimelock is ReentrancyGuard {
     event AdminSet(address admin);
     event DelaySet(uint64 delay);
@@ -47,6 +52,15 @@ contract DAOTimelock is ReentrancyGuard {
 
     modifier onlyAdmin() {
         _checkAdmin();
+        _;
+    }
+
+    /// @dev #454/#455 FIX: Allows cancel/cleanupExpired to be called by admin OR by this contract
+    ///      itself (i.e. via a governance-queued call routed through execute/executeBySecondary).
+    ///      Without this, post-rotation DAO-as-admin cannot cancel timelock ops through its own
+    ///      proposal flow because the inner call arrives as msg.sender == address(this).
+    modifier onlyAdminOrSelf() {
+        if (msg.sender != admin && msg.sender != address(this)) revert TL_NotAdmin();
         _;
     }
 
@@ -126,7 +140,16 @@ contract DAOTimelock is ReentrancyGuard {
         daoProposalForTx[id] = daoProposalId;
     }
 
-    function cancel(bytes32 id) external onlyAdmin { if(queue[id].eta==0) revert TL_NotQueued(); delete queue[id]; delete daoProposalForTx[id]; _removeFromQueuedIds(id); emit Cancelled(id); _log("tl_cancelled"); }
+    function cancel(bytes32 id) external onlyAdminOrSelf {
+        if(queue[id].eta==0) revert TL_NotQueued();
+        // #454 FIX: notify DAO of cancellation so proposal doesn't stay stuck in "queued" state
+        _notifyDaoCancelledIfTracked(id);
+        delete queue[id];
+        delete daoProposalForTx[id];
+        _removeFromQueuedIds(id);
+        emit Cancelled(id);
+        _log("tl_cancelled");
+    }
 
     function cancelBySecondary(bytes32 id) external {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");
@@ -243,6 +266,17 @@ contract DAOTimelock is ReentrancyGuard {
         uint256 daoProposalId = daoProposalForTx[id];
         if (daoProposalId == 0) return;
         IDAOExecutionTracker(admin).markExecuted(daoProposalId);
+    }
+
+    /// @dev #454/#455 FIX: When a linked tx is cancelled/expired, expire the DAO proposal
+    ///      so it doesn't stay permanently stuck in "queued" state. Uses DAO.expireQueuedProposal()
+    ///      if available; fails silently to not block cancellation.
+    function _notifyDaoCancelledIfTracked(bytes32 id) internal {
+        uint256 daoProposalId = daoProposalForTx[id];
+        if (daoProposalId == 0) return;
+        // Try to expire the DAO proposal; ignore failures (DAO may not have this method or proposal
+        // may already be expired/executed)
+        try IDAOCancellationTracker(admin).expireQueuedProposal(daoProposalId) {} catch {}
     }
 
     function _revertWithReason(bytes memory returndata, string memory fallbackMessage) internal pure {
@@ -368,12 +402,13 @@ contract DAOTimelock is ReentrancyGuard {
      * @notice Clean up expired transaction (anyone can call to free storage)
      * @param id Transaction ID to clean up
      */
-    function cleanupExpired(bytes32 id) external onlyAdmin { // TL-03: restrict to admin
+    function cleanupExpired(bytes32 id) external onlyAdminOrSelf { // TL-03 + #455 FIX: also callable by self (DAO proposal flow)
         Op storage op = queue[id];
         require(op.eta > 0, "TL: not queued");
         require(!op.done, "TL: already executed");
         require(block.timestamp > op.eta + EXPIRY_WINDOW, "TL: not expired");
-        
+        // #455 FIX: notify DAO so expired-proposal state is cleared
+        _notifyDaoCancelledIfTracked(id);
         delete queue[id];
         delete daoProposalForTx[id];
         _removeFromQueuedIds(id);

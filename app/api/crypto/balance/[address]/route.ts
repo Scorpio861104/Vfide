@@ -56,7 +56,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload, conte
     return NextResponse.json({ balances: result.rows });
   } catch (error) {
     logger.error('[Balance API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch balances';
+    const errorMessage = 'Failed to fetch balances';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

@@ -64,9 +64,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice Fee collector address
     address public feeCollector;
 
-    /// @notice Secondary cosigner required to activate a refund window when set.
-    /// @dev When non-zero, owner proposes a refund window and cosigner must approve it.
-    ///      If zero, owner alone can open refund windows (backwards-compatible default).
+    /// @notice Secondary cosigner required to activate any manual refund window.
+    /// @dev Owner proposes a refund window and cosigner must approve it.
+    ///      Setting this to zero disables owner-driven manual refund windows.
     address public refundWindowCosigner;
 
     /// @notice Pending refund window proposals awaiting cosigner approval.
@@ -952,28 +952,21 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      *      Calling this when delivery already succeeded would allow double-spend — use adminMarkBridgeExecuted
      *      when delivery succeeded.
      *
-     *      If refundWindowCosigner is set, this call only *proposes* the refund window. The cosigner
-     *      must then call approveRefundWindow(txId) to activate it, reducing single-admin trust risk.
-     *      If refundWindowCosigner is address(0), the window opens immediately (backwards-compatible).
+    *      This call only *proposes* the refund window. The configured cosigner must then
+    *      call approveRefundWindow(txId) to activate it, reducing single-admin trust risk.
      *
      * @param txId The bridge transaction ID to open a refund window for.
      */
     function openBridgeRefundWindow(bytes32 txId) external onlyOwner {
+        require(refundWindowCosigner != address(0), "VFIDEBridge: cosigner required");
         BridgeTransaction storage btx = bridgeTransactions[txId];
         require(btx.sender != address(0), "VFIDEBridge: unknown tx");
         require(!btx.executed, "VFIDEBridge: already executed");
         require(bridgeRefundableAfter[txId] == 0, "VFIDEBridge: window already open");
         require(!pendingRefundWindowProposal[txId], "VFIDEBridge: proposal already pending");
 
-        if (refundWindowCosigner == address(0)) {
-            // No cosigner configured: owner alone activates the window immediately.
-            bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
-            emit BridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
-        } else {
-            // Cosigner is set: propose only; cosigner must call approveRefundWindow to activate.
-            pendingRefundWindowProposal[txId] = true;
-            emit BridgeRefundWindowProposed(txId);
-        }
+        pendingRefundWindowProposal[txId] = true;
+        emit BridgeRefundWindowProposed(txId);
     }
 
     /**
@@ -1044,9 +1037,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Set or clear the refund window cosigner address.
-     * @dev Setting to address(0) reverts to owner-only single-approver mode.
-     *      Only callable by owner. No timelock — cosigner is a security enhancement, not a
+    * @notice Set or clear the refund window cosigner address.
+    * @dev Setting to address(0) disables owner-driven manual refund windows.
+    *      Only callable by owner. No timelock — cosigner is a security enhancement, not a
      *      privileged role that can steal funds.
      */
     function setRefundWindowCosigner(address cosigner) external onlyOwner {

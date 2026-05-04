@@ -53,31 +53,26 @@ class RateLimiter {
         const now = Date.now();
         const windowIndex = Math.floor(now / this.windowMs);
         const redisKey = `ws:rl:${this.name}:${key}:${windowIndex}`;
-        const incrUrl = `${this.redisUrl.replace(/\/$/, '')}/incr/${encodeURIComponent(redisKey)}`;
-        const incrResponse = await fetch(incrUrl, {
+        const ttlSeconds = Math.max(1, Math.ceil(this.windowMs / 1000) + 5);
+        // WS-01 FIX: use a single Upstash pipeline request so INCR and EXPIRE
+        // are applied together by Redis and cannot be split by network races.
+        const pipelineUrl = `${this.redisUrl.replace(/\/$/, '')}/pipeline`;
+        const pipelineResponse = await fetch(pipelineUrl, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${this.redisToken}`,
+                'content-type': 'application/json',
             },
+            body: JSON.stringify([
+                ['INCR', redisKey],
+                ['EXPIRE', redisKey, String(ttlSeconds), 'NX'],
+            ]),
         });
-        if (!incrResponse.ok) {
-            throw new Error(`Upstash INCR failed: HTTP ${incrResponse.status}`);
+        if (!pipelineResponse.ok) {
+            throw new Error(`Upstash pipeline failed: HTTP ${pipelineResponse.status}`);
         }
-        const incrData = (await incrResponse.json());
-        const count = Number(incrData.result ?? 0);
-        if (count === 1) {
-            const ttlSeconds = Math.max(1, Math.ceil(this.windowMs / 1000) + 5);
-            const expireUrl = `${this.redisUrl.replace(/\/$/, '')}/expire/${encodeURIComponent(redisKey)}/${ttlSeconds}`;
-            const expireResponse = await fetch(expireUrl, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${this.redisToken}`,
-                },
-            });
-            if (!expireResponse.ok) {
-                throw new Error(`Upstash EXPIRE failed: HTTP ${expireResponse.status}`);
-            }
-        }
+        const pipelineData = (await pipelineResponse.json());
+        const count = Number(pipelineData?.[0]?.result ?? 0);
         return count <= this.maxRequests;
     }
     cleanup() {

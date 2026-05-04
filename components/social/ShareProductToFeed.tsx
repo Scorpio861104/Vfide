@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,9 +27,11 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'product_share',
-          content: caption.trim() || `Check out ${product.name} from ${product.merchantName}!`,
-          metadata: {
+          userAddress: address,
+          activityType: 'product_share',
+          title: `Shared ${product.name}`,
+          description: caption.trim() || `Check out ${product.name} from ${product.merchantName}!`,
+          data: {
             productId: product.id,
             productName: product.name,
             productPrice: product.price,

@@ -9,7 +9,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import { query, getClient } from '@/lib/db';
-import { requireAuth, withAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -25,6 +26,21 @@ interface OrderItem {
   quantity: number;
   unit_price: number;
   product_type?: string;
+}
+
+interface CatalogProductRow {
+  id: number;
+  name: string;
+  sku: string | null;
+  price: string | number;
+}
+
+interface CatalogVariantRow {
+  id: number;
+  product_id: number;
+  name: string;
+  sku: string | null;
+  price_override: string | number | null;
 }
 
 const VALID_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'refunded'] as const;
@@ -79,24 +95,22 @@ function generateOrderNumber(): string {
   return `${prefix}-${randomBytes(3).toString('hex').toUpperCase()}`;
 }
 
-async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const address = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase() : '';
+function getAuthAddress(user: JWTPayload): string | null {
+  const address = typeof user.address === 'string'
+    ? user.address.trim().toLowerCase() : '';
   if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return null;
   }
   return address;
 }
 
 // ─────────────────────────── GET: List orders
-async function getHandler(request: NextRequest) {
+async function getHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
-  if (authAddress instanceof NextResponse) return authAddress;
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const role = searchParams.get('role') || 'merchant';  // merchant or customer
@@ -160,12 +174,12 @@ async function getHandler(request: NextRequest) {
 }
 
 // ─────────────────────────── POST: Create order
-async function postHandler(request: NextRequest) {
+async function postHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
-  if (authAddress instanceof NextResponse) return authAddress;
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const parsedBody = createOrderSchema.safeParse(await request.json());
@@ -178,19 +192,118 @@ async function postHandler(request: NextRequest) {
             tx_hash, token, shipping_address, shipping_method,
             tax_amount, shipping_amount, discount_amount, customer_notes } = body;
 
+    // #105 fix: enforce server-authoritative pricing from merchant catalog.
+    // This route serves customer checkout creation; never trust client-supplied unit_price.
+    const productIds = Array.from(
+      new Set(
+        items
+          .map((item) => item.product_id)
+          .filter((id): id is number => Number.isInteger(id) && id > 0)
+      )
+    );
+
+    if (productIds.length !== items.length) {
+      return NextResponse.json(
+        { error: 'Each order item must reference a valid product_id' },
+        { status: 400 }
+      );
+    }
+
+    const variantIds = Array.from(
+      new Set(
+        items
+          .map((item) => item.variant_id)
+          .filter((id): id is number => Number.isInteger(id) && id > 0)
+      )
+    );
+
+    const productResult = await query<CatalogProductRow>(
+      `SELECT id, name, sku, price
+         FROM merchant_products
+        WHERE merchant_address = $1
+          AND id = ANY($2::int[])
+          AND status = 'active'`,
+      [merchant_address, productIds]
+    );
+
+    if (productResult.rows.length !== productIds.length) {
+      return NextResponse.json(
+        { error: 'One or more products are invalid or unavailable' },
+        { status: 400 }
+      );
+    }
+
+    const productsById = new Map<number, CatalogProductRow>(
+      productResult.rows.map((row) => [row.id, row])
+    );
+
+    const variantsById = new Map<number, CatalogVariantRow>();
+    if (variantIds.length > 0) {
+      const variantResult = await query<CatalogVariantRow>(
+        `SELECT id, product_id, name, sku, price_override
+           FROM merchant_product_variants
+          WHERE id = ANY($1::int[])
+            AND status = 'active'`,
+        [variantIds]
+      );
+
+      if (variantResult.rows.length !== variantIds.length) {
+        return NextResponse.json(
+          { error: 'One or more product variants are invalid or unavailable' },
+          { status: 400 }
+        );
+      }
+
+      for (const variant of variantResult.rows) {
+        variantsById.set(variant.id, variant);
+      }
+    }
+
     // Validate items
     const validatedItems: OrderItem[] = [];
     let subtotal = 0;
     for (const item of items) {
+      const productId = item.product_id as number;
+      const product = productsById.get(productId);
+      if (!product) {
+        return NextResponse.json({ error: `Product ${productId} not found` }, { status: 400 });
+      }
+
+      let authoritativeUnitPrice = Number(product.price);
+      let authoritativeName = product.name;
+      let authoritativeSku = product.sku ?? item.sku;
+
+      if (item.variant_id) {
+        const variant = variantsById.get(item.variant_id);
+        if (!variant || variant.product_id !== productId) {
+          return NextResponse.json(
+            { error: `Variant ${item.variant_id} is invalid for product ${productId}` },
+            { status: 400 }
+          );
+        }
+        if (variant.price_override !== null && variant.price_override !== undefined) {
+          authoritativeUnitPrice = Number(variant.price_override);
+        }
+        authoritativeName = variant.name || authoritativeName;
+        authoritativeSku = variant.sku ?? authoritativeSku;
+      }
+
+      if (!Number.isFinite(authoritativeUnitPrice) || authoritativeUnitPrice < 0) {
+        return NextResponse.json(
+          { error: `Product ${productId} has invalid catalog pricing` },
+          { status: 400 }
+        );
+      }
+
       const qty = Math.max(1, Math.floor(item.quantity));
-      const price = item.unit_price;
+      const price = authoritativeUnitPrice;
       const lineTotal = Math.round(qty * price * 100) / 100;
       subtotal += lineTotal;
       validatedItems.push({
-        product_id: item.product_id,
+        product_id: productId,
         variant_id: item.variant_id,
-        name: item.name,
-        sku: item.sku,
+        name: authoritativeName,
+        sku: authoritativeSku ?? undefined,
         quantity: qty,
         unit_price: price,
         product_type: item.product_type ?? 'physical',
@@ -207,9 +320,15 @@ async function postHandler(request: NextRequest) {
       return NextResponse.json({ error: 'Order total cannot be negative' }, { status: 400 });
     }
 
-    const validTxHash = tx_hash || null;
-    const paymentStatus = validTxHash ? 'paid' : 'unpaid';
-    const orderStatus = validTxHash ? 'confirmed' : 'pending';
+    // Security hardening (#62): never trust client-supplied tx_hash at order creation time.
+    // Payment status is set only by the verified confirmation flow:
+    // app/api/merchant/payments/confirm/route.ts
+    if (tx_hash) {
+      logger.warn('[Orders POST] Ignoring unverified tx_hash; payment must be confirmed via /api/merchant/payments/confirm');
+    }
+
+    const paymentStatus = 'unpaid';
+    const orderStatus = 'pending';
 
     const orderNumber = generateOrderNumber();
 
@@ -232,7 +351,7 @@ async function postHandler(request: NextRequest) {
           customer_name ?? null,
           orderStatus,
           paymentStatus,
-          validTxHash,
+          null,
           token || 'VFIDE',
           subtotal,
           tax,
@@ -273,10 +392,10 @@ async function postHandler(request: NextRequest) {
       }
 
       // Update sold counts
-      const productIds = validatedItems
+      const soldProductIds = validatedItems
         .filter(i => i.product_id)
         .map(i => ({ id: i.product_id!, qty: i.quantity }));
-      for (const { id, qty } of productIds) {
+      for (const { id, qty } of soldProductIds) {
         await client.query(
           'UPDATE merchant_products SET sold_count = sold_count + $1 WHERE id = $2',
           [qty, id]
@@ -314,12 +433,12 @@ async function postHandler(request: NextRequest) {
 }
 
 // ─────────────────────────── PATCH: Update order status / fulfillment
-async function patchHandler(request: NextRequest) {
+async function patchHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
-  if (authAddress instanceof NextResponse) return authAddress;
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const parsedBody = updateOrderSchema.safeParse(await request.json());
@@ -375,9 +494,15 @@ async function patchHandler(request: NextRequest) {
     if (notes !== undefined) {
       updates.push(`notes = $${pi++}`); params.push(notes);
     }
+    // Security hardening (#62): payment settlement updates must come only
+    // from the on-chain verified confirmation endpoint.
     if (tx_hash !== undefined) {
-      updates.push(`tx_hash = $${pi++}`); params.push(tx_hash);
-      updates.push(`payment_status = 'paid'`);
+      return NextResponse.json(
+        {
+          error: 'tx_hash updates are not allowed on this endpoint. Use /api/merchant/payments/confirm with on-chain verification.',
+        },
+        { status: 400 }
+      );
     }
 
     params.push(id);

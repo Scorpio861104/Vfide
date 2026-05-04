@@ -59,6 +59,7 @@ import "./lib/ScoringConstants.sol";
 
 interface ISeerTL {
     function getScore(address subject) external view returns (uint16);
+    function getCachedScore(address subject) external view returns (uint16);
     function reward(address subject, uint16 delta, string calldata reason) external;
     function punish(address subject, uint16 delta, string calldata reason) external;
 }
@@ -359,7 +360,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         // Guarantor's own score must be reasonable
         if (address(seer) != address(0)) {
-            uint16 gScore = seer.getScore(msg.sender);
+            uint16 gScore = seer.getCachedScore(msg.sender);
             if (gScore == 0) gScore = 5000;
             if (gScore < TIER_1_SCORE) revert TL_ScoreTooLow();
         }
@@ -941,7 +942,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     function _maxBorrowable(address borrower) internal view returns (uint256) {
         if (address(seer) == address(0)) return tier1Limit;
-        uint16 score = seer.getScore(borrower);
+        uint16 score = seer.getCachedScore(borrower);
         if (score == 0) score = 5000;
         if (score >= TIER_4_SCORE) return tier4Limit;
         if (score >= TIER_3_SCORE) return tier3Limit;

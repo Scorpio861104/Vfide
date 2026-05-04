@@ -282,6 +282,8 @@ contract GuardianLock {
 contract PanicGuard {
     event LedgerSet(address ledger);
     event HubSet(address hub);
+    event HubChangeQueued(address indexed currentHub, address indexed pendingHub, uint64 effectiveAt);
+    event HubChangeCancelled(address indexed pendingHub);
     event Quarantined(address indexed vault, uint64 untilTs, string reason, uint8 severity);
     event Cleared(address indexed vault, string reason);
     event GlobalRiskSet(bool on, string reason);
@@ -290,6 +292,9 @@ contract PanicGuard {
     address public dao;
     IProofLedger public ledger;
     IVaultHub public vaultHub;
+    address public pendingHub;
+    uint64 public pendingHubAt;
+    uint64 public constant HUB_CHANGE_DELAY = 24 hours;
     // per-vault quarantine until timestamp (0 = not quarantined)
     mapping(address => uint64) public quarantineUntil;
     mapping(address => uint64) public selfPanicUntil;
@@ -327,9 +332,29 @@ contract PanicGuard {
     }
 
     function setHub(address _hub) external onlyDAO {
-        vaultHub = IVaultHub(_hub);
-        emit HubSet(_hub);
+        pendingHub = _hub;
+        pendingHubAt = uint64(block.timestamp) + HUB_CHANGE_DELAY;
+        emit HubChangeQueued(address(vaultHub), _hub, pendingHubAt);
+        _log("panicguard_hub_queued");
+    }
+
+    function applyHub() external onlyDAO {
+        if (pendingHubAt == 0 || block.timestamp < pendingHubAt) revert SEC_NotLocked();
+        address nextHub = pendingHub;
+        vaultHub = IVaultHub(nextHub);
+        delete pendingHub;
+        delete pendingHubAt;
+        emit HubSet(nextHub);
         _log("panicguard_hub_set");
+    }
+
+    function cancelHubChange() external onlyDAO {
+        if (pendingHubAt == 0) revert SEC_NotLocked();
+        address oldPending = pendingHub;
+        delete pendingHub;
+        delete pendingHubAt;
+        emit HubChangeCancelled(oldPending);
+        _log("panicguard_hub_cancelled");
     }
 
     /// @dev Register vault creation time (called by VaultHub)
@@ -459,17 +484,34 @@ contract PanicGuard {
 
 contract EmergencyBreaker {
     event Toggled(bool on, string reason);
+    event ToggleProposed(bool on, string reason, address indexed proposer);
+    event ToggleCancelled(bool on, string reason, address indexed cancelledBy);
     event DAOSet(address dao);
+    event DAOChangeQueued(address indexed currentDAO, address indexed pendingDAO, uint64 effectiveAt);
+    event DAOChangeCancelled(address indexed pendingDAO);
+    event CoSignerSet(address coSigner);
     event LedgerSet(address ledger);
     event CooldownSet(uint64 cooldown);
 
     address public dao;
+    address public pendingDAO;
+    uint64 public pendingDAOAt;
+    uint64 public constant DAO_CHANGE_DELAY = 48 hours;
+    address public coSigner;
     IProofLedger public ledger;
 
     bool public halted;
     
     uint64 public lastToggleTime;
     uint64 public toggleCooldown = 1 hours; // Default 1 hour cooldown between toggles
+
+    struct PendingToggle {
+        bool exists;
+        bool on;
+        string reason;
+        address proposer;
+    }
+    PendingToggle public pendingToggle;
 
     modifier onlyDAO() { _checkDAOEB(); _; }
     function _checkDAOEB() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
@@ -482,8 +524,36 @@ contract EmergencyBreaker {
 
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert SEC_Zero();
-        dao = _dao; emit DAOSet(_dao);
+        pendingDAO = _dao;
+        pendingDAOAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit DAOChangeQueued(dao, _dao, pendingDAOAt);
+        _log("breaker_dao_queued");
+    }
+
+    function applyDAO() external onlyDAO {
+        if (pendingDAO == address(0) || pendingDAOAt == 0 || block.timestamp < pendingDAOAt) revert SEC_NotLocked();
+        dao = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOSet(dao);
         _log("breaker_dao_set");
+    }
+
+    function cancelDAOChange() external onlyDAO {
+        if (pendingDAO == address(0) || pendingDAOAt == 0) revert SEC_NotLocked();
+        address oldPending = pendingDAO;
+        delete pendingDAO;
+        delete pendingDAOAt;
+        emit DAOChangeCancelled(oldPending);
+        _log("breaker_dao_cancelled");
+    }
+
+    function setCoSigner(address _coSigner) external onlyDAO {
+        if (_coSigner == address(0)) revert SEC_Zero();
+        if (_coSigner == dao) revert SEC_NoEffect();
+        coSigner = _coSigner;
+        emit CoSignerSet(_coSigner);
+        _log("breaker_cosigner_set");
     }
 
     function setLedger(address _ledger) external onlyDAO {
@@ -501,15 +571,55 @@ contract EmergencyBreaker {
         _log("breaker_cooldown_set");
     }
 
-    function toggle(bool on, string calldata reason) external onlyDAO {
+    function toggle(bool on, string calldata reason) external {
+        if (msg.sender != dao && msg.sender != coSigner) revert SEC_NotDAO();
+
+        // HALT-01: If DAO is a governance contract (e.g., EmergencyControl),
+        // its own threshold voting acts as the co-signature layer.
+        if (msg.sender == dao && dao.code.length > 0) {
+            if (toggleCooldown > 0 && lastToggleTime > 0 && !on) {
+                require(block.timestamp >= lastToggleTime + toggleCooldown, "SEC: toggle cooldown active");
+            }
+            halted = on;
+            lastToggleTime = uint64(block.timestamp);
+            emit Toggled(on, reason);
+            _log(string(abi.encodePacked("breaker_", on ? "on" : "off")));
+            _logEv(address(this), "breaker_toggle", on ? 1 : 0, reason);
+            return;
+        }
+
+        if (coSigner == address(0)) revert SEC_Zero();
+
+        bytes32 requested = keccak256(abi.encode(on, reason));
+        if (!pendingToggle.exists) {
+            pendingToggle = PendingToggle({
+                exists: true,
+                on: on,
+                reason: reason,
+                proposer: msg.sender
+            });
+            emit ToggleProposed(on, reason, msg.sender);
+            _logEv(address(this), "breaker_toggle_proposed", on ? 1 : 0, reason);
+            return;
+        }
+
+        bytes32 pendingHash = keccak256(abi.encode(pendingToggle.on, pendingToggle.reason));
+        if (requested != pendingHash) {
+            emit ToggleCancelled(pendingToggle.on, pendingToggle.reason, msg.sender);
+            delete pendingToggle;
+            revert SEC_NoEffect();
+        }
+        require(msg.sender != pendingToggle.proposer, "SEC: co-sig required");
+
         if (toggleCooldown > 0 && lastToggleTime > 0 && !on) {
             // Only enforce cooldown when deactivating (turning off)
             // Activation (turning on) is always allowed for emergencies
             require(block.timestamp >= lastToggleTime + toggleCooldown, "SEC: toggle cooldown active");
         }
-        
+
         halted = on;
         lastToggleTime = uint64(block.timestamp);
+        delete pendingToggle;
         emit Toggled(on, reason);
         _log(string(abi.encodePacked("breaker_", on ? "on" : "off")));
         _logEv(address(this), "breaker_toggle", on ? 1 : 0, reason);

@@ -846,7 +846,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev Tracks tx count and tier, actual payout happens monthly
      */
     function recordMerchantTransaction(address merchant) external onlyManager nonReentrant {
-        uint16 score = seer.getScore(merchant);
+        uint16 score = seer.getCachedScore(merchant);
         uint16 tier = _getMerchantBonusTier(score);
         
         if (tier == 0) return; // Below 80%, no bonus eligibility
@@ -923,7 +923,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (referralCredited[merchant]) return; // Already credited
         
         // Referrer must have minimum ProofScore
-        if (seer.getScore(referrer) < HEADHUNTER_MIN_SCORE) return;
+        if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
         
         pendingMerchantReferrer[merchant] = referrer;
         emit PendingReferralRegistered(merchant, referrer, true);
@@ -940,7 +940,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (referralCredited[user]) return; // Already credited
         
         // Referrer must have minimum ProofScore
-        if (seer.getScore(referrer) < HEADHUNTER_MIN_SCORE) return;
+        if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
         
         pendingUserReferrer[user] = referrer;
         emit PendingReferralRegistered(user, referrer, false);
@@ -957,7 +957,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (merchantLifetimeTxCount[merchant] < MIN_MERCHANT_TX) return;
         
         // Referrer must still have minimum score at credit time
-        if (seer.getScore(referrer) < HEADHUNTER_MIN_SCORE) return;
+        if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
         
         referralCredited[merchant] = true;
         _awardPoints(referrer, POINTS_MERCHANT_REFERRAL, merchant, true);
@@ -975,7 +975,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (!_meetsUserReferralThreshold(user)) return;
         
         // Referrer must still have minimum score at credit time
-        if (seer.getScore(referrer) < HEADHUNTER_MIN_SCORE) return;
+        if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
         
         referralCredited[user] = true;
         _awardPoints(referrer, POINTS_USER_REFERRAL, user, false);

@@ -395,6 +395,20 @@ const postHandler = async (request: NextRequest, user: JWTPayload) => {
       );
     }
 
+    // Per-proposer weekly rate limit: max 5 proposals per 7-day window (P2-M-18)
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const recentCount = await query<{ count: string }>(
+      `SELECT COUNT(*) AS count FROM proposals WHERE proposer_id = $1 AND created_at >= $2`,
+      [proposer.id, weekAgo]
+    );
+    const MAX_PROPOSALS_PER_WEEK = 5;
+    if (Number(recentCount.rows[0]?.count ?? 0) >= MAX_PROPOSALS_PER_WEEK) {
+      return NextResponse.json(
+        { error: 'Proposal rate limit exceeded: maximum 5 proposals per week per proposer' },
+        { status: 429 }
+      );
+    }
+
     // Insert proposal
     const result = await query<Proposal>(
       `INSERT INTO proposals (proposer_id, title, description, status, votes_for, votes_against, voting_ends_at)

@@ -171,6 +171,17 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     uint64 public pendingFraudRegistryAt;
     uint64 public constant FRAUD_REGISTRY_DELAY = 24 hours;
 
+    // TL-262 FIX: Timelocked seer + feeDistributor changes (#262)
+    address public pendingSeer;
+    uint64 public pendingSeerAt;
+    address public pendingFeeDistributor;
+    uint64 public pendingFeeDistributorAt;
+
+    // TL-240 FIX: Timelocked orphan sweep (#240)
+    address public pendingSweepRecipient;
+    uint256 public pendingSweepAmount;
+    uint64 public pendingSweepAt;
+
     mapping(address => LenderInfo) public lenders;
     address[] public lenderList;
     mapping(address => uint256) private lenderListIndex;
@@ -200,8 +211,14 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     event DAOSet(address indexed newDao);
     event DAOProposed(address indexed newDao, uint64 effectiveAt);
     event DAOChangeCancelled();
+    event SeerProposed(address indexed newSeer, uint64 effectiveAt);
     event SeerSet(address indexed newSeer);
+    event SeerChangeCancelled();
+    event FeeDistributorProposed(address indexed newFeeDistributor, uint64 effectiveAt);
     event FeeDistributorSet(address indexed newFeeDistributor);
+    event FeeDistributorChangeCancelled();
+    event OrphanSweepProposed(address indexed recipient, uint256 amount, uint64 effectiveAt);
+    event OrphanSweepCancelled();
     event FraudRegistryProposed(address indexed registry, uint64 effectiveAt);
     event FraudRegistrySet(address indexed registry);
     event FraudRegistryCancelled();
@@ -412,12 +429,38 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         return contractBalance > totalTrackedBalance ? contractBalance - totalTrackedBalance : 0;
     }
 
+    /// @notice TL-240 FIX: Propose an orphan-balance sweep (48h timelock). (#240)
     function sweepOrphanBalance(address recipient, uint256 amount) external onlyDAO nonReentrant {
         if (recipient == address(0)) revert FL_Zero();
         if (amount == 0 || amount > getOrphanBalance()) revert FL_ExceedsOrphanBalance();
+        require(pendingSweepAt == 0, "FL: sweep pending");
+        uint64 effectiveAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        pendingSweepRecipient = recipient;
+        pendingSweepAmount = amount;
+        pendingSweepAt = effectiveAt;
+        emit OrphanSweepProposed(recipient, amount, effectiveAt);
+    }
 
+    /// @notice Execute a previously proposed orphan-balance sweep after the 48h timelock.
+    function applyOrphanSweep() external onlyDAO nonReentrant {
+        require(pendingSweepAt != 0 && block.timestamp >= pendingSweepAt, "FL: timelock");
+        address recipient = pendingSweepRecipient;
+        uint256 amount = pendingSweepAmount;
+        require(amount <= getOrphanBalance(), "FL: balance dropped");
+        delete pendingSweepRecipient;
+        delete pendingSweepAmount;
+        delete pendingSweepAt;
         vfideToken.safeTransfer(recipient, amount);
         emit OrphanTokensSwept(recipient, amount);
+    }
+
+    /// @notice Cancel a pending orphan-balance sweep.
+    function cancelOrphanSweep() external onlyDAO {
+        require(pendingSweepAt != 0, "FL: no pending");
+        delete pendingSweepRecipient;
+        delete pendingSweepAmount;
+        delete pendingSweepAt;
+        emit OrphanSweepCancelled();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -522,18 +565,54 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         emit DAOChangeCancelled();
     }
 
-    /// @notice L-1 FIX: zero address check added
+    /// @notice TL-262 FIX: Propose a seer change (48h timelock). (#262)
     function setSeer(address _seer) external onlyDAO {
         if (_seer == address(0)) revert FL_Zero();
-        seer = ISeerFL(_seer);
-        emit SeerSet(_seer);
+        pendingSeer = _seer;
+        pendingSeerAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit SeerProposed(_seer, pendingSeerAt);
     }
 
-    /// @notice L-1 FIX: zero address check added
+    /// @notice Apply a pending seer change after the 48h timelock.
+    function applySeer() external onlyDAO {
+        require(pendingSeerAt != 0 && block.timestamp >= pendingSeerAt, "FL: timelock");
+        seer = ISeerFL(pendingSeer);
+        emit SeerSet(pendingSeer);
+        delete pendingSeer;
+        delete pendingSeerAt;
+    }
+
+    /// @notice Cancel a pending seer change.
+    function cancelSeer() external onlyDAO {
+        require(pendingSeerAt != 0, "FL: no pending");
+        delete pendingSeer;
+        delete pendingSeerAt;
+        emit SeerChangeCancelled();
+    }
+
+    /// @notice TL-262 FIX: Propose a feeDistributor change (48h timelock). (#262)
     function setFeeDistributor(address _fd) external onlyDAO {
         if (_fd == address(0)) revert FL_Zero();
-        feeDistributor = _fd;
-        emit FeeDistributorSet(_fd);
+        pendingFeeDistributor = _fd;
+        pendingFeeDistributorAt = uint64(block.timestamp) + DAO_CHANGE_DELAY;
+        emit FeeDistributorProposed(_fd, pendingFeeDistributorAt);
+    }
+
+    /// @notice Apply a pending feeDistributor change after the 48h timelock.
+    function applyFeeDistributor() external onlyDAO {
+        require(pendingFeeDistributorAt != 0 && block.timestamp >= pendingFeeDistributorAt, "FL: timelock");
+        feeDistributor = pendingFeeDistributor;
+        emit FeeDistributorSet(pendingFeeDistributor);
+        delete pendingFeeDistributor;
+        delete pendingFeeDistributorAt;
+    }
+
+    /// @notice Cancel a pending feeDistributor change.
+    function cancelFeeDistributor() external onlyDAO {
+        require(pendingFeeDistributorAt != 0, "FL: no pending");
+        delete pendingFeeDistributor;
+        delete pendingFeeDistributorAt;
+        emit FeeDistributorChangeCancelled();
     }
 
     /// @notice Propose a fraud registry change with 24-hour timelock (L-2 FIX)

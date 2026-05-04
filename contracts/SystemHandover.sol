@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-interface ISeer_SH { function minForGovernance() external view returns (uint16); function getScore(address subject) external view returns (uint16); }
+interface ISeer_SH { function minForGovernance() external view returns (uint16); function getScore(address subject) external view returns (uint16); function getCachedScore(address subject) external view returns (uint16); }
 interface ICouncilElection_SH { function getActualCouncilSize() external view returns (uint256); function getCouncilMember(uint256 index) external view returns (address); }
 interface IDAO_SH { function setAdmin(address _admin) external; function admin() external view returns (address); }
 interface IDAOTimelock_SH { function setAdmin(address _admin) external; function admin() external view returns (address); }
@@ -149,7 +149,7 @@ contract SystemHandover {
         for (uint256 i = 0; i < size; i++) {
             address member = councilElection.getCouncilMember(i);
             if (member != address(0)) {
-                total += seer.getScore(member);
+                total += seer.getCachedScore(member);
             }
         }
         uint16 avgScore = uint16(total / size);

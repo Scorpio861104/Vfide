@@ -12,6 +12,15 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler: (request: NextRequest, user?: JWTPayload) => Promise<NextResponse>) => {
+    return (request: NextRequest) => {
+      // PATCH handler expects a JWT payload as 2nd arg; GET/POST do not.
+      if (handler.length >= 2) {
+        return handler(request, { address: '0x2222222222222222222222222222222222222222' } as JWTPayload);
+      }
+      return handler(request);
+    };
+  },
   requireAuth: jest.fn(),
   requireOwnership: jest.fn(),
 }));
@@ -26,6 +35,10 @@ describe('/api/merchant/installments', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    query.mockReset();
+    withRateLimit.mockReset();
+    requireAuth.mockReset();
+    requireOwnership.mockReset();
     withRateLimit.mockResolvedValue(null);
     requireAuth.mockResolvedValue({ user: { address: customer } });
     requireOwnership.mockResolvedValue({ user: { address: merchant } });
@@ -94,5 +107,16 @@ describe('/api/merchant/installments', () => {
     const response = await GET(request);
 
     expect(response.status).toBe(429);
+  });
+
+  it('returns 500 when listing plans fails due to DB error', async () => {
+    query.mockRejectedValueOnce(new Error('db down'));
+
+    const request = new NextRequest(`http://localhost:3000/api/merchant/installments?merchant=${merchant}`);
+    const response = await GET(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data).toEqual({ error: 'Failed to load installment plans' });
   });
 });

@@ -118,6 +118,10 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 oldLimit,
         uint16 newLimit
     );
+    event DAORateLimitChangeQueued(RestrictionLevel level, ActionType action, uint16 newLimit, uint64 executeAfter);
+    event DAORateLimitChangeCancelled(RestrictionLevel level, ActionType action, uint16 newLimit);
+    event OperatorChangeQueued(address indexed operator, bool authorized, uint64 executeAfter);
+    event OperatorChangeCancelled(address indexed operator, bool authorized);
     event DAOMaxAutonomyProfileApplied(address indexed by);
 
     // EcosystemVault monitoring
@@ -197,6 +201,25 @@ contract SeerAutonomous is ReentrancyGuard {
     
     // Operator permissions (trusted contracts that can trigger checks)
     mapping(address => bool) public operators;
+    uint64 public constant DAO_RATE_LIMIT_DELAY = 24 hours;
+    uint64 public constant OPERATOR_CHANGE_DELAY = 48 hours;
+
+    struct PendingRateLimitChange {
+        RestrictionLevel level;
+        ActionType action;
+        uint16 limit;
+        uint64 executeAfter;
+        bool exists;
+    }
+    PendingRateLimitChange public pendingRateLimitChange;
+
+    struct PendingOperatorChange {
+        address operator;
+        bool authorized;
+        uint64 executeAfter;
+        bool exists;
+    }
+    PendingOperatorChange public pendingOperatorChange;
     
     // ─────────────────────────────────────────────────────────────────
     //                    USER RESTRICTION STATE
@@ -1038,7 +1061,31 @@ contract SeerAutonomous is ReentrancyGuard {
     }
     
     function daoSetRateLimit(RestrictionLevel level, ActionType action, uint16 limit) external onlyDAO {
-        _setRateLimitWithEvent(level, action, limit);
+        if (pendingRateLimitChange.exists) revert SA_NotAuthorized();
+        uint64 executeAfter = uint64(block.timestamp) + DAO_RATE_LIMIT_DELAY;
+        pendingRateLimitChange = PendingRateLimitChange({
+            level: level,
+            action: action,
+            limit: limit,
+            executeAfter: executeAfter,
+            exists: true
+        });
+        emit DAORateLimitChangeQueued(level, action, limit, executeAfter);
+    }
+
+    function applyRateLimitChange() external onlyDAO {
+        PendingRateLimitChange memory pending = pendingRateLimitChange;
+        if (!pending.exists) revert SA_NotAuthorized();
+        if (block.timestamp < pending.executeAfter) revert SA_NotAuthorized();
+        delete pendingRateLimitChange;
+        _setRateLimitWithEvent(pending.level, pending.action, pending.limit);
+    }
+
+    function cancelRateLimitChange() external onlyDAO {
+        PendingRateLimitChange memory pending = pendingRateLimitChange;
+        if (!pending.exists) revert SA_NotAuthorized();
+        delete pendingRateLimitChange;
+        emit DAORateLimitChangeCancelled(pending.level, pending.action, pending.limit);
     }
 
     /// @notice Apply a strict autonomy profile in one governance call.
@@ -1127,8 +1174,32 @@ contract SeerAutonomous is ReentrancyGuard {
     }
     
     function setOperator(address operator, bool authorized) external onlyDAO {
-        operators[operator] = authorized;
-        emit OperatorSet(operator, authorized);
+        if (operator == address(0)) revert SA_Zero();
+        if (pendingOperatorChange.exists) revert SA_NotAuthorized();
+        uint64 executeAfter = uint64(block.timestamp) + OPERATOR_CHANGE_DELAY;
+        pendingOperatorChange = PendingOperatorChange({
+            operator: operator,
+            authorized: authorized,
+            executeAfter: executeAfter,
+            exists: true
+        });
+        emit OperatorChangeQueued(operator, authorized, executeAfter);
+    }
+
+    function applyOperatorChange() external onlyDAO {
+        PendingOperatorChange memory pending = pendingOperatorChange;
+        if (!pending.exists) revert SA_NotAuthorized();
+        if (block.timestamp < pending.executeAfter) revert SA_NotAuthorized();
+        delete pendingOperatorChange;
+        operators[pending.operator] = pending.authorized;
+        emit OperatorSet(pending.operator, pending.authorized);
+    }
+
+    function cancelOperatorChange() external onlyDAO {
+        PendingOperatorChange memory pending = pendingOperatorChange;
+        if (!pending.exists) revert SA_NotAuthorized();
+        delete pendingOperatorChange;
+        emit OperatorChangeCancelled(pending.operator, pending.authorized);
     }
     
     // ═══════════════════════════════════════════════════════════════════════

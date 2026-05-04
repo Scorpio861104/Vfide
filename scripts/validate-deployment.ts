@@ -16,7 +16,9 @@
  */
 
 import { execSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import path from 'node:path';
+import { Contract, JsonRpcProvider } from 'ethers';
 
 const RESET = '\x1b[0m';
 const RED = '\x1b[31m';
@@ -51,6 +53,113 @@ class CheckResult {
   isCritical(): boolean {
     return !this.passed;
   }
+}
+
+type DeploymentBook = Record<string, string>;
+
+type DeploymentManifest = {
+  addresses?: DeploymentBook;
+};
+
+function isAddressLike(value: string | undefined | null): value is string {
+  return typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value.trim());
+}
+
+function pickDeploymentManifestPath(network: string): string | null {
+  const explicit = process.env.DEPLOYMENT_FILE?.trim();
+  if (explicit) {
+    const resolved = path.resolve(process.cwd(), explicit);
+    return existsSync(resolved) ? resolved : null;
+  }
+
+  const networkBookPath = path.join(process.cwd(), '.deployments', `${network}.json`);
+  if (existsSync(networkBookPath)) {
+    return networkBookPath;
+  }
+
+  const rootCandidates = readdirSync(process.cwd())
+    .filter((name) => /^deployments(-solo)?-.*\.json$/i.test(name))
+    .map((name) => ({
+      manifestPath: path.join(process.cwd(), name),
+      mtimeMs: statSync(path.join(process.cwd(), name)).mtimeMs,
+    }))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+  return rootCandidates[0]?.manifestPath ?? null;
+}
+
+function loadDeploymentBook(manifestPath: string): DeploymentBook {
+  const raw = JSON.parse(readFileSync(manifestPath, 'utf8')) as DeploymentBook | DeploymentManifest;
+  if ('addresses' in raw && raw.addresses && typeof raw.addresses === 'object') {
+    return raw.addresses;
+  }
+  return raw as DeploymentBook;
+}
+
+async function runOnChainOwnershipChecks(): Promise<CheckResult> {
+  const network = process.env.HARDHAT_NETWORK ?? 'hardhat';
+  const manifestPath = pickDeploymentManifestPath(network);
+
+  if (!manifestPath) {
+    return new CheckResult(
+      'on-chain ownership/DAO drift check',
+      true,
+      '',
+      ['deployment manifest missing (set DEPLOYMENT_FILE=<path> to enable check)']
+    );
+  }
+
+  const rpcUrl = process.env.RPC_URL?.trim();
+  const deployer = process.env.DEPLOYER_ADDRESS?.trim();
+  if (!rpcUrl || !isAddressLike(deployer)) {
+    return new CheckResult(
+      'on-chain ownership/DAO drift check',
+      true,
+      '',
+      ['RPC_URL and DEPLOYER_ADDRESS are required for on-chain ownership validation (skipped)']
+    );
+  }
+
+  const provider = new JsonRpcProvider(rpcUrl);
+  const deployerLc = deployer.toLowerCase();
+  const book = loadDeploymentBook(manifestPath);
+
+  const ownerAbi = ['function owner() view returns (address)'];
+  const daoAbi = ['function dao() view returns (address)'];
+  const adminAbi = ['function admin() view returns (address)'];
+
+  const leftovers: string[] = [];
+
+  const entries = Object.entries(book).filter(([, addr]) => isAddressLike(addr));
+  for (const [name, addr] of entries) {
+    const checks: Array<{ kind: 'owner' | 'dao' | 'admin'; abi: string[] }> = [
+      { kind: 'owner', abi: ownerAbi },
+      { kind: 'dao', abi: daoAbi },
+      { kind: 'admin', abi: adminAbi },
+    ];
+
+    for (const check of checks) {
+      try {
+        const c = new Contract(addr, check.abi, provider);
+        const value = String(await c[check.kind]()).toLowerCase();
+        if (value === deployerLc) {
+          leftovers.push(`${name} (${addr}) -> ${check.kind} still deployer`);
+        }
+      } catch {
+        // Contract may not implement this view; ignore.
+      }
+    }
+  }
+
+  if (leftovers.length > 0) {
+    return new CheckResult(
+      'on-chain ownership/DAO drift check',
+      false,
+      [`manifest: ${manifestPath}`, ...leftovers].join('\n')
+    );
+  }
+
+  return new CheckResult('on-chain ownership/DAO drift check', true);
 }
 
 /**
@@ -104,6 +213,12 @@ async function runValidationSuite(): Promise<void> {
   results.push(runCommand(
     'npm run contract:verify:frontend-abi-parity',
     'Frontend ABI parity verification',
+    true
+  ));
+
+  results.push(runCommand(
+    'npm run -s contract:verify:all:critical:local',
+    'Critical contract verify suite (local)',
     true
   ));
 
@@ -192,6 +307,22 @@ async function runValidationSuite(): Promise<void> {
   } else {
     console.error(`${RED}✗ FAILED${RESET} (.dockerignore not found)`);
     results.push(new CheckResult('.dockerignore exists', false, '.dockerignore not found'));
+  }
+
+  // On-chain ownership/DAO drift check (#521)
+  console.log(`\n${BLUE}Running:${RESET} On-chain ownership/DAO drift check`);
+  const onchainOwnershipCheck = await runOnChainOwnershipChecks();
+  results.push(onchainOwnershipCheck);
+  if (onchainOwnershipCheck.passed && onchainOwnershipCheck.warnings.length === 0) {
+    console.log(`${GREEN}✓ Passed${RESET} (no deployer-owned owner/dao/admin roles detected)`);
+  } else if (!onchainOwnershipCheck.passed) {
+    console.error(`${RED}✗ FAILED${RESET}`);
+    if (onchainOwnershipCheck.output) {
+      console.error(onchainOwnershipCheck.output);
+    }
+  } else {
+    hasWarnings = true;
+    console.warn(`${YELLOW}⚠ Warning${RESET} ${onchainOwnershipCheck.warnings.join('; ')}`);
   }
 
   // Check health endpoint is not leaking version

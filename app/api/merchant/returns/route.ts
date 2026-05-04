@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth, requireOwnership, withAuth } from '@/lib/auth/middleware';
+import { requireOwnership, withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 
@@ -78,12 +79,9 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
-
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
 
   try {
     const body = await request.json();
@@ -97,9 +95,13 @@ async function postHandler(request: NextRequest) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    const customerAddress = typeof authResult.user?.address === 'string'
-      ? authResult.user.address.trim().toLowerCase()
+    const customerAddress = typeof user.address === 'string'
+      ? user.address.trim().toLowerCase()
       : '';
+
+    if (!customerAddress || !ADDRESS_REGEX.test(customerAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const result = await query(
       `INSERT INTO merchant_returns (
@@ -150,13 +152,8 @@ async function patchHandler(request: NextRequest) {
     );
 
     if (status === 'approved' || status === 'completed') {
-      let returnData: { rows?: Array<{ items?: unknown }> } | null = null;
-      try {
-        returnData = await query(`SELECT items FROM merchant_returns WHERE id = $1`, [returnId]);
-      } catch {
-        returnData = { rows: [] };
-      }
-      const items = parseItems(returnData?.rows?.[0]?.items);
+      const returnData = await query(`SELECT items FROM merchant_returns WHERE id = $1`, [returnId]);
+      const items = parseItems(returnData.rows[0]?.items);
 
       for (const item of items) {
         if (typeof item === 'object' && item && 'product_id' in item && 'quantity' in item) {
@@ -168,7 +165,7 @@ async function patchHandler(request: NextRequest) {
                   SET inventory_count = inventory_count + $2
                 WHERE id = $1 AND track_inventory = true`,
               [productId, quantity],
-            ).catch(() => undefined);
+            );
           }
         }
       }

@@ -120,6 +120,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     error VH_InsufficientRecoveryApprovals();
     error VH_AlreadyOwnsVault();
     error VH_NotVault();
+    error VH_DeprecatedGlobalPause();
 
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
@@ -624,9 +625,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     //                         VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
-    /// @notice Pause vault-creation flows at hub level.
-    function pause() external onlyOwner { _pause(); }
+    /// @notice HALT-01: Hub-level global pause is deprecated in favor of breaker signals.
+    function pause() external onlyOwner { revert VH_DeprecatedGlobalPause(); }
 
-    /// @notice Unpause vault-creation flows at hub level.
-    function unpause() external onlyOwner { _unpause(); }
+    /// @notice HALT-01: Hub-level global unpause is deprecated in favor of breaker signals.
+    function unpause() external onlyOwner { revert VH_DeprecatedGlobalPause(); }
 }

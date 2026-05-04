@@ -19,13 +19,17 @@ import {
     Unlock,
     Users
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useChainId } from 'wagmi';
 import { getExplorerLink } from '@/components/ui/EtherscanLink';
+import { ShoppablePost } from './ShoppablePost';
+import { PurchaseProofEvent } from './PurchaseProofEvent';
 
 // ==================== TYPES ====================
 
 type ActivityType =
+  | 'product_share'
+  | 'purchase_proof'
   | 'post'
   | 'comment'
   | 'like'
@@ -60,6 +64,16 @@ interface UnifiedActivity {
     txHash?: string;
     contentType?: string;
     achievementName?: string;
+    productName?: string;
+    productPrice?: string;
+    productImage?: string;
+    productType?: 'physical' | 'digital' | 'service';
+    merchantSlug?: string;
+    merchantName?: string;
+    merchantAddress?: string;
+    merchantProofScore?: number;
+    buyerName?: string;
+    buyerProofScore?: number;
   };
 }
 
@@ -72,7 +86,7 @@ interface UnifiedActivityFeedProps {
 
 // ==================== COMPONENT ====================
 
-const SOCIAL_TYPES: ActivityType[] = ['post', 'comment', 'like'];
+const SOCIAL_TYPES: ActivityType[] = ['post', 'comment', 'like', 'product_share', 'purchase_proof'];
 const FINANCIAL_TYPES: ActivityType[] = [
   'tip_sent', 'tip_received',
   'content_purchased', 'content_sold',
@@ -91,8 +105,17 @@ interface ApiActivity {
   user_avatar?: string;
 }
 
+function toOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+function toOptionalNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
 function mapApiActivity(a: ApiActivity): UnifiedActivity {
   const address = a.user_address ?? '';
+  const data = a.data ?? {};
   return {
     id: String(a.id),
     type: a.activity_type as ActivityType,
@@ -103,14 +126,96 @@ function mapApiActivity(a: ApiActivity): UnifiedActivity {
       avatar: a.user_avatar ?? '',
     },
     content: a.description || a.title || undefined,
-    amount: typeof a.data?.amount === 'string' ? a.data.amount : undefined,
-    currency: a.data?.currency === 'ETH' || a.data?.currency === 'VFIDE' ? a.data.currency : undefined,
+    amount: typeof data.amount === 'string' ? data.amount : undefined,
+    currency: data.currency === 'ETH' || data.currency === 'VFIDE' ? data.currency : undefined,
     metadata: {
-      txHash: typeof a.data?.txHash === 'string' ? a.data.txHash : undefined,
-      contentType: typeof a.data?.contentType === 'string' ? a.data.contentType : undefined,
-      achievementName: typeof a.data?.achievementName === 'string' ? a.data.achievementName : undefined,
+      txHash: toOptionalString(data.txHash),
+      contentType: toOptionalString(data.contentType),
+      achievementName: toOptionalString(data.achievementName),
+      productName: toOptionalString(data.productName),
+      productPrice: toOptionalString(data.productPrice),
+      productImage: toOptionalString(data.productImage),
+      productType:
+        data.productType === 'physical' || data.productType === 'digital' || data.productType === 'service'
+          ? data.productType
+          : undefined,
+      merchantSlug: toOptionalString(data.merchantSlug),
+      merchantName: toOptionalString(data.merchantName),
+      merchantAddress: toOptionalString(data.merchantAddress),
+      merchantProofScore: toOptionalNumber(data.merchantProofScore),
+      buyerName: toOptionalString(data.buyerName),
+      buyerProofScore: toOptionalNumber(data.buyerProofScore),
     },
   };
+}
+
+function renderSocialCommerceActivity(activity: UnifiedActivity): React.ReactElement | null {
+  if (activity.type === 'product_share') {
+    const productName = activity.metadata?.productName;
+    const productPrice = activity.metadata?.productPrice;
+    const merchantSlug = activity.metadata?.merchantSlug;
+    const merchantName = activity.metadata?.merchantName;
+    const merchantAddress = activity.metadata?.merchantAddress;
+
+    if (!productName || !productPrice || !merchantSlug || !merchantName || !merchantAddress) {
+      return null;
+    }
+
+    return (
+      <ShoppablePost
+        product={{
+          id: activity.id,
+          name: productName,
+          price: productPrice,
+          compareAtPrice: null,
+          description: activity.content,
+          imageUrl: activity.metadata?.productImage,
+          merchantSlug,
+          merchantName,
+          merchantAddress,
+          merchantProofScore: activity.metadata?.merchantProofScore,
+          productType: activity.metadata?.productType,
+        }}
+        postedBy={{
+          address: activity.actor.address,
+          name: activity.actor.name,
+          proofScore: activity.metadata?.buyerProofScore ?? 0,
+        }}
+        timestamp={activity.timestamp.getTime()}
+        caption={activity.content}
+      />
+    );
+  }
+
+  if (activity.type === 'purchase_proof') {
+    const productName = activity.metadata?.productName;
+    const merchantName = activity.metadata?.merchantName;
+    const merchantSlug = activity.metadata?.merchantSlug;
+    const amount = activity.amount ?? activity.metadata?.productPrice;
+    if (!productName || !merchantName || !merchantSlug || !amount) {
+      return null;
+    }
+
+    return (
+      <PurchaseProofEvent
+        buyer={{
+          address: activity.actor.address,
+          name: activity.metadata?.buyerName ?? activity.actor.name,
+          proofScore: activity.metadata?.buyerProofScore ?? 0,
+        }}
+        merchant={{
+          name: merchantName,
+          slug: merchantSlug,
+          proofScore: activity.metadata?.merchantProofScore ?? 0,
+        }}
+        productName={productName}
+        amount={amount}
+        timestamp={activity.timestamp.getTime()}
+      />
+    );
+  }
+
+  return null;
 }
 
 export function UnifiedActivityFeed({
@@ -152,6 +257,10 @@ export function UnifiedActivityFeed({
     switch (type) {
       case 'post':
         return <MessageCircle className="w-4 h-4" />;
+      case 'product_share':
+        return <MessageCircle className="w-4 h-4" />;
+      case 'purchase_proof':
+        return <Unlock className="w-4 h-4" />;
       case 'comment':
         return <MessageCircle className="w-4 h-4" />;
       case 'like':
@@ -178,8 +287,11 @@ export function UnifiedActivityFeed({
   const getActivityColor = (type: ActivityType): string => {
     switch (type) {
       case 'post':
+      case 'product_share':
       case 'comment':
         return 'from-blue-500 to-cyan-500';
+      case 'purchase_proof':
+        return 'from-emerald-500 to-teal-500';
       case 'like':
         return 'from-pink-500 to-red-500';
       case 'tip_received':
@@ -201,6 +313,10 @@ export function UnifiedActivityFeed({
     switch (activity.type) {
       case 'post':
         return 'posted';
+      case 'product_share':
+        return 'shared a product';
+      case 'purchase_proof':
+        return 'completed a purchase';
       case 'comment':
         return 'commented';
       case 'like':
@@ -258,54 +374,57 @@ export function UnifiedActivityFeed({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: idx * 0.05 }}
-          className="p-4 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all group"
         >
-          <div className="flex gap-3">
-            {/* Icon */}
-            <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getActivityColor(activity.type)} flex items-center justify-center text-white shrink-0`}>
-              {getActivityIcon(activity.type)}
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="text-sm text-zinc-100">
-                  <span className="font-semibold">{activity.actor.name}</span>
-                  <span className="text-zinc-400 ml-1">{getActivityText(activity)}</span>
-                </p>
-                <span className="text-xs text-zinc-500 whitespace-nowrap">
-                  {formatTimeAgo(activity.timestamp)}
-                </span>
-              </div>
-
-              {/* Additional Content */}
-              {activity.content && (
-                <p className="text-sm text-zinc-400 mb-2 line-clamp-2">{activity.content}</p>
-              )}
-
-              {/* Amount Badge */}
-              {activity.amount && (
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full">
-                  <DollarSign className="w-3 h-3 text-purple-400" />
-                  <span className="text-xs font-bold text-purple-400">
-                    {activity.amount} {activity.currency}
-                  </span>
+          {renderSocialCommerceActivity(activity) ?? (
+            <div className="p-4 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all group">
+              <div className="flex gap-3">
+                {/* Icon */}
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getActivityColor(activity.type)} flex items-center justify-center text-white shrink-0`}>
+                  {getActivityIcon(activity.type)}
                 </div>
-              )}
 
-              {/* Transaction Hash */}
-              {activity.metadata?.txHash && (
-                <a
-                  href={getExplorerLink(chainId, activity.metadata.txHash, 'tx')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity mt-1 inline-block"
-                >
-                  View on Etherscan →
-                </a>
-              )}
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className="text-sm text-zinc-100">
+                      <span className="font-semibold">{activity.actor.name}</span>
+                      <span className="text-zinc-400 ml-1">{getActivityText(activity)}</span>
+                    </p>
+                    <span className="text-xs text-zinc-500 whitespace-nowrap">
+                      {formatTimeAgo(activity.timestamp)}
+                    </span>
+                  </div>
+
+                  {/* Additional Content */}
+                  {activity.content && (
+                    <p className="text-sm text-zinc-400 mb-2 line-clamp-2">{activity.content}</p>
+                  )}
+
+                  {/* Amount Badge */}
+                  {activity.amount && (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full">
+                      <DollarSign className="w-3 h-3 text-purple-400" />
+                      <span className="text-xs font-bold text-purple-400">
+                        {activity.amount} {activity.currency}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Transaction Hash */}
+                  {activity.metadata?.txHash && (
+                    <a
+                      href={getExplorerLink(chainId, activity.metadata.txHash, 'tx')}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-400 hover:text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity mt-1 inline-block"
+                    >
+                      View on Etherscan →
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </motion.div>
       ))}
 

@@ -23,8 +23,16 @@ import hre from "hardhat";
 
 const ethers = (hre as any).ethers;
 
+function isLocalBootstrapNetwork(network: string): boolean {
+  return network === "hardhat" || network === "localhost" || network === "local";
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
+  const networkName = process.env.HARDHAT_NETWORK || (await ethers.provider.getNetwork()).name || "unknown";
+  const allowTemporaryDeployerBootstrap =
+    process.env.ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP === "true" ||
+    isLocalBootstrapNetwork(networkName);
   console.log("Deploying lending contracts with:", deployer.address);
   console.log("Balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)), "ETH");
 
@@ -33,10 +41,16 @@ async function main() {
   const SEER = process.env.SEER || ethers.ZeroAddress;
   const VAULT_HUB = process.env.VAULT_HUB || ethers.ZeroAddress;
   const FEE_DIST = process.env.FEE_DIST || ethers.ZeroAddress;
-  const DAO = process.env.DAO || deployer.address;
+  const DAO = process.env.DAO || (allowTemporaryDeployerBootstrap ? deployer.address : "");
 
   if (!VFIDE_TOKEN) {
     throw new Error("VFIDE_TOKEN environment variable required");
+  }
+  if (!DAO) {
+    throw new Error(
+      "DAO environment variable required for non-local deployment. Refusing to default DAO to deployer.address; " +
+      "set ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP=true only for deliberate local/testing exceptions."
+    );
   }
 
   console.log("\n═══════════════════════════════════════════════════");

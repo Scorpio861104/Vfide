@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getClient } from '@/lib/db';
-import { isAdmin, requireAuth, withAuth } from '@/lib/auth/middleware';
+import { isAdmin, withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
@@ -331,17 +331,13 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload) => 
  * POST /api/quests/onboarding/claim
  * Claim onboarding completion reward
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   // Rate limiting
   const rateLimitPost = await withRateLimit(request, 'write');
   if (rateLimitPost) return rateLimitPost;
 
-  // Authentication
-  const authResultPost = await requireAuth(request);
-  if (authResultPost instanceof NextResponse) return authResultPost;
-
-  const requesterAddress = typeof authResultPost.user?.address === 'string'
-    ? normalizeAddress(authResultPost.user.address)
+  const requesterAddress = typeof user.address === 'string'
+    ? normalizeAddress(user.address)
     : '';
   if (!requesterAddress || !isAddressLike(requesterAddress)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -368,7 +364,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid user address format' }, { status: 400 });
     }
 
-    const canClaim = requesterAddress === targetAddress || isAdmin(authResultPost.user);
+    const canClaim = requesterAddress === targetAddress || isAdmin(user);
     if (!canClaim) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -455,4 +451,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});

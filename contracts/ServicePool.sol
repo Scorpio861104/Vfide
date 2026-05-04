@@ -114,6 +114,8 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     event EmergencyWithdrawQueued(address indexed to, uint256 amount, uint64 readyAt);
     event EmergencyWithdrawCancelled();
     event EmergencyWithdrawExecuted(address indexed to, uint256 amount);
+    event PauseQueued(uint64 readyAt);
+    event PauseCancelled();
 
     // ═══════════════════════════════════════════════════════════
     // ERRORS
@@ -140,11 +142,13 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
 
     // N-L38 FIX: 24h timelock for emergencyWithdraw.
     uint64 public constant EMERGENCY_WITHDRAW_DELAY = 24 hours;
+    uint64 public constant PAUSE_DELAY = 48 hours;
     struct PendingEmergencyWithdraw {
         address to;
         uint64 readyAt;
     }
     PendingEmergencyWithdraw public pendingEmergencyWithdraw;
+    uint64 public pendingPauseAt;
 
     function setSeerAttestation(address _attestation) external onlyRole(ADMIN_ROLE) {
         seerAttestation = ISeerWorkAttestation_SP(_attestation);
@@ -389,7 +393,24 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         maxPayoutPerPeriod = _max;
     }
 
-    function pause() external onlyRole(ADMIN_ROLE) { _pause(); }
+    function pause() external onlyRole(ADMIN_ROLE) {
+        if (pendingPauseAt != 0) revert SP_AlreadyQueued();
+        pendingPauseAt = uint64(block.timestamp) + PAUSE_DELAY;
+        emit PauseQueued(pendingPauseAt);
+    }
+
+    function applyPause() external onlyRole(ADMIN_ROLE) {
+        if (pendingPauseAt == 0) revert SP_NotQueued();
+        if (block.timestamp < pendingPauseAt) revert SP_TimelockActive();
+        delete pendingPauseAt;
+        _pause();
+    }
+
+    function cancelPause() external onlyRole(ADMIN_ROLE) {
+        if (pendingPauseAt == 0) revert SP_NotQueued();
+        delete pendingPauseAt;
+        emit PauseCancelled();
+    }
     function unpause() external onlyRole(ADMIN_ROLE) { _unpause(); }
 
     function emergencyWithdraw(address to) external onlyRole(DEFAULT_ADMIN_ROLE) {

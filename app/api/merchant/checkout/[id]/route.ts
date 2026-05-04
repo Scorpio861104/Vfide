@@ -68,11 +68,13 @@ export async function GET(
 
   try {
     const invoiceResult = await query(
-      `SELECT id, invoice_number, merchant_address, customer_address, customer_name,
+      `SELECT i.id, i.invoice_number, i.merchant_address, mp.display_name AS merchant_name,
+              i.customer_address, i.customer_name,
               status, token, subtotal, tax_rate, tax_amount, total, currency_display,
               memo, due_date, paid_at, tx_hash, created_at
-       FROM merchant_invoices
-       WHERE payment_link_id = $1`,
+       FROM merchant_invoices i
+       LEFT JOIN merchant_profiles mp ON mp.merchant_address = i.merchant_address
+       WHERE i.payment_link_id = $1`,
       [paymentLinkId]
     );
 

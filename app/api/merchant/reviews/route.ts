@@ -8,8 +8,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth, withAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
 
@@ -29,13 +30,11 @@ const patchReviewSchema = z.object({
   status: z.enum(['published', 'hidden']).optional(),
 });
 
-async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-  const address = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase() : '';
+function getAuthAddress(user: JWTPayload): string | null {
+  const address = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase() : '';
   if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return null;
   }
   return address;
 }
@@ -121,12 +120,12 @@ async function getHandler(request: NextRequest) {
 }
 
 // ─────────────────────────── POST: Submit review
-async function postHandler(request: NextRequest) {
+async function postHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
-  if (authAddress instanceof NextResponse) return authAddress;
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const parsedBody = createReviewSchema.safeParse(await request.json());
@@ -198,12 +197,12 @@ async function postHandler(request: NextRequest) {
 }
 
 // ─────────────────────────── PATCH: Merchant reply or moderate
-async function patchHandler(request: NextRequest) {
+async function patchHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
-  if (authAddress instanceof NextResponse) return authAddress;
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const parsedBody = patchReviewSchema.safeParse(await request.json());

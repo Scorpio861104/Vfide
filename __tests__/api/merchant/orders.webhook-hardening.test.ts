@@ -7,6 +7,16 @@ jest.mock('@/lib/db', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler: (request: NextRequest, user: { address: string }) => Promise<NextResponse>) => {
+    return async (request: NextRequest) => {
+      const { requireAuth } = require('@/lib/auth/middleware');
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+      return handler(request, authResult.user);
+    };
+  },
   requireAuth: jest.fn(),
 }));
 
@@ -21,7 +31,7 @@ jest.mock('@/lib/webhooks/merchantWebhookDispatcher', () => ({
 describe('/api/merchant/orders webhook hardening', () => {
   const { requireAuth } = require('@/lib/auth/middleware');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { getClient } = require('@/lib/db');
+  const { query, getClient } = require('@/lib/db');
   const { dispatchWebhook } = require('@/lib/webhooks/merchantWebhookDispatcher');
 
   const mockMerchant = '0x1111111111111111111111111111111111111111';
@@ -31,6 +41,10 @@ describe('/api/merchant/orders webhook hardening', () => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
     requireAuth.mockResolvedValue({ user: { address: mockCustomer } });
+    query.mockReset();
+    query.mockResolvedValueOnce({
+      rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
+    });
 
     const client = {
       query: jest
@@ -54,6 +68,7 @@ describe('/api/merchant/orders webhook hardening', () => {
         merchant_address: mockMerchant,
         items: [
           {
+            product_id: 11,
             name: 'Test Product',
             quantity: 1,
             unit_price: 25,
@@ -76,13 +91,16 @@ describe('/api/merchant/orders webhook hardening', () => {
         .fn()
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce({
-          rows: [{ id: 124, order_number: 'ORD-20260422-DEF456', status: 'confirmed', payment_status: 'paid' }],
+          rows: [{ id: 124, order_number: 'ORD-20260422-DEF456', status: 'pending', payment_status: 'unpaid' }],
         })
         .mockResolvedValueOnce({})
         .mockResolvedValueOnce({}),
       release: jest.fn(),
     };
     getClient.mockResolvedValue(client);
+    query.mockResolvedValueOnce({
+      rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
+    });
 
     const request = new NextRequest('http://localhost:3000/api/merchant/orders', {
       method: 'POST',
@@ -91,6 +109,7 @@ describe('/api/merchant/orders webhook hardening', () => {
         tx_hash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
         items: [
           {
+            product_id: 11,
             name: 'Test Product',
             quantity: 1,
             unit_price: 25,

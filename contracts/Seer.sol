@@ -96,6 +96,7 @@ contract Seer is ReentrancyGuard {
 
     // 0 == uninitialized → treated as NEUTRAL = 5000 (50% on 0-10000 scale)
     mapping(address => uint16) private _score;
+    mapping(address => int32) private _operatorScoreAdjustment;
 
     mapping(address => bool) private _deltaInProgress;
     
@@ -548,31 +549,40 @@ contract Seer is ReentrancyGuard {
         emit ScoreCacheRefreshed(subject, score, msg.sender);
     }
 
-    /// Returns current ProofScore combining DAO-set and on-chain sources
-    function getScore(address subject) public view returns (uint16) {
+    function _baseScore(address subject) internal view returns (uint16) {
         uint16 daoScore = _score[subject];
-        
+
         // If no DAO-set score, use automated calculation (preserves original behavior)
         if (daoScore < MIN_SCORE) {
             daoScore = calculateAutomatedScore(subject);
         }
-        
+
         // If no on-chain sources weight, just return DAO/automated score
         if (onChainScoreWeight == 0) {
             return daoScore;
         }
-        
+
         // Calculate on-chain score from external sources
         uint16 onChainScore = calculateOnChainScore(subject);
-        
+
         // Weighted average of DAO-set and on-chain sources
         uint256 combined = (uint256(daoScore) * daoScoreWeight + uint256(onChainScore) * onChainScoreWeight) / 100;
-        
-        // Clamp
+
         if (combined > MAX_SCORE) combined = MAX_SCORE;
         if (combined < MIN_SCORE) combined = MIN_SCORE;
-        
+
         return uint16(combined);
+    }
+
+    function _clampScore(int256 score) internal pure returns (uint16) {
+        if (score < int256(uint256(MIN_SCORE))) return MIN_SCORE;
+        if (score > int256(uint256(MAX_SCORE))) return MAX_SCORE;
+        return uint16(uint256(score));
+    }
+
+    /// Returns current ProofScore combining DAO-set and on-chain sources
+    function getScore(address subject) public view returns (uint16) {
+        return _clampScore(int256(uint256(_baseScore(subject))) + _operatorScoreAdjustment[subject]);
     }
 
     /// @notice Best-effort historical score lookup using the bounded score history ring buffer.
@@ -587,7 +597,7 @@ contract Seer is ReentrancyGuard {
         }
 
         uint8 head = scoreHistoryHead[subject];
-        uint16 currentScore = _score[subject];
+        uint16 currentScore = getScore(subject);
         ScoreChange memory oldest = ScoreChange({
             oldScore: currentScore,
             newScore: currentScore,
@@ -758,7 +768,12 @@ contract Seer is ReentrancyGuard {
         // F-16 FIX: Cap the maximum change per setScore() call to prevent instant trust manipulation
         if (delta > maxDAOScoreChange) revert TRUST_Bounds();
         _score[subject] = newScore;
+        _operatorScoreAdjustment[subject] = 0;
         lastDAOScoreChange[subject] = uint64(block.timestamp);
+        // SEER-01 FIX (#151, #177): DAO setScore must update lastActivity and push history snapshot
+        // so decay timer resets and historical queries return accurate data.
+        _recordHistory(subject, old, newScore, reason);
+        lastActivity[subject] = uint64(block.timestamp);
         _syncBurnRouterScore(subject);
         emit ScoreSet(subject, old, newScore, reason);
         emit ScoreReasonCode(subject, 500, int16(newScore) - int16(old), msg.sender);
@@ -866,15 +881,12 @@ contract Seer is ReentrancyGuard {
         if (_deltaInProgress[subject]) revert TRUST_InvalidState();
         _deltaInProgress[subject] = true;
 
-        // with on-chain score sources that may call back to Seer
-        uint16 cur = _score[subject];
-        int256 next = int256(uint256(cur)) + d;
-        if (next < int256(uint256(MIN_SCORE))) next = int256(uint256(MIN_SCORE));
-        if (next > int256(uint256(MAX_SCORE))) next = int256(uint256(MAX_SCORE));
-        // forge-lint: disable-next-line(unsafe-typecast)
-        // Safe: next is clamped between MIN_SCORE (10) and MAX_SCORE (10000)
-        uint16 newScore = uint16(uint256(next));
-        _score[subject] = newScore;
+        // Compose operator adjustments on top of the current baseline instead of
+        // overwriting the automated/manual baseline itself.
+        uint16 cur = getScore(subject);
+        uint16 baseScore = _baseScore(subject);
+        uint16 newScore = _clampScore(int256(uint256(cur)) + d);
+        _operatorScoreAdjustment[subject] = int32(int256(uint256(newScore)) - int256(uint256(baseScore)));
 
         // Record in history (capped to prevent unbounded growth)
         _recordHistory(subject, cur, newScore, reason);
@@ -896,7 +908,7 @@ contract Seer is ReentrancyGuard {
         _deltaInProgress[subject] = false;
     }
     
-    function _recordHistory(address subject, uint16 oldScore, uint16 newScore, string calldata reason) internal {
+    function _recordHistory(address subject, uint16 oldScore, uint16 newScore, string memory reason) internal {
         // S-05 FIX: Use circular buffer (O(1)) instead of O(n) array shift
         uint8 head = scoreHistoryHead[subject];
         scoreHistory[subject][head] = ScoreChange({
@@ -1048,15 +1060,17 @@ contract Seer is ReentrancyGuard {
         dispute.approved = approved;
         
         if (approved && adjustment != 0) {
-            // Apply against DAO baseline score to avoid double-counting weighted on-chain score.
-            uint16 cur = _score[subject];
-            int256 next = int256(uint256(cur)) + int256(adjustment);
-            if (next < int256(uint256(MIN_SCORE))) next = int256(uint256(MIN_SCORE));
-            if (next > int256(uint256(MAX_SCORE))) next = int256(uint256(MAX_SCORE));
-            _score[subject] = uint16(uint256(next));
+            uint16 cur = getScore(subject);
+            uint16 next = _clampScore(int256(uint256(cur)) + int256(adjustment));
+            _score[subject] = next;
+            _operatorScoreAdjustment[subject] = 0;
+            // SEER-02 FIX (#159, #178): resolveScoreDispute must update lastActivity and push
+            // history snapshot so decay timer resets after a successful dispute resolution.
+            _recordHistory(subject, cur, next, "disp_ok");
+            lastActivity[subject] = uint64(block.timestamp);
             _syncBurnRouterScore(subject);
-            emit ScoreSet(subject, cur, _score[subject], "disp_ok");
-            emit ScoreReasonCode(subject, 503, int16(_score[subject]) - int16(cur), msg.sender);
+            emit ScoreSet(subject, cur, next, "disp_ok");
+            emit ScoreReasonCode(subject, 503, int16(next) - int16(cur), msg.sender);
         }
         
         if (pendingDisputeCount > 0) {
@@ -1112,10 +1126,7 @@ contract Seer is ReentrancyGuard {
         uint64 daysInactive,
         uint16 decayAmount
     ) {
-        uint16 rawScore = _score[subject];
-        if (rawScore < MIN_SCORE) {
-            rawScore = calculateAutomatedScore(subject);
-        }
+        uint16 rawScore = getScore(subject);
         uint64 lastAct = lastActivity[subject];
         
         // No activity recorded = no decay (new user)
@@ -1172,8 +1183,9 @@ contract Seer is ReentrancyGuard {
         (uint16 adjustedScore, , uint16 decayAmount) = getDecayAdjustedScore(subject);
         
         if (decayAmount > 0) {
-            uint16 oldScore = _score[subject];
+            uint16 oldScore = getScore(subject);
             _score[subject] = adjustedScore;
+            _operatorScoreAdjustment[subject] = 0;
             lastActivity[subject] = uint64(block.timestamp);  // Reset decay timer
             _syncBurnRouterScore(subject);
             
@@ -1203,8 +1215,9 @@ contract Seer is ReentrancyGuard {
             (uint16 adjustedScore, , uint16 decayAmount) = getDecayAdjustedScore(subject);
             
             if (decayAmount > 0) {
-                uint16 oldScore = _score[subject];
+                uint16 oldScore = getScore(subject);
                 _score[subject] = adjustedScore;
+                _operatorScoreAdjustment[subject] = 0;
                 _syncBurnRouterScore(subject);
                 lastActivity[subject] = uint64(block.timestamp);
                 emit DecayApplied(subject, oldScore, adjustedScore, daysInactive);

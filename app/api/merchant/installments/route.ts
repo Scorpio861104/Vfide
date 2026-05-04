@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { requireAuth, requireOwnership, withAuth } from '@/lib/auth/middleware';
+import { requireOwnership, withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod4';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const DECIMAL_AMOUNT_REGEX = /^\d+(\.\d{1,18})?$/;
+
+const createInstallmentPlanSchema = z.object({
+  merchantAddress: z.string().trim().regex(ADDRESS_REGEX),
+  customerAddress: z.string().trim().regex(ADDRESS_REGEX),
+  orderId: z.string().trim().min(1).max(120),
+  totalAmount: z.union([
+    z.number().positive(),
+    z.string().trim().regex(DECIMAL_AMOUNT_REGEX),
+  ]),
+  installmentCount: z.number().int().positive().max(120),
+  intervalDays: z.number().int().positive().max(365).optional(),
+  token: z.string().trim().max(32).optional(),
+});
 
 function normalizeAddress(value: string | null): string | null {
   const address = value?.trim().toLowerCase() || '';
@@ -91,14 +107,19 @@ async function postHandler(request: NextRequest) {
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const body = await request.json();
-    const merchantAddress = normalizeAddress(typeof body?.merchantAddress === 'string' ? body.merchantAddress : null);
-    const customerAddress = normalizeAddress(typeof body?.customerAddress === 'string' ? body.customerAddress : null);
-    const orderId = typeof body?.orderId === 'string' ? body.orderId.trim() : '';
-    const totalAmount = Number(body?.totalAmount ?? 0);
-    const installmentCount = Number(body?.installmentCount ?? 0);
-    const intervalDays = Number(body?.intervalDays ?? 30);
-    const token = typeof body?.token === 'string' ? body.token.trim() : 'VFIDE';
+    const parsedBody = createInstallmentPlanSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    }
+
+    const body = parsedBody.data;
+    const merchantAddress = normalizeAddress(body.merchantAddress);
+    const customerAddress = normalizeAddress(body.customerAddress);
+    const orderId = body.orderId.trim();
+    const totalAmount = Number(body.totalAmount);
+    const installmentCount = Number(body.installmentCount);
+    const intervalDays = Number(body.intervalDays ?? 30);
+    const token = (body.token ?? 'VFIDE').trim();
 
     if (!merchantAddress || !customerAddress || !orderId || !Number.isFinite(totalAmount) || totalAmount <= 0 || !Number.isFinite(installmentCount) || installmentCount <= 0) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
@@ -130,14 +151,18 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-async function patchHandler(request: NextRequest) {
+async function patchHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
   try {
+    const requesterAddress = typeof user.address === 'string'
+      ? user.address.trim().toLowerCase()
+      : '';
+    if (!requesterAddress || !ADDRESS_REGEX.test(requesterAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const planId = typeof body?.planId === 'string' ? body.planId.trim() : '';
     const txHash = typeof body?.txHash === 'string' ? body.txHash.trim() : null;
@@ -158,7 +183,11 @@ async function patchHandler(request: NextRequest) {
          FROM merchant_installment_plans
         WHERE id = $1`,
       [planId],
-    ).catch(() => ({ rows: [] }));
+    );
+
+    if (planResult.rows.length === 0) {
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+    }
 
     const plan = (planResult.rows[0] ?? {}) as Record<string, unknown>;
     const newPaidCount = Number(plan.paid_count ?? 0) + 1;

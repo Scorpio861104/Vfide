@@ -102,8 +102,31 @@ describe("Seer", function () {
     it("should allow authorized operator to reward", async function () {
       await waitTx(seer.connect(owner).setScore(user.address, 5500, "seed"));
       await waitTx(seer.connect(owner).setOperator(scorer.address, true));
+      await time.increase(24 * 60 * 60 + 1);
       await waitTx(seer.connect(scorer).reward(user.address, 100, "good behavior"));
       expect(await seer.getScore(user.address)).to.equal(5600);
+    });
+
+    it("should compose operator reward on top of the automated baseline", async function () {
+      expect(await seer.getScore(user.address)).to.equal(5000);
+      await waitTx(seer.connect(owner).setOperator(scorer.address, true));
+      await time.increase(24 * 60 * 60 + 1);
+      await waitTx(seer.connect(scorer).reward(user.address, 100, "good behavior"));
+      expect(await seer.getScore(user.address)).to.equal(5100);
+    });
+
+    it("should allow positive activity to recover a decayed score", async function () {
+      await waitTx(seer.connect(owner).setScore(user.address, 5500, "seed"));
+      await waitTx(seer.connect(owner).setOperator(scorer.address, true));
+      await time.increase(24 * 60 * 60 + 1);
+
+      await time.increase(121 * 24 * 60 * 60);
+      const decayView = await seer.getDecayAdjustedScore(user.address);
+      await waitTx(seer.applyDecay(user.address));
+      expect(await seer.getScore(user.address)).to.equal(decayView.adjustedScore);
+
+      await waitTx(seer.connect(scorer).reward(user.address, 100, "recovery"));
+      expect(await seer.getScore(user.address)).to.equal(decayView.adjustedScore + 100n);
     });
 
     it("should enforce score bounds", async function () {

@@ -38,13 +38,25 @@ async function main() {
       process.env.SYSTEM_HANDOVER_ADDRESS ||
       "",
     // Set these after deploying the remaining contracts:
-    ocp: process.env.NEXT_PUBLIC_OCP_ADDRESS || "",
+    ocp:
+      process.env.NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS ||
+      process.env.NEXT_PUBLIC_OCP_ADDRESS ||
+      "",
     sanctumVault: process.env.NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS || "",
     ecosystemVault: process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS || "",
     daoPayrollPool: process.env.NEXT_PUBLIC_DAO_PAYROLL_POOL_ADDRESS || "",
     merchantPool: process.env.NEXT_PUBLIC_MERCHANT_POOL_ADDRESS || "",
     headhunterPool: process.env.NEXT_PUBLIC_HEADHUNTER_POOL_ADDRESS || "",
     termLoan: process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS || "",
+    payrollManager: process.env.NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS || "",
+    liquidityIncentives: process.env.NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS || "",
+    emergencyControl: process.env.NEXT_PUBLIC_EMERGENCY_CONTROL_ADDRESS || "",
+    circuitBreaker: process.env.NEXT_PUBLIC_CIRCUIT_BREAKER_ADDRESS || "",
+    proofLedger: process.env.NEXT_PUBLIC_PROOF_LEDGER_ADDRESS || "",
+    stablecoinRegistry: process.env.NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS || "",
+    vaultRegistry: process.env.NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS || "",
+    vaultRecoveryClaim: process.env.NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS || "",
+    testnetFaucet: process.env.NEXT_PUBLIC_FAUCET_ADDRESS || "",
     adminMultisig:
       process.env.NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS ||
       process.env.ADMIN_MULTISIG_ADDRESS ||
@@ -66,6 +78,15 @@ async function main() {
       "headhunterPool",
       "systemHandover",
       "termLoan",
+      "payrollManager",
+      "liquidityIncentives",
+      "emergencyControl",
+      "circuitBreaker",
+      "proofLedger",
+      "stablecoinRegistry",
+      "vaultRegistry",
+      "vaultRecoveryClaim",
+      "testnetFaucet",
     ].includes(name)) {
       throw new Error(`Missing env var for ${name}`);
     }
@@ -164,6 +185,15 @@ async function main() {
     console.log("  ⏭️  Seer.setDAO:", e.reason || e.message);
   }
 
+
+  // VaultHub.setDAO -> DAO contract (48h timelock)
+  const vaultHub = await ethers.getContractAt("VaultHub", addrs.vaultHub);
+  try {
+    await vaultHub.setDAO(addrs.dao);
+    console.log("  ✅ VaultHub.setDAO → DAO proposed (48h)");
+  } catch (e: any) {
+    console.log("  ⏭️  VaultHub.setDAO:", e.reason || e.message);
+  }
   // FraudRegistry.setDAO → DAO contract (immediate if deployer is current dao)
   const fraud = await ethers.getContractAt("FraudRegistry", addrs.fraudRegistry);
   try {
@@ -212,6 +242,60 @@ async function main() {
       console.log("  ✅ VFIDETermLoan.setDAO → DAO");
     } catch (e: any) {
       console.log("  ⏭️  VFIDETermLoan.setDAO:", e.reason || e.message);
+    }
+  }
+
+  if (addrs.payrollManager) {
+    const payroll = await ethers.getContractAt("PayrollManager", addrs.payrollManager);
+    try {
+      await payroll.setDAO(addrs.dao);
+      console.log("  ✅ PayrollManager.setDAO → DAO");
+    } catch (e: any) {
+      console.log("  ⏭️  PayrollManager.setDAO:", e.reason || e.message);
+    }
+  }
+
+  if (addrs.liquidityIncentives) {
+    const liq = await ethers.getContractAt("LiquidityIncentives", addrs.liquidityIncentives);
+    try {
+      await liq.setDAO(addrs.dao);
+      console.log("  ✅ LiquidityIncentives.setDAO → DAO");
+    } catch (e: any) {
+      console.log("  ⏭️  LiquidityIncentives.setDAO:", e.reason || e.message);
+    }
+  }
+
+  if (addrs.sanctumVault) {
+    const sanctumVault = await ethers.getContractAt("SanctumVault", addrs.sanctumVault);
+    try {
+      await sanctumVault.setDAO(addrs.dao);
+      console.log("  ✅ SanctumVault.setDAO → DAO proposed (48h)");
+    } catch (e: any) {
+      console.log("  ⏭️  SanctumVault.setDAO:", e.reason || e.message);
+    }
+  }
+
+  if (addrs.emergencyControl) {
+    const ec = await ethers.getContractAt("EmergencyControl", addrs.emergencyControl);
+    try {
+      await ec.setModules(
+        addrs.dao,
+        addrs.circuitBreaker || ethers.ZeroAddress,
+        addrs.proofLedger || ethers.ZeroAddress,
+      );
+      console.log("  ✅ EmergencyControl.setModules → DAO proposed (48h)");
+    } catch (e: any) {
+      console.log("  ⏭️  EmergencyControl.setModules:", e.reason || e.message);
+    }
+  }
+
+  if (addrs.stablecoinRegistry) {
+    const stableReg = await ethers.getContractAt("StablecoinRegistry", addrs.stablecoinRegistry);
+    try {
+      await stableReg.setGovernance(addrs.dao);
+      console.log("  ✅ StablecoinRegistry.setGovernance → DAO proposed (48h)");
+    } catch (e: any) {
+      console.log("  ⏭️  StablecoinRegistry.setGovernance:", e.reason || e.message);
     }
   }
 
@@ -271,6 +355,45 @@ async function main() {
     console.log("  ⏭️  Skipped ownership transfer. Set FINALIZE_OWNERSHIP_TRANSFER=true only after all 48h applies are complete.");
   }
 
+  async function requireNoPending(label: string, readPendingAt: () => Promise<bigint>) {
+    const pendingAt = await readPendingAt();
+    if (pendingAt !== 0n) {
+      throw new Error(`${label} has pending timelocked change (pendingAt=${pendingAt}). Apply/cancel first.`);
+    }
+  }
+
+  if (finalizeOwnershipTransfer) {
+    await requireNoPending("VFIDEToken.pendingTreasurySinkAt", () => token.pendingTreasurySinkAt());
+    await requireNoPending("VFIDEToken.pendingSanctumSinkAt", () => token.pendingSanctumSinkAt());
+    await requireNoPending("VFIDEToken.pendingBurnRouterAt", () => token.pendingBurnRouterAt());
+    await requireNoPending("VFIDEToken.pendingFraudRegistryAt", () => token.pendingFraudRegistryAt());
+    await requireNoPending("VFIDEToken.pendingVaultHubAt", () => token.pendingVaultHubAt());
+    await requireNoPending("ProofScoreBurnRouter.pendingModulesAt", () => burnRouter.pendingModulesAt());
+    await requireNoPending("Seer.pendingDAOAt", () => seer.pendingDAOAt());
+
+    if (addrs.vaultHub) {
+      await requireNoPending("VaultHub.pendingDAOAt_VH", () => vaultHub.pendingDAOAt_VH());
+    }
+    if (addrs.sanctumVault) {
+      const sanctumVault = await ethers.getContractAt("SanctumVault", addrs.sanctumVault);
+      await requireNoPending("SanctumVault.pendingDAOAt", () => sanctumVault.pendingDAOAt());
+    }
+    if (addrs.payrollManager) {
+      const payroll = await ethers.getContractAt("PayrollManager", addrs.payrollManager);
+      await requireNoPending("PayrollManager.pendingDAOAt_PM", () => payroll.pendingDAOAt_PM());
+    }
+    if (addrs.emergencyControl) {
+      const ec = await ethers.getContractAt("EmergencyControl", addrs.emergencyControl);
+      await requireNoPending("EmergencyControl.pendingModulesAt", () => ec.pendingModulesAt());
+    }
+    if (addrs.stablecoinRegistry) {
+      const stableReg = await ethers.getContractAt("StablecoinRegistry", addrs.stablecoinRegistry);
+      await requireNoPending("StablecoinRegistry.pendingGovernanceAt", () => stableReg.pendingGovernanceAt());
+    }
+
+    console.log("  ✅ Ownership preflight: no blocking timelocked governance changes pending");
+  }
+
   async function transferOwnershipIfPossible(label: string, contractName: string, addr?: string) {
     if (!finalizeOwnershipTransfer) return;
     if (!addr) return;
@@ -288,7 +411,101 @@ async function main() {
   await transferOwnershipIfPossible("ProofScoreBurnRouter", "ProofScoreBurnRouter", addrs.burnRouter);
   await transferOwnershipIfPossible("EcosystemVault", "EcosystemVault", addrs.ecosystemVault);
   await transferOwnershipIfPossible("SanctumVault", "SanctumVault", addrs.sanctumVault);
-  await transferOwnershipIfPossible("FeeDistributor", "FeeDistributor", addrs.feeDistributor);
+  await transferOwnershipIfPossible("OwnerControlPanel", "OwnerControlPanel", addrs.ocp);
+  await transferOwnershipIfPossible("VaultRegistry", "VaultRegistry", addrs.vaultRegistry);
+  await transferOwnershipIfPossible("VaultRecoveryClaim", "VaultRecoveryClaim", addrs.vaultRecoveryClaim);
+
+  async function migrateAdminRolesIfPossible(label: string, contractName: string, addr?: string) {
+    if (!finalizeOwnershipTransfer || !addr) return;
+
+    const ADMIN_ROLE = ethers.id("ADMIN_ROLE");
+    const DEFAULT_ADMIN_ROLE = ethers.ZeroHash;
+
+    try {
+      const pool = await ethers.getContractAt(contractName, addr);
+      await pool.grantRole(DEFAULT_ADMIN_ROLE, addrs.adminMultisig);
+      console.log(`  ✅ ${label}.grantRole(DEFAULT_ADMIN_ROLE) → AdminMultiSig`);
+    } catch (e: any) {
+      console.log(`  ⏭️  ${label}.grantRole(DEFAULT_ADMIN_ROLE):`, e.reason || e.message);
+    }
+
+    try {
+      const pool = await ethers.getContractAt(contractName, addr);
+      await pool.grantRole(ADMIN_ROLE, addrs.adminMultisig);
+      console.log(`  ✅ ${label}.grantRole(ADMIN_ROLE) → AdminMultiSig`);
+    } catch (e: any) {
+      console.log(`  ⏭️  ${label}.grantRole(ADMIN_ROLE):`, e.reason || e.message);
+    }
+
+    try {
+      const pool = await ethers.getContractAt(contractName, addr);
+      await pool.renounceRole(ADMIN_ROLE, deployer.address);
+      console.log(`  ✅ ${label}.renounceRole(ADMIN_ROLE) from deployer`);
+    } catch (e: any) {
+      console.log(`  ⏭️  ${label}.renounceRole(ADMIN_ROLE):`, e.reason || e.message);
+    }
+
+    try {
+      const pool = await ethers.getContractAt(contractName, addr);
+      await pool.renounceRole(DEFAULT_ADMIN_ROLE, deployer.address);
+      console.log(`  ✅ ${label}.renounceRole(DEFAULT_ADMIN_ROLE) from deployer`);
+    } catch (e: any) {
+      console.log(`  ⏭️  ${label}.renounceRole(DEFAULT_ADMIN_ROLE):`, e.reason || e.message);
+    }
+  }
+
+  await migrateAdminRolesIfPossible("DAOPayrollPool", "DAOPayrollPool", addrs.daoPayrollPool);
+  await migrateAdminRolesIfPossible("MerchantCompetitionPool", "MerchantCompetitionPool", addrs.merchantPool);
+  await migrateAdminRolesIfPossible("HeadhunterCompetitionPool", "HeadhunterCompetitionPool", addrs.headhunterPool);
+
+  if (finalizeOwnershipTransfer && addrs.feeDistributor) {
+    const feeDistAdmin = await ethers.getContractAt("FeeDistributor", addrs.feeDistributor);
+    const ADMIN_ROLE = ethers.id("ADMIN_ROLE");
+    const DEFAULT_ADMIN_ROLE = ethers.ZeroHash;
+
+    try {
+      await feeDistAdmin.grantRole(DEFAULT_ADMIN_ROLE, addrs.adminMultisig);
+      console.log("  ✅ FeeDistributor.grantRole(DEFAULT_ADMIN_ROLE) → AdminMultiSig");
+    } catch (e: any) {
+      console.log("  ⏭️  FeeDistributor.grantRole(DEFAULT_ADMIN_ROLE):", e.reason || e.message);
+    }
+
+    try {
+      await feeDistAdmin.grantRole(ADMIN_ROLE, addrs.adminMultisig);
+      console.log("  ✅ FeeDistributor.grantRole(ADMIN_ROLE) → AdminMultiSig");
+    } catch (e: any) {
+      console.log("  ⏭️  FeeDistributor.grantRole(ADMIN_ROLE):", e.reason || e.message);
+    }
+
+    console.log("  ℹ️  FeeDistributor deployer role renounce deferred until after destination updates.");
+  }
+
+  if (finalizeOwnershipTransfer && addrs.circuitBreaker) {
+    const breaker = await ethers.getContractAt("CircuitBreaker", addrs.circuitBreaker);
+    const DEFAULT_ADMIN_ROLE = ethers.ZeroHash;
+    try {
+      await breaker.grantRoleWithReason(DEFAULT_ADMIN_ROLE, addrs.adminMultisig, "governance rotation");
+      console.log("  ✅ CircuitBreaker.grantRoleWithReason(DEFAULT_ADMIN_ROLE) → AdminMultiSig");
+    } catch (e: any) {
+      console.log("  ⏭️  CircuitBreaker.grantRoleWithReason(DEFAULT_ADMIN_ROLE):", e.reason || e.message);
+    }
+    try {
+      await breaker.renounceRole(DEFAULT_ADMIN_ROLE, deployer.address);
+      console.log("  ✅ CircuitBreaker.renounceRole(DEFAULT_ADMIN_ROLE) from deployer");
+    } catch (e: any) {
+      console.log("  ⏭️  CircuitBreaker.renounceRole(DEFAULT_ADMIN_ROLE):", e.reason || e.message);
+    }
+  }
+
+  if (finalizeOwnershipTransfer && addrs.testnetFaucet) {
+    const faucet = await ethers.getContractAt("VFIDETestnetFaucet", addrs.testnetFaucet);
+    try {
+      await faucet.proposeOwnerTransfer(addrs.adminMultisig);
+      console.log("  ✅ VFIDETestnetFaucet.proposeOwnerTransfer → AdminMultiSig (7d timelock)");
+    } catch (e: any) {
+      console.log("  ⏭️  VFIDETestnetFaucet.proposeOwnerTransfer:", e.reason || e.message);
+    }
+  }
 
   if (addrs.ocp) {
     console.log("  ℹ️  OCP is optional in this flow; AdminMultiSig is the canonical ownership target.");
@@ -333,6 +550,26 @@ async function main() {
       console.log(`  ✅ FeeDistributor.${name} → ${addr.slice(0, 10)}...`);
     } catch (e: any) {
       console.log(`  ⏭️  setDestination(${name}): ${e.reason || e.message}`);
+    }
+  }
+
+  if (finalizeOwnershipTransfer && addrs.feeDistributor) {
+    const feeDistAdmin = await ethers.getContractAt("FeeDistributor", addrs.feeDistributor);
+    const ADMIN_ROLE = ethers.id("ADMIN_ROLE");
+    const DEFAULT_ADMIN_ROLE = ethers.ZeroHash;
+
+    try {
+      await feeDistAdmin.renounceRole(ADMIN_ROLE, deployer.address);
+      console.log("  ✅ FeeDistributor.renounceRole(ADMIN_ROLE) from deployer");
+    } catch (e: any) {
+      console.log("  ⏭️  FeeDistributor.renounceRole(ADMIN_ROLE):", e.reason || e.message);
+    }
+
+    try {
+      await feeDistAdmin.renounceRole(DEFAULT_ADMIN_ROLE, deployer.address);
+      console.log("  ✅ FeeDistributor.renounceRole(DEFAULT_ADMIN_ROLE) from deployer");
+    } catch (e: any) {
+      console.log("  ⏭️  FeeDistributor.renounceRole(DEFAULT_ADMIN_ROLE):", e.reason || e.message);
     }
   }
 

@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
     // the magic value (0x1626ba7e) would accept any signature for that address.
     // Trust assumption: no deployed vault contract has a permissive isValidSignature.
     // Mitigation: vault contracts (CardBoundVault, EcosystemVault) must NOT implement
-    // isValidSignature(..) → 0x1626ba7e unconditionally; enforced by code review.
+    // isValidSignature(..) → 0x1626ba7e unconditionally; enforced by CI via check:eip1271.
     const isValid = await verifyMessage({
       address: address as `0x${string}`,
       message,
@@ -185,11 +185,14 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now(),
     };
     await recordActivity(normalizedAddress, activityRecord).catch(() => { /* non-blocking */ });
-    analyzeActivity(normalizedAddress, activityRecord).then((alert) => {
+    try {
+      const alert = await analyzeActivity(normalizedAddress, activityRecord);
       if (alert) {
         logger.warn('security.anomaly_detected', { userAddress: normalizedAddress, alert });
       }
-    }).catch(() => { /* non-blocking */ });
+    } catch {
+      // non-blocking
+    }
 
     // Generate secure JWT token
     const tokenResponse = generateToken(normalizedAddress, chainId);

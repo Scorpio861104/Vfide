@@ -565,8 +565,6 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
     });
   } catch (error) {
     logger.error('[Export API] Error:', error);
-    const errorMessage =
-      error instanceof Error ? error.message : 'Failed to export transactions';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to export transactions' }, { status: 500 });
   }
 });

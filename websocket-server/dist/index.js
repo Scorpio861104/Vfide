@@ -48,10 +48,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.chatTopic = chatTopic;
 exports.broadcast = broadcast;
 const http = __importStar(require("http"));
 const https = __importStar(require("https"));
 const fs = __importStar(require("fs"));
+const crypto_1 = require("crypto");
 const ws_1 = require("ws");
 const auth_1 = require("./auth");
 const rateLimit_1 = require("./rateLimit");
@@ -59,6 +61,7 @@ const schema_1 = require("./schema");
 // ─── Configuration ─────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.WS_PORT || '8080', 10);
 const MAX_PAYLOAD_BYTES = 8 * 1024; // 8 KiB
+const MAX_EVENT_BODY_BYTES = 64 * 1024; // 64 KiB cap for internal bridge endpoint
 // WS-2 mitigation: Cap auth timeout at 30 seconds regardless of env var
 // Prevents env var misconfiguration from allowing extremely long unauthenticated persistence
 const AUTH_TIMEOUT_MS = Math.min(parseInt(process.env.WS_AUTH_TIMEOUT_MS || '5000', 10), 30000 // Maximum 30 seconds
@@ -69,10 +72,6 @@ const TOPIC_ACL_REFRESH_MS = Number.isFinite(TOPIC_ACL_REFRESH_MS_RAW)
     ? TOPIC_ACL_REFRESH_MS_RAW
     : 5000;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-const TOPIC_ACL_ALLOW_MISSING = !IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
-if (IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true') {
-    console.warn('[ws] Ignoring WS_TOPIC_ACL_ALLOW_MISSING=true in production (topic ACL remains fail-closed).');
-}
 // WS-1 mitigation: Require explicit proxy configuration to use X-Forwarded-For
 // Defaults to false for security (direct address only) unless explicitly enabled
 const TRUST_PROXY = process.env.WS_TRUST_PROXY === 'true';
@@ -121,10 +120,66 @@ const wss = new ws_1.WebSocketServer({
     perMessageDeflate: false,
 });
 // Lightweight health probe for container/runtime monitoring.
+// ─── Internal event bridge HTTP endpoint ─────────────────────────────────────
+// N-L16 FIX: Accept POST /event from the Next.js backend (or any backend service)
+// to push broadcast messages to connected subscribers.
+//
+// Authentication: shared secret via `x-internal-secret` header.
+// Set WS_INTERNAL_SECRET env to a long random string; the Next.js API must send
+// the same value. If the env is unset in production, all POST /event calls are
+// rejected (fail-closed).
+const WS_INTERNAL_SECRET = process.env.WS_INTERNAL_SECRET || '';
+if (IS_PRODUCTION && !WS_INTERNAL_SECRET) {
+    console.warn('[ws] WARNING: WS_INTERNAL_SECRET is not set. POST /event will be rejected in production.');
+}
 server.on('request', (req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
         res.writeHead(200, { 'content-type': 'application/json' });
         res.end(JSON.stringify({ status: 'ok' }));
+        return;
+    }
+    // N-L16 FIX: internal broadcast bridge — Next.js and other backend services call
+    // POST /event with a JSON body matching OutboundMessage to push events to subscribers.
+    if (req.method === 'POST' && req.url === '/event') {
+        const headerSecretRaw = req.headers['x-internal-secret'];
+        const providedSecret = Array.isArray(headerSecretRaw) ? headerSecretRaw[0] : headerSecretRaw;
+        let isAuthorized = false;
+        if (WS_INTERNAL_SECRET && typeof providedSecret === 'string') {
+            const expected = Buffer.from(WS_INTERNAL_SECRET, 'utf8');
+            const provided = Buffer.from(providedSecret, 'utf8');
+            if (expected.length === provided.length) {
+                isAuthorized = (0, crypto_1.timingSafeEqual)(expected, provided);
+            }
+        }
+        if (!isAuthorized) {
+            res.writeHead(401, { 'content-type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Unauthorized' }));
+            return;
+        }
+        let body = '';
+        let bodySize = 0;
+        req.on('data', (chunk) => {
+            bodySize += chunk.length;
+            if (bodySize > MAX_EVENT_BODY_BYTES) {
+                res.writeHead(413, { 'content-type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Payload too large' }));
+                req.destroy();
+                return;
+            }
+            body += chunk.toString();
+        });
+        req.on('end', () => {
+            try {
+                const msg = JSON.parse(body);
+                broadcast(msg);
+                res.writeHead(200, { 'content-type': 'application/json' });
+                res.end(JSON.stringify({ ok: true }));
+            }
+            catch {
+                res.writeHead(400, { 'content-type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+            }
+        });
         return;
     }
     if (req.method !== 'GET') {
@@ -170,6 +225,14 @@ function sendError(ws, code, message) {
     if (ws.readyState === ws_1.WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: 'error', payload: { code, message } }));
     }
+}
+/**
+ * Return the canonical chat topic for two participants.
+ * Addresses are lower-cased and sorted so the same pair always maps to the same topic.
+ */
+function chatTopic(addrA, addrB) {
+    const sorted = [addrA.toLowerCase(), addrB.toLowerCase()].sort();
+    return `chat.${sorted[0]}_${sorted[1]}`;
 }
 function isAllowedTopic(topic) {
     if (topic === 'governance' || topic === 'notifications') {
@@ -254,12 +317,11 @@ function ensureFreshTopicAclSnapshot(forceFileCheck) {
 }
 function startTopicAclRefresh() {
     if (!TOPIC_ACL_PATH) {
-        if (TOPIC_ACL_ALLOW_MISSING) {
-            console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL in compatibility allow mode.');
+        if (IS_PRODUCTION) {
+            console.error('[ws] FATAL: WS_TOPIC_ACL_PATH is required in production.');
+            process.exit(1);
         }
-        else {
-            console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL is fail-closed.');
-        }
+        console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL is fail-closed.');
         return;
     }
     refreshTopicAclSnapshot(TOPIC_ACL_PATH);
@@ -288,14 +350,32 @@ function isAuthorizedForTopic(client, topic, refreshForSubscribe = false) {
     if (!isAllowedTopic(topic)) {
         return false;
     }
+    if (!client.vfideAddress) {
+        return false;
+    }
+    if (topic.startsWith('chat.')) {
+        const participants = topic.slice('chat.'.length).split('_');
+        if (participants.length !== 2)
+            return false;
+        const [a, b] = participants.map((entry) => entry.toLowerCase());
+        const addrRe = /^0x[a-f0-9]{40}$/;
+        if (!addrRe.test(a) || !addrRe.test(b) || a >= b)
+            return false;
+        const me = client.vfideAddress.toLowerCase();
+        return me === a || me === b;
+    }
+    if (topic.startsWith('presence.')) {
+        const subject = topic.slice('presence.'.length).toLowerCase();
+        return /^0x[a-f0-9]{40}$/.test(subject) && subject === client.vfideAddress.toLowerCase();
+    }
     if (!TOPIC_ACL_PATH) {
-        return TOPIC_ACL_ALLOW_MISSING;
+        return false;
     }
     // For subscription checks, include file-change probing so ACL updates can be
     // enforced immediately. Delivery checks rely on interval freshness to avoid
     // synchronous fs.stat calls per message fanout.
     ensureFreshTopicAclSnapshot(refreshForSubscribe);
-    if (!topicAclSnapshot || !client.vfideAddress) {
+    if (!topicAclSnapshot) {
         return false;
     }
     const address = client.vfideAddress.toLowerCase();

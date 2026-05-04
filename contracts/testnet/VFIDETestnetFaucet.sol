@@ -43,6 +43,7 @@ error Faucet_OwnerTransferTimelockActive();
 error Faucet_InvalidConfig();
 error Faucet_NoPendingGasTopUp();
 error Faucet_GasRetryFailed();
+error Faucet_ReferrerChainTooDeep();
 
 contract VFIDETestnetFaucet is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -146,6 +147,9 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         // Record referral
         if (referrer != address(0)) {
             if (referrer == user || !hasClaimed[referrer]) revert Faucet_ReferrerNotEligible();
+            // FAUCET-04 FIX: limit referral depth to one hop to reduce trivial sybil chains.
+            // A valid referrer cannot itself be referral-derived.
+            if (referredBy[referrer] != address(0)) revert Faucet_ReferrerChainTooDeep();
             referredBy[user] = referrer;
             _registerReferral(referrer, user);
         }
@@ -188,7 +192,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
             totalUsers++;
             
             if (referrers[i] != address(0)) {
-                if (referrers[i] != user && hasClaimed[referrers[i]]) {
+                if (referrers[i] != user && hasClaimed[referrers[i]] && referredBy[referrers[i]] == address(0)) {
                     referredBy[user] = referrers[i];
                     _registerReferral(referrers[i], user);
                 }

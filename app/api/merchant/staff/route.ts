@@ -2,7 +2,8 @@ import { createHash, randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
 import { query } from '@/lib/db';
-import { requireAuth, withAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
 import { normalizeStaffPermissions, type StaffRole } from '@/lib/merchantStaff';
@@ -47,16 +48,13 @@ function hashStaffToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
-async function getAuthAddress(request: NextRequest): Promise<string | NextResponse> {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  const address = typeof authResult.user?.address === 'string'
-    ? authResult.user.address.trim().toLowerCase()
+function getAuthAddress(user: JWTPayload): string | null {
+  const address = typeof user.address === 'string'
+    ? user.address.trim().toLowerCase()
     : '';
 
   if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return null;
   }
 
   return address;
@@ -88,7 +86,7 @@ function serializeStaffRow(row: Record<string, unknown>, sessionToken?: string, 
   };
 }
 
-async function getHandler(request: NextRequest) {
+async function getHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'read');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -119,8 +117,8 @@ async function getHandler(request: NextRequest) {
       });
     }
 
-    const authAddress = await getAuthAddress(request);
-    if (authAddress instanceof NextResponse) return authAddress;
+    const authAddress = getAuthAddress(user);
+    if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     if (view === 'activity') {
       const result = await query(
@@ -154,7 +152,7 @@ async function getHandler(request: NextRequest) {
   }
 }
 
-async function postHandler(request: NextRequest) {
+async function postHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -187,8 +185,8 @@ async function postHandler(request: NextRequest) {
       return NextResponse.json({ success: true, activity: result.rows[0] });
     }
 
-    const authAddress = await getAuthAddress(request);
-    if (authAddress instanceof NextResponse) return authAddress;
+    const authAddress = getAuthAddress(user);
+    if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const parsedBody = createStaffSchema.safeParse(rawBody);
     if (!parsedBody.success) {
@@ -251,12 +249,12 @@ async function postHandler(request: NextRequest) {
   }
 }
 
-async function patchHandler(request: NextRequest) {
+async function patchHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
-  if (authAddress instanceof NextResponse) return authAddress;
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const parsedBody = updateStaffSchema.safeParse(await request.json());
@@ -298,12 +296,12 @@ async function patchHandler(request: NextRequest) {
   }
 }
 
-async function deleteHandler(request: NextRequest) {
+async function deleteHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
-  const authAddress = await getAuthAddress(request);
-  if (authAddress instanceof NextResponse) return authAddress;
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
   const id = (searchParams.get('id') || '').trim();

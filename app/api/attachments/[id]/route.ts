@@ -60,7 +60,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload, conte
     return NextResponse.json({ attachment: result.rows[0] });
   } catch (error) {
     logger.error('[Attachments GET] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch attachment';
+    const errorMessage = 'Failed to fetch attachment';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -109,7 +109,7 @@ export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload, co
     return NextResponse.json({ success: true, attachment: result.rows[0] });
   } catch (error) {
     logger.error('[Attachments DELETE] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to delete attachment';
+    const errorMessage = 'Failed to delete attachment';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

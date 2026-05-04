@@ -7,6 +7,8 @@ import { query } from '@/lib/db';
 const CHAIN = process.env.NEXT_PUBLIC_CHAIN_ID === '8453' ? base : baseSepolia;
 const RPC_URL = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || process.env.NEXT_PUBLIC_RPC_URL || 'https://sepolia.base.org';
 const BATCH_SIZE = Number.parseInt(process.env.INDEXER_BATCH_SIZE || '2000', 10);
+const INDEXER_CONFIRMATION_DEPTH = Number.parseInt(process.env.INDEXER_CONFIRMATION_DEPTH || '2', 10);
+const INDEXER_REORG_REWIND_BLOCKS = Number.parseInt(process.env.INDEXER_REORG_REWIND_BLOCKS || '12', 10);
 
 interface EventDef {
   contract: keyof typeof CONTRACT_ADDRESSES;
@@ -89,6 +91,21 @@ async function setLastIndexedBlock(block: number): Promise<void> {
   }
 }
 
+async function deleteIndexedEventsFromBlock(block: number): Promise<void> {
+  if (!hasDatabaseConfig() || block <= 0) {
+    return;
+  }
+
+  try {
+    await query(
+      'DELETE FROM indexed_events WHERE block_number >= $1',
+      [block]
+    );
+  } catch (error) {
+    logger.error('[Indexer] Failed to clear reorg window:', error);
+  }
+}
+
 const INDEXED_EVENTS: EventDef[] = [
   {
     contract: 'VFIDEToken',
@@ -166,13 +183,23 @@ export async function pollEvents(): Promise<{ indexed: number; toBlock: number }
   });
 
   const currentBlock = Number(await client.getBlockNumber());
+  const confirmedHead = currentBlock - INDEXER_CONFIRMATION_DEPTH;
+  if (confirmedHead <= 0) {
+    return { indexed: 0, toBlock: 0 };
+  }
+
   const lastBlock = await getLastIndexedBlock();
-  const fromBlock = lastBlock > 0 ? BigInt(lastBlock + 1) : BigInt(Math.max(0, currentBlock - 1000));
-  const toBlock = BigInt(Math.min(currentBlock, Number(fromBlock) + BATCH_SIZE));
+  const rewindFrom = lastBlock > 0
+    ? Math.max(0, lastBlock + 1 - INDEXER_REORG_REWIND_BLOCKS)
+    : Math.max(0, confirmedHead - 1000);
+  const fromBlock = BigInt(rewindFrom);
+  const toBlock = BigInt(Math.min(confirmedHead, rewindFrom + BATCH_SIZE));
 
   if (fromBlock > toBlock) {
-    return { indexed: 0, toBlock: currentBlock };
+    return { indexed: 0, toBlock: confirmedHead };
   }
+
+  await deleteIndexedEventsFromBlock(Number(fromBlock));
 
   let totalIndexed = 0;
 

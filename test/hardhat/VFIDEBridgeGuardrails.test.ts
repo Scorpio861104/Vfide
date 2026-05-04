@@ -49,6 +49,7 @@ describe("VFIDEBridge (delivery confirmation)", { concurrency: 1, timeout: 12000
     await sourceBridge.connect(owner).setExemptCheckBypass(true, 3600);
     await token.setSystemExempt(await sourceBridge.getAddress(), true);
     await token.setSystemExempt(await destinationBridge.getAddress(), true);
+    await sourceBridge.connect(owner).setRefundWindowCosigner(receiver.address);
 
     await token.mint(owner.address, ethers.parseEther("200000000"));
     await token.transfer(user.address, ethers.parseEther("1000"));
@@ -90,6 +91,9 @@ describe("VFIDEBridge (delivery confirmation)", { concurrency: 1, timeout: 12000
 
     assert.equal(await sourceBridge.bridgeRefundableAfter(txId), 0n);
     await sourceBridge.connect(owner).openBridgeRefundWindow(txId);
+    assert.equal(await sourceBridge.pendingRefundWindowProposal(txId), true);
+    assert.equal(await sourceBridge.bridgeRefundableAfter(txId), 0n);
+    await sourceBridge.connect(receiver).approveRefundWindow(txId);
     assert.ok((await sourceBridge.bridgeRefundableAfter(txId)) > 0n);
     assert.equal(await endpoint.pendingCount(), 1n);
 
@@ -139,6 +143,7 @@ describe("VFIDEBridge (delivery confirmation)", { concurrency: 1, timeout: 12000
     );
 
     await sourceBridge.connect(owner).openBridgeRefundWindow(txId);
+    await sourceBridge.connect(receiver).approveRefundWindow(txId);
 
     await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);

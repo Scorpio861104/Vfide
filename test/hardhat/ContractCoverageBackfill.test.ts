@@ -339,13 +339,15 @@ describe("MerchantRegistry coverage backfill", { concurrency: 1, timeout: 120000
 describe("EmergencyBreaker coverage backfill", { concurrency: 1, timeout: 120000 }, () => {
   async function emergencyBreakerFixture() {
     const { ethers } = (await getConnection()) as any;
-    const [dao] = await ethers.getSigners();
+    const [dao, coSigner] = await ethers.getSigners();
 
     const EmergencyBreaker = await ethers.getContractFactory("EmergencyBreaker");
     const breaker = await EmergencyBreaker.deploy(dao.address, ethers.ZeroAddress);
     await breaker.waitForDeployment();
 
-    return { dao, breaker };
+    await breaker.connect(dao).setCoSigner(coSigner.address);
+
+    return { dao, coSigner, breaker };
   }
 
   async function deployFixture() {
@@ -354,10 +356,12 @@ describe("EmergencyBreaker coverage backfill", { concurrency: 1, timeout: 120000
   }
 
   it("reports the halted state when the emergency breaker is toggled", async () => {
-    const { dao, breaker } = await deployFixture();
+    const { dao, coSigner, breaker } = await deployFixture();
 
     assert.equal(await breaker.halted(), false);
     await breaker.connect(dao).toggle(true, "incident");
+    assert.equal(await breaker.halted(), false);
+    await breaker.connect(coSigner).toggle(true, "incident");
     assert.equal(await breaker.halted(), true);
   });
 });

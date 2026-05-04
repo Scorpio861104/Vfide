@@ -4,10 +4,16 @@ pragma solidity 0.8.30;
 import "./interfaces/AggregatorV3Interface.sol";
 import "./SharedInterfaces.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
+import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 
 interface IUniswapV3PoolLite {
     function token0() external view returns (address);
     function token1() external view returns (address);
+    function observe(uint32[] calldata secondsAgos)
+        external
+        view
+        returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s);
     function slot0()
         external
         view
@@ -75,6 +81,9 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
     /// @notice Last recorded price
     uint256 public lastPrice;
+
+    /// @notice Source used for the last validated price update
+    PriceSource public lastPriceSource;
 
     /// @notice Circuit breaker active
     bool public circuitBreakerActive;
@@ -182,6 +191,17 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @return source Price source used
      */
     function getPrice() external view returns (uint256 price, PriceSource source) {
+        if (lastPrice > 0) {
+            if (block.timestamp > lastUpdate + MAX_PRICE_STALENESS) {
+                revert PriceStale();
+            }
+            return (lastPrice, lastPriceSource);
+        }
+
+        return _getLivePrice();
+    }
+
+    function _getLivePrice() internal view returns (uint256 price, PriceSource source) {
         if (circuitBreakerActive) {
             if (block.timestamp < circuitBreakerTime + CIRCUIT_BREAKER_COOLDOWN) {
                 revert CircuitBreakerActive();
@@ -245,7 +265,12 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             }
 
             // Convert to 18 decimals
-            uint8 decimals = chainlinkFeed.decimals();
+            uint8 decimals;
+            try chainlinkFeed.decimals() returns (uint8 d) {
+                decimals = d;
+            } catch {
+                return (0, PriceSource.CHAINLINK);
+            }
             uint256 chainlinkPrice = uint256(answer);
 
             if (decimals < 18) {
@@ -290,21 +315,21 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             return (0, PriceSource.UNISWAP);
         }
 
-        uint160 sqrtPriceX96;
-        try pool.slot0() returns (
-            uint160 sqrtPriceRaw,
-            int24,
-            uint16,
-            uint16,
-            uint16,
-            uint8,
-            bool
+        uint32[] memory secondsAgos = new uint32[](2);
+        secondsAgos[0] = TWAP_PERIOD;
+        secondsAgos[1] = 0;
+
+        int56[] memory tickCumulatives;
+        try pool.observe(secondsAgos) returns (
+            int56[] memory observedTickCumulatives,
+            uint160[] memory
         ) {
-            sqrtPriceX96 = sqrtPriceRaw;
+            tickCumulatives = observedTickCumulatives;
         } catch {
             return (0, PriceSource.UNISWAP);
         }
-        if (sqrtPriceX96 == 0) {
+
+        if (tickCumulatives.length != 2) {
             return (0, PriceSource.UNISWAP);
         }
 
@@ -314,22 +339,19 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             return (0, PriceSource.UNISWAP);
         }
 
-        uint256 sqrtPrice = uint256(sqrtPriceX96);
-        uint256 ratioX192 = Math.mulDiv(sqrtPrice, sqrtPrice, 1);
-        if (ratioX192 == 0) {
-            return (0, PriceSource.UNISWAP);
+        int56 tickDelta = tickCumulatives[1] - tickCumulatives[0];
+        int56 period = int56(uint56(TWAP_PERIOD));
+        int24 arithmeticMeanTick = int24(tickDelta / period);
+        if (tickDelta < 0 && (tickDelta % period != 0)) {
+            arithmeticMeanTick--;
         }
 
         uint256 vfideUnit = 10 ** uint256(vfideDecimals);
-        uint256 quoteUnit = 10 ** uint256(quoteDecimals);
-        uint256 q192 = 2 ** 192;
-
-        if (vfideIsToken0) {
-            uint256 numerator = Math.mulDiv(ratioX192, vfideUnit * 1e18, 1);
-            price = numerator / (q192 * quoteUnit);
-        } else {
-            uint256 numerator = Math.mulDiv(q192, quoteUnit * 1e18, 1);
-            price = numerator / (ratioX192 * vfideUnit);
+        price = _getQuoteAtTick(arithmeticMeanTick, vfideUnit, vfideToken, quoteToken);
+        if (quoteDecimals < 18) {
+            price = price * 10 ** uint256(18 - quoteDecimals);
+        } else if (quoteDecimals > 18) {
+            price = price / 10 ** uint256(quoteDecimals - 18);
         }
 
         if (price == 0) {
@@ -337,6 +359,26 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         }
 
         return (price, PriceSource.UNISWAP);
+    }
+
+    function _getQuoteAtTick(int24 tick, uint128 baseAmount, address baseToken, address quoteToken_)
+        internal
+        pure
+        returns (uint256 quoteAmount)
+    {
+        uint160 sqrtRatioX96 = TickMath.getSqrtRatioAtTick(tick);
+
+        if (sqrtRatioX96 <= type(uint128).max) {
+            uint256 ratioX192 = uint256(sqrtRatioX96) * uint256(sqrtRatioX96);
+            quoteAmount = baseToken < quoteToken_
+                ? FullMath.mulDiv(ratioX192, baseAmount, 1 << 192)
+                : FullMath.mulDiv(1 << 192, baseAmount, ratioX192);
+        } else {
+            uint256 ratioX128 = FullMath.mulDiv(sqrtRatioX96, sqrtRatioX96, 1 << 64);
+            quoteAmount = baseToken < quoteToken_
+                ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128)
+                : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
+        }
     }
 
     function _getTokenDecimals(address token) internal view returns (uint8 decimals, bool ok) {
@@ -355,7 +397,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             revert UpdateTooFrequent();
         }
 
-        (uint256 newPrice, PriceSource source) = this.getPrice();
+        (uint256 newPrice, PriceSource source) = _getLivePrice();
 
         // Check for price manipulation if we have a previous price
         if (lastPrice > 0) {
@@ -372,6 +414,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
         // Record price
         lastPrice = newPrice;
+        lastPriceSource = source;
         lastUpdate = block.timestamp;
 
         // Store historical price
@@ -398,8 +441,11 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         uint256 diff = oldPrice > newPrice
             ? oldPrice - newPrice
             : newPrice - oldPrice;
+
+        uint256 referencePrice = oldPrice < newPrice ? oldPrice : newPrice;
+        if (referencePrice == 0) return type(uint256).max;
         
-        deviation = (diff * 10000) / oldPrice;
+        deviation = (diff * 10000) / referencePrice;
         return deviation;
     }
 

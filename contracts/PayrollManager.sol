@@ -55,6 +55,10 @@ contract PayrollManager is ReentrancyGuard {
     event StreamExpired(uint256 indexed streamId, address indexed reclaimedBy, uint256 amount);
     event DAOSet(address indexed dao);
     event SupportedTokenSet(address indexed token, bool supported);
+    event SeerChangeProposed(address indexed pendingSeer, uint64 effectiveAt);
+    event SeerChangeCancelled(address indexed pendingSeer);
+    event SupportedTokenChangeProposed(address indexed token, bool supported, uint64 effectiveAt);
+    event SupportedTokenChangeCancelled(address indexed token, bool supported);
 
     struct Stream {
         address payer;
@@ -105,6 +109,20 @@ contract PayrollManager is ReentrancyGuard {
     mapping(address => uint256) public activePayeeStreamCount;
     mapping(address => bool) public supportedTokens;
 
+    // TL-438 / TL-439 FIX: timelock sensitive module/config changes.
+    address public pendingSeer_PM;
+    uint64 public pendingSeerAt_PM;
+    uint64 public constant SEER_CHANGE_DELAY_PM = 48 hours;
+
+    struct PendingSupportedTokenChange {
+        address token;
+        bool supported;
+        uint64 executeAfter;
+        bool exists;
+    }
+    PendingSupportedTokenChange public pendingSupportedTokenChange;
+    uint64 public constant SUPPORTED_TOKEN_CHANGE_DELAY_PM = 24 hours;
+
     // H-2 FIX: Timelocked DAO rotation
     address public pendingDAO_PM;
     uint64 public pendingDAOAt_PM;
@@ -146,13 +164,51 @@ contract PayrollManager is ReentrancyGuard {
     }
     
     function setSeer(address _seer) external onlyDAO {
-        seer = ISeer_PM(_seer);
+        pendingSeer_PM = _seer;
+        pendingSeerAt_PM = uint64(block.timestamp) + SEER_CHANGE_DELAY_PM;
+        emit SeerChangeProposed(_seer, pendingSeerAt_PM);
+    }
+
+    function applySeer() external onlyDAO {
+        require(pendingSeerAt_PM != 0 && block.timestamp >= pendingSeerAt_PM, "PM: seer timelock");
+        seer = ISeer_PM(pendingSeer_PM);
+        delete pendingSeer_PM;
+        delete pendingSeerAt_PM;
+    }
+
+    function cancelSeerChange() external onlyDAO {
+        require(pendingSeerAt_PM != 0, "PM: no pending seer");
+        address oldPending = pendingSeer_PM;
+        delete pendingSeer_PM;
+        delete pendingSeerAt_PM;
+        emit SeerChangeCancelled(oldPending);
     }
 
     function setSupportedToken(address token, bool supported) external onlyDAO {
         require(token != address(0), "PM: zero token");
-        supportedTokens[token] = supported;
-        emit SupportedTokenSet(token, supported);
+        pendingSupportedTokenChange = PendingSupportedTokenChange({
+            token: token,
+            supported: supported,
+            executeAfter: uint64(block.timestamp) + SUPPORTED_TOKEN_CHANGE_DELAY_PM,
+            exists: true
+        });
+        emit SupportedTokenChangeProposed(token, supported, pendingSupportedTokenChange.executeAfter);
+    }
+
+    function applySupportedToken() external onlyDAO {
+        PendingSupportedTokenChange memory pending = pendingSupportedTokenChange;
+        require(pending.exists, "PM: no pending token");
+        require(block.timestamp >= pending.executeAfter, "PM: token timelock");
+        delete pendingSupportedTokenChange;
+        supportedTokens[pending.token] = pending.supported;
+        emit SupportedTokenSet(pending.token, pending.supported);
+    }
+
+    function cancelSupportedTokenChange() external onlyDAO {
+        PendingSupportedTokenChange memory pending = pendingSupportedTokenChange;
+        require(pending.exists, "PM: no pending token");
+        delete pendingSupportedTokenChange;
+        emit SupportedTokenChangeCancelled(pending.token, pending.supported);
     }
     
     /**

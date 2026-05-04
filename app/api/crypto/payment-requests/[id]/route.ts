@@ -2,6 +2,7 @@ import { query } from '@/lib/db';
 import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import type { JWTPayload } from '@/lib/auth/jwt';
+import { createPublicClient, http } from 'viem';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { logger } from '@/lib/logger';
@@ -11,6 +12,24 @@ import { z } from 'zod4';
 const ALLOWED_STATUSES = ['pending', 'accepted', 'rejected', 'completed', 'cancelled'] as const;
 const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
 const TX_HASH_PATTERN = /^0x[a-fA-F0-9]{64}$/;
+
+/**
+ * #95 fix: When a PATCH request transitions to 'completed' with a tx_hash,
+ * verify the transaction succeeded on-chain.
+ * If verification is unavailable, fail closed instead of accepting client claims.
+ */
+async function verifyTxHashOnChain(txHash: string): Promise<'confirmed' | 'failed' | 'unverifiable'> {
+  const rpcUrl = process.env.RPC_URL?.trim();
+  if (!rpcUrl) return 'unverifiable';
+  try {
+    const client = createPublicClient({ transport: http(rpcUrl) });
+    const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
+    return receipt.status === 'success' ? 'confirmed' : 'failed';
+  } catch (err) {
+    logger.warn('[PaymentRequest PATCH] tx_hash verification failed', err);
+    return 'unverifiable';
+  }
+}
 
 const paymentStatusSchema = z.string().trim().toLowerCase().refine(
   (value) => ALLOWED_STATUSES.includes(value as (typeof ALLOWED_STATUSES)[number]),
@@ -205,8 +224,34 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
       );
     }
 
-    const normalizedStatus = body.status;
     const normalizedTxHash = body.txHash ?? null;
+
+    // #95 fix: 'completed' requires a tx_hash and on-chain verification.
+    // Without a tx_hash, the transition is rejected.
+    // With a tx_hash, we verify the transaction succeeded on-chain.
+    // If verification is unavailable, fail closed.
+    let normalizedStatus = body.status;
+    if (normalizedStatus === 'completed') {
+      if (!normalizedTxHash) {
+        return NextResponse.json(
+          { error: 'tx_hash is required to mark a payment request as completed' },
+          { status: 400 }
+        );
+      }
+      const chainResult = await verifyTxHashOnChain(normalizedTxHash);
+      if (chainResult === 'failed') {
+        return NextResponse.json(
+          { error: 'Transaction did not succeed on-chain; cannot mark as completed' },
+          { status: 422 }
+        );
+      }
+      if (chainResult === 'unverifiable') {
+        return NextResponse.json(
+          { error: 'Unable to verify transaction on-chain at this time; cannot mark as completed' },
+          { status: 503 }
+        );
+      }
+    }
 
     // Verify the authenticated user is a party to this payment request
     const existing = await query('SELECT * FROM payment_requests WHERE id = $1', [id]);
@@ -227,7 +272,7 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
     return NextResponse.json({ success: true, request: result.rows[0] });
   } catch (error) {
     logger.error('[Payment Request PATCH] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update request';
+    const errorMessage = 'Failed to update request';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

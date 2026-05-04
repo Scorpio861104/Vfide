@@ -6,6 +6,7 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { isAddress } from 'viem';
 import { logger } from '@/lib/logger';
+import { publishWebsocketEvent } from '@/lib/server/websocketBridge';
 import { z } from 'zod4';
 
 interface Message {
@@ -66,6 +67,11 @@ function toNonEmptyString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function chatTopic(addrA: string, addrB: string): string {
+  const sorted = [addrA.toLowerCase(), addrB.toLowerCase()].sort();
+  return `chat.${sorted[0]}_${sorted[1]}`;
 }
 
 function isEncryptedDirectMessagePayload(content: string): boolean {
@@ -254,7 +260,7 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
     }
   } catch (error) {
     logger.error('[Messages GET API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch messages';
+    const errorMessage = 'Failed to fetch messages';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -431,6 +437,33 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
 
     await client.query('COMMIT');
 
+    // N-L16 FIX: call websocket-server internal bridge so subscribers receive
+    // near-real-time chat and notification updates after message persistence.
+    const chatEvent = {
+      type: 'message',
+      payload: {
+        topic: chatTopic(from, to),
+        messageId: message.id,
+        from: from.toLowerCase(),
+        to: to.toLowerCase(),
+        createdAt: message.created_at,
+      },
+    };
+    const notificationEvent = {
+      type: 'notification',
+      payload: {
+        topic: 'notifications',
+        category: 'message',
+        recipient: to.toLowerCase(),
+        sender: from.toLowerCase(),
+        messageId: message.id,
+      },
+    };
+    await Promise.allSettled([
+      publishWebsocketEvent(chatEvent),
+      publishWebsocketEvent(notificationEvent),
+    ]);
+
     return NextResponse.json({
       success: true,
       message,
@@ -438,7 +471,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
   } catch (error) {
     await client.query('ROLLBACK');
     logger.error('[Messages POST API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+    const errorMessage = 'Failed to send message';
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }

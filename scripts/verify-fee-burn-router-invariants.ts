@@ -85,6 +85,8 @@ async function main() {
       5
     )
   ).wait();
+  await increaseTime(provider, 24 * 60 * 60 + 1);
+  await (await router.applySustainability()).wait();
 
   const feesPaused = (await router.computeFees(userAddress, ownerAddress, amount)) as readonly [
     bigint,
@@ -125,6 +127,8 @@ async function main() {
 
   // #345: ecosystem minimum top-up must not increase total fees above the original totalFee.
   await (await router.setSustainability(0n, 0n, 100)).wait();
+  await increaseTime(provider, 24 * 60 * 60 + 1);
+  await (await router.applySustainability()).wait();
   await (await seer.setScore(userAddress, 8000)).wait();
   const largeAmount = 100n * amount;
   const cappedMinFees = (await router.computeFees(userAddress, ownerAddress, largeAmount)) as readonly [

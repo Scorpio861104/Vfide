@@ -17,6 +17,7 @@
 import * as http from 'http';
 import * as https from 'https';
 import * as fs from 'fs';
+import { timingSafeEqual } from 'crypto';
 import { WebSocketServer, WebSocket, RawData } from 'ws';
 import { verifyJWT, JWTPayload } from './auth';
 import { RateLimiter } from './rateLimit';
@@ -26,6 +27,7 @@ import { parseMessage, OutboundMessage, CURRENT_PROTOCOL_VERSION } from './schem
 
 const PORT = parseInt(process.env.WS_PORT || '8080', 10);
 const MAX_PAYLOAD_BYTES = 8 * 1024; // 8 KiB
+const MAX_EVENT_BODY_BYTES = 64 * 1024; // 64 KiB cap for internal bridge endpoint
 
 // WS-2 mitigation: Cap auth timeout at 30 seconds regardless of env var
 // Prevents env var misconfiguration from allowing extremely long unauthenticated persistence
@@ -40,12 +42,6 @@ const TOPIC_ACL_REFRESH_MS = Number.isFinite(TOPIC_ACL_REFRESH_MS_RAW)
   ? TOPIC_ACL_REFRESH_MS_RAW
   : 5000;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
-const TOPIC_ACL_ALLOW_MISSING = !IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true';
-
-if (IS_PRODUCTION && process.env.WS_TOPIC_ACL_ALLOW_MISSING === 'true') {
-  console.error('[ws] FATAL: WS_TOPIC_ACL_ALLOW_MISSING=true is not permitted in production.');
-  process.exit(1);
-}
 
 // WS-1 mitigation: Require explicit proxy configuration to use X-Forwarded-For
 // Defaults to false for security (direct address only) unless explicitly enabled
@@ -134,15 +130,36 @@ server.on('request', (req, res) => {
   // N-L16 FIX: internal broadcast bridge — Next.js and other backend services call
   // POST /event with a JSON body matching OutboundMessage to push events to subscribers.
   if (req.method === 'POST' && req.url === '/event') {
-    const secret = req.headers['x-internal-secret'];
-    if (!WS_INTERNAL_SECRET || secret !== WS_INTERNAL_SECRET) {
+    const headerSecretRaw = req.headers['x-internal-secret'];
+    const providedSecret = Array.isArray(headerSecretRaw) ? headerSecretRaw[0] : headerSecretRaw;
+
+    let isAuthorized = false;
+    if (WS_INTERNAL_SECRET && typeof providedSecret === 'string') {
+      const expected = Buffer.from(WS_INTERNAL_SECRET, 'utf8');
+      const provided = Buffer.from(providedSecret, 'utf8');
+      if (expected.length === provided.length) {
+        isAuthorized = timingSafeEqual(expected, provided);
+      }
+    }
+
+    if (!isAuthorized) {
       res.writeHead(401, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: 'Unauthorized' }));
       return;
     }
 
     let body = '';
-    req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+    let bodySize = 0;
+    req.on('data', (chunk: Buffer) => {
+      bodySize += chunk.length;
+      if (bodySize > MAX_EVENT_BODY_BYTES) {
+        res.writeHead(413, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload too large' }));
+        req.destroy();
+        return;
+      }
+      body += chunk.toString();
+    });
     req.on('end', () => {
       try {
         const msg = JSON.parse(body) as OutboundMessage;
@@ -348,11 +365,7 @@ function startTopicAclRefresh(): void {
       console.error('[ws] FATAL: WS_TOPIC_ACL_PATH is required in production.');
       process.exit(1);
     }
-    if (TOPIC_ACL_ALLOW_MISSING) {
-      console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL in compatibility allow mode.');
-    } else {
-      console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL is fail-closed.');
-    }
+    console.warn('[ws] No WS_TOPIC_ACL_PATH configured; topic ACL is fail-closed.');
     return;
   }
 
@@ -409,7 +422,7 @@ function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string, refres
   }
 
   if (!TOPIC_ACL_PATH) {
-    return TOPIC_ACL_ALLOW_MISSING;
+    return false;
   }
 
   // For subscription checks, include file-change probing so ACL updates can be

@@ -24,3 +24,4 @@ for _ in $(seq 1 30); do
 done
 
 RPC_URL="${RPC_URL_VALUE}" npm run -s contract:verify:fee-burn-router
+RPC_URL="${RPC_URL_VALUE}" npm run -s contract:verify:fee-burn-router:real

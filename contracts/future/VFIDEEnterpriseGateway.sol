@@ -27,6 +27,8 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     event OrderRefunded(bytes32 indexed orderId, address indexed buyer, uint256 amount, string reason);
     event SeerRewardFailed(bytes32 indexed orderId, address indexed buyer, uint16 delta, bytes reason);
     event OracleSet(address indexed oracle);
+    event OracleChangeScheduled(address indexed oracle, uint64 effectiveAt);
+    event OracleChangeCancelled(address indexed oracle);
     event MerchantWalletSet(address indexed merchantWallet);
     event MerchantWalletChangeScheduled(address indexed merchantWallet, uint64 effectiveAt);
     event MerchantWalletChangeCancelled(address indexed merchantWallet);
@@ -45,10 +47,13 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     address public oracle; // The Enterprise API Key (Amazon)
     address public merchantWallet; // Where funds go (Amazon's Wallet)
     uint64 public constant MERCHANT_WALLET_CHANGE_DELAY = 48 hours;
+    uint64 public constant ORACLE_CHANGE_DELAY = 48 hours;
     /// @dev H-26 FIX: Payer can self-cancel after this window if oracle hasn't acted.
     uint64 public constant ORDER_PAYER_CANCEL_WINDOW = 7 days;
     address public pendingMerchantWallet;
     uint64 public pendingMerchantWalletAt;
+    address public pendingOracle;
+    uint64 public pendingOracleAt;
     
     IERC20 public token;
     ISeer public seer;
@@ -110,8 +115,28 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
         if (pendingMerchantWallet != address(0)) {
             _requireDistinctOracle(_oracle, pendingMerchantWallet, "ENT: oracle must differ from pending merchant");
         }
-        oracle = _oracle;
-        emit OracleSet(_oracle);
+        pendingOracle = _oracle;
+        pendingOracleAt = uint64(block.timestamp) + ORACLE_CHANGE_DELAY;
+        emit OracleChangeScheduled(_oracle, pendingOracleAt);
+    }
+
+    function applyOracle() external onlyDAO {
+        if (pendingOracleAt == 0 || block.timestamp < pendingOracleAt) revert ENT_NotPending();
+        _requireDistinctOracle(pendingOracle, merchantWallet, "ENT: oracle must differ from merchant");
+        if (pendingMerchantWallet != address(0)) {
+            _requireDistinctOracle(pendingOracle, pendingMerchantWallet, "ENT: oracle must differ from pending merchant");
+        }
+        oracle = pendingOracle;
+        emit OracleSet(oracle);
+        delete pendingOracle;
+        delete pendingOracleAt;
+    }
+
+    function cancelOracleChange() external onlyDAO {
+        address pending = pendingOracle;
+        delete pendingOracle;
+        delete pendingOracleAt;
+        emit OracleChangeCancelled(pending);
     }
 
     function setMerchantWallet(address _wallet) external onlyDAO {

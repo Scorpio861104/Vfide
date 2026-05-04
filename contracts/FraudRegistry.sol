@@ -27,6 +27,7 @@ import "./SharedInterfaces.sol";
 
 interface ISeer_FR {
     function getScore(address subject) external view returns (uint16);
+    function getCachedScore(address subject) external view returns (uint16);
     /// @dev L-4 FIX: Used to apply score penalty to reporters whose complaints are dismissed.
     ///      Requires FraudRegistry to be registered as an authorized operator in Seer.
     function punish(address subject, uint16 delta, string calldata reason) external;
@@ -56,6 +57,7 @@ error FR_EscrowInvalidIndex();
 error FR_ReviewActive();
 error FR_InvalidTarget();
 error FR_SystemExemptViolation();
+error FR_EscrowRecipientMismatch();
 
 contract FraudRegistry is ReentrancyGuard {
 
@@ -184,7 +186,7 @@ contract FraudRegistry is ReentrancyGuard {
         if (isPendingReview[target] || isFlagged[target] || isPermanentlyBanned[target]) revert FR_ReviewActive();
 
         // Reporter must have minimum trust
-        uint16 reporterScore = seer.getScore(msg.sender);
+        uint16 reporterScore = seer.getCachedScore(msg.sender);
         if (reporterScore < MIN_REPORTER_SCORE) revert FR_InsufficientScore();
 
         lastComplaintEpoch[target][msg.sender] = epoch + 1;
@@ -306,18 +308,21 @@ contract FraudRegistry is ReentrancyGuard {
     }
 
     function rescueStuckEscrow(uint256 escrowIndex, address recipient) external onlyDAO nonReentrant {
+        // #374 hardening: only allow rescue back to original sender.
+        // Keep recipient arg for ABI compatibility with existing integrations.
         if (recipient == address(0)) revert FR_Zero();
         if (escrowIndex >= escrowedTransfers.length) revert FR_EscrowInvalidIndex();
 
         EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
         if (e.released || e.cancelled) revert FR_EscrowAlreadyProcessed();
         require(block.timestamp >= e.releaseAt + ESCROW_RESCUE_DELAY, "FR: rescue timelock active");
+        if (recipient != e.from) revert FR_EscrowRecipientMismatch();
 
         e.cancelled = true;
         totalActiveEscrowed -= e.amount;
-        SafeERC20.safeTransfer(vfideToken, recipient, e.amount);
+        SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
 
-        emit EscrowRescued(escrowIndex, recipient, e.amount);
+        emit EscrowRescued(escrowIndex, e.from, e.amount);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -637,6 +642,59 @@ contract FraudRegistry is ReentrancyGuard {
                 idx++;
             }
         }
+    }
+
+    /// @notice Get pending escrowed transfers with bounded pagination.
+    /// @param user Address to inspect.
+    /// @param offset Cursor in userEscrowIndices[user].
+    /// @param limit Max entries to scan from the cursor (0 => default 25).
+    /// @return indices Matching escrow indices.
+    /// @return recipients Escrow recipients.
+    /// @return amounts Escrow amounts.
+    /// @return releaseAts Escrow unlock timestamps.
+    /// @return nextOffset Cursor for the next page.
+    function getPendingEscrowsPaginated(address user, uint256 offset, uint256 limit) external view returns (
+        uint256[] memory indices,
+        address[] memory recipients,
+        uint256[] memory amounts,
+        uint64[] memory releaseAts,
+        uint256 nextOffset
+    ) {
+        uint256[] storage userIndices = userEscrowIndices[user];
+        uint256 len = userIndices.length;
+        if (offset >= len) {
+            return (new uint256[](0), new address[](0), new uint256[](0), new uint64[](0), offset);
+        }
+
+        uint256 span = limit == 0 ? 25 : limit;
+        uint256 stop = offset + span;
+        if (stop > len) stop = len;
+
+        uint256 pendingCount = 0;
+        for (uint256 i = offset; i < stop; i++) {
+            EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
+            if (!e.released && !e.cancelled) pendingCount++;
+        }
+
+        indices = new uint256[](pendingCount);
+        recipients = new address[](pendingCount);
+        amounts = new uint256[](pendingCount);
+        releaseAts = new uint64[](pendingCount);
+
+        uint256 idx = 0;
+        for (uint256 i = offset; i < stop; i++) {
+            uint256 escrowIndex = userIndices[i];
+            EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
+            if (!e.released && !e.cancelled) {
+                indices[idx] = escrowIndex;
+                recipients[idx] = e.to;
+                amounts[idx] = e.amount;
+                releaseAts[idx] = e.releaseAt;
+                idx++;
+            }
+        }
+
+        nextOffset = stop;
     }
 
     /// @notice Get fraud status summary for an address

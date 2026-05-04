@@ -84,18 +84,22 @@ describe('indexer service', () => {
     const result = await pollEvents();
 
     expect(result.indexed).toBe(2);
+    expect(result.toBlock).toBe(118);
     expect(mockGetLogs).toHaveBeenCalledTimes(3);
     expect(mockGetLogs).toHaveBeenCalledWith(expect.objectContaining({
       address: '0x1111111111111111111111111111111111111111',
-      fromBlock: 101n,
+      fromBlock: 89n,
+      toBlock: 118n,
     }));
     expect(mockGetLogs).toHaveBeenCalledWith(expect.objectContaining({
       address: '0x2222222222222222222222222222222222222222',
-      fromBlock: 101n,
+      fromBlock: 89n,
+      toBlock: 118n,
     }));
     expect(mockGetLogs).toHaveBeenCalledWith(expect.objectContaining({
       address: '0x3333333333333333333333333333333333333333',
-      fromBlock: 101n,
+      fromBlock: 89n,
+      toBlock: 118n,
     }));
   });
 

@@ -38,6 +38,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     uint256 public constant MAX_SINGLE_BPS = 5000;   // No channel > 50%
     uint256 public constant SPLIT_CHANGE_DELAY = 72 hours;
     uint256 public constant DESTINATION_CHANGE_DELAY = 72 hours;
+    uint256 public constant FEE_SOURCE_CHANGE_DELAY = 48 hours; // TL-236
 
     struct FeeSplit {
         uint256 burnBps;
@@ -72,6 +73,15 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     // F-33 FIX: Authorized fee sources (in addition to vfideToken)
     // Allows other contracts to call receiveFee() while maintaining security gate
     mapping(address => bool) public authorizedFeeSources;
+
+    // TL-236 FIX: Pending fee source change (#236)
+    struct PendingFeeSourceChange {
+        address source;
+        bool authorized;
+        uint256 effectiveTime;
+        bool pending;
+    }
+    PendingFeeSourceChange public pendingFeeSourceChange;
 
     uint256 public minDistributionAmount;
 
@@ -114,6 +124,9 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     event RescueProposed(address indexed to, uint256 amount, uint256 effectiveTime);
     event RescueExecuted(address indexed to, uint256 amount);
     event RescueCancelled(address indexed to, uint256 amount);
+    event FeeSourceChangeProposed(address indexed source, bool authorized, uint256 effectiveTime);
+    event FeeSourceChangeExecuted(address indexed source, bool authorized);
+    event FeeSourceChangeCancelled(address indexed source);
 
     error ZeroAddress();
     error InvalidSplit();
@@ -161,11 +174,31 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         minDistributionAmount = 100 * 1e18;
     }
 
-        /// @notice Set authorization for a fee source contract (Flash loans, Bridges, etc.)
-        /// @dev Admin-only. Allows contracts other than VFIDEToken to call receiveFee().
+        /// @notice TL-236 FIX: Propose a fee-source authorization change (48h timelock). (#236)
         function setAuthorizedFeeSource(address source, bool authorized) external onlyRole(ADMIN_ROLE) {
             if (source == address(0)) revert ZeroAddress();
-            authorizedFeeSources[source] = authorized;
+            require(!pendingFeeSourceChange.pending, "FD: change pending");
+            uint256 effectiveTime = block.timestamp + FEE_SOURCE_CHANGE_DELAY;
+            pendingFeeSourceChange = PendingFeeSourceChange({ source: source, authorized: authorized, effectiveTime: effectiveTime, pending: true });
+            emit FeeSourceChangeProposed(source, authorized, effectiveTime);
+        }
+
+        /// @notice Apply a pending fee-source change after the 48h timelock.
+        function applyFeeSourceChange() external onlyRole(ADMIN_ROLE) {
+            require(pendingFeeSourceChange.pending && block.timestamp >= pendingFeeSourceChange.effectiveTime, "FD: timelock");
+            address source = pendingFeeSourceChange.source;
+            bool auth = pendingFeeSourceChange.authorized;
+            delete pendingFeeSourceChange;
+            authorizedFeeSources[source] = auth;
+            emit FeeSourceChangeExecuted(source, auth);
+        }
+
+        /// @notice Cancel a pending fee-source change.
+        function cancelFeeSourceChange() external onlyRole(ADMIN_ROLE) {
+            require(pendingFeeSourceChange.pending, "FD: no pending");
+            address source = pendingFeeSourceChange.source;
+            delete pendingFeeSourceChange;
+            emit FeeSourceChangeCancelled(source);
         }
 
         /// @notice Receive fee tokens from VFIDEToken._transfer() or authorized sources.

@@ -16,8 +16,8 @@ async function trustVerifier(contract: any, verifier: string, ethers: any) {
   await contract.applyTrustedVerifierChange();
 }
 
-describe("VaultRecoveryClaim bootstrap fallback", { concurrency: 1 }, () => {
-  it("allows trusted verifiers to approve claims for single-guardian bootstrap vaults", async () => {
+describe("VaultRecoveryClaim bootstrap behavior", { concurrency: 1 }, () => {
+  it("does not allow trusted verifiers to finalize claims without guardian approvals", async () => {
     const { ethers } = (await getConnection()) as any;
     const [deployer, originalOwner, claimant, guardian, verifierA, verifierB, verifierC, verifierD, verifierE] = await ethers.getSigners();
 
@@ -64,7 +64,7 @@ describe("VaultRecoveryClaim bootstrap fallback", { concurrency: 1 }, () => {
     await recovery.connect(verifierE).verifierVote(1, true);
 
     const claim = await recovery.claims(1);
-    assert.equal(claim.status, 2n);
+    assert.equal(claim.status, 1n);
     assert.equal(claim.verifierVotes, 5n);
     assert.ok(claim.challengeEndsAt > 0n);
   });

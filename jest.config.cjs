@@ -13,8 +13,8 @@ const customJestConfig = {
   maxConcurrency: 1, // Run tests serially to avoid axe-core concurrency issues
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
-    '^uncrypto$': '<rootDir>/__mocks__/uncrypto.js',
-    '^minimatch$': '<rootDir>/__mocks__/minimatch-compat.cjs',
+    '^uncrypto$': '<rootDir>/test/mocks/uncrypto.js',
+    '^minimatch$': '<rootDir>/test/mocks/minimatch-compat.cjs',
   },
   collectCoverageFrom: [
     'lib/utils.ts',

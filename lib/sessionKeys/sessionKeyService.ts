@@ -111,16 +111,8 @@ function resolveMaxSessionDurationSeconds(): number {
 function getSessionStorageBackend(): Storage | null {
   if (typeof window === 'undefined') return null;
 
-  // Persistent permission records increase blast radius after XSS;
-  // keep them session-scoped in production even if the flag is enabled.
-  if (process.env.NODE_ENV === 'production') {
-    return window.sessionStorage;
-  }
-
-  if (getEnv().NEXT_PUBLIC_ENABLE_PERSISTENT_SESSION_KEYS) {
-    return window.localStorage;
-  }
-
+  // Always keep session-key permissions session-scoped to reduce XSS blast radius.
+  // Legacy persistent mode is intentionally ignored (P2-L-26).
   return window.sessionStorage;
 }
 

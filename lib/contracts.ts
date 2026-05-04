@@ -200,7 +200,91 @@ function buildContractAddresses(chainId: number = CURRENT_CHAIN_ID) {
   };
 }
 
-export const CONTRACT_ADDRESSES = buildContractAddresses(CURRENT_CHAIN_ID)
+type ContractAddresses = ReturnType<typeof buildContractAddresses>;
+
+function parseChainId(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.trunc(value);
+  }
+
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = trimmed.startsWith('0x')
+    ? Number.parseInt(trimmed, 16)
+    : Number.parseInt(trimmed, 10);
+
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+/**
+ * Resolve active chain id in browser contexts and fall back to CURRENT_CHAIN_ID
+ * for SSR/server paths where wallet state is unavailable.
+ */
+export function resolveActiveChainId(defaultChainId: number = CURRENT_CHAIN_ID): number {
+  if (typeof window === 'undefined') {
+    return defaultChainId;
+  }
+
+  const chainFromEthereum = parseChainId(
+    (window as Window & { ethereum?: { chainId?: string | number } }).ethereum?.chainId
+  );
+  if (chainFromEthereum) {
+    return chainFromEthereum;
+  }
+
+  try {
+    const wagmiState = window.localStorage?.getItem('wagmi.store');
+    if (wagmiState) {
+      const parsed = JSON.parse(wagmiState) as { state?: { chainId?: number | string } };
+      const chainFromStore = parseChainId(parsed?.state?.chainId);
+      if (chainFromStore) {
+        return chainFromStore;
+      }
+    }
+  } catch {
+    // Ignore malformed localStorage state and use default chain id.
+  }
+
+  return defaultChainId;
+}
+
+const contractAddressOverrides: Partial<ContractAddresses> = {};
+
+export const CONTRACT_ADDRESSES: ContractAddresses = new Proxy(
+  buildContractAddresses(CURRENT_CHAIN_ID),
+  {
+    get(target, prop: string | symbol) {
+      if (typeof prop !== 'string') {
+        return Reflect.get(target, prop);
+      }
+
+      if (Object.prototype.hasOwnProperty.call(contractAddressOverrides, prop)) {
+        return contractAddressOverrides[prop as keyof ContractAddresses];
+      }
+
+      const chainScoped = buildContractAddresses(resolveActiveChainId());
+      const value = chainScoped[prop as keyof ContractAddresses];
+      if (typeof value === 'undefined') {
+        return Reflect.get(target, prop);
+      }
+
+      return value;
+    },
+    set(target, prop: string | symbol, value) {
+      if (typeof prop === 'string') {
+        contractAddressOverrides[prop as keyof ContractAddresses] = value as ContractAddresses[keyof ContractAddresses];
+      }
+      return Reflect.set(target, prop, value);
+    },
+  }
+)
 
 export function getContractAddresses(chainId: number) {
   return buildContractAddresses(chainId);
