@@ -21,6 +21,12 @@ describe("MainstreamPriceOracle updater cooldown", () => {
     await oracle.connect(dao).setUpdater(updaterA.address, true);
     await oracle.connect(dao).setUpdater(updaterB.address, true);
 
+    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
+    await ethers.provider.send("evm_mine", []);
+
+    await oracle.connect(dao).applyUpdater(updaterA.address);
+    await oracle.connect(dao).applyUpdater(updaterB.address);
+
     // Satisfy global update cooldown from constructor timestamp.
     await ethers.provider.send("evm_increaseTime", [5 * 60 + 1]);
     await ethers.provider.send("evm_mine", []);

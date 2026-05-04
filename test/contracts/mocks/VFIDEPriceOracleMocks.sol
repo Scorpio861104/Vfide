@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../../contracts/interfaces/AggregatorV3Interface.sol";
-import "../../contracts/VFIDEPriceOracle.sol";
+import "../../../contracts/interfaces/AggregatorV3Interface.sol";
+import "../../../contracts/VFIDEPriceOracle.sol";
 
 contract MockChainlinkFeed is AggregatorV3Interface {
     uint8 private _decimals;

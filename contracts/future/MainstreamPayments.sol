@@ -268,6 +268,9 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     event PriceSourceRemoved(address indexed source);
     event PriceSourceReported(address indexed source, uint256 price, uint256 timestamp);
     event StalenessThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
+    event UpdaterChangeProposed(address indexed updater, bool status, uint256 effectiveAt);
+    event UpdaterChangeApplied(address indexed updater, bool status);
+    event ForcePriceProposed(uint256 newPrice, uint256 effectiveAt);
     
     address public dao;
     
@@ -281,8 +284,10 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     uint256 public constant MIN_ABSOLUTE_VFIDE_PER_USD = 1e12;
     uint256 public constant MAX_STANDARD_PRICE_CHANGE_BPS = 5000;
     uint256 public constant MAX_FORCE_PRICE_INCREASE_BPS = 90000;
-    uint256 public constant MAX_FORCE_PRICE_DECREASE_BPS = 9000;
+    uint256 public constant MAX_FORCE_PRICE_DECREASE_BPS = 5000;
     uint256 public constant MAX_SOURCE_DEVIATION_BPS = 5000;
+    uint256 public constant FORCE_PRICE_DELAY = 24 hours;
+    uint256 public constant UPDATER_CHANGE_DELAY = 24 hours;
     
     struct PriceSource {
         bool active;
@@ -298,6 +303,10 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     // Authorized updaters (keepers, oracles)
     mapping(address => bool) public isUpdater;
     mapping(address => uint256) public lastUpdaterUpdateAt;
+    mapping(address => bool) public pendingUpdaterStatus;
+    mapping(address => uint256) public pendingUpdaterAt;
+    uint256 public pendingForcePrice;
+    uint256 public pendingForcePriceAt;
     
     modifier onlyDAO() {
         require(msg.sender == dao, "PO: not DAO");
@@ -364,13 +373,25 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     }
     
     /**
-     * @notice Force set price (DAO only, bypasses sanity check)
-     * @dev H-5 FIX: Now truly bypasses the sanity check to allow DAO recovery from stale prices
+     * @notice Queue a force price change (DAO only), applied after delay.
      */
     function forceSetPrice(uint256 newPrice) external onlyDAO nonReentrant {
         _requireValidAbsolutePrice(newPrice);
-        _enforceUpdateCooldown();
         _validatePriceWindow(vfidePerUsd, newPrice, MAX_FORCE_PRICE_INCREASE_BPS, MAX_FORCE_PRICE_DECREASE_BPS);
+        pendingForcePrice = newPrice;
+        pendingForcePriceAt = block.timestamp + FORCE_PRICE_DELAY;
+        emit ForcePriceProposed(newPrice, pendingForcePriceAt);
+    }
+
+    function applyForceSetPrice() external onlyDAO nonReentrant {
+        require(pendingForcePriceAt > 0, "PO: no pending force price");
+        require(block.timestamp >= pendingForcePriceAt, "PO: force price timelocked");
+        _enforceUpdateCooldown();
+
+        uint256 newPrice = pendingForcePrice;
+        pendingForcePrice = 0;
+        pendingForcePriceAt = 0;
+
         vfidePerUsd = newPrice;
         lastUpdateTime = block.timestamp;
         emit PriceUpdated(newPrice, block.timestamp, msg.sender);
@@ -417,10 +438,24 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     }
     
     /**
-     * @notice Set authorized updater
+     * @notice Queue authorized updater change
      */
     function setUpdater(address updater, bool status) external onlyDAO nonReentrant {
+        require(updater != address(0), "PO: zero updater");
+        pendingUpdaterStatus[updater] = status;
+        pendingUpdaterAt[updater] = block.timestamp + UPDATER_CHANGE_DELAY;
+        emit UpdaterChangeProposed(updater, status, pendingUpdaterAt[updater]);
+    }
+
+    function applyUpdater(address updater) external onlyDAO nonReentrant {
+        uint256 effectiveAt = pendingUpdaterAt[updater];
+        require(effectiveAt > 0, "PO: no pending updater");
+        require(block.timestamp >= effectiveAt, "PO: updater timelocked");
+
+        bool status = pendingUpdaterStatus[updater];
         isUpdater[updater] = status;
+        pendingUpdaterAt[updater] = 0;
+        emit UpdaterChangeApplied(updater, status);
     }
     
     /// @notice Fallback — any updater can push a price from a registered source
@@ -1112,6 +1147,7 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     event TokenRouteAdded(address indexed token, string symbol, address[] path);
     event TokenRouteRemoved(address indexed token);
     event SwapRouterUpdated(address indexed oldRouter, address indexed newRouter);
+    event RecommendedRouterUpdateProposed(address indexed newRouter, uint256 effectiveAt);
     event DirectPaymentRecorded(
         address indexed customer,
         address indexed merchant,
@@ -1127,6 +1163,9 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     
     // Recommended DEX routers (user chooses which to use)
     address public recommendedRouter;  // e.g., Uniswap V3 Router
+    address public pendingRecommendedRouter;
+    uint256 public pendingRecommendedRouterAt;
+    uint256 public constant RECOMMENDED_ROUTER_DELAY = 48 hours;
     
     struct TokenRoute {
         bool supported;
@@ -1205,13 +1244,25 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     }
     
     /**
-     * @notice Update recommended router
+     * @notice Queue recommended router update
      */
     function setRecommendedRouter(address router) external onlyDAO nonReentrant {
         require(router != address(0), "MCR: zero router");
+        pendingRecommendedRouter = router;
+        pendingRecommendedRouterAt = block.timestamp + RECOMMENDED_ROUTER_DELAY;
+        emit RecommendedRouterUpdateProposed(router, pendingRecommendedRouterAt);
+    }
+
+    function applyRecommendedRouter() external onlyDAO nonReentrant {
+        require(pendingRecommendedRouterAt > 0, "MCR: no pending router");
+        require(block.timestamp >= pendingRecommendedRouterAt, "MCR: router timelocked");
+
         address old = recommendedRouter;
-        recommendedRouter = router;
-        emit SwapRouterUpdated(old, router);
+        address next = pendingRecommendedRouter;
+        pendingRecommendedRouter = address(0);
+        pendingRecommendedRouterAt = 0;
+        recommendedRouter = next;
+        emit SwapRouterUpdated(old, next);
     }
 
     function setAuthorizedRecorder(address recorder, bool authorized) external onlyDAO nonReentrant {

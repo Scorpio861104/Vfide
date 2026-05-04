@@ -39,7 +39,16 @@ Rule: exactly one item may be `IN_PROGRESS` at a time.
 - BATCH-G/#69 — DONE_FIXED — `OwnerControlPanel` queued governance actions now expire after `GOVERNANCE_ACTION_EXPIRY=30 days`; stale actions are deleted and revert with `OCP_ActionExpired(expiredAt)` instead of remaining executable forever.
 - BATCH-G/#79 — DONE_VALIDATED — mapped to ABI-01..ABI-05 tracker items: ABI parity checks and runtime/indexer compatibility fixes are in place for the previously mismatched surfaces.
 - BATCH-G/#80 — DONE_FIXED — `lib/indexer/service.ts` now indexes only finalized blocks (`INDEXER_CONFIRMATION_DEPTH`) and rewinds/clears a short block window (`INDEXER_REORG_REWIND_BLOCKS`) before each poll to tolerate short reorgs; focused regression test updated and passing in `__tests__/lib/indexer-service.test.ts`.
-- NEXT_IN_PROGRESS: residual unmapped ZIP IDs from exact tracker cross-check
+- BATCH-G/#230 — DONE_FIXED — `contracts/VFIDEPriceOracle.sol` no longer relies on Uniswap spot `slot0()` for fallback price; it now computes fallback using `observe([TWAP_PERIOD,0])` arithmetic-mean tick and quote conversion via local 0.8-compatible Uniswap math helpers.
+- BATCH-G/#231 — DONE_FIXED — read path now returns only last validated oracle price (`lastPrice`) and enforces staleness/circuit-breaker semantics; live external reads are isolated to `updatePrice()` validation path instead of bypassing protections from `getPrice()`.
+- BATCH-G/#268 — DONE_FIXED — `_calculateDeviation(oldPrice,newPrice)` now uses `min(old,new)` as the denominator for symmetric deviation checks.
+- BATCH-G/#269 — DONE_FIXED — Chainlink decimal scaling is fail-safe: `chainlinkFeed.decimals()` is wrapped in `try/catch` and cleanly falls through to fallback pricing if decimals lookup fails.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDEPriceOracleAuditFixes.test.ts` (4/4 passing) after `npx hardhat compile`.
+- BATCH-G/#488 — DONE_FIXED — `MainstreamPriceOracle` force-price path is now timelocked (`FORCE_PRICE_DELAY=24h`) via queue/apply flow (`forceSetPrice` + `applyForceSetPrice`), and maximum force-decrease window is reduced from 90% to 50% (`MAX_FORCE_PRICE_DECREASE_BPS=5000`).
+- BATCH-G/#489 — DONE_FIXED — updater authorization changes are now timelocked (`UPDATER_CHANGE_DELAY=24h`) via queue/apply flow (`setUpdater` + `applyUpdater`) instead of instant mutation.
+- BATCH-G/#490 — DONE_FIXED — `MultiCurrencyRouter.setRecommendedRouter` is now timelocked (`RECOMMENDED_ROUTER_DELAY=48h`) through queue/apply flow (`setRecommendedRouter` + `applyRecommendedRouter`) so recommended DEX router changes are no longer instant.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/MainstreamPriceOracleUpdaterCooldown.test.ts test/hardhat/MainstreamPriceOracleForcePriceTimelock.test.ts test/hardhat/MultiCurrencyRouterTimelock.test.ts` (4/4 passing) after `npx hardhat compile`.
+- NEXT_IN_PROGRESS: residual unmapped ZIP IDs from exact tracker cross-check (continue with related future-contract timelock surfaces)
 
 ## Zip Evidence Reconciliation (2026-05-03)
 

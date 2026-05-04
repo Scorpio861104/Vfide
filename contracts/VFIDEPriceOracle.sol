@@ -4,8 +4,8 @@ pragma solidity 0.8.30;
 import "./interfaces/AggregatorV3Interface.sol";
 import "./SharedInterfaces.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
-import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
+import "./libraries/uniswapv3/FullMath.sol";
+import "./libraries/uniswapv3/TickMath.sol";
 
 interface IUniswapV3PoolLite {
     function token0() external view returns (address);
@@ -347,7 +347,10 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         }
 
         uint256 vfideUnit = 10 ** uint256(vfideDecimals);
-        price = _getQuoteAtTick(arithmeticMeanTick, vfideUnit, vfideToken, quoteToken);
+        if (vfideUnit > type(uint128).max) {
+            return (0, PriceSource.UNISWAP);
+        }
+        price = _getQuoteAtTick(arithmeticMeanTick, uint128(vfideUnit), vfideToken, quoteToken);
         if (quoteDecimals < 18) {
             price = price * 10 ** uint256(18 - quoteDecimals);
         } else if (quoteDecimals > 18) {
