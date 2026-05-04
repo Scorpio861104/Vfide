@@ -222,7 +222,7 @@
     "react": "19.2.5",
     "react-confetti": "^6.4.0",
     "react-dom": "19.2.5",
-    "react-hook-form": "^7.74.0",
+    "react-hook-form": "^7.75.0",
     "react-window": "^2.2.7",
     "recharts": "^3.8.0",
     "sharp": "^0.34.1",
