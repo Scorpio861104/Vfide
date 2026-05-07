@@ -139,6 +139,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         PaymentChannel channel
     );
     event FeeUpdated(uint256 feeBasisPoints);
+    event ProtocolFeeProposed(uint256 newFeeBps, uint64 effectiveAt); // H3
+    event ProtocolFeeCancelled(); // H3
     event MinScoreUpdated(uint16 minScore);
     event FeeSinkSet(address sink);
     event MinSwapOutputUpdated(uint256 previousBps, uint256 newBps);
@@ -159,6 +161,12 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     address public pendingDAO;
     uint64 public pendingDAOAt;
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
+
+    // H3 FIX: Protocol fee changes require a 24h timelock to honor the
+    //         "zero merchant fees" guarantee against instant DAO action.
+    uint256 public pendingProtocolFeeBps;
+    uint64 public pendingProtocolFeeAt;
+    uint64 public constant PROTOCOL_FEE_CHANGE_DELAY = 24 hours;
     address public fraudRegistry;
     // N-L15 FIX: optional session-key spend-limit gate (zero address = disabled).
     // Kept private to avoid generating an extra public getter and reduce bytecode size.
@@ -294,11 +302,34 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         sessionKeyManager = _skm;
     }
 
+    /// @notice Propose a protocol fee change. Takes effect after 24h timelock.
+    /// @dev H3 FIX: 24-hour delay gives merchants / community time to react.
     function setProtocolFee(uint256 _feeBps) external onlyDAO {
         if (_feeBps > 500) revert MERCH_InvalidConfig(); // Max 5%
-        protocolFeeBps = _feeBps;
-        emit FeeUpdated(_feeBps);
+        pendingProtocolFeeBps = _feeBps;
+        pendingProtocolFeeAt = uint64(block.timestamp) + PROTOCOL_FEE_CHANGE_DELAY;
+        emit ProtocolFeeProposed(_feeBps, pendingProtocolFeeAt);
+        _log("fee_pend");
+    }
+
+    /// @notice Apply a pending protocol fee change after the timelock.
+    function applyProtocolFee() external onlyDAO {
+        if (pendingProtocolFeeAt == 0) revert MERCH_NotConfigured();
+        if (block.timestamp < pendingProtocolFeeAt) revert MERCH_NotConfigured();
+        protocolFeeBps = pendingProtocolFeeBps;
+        delete pendingProtocolFeeBps;
+        delete pendingProtocolFeeAt;
+        emit FeeUpdated(protocolFeeBps);
         _log("fee_upd");
+    }
+
+    /// @notice Cancel a pending protocol fee change.
+    function cancelProtocolFee() external onlyDAO {
+        if (pendingProtocolFeeAt == 0) revert MERCH_NotConfigured();
+        delete pendingProtocolFeeBps;
+        delete pendingProtocolFeeAt;
+        emit ProtocolFeeCancelled();
+        _log("fee_cancel");
     }
 
     function setFeeSink(address _sink) external onlyDAO {

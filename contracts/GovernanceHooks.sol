@@ -44,6 +44,25 @@ contract GovernanceHooks is ReentrancyGuard {
     error GH_NotAuthorized();
     error GH_ProposalBlocked(string reason);
     error GH_VoterRestricted();
+    event ModulesProposed(address ledger, address seer, address guardian, uint64 effectiveAt);
+    event ModulesCancelled();
+    event OwnershipClaimedByDAO(address indexed previousOwner, address indexed dao);
+
+    error GH_NoPending();
+    error GH_DelayActive();
+    error GH_DAOAlreadyOwns();
+
+    // C3 FIX: 7-day timelock on module changes so DAO can veto a malicious swap.
+    uint64 public constant MODULE_CHANGE_DELAY = 7 days;
+
+    struct PendingModulesChange {
+        address ledger;
+        address seer;
+        address guardian;
+        uint64 effectiveAt;
+    }
+    PendingModulesChange public pendingModules;
+    bool public hasPendingModules;
 
     modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
     modifier onlyDAO() { if (msg.sender != dao) revert GH_NotAuthorized(); _; }
@@ -65,12 +84,54 @@ contract GovernanceHooks is ReentrancyGuard {
         emit DAOSet(_dao);
     }
 
-    function setModules(address _ledger, address _seer, address _guardian) external onlyOwner nonReentrant { 
+    /// @notice Propose a module change. Takes effect after MODULE_CHANGE_DELAY.
+    /// @dev C3 FIX: Timelock prevents instant malicious module swap.
+    function proposeModules(address _ledger, address _seer, address _guardian)
+        external onlyOwner nonReentrant
+    {
         require(_seer != address(0), "zero seer");
-        ledger=IProofLedger_GH(_ledger); 
-        seer=ISeer_GH(_seer);
-        guardian = ISeerGuardian_GH(_guardian);
-        emit ModulesSet(_ledger,_seer, _guardian); 
+        uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
+        pendingModules = PendingModulesChange({
+            ledger: _ledger,
+            seer: _seer,
+            guardian: _guardian,
+            effectiveAt: effectiveAt
+        });
+        hasPendingModules = true;
+        emit ModulesProposed(_ledger, _seer, _guardian, effectiveAt);
+    }
+
+    /// @notice Apply a previously proposed module change after the timelock.
+    function applyModules() external nonReentrant {
+        if (!hasPendingModules) revert GH_NoPending();
+        if (block.timestamp < pendingModules.effectiveAt) revert GH_DelayActive();
+        ledger = IProofLedger_GH(pendingModules.ledger);
+        seer = ISeer_GH(pendingModules.seer);
+        guardian = ISeerGuardian_GH(pendingModules.guardian);
+        emit ModulesSet(pendingModules.ledger, pendingModules.seer, pendingModules.guardian);
+        delete pendingModules;
+        hasPendingModules = false;
+    }
+
+    /// @notice Cancel a pending module change. Either owner or DAO may cancel.
+    function cancelModules() external nonReentrant {
+        require(msg.sender == owner || msg.sender == dao, "GH: not authorized");
+        if (!hasPendingModules) revert GH_NoPending();
+        delete pendingModules;
+        hasPendingModules = false;
+        emit ModulesCancelled();
+    }
+
+    /// @notice Permissionless DAO ownership claim. Eliminates "deployer forgot to transfer" foot-gun.
+    /// @dev C3 FIX: After SystemHandover, the DAO calls this to take ownership on-chain.
+    function claimOwnershipForDAO() external nonReentrant {
+        require(msg.sender == dao, "GH: only DAO");
+        require(dao != address(0), "GH: dao not set");
+        if (owner == dao) revert GH_DAOAlreadyOwns();
+        address previousOwner = owner;
+        owner = dao;
+        emit OwnershipTransferred(previousOwner, dao);
+        emit OwnershipClaimedByDAO(previousOwner, dao);
     }
 
     function transferOwnership(address newOwner) external onlyOwner nonReentrant {

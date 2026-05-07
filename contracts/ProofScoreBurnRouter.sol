@@ -786,14 +786,12 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
             emit SeerScoreZeroWarning(from, address(seer));
         }
 
-        // Reuse canonical fee computation via internal call, then reserve burn in the same tx.
+        // C2 FIX: Removed dailyBurnedAmount increment. The daily-burn cap is
+        // tracked exclusively through recordBurn(), which is called by VFIDEToken
+        // AFTER the burn actually executes. Double-incrementing here caused the
+        // cap to be reached at 50% of its intended threshold.
         (burnAmount, sanctumAmount, ecosystemAmount, sanctumSink_, ecosystemSink_, burnSink_) =
             computeFees(from, to, amount);
-
-        if (burnAmount > 0) {
-            _resetDayIfNeeded();
-            dailyBurnedAmount += burnAmount;
-        }
     }
     
     /**

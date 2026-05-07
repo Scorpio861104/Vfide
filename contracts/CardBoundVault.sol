@@ -55,6 +55,11 @@ contract CardBoundVault is ReentrancyGuard {
     IProofLedger public immutable ledger;
     ISeerAutonomousVault public seerAutonomous;
 
+    // H4 FIX: Track when recovery leaves admin == activeWallet so the user can
+    // restore cold/hot key separation after regaining control.
+    bool public recoveryAdminUnseparated;
+    uint64 public recoveryUnseparatedSince;
+
     address public admin;
     address public pendingAdmin;
     address public activeWallet;
@@ -104,6 +109,31 @@ contract CardBoundVault is ReentrancyGuard {
     QueuedWithdrawal[] public withdrawalQueue;
     uint8 public activeQueuedWithdrawals;
     uint256 public largeTransferThreshold; // Transfers above this get queued
+
+        // ── Merchant-Payment Queue (C1 FIX: large payment threshold protection) ──
+        uint256 public largePaymentThreshold;
+        uint8 public activeQueuedPayments;
+        uint8 public constant MAX_QUEUED_PAYMENTS = 20;
+
+        struct QueuedPayment {
+            address token;
+            address merchant;
+            address recipient;
+            uint256 amount;
+            uint64 requestTime;
+            uint64 executeAfter;
+            bool executed;
+            bool cancelled;
+            uint256 intentNonce;
+            bytes32 recipientCodeHashAtQueue;
+        }
+        QueuedPayment[] public paymentQueue;
+
+        struct PendingLargePaymentThresholdChange {
+            uint256 threshold;
+            uint64 executeAfter;
+        }
+        PendingLargePaymentThresholdChange public pendingLargePaymentThresholdChange;
 
     struct WalletRotation {
         address newWallet;
@@ -186,6 +216,9 @@ contract CardBoundVault is ReentrancyGuard {
 
     event AdminTransferStarted(address indexed oldAdmin, address indexed newAdmin);
     event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
+    event RecoveryAdminUnseparated(address indexed wallet, uint64 since);
+    event RecoveryAdminSeparated(address indexed activeWallet, address indexed newAdmin);
+    event RecoverySplitReminderEmitted(address indexed wallet, uint64 daysUnseparated);
 
     event GuardianSet(address indexed guardian, bool active);
     event GuardianThresholdSet(uint8 threshold);
@@ -233,6 +266,11 @@ contract CardBoundVault is ReentrancyGuard {
     event WithdrawalExecuted(uint256 indexed queueIndex, address indexed toVault, uint256 amount);
     event WithdrawalCancelled(uint256 indexed queueIndex, address indexed cancelledBy);
     event LargeTransferThresholdSet(uint256 threshold);
+    event PaymentQueued(uint256 indexed queueIndex, address indexed token, address indexed merchant, address recipient, uint256 amount, uint64 executeAfter);
+    event PaymentQueueExecuted(uint256 indexed queueIndex, address recipient, uint256 amount);
+    event PaymentQueueCancelled(uint256 indexed queueIndex, address by);
+    event LargePaymentThresholdSet(uint256 oldThreshold, uint256 newThreshold);
+    event LargePaymentThresholdProposed(uint256 threshold, uint64 executeAfter);
 
     error CBV_NotAdmin();
     error CBV_NotGuardian();
@@ -262,7 +300,17 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_PauseAlreadyApproved();
     error CBV_SeerBlocked();
     error CBV_NotMerchantPortal();
+    error CBV_SameAdmin();
+    error CBV_NoSeparationNeeded();
     error CBV_PayIntentInvalid();
+    error CBV_PayIntentTokenInvalid(); // H2: intent.token must be vfideToken
+    error CBV_PaymentQueueFull();
+    error CBV_PaymentQueueInvalidIndex();
+    error CBV_PaymentQueueAlreadyProcessed();
+    error CBV_PaymentQueueNotReady();
+    error CBV_NotAuthorized();
+    error CBV_NoPending();
+    error CBV_DelayActive();
     /// @notice C-7 FIX: Destination vault cannot receive transfer (unguarded and cap would be exceeded).
     error CBV_ReceiverNeedsGuardian();
 
@@ -351,6 +399,10 @@ contract CardBoundVault is ReentrancyGuard {
         largeTransferThreshold = _dailyTransferLimit;
         emit LargeTransferThresholdSet(_dailyTransferLimit);
 
+            // C1 FIX: payment threshold = 5x transfer threshold so daily payments
+            // under that amount execute instantly while outliers are queued.
+            largePaymentThreshold = _dailyTransferLimit * 5;
+
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
 
@@ -373,7 +425,23 @@ contract CardBoundVault is ReentrancyGuard {
         address old = admin;
         admin = pendingAdmin;
         pendingAdmin = address(0);
+
+        if (recoveryAdminUnseparated && admin != activeWallet) {
+            recoveryAdminUnseparated = false;
+            recoveryUnseparatedSince = 0;
+            emit RecoveryAdminSeparated(activeWallet, admin);
+        }
+
         emit AdminTransferred(old, admin);
+    }
+
+    /// @notice Restore admin/activeWallet separation after a recovery.
+    function splitAdminFromActive(address newAdmin) external onlyAdmin {
+        if (newAdmin == address(0)) revert CBV_Zero();
+        if (newAdmin == activeWallet) revert CBV_SameAdmin();
+        if (!recoveryAdminUnseparated) revert CBV_NoSeparationNeeded();
+        pendingAdmin = newAdmin;
+        emit AdminTransferStarted(admin, newAdmin);
     }
 
     /// @notice Propose a guardian change with 24-hour timelock (CBV-03)
@@ -709,6 +777,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         address signer = _recoverTransferSigner(intent, signature);
         if (signer != activeWallet) revert CBV_InvalidSigner();
+        _emitRecoverySplitReminder(signer);
 
         _enforceSeerAction(admin, 0, amount, intent.toVault);
 
@@ -757,7 +826,8 @@ contract CardBoundVault is ReentrancyGuard {
         if (msg.sender != intent.merchantPortal) revert CBV_NotMerchantPortal();
         if (intent.vault != address(this)) revert CBV_PayIntentInvalid();
         if (intent.merchantPortal == address(0)) revert CBV_PayIntentInvalid();
-        if (intent.token == address(0) || intent.merchant == address(0)) revert CBV_PayIntentInvalid();
+        if (intent.merchant == address(0)) revert CBV_PayIntentInvalid();
+        if (intent.token != vfideToken) revert CBV_PayIntentTokenInvalid(); // H2 FIX: restrict to VFIDE only
         if (intent.recipient == address(0) || intent.recipient == address(this)) revert CBV_PayIntentInvalid();
         if (intent.chainId != block.chainid) revert CBV_InvalidChain();
         if (intent.walletEpoch != walletEpoch) revert CBV_InvalidEpoch();
@@ -772,15 +842,95 @@ contract CardBoundVault is ReentrancyGuard {
 
         address signer = _recoverPaySigner(intent, signature);
         if (signer != activeWallet) revert CBV_InvalidSigner();
+        _emitRecoverySplitReminder(signer);
 
         _enforceSeerAction(admin, 0, amount, intent.recipient);
 
         nextNonce += 1;
-        spentToday += amount;
+        if (largePaymentThreshold > 0 && amount >= largePaymentThreshold) {
+            spentToday += amount;
+            _queuePayment(intent.token, intent.merchant, intent.recipient, amount, intent.nonce);
+            _logPayment(intent.recipient, amount);
+            return;
+        }
 
+        spentToday += amount;
         IERC20(intent.token).safeTransfer(intent.recipient, amount);
+        _logPayment(intent.recipient, amount);
     }
 
+    /// @notice Execute a queued payment after the 7-day delay (admin only).
+    function executeQueuedPayment(uint256 queueIndex)
+        external
+        nonReentrant
+        whenNotPaused
+    {
+        if (queueIndex >= paymentQueue.length) revert CBV_PaymentQueueInvalidIndex();
+
+        QueuedPayment storage q = paymentQueue[queueIndex];
+        if (q.executed || q.cancelled) revert CBV_PaymentQueueAlreadyProcessed();
+        if (block.timestamp < q.executeAfter) revert CBV_PaymentQueueNotReady();
+        if (msg.sender != admin) revert CBV_NotAdmin();
+
+        address recipient = q.recipient;
+        bytes32 currentCodeHash;
+        assembly { currentCodeHash := extcodehash(recipient) }
+        if (currentCodeHash != q.recipientCodeHashAtQueue) revert CBV_ReceiverChanged();
+
+        _enforceSeerAction(admin, 0, q.amount, q.recipient);
+
+        q.executed = true;
+        if (activeQueuedPayments > 0) {
+            activeQueuedPayments -= 1;
+        }
+
+        IERC20(q.token).safeTransfer(q.recipient, q.amount);
+        emit PaymentQueueExecuted(queueIndex, q.recipient, q.amount);
+        _logPayment(q.recipient, q.amount);
+    }
+
+    /// @notice Cancel a queued payment (admin or guardian).
+    function cancelQueuedPayment(uint256 queueIndex) external {
+        if (queueIndex >= paymentQueue.length) revert CBV_PaymentQueueInvalidIndex();
+
+        QueuedPayment storage q = paymentQueue[queueIndex];
+        if (q.executed || q.cancelled) revert CBV_PaymentQueueAlreadyProcessed();
+        if (msg.sender != admin && !isGuardian[msg.sender]) revert CBV_NotAuthorized();
+
+        q.cancelled = true;
+        if (activeQueuedPayments > 0) {
+            activeQueuedPayments -= 1;
+        }
+
+        _refreshDailyWindow();
+        if (q.requestTime >= dayStart && spentToday >= q.amount) {
+            spentToday -= q.amount;
+        }
+
+        emit PaymentQueueCancelled(queueIndex, msg.sender);
+    }
+
+    /// @notice Propose a new large-payment threshold (timelocked).
+    function setLargePaymentThreshold(uint256 _threshold) external onlyAdmin {
+        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
+        pendingLargePaymentThresholdChange = PendingLargePaymentThresholdChange({
+            threshold: _threshold,
+            executeAfter: executeAfter
+        });
+        emit LargePaymentThresholdProposed(_threshold, executeAfter);
+    }
+
+    /// @notice Apply a pending large-payment threshold change.
+    function applyLargePaymentThreshold() external onlyAdmin {
+        PendingLargePaymentThresholdChange memory pending = pendingLargePaymentThresholdChange;
+        if (pending.executeAfter == 0) revert CBV_NoPending();
+        if (block.timestamp < pending.executeAfter) revert CBV_DelayActive();
+
+        uint256 oldThreshold = largePaymentThreshold;
+        largePaymentThreshold = pending.threshold;
+        delete pendingLargePaymentThresholdChange;
+        emit LargePaymentThresholdSet(oldThreshold, pending.threshold);
+    }
     // ═══════════════════════════════════════════════════════════════
     //  WITHDRAWAL QUEUE — Large transfer protection
     // ═══════════════════════════════════════════════════════════════
@@ -993,6 +1143,37 @@ contract CardBoundVault is ReentrancyGuard {
         emit WithdrawalQueued(withdrawalQueue.length - 1, toVault, amount, executeAfter);
     }
 
+    function _queuePayment(
+        address token,
+        address merchant,
+        address recipient,
+        uint256 amount,
+        uint256 intentNonce
+    ) internal {
+        if (activeQueuedPayments >= MAX_QUEUED_PAYMENTS) revert CBV_PaymentQueueFull();
+
+        uint64 executeAfter = uint64(block.timestamp) + uint64(WITHDRAWAL_DELAY);
+
+        bytes32 codeHash;
+        assembly { codeHash := extcodehash(recipient) }
+
+        paymentQueue.push(QueuedPayment({
+            token: token,
+            merchant: merchant,
+            recipient: recipient,
+            amount: amount,
+            requestTime: uint64(block.timestamp),
+            executeAfter: executeAfter,
+            executed: false,
+            cancelled: false,
+            intentNonce: intentNonce,
+            recipientCodeHashAtQueue: codeHash
+        }));
+        activeQueuedPayments += 1;
+
+        emit PaymentQueued(paymentQueue.length - 1, token, merchant, recipient, amount, executeAfter);
+    }
+
     function _queueTokenApproval(address token, address spender, uint256 amount) internal {
         uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
         pendingTokenApproval = PendingTokenApproval({
@@ -1141,6 +1322,37 @@ contract CardBoundVault is ReentrancyGuard {
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator(), structHash));
     }
 
+    /// @dev H1 FIX: Log merchant payments to ProofLedger for audit trail and ProofScore.
+    function _logPayment(address recipient, uint256 amount) internal {
+        if (address(ledger) != address(0)) {
+            try ledger.logTransfer(address(this), recipient, amount, "merchant_pay")
+            {} catch { emit LedgerLogFailed(address(this), "merchant_pay"); }
+        }
+    }
+
+    function _emitRecoverySplitReminder(address wallet) internal {
+        if (!recoveryAdminUnseparated || recoveryUnseparatedSince == 0) {
+            return;
+        }
+
+        uint64 daysSince = (uint64(block.timestamp) - recoveryUnseparatedSince) / 1 days;
+        if (daysSince >= 7 && daysSince % 7 == 0) {
+            emit RecoverySplitReminderEmitted(wallet, daysSince);
+        }
+    }
+
+    function recoveryAdminSeparationStatus()
+        external
+        view
+        returns (bool unseparated, uint64 since, uint64 daysSince)
+    {
+        unseparated = recoveryAdminUnseparated;
+        since = recoveryUnseparatedSince;
+        daysSince = unseparated && since > 0
+            ? (uint64(block.timestamp) - since) / 1 days
+            : 0;
+    }
+
     function _logTransfer(address toVault, uint256 amount) internal {
         if (address(ledger) != address(0)) {
             try ledger.logTransfer(address(this), toVault, amount, "vault_to_vault") {} catch { emit LedgerLogFailed(address(this), "vault_to_vault"); }
@@ -1245,6 +1457,9 @@ contract CardBoundVault is ReentrancyGuard {
         pendingAdmin = address(0);
         paused = true;
 
+        recoveryAdminUnseparated = true;
+        recoveryUnseparatedSince = uint64(block.timestamp);
+
         // N-H6/N-H10 FIX: Recovery rotation must clear ALL sensitive queued state so the
         // new admin cannot accidentally apply stale operations approved under the old wallet.
         delete pendingRotation;
@@ -1256,11 +1471,14 @@ contract CardBoundVault is ReentrancyGuard {
         delete pendingTokenApproval;
         delete withdrawalQueue;
         activeQueuedWithdrawals = 0;
+        delete paymentQueue;
+        activeQueuedPayments = 0;
         pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
 
         emit RecoveryRotationExecuted(oldWallet, newWallet, oldAdmin, newWallet);
         emit WalletRotated(oldWallet, newWallet, walletEpoch);
         emit AdminTransferred(oldAdmin, newWallet);
+        emit RecoveryAdminUnseparated(newWallet, uint64(block.timestamp));
         emit PauseSet(true, msg.sender);
     }
 
