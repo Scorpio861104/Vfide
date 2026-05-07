@@ -66,6 +66,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
     /// @notice Maximum price staleness (2 hours)
     uint256 public constant MAX_PRICE_STALENESS = 2 hours;
+    uint256 public constant MAX_HISTORY = 8760; // 1 year of hourly updates
 
     /// @notice Price deviation threshold (10%)
     uint256 public constant MAX_PRICE_DEVIATION = 1000; // 10% in basis points

@@ -102,6 +102,11 @@ error TL_NoVault();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
+
+interface IFeeDistributor {
+    function receiveFee(uint256 amount) external;
+}
+
 contract VFIDETermLoan is ReentrancyGuard {
     using SafeERC20 for IERC20;
 

@@ -494,12 +494,22 @@ contract CircuitBreaker is VFIDEAccessControl {
         circuitBreakerTriggered = true;
         lastTriggerTime = block.timestamp;
 
-        triggerHistory.push(TriggerEvent({
-            timestamp: block.timestamp,
-            reason: _reason,
-            metricValue: _metricValue,
-            triggeredBy: msg.sender
-        }));
+        // M1 FIX: Ring buffer to prevent unbounded triggerHistory growth
+        if (triggerHistory.length >= MAX_TRIGGER_HISTORY) {
+            triggerHistory[triggerHistory.length % MAX_TRIGGER_HISTORY] = TriggerEvent({
+                timestamp: block.timestamp,
+                reason: _reason,
+                metricValue: _metricValue,
+                triggeredBy: msg.sender
+            });
+        } else {
+            triggerHistory.push(TriggerEvent({
+                timestamp: block.timestamp,
+                reason: _reason,
+                metricValue: _metricValue,
+                triggeredBy: msg.sender
+            }));
+        }
 
         emit CircuitBreakerTriggered(_reason, _metricValue, block.timestamp, msg.sender);
 

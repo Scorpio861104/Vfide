@@ -183,7 +183,7 @@ contract DAOTimelock is ReentrancyGuard {
         // H-15: Check transaction hasn't expired
         require(block.timestamp <= op.eta + EXPIRY_WINDOW, "TL: transaction expired");
 
-        if (_globalRiskSafe()) {
+        if (_globalRiskActive()) {
             require(block.timestamp>=op.eta+6 hours,"risk delay");
         } else {
             require(block.timestamp>=op.eta,"too early");
@@ -218,7 +218,7 @@ contract DAOTimelock is ReentrancyGuard {
         return selector == this.setAdmin.selector;
     }
 
-    function _globalRiskSafe() internal view returns (bool) {
+    function _globalRiskActive() internal view returns (bool) {
         if (address(panicGuard) == address(0)) {
             return false;
         }
