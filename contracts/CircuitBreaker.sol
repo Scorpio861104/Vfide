@@ -59,6 +59,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     bool public circuitBreakerTriggered;
     uint256 public lastTriggerTime;
     uint256 private _guardLock;
+    uint256 private triggerHistoryStart;
     
     TriggerEvent[] public triggerHistory;
     uint256 public constant MAX_TRIGGER_HISTORY = 1000;
@@ -412,11 +413,16 @@ contract CircuitBreaker is VFIDEAccessControl {
      */
     function getTriggerHistory() external view returns (TriggerEvent[] memory history) {
         uint256 len = triggerHistory.length;
-        uint256 start = len > MAX_TRIGGER_HISTORY ? len - MAX_TRIGGER_HISTORY : 0;
-        uint256 count = len - start;
-        history = new TriggerEvent[](count);
-        for (uint256 i = 0; i < count; i++) {
-            history[i] = triggerHistory[start + i];
+        history = new TriggerEvent[](len);
+        if (len == 0) {
+            return history;
+        }
+
+        for (uint256 i = 0; i < len; i++) {
+            uint256 index = len < MAX_TRIGGER_HISTORY
+                ? i
+                : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
+            history[i] = triggerHistory[index];
         }
     }
 
@@ -496,12 +502,13 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         // M1 FIX: Ring buffer to prevent unbounded triggerHistory growth
         if (triggerHistory.length >= MAX_TRIGGER_HISTORY) {
-            triggerHistory[triggerHistory.length % MAX_TRIGGER_HISTORY] = TriggerEvent({
+            triggerHistory[triggerHistoryStart] = TriggerEvent({
                 timestamp: block.timestamp,
                 reason: _reason,
                 metricValue: _metricValue,
                 triggeredBy: msg.sender
             });
+            triggerHistoryStart = (triggerHistoryStart + 1) % MAX_TRIGGER_HISTORY;
         } else {
             triggerHistory.push(TriggerEvent({
                 timestamp: block.timestamp,

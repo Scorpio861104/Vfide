@@ -457,7 +457,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), totalOwed);
         vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderReceives);
         if (protocolFee > 0 && feeDistributor != address(0)) {
-            vfideToken.safeTransfer(feeDistributor, protocolFee);
+            _notifyFeeDistributor(protocolFee);
         }
         totalProtocolFees += protocolFee;
         totalLoans++;
@@ -566,7 +566,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), amount);
         vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderReceives);
         if (protocolFee > 0 && feeDistributor != address(0)) {
-            vfideToken.safeTransfer(feeDistributor, protocolFee);
+            _notifyFeeDistributor(protocolFee);
         }
         totalProtocolFees += protocolFee;
 
@@ -797,7 +797,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), remaining);
             vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderGets);
             if (protocolFee > 0 && feeDistributor != address(0)) {
-                vfideToken.safeTransfer(feeDistributor, protocolFee);
+                _notifyFeeDistributor(protocolFee);
             }
             l.amountRepaid += remaining;
         }
@@ -877,7 +877,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), amount);
         vfideToken.safeTransfer(_settlementRecipient(l.lender), lenderGets);
         if (protocolFee > 0 && feeDistributor != address(0)) {
-            vfideToken.safeTransfer(feeDistributor, protocolFee);
+            _notifyFeeDistributor(protocolFee);
         }
 
         // Check if fully repaid via revenue
@@ -901,6 +901,11 @@ contract VFIDETermLoan is ReentrancyGuard {
     function _closeLoan(Loan storage l) internal {
         if (l.borrower != address(0)) activeLoanCount[l.borrower]--;
         activeLoanCount[l.lender]--;
+    }
+
+    function _notifyFeeDistributor(uint256 amount) internal {
+        vfideToken.safeTransfer(feeDistributor, amount);
+        IFeeDistributor(feeDistributor).receiveFee(amount);
     }
 
     function _releaseAllGuarantorCommitments(uint256 id) internal {

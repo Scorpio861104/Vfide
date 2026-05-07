@@ -42,7 +42,11 @@ describe("GovernanceHooks (generated stub)", () => {
     assert.equal(await contract.dao(), signers[4].address);
 
     await assert.rejects(contract.connect(signers[3]).setModules(signers[5].address, signers[6].address, signers[7].address));
-    await contract.connect(signers[0]).setModules(signers[5].address, signers[6].address, signers[7].address);
+    await assert.rejects(contract.connect(signers[0]).setModules(signers[5].address, signers[6].address, signers[7].address));
+    await contract.connect(signers[0]).proposeModules(signers[5].address, signers[6].address, signers[7].address);
+    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
+    await contract.connect(signers[0]).applyModules();
     assert.equal(await contract.ledger(), signers[5].address);
     assert.equal(await contract.seer(), signers[6].address);
     assert.equal(await contract.guardian(), signers[7].address);

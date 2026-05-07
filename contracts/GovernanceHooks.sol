@@ -113,6 +113,15 @@ contract GovernanceHooks is ReentrancyGuard {
         hasPendingModules = false;
     }
 
+    /// @notice Legacy entrypoint retained for ABI compatibility.
+    /// @dev Module changes are timelocked via proposeModules/applyModules.
+    function setModules(address _ledger, address _seer, address _guardian) external {
+        _ledger;
+        _seer;
+        _guardian;
+        revert("GH: use proposeModules/applyModules");
+    }
+
     /// @notice Cancel a pending module change. Either owner or DAO may cancel.
     function cancelModules() external nonReentrant {
         require(msg.sender == owner || msg.sender == dao, "GH: not authorized");

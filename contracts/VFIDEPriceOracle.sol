@@ -114,6 +114,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     /// @notice Historical prices
     mapping(uint256 => PricePoint) public historicalPrices;
     uint256 public pricePointCount;
+    uint256 private historyStartIndex;
 
     struct PricePoint {
         uint256 price;
@@ -422,12 +423,20 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         lastUpdate = block.timestamp;
 
         // Store historical price
-        historicalPrices[pricePointCount] = PricePoint({
+        uint256 writeIndex;
+        if (pricePointCount < MAX_HISTORY) {
+            writeIndex = pricePointCount;
+            pricePointCount++;
+        } else {
+            writeIndex = historyStartIndex;
+            historyStartIndex = (historyStartIndex + 1) % MAX_HISTORY;
+        }
+
+        historicalPrices[writeIndex] = PricePoint({
             price: newPrice,
             timestamp: block.timestamp,
             source: source
         });
-        pricePointCount++;
 
         emit PriceUpdated(newPrice, source, block.timestamp);
     }
@@ -552,7 +561,10 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      */
     function getHistoricalPrice(uint256 index) external view returns (PricePoint memory) {
         require(index < pricePointCount, "Invalid index");
-        return historicalPrices[index];
+        uint256 storageIndex = pricePointCount < MAX_HISTORY
+            ? index
+            : (historyStartIndex + index) % MAX_HISTORY;
+        return historicalPrices[storageIndex];
     }
 
     /**
@@ -565,7 +577,11 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         prices = new PricePoint[](returnCount);
         
         for (uint256 i = 0; i < returnCount; i++) {
-            prices[i] = historicalPrices[pricePointCount - returnCount + i];
+            uint256 relativeIndex = pricePointCount - returnCount + i;
+            uint256 storageIndex = pricePointCount < MAX_HISTORY
+                ? relativeIndex
+                : (historyStartIndex + relativeIndex) % MAX_HISTORY;
+            prices[i] = historicalPrices[storageIndex];
         }
         
         return prices;
