@@ -108,6 +108,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     event BadgeFingerprintUpdated(address indexed vault, bytes32 indexed fingerprint);
     event VaultActivityUpdated(address indexed vault, uint256 timestamp);
     event VaultHubSet(address indexed newVaultHub);
+    event VaultHubChangeQueued(address indexed pendingVaultHub, uint256 executeAfter);
+    event VaultHubChangeCancelled(address indexed pendingVaultHub);
     event BadgeManagerSet(address indexed newBadgeManager);
     event ProofScoreManagerSet(address indexed newProofScoreManager);
     
@@ -123,6 +125,18 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     error PhoneAlreadyTaken();
     error VaultNotFound();
     error ZeroAddress();
+    error ModuleChangeNotReady();
+    error ModuleChangePending();
+    error NoPendingModuleChange();
+
+    uint256 public constant MODULE_CHANGE_DELAY = 48 hours;
+
+    struct PendingVaultHubChange {
+        address vaultHub;
+        uint256 executeAfter;
+    }
+
+    PendingVaultHubChange public pendingVaultHubChange;
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -808,8 +822,33 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     function setVaultHub(address _vaultHub) external onlyOwner {
         if (_vaultHub == address(0)) revert ZeroAddress();
-        vaultHub = IVaultInfrastructure(_vaultHub);
-        emit VaultHubSet(_vaultHub);
+
+        PendingVaultHubChange memory pending = pendingVaultHubChange;
+        if (pending.executeAfter != 0) revert ModuleChangePending();
+
+        pendingVaultHubChange = PendingVaultHubChange({
+            vaultHub: _vaultHub,
+            executeAfter: block.timestamp + MODULE_CHANGE_DELAY
+        });
+        emit VaultHubChangeQueued(_vaultHub, block.timestamp + MODULE_CHANGE_DELAY);
+    }
+
+    function applyVaultHub() external onlyOwner {
+        PendingVaultHubChange memory pending = pendingVaultHubChange;
+        if (pending.executeAfter == 0) revert NoPendingModuleChange();
+        if (block.timestamp < pending.executeAfter) revert ModuleChangeNotReady();
+
+        delete pendingVaultHubChange;
+        vaultHub = IVaultInfrastructure(pending.vaultHub);
+        emit VaultHubSet(pending.vaultHub);
+    }
+
+    function cancelVaultHubChange() external onlyOwner {
+        PendingVaultHubChange memory pending = pendingVaultHubChange;
+        if (pending.executeAfter == 0) revert NoPendingModuleChange();
+
+        delete pendingVaultHubChange;
+        emit VaultHubChangeCancelled(pending.vaultHub);
     }
     
     function setBadgeManager(address _badgeManager) external onlyOwner {

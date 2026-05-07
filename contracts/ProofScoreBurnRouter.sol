@@ -301,8 +301,12 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      */
     function burnsPaused() public view returns (bool) {
         if (token == address(0) || minimumSupplyFloor == 0) return false;
-        uint256 currentSupply = IVFIDEToken(token).totalSupply();
-        return currentSupply <= minimumSupplyFloor;
+        try IVFIDEToken(token).totalSupply() returns (uint256 currentSupply) {
+            return currentSupply <= minimumSupplyFloor;
+        } catch {
+            // Keep read paths resilient if the configured token cannot provide supply data.
+            return false;
+        }
     }
 
     /**
@@ -560,6 +564,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
 
     /// @notice TL-349 FIX: Propose micro-tx fee ceiling change (24h timelock). (#349)
     function setMicroTxFeeCeiling(uint16 _maxBps, uint256 _maxAmount) external onlyOwner nonReentrant {
+        require(_maxBps >= minTotalBps, "BURN: micro ceiling below floor");
         require(_maxBps <= 500, "BURN: micro ceiling too high");
         require(!pendingMicroTxFee.pendingCeiling, "BR: ceiling pending");
         uint64 effectiveAt = uint64(block.timestamp) + SUSTAINABILITY_CHANGE_DELAY;
@@ -666,7 +671,8 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         // Cap fee for low-value payments to avoid punitive costs on daily commerce.
         bool belowTokenCap = microTxMaxAmount > 0 && amount <= microTxMaxAmount;
         bool belowUsdCap = _isWithinMicroTxUsdCap(amount);
-        if ((belowTokenCap || belowUsdCap) && totalBps > microTxFeeCeilingBps) {
+        bool microCapActive = microTxFeeCeilingBps >= minTotalBps;
+        if ((belowTokenCap || belowUsdCap) && microCapActive && totalBps > microTxFeeCeilingBps) {
             totalBps = microTxFeeCeilingBps;
         }
         
@@ -736,7 +742,22 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         }
         
         uint256 totalFees = burnAmount + sanctumAmount + ecosystemAmount;
-        require(totalFees <= amount, "BURN: fees exceed amount");
+        if (totalFees > amount) {
+            uint256 overflow = totalFees - amount;
+
+            if (ecosystemAmount >= overflow) {
+                ecosystemAmount -= overflow;
+            } else if (ecosystemAmount + sanctumAmount >= overflow) {
+                uint256 remaining = overflow - ecosystemAmount;
+                ecosystemAmount = 0;
+                sanctumAmount -= remaining;
+            } else {
+                uint256 remaining = overflow - ecosystemAmount - sanctumAmount;
+                ecosystemAmount = 0;
+                sanctumAmount = 0;
+                burnAmount -= remaining;
+            }
+        }
         
         sanctumSink_ = sanctumSink;
         ecosystemSink_ = ecosystemSink;
@@ -789,7 +810,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @notice Record transfer volume (called by token after transfer)
      * @dev Used for adaptive fee calculations
      */
-    function recordVolume(uint256 amount) external nonReentrant {
+    function recordVolume(uint256 amount) external {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
         dailyVolumeTracked += amount;
@@ -833,7 +854,15 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         volumeMultiplier = getVolumeMultiplier();
         burnsPausedFlag = burnsPaused();
         supplyFloor = minimumSupplyFloor;
-        currentSupply = token != address(0) ? IVFIDEToken(token).totalSupply() : 0;
+        if (token == address(0)) {
+            currentSupply = 0;
+        } else {
+            try IVFIDEToken(token).totalSupply() returns (uint256 supply) {
+                currentSupply = supply;
+            } catch {
+                currentSupply = 0;
+            }
+        }
     }
 
     // ─────────────────────────── View Helpers

@@ -153,6 +153,10 @@ describe("Mainnet readiness contract fixes", { concurrency: 1, timeout: 120000 }
       await payroll.waitForDeployment();
 
       await payroll.connect(dao).setSupportedToken(await token.getAddress(), true);
+      const tokenDelay = await payroll.SUPPORTED_TOKEN_CHANGE_DELAY_PM();
+      await ethers.provider.send("evm_increaseTime", [Number(tokenDelay) + 1]);
+      await ethers.provider.send("evm_mine", []);
+      await payroll.connect(dao).applySupportedToken();
       await token.connect(payer).approve(await payroll.getAddress(), ethers.parseEther("1000"));
 
       await payroll.connect(payer).createStream(payee.address, await token.getAddress(), 10n ** 12n, ethers.parseEther("10"));
@@ -182,6 +186,10 @@ describe("Mainnet readiness contract fixes", { concurrency: 1, timeout: 120000 }
       await payroll.waitForDeployment();
 
       await payroll.connect(dao).setSupportedToken(await token.getAddress(), true);
+      const tokenDelay = await payroll.SUPPORTED_TOKEN_CHANGE_DELAY_PM();
+      await ethers.provider.send("evm_increaseTime", [Number(tokenDelay) + 1]);
+      await ethers.provider.send("evm_mine", []);
+      await payroll.connect(dao).applySupportedToken();
       await token.connect(payer).approve(await payroll.getAddress(), ethers.parseEther("1000"));
 
       await payroll.connect(payer).createStream(payee.address, await token.getAddress(), 10n ** 12n, ethers.parseEther("10"));

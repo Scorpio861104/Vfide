@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from '@jest/globals'
+import { PROOF_SCORE_PERMISSIONS } from '@/lib/constants'
 
 // ============================================
 // MERCHANT HOOKS TESTS
@@ -124,7 +125,7 @@ describe('useMerchantHooks', () => {
 
     it('requires ProofScore >= 5600 for merchant registration', () => {
       const testScores = [5700, 5600, 5599, 5000]
-      const minScore = 5600
+      const minScore = PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT
       
       testScores.forEach((score, i) => {
         const canRegister = score >= minScore

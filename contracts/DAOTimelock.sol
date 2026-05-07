@@ -93,6 +93,7 @@ contract DAOTimelock is ReentrancyGuard {
     function setDelay(uint64 _delay) external onlyTimelockSelf { 
         // C-1 FIX: Enforce minimum and maximum delay to prevent timelock bypass
         require(_delay >= MIN_DELAY, "TL: delay below minimum");
+        require(_delay >= ABSOLUTE_MIN_DELAY, "TL: delay below absolute minimum");
         require(_delay <= MAX_DELAY, "TL: delay above maximum");
         emergencyDelayReduced = false;
         delay=_delay; 
@@ -168,17 +169,21 @@ contract DAOTimelock is ReentrancyGuard {
     }
 
     function execute(bytes32 id) external payable nonReentrant returns(bytes memory res){
-        // H-23: Only admin (DAO) can execute to prevent front-running
-        require(msg.sender == admin, "TL: only admin can execute");
-        
         Op storage op=queue[id];
         if(op.eta==0) revert TL_NotQueued();
         if(op.done)   revert TL_AlreadyExecuted();
+
+        // #208 FIX: Keep admin-only execution by default, but allow permissionless execution
+        // for queued self-admin-rotation calls so the system cannot deadlock if the temporary
+        // bootstrap admin key is lost after queueing DAOTimelock.setAdmin(...).
+        if (msg.sender != admin) {
+            require(_isPermissionlessSelfAdminRotation(op.target, op.data), "TL: only admin can execute");
+        }
         
         // H-15: Check transaction hasn't expired
         require(block.timestamp <= op.eta + EXPIRY_WINDOW, "TL: transaction expired");
 
-        if(address(panicGuard)!=address(0) && panicGuard.globalRisk()){
+        if (_globalRiskSafe()) {
             require(block.timestamp>=op.eta+6 hours,"risk delay");
         } else {
             require(block.timestamp>=op.eta,"too early");
@@ -198,6 +203,31 @@ contract DAOTimelock is ReentrancyGuard {
 
         emit Executed(id); _log("tl_executed");
         return r;
+    }
+
+    function _isPermissionlessSelfAdminRotation(address target, bytes memory data) internal view returns (bool) {
+        if (target != address(this) || data.length < 4) {
+            return false;
+        }
+
+        bytes4 selector;
+        assembly {
+            selector := mload(add(data, 32))
+        }
+
+        return selector == this.setAdmin.selector;
+    }
+
+    function _globalRiskSafe() internal view returns (bool) {
+        if (address(panicGuard) == address(0)) {
+            return false;
+        }
+        try panicGuard.globalRisk() returns (bool risk) {
+            return risk;
+        } catch {
+            // Fail-open if panic guard status call is unavailable; this avoids bricking execute.
+            return false;
+        }
     }
 
     /**
@@ -426,6 +456,7 @@ contract DAOTimelock is ReentrancyGuard {
         require(op.eta > 0, "TL: not queued");
         require(!op.done, "TL: already executed");
         require(block.timestamp > op.eta + EXPIRY_WINDOW, "TL: not expired");
+        uint256 trackedDaoProposalId = daoProposalForTx[oldId];
         
         // Get old data
         address target = op.target;
@@ -434,6 +465,7 @@ contract DAOTimelock is ReentrancyGuard {
         
         // Delete old and remove from tracking array
         delete queue[oldId];
+        delete daoProposalForTx[oldId];
         _removeFromQueuedIds(oldId);
         
         // Create new with fresh ETA and unique nonce
@@ -443,6 +475,9 @@ contract DAOTimelock is ReentrancyGuard {
         require(queue[newId].eta == 0, "TL: already queued");
         
         queue[newId] = Op({target: target, value: value, data: data, eta: eta, done: false});
+        if (trackedDaoProposalId > 0) {
+            daoProposalForTx[newId] = trackedDaoProposalId;
+        }
         queuedIds.push(newId);
         queuedIdIndex[newId] = queuedIds.length; // 1-indexed
         

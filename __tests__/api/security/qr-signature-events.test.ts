@@ -5,9 +5,18 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/middleware', () => ({
-  requireAuth: jest.fn(),
-}));
+jest.mock('@/lib/auth/middleware', () => {
+  const requireAuth = jest.fn();
+  return {
+    requireAuth,
+    withAuth: (handler: (request: NextRequest, user: unknown) => unknown) => async (request: NextRequest, ...rest: unknown[]) => {
+      const authResult = await requireAuth(request);
+      if (!authResult?.user) return authResult;
+      return handler(request, authResult.user, ...rest);
+    },
+    isAdmin: jest.fn(() => false),
+  };
+});
 
 describe('/api/security/qr-signature-events', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
@@ -16,7 +25,7 @@ describe('/api/security/qr-signature-events', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
-    requireAuth.mockResolvedValue({ user: { address: '0x1234567890123456789012345678901234567890' } });
+    requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111' } });
   });
 
   it('accepts valid telemetry payload', async () => {

@@ -31,6 +31,17 @@
     "type": "constructor"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "expiredAt",
+        "type": "uint256"
+      }
+    ],
+    "name": "OCP_ActionExpired",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "OCP_ActionNotQueued",
     "type": "error"
@@ -49,6 +60,16 @@
   {
     "inputs": [],
     "name": "OCP_CooldownActive",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OCP_DeprecatedVaultFreeze",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OCP_DeprecatedView",
     "type": "error"
   },
   {
@@ -73,7 +94,17 @@
   },
   {
     "inputs": [],
+    "name": "OCP_OwnershipTransferExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "OCP_PanicGuardNotSet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "OCP_RecoveryDisabled",
     "type": "error"
   },
   {
@@ -507,6 +538,19 @@
   },
   {
     "inputs": [],
+    "name": "GOVERNANCE_ACTION_EXPIRY",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_ALLOWED_AUTOSWAP_SLIPPAGE_BPS",
     "outputs": [
       {
@@ -789,6 +833,13 @@
   },
   {
     "inputs": [],
+    "name": "emergency_confirmPauseAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "emergency_pauseAll",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -861,21 +912,21 @@
     "outputs": [
       {
         "internalType": "bool",
-        "name": "tokenHealthy",
+        "name": "",
         "type": "bool"
       },
       {
         "internalType": "bool",
-        "name": "vaultHealthy",
+        "name": "",
         "type": "bool"
       },
       {
         "internalType": "string",
-        "name": "status",
+        "name": "",
         "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1194,6 +1245,19 @@
   },
   {
     "inputs": [],
+    "name": "ownershipTransferDeadline",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "panicGuard",
     "outputs": [
       {
@@ -1427,59 +1491,101 @@
     "type": "function"
   },
   {
-    "inputs": [
+    "inputs": [],
+    "name": "system_getStatus",
+    "outputs": [
       {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
-    "name": "sustainability_setTokenReference",
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token_applyAntiWhale",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
-    "name": "system_getStatus",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "allHoweySafe",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "autoSwapEnabled",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "tokenCircuitBreaker",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "tokenVaultOnly",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "tokenPolicyLocked",
-        "type": "bool"
-      },
-      {
-        "internalType": "string",
-        "name": "healthStatus",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "token_applyEcosystemDistributor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token_applyEmergencyBreaker",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token_applyFraudRegistry",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "token_applyModules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token_applySinks",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "token_applyVaultOnlyDisable",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "addr",
+        "type": "address"
+      }
+    ],
+    "name": "token_applyWhaleLimitExempt",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1637,6 +1743,45 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "distributor",
+        "type": "address"
+      }
+    ],
+    "name": "token_setEcosystemDistributor",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "breaker",
+        "type": "address"
+      }
+    ],
+    "name": "token_setEmergencyBreaker",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "registry",
+        "type": "address"
+      }
+    ],
+    "name": "token_setFraudRegistry",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "hub",
         "type": "address"
       },
@@ -1652,6 +1797,19 @@
       }
     ],
     "name": "token_setModules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seerAutonomous",
+        "type": "address"
+      }
+    ],
+    "name": "token_setSeerAutonomous",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1771,6 +1929,34 @@
       }
     ],
     "name": "vault_freezeVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "duration",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint8",
+        "name": "severity",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "reason",
+        "type": "string"
+      }
+    ],
+    "name": "vault_reportRisk",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

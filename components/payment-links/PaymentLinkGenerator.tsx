@@ -1,16 +1,30 @@
 'use client';
 import { useState } from 'react';
 import { Link2, Copy, Check, MessageCircle } from 'lucide-react';
+import { isAddress } from 'viem';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import { safeWindowOpen } from '@/lib/security/urlValidation';
 
-export function PaymentLinkGenerator({ merchantSlug, merchantName }: { merchantSlug: string; merchantName: string; }) {
+export function PaymentLinkGenerator({
+  merchantSlug,
+  merchantName,
+  merchantAddress,
+}: {
+  merchantSlug: string;
+  merchantName: string;
+  merchantAddress?: string | null;
+}) {
   const { formatCurrency } = useLocale();
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [copied, setCopied] = useState(false);
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://vfide.io';
-  const link = amount ? `${baseUrl}/pay/${merchantSlug}?amount=${amount}${description ? `&desc=${encodeURIComponent(description)}` : ''}` : '';
+  const normalizedMerchantAddress = merchantAddress && isAddress(merchantAddress) ? merchantAddress : null;
+  const link = amount
+    ? normalizedMerchantAddress
+      ? `${baseUrl}/pay?to=${encodeURIComponent(normalizedMerchantAddress)}&amount=${amount}&source=link${description ? `&desc=${encodeURIComponent(description)}` : ''}`
+      : `${baseUrl}/store/${encodeURIComponent(merchantSlug)}?amount=${amount}${description ? `&desc=${encodeURIComponent(description)}` : ''}`
+    : '';
   const copy = () => { navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   const whatsapp = () => safeWindowOpen(`https://wa.me/?text=${encodeURIComponent(`Pay ${merchantName} ${formatCurrency(parseFloat(amount))}: ${link}`)}`, {
     allowRelative: false,

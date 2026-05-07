@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, DollarSign, QrCode, ShoppingBag, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useTranslation } from '@/lib/locale/useTranslation';
+import { logger } from '@/lib/logger';
 
 interface TrainingModule {
   id: string;
@@ -82,11 +83,69 @@ export default function MerchantTraining({ onComplete, onSkip }: MerchantTrainin
   const { t } = useTranslation();
   const [completed, setCompleted] = useState<string[]>([]);
   const [quickStep, setQuickStep] = useState(0);
+  const [syncReady, setSyncReady] = useState(false);
   const progress = useMemo(() => (completed.length / MODULES.length) * 100, [completed]);
   const quickProgress = useMemo(() => ((quickStep + 1) / QUICKSTART_STEPS.length) * 100, [quickStep]);
 
+  const persistProgress = useCallback(async (nextCompleted: string[], nextQuickStep: number) => {
+    try {
+      await fetch('/api/merchant/training', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          completed_modules: nextCompleted,
+          quick_step: nextQuickStep,
+        }),
+      });
+    } catch (error) {
+      logger.warn('[MerchantTraining] Failed to persist training progress', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        const response = await fetch('/api/merchant/training');
+        if (!response.ok) {
+          setSyncReady(true);
+          return;
+        }
+        const data = await response.json();
+        const completedModules = Array.isArray(data?.progress?.completed_modules)
+          ? data.progress.completed_modules.filter((id: unknown) => typeof id === 'string')
+          : [];
+        const fetchedQuickStep = Number.isFinite(Number(data?.progress?.quick_step))
+          ? Number(data.progress.quick_step)
+          : 0;
+
+        if (mounted) {
+          setCompleted(completedModules);
+          setQuickStep(Math.max(0, Math.min(fetchedQuickStep, QUICKSTART_STEPS.length - 1)));
+        }
+      } catch (error) {
+        logger.warn('[MerchantTraining] Failed to load training progress', error);
+      } finally {
+        if (mounted) {
+          setSyncReady(true);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const toggleComplete = (id: string) => {
-    setCompleted((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+    setCompleted((current) => {
+      const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+      if (syncReady) {
+        void persistProgress(next, quickStep);
+      }
+      return next;
+    });
   };
 
   const handleNext = () => {
@@ -94,11 +153,23 @@ export default function MerchantTraining({ onComplete, onSkip }: MerchantTrainin
       onComplete?.();
       return;
     }
-    setQuickStep((current) => Math.min(current + 1, QUICKSTART_STEPS.length - 1));
+    setQuickStep((current) => {
+      const next = Math.min(current + 1, QUICKSTART_STEPS.length - 1);
+      if (syncReady) {
+        void persistProgress(completed, next);
+      }
+      return next;
+    });
   };
 
   const handleBack = () => {
-    setQuickStep((current) => Math.max(current - 1, 0));
+    setQuickStep((current) => {
+      const next = Math.max(current - 1, 0);
+      if (syncReady) {
+        void persistProgress(completed, next);
+      }
+      return next;
+    });
   };
 
   const step = QUICKSTART_STEPS[Math.min(quickStep, QUICKSTART_STEPS.length - 1)]!;

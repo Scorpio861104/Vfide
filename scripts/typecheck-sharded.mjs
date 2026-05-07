@@ -36,6 +36,18 @@ const commonIncludes = [
   'app/components/**/*.tsx',
 ];
 
+function readChunkSize(envName, fallback) {
+  const raw = process.env[envName];
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+// Keep defaults conservative to avoid OOM in constrained CI/devcontainer environments.
+const APP_CHUNK_SIZE = readChunkSize('TYPECHECK_APP_CHUNK_SIZE', 6);
+const COMPONENTS_CHUNK_SIZE = readChunkSize('TYPECHECK_COMPONENTS_CHUNK_SIZE', 8);
+const LIB_CHUNK_SIZE = readChunkSize('TYPECHECK_LIB_CHUNK_SIZE', 8);
+
 function chunk(values, size) {
   const groups = [];
   for (let index = 0; index < values.length; index += size) {
@@ -71,7 +83,7 @@ function absolutizePattern(pattern) {
 const shards = [];
 
 const appDirectories = listChildDirectories('app').filter((entry) => entry !== 'components');
-const appChunks = chunk(appDirectories, 12);
+const appChunks = chunk(appDirectories, APP_CHUNK_SIZE);
 appChunks.forEach((entries, index) => {
   const includes = [...commonIncludes, ...directoryGlobs('app', entries)];
   if (index === 0) {
@@ -85,7 +97,7 @@ appChunks.forEach((entries, index) => {
 });
 
 const componentDirectories = listChildDirectories('components');
-const componentChunks = chunk(componentDirectories, 16);
+const componentChunks = chunk(componentDirectories, COMPONENTS_CHUNK_SIZE);
 componentChunks.forEach((entries, index) => {
   const includes = [...commonIncludes, ...directoryGlobs('components', entries)];
   if (index === 0) {
@@ -99,7 +111,7 @@ componentChunks.forEach((entries, index) => {
 });
 
 const libDirectories = listChildDirectories('lib');
-const libChunks = chunk(libDirectories, 16);
+const libChunks = chunk(libDirectories, LIB_CHUNK_SIZE);
 libChunks.forEach((entries, index) => {
   const includes = [...commonIncludes, ...directoryGlobs('lib', entries)];
   if (index === 0) {

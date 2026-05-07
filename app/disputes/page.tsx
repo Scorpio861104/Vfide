@@ -11,6 +11,9 @@ import { LazyPeerMediation as PeerMediation } from '@/lib/lazy';
 
 interface ReturnPreview {
   id: string;
+  customer_address?: string;
+  reason?: string | null;
+  refund_amount?: string | null;
   status?: string;
   type?: string;
 }
@@ -72,17 +75,31 @@ export default function DisputesPage() {
     [merchantCases]
   );
 
-  const mediationPreview = useMemo(() => ({
-    id: merchantCases[0]?.id ?? 'preview-case',
-    buyerAddress: '0x7a12...42ef',
-    merchantAddress: address ?? '0x1fd0...90ab',
-    amount: '250',
-    reason: merchantCases[0]?.type ?? 'Return correction pending review',
-    status: awaitingReview > 0 ? 'open' as const : merchantCases.length > 0 ? 'mediating' as const : 'open' as const,
-    mediatorName: awaitingReview > 0 ? 'Market elder queue' : 'Escalation desk',
-    proposedResolution: resolvedCases > 0 ? 'Offer a partial refund or exchange before escalating to a DAO vote.' : undefined,
-    proposedSplit: resolvedCases > 0 ? { buyerPercent: 60, merchantPercent: 40 } : undefined,
-  }), [address, awaitingReview, merchantCases, resolvedCases]);
+  const mediationPreview = useMemo(() => {
+    if (!address || merchantCases.length === 0) {
+      return undefined;
+    }
+
+    const primaryCase = merchantCases[0];
+    const normalizedStatus = String(primaryCase?.status ?? '').toLowerCase();
+    const status = normalizedStatus === 'resolved' || normalizedStatus === 'completed'
+      ? 'resolved'
+      : normalizedStatus === 'escalated' || normalizedStatus === 'disputed'
+        ? 'escalated'
+        : normalizedStatus === 'pending' || normalizedStatus === 'requested'
+          ? 'open'
+          : 'mediating';
+
+    return {
+      id: primaryCase?.id ?? '',
+      buyerAddress: primaryCase?.customer_address || '',
+      merchantAddress: address,
+      amount: primaryCase?.refund_amount || '0',
+      reason: primaryCase?.reason || primaryCase?.type || 'Return correction pending review',
+      status,
+      mediatorName: awaitingReview > 0 ? 'Market elder queue' : undefined,
+    } as const;
+  }, [address, awaitingReview, merchantCases]);
 
   return (
     <>

@@ -72,6 +72,14 @@ async function main() {
 
   const token = await ethers.getContractAt("VFIDEToken", tokenAddr);
 
+  const exemptEntries = EXEMPT_SCHEDULE
+    .map((name) => {
+      const envKey = `NEXT_PUBLIC_${name.toUpperCase().replace(/VFIDE/g, "VFIDE_")}_ADDRESS`;
+      const addr = book[name] ?? process.env[envKey];
+      return { name, addr };
+    })
+    .filter((entry): entry is { name: (typeof EXEMPT_SCHEDULE)[number]; addr: string } => !!entry.addr);
+
   async function assertEmergencyControllerUnset(name: string, addr?: string) {
     if (!addr || addr === ethers.ZeroAddress) return;
 
@@ -137,42 +145,56 @@ async function main() {
   //  the next one (if any remain).
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ System Exemption Queue ═══");
-
-  // Determine which exemptions have already been confirmed by checking whether
-  // we can confirm the pending one.  We do this by trying confirmSystemExempt:
-  // - If it succeeds → we just confirmed the current pending entry; propose next.
-  // - If it reverts  → either not ready yet (48h not elapsed) or nothing pending.
-  let confirmedIndex = -1;
-  for (let i = 0; i < EXEMPT_SCHEDULE.length; i++) {
+  let confirmedThisRun: { name: string; addr: string } | null = null;
+  const pendingExemptAddr = String(await token.pendingExemptAddr());
+  const pendingExemptAt = await token.pendingExemptAt();
+  if (pendingExemptAt !== 0n) {
     try {
       await token.confirmSystemExempt();
-      confirmedIndex = i;
-      console.log(`  ✅ ${EXEMPT_SCHEDULE[i]} systemExempt confirmed`);
-      break;
+      const matched = exemptEntries.find((entry) => entry.addr.toLowerCase() === pendingExemptAddr.toLowerCase());
+      confirmedThisRun = {
+        name: matched?.name ?? "unknown",
+        addr: pendingExemptAddr,
+      };
+      console.log(`  ✅ ${confirmedThisRun.name} systemExempt confirmed (${pendingExemptAddr})`);
     } catch (e: any) {
-      // Not ready or not pending; check the next slot only if we haven't
-      // confirmed anything yet (i.e., keep trying until one succeeds).
-      if (i === EXEMPT_SCHEDULE.length - 1) {
-        console.log(`  ⏭  confirmSystemExempt: ${e.reason ?? e.message?.slice(0, 80)}`);
+      console.log(`  ⏭  confirmSystemExempt: ${e.reason ?? e.message?.slice(0, 80)}`);
+    }
+  } else {
+    console.log("  ⏭  No pending system-exempt proposal to confirm");
+  }
+
+  if (confirmedThisRun?.name === "VFIDEFlashLoan") {
+    const flashAddr = book.VFIDEFlashLoan ?? process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS;
+    if (flashAddr) {
+      const flash = await ethers.getContractAt("VFIDEFlashLoan", flashAddr);
+      const daoAddr = String(await flash.dao());
+      if (daoAddr.toLowerCase() === deployer.address.toLowerCase()) {
+        await call("VFIDEFlashLoan.confirmSystemExempt", () => flash.confirmSystemExempt());
+      } else {
+        console.log(
+          `  ⚠  VFIDEFlashLoan.dao is ${daoAddr}; current signer is not DAO. ` +
+          "Confirm flash-loan initialization from the DAO-controlled signer after exemption confirmation."
+        );
       }
     }
   }
 
-  // Propose the next exemption in the schedule
-  const nextIndex = confirmedIndex + 1;
-  if (nextIndex < EXEMPT_SCHEDULE.length) {
-    const nextName = EXEMPT_SCHEDULE[nextIndex];
-    if (nextName) {
-      const nextEnvKey = `NEXT_PUBLIC_${nextName.toUpperCase().replace(/VFIDE/g, "VFIDE_")}_ADDRESS`;
-      const nextAddr = book[nextName] ?? process.env[nextEnvKey];
-      if (nextAddr) {
-        await call(`Token.proposeSystemExempt(${nextName}) — round ${nextIndex + 1}`, () =>
-          token.proposeSystemExempt(nextAddr, true),
-        );
-        console.log(`  ⏳ Wait 48h, then re-run apply-full.ts to confirm ${nextName}`);
-      } else {
-        console.log(`  ⚠  Address for ${nextName} not in deployment book — set it and re-run`);
-      }
+  const statuses = await Promise.all(
+    exemptEntries.map(async (entry) => ({
+      ...entry,
+      confirmed: await token.systemExempt(entry.addr),
+    })),
+  );
+
+  const pendingAfterConfirm = await token.pendingExemptAt();
+  if (pendingAfterConfirm === 0n) {
+    const nextPending = statuses.find((entry) => !entry.confirmed);
+    if (nextPending) {
+      await call(`Token.proposeSystemExempt(${nextPending.name})`, () =>
+        token.proposeSystemExempt(nextPending.addr, true),
+      );
+      console.log(`  ⏳ Wait 48h, then re-run apply-full.ts to confirm ${nextPending.name}`);
     }
   }
 
@@ -191,7 +213,7 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   //  Summary
   // ══════════════════════════════════════════════════════════════════════════
-  const allDone = nextIndex >= EXEMPT_SCHEDULE.length && confirmedIndex >= 0;
+  const allDone = statuses.length > 0 && statuses.every((entry) => entry.confirmed);
 
   if (allDone) {
     console.log("\n╔══════════════════════════════════════════════════════════════╗");
@@ -208,7 +230,7 @@ async function main() {
     console.log("║    4. Run SystemHandover after 6 months to burn dev keys     ║");
     console.log("╚══════════════════════════════════════════════════════════════╝\n");
   } else {
-    const remaining = EXEMPT_SCHEDULE.length - (confirmedIndex + 1);
+    const remaining = statuses.filter((entry) => !entry.confirmed).length;
     console.log(`\n⏳ ${remaining} exemption round(s) remaining. Re-run apply-full.ts in 48h.\n`);
   }
 }

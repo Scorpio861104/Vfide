@@ -532,8 +532,11 @@ contract SeerGuardian is ReentrancyGuard {
 
         uint16 score = seer.getScore(proposer);
         
-        // Flag proposals from low-trust users
-        if (score < seer.minForGovernance() + 1000) {
+        // #509 FIX: Use absolute floor (500) rather than settable minForGovernance to prevent
+        // DAO from raising the threshold to flag everyone.
+        uint16 ABSOLUTE_FLAG_FLOOR = 500;
+        // Flag proposals from very-low-trust users only
+        if (score < ABSOLUTE_FLAG_FLOOR) {
             // Score is barely above governance threshold - flag for extra scrutiny
             if (!proposalFlagged[proposalId]) {
                 proposalFlagged[proposalId] = true;

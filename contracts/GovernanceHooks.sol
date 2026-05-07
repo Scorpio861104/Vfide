@@ -103,11 +103,14 @@ contract GovernanceHooks is ReentrancyGuard {
     function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO nonReentrant {
         _log("gh_queued");
         
-        // Check if Seer has flagged this proposal
+        // #470 FIX: Wrap SeerGuardian check in try/catch so a failing guardian cannot brick DAO execution.
         if (address(guardian) != address(0)) {
-            (bool blocked, string memory reason) = guardian.isProposalBlocked(id);
-            if (blocked) {
-                revert GH_ProposalBlocked(reason);
+            try guardian.isProposalBlocked(id) returns (bool blocked, string memory reason) {
+                if (blocked) {
+                    revert GH_ProposalBlocked(reason);
+                }
+            } catch {
+                emit ProposalAutoChecked(id, address(0), false); // guardian unavailable; allow through
             }
         }
     }
@@ -119,11 +122,16 @@ contract GovernanceHooks is ReentrancyGuard {
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO nonReentrant {
         _log("gh_vote");
         
-        // Check if voter is restricted by SeerGuardian
+        // #471 FIX: Wrap guardian check in try/catch so guardian failure doesn't block all votes.
         if (address(guardian) != address(0)) {
-            if (!guardian.canParticipateInGovernance(voter)) {
-                emit VoterRestricted(voter, "governance_banned");
-                revert GH_VoterRestricted();
+            try guardian.canParticipateInGovernance(voter) returns (bool allowed) {
+                if (!allowed) {
+                    emit VoterRestricted(voter, "governance_banned");
+                    revert GH_VoterRestricted();
+                }
+            } catch {
+                // guardian unavailable — allow vote through, log it
+                emit VoterRestricted(voter, "guardian_unavailable");
             }
         }
         

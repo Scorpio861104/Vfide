@@ -32,6 +32,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
     event ModulesSet(address dao, address ledger, address vfideToken);
     event ModulesChangeQueued(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
     event ModulesChangeCancelled(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
+    event ModulesChangeExpired(address indexed pendingDAO, address indexed pendingLedger, address indexed pendingVfideToken);
     event ReceivedVFIDE(uint256 amount, address from);
     event Sent(address indexed token, address to, uint256 amount, string reason);
     event NotifierChangeQueued(address indexed notifier, bool authorized, uint64 effectiveAt);
@@ -41,6 +42,8 @@ contract EcoTreasuryVault is ReentrancyGuard {
     address public pendingDAO;
     address public pendingLedger;
     address public pendingVfideToken;
+    uint64 public pendingModulesExpireAt;
+    uint64 public constant MODULE_ACCEPT_WINDOW = 7 days;
     IProofLedger public ledger;
     IERC20 public vfideToken;
     
@@ -65,6 +68,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
         pendingDAO = _dao;
         pendingLedger = _ledger;
         pendingVfideToken = _vfide;
+        pendingModulesExpireAt = uint64(block.timestamp) + MODULE_ACCEPT_WINDOW;
         emit ModulesChangeQueued(_dao, _ledger, _vfide);
         _log("treasury_modules_queued");
     }
@@ -72,6 +76,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
     function acceptDAO() external {
         require(msg.sender == pendingDAO, "FI: not pending DAO");
         require(pendingLedger != address(0) && pendingVfideToken != address(0), "FI: pending modules missing");
+        require(pendingModulesExpireAt != 0 && block.timestamp <= pendingModulesExpireAt, "FI: pending modules expired");
 
         dao = pendingDAO;
         ledger = IProofLedger(pendingLedger);
@@ -82,6 +87,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
         pendingDAO = address(0);
         pendingLedger = address(0);
         pendingVfideToken = address(0);
+        pendingModulesExpireAt = 0;
         _log("treasury_dao_accepted");
     }
 
@@ -91,7 +97,19 @@ contract EcoTreasuryVault is ReentrancyGuard {
         pendingDAO = address(0);
         pendingLedger = address(0);
         pendingVfideToken = address(0);
+        pendingModulesExpireAt = 0;
         _log("treasury_modules_cancelled");
+    }
+
+    function clearExpiredModules() external {
+        require(pendingDAO != address(0), "FI: no pending modules");
+        require(pendingModulesExpireAt != 0 && block.timestamp > pendingModulesExpireAt, "FI: pending modules active");
+        emit ModulesChangeExpired(pendingDAO, pendingLedger, pendingVfideToken);
+        pendingDAO = address(0);
+        pendingLedger = address(0);
+        pendingVfideToken = address(0);
+        pendingModulesExpireAt = 0;
+        _log("treasury_modules_expired");
     }
 
     mapping(address => bool) public authorizedNotifiers;

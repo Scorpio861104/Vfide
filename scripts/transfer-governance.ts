@@ -27,6 +27,7 @@ async function main() {
     burnRouter: process.env.NEXT_PUBLIC_BURN_ROUTER_ADDRESS!,
     dao: process.env.NEXT_PUBLIC_DAO_ADDRESS!,
     timelock: process.env.NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS!,
+    secondaryExecutor: process.env.NEXT_PUBLIC_DAO_TIMELOCK_SECONDARY_EXECUTOR_ADDRESS || process.env.DAO_TIMELOCK_SECONDARY_EXECUTOR_ADDRESS || "",
     feeDistributor: process.env.NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS!,
     fraudRegistry: process.env.NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS!,
     merchantPortal: process.env.NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS!,
@@ -67,6 +68,7 @@ async function main() {
     process.env.ALLOW_COMMINGLED_FEE_DESTINATIONS === "true";
   const requireSystemHandover = process.env.REQUIRE_SYSTEM_HANDOVER !== "false";
   const finalizeOwnershipTransfer = process.env.FINALIZE_OWNERSHIP_TRANSFER === "true";
+  const autoExecuteTimelock = process.env.AUTO_EXECUTE_TIMELOCK === "true";
 
   for (const [name, addr] of Object.entries(addrs)) {
     if (!addr && ![
@@ -77,6 +79,7 @@ async function main() {
       "merchantPool",
       "headhunterPool",
       "systemHandover",
+      "secondaryExecutor",
       "termLoan",
       "payrollManager",
       "liquidityIncentives",
@@ -308,27 +311,126 @@ async function main() {
   const timelock = await ethers.getContractAt("DAOTimelock", addrs.timelock);
   const dao = await ethers.getContractAt("DAO", addrs.dao);
 
+  async function findQueuedTxId(target: string, value: bigint, data: string): Promise<string | null> {
+    try {
+      const [ids] = await timelock.getQueuedTransactions();
+      for (const id of ids) {
+        const op = await timelock.queue(id);
+        if (
+          !op.done &&
+          op.target.toLowerCase() === target.toLowerCase() &&
+          op.value === value &&
+          op.data === data
+        ) {
+          return id;
+        }
+      }
+    } catch {}
+    return null;
+  }
+
+  async function extractQueuedTxIdFromReceipt(tx: any): Promise<string | null> {
+    try {
+      const receipt = await tx.wait();
+      const queuedEvent = receipt?.logs?.find((log: any) => {
+        try {
+          return timelock.interface.parseLog(log)?.name === "Queued";
+        } catch {
+          return false;
+        }
+      });
+      if (!queuedEvent) return null;
+      const parsed = timelock.interface.parseLog(queuedEvent);
+      const id = parsed?.args?.id;
+      return id ? String(id) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function queueOrLocateTimelockTx(label: string, target: string, value: bigint, data: string): Promise<string | null> {
+    try {
+      const tx = await timelock.queueTx(target, value, data);
+      const txIdFromEvent = await extractQueuedTxIdFromReceipt(tx);
+      if (txIdFromEvent) {
+        console.log(`  ✅ ${label} queued as ${txIdFromEvent}`);
+        return txIdFromEvent;
+      }
+      const locatedId = await findQueuedTxId(target, value, data);
+      if (locatedId) {
+        console.log(`  ✅ ${label} queued (located as ${locatedId})`);
+        return locatedId;
+      }
+      console.log(`  ⚠️  ${label} queued but tx id could not be resolved from receipt/state`);
+      return null;
+    } catch (e: any) {
+      const existingId = await findQueuedTxId(target, value, data);
+      if (existingId) {
+        console.log(`  ✅ ${label} already queued as ${existingId}`);
+        return existingId;
+      }
+      console.log(`  ⏭️  queueTx(${label}):`, e.reason || e.message);
+      return null;
+    }
+  }
+
+  async function maybeExecuteTimelockTx(label: string, txId: string | null) {
+    if (!autoExecuteTimelock || !txId) return;
+    try {
+      const status = await timelock.getTransactionStatus(txId);
+      if (!status.executable) {
+        console.log(`  ⏭️  ${label} not executable yet (ETA pending or expired)`);
+        return;
+      }
+      await timelock.execute(txId);
+      console.log(`  ✅ ${label} executed`);
+    } catch (e: any) {
+      console.log(`  ⏭️  execute(${label}):`, e.reason || e.message);
+    }
+  }
+
   if (addrs.councilElection) {
     const setCouncilData = dao.interface.encodeFunctionData("setCouncilElection", [addrs.councilElection]);
     const syncQuorumData = dao.interface.encodeFunctionData("syncQuorumToCouncil", []);
 
-    try {
-      const setCouncilTxId = await timelock.queueTx(addrs.dao, 0, setCouncilData);
-      console.log("  ✅ DAO.setCouncilElection(CouncilElection) queued");
+    const setCouncilTxId = await queueOrLocateTimelockTx("DAO.setCouncilElection(CouncilElection)", addrs.dao, 0n, setCouncilData);
+    if (setCouncilTxId) {
       console.log(`     Execute after delay: timelock.execute(${setCouncilTxId})`);
-    } catch (e: any) {
-      console.log("  ⏭️  queueTx(setCouncilElection):", e.reason || e.message);
     }
+    await maybeExecuteTimelockTx("DAO.setCouncilElection(CouncilElection)", setCouncilTxId);
 
-    try {
-      const syncQuorumTxId = await timelock.queueTx(addrs.dao, 0, syncQuorumData);
-      console.log("  ✅ DAO.syncQuorumToCouncil() queued");
+    const syncQuorumTxId = await queueOrLocateTimelockTx("DAO.syncQuorumToCouncil()", addrs.dao, 0n, syncQuorumData);
+    if (syncQuorumTxId) {
       console.log(`     Execute after delay: timelock.execute(${syncQuorumTxId})`);
-    } catch (e: any) {
-      console.log("  ⏭️  queueTx(syncQuorumToCouncil):", e.reason || e.message);
     }
+    await maybeExecuteTimelockTx("DAO.syncQuorumToCouncil()", syncQuorumTxId);
   } else {
     console.log("  ⚠️  CouncilElection not provided — DAO council/quorum sync not queued");
+  }
+
+  if (addrs.secondaryExecutor) {
+    try {
+      const [ok, reason] = await timelock.canRotateSecondaryExecutor(addrs.secondaryExecutor);
+      if (!ok) {
+        console.log(`  ⏭️  Skipping secondary executor queue: ${reason}`);
+      } else {
+        const setSecondaryData = timelock.interface.encodeFunctionData("setSecondaryExecutor", [addrs.secondaryExecutor]);
+        const setSecondaryTxId = await queueOrLocateTimelockTx(
+          "DAOTimelock.setSecondaryExecutor(secondary)",
+          addrs.timelock,
+          0n,
+          setSecondaryData,
+        );
+        if (setSecondaryTxId) {
+          console.log(`     Execute after delay: timelock.execute(${setSecondaryTxId})`);
+        }
+        await maybeExecuteTimelockTx("DAOTimelock.setSecondaryExecutor(secondary)", setSecondaryTxId);
+      }
+    } catch (e: any) {
+      console.log("  ⏭️  canRotateSecondaryExecutor preflight:", e.reason || e.message);
+    }
+  } else {
+    console.log("  ⚠️  Secondary executor address not set — set NEXT_PUBLIC_DAO_TIMELOCK_SECONDARY_EXECUTOR_ADDRESS to queue backup executor");
   }
 
   // ══════════════════════════════════════════════
@@ -338,13 +440,11 @@ async function main() {
   console.log("\n═══ 5. DAOTimelock Admin → DAO ═══");
 
   const setAdminData = timelock.interface.encodeFunctionData("setAdmin", [addrs.dao]);
-  try {
-    const _txId = await timelock.queueTx(addrs.timelock, 0, setAdminData);
-    console.log("  ✅ DAOTimelock.setAdmin(DAO) queued — wait for delay then execute");
-    console.log("     Execute after delay: timelock.execute(txId)");
-  } catch (e: any) {
-    console.log("  ⏭️  queueTx(setAdmin):", e.reason || e.message);
+  const setAdminTxId = await queueOrLocateTimelockTx("DAOTimelock.setAdmin(DAO)", addrs.timelock, 0n, setAdminData);
+  if (setAdminTxId) {
+    console.log(`     Execute after delay: timelock.execute(${setAdminTxId})`);
   }
+  await maybeExecuteTimelockTx("DAOTimelock.setAdmin(DAO)", setAdminTxId);
 
   // ══════════════════════════════════════════════
   //  6. OWNERSHIP TRANSFERS → ADMIN MULTISIG
@@ -517,6 +617,20 @@ async function main() {
   console.log("\n═══ 7. FeeDistributor Destinations ═══");
 
   const feeDist = await ethers.getContractAt("FeeDistributor", addrs.feeDistributor);
+  const feeAdminRole = ethers.id("ADMIN_ROLE");
+  let deployerCanSetFeeDestinations = false;
+  try {
+    deployerCanSetFeeDestinations = await feeDist.hasRole(feeAdminRole, deployer.address);
+  } catch (e: any) {
+    console.log("  ⏭️  FeeDistributor admin-role precheck unavailable:", e.reason || e.message);
+  }
+
+  if (!deployerCanSetFeeDestinations) {
+    console.log(
+      "  ⚠️  Deployer lacks FeeDistributor ADMIN_ROLE; skipping setDestination writes in this run. " +
+      "Run destination updates with an authorized signer before role renounce/finalization."
+    );
+  }
 
   const daoPayrollDestination = addrs.daoPayrollPool || addrs.ecosystemVault || deployer.address;
   const merchantPoolDestination = addrs.merchantPool || addrs.ecosystemVault || deployer.address;
@@ -544,12 +658,14 @@ async function main() {
     ["headhunterPool", headhunterPoolDestination],
   ];
 
-  for (const [name, addr] of destinations) {
-    try {
-      await feeDist.setDestination(name, addr);
-      console.log(`  ✅ FeeDistributor.${name} → ${addr.slice(0, 10)}...`);
-    } catch (e: any) {
-      console.log(`  ⏭️  setDestination(${name}): ${e.reason || e.message}`);
+  if (deployerCanSetFeeDestinations) {
+    for (const [name, addr] of destinations) {
+      try {
+        await feeDist.setDestination(name, addr);
+        console.log(`  ✅ FeeDistributor.${name} → ${addr.slice(0, 10)}...`);
+      } catch (e: any) {
+        console.log(`  ⏭️  setDestination(${name}): ${e.reason || e.message}`);
+      }
     }
   }
 
@@ -574,6 +690,9 @@ async function main() {
   }
 
   console.log("\n═══ SUMMARY ═══");
+  if (autoExecuteTimelock) {
+    console.log("AUTO_EXECUTE_TIMELOCK=true: attempted execution of all ripe queued timelock txs.");
+  }
   console.log("Wait 48h then run apply scripts to confirm:");
   console.log("  - token.applyTreasurySink()");
   console.log("  - token.applySanctumSink()");

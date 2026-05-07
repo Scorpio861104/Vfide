@@ -1,8 +1,15 @@
+import { isAddress } from 'viem';
+
 export function isNFCSupported(): boolean {
   return typeof window !== 'undefined' && 'NDEFReader' in window;
 }
 
-export async function writePaymentNFC(merchantSlug: string, amount: number, currency: string): Promise<{ success: boolean; error?: string }> {
+export async function writePaymentNFC(
+  merchantSlug: string,
+  amount: number,
+  currency: string,
+  merchantAddress?: string | null,
+): Promise<{ success: boolean; error?: string }> {
   if (!isNFCSupported()) {
     return { success: false, error: 'NFC not supported on this device' };
   }
@@ -10,7 +17,10 @@ export async function writePaymentNFC(merchantSlug: string, amount: number, curr
   try {
     const Reader = (window as unknown as { NDEFReader: new () => { write: (message: { records: { recordType: string; data: string }[] }) => Promise<void> } }).NDEFReader;
     const ndef = new Reader();
-    const paymentUrl = `${window.location.origin}/pay/${merchantSlug}?amount=${amount}&currency=${currency}`;
+    const normalizedMerchantAddress = merchantAddress && isAddress(merchantAddress) ? merchantAddress : null;
+    const paymentUrl = normalizedMerchantAddress
+      ? `${window.location.origin}/pay?to=${encodeURIComponent(normalizedMerchantAddress)}&amount=${amount}&currency=${encodeURIComponent(currency)}&source=nfc`
+      : `${window.location.origin}/store/${encodeURIComponent(merchantSlug)}?amount=${amount}&currency=${encodeURIComponent(currency)}&source=nfc`;
     await ndef.write({ records: [{ recordType: 'url', data: paymentUrl }] });
     return { success: true };
   } catch (error) {

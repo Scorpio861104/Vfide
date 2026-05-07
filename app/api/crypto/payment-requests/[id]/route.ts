@@ -112,7 +112,11 @@ export const GET = withAuth(async (request: NextRequest, user: JWTPayload, conte
     }
 
     const result = await query(
-      `SELECT * FROM payment_requests WHERE id = $1`,
+      `SELECT pr.*, sender.wallet_address AS from_wallet_address, recipient.wallet_address AS to_wallet_address
+       FROM payment_requests pr
+       LEFT JOIN users sender ON sender.id = pr.from_user_id
+       LEFT JOIN users recipient ON recipient.id = pr.to_user_id
+       WHERE pr.id = $1`,
       [id]
     );
 
@@ -230,7 +234,7 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
     // Without a tx_hash, the transition is rejected.
     // With a tx_hash, we verify the transaction succeeded on-chain.
     // If verification is unavailable, fail closed.
-    let normalizedStatus = body.status;
+    const normalizedStatus = body.status;
     if (normalizedStatus === 'completed') {
       if (!normalizedTxHash) {
         return NextResponse.json(

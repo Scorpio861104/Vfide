@@ -141,7 +141,9 @@ async function runOnChainOwnershipChecks(): Promise<CheckResult> {
     for (const check of checks) {
       try {
         const c = new Contract(addr, check.abi, provider);
-        const value = String(await c[check.kind]()).toLowerCase();
+        const viewFn = (c as Record<string, (() => Promise<unknown>) | undefined>)[check.kind];
+        if (typeof viewFn !== 'function') continue;
+        const value = String(await viewFn()).toLowerCase();
         if (value === deployerLc) {
           leftovers.push(`${name} (${addr}) -> ${check.kind} still deployer`);
         }

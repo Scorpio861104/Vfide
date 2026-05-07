@@ -333,7 +333,7 @@ describe('JWT Authentication', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
       const extracted = extractToken(token);
       
-      expect(extracted).toBe(token);
+      expect(extracted).toBeNull();
     });
 
     it('returns null for missing authorization header', () => {

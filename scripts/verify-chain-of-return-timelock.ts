@@ -55,7 +55,6 @@ async function main() {
     ownerAddress,
     ownerAddress,
     ownerAddress,
-    '0x0000000000000000000000000000000000000000',
     '0x0000000000000000000000000000000000000000'
   )) as any;
   await vaultA.waitForDeployment();

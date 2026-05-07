@@ -64,6 +64,14 @@ contract BadgeManager {
     /// @notice Founding member counter (first 1,000 to reach 800+)
     uint32 public foundingMemberCount;
     uint32 public constant MAX_FOUNDING_MEMBERS = 1_000;
+
+    mapping(address => bool) public pendingOperatorStatus;
+    mapping(address => uint256) public pendingOperatorAt;
+    uint256 public constant OPERATOR_CHANGE_DELAY = 24 hours;
+
+    address public pendingQualificationRules;
+    uint256 public pendingQualificationRulesAt;
+    uint256 public constant QUALIFICATION_RULES_DELAY = 48 hours;
     
     // ════════════════════════════════════════════════════════════════════════
     //                              EVENTS
@@ -73,8 +81,10 @@ contract BadgeManager {
     event BadgeRevoked(address indexed user, bytes32 indexed badge, string reason);
     event BadgeRenewed(address indexed user, bytes32 indexed badge, uint256 newExpiry);
     event OperatorSet(address indexed operator, bool authorized);
+    event OperatorChangeProposed(address indexed operator, bool authorized, uint256 effectiveAt);
     event StatsUpdated(address indexed user, string metric, uint32 newValue);
     event QualificationRulesSet(address indexed oldRules, address indexed newRules);
+    event QualificationRulesChangeProposed(address indexed newRules, uint256 effectiveAt);
     
     // ════════════════════════════════════════════════════════════════════════
     //                              ERRORS
@@ -85,6 +95,8 @@ contract BadgeManager {
     error BM_Zero();
     error BM_InvalidBadge();
     error BM_ReentrantCall();
+    error BM_NotPending();
+    error BM_Timelocked(uint256 effectiveAt);
     
     // ════════════════════════════════════════════════════════════════════════
     //                           MODIFIERS
@@ -141,7 +153,19 @@ contract BadgeManager {
     
     function setOperator(address operator, bool authorized) external onlyDAO nonReentrantBM {
         if (operator == address(0)) revert BM_Zero();
+        pendingOperatorStatus[operator] = authorized;
+        pendingOperatorAt[operator] = block.timestamp + OPERATOR_CHANGE_DELAY;
+        emit OperatorChangeProposed(operator, authorized, pendingOperatorAt[operator]);
+    }
+
+    function applyOperator(address operator) external onlyDAO nonReentrantBM {
+        uint256 effectiveAt = pendingOperatorAt[operator];
+        if (effectiveAt == 0) revert BM_NotPending();
+        if (block.timestamp < effectiveAt) revert BM_Timelocked(effectiveAt);
+
+        bool authorized = pendingOperatorStatus[operator];
         operators[operator] = authorized;
+        pendingOperatorAt[operator] = 0;
         emit OperatorSet(operator, authorized);
     }
 
@@ -158,8 +182,21 @@ contract BadgeManager {
 
     function setQualificationRules(address newRules) external onlyDAO nonReentrantBM {
         if (newRules == address(0)) revert BM_Zero();
+        pendingQualificationRules = newRules;
+        pendingQualificationRulesAt = block.timestamp + QUALIFICATION_RULES_DELAY;
+        emit QualificationRulesChangeProposed(newRules, pendingQualificationRulesAt);
+    }
+
+    function applyQualificationRules() external onlyDAO nonReentrantBM {
+        uint256 effectiveAt = pendingQualificationRulesAt;
+        if (effectiveAt == 0) revert BM_NotPending();
+        if (block.timestamp < effectiveAt) revert BM_Timelocked(effectiveAt);
+
+        address newRules = pendingQualificationRules;
         address oldRules = address(qualificationRules);
         qualificationRules = IBadgeQualificationRules(newRules);
+        pendingQualificationRules = address(0);
+        pendingQualificationRulesAt = 0;
         emit QualificationRulesSet(oldRules, newRules);
     }
     
@@ -200,27 +237,39 @@ contract BadgeManager {
             emit BadgeEarned(user, badge, expiry, scoreBoost);
         } catch {}
     }
-    
-    /**
-     * @notice Revoke a badge from a user and penalize ProofScore
-     * @param user The user address
-     * @param badge The badge ID
-     * @param reason Reason for revocation
-     */
+
+    // #497 FIX: badge revocation has a 7-day notice period before score penalty fires.
+    uint64 public constant REVOKE_NOTICE_DELAY = 7 days;
+    mapping(address => mapping(bytes32 => uint64)) public pendingRevocationAt;
+    event BadgeRevocationQueued(address indexed user, bytes32 indexed badge, uint64 effectiveAt, string reason);
+    event BadgeRevocationCancelled(address indexed user, bytes32 indexed badge);
+
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     function revokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
         if (!seer.hasBadge(user, badge)) return;
-        
-        // Revoke badge in Seer
+        require(pendingRevocationAt[user][badge] == 0, "BM: revocation already queued");
+        uint64 effectiveAt = uint64(block.timestamp) + REVOKE_NOTICE_DELAY;
+        pendingRevocationAt[user][badge] = effectiveAt;
+        emit BadgeRevocationQueued(user, badge, effectiveAt, reason);
+    }
+
+    function applyRevokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
+        require(pendingRevocationAt[user][badge] != 0 && block.timestamp >= pendingRevocationAt[user][badge], "BM: notice period");
+        delete pendingRevocationAt[user][badge];
+        if (!seer.hasBadge(user, badge)) return;
         try seer.setBadge(user, badge, false, 0) {
-            // Penalize ProofScore by badge weight
             uint16 scorePenalty = BadgeRegistry.getRecommendedWeight(badge);
             if (scorePenalty > 0) {
                 try seer.punish(user, scorePenalty, reason) {} catch {}
             }
-
             emit BadgeRevoked(user, badge, reason);
         } catch {}
+    }
+
+    function cancelRevokeBadge(address user, bytes32 badge) external onlyDAO nonReentrantBM {
+        require(pendingRevocationAt[user][badge] != 0, "BM: no pending revocation");
+        delete pendingRevocationAt[user][badge];
+        emit BadgeRevocationCancelled(user, badge);
     }
     
     /**

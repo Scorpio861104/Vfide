@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach, Mock } from '@jest/globals'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
+import { PROOF_SCORE_PERMISSIONS } from '@/lib/constants'
 
 // Mock all hooks and dependencies before importing components
 jest.mock('@/lib/vfide-hooks', () => ({
@@ -181,7 +182,7 @@ describe('MerchantDashboard', () => {
 
       render(<MerchantDashboard />)
 
-      expect(screen.getByText(/5,600/)).toBeInTheDocument()
+      expect(screen.getByText(new RegExp(PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT.toLocaleString()))).toBeInTheDocument()
       expect(screen.getByText(/Current:/)).toBeInTheDocument()
     })
 

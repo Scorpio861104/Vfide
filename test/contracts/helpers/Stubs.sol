@@ -105,6 +105,51 @@ contract ExemptableMintableTokenStub is MintableTokenStub {
     }
 }
 
+/// @dev Mintable token that charges a transfer fee in transferFrom to simulate fee-on-transfer behavior.
+contract FeeOnTransferMintableTokenStub {
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+    uint256 public immutable feeBps;
+
+    constructor(uint256 feeBps_) {
+        feeBps = feeBps_;
+    }
+
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+    }
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        allowance[from][msg.sender] -= amount;
+        balanceOf[from] -= amount;
+
+        uint256 fee = (amount * feeBps) / 10_000;
+        uint256 received = amount - fee;
+        balanceOf[to] += received;
+
+        return true;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        return true;
+    }
+
+    function setSystemExempt(address, bool) external {
+        // No-op: intentionally returns success to satisfy flash-loan setup expectations.
+    }
+
+    function systemExempt(address) external pure returns (bool) {
+        return true;
+    }
+}
+
 /// @dev Minimal contract stub — satisfies extcodesize > 0 + IPresaleStart interface.
 contract SaleStartStub {
     uint256 public saleStartTime;

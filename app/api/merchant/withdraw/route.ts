@@ -137,8 +137,9 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       return NextResponse.json({ error: 'Merchant profile required before requesting withdrawal' }, { status: 403 });
     }
 
-    // #138 fix: verify the merchant has sufficient confirmed balance before creating the withdrawal row.
-    // Sum confirmed (non-pending, non-failed) credits minus pending/completed withdrawals.
+    // #138/#137 fix: verify the merchant has sufficient confirmed balance before creating the withdrawal row.
+    // Reserve against requested/in-flight/completed withdrawals to prevent over-commitment while the
+    // off-ramp provider flow is still awaiting user completion.
     const balanceResult = await query<{ net_balance: string }>(
       `SELECT (
          COALESCE((
@@ -153,7 +154,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
              FROM merchant_withdrawals
             WHERE merchant_address = $1
               AND token = $2
-              AND status IN ('pending', 'processing', 'completed')
+              AND status IN ('requested', 'pending', 'processing', 'completed')
          ), 0)
        )::text AS net_balance`,
       [authAddress, token]
@@ -173,7 +174,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
     const insertResult = await query(
       `INSERT INTO merchant_withdrawals
          (merchant_address, amount, token, provider, mobile_number_hint, network, status, provider_tx_id, metadata)
-       VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8::jsonb)
+       VALUES ($1, $2, $3, $4, $5, $6, 'requested', $7, $8::jsonb)
        RETURNING id, merchant_address, amount::text AS amount, token, provider,
                  mobile_number_hint, network, status, provider_tx_id, created_at, completed_at`,
       [
@@ -192,7 +193,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       success: true,
       request: insertResult.rows[0],
       redirectUrl,
-      instructions: 'Continue with the provider to complete settlement into your selected mobile-money or bank rail.',
+      instructions: 'Withdrawal request created. Continue with the provider to initiate settlement into your selected mobile-money or bank rail.',
     });
   } catch (error) {
     logger.error('[Merchant Withdraw POST] Error:', error);

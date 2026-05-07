@@ -37,6 +37,29 @@ describe('/api/merchant/orders webhook hardening', () => {
   const mockMerchant = '0x1111111111111111111111111111111111111111';
   const mockCustomer = '0x2222222222222222222222222222222222222222';
 
+  function makeClient(options?: { inventoryCount?: number | null; inventoryTracking?: boolean }) {
+    const inventoryCount = options?.inventoryCount ?? 5;
+    const inventoryTracking = options?.inventoryTracking ?? true;
+
+    return {
+      query: jest.fn(async (sql: string) => {
+        if (sql === 'BEGIN' || sql === 'COMMIT' || sql === 'ROLLBACK') {
+          return {};
+        }
+        if (sql.includes('inventory_tracking') && sql.includes('inventory_count') && sql.includes('FOR UPDATE')) {
+          return { rows: [{ inventory_tracking: inventoryTracking, inventory_count: inventoryCount }] };
+        }
+        if (sql.includes('INSERT INTO merchant_orders')) {
+          return {
+            rows: [{ id: 123, order_number: 'ORD-20260422-ABC123', status: 'pending', payment_status: 'unpaid' }],
+          };
+        }
+        return {};
+      }),
+      release: jest.fn(),
+    };
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
@@ -46,19 +69,7 @@ describe('/api/merchant/orders webhook hardening', () => {
       rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
     });
 
-    const client = {
-      query: jest
-        .fn()
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({
-          rows: [{ id: 123, order_number: 'ORD-20260422-ABC123', status: 'pending', payment_status: 'unpaid' }],
-        })
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({}),
-      release: jest.fn(),
-    };
-
-    getClient.mockResolvedValue(client);
+    getClient.mockResolvedValue(makeClient());
   });
 
   it('does not emit payment.completed when creating unpaid order', async () => {
@@ -86,18 +97,7 @@ describe('/api/merchant/orders webhook hardening', () => {
   });
 
   it('does not emit payment.completed even when tx_hash is present at order creation', async () => {
-    const client = {
-      query: jest
-        .fn()
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({
-          rows: [{ id: 124, order_number: 'ORD-20260422-DEF456', status: 'pending', payment_status: 'unpaid' }],
-        })
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({}),
-      release: jest.fn(),
-    };
-    getClient.mockResolvedValue(client);
+    getClient.mockResolvedValue(makeClient());
     query.mockResolvedValueOnce({
       rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
     });
@@ -120,6 +120,35 @@ describe('/api/merchant/orders webhook hardening', () => {
 
     const response = await POST(request);
     expect(response.status).toBe(201);
+    expect(dispatchWebhook).not.toHaveBeenCalled();
+  });
+
+  it('rejects order creation when tracked inventory is insufficient', async () => {
+    getClient.mockResolvedValue(makeClient({ inventoryCount: 0 }));
+    query.mockResolvedValueOnce({
+      rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
+    });
+
+    const request = new NextRequest('http://localhost:3000/api/merchant/orders', {
+      method: 'POST',
+      body: JSON.stringify({
+        merchant_address: mockMerchant,
+        items: [
+          {
+            product_id: 11,
+            name: 'Test Product',
+            quantity: 1,
+            unit_price: 25,
+          },
+        ],
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(data.error).toMatch(/Insufficient inventory/i);
     expect(dispatchWebhook).not.toHaveBeenCalled();
   });
 

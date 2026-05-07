@@ -3,7 +3,7 @@ import { describe, it, expect } from '@jest/globals';
 
 describe('testnet faucet config bounds', () => {
   it('keeps explicit max bounds and validation guards for claim and cap setters', () => {
-    const source = fs.readFileSync('contracts/VFIDETestnetFaucet.sol', 'utf-8');
+    const source = fs.readFileSync('contracts/testnet/VFIDETestnetFaucet.sol', 'utf-8');
 
     expect(source).toContain('error Faucet_InvalidConfig();');
     expect(source).toContain('MAX_CLAIM_AMOUNT_VFIDE');

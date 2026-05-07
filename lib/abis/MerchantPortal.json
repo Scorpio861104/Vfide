@@ -52,6 +52,11 @@
   },
   {
     "inputs": [],
+    "name": "MERCH_Deprecated",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MERCH_EscrowRequired",
     "type": "error"
   },
@@ -68,6 +73,11 @@
   {
     "inputs": [],
     "name": "MERCH_IntentRecipientMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MERCH_InvalidChannel",
     "type": "error"
   },
   {
@@ -1014,22 +1024,22 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "customer",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "merchant",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "token",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "desiredNetAmount",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -1037,26 +1047,26 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "grossAmount",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "totalFee",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "protocolFee",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "networkFee",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1097,13 +1107,13 @@
     "inputs": [
       {
         "internalType": "bytes32",
-        "name": "refundId",
+        "name": "",
         "type": "bytes32"
       }
     ],
     "name": "completeRefundFromVault",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1229,7 +1239,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "merchant",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1237,21 +1247,21 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "refundCount",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "refundVolume",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "refundRate",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {

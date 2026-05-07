@@ -10,6 +10,7 @@ import {
   useIsMerchant,
   useRegisterMerchant,
   useSetAutoConvert,
+  useGetAutoConvert,
   useSetPayoutAddress,
   useProofScore,
 } from '@/lib/vfide-hooks'
@@ -18,6 +19,7 @@ import { Store, DollarSign, Settings, Zap, Shield, CheckCircle2, Sparkles } from
 import { isAddress } from 'viem'
 import { useTransactionSounds } from '@/hooks/useTransactionSounds'
 import { useEffect } from 'react'
+import { PROOF_SCORE_PERMISSIONS } from '@/lib/constants'
 
 // Animated counter component
 function AnimatedCounter({ value, className }: { value: number; className?: string }) {
@@ -33,19 +35,60 @@ function AnimatedCounter({ value, className }: { value: number; className?: stri
 }
 
 export function MerchantDashboard() {
+  const merchantMinScore = PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT
   const { address } = useAccount()
   const merchantInfo = useIsMerchant(address)
   const { registerMerchant, isRegistering, isSuccess: registrationSuccess } = useRegisterMerchant()
   const { setAutoConvert, isSetting: isSettingConvert, isSuccess: convertSuccess } = useSetAutoConvert()
+  const { autoConvertEnabled, refetch: refetchAutoConvert } = useGetAutoConvert(address)
   const { setPayoutAddress, isSetting: isSettingPayout, isSuccess: payoutSuccess } = useSetPayoutAddress()
   const { score, canMerchant } = useProofScore(address)
   
   const [businessName, setBusinessName] = useState('')
   const [category, setCategory] = useState('retail')
-  const [autoConvertEnabled, setAutoConvertEnabled] = useState(false)
   const [customPayout, setCustomPayout] = useState('')
   const [showCelebration, setShowCelebration] = useState(false)
+  const [isPendingConvertToggle, setIsPendingConvertToggle] = useState(false)
   const { playSuccess, playNotification, playError: _playError } = useTransactionSounds()
+
+  // #142 FIX: keep off-chain merchant profile in sync after successful on-chain registration.
+  useEffect(() => {
+    if (!registrationSuccess || !address || !businessName.trim()) return
+
+    const payload = {
+      display_name: businessName.trim(),
+      category,
+      slug: businessName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60),
+    }
+
+    void (async () => {
+      try {
+        const createRes = await fetch('/api/merchant/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        // Profile may already exist from quick setup or prior onboarding.
+        if (createRes.status === 409) {
+          await fetch('/api/merchant/profile', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ display_name: payload.display_name }),
+          })
+        }
+      } catch {
+        // Best-effort sync only; do not block successful on-chain registration UX.
+      }
+    })()
+  }, [registrationSuccess, address, businessName, category])
+
+  // Refetch auto-convert state after transaction confirms
+  useEffect(() => {
+    if (convertSuccess) {
+      refetchAutoConvert()
+    }
+  }, [convertSuccess, refetchAutoConvert])
 
   const categories = [
     'retail', 'services', 'digital_goods', 'food_beverage', 
@@ -131,12 +174,12 @@ export function MerchantDashboard() {
           <h3 className="font-bold text-lg mb-4">Requirements</h3>
           <div className="space-y-3">
             <motion.div 
-              className={`flex items-center gap-3 ${score >= 5600 ? 'text-green-400' : 'text-red-400'}`}
+              className={`flex items-center gap-3 ${score >= merchantMinScore ? 'text-green-400' : 'text-red-400'}`}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              {score >= 5600 ? (
+              {score >= merchantMinScore ? (
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -147,7 +190,7 @@ export function MerchantDashboard() {
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               )}
-              <span>ProofScore ≥ 5,600 (Current: <AnimatedCounter value={score} />)</span>
+              <span>ProofScore ≥ {merchantMinScore.toLocaleString()} (Current: <AnimatedCounter value={score} />)</span>
             </motion.div>
             {!canMerchant && (
               <motion.div 
@@ -381,7 +424,6 @@ export function MerchantDashboard() {
             <motion.button
               onClick={() => {
                 setAutoConvert(!autoConvertEnabled)
-                setAutoConvertEnabled(!autoConvertEnabled)
                 playNotification()
               }}
               disabled={isSettingConvert}

@@ -30,6 +30,10 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     
     /// @notice Base URI for token metadata
     string private _baseTokenURI;
+
+    string public pendingBaseTokenURI;
+    uint256 public pendingBaseTokenURIAt;
+    uint256 public constant BASE_URI_DELAY = 24 hours;
     
     /// @notice Counter for unique token IDs
     uint256 private _nextTokenId;
@@ -71,6 +75,9 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         uint256 indexed tokenId,
         bytes32 indexed badge
     );
+
+    event BaseURIUpdateProposed(string newBaseURI, uint256 effectiveAt);
+    event BaseURIUpdated(string oldBaseURI, string newBaseURI);
     
     /// @notice ERC-5192: Emitted when token is locked (soulbound)
     event Locked(uint256 tokenId);
@@ -237,8 +244,28 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     /**
      * @notice Set base URI for metadata (only owner/DAO)
      */
-    function setBaseURI(string memory baseURI) external onlyOwner {
-        _baseTokenURI = baseURI;
+    function setBaseURI(string memory newBaseURI) external onlyOwner {
+        pendingBaseTokenURI = newBaseURI;
+        pendingBaseTokenURIAt = block.timestamp + BASE_URI_DELAY;
+        emit BaseURIUpdateProposed(newBaseURI, pendingBaseTokenURIAt);
+    }
+
+    function applyBaseURI() external onlyOwner {
+        require(pendingBaseTokenURIAt > 0, "BADGE: no pending base URI");
+        require(block.timestamp >= pendingBaseTokenURIAt, "BADGE: base URI timelocked");
+
+        string memory oldBaseURI = _baseTokenURI;
+        string memory newBaseURI = pendingBaseTokenURI;
+
+        _baseTokenURI = newBaseURI;
+        pendingBaseTokenURI = "";
+        pendingBaseTokenURIAt = 0;
+
+        emit BaseURIUpdated(oldBaseURI, newBaseURI);
+    }
+
+    function baseURI() external view returns (string memory) {
+        return _baseTokenURI;
     }
     
     /**

@@ -260,6 +260,48 @@ describe("CardBoundVault (Fix 2)", () => {
     assert.equal(await ethers.provider.getBalance(recipient.address), recipientBalanceBefore + amount);
   });
 
+  it("applies native rescue to contract recipients without fixed-gas stipend failures", async () => {
+    const { ethers } = (await getConnection()) as any;
+    const [hub, admin, wallet, guardian] = await ethers.getSigners();
+
+    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const token = await Token.deploy();
+    await token.waitForDeployment();
+
+    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const vault = await Vault.deploy(
+      hub.address,
+      await token.getAddress(),
+      admin.address,
+      wallet.address,
+      [guardian.address],
+      1,
+      ethers.parseEther("100"),
+      ethers.parseEther("300"),
+      ethers.ZeroAddress,
+    );
+    await vault.waitForDeployment();
+
+    const Consumer = await ethers.getContractFactory("NativeGasConsumer");
+    const consumer = await Consumer.deploy();
+    await consumer.waitForDeployment();
+
+    const amount = ethers.parseEther("1");
+    await admin.sendTransaction({ to: await vault.getAddress(), value: amount });
+
+    await vault.connect(admin).rescueNative(await consumer.getAddress(), amount);
+    const pending = await vault.pendingNativeRescue();
+    const latest = await ethers.provider.getBlock("latest");
+    const wait = Number((pending.executeAfter - BigInt(latest.timestamp)) + 1n);
+    await ethers.provider.send("evm_increaseTime", [wait]);
+    await ethers.provider.send("evm_mine", []);
+
+    await vault.connect(admin).applyRescueNative();
+
+    assert.equal(await consumer.receives(), 1n);
+    assert.equal(await ethers.provider.getBalance(await vault.getAddress()), 0n);
+  });
+
   it("timelocks non-VFIDE ERC20 rescue requests", async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, recipient] = await ethers.getSigners();

@@ -1,4 +1,4 @@
-import { ContractFactory, JsonRpcProvider } from 'ethers';
+import { ContractFactory, FetchRequest, JsonRpcProvider } from 'ethers';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -7,7 +7,41 @@ function loadArtifact(relativePath: string) {
   return JSON.parse(readFileSync(filePath, 'utf8')) as {
     abi: any[];
     bytecode: string;
+    linkReferences?: Record<string, Record<string, Array<{ start: number; length: number }>>>;
   };
+}
+
+function linkBytecode(
+  bytecode: string,
+  linkReferences: Record<string, Record<string, Array<{ start: number; length: number }>>> | undefined,
+  libraries: Record<string, string>
+) {
+  if (!linkReferences) {
+    return bytecode;
+  }
+
+  let linkedBytecode = bytecode.startsWith('0x') ? bytecode.slice(2) : bytecode;
+
+  for (const [, fileReferences] of Object.entries(linkReferences)) {
+    for (const [libraryName, references] of Object.entries(fileReferences)) {
+      const address = libraries[libraryName];
+      if (!address) {
+        throw new Error(`Missing linked library address for ${libraryName}`);
+      }
+
+      const normalizedAddress = address.toLowerCase().replace(/^0x/, '');
+      for (const { start, length } of references) {
+        const startIndex = start * 2;
+        const endIndex = startIndex + length * 2;
+        linkedBytecode =
+          linkedBytecode.slice(0, startIndex) +
+          normalizedAddress +
+          linkedBytecode.slice(endIndex);
+      }
+    }
+  }
+
+  return `0x${linkedBytecode}`;
 }
 
 async function expectRevert(action: () => Promise<any>) {
@@ -21,7 +55,9 @@ async function expectRevert(action: () => Promise<any>) {
 
 async function main() {
   const rpcUrl = process.env.RPC_URL ?? 'http://127.0.0.1:8545';
-  const provider = new JsonRpcProvider(rpcUrl);
+  const request = new FetchRequest(rpcUrl);
+  request.timeout = 180_000;
+  const provider = new JsonRpcProvider(request);
 
   const owner = await provider.getSigner(0);
   const merchant = await provider.getSigner(1);
@@ -41,6 +77,12 @@ async function main() {
   const tokenArtifact = loadArtifact(
     'artifacts/contracts/mocks/EcosystemWorkRewardsVerifierMocks.sol/MockTokenForEcosystem.json'
   );
+  const vaultHubArtifact = loadArtifact(
+    'artifacts/contracts/mocks/EcosystemWorkRewardsVerifierMocks.sol/MockVaultHubForEcosystem.json'
+  );
+  const vaultLibArtifact = loadArtifact(
+    'artifacts/contracts/EcosystemVaultLib.sol/EcosystemVaultLib.json'
+  );
   const vaultArtifact = loadArtifact('artifacts/contracts/EcosystemVault.sol/EcosystemVault.json');
 
   const seerFactory = new ContractFactory(seerArtifact.abi as any, seerArtifact.bytecode, owner);
@@ -51,7 +93,26 @@ async function main() {
   const token = (await tokenFactory.deploy()) as any;
   await token.waitForDeployment();
 
-  const vaultFactory = new ContractFactory(vaultArtifact.abi as any, vaultArtifact.bytecode, owner);
+  const vaultHubFactory = new ContractFactory(
+    vaultHubArtifact.abi as any,
+    vaultHubArtifact.bytecode,
+    owner
+  );
+  const vaultHub = (await vaultHubFactory.deploy()) as any;
+  await vaultHub.waitForDeployment();
+
+  const vaultLibFactory = new ContractFactory(
+    vaultLibArtifact.abi as any,
+    vaultLibArtifact.bytecode,
+    owner
+  );
+  const vaultLib = (await vaultLibFactory.deploy()) as any;
+  await vaultLib.waitForDeployment();
+
+  const linkedVaultBytecode = linkBytecode(vaultArtifact.bytecode, vaultArtifact.linkReferences, {
+    EcosystemVaultLib: await vaultLib.getAddress(),
+  });
+  const vaultFactory = new ContractFactory(vaultArtifact.abi as any, linkedVaultBytecode, owner);
   const vault = (await vaultFactory.deploy(
     await token.getAddress(),
     await seer.getAddress(),
@@ -61,6 +122,13 @@ async function main() {
 
   const one = 1_000_000_000_000_000_000n;
   await (await token.mint(await vault.getAddress(), 1_000n * one)).wait();
+  await (await token.mint(ownerAddress, 10n * one)).wait();
+  await (await vault.configureAutoSwap('0x0000000000000000000000000000000000000000', await token.getAddress(), false, 0)).wait();
+  await (await vault.setReferralVaultHub(await vaultHub.getAddress())).wait();
+  await (await token.approve(await vault.getAddress(), 10n * one)).wait();
+  await (await vault.depositStablecoinReserve(await token.getAddress(), 10n * one)).wait();
+  await (await vaultHub.setVault(userAddress, userAddress)).wait();
+  await (await token.mint(userAddress, 25n * one)).wait();
 
   await (await vault.allocateIncoming()).wait();
 
@@ -68,7 +136,7 @@ async function main() {
   const initialHeadhunterPool = await vault.headhunterPool();
   const initialOperationsPool = await vault.operationsPool();
 
-  await (await vault.payExpense(expenseRecipientAddress, 200n * one, 'ops_expense')).wait();
+  await (await vault.payExpense(expenseRecipientAddress, 50n * one, 'ops_expense')).wait();
 
   const merchantAfterExpense = await vault.merchantPool();
   const headhunterAfterExpense = await vault.headhunterPool();
@@ -81,13 +149,13 @@ async function main() {
     throw new Error('payExpense must not debit merchant/headhunter pools');
   }
 
-  if (operationsAfterExpense !== initialOperationsPool - 200n * one) {
+  if (operationsAfterExpense !== initialOperationsPool - 50n * one) {
     throw new Error('payExpense did not debit operations pool by expected amount');
   }
 
   const expensesTotal = await vault.totalExpensesPaid();
-  if (expensesTotal !== 200n * one) {
-    throw new Error(`Expected totalExpensesPaid=200e18, got ${expensesTotal}`);
+  if (expensesTotal !== 50n * one) {
+    throw new Error(`Expected totalExpensesPaid=50e18, got ${expensesTotal}`);
   }
 
   await expectRevert(() =>
@@ -128,29 +196,29 @@ async function main() {
     );
   }
 
-  const pending = (await vault.getPendingReferral(userAddress)) as readonly [
-    string,
-    string,
-    boolean,
-  ];
-  if (pending[2] !== true) {
+  const pendingReferrer = await vault.pendingUserReferrer(userAddress);
+  if (pendingReferrer !== referrerAddress) {
+    throw new Error(`Expected pendingUserReferrer to remain ${referrerAddress}, got ${pendingReferrer}`);
+  }
+
+  const credited = await vault.referralCredited(userAddress);
+  if (credited !== true) {
     throw new Error('Expected referral to be marked credited');
   }
 
-  const health = (await vault.getVaultHealth()) as readonly [
-    bigint,
-    bigint,
-    bigint,
-    bigint,
-    bigint,
-    bigint,
-  ];
-  if (health[1] < health[2]) {
+  const totalReceived = await vault.totalReceived();
+  const totalOut =
+    (await vault.totalCouncilPaid()) +
+    (await vault.totalMerchantBonusPaid()) +
+    (await vault.totalHeadhunterPaid()) +
+    (await vault.totalExpensesPaid()) +
+    (await vault.totalBurned());
+  if (totalReceived < totalOut) {
     throw new Error('Vault health invariant violated: totalIn must be >= totalOut');
   }
 
-  const pools = (await vault.getPoolBalances()) as readonly [bigint, bigint, bigint, bigint];
-  if (pools[3] === 0n) {
+  const vaultBalance = await token.balanceOf(await vault.getAddress());
+  if (vaultBalance === 0n) {
     throw new Error('Expected non-zero vault balance after invariant flow');
   }
 

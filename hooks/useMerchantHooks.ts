@@ -488,6 +488,33 @@ export function useCustomerTrustScore(customerAddress?: `0x${string}`) {
 }
 
 /**
+ * Read current auto-convert state for merchant (reads from public mapping)
+ */
+export function useGetAutoConvert(merchantAddress?: `0x${string}`) {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const { address: connectedAddress } = useAccount()
+  const targetAddress = merchantAddress || connectedAddress
+  const isAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
+
+  const { data: autoConvertEnabled, isLoading, refetch } = useReadContract({
+    address: CONTRACT_ADDRESSES.MerchantPortal,
+    abi: MerchantPortalABI,
+    functionName: 'autoConvert',
+    args: targetAddress ? [targetAddress] : undefined,
+    query: {
+      enabled: !!targetAddress && isAvailable,
+    }
+  })
+
+  return {
+    autoConvertEnabled: !!autoConvertEnabled,
+    isLoading,
+    refetch,
+    isAvailable,
+  }
+}
+
+/**
  * Enable/disable auto-conversion to stablecoins (STABLE-PAY)
  */
 export function useSetAutoConvert() {

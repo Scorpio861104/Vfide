@@ -748,19 +748,6 @@
   },
   {
     "inputs": [],
-    "name": "MIN_VERIFIER_VOTES_NO_GUARDIAN",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MODULE_CHANGE_DELAY",
     "outputs": [
       {
@@ -788,19 +775,6 @@
   {
     "inputs": [],
     "name": "VERIFIER_CHANGE_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "VERIFIER_ONLY_CHALLENGE_PERIOD",
     "outputs": [
       {
         "internalType": "uint64",

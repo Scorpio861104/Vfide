@@ -287,6 +287,8 @@ contract PanicGuard {
     event Quarantined(address indexed vault, uint64 untilTs, string reason, uint8 severity);
     event Cleared(address indexed vault, string reason);
     event GlobalRiskSet(bool on, string reason);
+    event GlobalRiskQueued(bool on, string reason, uint64 effectiveAt);
+    event GlobalRiskCancelled();
     event PolicySet(uint64 minDuration, uint64 maxDuration);
 
     address public dao;
@@ -295,6 +297,10 @@ contract PanicGuard {
     address public pendingHub;
     uint64 public pendingHubAt;
     uint64 public constant HUB_CHANGE_DELAY = 24 hours;
+    // #429 FIX: Timelock pending global-risk request
+    bool public pendingGlobalRiskOn;
+    uint64 public pendingGlobalRiskAt;
+    uint64 public constant GLOBAL_RISK_DELAY = 24 hours;
     // per-vault quarantine until timestamp (0 = not quarantined)
     mapping(address => uint64) public quarantineUntil;
     mapping(address => uint64) public selfPanicUntil;
@@ -455,10 +461,37 @@ contract PanicGuard {
     }
 
     function setGlobalRisk(bool on, string calldata reason) external onlyDAO {
-        globalRisk = on;
-        emit GlobalRiskSet(on, reason);
-        _log(string(abi.encodePacked("panic_global_", on ? "on" : "off")));
-        _logEv(address(this), "panic_global", on ? 1 : 0, reason);
+        // #429 FIX: Propose global risk change; requires 24h delay before taking effect.
+        // Turning OFF (clearing risk) is allowed immediately for safety.
+        if (!on) {
+            globalRisk = false;
+            delete pendingGlobalRiskAt;
+            emit GlobalRiskSet(false, reason);
+            _log("panic_global_off");
+            _logEv(address(this), "panic_global", 0, reason);
+            return;
+        }
+        pendingGlobalRiskOn = true;
+        pendingGlobalRiskAt = uint64(block.timestamp) + GLOBAL_RISK_DELAY;
+        emit GlobalRiskQueued(true, reason, pendingGlobalRiskAt);
+        _log("panic_global_queued");
+    }
+
+    function applyGlobalRisk() external onlyDAO {
+        require(pendingGlobalRiskAt != 0 && block.timestamp >= pendingGlobalRiskAt, "SEC: global risk timelock");
+        globalRisk = true;
+        delete pendingGlobalRiskAt;
+        emit GlobalRiskSet(true, "applied");
+        _log("panic_global_on");
+        _logEv(address(this), "panic_global", 1, "applied");
+    }
+
+    function cancelGlobalRisk() external onlyDAO {
+        require(pendingGlobalRiskAt != 0, "SEC: no pending global risk");
+        delete pendingGlobalRiskAt;
+        delete pendingGlobalRiskOn;
+        emit GlobalRiskCancelled();
+        _log("panic_global_cancelled");
     }
 
     function isQuarantined(address vault) public view returns (bool) {

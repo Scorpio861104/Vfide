@@ -243,6 +243,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     event LoanDefaulted(uint256 indexed id, bool planFailed);
     event GuarantorExtracted(uint256 indexed id, address indexed guarantor, uint256 amount, uint256 totalFromGuarantor);
     event GuarantorExtractionSkipped(uint256 indexed id, address indexed guarantor, uint256 attemptedAmount);
+    event GuarantorExtractionRound(uint256 indexed id, uint256 extracted, uint256 skipped, uint256 guarantorCount);
     event GuarantorRelieved(uint256 indexed id, address indexed guarantor, uint256 remainingLiability);
     event LoanCancelled(uint256 indexed id);
     event RevenueAssignmentSet(uint256 indexed id, bool enabled);
@@ -281,6 +282,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (interestBps > MAX_INTEREST_BPS) revert TL_InvalidTerms();
         if (duration < MIN_DURATION || duration > MAX_DURATION) revert TL_InvalidTerms();
         if (activeLoanCount[msg.sender] >= MAX_ACTIVE_LOANS) revert TL_LoanCap();
+        if (unresolvedDefaults[msg.sender] > 0) revert TL_DebtOutstanding();
         _requireVaultParticipant(msg.sender);
 
         id = nextLoanId++;
@@ -381,6 +383,8 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 totalCommittedForSource = committedLiabilityBySource[approvalSource] + liabilityPerGuarantor;
         uint256 approved = vfideToken.allowance(approvalSource, address(this));
         require(approved >= totalCommittedForSource, "TL: guarantor must approve liability first");
+        uint256 balance = vfideToken.balanceOf(approvalSource);
+        require(balance >= totalCommittedForSource, "TL: guarantor source balance below liability");
 
         hasSigned[id][msg.sender] = true;
         guarantors[id].push(msg.sender);
@@ -404,6 +408,9 @@ contract VFIDETermLoan is ReentrancyGuard {
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     function _activateLoan(uint256 id) internal {
         Loan storage l = loans[id];
+        // Re-evaluate borrower capacity right before funding to avoid stale score windows.
+        uint256 currentLimit = _maxBorrowable(l.borrower);
+        if (l.principal > currentLimit) revert TL_ExceedsLimit();
         l.startTime = uint64(block.timestamp);
         l.deadline = uint64(block.timestamp) + l.duration;
         l.state = LoanState.ACTIVE;
@@ -620,6 +627,9 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         l.state = LoanState.DEFAULTED;
         _closeLoan(l);
+        // Release accounting commitments once a loan defaults; extraction can
+        // continue from allowances while avoiding stale commitment lockups.
+        _releaseAllGuarantorCommitments(id);
         totalDefaults++;
 
         unresolvedDefaults[l.borrower]++;
@@ -694,6 +704,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 liabilityPer = guarantorLiabilityEach[id];
         address[] storage g = guarantors[id];
         uint256 totalThisRound = 0;
+        uint256 skippedThisRound = 0;
         address recipient = _settlementRecipient(l.lender);
 
         for (uint256 i = 0; i < g.length; i++) {
@@ -713,6 +724,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             // current vault mapping. If the source is no longer valid, skip extraction.
             if (!_isValidGuarantorSource(g[i], source)) {
                 emit GuarantorExtractionSkipped(id, g[i], extractAmount);
+                skippedThisRound++;
                 continue;
             }
 
@@ -721,6 +733,7 @@ contract VFIDETermLoan is ReentrancyGuard {
                 uint256 received = vfideToken.balanceOf(recipient) - balBefore;
                 if (received == 0) {
                     emit GuarantorExtractionSkipped(id, g[i], extractAmount);
+                    skippedThisRound++;
                     continue;
                 }
 
@@ -740,6 +753,7 @@ contract VFIDETermLoan is ReentrancyGuard {
                 emit GuarantorExtracted(id, g[i], received, guarantorExtracted[id][g[i]]);
             } catch {
                 emit GuarantorExtractionSkipped(id, g[i], extractAmount);
+                skippedThisRound++;
             }
         }
 
@@ -747,6 +761,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (totalThisRound > 0) {
             lastExtractionTime[id] = uint64(block.timestamp);
         }
+        emit GuarantorExtractionRound(id, totalThisRound, skippedThisRound, g.length);
     }
 
     /**
@@ -899,14 +914,16 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (amount == 0) return;
 
         uint256 committedForLoan = guarantorCommittedLiability[id][guarantor];
-        if (amount > committedForLoan) {
-            amount = committedForLoan;
-        }
+        if (amount > committedForLoan) amount = committedForLoan;
+        uint256 committedForGuarantor = committedLiability[guarantor];
+        if (amount > committedForGuarantor) amount = committedForGuarantor;
+        uint256 committedForSource = committedLiabilityBySource[source];
+        if (amount > committedForSource) amount = committedForSource;
         if (amount == 0) return;
 
         guarantorCommittedLiability[id][guarantor] = committedForLoan - amount;
-        committedLiability[guarantor] -= amount;
-        committedLiabilityBySource[source] -= amount;
+        committedLiability[guarantor] = committedForGuarantor - amount;
+        committedLiabilityBySource[source] = committedForSource - amount;
     }
 
     function _requireVaultParticipant(address participant) internal view {
@@ -980,6 +997,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     function setScoreTiers(uint256 t1, uint256 t2, uint256 t3, uint256 t4) external onlyDAO {
+        if (t1 > t2 || t2 > t3 || t3 > t4) revert TL_InvalidTerms();
         tier1Limit = t1; tier2Limit = t2; tier3Limit = t3; tier4Limit = t4;
         emit TiersUpdated(t1, t2, t3, t4);
     }

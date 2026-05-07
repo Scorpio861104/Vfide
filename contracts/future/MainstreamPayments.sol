@@ -590,6 +590,8 @@ contract SessionKeyManager is ReentrancyGuard {
     event SessionRevoked(address indexed owner, address indexed sessionKey);
     event SessionUsed(address indexed owner, address indexed sessionKey, uint256 amount, uint256 remaining);
     event DefaultLimitsUpdated(uint256 spendLimit, uint64 duration);
+    event DefaultLimitsChangeProposed(uint256 spendLimit, uint64 duration, uint256 maxPerTx, uint256 effectiveAt);
+    event SessionActionDelayed(address indexed owner, address indexed recorder, uint8 action, uint256 amount);
     event SeerAutonomousSet(address indexed seerAutonomous);
     event SessionRecorderPermissionSet(address indexed owner, address indexed sessionKey, address indexed recorder, bool allowed);
 
@@ -618,6 +620,12 @@ contract SessionKeyManager is ReentrancyGuard {
     uint256 public defaultSpendLimit = 1000 * 1e18;  // 1000 VFIDE
     uint64 public defaultDuration = 24 hours;
     uint256 public defaultMaxPerTx = 100 * 1e18;     // 100 VFIDE per tx
+
+    uint256 public pendingDefaultSpendLimit;
+    uint64 public pendingDefaultDuration;
+    uint256 public pendingDefaultMaxPerTx;
+    uint256 public pendingDefaultLimitsAt;
+    uint256 public constant DEFAULT_LIMITS_DELAY = 24 hours;
     
     modifier onlyDAO() {
         require(msg.sender == dao, "SKM: not DAO");
@@ -842,10 +850,27 @@ contract SessionKeyManager is ReentrancyGuard {
     function setDefaultLimits(uint256 spendLimit, uint64 duration, uint256 maxPerTx) external onlyDAO nonReentrant {
         require(spendLimit <= 10000 * 1e18, "SKM: limit too high");
         require(duration <= 7 days, "SKM: duration too long");
-        defaultSpendLimit = spendLimit;
-        defaultDuration = duration;
-        defaultMaxPerTx = maxPerTx;
-        emit DefaultLimitsUpdated(spendLimit, duration);
+
+        pendingDefaultSpendLimit = spendLimit;
+        pendingDefaultDuration = duration;
+        pendingDefaultMaxPerTx = maxPerTx;
+        pendingDefaultLimitsAt = block.timestamp + DEFAULT_LIMITS_DELAY;
+        emit DefaultLimitsChangeProposed(spendLimit, duration, maxPerTx, pendingDefaultLimitsAt);
+    }
+
+    function applyDefaultLimits() external onlyDAO nonReentrant {
+        require(pendingDefaultLimitsAt > 0, "SKM: no pending limits");
+        require(block.timestamp >= pendingDefaultLimitsAt, "SKM: limits timelocked");
+
+        defaultSpendLimit = pendingDefaultSpendLimit;
+        defaultDuration = pendingDefaultDuration;
+        defaultMaxPerTx = pendingDefaultMaxPerTx;
+
+        pendingDefaultSpendLimit = 0;
+        pendingDefaultDuration = 0;
+        pendingDefaultMaxPerTx = 0;
+        pendingDefaultLimitsAt = 0;
+        emit DefaultLimitsUpdated(defaultSpendLimit, defaultDuration);
     }
 
     function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
@@ -861,7 +886,11 @@ contract SessionKeyManager is ReentrancyGuard {
         }
 
         // 0=Allowed,1=Warned,2=Delayed,3=Blocked,4=Penalized
-        if (result >= 2) revert SKM_ActionBlocked(result);
+        if (result == 2) {
+            emit SessionActionDelayed(subject, counterparty, action, amount);
+            return;
+        }
+        if (result >= 3) revert SKM_ActionBlocked(result);
     }
 }
 

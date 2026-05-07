@@ -9,6 +9,7 @@ import { ZERO_ADDRESS } from '../lib/constants'
 import { CURRENT_CHAIN_ID } from '../lib/testnet'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
+import { PROOF_SCORE_PERMISSIONS } from '@/lib/constants';
 
 // ============================================
 // PROOFSCORE HOOKS - Live reputation tracking
@@ -62,9 +63,9 @@ export function useProofScore(userAddress?: `0x${string}`) {
     tier,
     burnFee,
     color,
-    canVote: scoreNum >= 5400,
-    canMerchant: scoreNum >= 5600,
-    canCouncil: scoreNum >= 7000,
+    canVote: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
+    canMerchant: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
+    canCouncil: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
     canEndorse: scoreNum >= 8000,
     isElite: scoreNum >= 8000,
     isLoading,

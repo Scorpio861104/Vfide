@@ -783,6 +783,19 @@ contract DAO is ReentrancyGuard {
         emit ProposalStateChanged(id, "queued", "expired");
     }
 
+    /// @notice #207 FIX: Execute a queued timelock transaction.
+    /// @dev Permissionless for flexibility: can be called by anyone when DAO is the timelock admin.
+    ///      This enables post-deployment governance: DAO proposes → DAO queues in timelock →
+    ///      DAO (via executeTimelockTx) executes the timelock transaction.
+    ///      The timelock will internally call markExecuted() to transition the DAO proposal state.
+    /// @param timelockId The ID of the queued transaction to execute (from queueTxFromDAO)
+    function executeTimelockTx(bytes32 timelockId) external payable {
+        // Execute the queued transaction via the timelock interface.
+        // This will revert if not yet ripe, already executed, or if execution fails.
+        // The timelock will call this DAO's markExecuted() to update the associated proposal state.
+        timelock.execute(timelockId);
+    }
+
     function withdrawProposal(uint256 id) external {
         Proposal storage p = proposals[id];
         require(p.proposer == msg.sender, "Not proposer");

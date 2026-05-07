@@ -224,7 +224,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
     }
 
     // Validate token before step-up payload binding.
-    const ALLOWED_TOKENS = ['ETH', 'USDC', 'USDT', 'DAI', 'WETH'];
+    const ALLOWED_TOKENS = ['ETH', 'VFIDE', 'USDC', 'USDT', 'DAI', 'WETH'];
     const tokenValue = typeof token === 'string' && token.trim() ? token.trim().toUpperCase() : 'ETH';
 
     if (!ALLOWED_TOKENS.includes(tokenValue)) {

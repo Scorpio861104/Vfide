@@ -57,6 +57,7 @@ contract OwnerControlPanel {
     
     address public owner;
     address public pendingOwner;
+    uint64 public ownershipTransferDeadline;
 
     event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -111,6 +112,7 @@ contract OwnerControlPanel {
     error OCP_ActionNotQueued();
     error OCP_ActionNotReady(uint256 executeAfter);
     error OCP_ActionExpired(uint256 expiredAt);
+    error OCP_OwnershipTransferExpired();
     error OCP_SlippageTooHigh();
         error OCP_CooldownActive();
         error OCP_ReduceTooLarge();
@@ -137,15 +139,18 @@ contract OwnerControlPanel {
     function transferOwnership(address newOwner) external onlyOwner {
         if (newOwner == address(0)) revert OCP_Zero();
         pendingOwner = newOwner;
+        ownershipTransferDeadline = uint64(block.timestamp + 7 days);
         emit OwnershipTransferStarted(owner, newOwner);
     }
 
     /// @notice Step 2: nominated owner accepts — prevents fat-finger transfers
     function acceptOwnership() external {
         if (msg.sender != pendingOwner) revert OCP_NotPendingOwner();
+        if (block.timestamp > ownershipTransferDeadline) revert OCP_OwnershipTransferExpired();
         address previous = owner;
         owner = pendingOwner;
         pendingOwner = address(0);
+        ownershipTransferDeadline = 0;
         emit OwnershipTransferred(previous, owner);
     }
 
@@ -332,6 +337,14 @@ contract OwnerControlPanel {
 
     function actionId_token_setSinks(address treasury, address sanctum) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setSinks", treasury, sanctum));
+    }
+
+    function actionId_token_proposeSystemExempt(address who, bool isExempt) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_proposeSystemExempt", who, isExempt));
+    }
+
+    function actionId_token_proposeWhitelist(address addr, bool status) private pure returns (bytes32) {
+        return keccak256(abi.encode("token_proposeWhitelist", addr, status));
     }
 
     function actionId_sustainability_setBurnLimits(
@@ -569,6 +582,7 @@ contract OwnerControlPanel {
      * @dev Exempts address from vault-only enforcement and all fees
      */
     function token_proposeSystemExempt(address who, bool isExempt) external onlyOwner nonReentrant {
+        _consumeQueuedAction(actionId_token_proposeSystemExempt(who, isExempt));
         vfideToken.proposeSystemExempt(who, isExempt);
         emit EmergencyAction(isExempt ? "tok_exm_prop" : "tok_exm_unprop", who);
     }
@@ -593,6 +607,7 @@ contract OwnerControlPanel {
      * @notice Propose whitelist entry with 48-hour timelock
      */
     function token_proposeWhitelist(address addr, bool status) external onlyOwner nonReentrant {
+        _consumeQueuedAction(actionId_token_proposeWhitelist(addr, status));
         vfideToken.proposeWhitelist(addr, status);
         emit EmergencyAction(status ? "tok_wl_prop" : "tok_wl_unprop", addr);
     }
@@ -937,7 +952,7 @@ contract OwnerControlPanel {
         } else {
             devReserveBalance = DEV_RESERVE_SUPPLY;
         }
-        treasuryBalance = vfideToken.balanceOf(owner);
+        treasuryBalance = vfideToken.balanceOf(vfideToken.treasurySink());
     }
     
     /**

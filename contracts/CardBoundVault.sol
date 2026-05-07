@@ -1177,7 +1177,9 @@ contract CardBoundVault is ReentrancyGuard {
 
         delete pendingNativeRescue;
 
-        (bool ok, ) = pending.to.call{value: pending.amount, gas: 10_000}("");
+        // Do not hard-cap gas here: contract recipients and L2 execution environments
+        // can require more than 10k gas to accept native token transfers.
+        (bool ok, ) = pending.to.call{value: pending.amount}("");
         if (!ok) revert CBV_TransferFailed();
         emit NativeRescue(pending.to, pending.amount);
     }

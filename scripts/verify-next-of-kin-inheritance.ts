@@ -65,7 +65,6 @@ async function main() {
     await hub.getAddress(),
     await vfide.getAddress(),
     ownerAddress,
-    '0x0000000000000000000000000000000000000000',
     '0x0000000000000000000000000000000000000000'
   )) as any;
   await vault.waitForDeployment();
@@ -75,7 +74,6 @@ async function main() {
     await hub.getAddress(),
     await vfide.getAddress(),
     kinAddress,
-    '0x0000000000000000000000000000000000000000',
     '0x0000000000000000000000000000000000000000'
   )) as any;
   await kinVault.waitForDeployment();
@@ -122,7 +120,6 @@ async function main() {
     await hub.getAddress(),
     await vfide.getAddress(),
     ownerAddress,
-    '0x0000000000000000000000000000000000000000',
     '0x0000000000000000000000000000000000000000'
   )) as any;
   await vaultR.waitForDeployment();

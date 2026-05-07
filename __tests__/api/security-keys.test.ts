@@ -5,9 +5,17 @@ jest.mock('@/lib/db', () => ({
   query: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/middleware', () => ({
-  requireAuth: jest.fn(),
-}));
+jest.mock('@/lib/auth/middleware', () => {
+  const requireAuth = jest.fn();
+  return {
+    requireAuth,
+    withAuth: (handler: (request: NextRequest, user: unknown) => unknown) => async (request: NextRequest, ...rest: unknown[]) => {
+      const authResult = await requireAuth(request);
+      if (!authResult?.user) return authResult;
+      return handler(request, authResult.user, ...rest);
+    },
+  };
+});
 
 jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),

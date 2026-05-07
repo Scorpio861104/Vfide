@@ -189,6 +189,14 @@ contract DevReserveVestingVault is ReentrancyGuard {
         _log("emergency_freeze");
     }
 
+    /// @notice DAO can lift its own emergency freeze (mirrors emergencyFreeze, #462 FIX).
+    function emergencyUnfreeze() external {
+        require(msg.sender == DAO, "DV: only DAO");
+        claimsPaused = false;
+        emit PauseSet(false);
+        _log("emergency_unfreeze");
+    }
+
     // ─────────────────────────────────────────────────────────────
     // Claim
     // ─────────────────────────────────────────────────────────────

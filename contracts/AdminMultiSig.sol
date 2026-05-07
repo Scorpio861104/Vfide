@@ -55,7 +55,7 @@ contract AdminMultiSig is ReentrancyGuard {
     uint256 public proposalCount;
     mapping(uint256 => Proposal) public proposals;
     
-    uint256 public constant vetoThreshold = 100; // 100 veto votes needed
+    uint256 public vetoThreshold = 100; // 100 veto votes needed
     // This makes Sybil attacks economically costly — 100 wallets × 10,000 VFIDE = 1M VFIDE locked.
     uint256 public vetoMinStake = 10_000e18; // 10,000 VFIDE minimum to cast one veto vote (fallback when seer not set)
     IERC20 public vfideToken; // VFIDE token reference for fallback stake checks
@@ -72,6 +72,7 @@ contract AdminMultiSig is ReentrancyGuard {
     bytes4 private constant SELECTOR_SET_SEER = bytes4(keccak256("setSeer(address)"));
     bytes4 private constant SELECTOR_SET_VETO_MIN_SCORE = bytes4(keccak256("setVetoMinScore(uint16)"));
     bytes4 private constant SELECTOR_SET_VETO_MIN_STAKE = bytes4(keccak256("setVetoMinStake(uint256)"));
+    bytes4 private constant SELECTOR_SET_VETO_THRESHOLD = bytes4(keccak256("setVetoThreshold(uint256)"));
     bytes4 private constant SELECTOR_SET_EXECUTION_GAS_LIMIT = bytes4(keccak256("setExecutionGasLimit(uint256)"));
     bytes4 private constant SELECTOR_UPDATE_COUNCIL_MEMBER = bytes4(keccak256("updateCouncilMember(uint256,address)"));
     bytes4 private constant SELECTOR_SET_TARGET_ALLOW = bytes4(keccak256("setProposalTypeTargetAllowed(uint8,address,bool)"));
@@ -93,6 +94,7 @@ contract AdminMultiSig is ReentrancyGuard {
     event VFIDETokenSet(address indexed token);
     event SeerSet(address indexed seer);
     event VetoMinScoreSet(uint16 minScore);
+    event VetoThresholdSet(uint256 newThreshold);
     event ExecutionGasLimitSet(uint256 newGasLimit);
     event ProposalTypeTargetAllowSet(ProposalType indexed proposalType, address indexed target, bool allowed);
     event ProposalTypeSelectorAllowSet(ProposalType indexed proposalType, bytes4 indexed selector, bool allowed);
@@ -158,6 +160,9 @@ contract AdminMultiSig is ReentrancyGuard {
             proposalTypeSelectorAllowed[pt][SELECTOR_SET_VETO_MIN_STAKE] = true;
             emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_VETO_MIN_STAKE, true);
 
+            proposalTypeSelectorAllowed[pt][SELECTOR_SET_VETO_THRESHOLD] = true;
+            emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_VETO_THRESHOLD, true);
+
             proposalTypeSelectorAllowed[pt][SELECTOR_SET_EXECUTION_GAS_LIMIT] = true;
             emit ProposalTypeSelectorAllowSet(pt, SELECTOR_SET_EXECUTION_GAS_LIMIT, true);
 
@@ -175,6 +180,7 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @notice Set the VFIDE token address used for fallback stake checks on community veto
     function setVFIDEToken(address _token) external onlyProposalExecutionContext {
         require(_token != address(0), "AdminMultiSig: zero address");
+        require(_token != address(vfideToken), "AdminMultiSig: token unchanged");
         vfideToken = IERC20(_token);
         emit VFIDETokenSet(_token);
     }
@@ -196,6 +202,14 @@ contract AdminMultiSig is ReentrancyGuard {
     function setVetoMinStake(uint256 _minStake) external onlyProposalExecutionContext {
         vetoMinStake = _minStake;
         emit VetoMinStakeSet(_minStake);
+    }
+
+    /// @notice Update the number of community veto votes required to cancel a proposal
+    function setVetoThreshold(uint256 _threshold) external onlyProposalExecutionContext {
+        require(_threshold > 0, "AdminMultiSig: invalid veto threshold");
+        require(_threshold != vetoThreshold, "AdminMultiSig: veto threshold unchanged");
+        vetoThreshold = _threshold;
+        emit VetoThresholdSet(_threshold);
     }
 
     /// @notice Governance-managed target allowlist by proposal type.
@@ -278,6 +292,8 @@ contract AdminMultiSig is ReentrancyGuard {
         Proposal storage proposal = proposals[_proposalId];
         
         require(proposal.status == ProposalStatus.Pending, "AdminMultiSig: proposal not pending");
+        // #407 FIX: Reject approvals on already-expired proposals to avoid misleading state.
+        require(block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY, "AdminMultiSig: proposal expired");
         require(!proposal.hasApproved[msg.sender], "AdminMultiSig: already approved");
 
         proposal.hasApproved[msg.sender] = true;
@@ -320,6 +336,8 @@ contract AdminMultiSig is ReentrancyGuard {
         }
 
         require(proposal.target.code.length > 0, "AdminMultiSig: target has no code");
+        // #406 FIX: Re-verify target is still allowlisted at execution time.
+        require(proposalTypeTargetAllowed[proposal.proposalType][proposal.target], "AdminMultiSig: target no longer allowed");
 
         proposal.status = ProposalStatus.Executed;
         executingProposalId = _proposalId;
@@ -343,8 +361,8 @@ contract AdminMultiSig is ReentrancyGuard {
     }
 
     /// @notice Allow council to adjust execution gas limit via governance
-    function setExecutionGasLimit(uint256 _gasLimit) external {
-        require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: must be via proposal");
+    // #409 FIX: Require full proposal execution context (msg.sender == address(this) + active proposal).
+    function setExecutionGasLimit(uint256 _gasLimit) external onlyProposalExecutionContext {
         require(_gasLimit >= 100_000 && _gasLimit <= 10_000_000, "AdminMultiSig: invalid gas limit");
         executionGasLimit = _gasLimit;
         emit ExecutionGasLimitSet(_gasLimit);
@@ -396,6 +414,14 @@ contract AdminMultiSig is ReentrancyGuard {
             block.timestamp <= proposal.executionTime + VETO_WINDOW,
             "AdminMultiSig: veto window closed"
         );
+
+        // H-10 FIX: Do not allow permissionless community veto when bootstrap gates are unset.
+        // Require either score-gating (seer) or stake-gating (vfideToken + min stake).
+        require(
+            address(seer) != address(0) || (vetoMinStake > 0 && address(vfideToken) != address(0)),
+            "AdminMultiSig: veto gate not configured"
+        );
+
         if (address(seer) != address(0)) {
             // N-M21 FIX: In production, require BOTH reputation and stake to reduce
             // low-cost sybil vetoing with fresh default-score vaults.

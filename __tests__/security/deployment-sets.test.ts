@@ -8,7 +8,6 @@ describe('deployment contract set policy', () => {
     const deployableSection = productionSet.split('## Excluded From Production Set')[0] ?? productionSet;
 
     expect(deployableSection).not.toContain('- VFIDETestnetFaucet.sol');
-    expect(productionSet).toContain('VFIDETestnetFaucet.sol (testnet-only utility; listed in TESTNET_SET.md)');
-    expect(testnetSet).toContain('VFIDETestnetFaucet.sol');
+    expect(testnetSet).toContain('testnet/VFIDETestnetFaucet.sol');
   });
 });

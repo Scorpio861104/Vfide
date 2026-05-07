@@ -197,6 +197,7 @@ interface IVFIDEToken is IERC20 {
     function setFeeBypass(bool active, uint256 duration) external;       // H-02 FIX: explicit fee bypass
     // setBlacklist removed — non-custodial
     function lockPolicy() external;
+    function treasurySink() external view returns (address);
     function vaultOnly() external view returns (bool);
     function policyLocked() external view returns (bool);
     function circuitBreaker() external view returns (bool);
@@ -292,6 +293,7 @@ interface IEscrowManager {
 interface IDAOTimelock {
     function queueTx(address target, uint256 value, bytes calldata data) external returns (bytes32);
     function queueTxFromDAO(address target, uint256 value, bytes calldata data, uint256 daoProposalId) external returns (bytes32);
+    function execute(bytes32 id) external payable returns (bytes memory);
 }
 
 interface IGovernanceHooks {

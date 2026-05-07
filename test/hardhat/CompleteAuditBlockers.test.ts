@@ -44,11 +44,16 @@ describe("Complete audit blockers", () => {
   it("ProofScoreBurnRouter reverse calculator returns net >= desired", async () => {
     const { ethers } = (await network.connect()) as any;
     const [owner, user, to, sanctum, burn, ecosystem] = await ethers.getSigners();
+    void owner;
 
     const SeerStub = await ethers.getContractFactory("SeerScoreStub");
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
     await seer.setScore(user.address, 6500);
+
+    const TokenFactory = await ethers.getContractFactory("test/contracts/mocks/MockERC20.sol:MockERC20");
+    const token = await TokenFactory.deploy();
+    await token.waitForDeployment();
 
     const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
     const router = await Router.deploy(
@@ -56,6 +61,7 @@ describe("Complete audit blockers", () => {
       sanctum.address,
       burn.address,
       ecosystem.address,
+      await token.getAddress(),
     );
     await router.waitForDeployment();
 

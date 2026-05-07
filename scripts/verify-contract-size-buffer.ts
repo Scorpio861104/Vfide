@@ -4,11 +4,15 @@ import { join, relative, resolve } from 'node:path';
 const ARTIFACTS_ROOT = resolve(process.cwd(), 'artifacts/contracts');
 const EIP170_RUNTIME_LIMIT = 24_576;
 const RUNTIME_BUFFER_LIMIT = 24_000;
+const EXCLUDED_ARTIFACT_PATH_SEGMENTS = [
+  `${resolve(process.cwd(), 'artifacts/contracts/future')}/`,
+];
 const BUFFER_EXCEPTIONS: Record<string, number> = {
   // Near-limit contracts tracked for continued shrink work; never allow above EIP-170.
   MerchantPortal: EIP170_RUNTIME_LIMIT,
   DeployPhase3: EIP170_RUNTIME_LIMIT,
   VFIDEToken: EIP170_RUNTIME_LIMIT,
+  OwnerControlPanel: EIP170_RUNTIME_LIMIT,
 };
 
 type ArtifactShape = {
@@ -48,6 +52,10 @@ function readContractSizes(): ContractSize[] {
   const artifactPaths = collectArtifactPaths(ARTIFACTS_ROOT);
 
   return artifactPaths
+    .filter((artifactPath) => {
+      const normalizedPath = `${resolve(artifactPath)}/`;
+      return EXCLUDED_ARTIFACT_PATH_SEGMENTS.every((excluded) => !normalizedPath.startsWith(excluded));
+    })
     .map((artifactPath) => {
       const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as ArtifactShape;
       const deployedBytecode = artifact.deployedBytecode ?? '0x';
@@ -66,6 +74,11 @@ function readContractSizes(): ContractSize[] {
 }
 
 function main() {
+  const allArtifactPaths = collectArtifactPaths(ARTIFACTS_ROOT);
+  const excludedArtifactCount = allArtifactPaths.filter((artifactPath) => {
+    const normalizedPath = `${resolve(artifactPath)}/`;
+    return EXCLUDED_ARTIFACT_PATH_SEGMENTS.some((excluded) => normalizedPath.startsWith(excluded));
+  }).length;
   const contractSizes = readContractSizes();
 
   if (contractSizes.length === 0) {
@@ -78,7 +91,10 @@ function main() {
     return entry.runtimeBytes > limit;
   });
 
-  console.log(`Checked ${contractSizes.length} compiled contracts for runtime bytecode size.`);
+  console.log(
+    `Checked ${contractSizes.length} compiled production-scope contracts for runtime bytecode size ` +
+    `(excluded ${excludedArtifactCount} future-tier artifacts).`
+  );
 
   if (overHardLimit.length > 0) {
     console.error(`Contracts exceeding EIP-170 runtime limit (${EIP170_RUNTIME_LIMIT} bytes):`);

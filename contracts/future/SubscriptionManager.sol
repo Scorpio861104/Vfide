@@ -57,6 +57,8 @@ contract SubscriptionManager is ReentrancyGuard {
     event SeerRewardFailed(uint256 indexed subId, address indexed subject, string reason);
     event GracePeriodStarted(uint256 indexed subId, uint256 graceEndTime);
     event EmergencyCancelled(uint256 indexed subId, address indexed cancelledBy);
+    event EmergencyCancelQueued(uint256 indexed subId, uint64 effectiveAt);
+    event EmergencyCancelRevoked(uint256 indexed subId);
     event EmergencyBreakerChangeQueued(address indexed breaker, uint64 effectiveAt);
     event EmergencyBreakerChangeApplied(address indexed breaker);
     event EmergencyBreakerChangeCancelled(address indexed breaker);
@@ -97,6 +99,9 @@ contract SubscriptionManager is ReentrancyGuard {
     // NEW: DAO for emergency controls
     address public dao;
     IEmergencyBreaker public emergencyBreaker;
+    // #515 FIX: Timelock emergency cancellation so subscriber has 48h notice.
+    uint64 public constant EMERGENCY_CANCEL_DELAY = 48 hours;
+    mapping(uint256 => uint64) public pendingEmergencyCancelAt;
     address public pendingEmergencyBreaker;
     uint64 public pendingEmergencyBreakerAt;
     uint64 public constant BREAKER_CHANGE_DELAY = 48 hours;
@@ -296,18 +301,36 @@ contract SubscriptionManager is ReentrancyGuard {
     }
     
     /**
-     * @notice Emergency cancel by DAO (for fraud/disputes)
+     * @notice Propose emergency cancel by DAO (for fraud/disputes)
+     * @dev #515 FIX: 48h notice before cancellation finalises.
      */
     function emergencyCancel(uint256 subId) external onlyDAO {
         Subscription storage sub = subscriptions[subId];
         require(sub.active, "SM: already inactive");
+        require(pendingEmergencyCancelAt[subId] == 0, "SM: cancel already queued");
 
         if (address(emergencyBreaker) == address(0) || !emergencyBreaker.halted()) {
             revert SM_EmergencyNotActive();
         }
-        
+
+        uint64 effectiveAt = uint64(block.timestamp) + EMERGENCY_CANCEL_DELAY;
+        pendingEmergencyCancelAt[subId] = effectiveAt;
+        emit EmergencyCancelQueued(subId, effectiveAt);
+    }
+
+    function applyEmergencyCancel(uint256 subId) external onlyDAO {
+        Subscription storage sub = subscriptions[subId];
+        require(sub.active, "SM: already inactive");
+        require(pendingEmergencyCancelAt[subId] != 0 && block.timestamp >= pendingEmergencyCancelAt[subId], "SM: timelock");
+        delete pendingEmergencyCancelAt[subId];
         sub.active = false;
         emit EmergencyCancelled(subId, msg.sender);
+    }
+
+    function revokeEmergencyCancel(uint256 subId) external onlyDAO {
+        require(pendingEmergencyCancelAt[subId] != 0, "SM: no pending cancel");
+        delete pendingEmergencyCancelAt[subId];
+        emit EmergencyCancelRevoked(subId);
     }
 
     // 3. Merchant (or anyone) processes the payment

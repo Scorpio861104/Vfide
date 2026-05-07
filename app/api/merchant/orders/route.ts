@@ -198,7 +198,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       new Set(
         items
           .map((item) => item.product_id)
-          .filter((id): id is number => Number.isInteger(id) && id > 0)
+          .filter((id): id is number => typeof id === 'number' && Number.isInteger(id) && id > 0)
       )
     );
 
@@ -213,7 +213,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       new Set(
         items
           .map((item) => item.variant_id)
-          .filter((id): id is number => Number.isInteger(id) && id > 0)
+          .filter((id): id is number => typeof id === 'number' && Number.isInteger(id) && id > 0)
       )
     );
 
@@ -336,6 +336,46 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
     try {
       await client.query('BEGIN');
 
+      const requestedInventory = new Map<number, number>();
+      for (const item of validatedItems) {
+        if (!item.product_id) continue;
+        requestedInventory.set(
+          item.product_id,
+          (requestedInventory.get(item.product_id) ?? 0) + item.quantity
+        );
+      }
+
+      for (const [productId, requestedQty] of requestedInventory.entries()) {
+        const inventoryResult = await client.query<{
+          inventory_tracking: boolean;
+          inventory_count: number | null;
+        }>(
+          `SELECT inventory_tracking, inventory_count
+             FROM merchant_products
+            WHERE id = $1 AND merchant_address = $2
+            FOR UPDATE`,
+          [productId, merchant_address]
+        );
+
+        const inventoryRow = inventoryResult.rows[0];
+        if (!inventoryRow) {
+          await client.query('ROLLBACK');
+          return NextResponse.json({ error: `Product ${productId} not found` }, { status: 400 });
+        }
+
+        if (
+          inventoryRow.inventory_tracking &&
+          inventoryRow.inventory_count !== null &&
+          inventoryRow.inventory_count < requestedQty
+        ) {
+          await client.query('ROLLBACK');
+          return NextResponse.json(
+            { error: `Insufficient inventory for product ${productId}` },
+            { status: 409 }
+          );
+        }
+      }
+
       const orderResult = await client.query(
         `INSERT INTO merchant_orders
          (order_number, merchant_address, customer_address, customer_email, customer_name,
@@ -403,15 +443,13 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       }
 
       // Decrement inventory if tracking
-      for (const item of validatedItems) {
-        if (item.product_id) {
+      for (const [productId, requestedQty] of requestedInventory.entries()) {
           await client.query(
             `UPDATE merchant_products
              SET inventory_count = GREATEST(0, inventory_count - $1)
              WHERE id = $2 AND inventory_tracking = true AND inventory_count IS NOT NULL`,
-            [item.quantity, item.product_id]
+            [requestedQty, productId]
           );
-        }
       }
 
       await client.query('COMMIT');

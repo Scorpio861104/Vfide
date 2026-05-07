@@ -403,11 +403,14 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * @notice Propose emergency withdraw by DAO (for contract migration or disputes)
      * @dev N-M38 FIX: execution is delayed by 7 days to prevent instant confiscation.
+     * @dev #436 FIX: recipient must be the stream payer (prevents DAO draining to arbitrary address).
      */
     function emergencyWithdraw(uint256 streamId, address to) external onlyDAO {
         Stream storage s = streams[streamId];
         require(s.active, "PM: stream inactive");
         require(to != address(0), "PM: zero address");
+        // #436 FIX: Funds must return to the payer, not an arbitrary DAO-chosen address.
+        require(to == s.payer, "PM: recipient must be stream payer");
 
         PendingEmergencyWithdraw storage pending = pendingEmergencyWithdraws[streamId];
         require(pending.executeAfter == 0, "PM: pending emergency withdraw");

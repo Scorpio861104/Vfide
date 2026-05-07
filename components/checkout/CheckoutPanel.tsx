@@ -69,7 +69,7 @@ export function CheckoutPanel({
   merchantName,
   merchantProofScore,
   buyerFeeBps = 100,  // Default 1% for new users
-  tokenPrice = 0.50,
+  tokenPrice,
   onComplete,
   onCancel,
 }: CheckoutPanelProps) {
@@ -82,9 +82,13 @@ export function CheckoutPanel({
   const { payMerchant, isPaying } = usePayMerchant();
 
   // Update token rates with live price
+  const resolvedTokenPrice = typeof tokenPrice === 'number' && Number.isFinite(tokenPrice) && tokenPrice > 0
+    ? tokenPrice
+    : 0;
+
   const tokens = useMemo(() =>
-    PAYMENT_TOKENS.map(t => t.symbol === 'VFIDE' ? { ...t, rate: tokenPrice } : t),
-    [tokenPrice]
+    PAYMENT_TOKENS.map(t => t.symbol === 'VFIDE' ? { ...t, rate: resolvedTokenPrice } : t),
+    [resolvedTokenPrice]
   );
   const supportedTokens = useMemo(
     () => tokens.filter((token) => token.symbol === 'VFIDE'),
@@ -96,7 +100,8 @@ export function CheckoutPanel({
   const total = subtotal + feeAmount;
 
   const activeToken = supportedTokens.find(t => t.symbol === selectedToken) ?? supportedTokens[0] ?? PAYMENT_TOKENS[0]!;
-  const tokenAmount = total / activeToken.rate;
+  const hasValidTokenQuote = activeToken.rate > 0;
+  const tokenAmount = hasValidTokenQuote ? total / activeToken.rate : 0;
 
   const feeSavedVsSquare = subtotal * 0.029 + 0.30; // Square's 2.9% + $0.30
 
@@ -236,14 +241,19 @@ export function CheckoutPanel({
                 ))}
               </div>
               <div className="mt-3 text-xs text-amber-300">
-                Stablecoin checkout is not live on this route yet. VFIDE is the only supported payment token here.
+                  Stablecoin checkout is not live on this route yet. VFIDE is the only supported payment token here.
               </div>
+              {!hasValidTokenQuote && (
+                <div className="mt-2 text-xs text-red-300">
+                  Live VFIDE pricing is temporarily unavailable. Retry when quote data is available.
+                </div>
+              )}
             </div>
 
             {/* Pay button */}
             <button
               onClick={handlePay}
-              disabled={!isConnected || isPaying || isProcessing}
+              disabled={!isConnected || isPaying || isProcessing || !hasValidTokenQuote}
               className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Wallet size={22} />

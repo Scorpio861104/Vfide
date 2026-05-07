@@ -69,6 +69,56 @@ export interface PaymentRequest {
   expiresAt: number;
 }
 
+interface ApiPaymentRequest {
+  id: string | number;
+  from_wallet_address?: string | null;
+  to_wallet_address?: string | null;
+  amount?: string | number;
+  token?: string | null;
+  memo?: string | null;
+  status?: string | null;
+  message_id?: string | null;
+  conversation_id?: string | null;
+  created_at?: string | null;
+  expires_at?: string | null;
+}
+
+function normalizePaymentRequestStatus(status?: string | null): PaymentRequest['status'] {
+  switch ((status || '').toLowerCase()) {
+    case 'completed':
+    case 'paid':
+      return 'paid';
+    case 'rejected':
+    case 'declined':
+    case 'cancelled':
+      return 'declined';
+    case 'expired':
+      return 'expired';
+    default:
+      return 'pending';
+  }
+}
+
+function normalizePaymentRequest(raw: ApiPaymentRequest): PaymentRequest {
+  const createdAt = raw.created_at ? Date.parse(raw.created_at) : Date.now();
+  const safeCreatedAt = Number.isFinite(createdAt) ? createdAt : Date.now();
+  const expiresAt = raw.expires_at ? Date.parse(raw.expires_at) : safeCreatedAt + 7 * 24 * 60 * 60 * 1000;
+
+  return {
+    id: String(raw.id),
+    from: raw.from_wallet_address || '',
+    to: raw.to_wallet_address || '',
+    amount: String(raw.amount ?? '0'),
+    currency: (raw.token || '').toUpperCase() === 'ETH' ? 'ETH' : 'VFIDE',
+    reason: raw.memo || '',
+    status: normalizePaymentRequestStatus(raw.status),
+    messageId: raw.message_id || '',
+    conversationId: raw.conversation_id || '',
+    createdAt: safeCreatedAt,
+    expiresAt: Number.isFinite(expiresAt) ? expiresAt : safeCreatedAt + 7 * 24 * 60 * 60 * 1000,
+  };
+}
+
 export interface CryptoBadge {
   id: string;
   tokenId: string;
@@ -342,31 +392,27 @@ export async function createPaymentRequest(
   reason: string,
   conversationId: string
 ): Promise<PaymentRequest> {
-  const from = await getCurrentWalletAddress();
+  void conversationId;
 
-  const request: PaymentRequest = {
-    id: `req_${Date.now()}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`,
-    from,
-    to,
-    amount,
-    currency,
-    reason,
-    status: 'pending',
-    messageId: '', // Will be set when message is created
-    conversationId,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-  };
+  const token = currency === 'ETH' ? 'ETH' : 'VFIDE';
 
-  // Save to database
   const response = await fetch('/api/crypto/payment-requests', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request),
+    body: JSON.stringify({
+      toAddress: to,
+      amount,
+      token,
+      memo: reason,
+    }),
   });
 
   const data = await response.json();
-  return data.request;
+  if (!response.ok) {
+    throw new Error(data?.error || 'Failed to create payment request');
+  }
+
+  return normalizePaymentRequest(data.request as ApiPaymentRequest);
 }
 
 /**
@@ -376,10 +422,18 @@ export async function payPaymentRequest(requestId: string): Promise<Transaction>
   // Get request details
   const response = await fetch(`/api/crypto/payment-requests/${requestId}`);
   const data = await response.json();
-  const request: PaymentRequest = data.request;
+  if (!response.ok) {
+    throw new Error(data?.error || 'Failed to fetch payment request');
+  }
+  const request = normalizePaymentRequest(data.request as ApiPaymentRequest);
+
+  const payTo = request.from;
+  if (!/^0x[a-fA-F0-9]{40}$/.test(payTo)) {
+    throw new Error('Invalid payment request recipient');
+  }
 
   // Send payment
-  const transaction = await sendPayment(request.from, request.amount, request.currency, {
+  const transaction = await sendPayment(payTo, request.amount, request.currency, {
     messageId: request.messageId,
     conversationId: request.conversationId,
     memo: `Payment for: ${request.reason}`,
@@ -388,11 +442,16 @@ export async function payPaymentRequest(requestId: string): Promise<Transaction>
   transaction.type = 'payment_request';
 
   // Update request status
-  await fetch(`/api/crypto/payment-requests/${requestId}`, {
+  const patchResponse = await fetch(`/api/crypto/payment-requests/${requestId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'paid', transactionId: transaction.id }),
+    body: JSON.stringify({ status: 'completed', txHash: transaction.txHash }),
   });
+
+  if (!patchResponse.ok) {
+    const patchData = await patchResponse.json().catch(() => ({}));
+    throw new Error(patchData?.error || 'Failed to update payment request status');
+  }
 
   return transaction;
 }

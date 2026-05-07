@@ -11,6 +11,10 @@ contract MockSeerForEcosystem {
     function getScore(address account) external view returns (uint16) {
         return _scores[account];
     }
+
+    function getCachedScore(address account) external view returns (uint16) {
+        return _scores[account];
+    }
 }
 
 contract MockTokenForEcosystem {
@@ -30,6 +34,18 @@ contract MockTokenForEcosystem {
         totalSupply += amount;
         balanceOf[to] += amount;
         emit Transfer(address(0), to, amount);
+    }
+
+    function burn(uint256 amount) external {
+        uint256 accountBalance = balanceOf[msg.sender];
+        require(accountBalance >= amount, 'ERC20: burn exceeds balance');
+
+        unchecked {
+            balanceOf[msg.sender] = accountBalance - amount;
+            totalSupply -= amount;
+        }
+
+        emit Transfer(msg.sender, address(0), amount);
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {
@@ -66,5 +82,17 @@ contract MockTokenForEcosystem {
         balanceOf[to] += amount;
 
         emit Transfer(from, to, amount);
+    }
+}
+
+contract MockVaultHubForEcosystem {
+    mapping(address => address) private _vaults;
+
+    function setVault(address owner, address vault) external {
+        _vaults[owner] = vault;
+    }
+
+    function vaultOf(address owner) external view returns (address) {
+        return _vaults[owner];
     }
 }

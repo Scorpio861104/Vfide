@@ -1,5 +1,5 @@
 import { ContractFactory, JsonRpcProvider, ZeroAddress } from 'ethers';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 function loadArtifact(relativePath: string) {
@@ -8,6 +8,20 @@ function loadArtifact(relativePath: string) {
     abi: any[];
     bytecode: string;
   };
+}
+
+function loadArtifactFromCandidates(candidates: string[]) {
+  for (const relativePath of candidates) {
+    const filePath = resolve(process.cwd(), relativePath);
+    if (existsSync(filePath)) {
+      return JSON.parse(readFileSync(filePath, 'utf8')) as {
+        abi: any[];
+        bytecode: string;
+      };
+    }
+  }
+
+  throw new Error(`Artifact not found in any candidate path: ${candidates.join(', ')}`);
 }
 
 async function increaseTime(provider: JsonRpcProvider, seconds: number) {
@@ -26,6 +40,30 @@ async function expectRevert(action: () => Promise<unknown>) {
     const text = String(error);
     if (text.includes('Expected transaction to revert but it succeeded')) {
       throw error;
+    }
+  }
+}
+
+async function seedScoreWithDaoLimits(
+  seer: any,
+  provider: JsonRpcProvider,
+  subject: string,
+  targetScore: number,
+  label: string,
+) {
+  let current = Number(await seer.getScore(subject));
+  let step = 0;
+  while (current !== targetScore) {
+    const next = current < targetScore
+      ? Math.min(current + 500, targetScore)
+      : Math.max(current - 500, targetScore);
+
+    await (await seer.setScore(subject, next, `${label}_${step}`)).wait();
+    current = Number(await seer.getScore(subject));
+    step += 1;
+
+    if (current !== targetScore) {
+      await increaseTime(provider, 4 * 60 * 60 + 1);
     }
   }
 }
@@ -49,8 +87,14 @@ async function main() {
   const operatorAddress = await operator.getAddress();
 
   const seerArtifact = loadArtifact('artifacts/contracts/Seer.sol/Seer.json');
-  const socialArtifact = loadArtifact('artifacts/contracts/SeerSocial.sol/SeerSocial.json');
-  const viewArtifact = loadArtifact('artifacts/contracts/SeerView.sol/SeerView.json');
+  const socialArtifact = loadArtifactFromCandidates([
+    'artifacts/contracts/SeerSocial.sol/SeerSocial.json',
+    'artifacts/contracts/future/SeerSocial.sol/SeerSocial.json',
+  ]);
+  const viewArtifact = loadArtifactFromCandidates([
+    'artifacts/contracts/SeerView.sol/SeerView.json',
+    'artifacts/contracts/future/SeerView.sol/SeerView.json',
+  ]);
 
   const seerFactory = new ContractFactory(seerArtifact.abi as any, seerArtifact.bytecode, dao);
   const seer = (await seerFactory.deploy(daoAddress, ZeroAddress, ZeroAddress)) as any;
@@ -72,9 +116,9 @@ async function main() {
 
   await (await seer.setSeerSocial(await social.getAddress())).wait();
 
-  // Keep DAO score set deltas within maxDAOScoreChange bounds from neutral baseline.
-  await (await seer.setScore(endorserAddress, 7000, 'seed_endorser')).wait();
-  await (await seer.setScore(mentorAddress, 7000, 'seed_mentor')).wait();
+  // Seed scores using bounded 500-point steps with 1h cooldown windows.
+  await seedScoreWithDaoLimits(seer, provider, endorserAddress, 7000, 'seed_endorser');
+  await seedScoreWithDaoLimits(seer, provider, mentorAddress, 7000, 'seed_mentor');
 
   await (await social.connect(endorser).endorse(subjectAddress, 'peer verified')).wait();
 
@@ -112,7 +156,13 @@ async function main() {
     throw new Error(`Expected SeerView menteeCount=1 from SeerSocial, got ${mentorInfo[2]}`);
   }
 
+  // Wait out DAO score-change cooldown before operator actions on the seeded subjects.
+  await increaseTime(provider, 4 * 60 * 60 + 1);
+
   await (await seer.setOperator(operatorAddress, true)).wait();
+
+  // Newly authorized operators have a 24h warmup before they can act.
+  await increaseTime(provider, 24 * 60 * 60 + 1);
 
   await (await seer.connect(operator).reward(subjectAddress, 100, 'op_reward_1')).wait();
   await (await seer.connect(operator).reward(subjectAddress, 100, 'op_reward_2')).wait();
@@ -120,7 +170,8 @@ async function main() {
     seer.connect(operator).reward(subjectAddress, 1, 'op_reward_over_daily')
   );
 
-  await (await seer.connect(operator).reward(mentorAddress, 100, 'op_reward_other_subject')).wait();
+  // Stay within the current cross-subject daily cap (300 total across all subjects).
+  await (await seer.connect(operator).reward(mentorAddress, 99, 'op_reward_other_subject')).wait();
 
   await increaseTime(provider, 24 * 60 * 60 + 1);
   await (await seer.connect(operator).reward(subjectAddress, 100, 'op_reward_after_window')).wait();

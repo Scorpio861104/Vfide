@@ -344,11 +344,16 @@ contract CouncilElection {
     }
 
     /// Called periodically off-chain or by DAO keepers to remove members who fell below score.
-    function refreshCouncil(address[] calldata current) external onlyDAO {
+    // #503 FIX: refreshCouncil is permissionless so DAO cannot selectively target members.
+    // Anyone can call; ALL current council members are checked (not a DAO-chosen subset).
+    function refreshCouncil(address[] calldata current) external {
+        // Require that current contains exactly all council members (prevent selective removal).
+        require(current.length == currentCouncil.length, "CE: must check all members");
         uint256 length = current.length;
         for (uint256 i=0;i<length;++i){
             address m=current[i];
-            if (isCouncil[m] && !_eligibleForCurrentTerm(m)) {
+            require(isCouncil[m], "CE: member mismatch");
+            if (!_eligibleForCurrentTerm(m)) {
                 isCouncil[m]=false;
                 councilTermScoreSnapshot[m] = 0;
                 _removeFromCouncilArray(m);
@@ -372,25 +377,36 @@ contract CouncilElection {
     /// Remove council member for breaking VFIDE laws or falling below ProofScore 7000 (70%)
     /// Can be called immediately without waiting for refresh
     // slither-disable-next-line reentrancy-events
+    // #504 FIX: DAO removal is timelocked 7 days so council member can challenge.
+    uint64 public constant MEMBER_REMOVAL_DELAY = 7 days;
+    mapping(address => uint64) public pendingRemovalAt;
+
     function removeCouncilMember(address member, string calldata reason) external onlyDAO {
         require(isCouncil[member], "CE: not council member");
-        
-        // DAO can remove anyone for any reason
-        isCouncil[member] = false;
-        
-        // Remove from currentCouncil array using helper
-        _removeFromCouncilArray(member);
-        
-        // Mark their term as ended early (prevents immediate re-election)
-        lastTermEndDate[member] = uint64(block.timestamp);
-        
-        emit CandidateUnregistered(member);
-        _log("ce_member_removed");
-        
-        // Log reason to ProofLedger
+        require(pendingRemovalAt[member] == 0, "CE: removal already pending");
+        pendingRemovalAt[member] = uint64(block.timestamp) + MEMBER_REMOVAL_DELAY;
+        // Log reason immediately so member can inspect and challenge.
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(member, reason, msg.sender) {} catch { emit LedgerLogFailed(member, reason); }
+            try ledger.logSystemEvent(member, string(abi.encodePacked("removal_proposed:", reason)), msg.sender) {} catch {}
         }
+        emit CandidateUnregistered(member); // re-use event to signal pending removal
+        _log("ce_member_removal_queued");
+    }
+
+    function applyRemoveCouncilMember(address member) external onlyDAO {
+        require(isCouncil[member], "CE: not council member");
+        require(pendingRemovalAt[member] != 0 && block.timestamp >= pendingRemovalAt[member], "CE: removal timelock");
+        isCouncil[member] = false;
+        _removeFromCouncilArray(member);
+        lastTermEndDate[member] = uint64(block.timestamp);
+        delete pendingRemovalAt[member];
+        _log("ce_member_removed");
+    }
+
+    function cancelRemoveCouncilMember(address member) external onlyDAO {
+        require(pendingRemovalAt[member] != 0, "CE: no pending removal");
+        delete pendingRemovalAt[member];
+        _log("ce_member_removal_cancelled");
     }
 
 // ─────────────────────────── Helpers for Salary/External

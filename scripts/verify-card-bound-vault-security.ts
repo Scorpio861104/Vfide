@@ -66,6 +66,14 @@ async function signIntent(
   return wallet.signTypedData(domain as any, types as any, value as any);
 }
 
+async function chainDeadline(provider: JsonRpcProvider, offsetSeconds = 3600): Promise<bigint> {
+  const latest = await provider.getBlock('latest');
+  if (!latest) {
+    throw new Error('Unable to read latest block for deadline calculation');
+  }
+  return BigInt(latest.timestamp + offsetSeconds);
+}
+
 async function main() {
   const rpcUrl = process.env.RPC_URL ?? 'http://127.0.0.1:8545';
   const provider = new JsonRpcProvider(rpcUrl);
@@ -117,7 +125,6 @@ async function main() {
     maxPerTransfer,
     dailyLimit,
     '0x0000000000000000000000000000000000000000',
-    '0x0000000000000000000000000000000000000000'
   )) as any;
   await vaultAContract.waitForDeployment();
 
@@ -132,7 +139,6 @@ async function main() {
     maxPerTransfer,
     dailyLimit,
     '0x0000000000000000000000000000000000000000',
-    '0x0000000000000000000000000000000000000000'
   )) as any;
   await vaultBContract.waitForDeployment();
 
@@ -142,6 +148,8 @@ async function main() {
   currentStep = 'set-vault-flags';
   await (await registry.setVault(vaultAAddress, true)).wait();
   await (await registry.setVault(vaultBAddress, true)).wait();
+  await (await registry.setGuardianSetupComplete(vaultAAddress, true)).wait();
+  await (await registry.setGuardianSetupComplete(vaultBAddress, true)).wait();
 
   currentStep = 'mint-vault-a';
   await (await token.mint(vaultAAddress, parseUnits('500', 18))).wait();
@@ -152,7 +160,7 @@ async function main() {
   currentStep = 'transfer-valid';
   const nonce0 = await vaultAContract.nextNonce();
   const epoch0 = await vaultAContract.walletEpoch();
-  const deadline0 = BigInt(Math.floor(Date.now() / 1000) + 3600);
+  const deadline0 = await chainDeadline(provider);
   const amount50 = parseUnits('50', 18);
 
   const sig0 = await signIntent(
@@ -209,7 +217,7 @@ async function main() {
   // 3) Destination must be a registered vault.
   currentStep = 'transfer-non-vault';
   const nonce1 = await vaultAContract.nextNonce();
-  const deadline1 = BigInt(Math.floor(Date.now() / 1000) + 3600);
+  const deadline1 = await chainDeadline(provider);
   const sigNonVault = await signIntent(
     walletA,
     vaultAAddress,
@@ -242,7 +250,7 @@ async function main() {
   // 4) Max per transfer enforcement.
   currentStep = 'transfer-over-limit';
   const nonce2 = await vaultAContract.nextNonce();
-  const deadline2 = BigInt(Math.floor(Date.now() / 1000) + 3600);
+  const deadline2 = await chainDeadline(provider);
   const overMax = parseUnits('120', 18);
   const sigOverMax = await signIntent(
     walletA,
@@ -276,9 +284,10 @@ async function main() {
   // 5) Pause blocks transfers.
   currentStep = 'pause-flow';
   await (await vaultAContract.connect(guardian1).pause()).wait();
+  await (await vaultAContract.connect(guardian2).pause()).wait();
 
   const nonce3 = await vaultAContract.nextNonce();
-  const deadline3 = BigInt(Math.floor(Date.now() / 1000) + 3600);
+  const deadline3 = await chainDeadline(provider);
   const sigPaused = await signIntent(
     walletA,
     vaultAAddress,
@@ -338,7 +347,7 @@ async function main() {
   // 7) Old wallet signatures must fail after epoch bump; new wallet must work.
   currentStep = 'post-rotation-signature-checks';
   const nonceAfterRotate = await vaultAContract.nextNonce();
-  const deadline4 = BigInt(Math.floor(Date.now() / 1000) + 3600);
+  const deadline4 = await chainDeadline(provider);
 
   const oldSig = await signIntent(
     walletA,

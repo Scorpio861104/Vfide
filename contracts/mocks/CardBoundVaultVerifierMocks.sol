@@ -3,13 +3,26 @@ pragma solidity 0.8.30;
 
 contract MockVaultRegistryForCardBound {
     mapping(address => bool) public isVaultMap;
+    mapping(address => bool) public guardianSetupCompleteMap;
 
     function setVault(address vault, bool active) external {
         isVaultMap[vault] = active;
     }
 
+    function setGuardianSetupComplete(address vault, bool complete) external {
+        guardianSetupCompleteMap[vault] = complete;
+    }
+
     function isVault(address vault) external view returns (bool) {
         return isVaultMap[vault];
+    }
+
+    function guardianSetupComplete(address vault) external view returns (bool) {
+        return guardianSetupCompleteMap[vault];
+    }
+
+    function invalidateGuardianSetup(address vault) external {
+        guardianSetupCompleteMap[vault] = false;
     }
 }
 

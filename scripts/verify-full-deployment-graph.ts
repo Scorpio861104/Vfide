@@ -64,7 +64,7 @@ function norm(address: string): string {
   return address.toLowerCase();
 }
 
-function pickManifestPath(): string {
+function pickManifestPath(): string | null {
   if (process.env.DEPLOYMENT_FILE) {
     return resolve(process.cwd(), process.env.DEPLOYMENT_FILE);
   }
@@ -78,7 +78,7 @@ function pickManifestPath(): string {
     .sort((a, b) => b.mtime - a.mtime);
 
   if (!candidates.length) {
-    throw new Error('No deployment manifest found. Set DEPLOYMENT_FILE=<path>.');
+    return null;
   }
 
   return candidates[0]!.path;
@@ -116,6 +116,10 @@ async function run(): Promise<void> {
   const provider = new JsonRpcProvider(rpc);
 
   const manifestPath = pickManifestPath();
+  if (!manifestPath) {
+    console.log(`${YELLOW}WARN${RESET} No deployment manifest found; skipping deployment graph verification. Set DEPLOYMENT_FILE=<path> to enable.`);
+    return;
+  }
   const manifest = loadManifest(manifestPath);
   const addresses = manifest.addresses ?? {};
 

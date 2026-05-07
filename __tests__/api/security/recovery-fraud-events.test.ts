@@ -9,10 +9,18 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/middleware', () => ({
-  requireAuth: jest.fn(),
-  isAdmin: jest.fn(() => false),
-}));
+jest.mock('@/lib/auth/middleware', () => {
+  const requireAuth = jest.fn();
+  return {
+    requireAuth,
+    withAuth: (handler: (request: NextRequest, user: unknown) => unknown) => async (request: NextRequest, ...rest: unknown[]) => {
+      const authResult = await requireAuth(request);
+      if (!authResult?.user) return authResult;
+      return handler(request, authResult.user, ...rest);
+    },
+    isAdmin: jest.fn(() => false),
+  };
+});
 
 describe('/api/security/recovery-fraud-events', () => {
   const { query } = require('@/lib/db');

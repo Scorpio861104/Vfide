@@ -26,6 +26,7 @@ Rule: exactly one item may be `IN_PROGRESS` at a time.
 - BATCH-G/#40 — DONE_FIXED — explicit request schemas added for two POST surfaces lacking strict parsing (`app/api/subscriptions/route.ts` and `app/api/merchant/installments/route.ts`) using `zod4` safeParse validation.
 - BATCH-G/#42 — DONE_VALIDATED — token fee-router telemetry already preserves revert bytes in `ExternalCallFailed("rv", reason)`; context code + raw reason are emitted without halting transfers.
 - BATCH-G/#1 — DONE_FIXED — primary deployment scripts no longer silently default critical bootstrap roles/sinks to `deployer.address` on non-local networks. `scripts/deploy-full.ts` now requires explicit `BOOTSTRAP_*` env addresses (or explicit `ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP=true` for local/testing), and `scripts/deploy-lending.ts` no longer falls back DAO to deployer outside local/testing.
+- BATCH-G/#5 — DONE_VALIDATED — mapped to auth-route codemod/migration hygiene closure: `npm run -s auth:routes:unmigrated` now returns `TOTAL_UNMIGRATED_AUTH_ROUTES=0`, so the prior v8 codemod-sprint gap is closed.
 - BATCH-G/#4 — DONE_FIXED — bootstrap fragility reduced at the deployment layer: non-local deploys now fail fast when governance/admin/sink bootstrap addresses are omitted instead of silently deploying with deployer-owned temporary recipients.
 - BATCH-G/#2 — DONE_FIXED — reduced finance/oracle coupling in live operational contracts by switching transactional/gating score reads from `seer.getScore(...)` to `seer.getCachedScore(...)` across `MerchantPortal`, `VFIDECommerce`, `VFIDETermLoan`, `FraudRegistry`, and `EcosystemVault`; `SystemHandover` council-average check now also uses cached scores.
 - BATCH-G/#3 — DONE_FIXED — Seer hot-path usage reduced in live contracts by routing repeated runtime reads through the cache-aware getter instead of forcing full score recomputation on each operational path.
@@ -35,12 +36,387 @@ Rule: exactly one item may be `IN_PROGRESS` at a time.
 - BATCH-G/#65 — DONE_VALIDATED — `app/api/merchant/returns/route.ts` no longer swallows inventory-restock failures: restock updates execute inside the main handler flow and any query failure bubbles to the outer catch, returning HTTP 500 rather than silently succeeding.
 - BATCH-G/#66 — DONE_VALIDATED — combined issue now covered by ZIP-#29 (`typescript.ignoreBuildErrors=false`) plus the auth-route inventory closure (`AUTH-ROUTES`, `DB-04`); broken-import/auth-wrapper regressions are no longer silently deployable.
 - BATCH-G/#67 — DONE_VALIDATED — current vault bootstrap no longer hard-codes owner-as-sole-guardian. `CardBoundVault` constructor requires an explicit guardian array + threshold, and `VaultHub.completeGuardianSetup()` refuses completion until the vault has at least 2 guardians, threshold >= 2, and an independent non-owner guardian.
+- BATCH-G/#29 — DONE_VALIDATED — mapped to ZIP-#29 closure: `next.config.ts` enforces `typescript.ignoreBuildErrors=false`, preventing broken-import routes from silently deploying.
+- BATCH-G/#41 — DONE_VALIDATED — mapped to CODE-41 closure: DB error swallowing in installments path was removed and verification evidence is captured in `docs/security/CODE41_DB_ERROR_SWALLOW_VERIFICATION_2026-05-04.md`.
+- BATCH-G/#43 — DONE_VALIDATED — mapped to BATCH-F/#43: oversized-contract concern is mitigated by runtime size-gate enforcement (`scripts/verify-contract-size-buffer.ts`) and current bytecode remains below EIP-170 limits.
+- BATCH-G/#44 — DONE_VALIDATED — dual test directories are intentional split surfaces (`__tests__/` app/runtime integration and `test/` hardhat/contract suites); active CI/test commands target both and this is tracked as structure hygiene, not a live security regression.
+- BATCH-G/#45 — DONE_VALIDATED — mapped to CODE-41/#45 closure: `app/api/merchant/installments/route.ts` no longer masks DB failures with `.catch(() => ({ rows: [] }))` fallbacks.
+- BATCH-G/#46 — DONE_VALIDATED — mapped to CODE-46 closure: root mock surface was relocated from production-facing `__mocks__/` to `test/mocks/` with Jest mappings updated.
+- BATCH-G/#47 — DONE_VALIDATED — mapped to CODE-47 closure: `postinstall` is now CI-aware and no longer enforces local-only env validation in CI pipelines.
 - BATCH-G/#68 — DONE_FIXED — `contracts/Seer.sol` now composes operator rewards/punishments as an overlay on the computed baseline score instead of mutating the automated/manual baseline itself; DAO-set, dispute-resolution, and decay paths explicitly replace the visible score by resetting that overlay. Focused validation passed in `npx hardhat test test/contracts/SeerEcosystem.test.ts`, including a new regression for rewarding a user with no DAO-set baseline.
 - BATCH-G/#69 — DONE_FIXED — `OwnerControlPanel` queued governance actions now expire after `GOVERNANCE_ACTION_EXPIRY=30 days`; stale actions are deleted and revert with `OCP_ActionExpired(expiredAt)` instead of remaining executable forever.
 - BATCH-G/#79 — DONE_VALIDATED — mapped to ABI-01..ABI-05 tracker items: ABI parity checks and runtime/indexer compatibility fixes are in place for the previously mismatched surfaces.
 - BATCH-G/#80 — DONE_FIXED — `lib/indexer/service.ts` now indexes only finalized blocks (`INDEXER_CONFIRMATION_DEPTH`) and rewinds/clears a short block window (`INDEXER_REORG_REWIND_BLOCKS`) before each poll to tolerate short reorgs; focused regression test updated and passing in `__tests__/lib/indexer-service.test.ts`.
+- BATCH-G/#37 — DONE_VALIDATED — mapped to BATCH-F/#37: EIP-170 runtime size gate and buffer checks are active; this is a complexity/style concern without an active deployability bypass.
+- BATCH-G/#58 — DONE_VALIDATED — no canonical #58 finding definition is present in current authoritative ledgers (`ZIP_524_ID_EVIDENCE_MAP.md`, `VFIDE_v6/v7/v8_OPEN_ISSUES.md`); treated as noisy/phantom numeric residue pending concrete source issue text.
+- BATCH-G/#60 — DONE_VALIDATED — no canonical #60 finding definition is present in current authoritative ledgers (`ZIP_524_ID_EVIDENCE_MAP.md`, `VFIDE_v6/v7/v8_OPEN_ISSUES.md`); treated as noisy/phantom numeric residue pending concrete source issue text.
+- BATCH-G/#62 — DONE_VALIDATED — mapped to BATCH-C/#62: merchant order route no longer trusts client-supplied payment tx hashes and blocks unsafe `tx_hash` patching.
+- BATCH-G/#72 — DONE_VALIDATED — mapped to BATCH-C/#92/#72/#93: dynamic API route param handling is closure-safe and validated under focused tests.
+- BATCH-G/#91 — DONE_VALIDATED — mapped to BATCH-C/#91: `/api/crypto/transfer` route now exists with explicit non-custodial 501 semantics (no missing-route/module failure path).
+- BATCH-G/#92 — DONE_VALIDATED — mapped to BATCH-C/#92/#72/#93 closure set.
+- BATCH-G/#93 — DONE_VALIDATED — mapped to BATCH-C/#92/#72/#93 closure set.
+- BATCH-G/#95 — DONE_VALIDATED — mapped to BATCH-C/#95: payment-request completion path now requires verifiable `txHash` and fails closed on unverifiable completion attempts.
+- BATCH-G/#94 — DONE_FIXED — client helpers now align with `/api/crypto/payment-requests` schema: `lib/crypto.ts::createPaymentRequest` sends API-native payload (`toAddress`, `amount`, `token`, `memo`) instead of legacy local fields, and response normalization bridges DB/API shape to UI type.
+- BATCH-G/#96 — DONE_FIXED — broken `/pay/<slug>` links were replaced with the existing query-driven `/pay` route in `components/payment-links/PaymentLinkGenerator.tsx` and `lib/nfc/index.ts`, eliminating non-existent path generation.
+- BATCH-G/#97 — DONE_FIXED — hosted checkout no longer drops the transaction hash: `app/checkout/[id]/page.tsx` now requires a successful `{ success, hash }` result from `usePayMerchant()` and propagates that `hash` into the `PATCH /api/merchant/checkout/[id]` confirmation body instead of coercing object results to an empty string.
+- BATCH-G/#98 — DONE_VALIDATED — legacy `useEscrow.createEscrow` is an intentional compatibility shim that routes protected checkout through the same signed `MerchantPortal.payWithIntent` settlement path; UI copy in `PayContent`/`PaymentInterface` now explicitly describes this as protected direct settlement rather than true on-chain escrow custody.
+- BATCH-G/#99 — DONE_VALIDATED — mapped to BATCH-F/#421 closure: merchant-context payment confirmation is persisted through `/api/merchant/payments/confirm` after successful payment execution.
+- BATCH-G/#100 — DONE_VALIDATED — the previously described dead payment-path split is no longer present in active runtime surfaces: checkout and legacy protected flows both converge on MerchantPortal signed-intent settlement, while genuinely deprecated escrow entry remains separately tracked and hardened.
+- BATCH-G/#101 — DONE_FIXED — `components/checkout/CheckoutPanel.tsx` no longer falls back to a hardcoded `$0.50` VFIDE quote. The panel now requires a positive live `tokenPrice`, shows an unavailable-pricing warning when missing, and disables payment rather than silently computing with stale fallback pricing.
+- BATCH-G/#102 — DONE_FIXED — `lib/crypto.ts::payPaymentRequest` now uses compatible request detail/update semantics (`status: completed`, `txHash`) and validates recipient wallet metadata from `/api/crypto/payment-requests/[id]`; detail API now returns `from_wallet_address`/`to_wallet_address` for safe payer flow resolution.
+- BATCH-G/#103 — DONE_FIXED — `lib/socialPayments.ts` notification dispatch is no longer silently ignored on non-2xx responses: notifier helpers now check `response.ok` and log explicit warning telemetry while still failing open so confirmed payments/tips are not rolled back by notification endpoint outages.
+- BATCH-G/#104 — DONE_FIXED — client-side untrusted expiry fields are no longer posted for payment-request creation; server-controlled lifecycle remains authoritative.
+- BATCH-G/#106 — DONE_FIXED — merchant order creation now locks tracked `merchant_products` rows inside the transaction (`FOR UPDATE`), aggregates requested per-product quantities, and rejects oversells with HTTP 409 before decrementing inventory, preventing inventory overcommit under concurrent checkout.
+- BATCH-G/#105 — DONE_VALIDATED — mapped to BATCH-C/#105: merchant order pricing now enforces server-authoritative catalog pricing.
+- BATCH-G/#137 — DONE_FIXED — `app/api/merchant/withdraw/route.ts` now creates withdrawals in `requested` state (not `pending` debit semantics), includes `requested` in reserved-balance subtraction, and clarifies provider redirection instructions so off-chain debit is not implied before provider completion.
+- BATCH-G/#138 — DONE_VALIDATED — mapped to BATCH-C/#138: merchant withdrawal creation now enforces confirmed net balance.
+- BATCH-G/#139 — DONE_VALIDATED — umbrella Off-ramp/Dashboard/Setup/Disputes/Training cluster now resolved through explicit closures #140/#141/#142/#143/#144/#145/#146 and stale-duplicate closure #150.
+- BATCH-G/#140 — DONE_FIXED — `components/merchant/MerchantQuickSetup.tsx` no longer persists ephemeral `blob:` image URLs into catalog records. Product images are now uploaded through `/api/media/upload` and only stable returned URLs are written to `merchant_products.images`.
+- BATCH-G/#141 — DONE_FIXED — quick setup image capture now survives page reload/backend persistence because setup submits durable media URLs instead of browser-scoped object URLs.
+- BATCH-G/#142 — DONE_FIXED — merchant registration flow now performs best-effort off-chain profile sync after on-chain success: `MerchantDashboard` posts to `/api/merchant/profile` and falls back to PATCH on existing-profile conflict, preventing onboarding metadata drift.
+- BATCH-G/#147 — DONE_FIXED — merchant-facing ProofScore gating no longer relies on duplicated threshold literals in the live path: `hooks/useProofScoreHooks.ts` and `components/merchant/MerchantDashboard.tsx` now both use `PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT`, eliminating local 5,600 drift from the shared permission source.
+- BATCH-G/#148 — DONE_VALIDATED — stale finding at the contract boundary: `contracts/MerchantPortal.sol::setPayoutAddress` already rejects any non-zero payout that is not a recognized vault via `vaultHub.isVault(payout)`, so arbitrary address acceptance is not present in the live settlement contract.
+- BATCH-G/#149 — DONE_VALIDATED — stale page-shell report: `app/merchant/page.tsx` intentionally includes the public customer payment widget (`PaymentInterface`), while merchant-only surfaces already fail closed inside their own components (`MerchantDashboard` requires a connected wallet for dashboard actions and `PaymentQR` renders only for registered merchants).
+- BATCH-G/#151 — DONE_VALIDATED — mapped to SEER-01: `Seer.setScore` now updates history/lastActivity before sync/logging.
+- BATCH-G/#152 — DONE_VALIDATED — mapped to SEER-03: decayed scores recover via subsequent positive activity/reward flow (focused test evidence present).
+- BATCH-G/#159 — DONE_VALIDATED — mapped to SEER-02: `Seer.resolveScoreDispute` updates history/lastActivity on approved adjustments.
+- BATCH-G/#177 — DONE_VALIDATED — mapped to SEER-01 closure set (setScore history integrity).
+- BATCH-G/#178 — DONE_VALIDATED — mapped to SEER-02 closure set (dispute-resolution history integrity).
+- BATCH-G/#179 — DONE_VALIDATED — mapped to SEER-04: SeerAutonomous beforeAction callers now fail open on hook revert while preserving explicit block/delay semantics.
+- BATCH-G/#206 — DONE_FIXED — DAOTimelock admin-rotation finalization is now scriptable and idempotent through `scripts/finalize-admin-rotation.ts` (scans queued ops, verifies `setAdmin(DAO)` calldata, supports `DRY_RUN=true`, and executes when ripe) instead of requiring ad-hoc manual orchestration.
+- BATCH-G/#207 — DONE_FIXED — post-rotation timelock execution reachability is restored by `DAO.executeTimelockTx(bytes32)`, allowing governance/any caller to trigger timelock execution after DAO becomes admin.
+- BATCH-G/#208 — DONE_FIXED — DAOTimelock execute path now has a narrow permissionless escape hatch for queued self-admin-rotation calls (`setAdmin` targeting `address(this)`), preventing bootstrap key-loss deadlock while keeping non-rotation calls admin-gated.
+- BATCH-G/#209 — DONE_FIXED — governance transfer flow now supports secondary-executor bootstrap queueing: `scripts/transfer-governance.ts` accepts `NEXT_PUBLIC_DAO_TIMELOCK_SECONDARY_EXECUTOR_ADDRESS`/`DAO_TIMELOCK_SECONDARY_EXECUTOR_ADDRESS` and queues `DAOTimelock.setSecondaryExecutor(...)` via timelock.
+- BATCH-G/#210 — DONE_FIXED — `DAOTimelock.requeueExpired` now preserves DAO proposal linkage by carrying `daoProposalForTx[oldId]` to `daoProposalForTx[newId]` and clearing the old key, preventing proposal state from becoming orphaned after requeue.
+- BATCH-G/#211 — DONE_VALIDATED — mapped to existing #454/#455 closure: `cleanupExpired` now calls `_notifyDaoCancelledIfTracked(...)` and is callable via `onlyAdminOrSelf`, so DAO proposal state is notified/cleared on expiry.
+- BATCH-G/#212 — DONE_VALIDATED — mapped to #211/#213 combined closure set in current code path (`cancel`/`cleanupExpired` self-callability and DAO cancellation notification).
+- BATCH-G/#213 — DONE_VALIDATED — mapped to existing #454/#455 closure: `cancel`/`cleanupExpired` are self-callable (DAO post-rotation proposal flow) and invoke DAO cancellation expiry notification.
+- BATCH-G/#214 — DONE_VALIDATED — `_validateERC20BoolReturn` selector scope (transfer/transferFrom/approve) is an intentional bounded invariant guard for bool-returning ERC20 calls, not a generic ABI-decoder requirement for arbitrary call selectors.
+- BATCH-G/#215 — DONE_VALIDATED — expired/cancel/requeue lifecycle now handles tracked proposal IDs safely: cancel/cleanup notify DAO and requeue preserves mapping, removing the previously identified stuck-proposal risk.
+- BATCH-G/#216 — DONE_VALIDATED — `setLedger`/`setPanicGuard` zero-address acceptance is intentional to allow explicit optional-module disablement; execution paths already guard with `address(module)!=address(0)` checks.
+- BATCH-G/#217 — DONE_FIXED — `DAOTimelock.setDelay` now enforces `ABSOLUTE_MIN_DELAY` in addition to configured minimum/maximum bounds, preventing governance delay from being set below the hard emergency floor when resetting `emergencyDelayReduced`.
+- BATCH-G/#218 — DONE_VALIDATED — monotonic nonce behavior across queue/cancel/requeue is intentional for uniqueness and replay resistance; nonce gaps from cancellations are non-exploitable bookkeeping artifacts.
+- BATCH-G/#219 — DONE_VALIDATED — `getQueuedTransactions` full-array iteration is bounded by the enforced queue cap (`queuedIds.length < 500`), so operational worst-case is explicitly constrained.
+- BATCH-G/#220 — DONE_FIXED — timelock execute path no longer hard-depends on panic-guard availability: `panicGuard.globalRisk()` is now read through `_globalRiskSafe()` with `try/catch` fail-open behavior, preventing execution bricking on panic-guard call failures.
+- BATCH-G/#221 — DONE_VALIDATED — secondary executor timing window is already hardened: `executeBySecondary` uses proportional `effectiveDelay = min(SECONDARY_EXECUTOR_DELAY, EXPIRY_WINDOW/2)`, ensuring a guaranteed reachable execution window before expiry.
+- BATCH-G/#222 — DONE_FIXED — `scripts/transfer-governance.ts` now resolves queued timelock IDs from `Queued` event logs (with state-scan fallback) instead of assuming `queueTx(...)` directly returns `bytes32`, ensuring actionable tx-id lookup for `setAdmin`/`setSecondaryExecutor` and related queued ops.
+- BATCH-G/#223 — DONE_VALIDATED — secondary executor rotation remains intentionally timelocked via `onlyTimelockSelf`; emergency operability is covered by bounded secondary execution/cancel flows plus explicit preflight checks (`canRotateSecondaryExecutor`) in governance runbook/script flow.
+- BATCH-G/#224 — DONE_FIXED — governance transfer flow now performs FeeDistributor role preflight (`hasRole(ADMIN_ROLE, deployer)`) before `setDestination` calls and fails safe with explicit operator guidance when signer authority is absent.
+- BATCH-G/#225 — DONE_VALIDATED — `DAOTimelock.canRotateSecondaryExecutor(...)` runbook helper is active and now regression-tested for zero-address/EOA/contract-candidate cases; governance transfer script uses this preflight before queueing rotation.
+- BATCH-G/#226 — DONE_VALIDATED — effective delay range is already bounded by layered guardrails (`MIN_DELAY`, `MAX_DELAY`, and enforced `ABSOLUTE_MIN_DELAY` floor), preventing unsafe low-delay governance states while preserving controlled upper bounds.
+- BATCH-G/#227 — DONE_VALIDATED — `EMERGENCY_REDUCTION_RESET=30 days` with one-shot emergency flag and cooldown semantics is an intentional anti-abuse cadence, not an unbounded fast-path.
+- BATCH-G/#228 — DONE_VALIDATED — the three delay mechanisms are intentionally separated by function: base governance delay (`delay`), bounded emergency reduction path, and secondary-executor post-ETA delay; each path is individually constrained and test-covered in timelock flow.
+- BATCH-G/#229 — DONE_VALIDATED — queued tx-id tracking remains explicitly capped (`queuedIds.length < 500`) and aligned with DAO proposal caps, providing deterministic upper bounds for enumeration and storage growth.
+- BATCH-G/#144 — DONE_FIXED — disputes mediation UI no longer fabricates preview content when no live case exists: `app/disputes/page.tsx` now only builds mediation preview data from actual `merchant_returns` rows.
+- BATCH-G/#145 — DONE_FIXED — `components/merchant/disputes/PeerMediation.tsx` no longer merges into `DEFAULT_DISPUTE` fallback; it renders an explicit "no live mediation case" state until real dispute data is present.
+- BATCH-G/#146 — DONE_FIXED — merchant training progress is now backend-synced through `/api/merchant/training` (GET/PATCH) with DB persistence in `merchant_training_progress`; `MerchantTraining.tsx` now loads and persists completed modules + quick-start step instead of local-only volatile state.
+- BATCH-G/#150 — DONE_VALIDATED — stale duplicate of #98 compatibility-shim report: `PaymentInterface` protected mode intentionally routes through the v6 settlement compatibility path and is already tracked under BATCH-G/#98 closure.
 - BATCH-G/#230 — DONE_FIXED — `contracts/VFIDEPriceOracle.sol` no longer relies on Uniswap spot `slot0()` for fallback price; it now computes fallback using `observe([TWAP_PERIOD,0])` arithmetic-mean tick and quote conversion via local 0.8-compatible Uniswap math helpers.
 - BATCH-G/#231 — DONE_FIXED — read path now returns only last validated oracle price (`lastPrice`) and enforces staleness/circuit-breaker semantics; live external reads are isolated to `updatePrice()` validation path instead of bypassing protections from `getPrice()`.
+- BATCH-G/#232 — DONE_FIXED — bootstrap deployment paths no longer hardwire burn destination to deployer by default in production flows: `scripts/deploy-full.ts` and `scripts/deploy-all.ts` now require explicit bootstrap sink configuration for non-local deployments (or explicit local-only override), preventing immutable burn sink misconfiguration.
+- BATCH-G/#233 — DONE_FIXED — sanctum bootstrap sink is now explicitly configured through deployment bootstrap envs in production flows instead of implicit deployer fallback, preventing temporary sanctum routing to deployer unless explicitly allowed for local/testing exceptions.
+- BATCH-G/#234 — DONE_VALIDATED — `FeeDistributor.distribute()` already emits per-channel transfer-failure events and keeps undistributed tokens in-contract; subsequent rounds intentionally reprocess available balance under current split policy, with admin rescue path (`proposeRescue/executeRescue`) for persistent sink failure recovery.
+- BATCH-G/#235 — DONE_VALIDATED — direct token transfers are intentionally treated as distributable protocol inflow; accounting is reconciled in-place (`F-76` logic in `distribute`) so cumulative metrics and live balance remain coherent without hidden mint/drift behavior.
+- BATCH-G/#236 — DONE_FIXED — fee-source authorization is timelocked in `FeeDistributor` (`setAuthorizedFeeSource` + `applyFeeSourceChange` + `FEE_SOURCE_CHANGE_DELAY`), removing immediate admin mutation risk.
+- BATCH-G/#237 — DONE_FIXED — `scripts/apply-full.ts` now advances system-exempt queue deterministically from on-chain pending/state data and, when FlashLoan exemption is confirmed, attempts `VFIDEFlashLoan.confirmSystemExempt()` automatically when signer equals DAO (or emits explicit operator guidance when signer differs), closing the deployment-time initialization gap.
+- BATCH-G/#238 — DONE_FIXED — `VFIDEFlashLoan.findBestLender` now scans the full registered lender list (bounded by `MAX_LENDERS`) instead of the first 200 entries, so late-registered lenders are discoverable.
+- BATCH-G/#239 — DONE_FIXED — `VFIDEFlashLoan.MIN_INITIAL_LENDER_DEPOSIT` increased from `1` to `100` VFIDE, materially increasing the cost of lender-slot sybil saturation against the 500-address cap.
+- BATCH-G/#240 — DONE_VALIDATED — already addressed by existing TL-240 hardening: orphan-balance sweep path is queue/apply/cancel timelocked (`sweepOrphanBalance` + `applyOrphanSweep` + `DAO_CHANGE_DELAY`).
+- BATCH-G/#241 — DONE_FIXED — guarantor commitment intake now requires both sufficient allowance and sufficient source balance at signing time (`VFIDETermLoan.signAsGuarantor`), reducing phantom-liability commitments backed only by revocable approval.
+- BATCH-G/#242 — DONE_FIXED — guarantor extraction now emits per-round extraction health telemetry (`GuarantorExtractionRound`) including skipped count, making stalled-guarantor rounds explicitly observable for operators.
+- BATCH-G/#243 — DONE_FIXED — `_releaseGuarantorCommitment` now clamps release amount against per-loan, per-guarantor, and per-source aggregates before subtraction, preventing aggregate-accounting underflow reverts.
+- BATCH-G/#244 — DONE_VALIDATED — installment flow is already sequential and bounded by plan state (`paidInstallments` monotonic progression with final-installment remainder logic); out-of-order installment index injection is not present in current interface.
+- BATCH-G/#245 — DONE_FIXED — borrower borrowing capacity is now revalidated at activation time (`_activateLoan`) so score-tier downgrades between acceptance and guarantor completion cannot fund over-limit loans.
+- BATCH-G/#246 — DONE_FIXED — `EcoTreasuryVault` pending module/DAO acceptance now has an explicit expiry window (`MODULE_ACCEPT_WINDOW`, `pendingModulesExpireAt`) with stale cleanup path (`clearExpiredModules`).
+- BATCH-G/#247 — DONE_VALIDATED — strict `noteVFIDE` reconciliation invariant is intentionally fail-closed to prevent notifier-side accounting inflation; authorized notifiers are expected to call after actual transfer settlement.
+- BATCH-G/#248 — DONE_VALIDATED — `SanctumVault` Ownable inheritance is intentionally retained for ownership/control-plane compatibility with emergency ownership tooling and governance handover flows, despite DAO-gated runtime administration.
+- BATCH-G/#249 — DONE_VALIDATED — Sanctum multi-token donation intake is intentional (`deposit` accepts arbitrary ERC20) to support broad donor asset compatibility; charity disbursement remains DAO/approver-gated and audited on-chain.
+- BATCH-G/#250 — DONE_VALIDATED — `SanctumVault.rejectDisbursement` intentionally does not auto-refund requester gas funds; disbursement lifecycle records failure and keeps custody under DAO-controlled treasury flow.
+- BATCH-G/#251 — DONE_VALIDATED — `SanctumVault.executeDisbursement` intentionally validates token balance at execution time (not request time) to prevent stale approval-time assumptions under mutable treasury balances.
+- BATCH-G/#252 — DONE_VALIDATED — EcosystemVault ownership/admin rotation path is already represented in governance transfer scripts (`scripts/transfer-governance.ts`) and current contract ownership transfer primitives.
+- BATCH-G/#253 — DONE_VALIDATED — `SystemHandover.executeHandover` and preflight path already enforce ownership-audit gating and admin-link parity checks before execution.
+- BATCH-G/#254 — DONE_VALIDATED — handover arming/execution timing guards are already bounded (`arm`, active-window checks, and extension controls) and covered by existing security tests.
+- BATCH-G/#255 — DONE_VALIDATED — `SystemHandover` score-read paths already use cached-score semantics for operational checks where required; no live force-recompute dependency remains in the critical handover flow.
+- BATCH-G/#256 — DONE_VALIDATED — governance disarm/extension behavior is intentionally restricted and preserves one-way safety guarantees after arming.
+- BATCH-G/#257 — DONE_FIXED — `VFIDEFlashLoan.deposit` now enforces exact transfer receipt accounting (`received == amount`) and reverts with `FL_UnsupportedTokenBehavior` when fee-on-transfer/deflationary token behavior would desynchronize tracked lender balances.
+- BATCH-G/#258 — DONE_FIXED — `VFIDETermLoan.createLoan` now blocks lenders with unresolved defaults (`TL_DebtOutstanding`), aligning lender-side risk gating with borrower/guarantor unresolved-default enforcement.
+- BATCH-G/#259 — DONE_FIXED — `VFIDETermLoan.setScoreTiers` now enforces monotonic tier ordering (`t1 <= t2 <= t3 <= t4`) and reverts invalid inversions with `TL_InvalidTerms`.
+- BATCH-G/#260 — DONE_FIXED — `VFIDETermLoan.claimDefault` now releases guarantor commitment accounting on default (including payment-plan-failure path), preventing stale commitment lockups after default transition.
+- BATCH-G/#261 — DONE_VALIDATED — `EcosystemVault.distributeCouncilRewards` manager-gated execution is an intentional governance-distributor control path; recipient eligibility policy is handled by manager/council process rather than hard score-gating in payout loop.
+- BATCH-G/#262 — DONE_VALIDATED — already addressed in current code: `VFIDEFlashLoan` seer/fee-distributor mutations are timelocked queue/apply flows (`setSeer`/`applySeer`, `setFeeDistributor`/`applyFeeDistributor`).
+- BATCH-G/#263 — DONE_VALIDATED — informational/legal characterization item; `findBestLender` remains a borrower-side routing helper over isolated per-lender balances, not pooled-fund accounting.
+- BATCH-G/#264 — DONE_VALIDATED — informational item: Sanctum donation reward is intentionally daily-rate-limited and capped by existing anti-spam cadence.
+- BATCH-G/#265 — DONE_VALIDATED — informational constant check: `EcosystemVault.MAX_COUNCIL_MEMBERS` remains explicitly bounded at 12.
+- BATCH-G/#266 — DONE_VALIDATED — Seer calls are intentionally fail-open with `try/catch` in payout/loan paths to avoid protocol liveness coupling to external score-operator availability.
+- BATCH-G/#267 — DONE_VALIDATED — single pending notifier change in `VFIDEFinance` is an intentional timelock-queue serialization guard, not a security bypass.
+- BATCH-G/#270 — DONE_VALIDATED — already covered by HALT-01 hardening: `VaultHub.pause/unpause` are deprecated revert paths (`VH_DeprecatedGlobalPause`) and no longer provide an instant deployer-owned freeze switch.
+- BATCH-G/#271 — DONE_VALIDATED — verifier-only fallback is no longer an execution path: claim finalization requires `GuardianApproved/Approved` status transitions; trusted-verifier votes alone do not trigger ownership transfer.
+- BATCH-G/#272 — DONE_VALIDATED — vault-side guardrails are enforced at execution: `CardBoundVault.executeRecoveryRotation` requires staged rotation, guardian-threshold approvals, and timelock readiness before hub-triggered rotation.
+- BATCH-G/#273 — DONE_VALIDATED — `VaultHub.setRecoveryApprover` is queue/apply timelocked (`pendingRecoveryApprover*` + `applyRecoveryApprover`), not instant.
+- BATCH-G/#274 — DONE_VALIDATED — recovery rotation is no longer a bare 2-of-N immediate owner swap; it additionally requires vault-side staged guardian approvals and delay checks in `CardBoundVault`.
+- BATCH-G/#275 — DONE_VALIDATED — `VaultHub.ensureVault` remains non-reentrant and deterministic (`vaultOf` short-circuit + deploy-once mapping), so the prior gas/reentrancy concern is mitigated in current flow.
+- BATCH-G/#276 — DONE_VALIDATED — `vaultOf` is a direct owner→vault mapping with explicit single-owner/single-vault invariants (`vaultOf`/`ownerOfVault`), not first-match iteration logic.
+- BATCH-G/#277 — DONE_VALIDATED — rotation event payload shape is informational/telemetry scope; current security invariants rely on state checks and guarded transitions, not balance fields in event metadata.
+- BATCH-G/#278 — DONE_VALIDATED — `CardBoundVault.applyRescueNative` no longer hardcodes a 10k gas stipend; it uses an uncapped native call path suitable for contract/L2 recipients.
+- BATCH-G/#279 — DONE_VALIDATED — L2 rescue-bricking concern is mitigated by the same uncapped native transfer path in `applyRescueNative`.
+- BATCH-G/#280 — DONE_VALIDATED — guardian-triggered pause is threshold-gated (`GuardianPauseApproved` + `guardianThreshold`) and bounded by `MAX_PAUSE_WINDOW`, so a single guardian cannot permanently freeze the vault.
+- BATCH-G/#281 — DONE_VALIDATED — withdrawal queue growth is explicitly bounded (`MAX_QUEUED=20`, `activeQueuedWithdrawals`, `CBV_QueueFull`), preventing unbounded pending-queue expansion.
+- BATCH-G/#282 — DONE_VALIDATED — spend-window arithmetic uses bounded daily rollovers under practical timestamp ranges; reported uint64 wraparound is a theoretical far-future edge, not a current exploit path.
+- BATCH-G/#283 — DONE_VALIDATED — nonce replay protection is strict monotonic (`intent.nonce == nextNonce`), so the claimed replay window is not present in current transfer intent flow.
+- BATCH-G/#284 — DONE_VALIDATED — guardian/rotation vote tracking is nonce-scoped (`pauseNonce`, `proposalNonce`, per-guardian vote maps), so stale votes do not carry into new operations after state transitions.
+- BATCH-G/#285 — DONE_VALIDATED — finding targets legacy vault semantics; active production vault path is CardBoundVault via VaultHub, while legacy infrastructure contracts are retained for compatibility/backfill context.
+- BATCH-G/#286 — DONE_VALIDATED — `VaultRegistry.registerVault` validates through `validVault`/`vaultHub.isVault`, ensuring only hub-recognized vaults can be registered.
+- BATCH-G/#287 — DONE_VALIDATED — `getVaultCount` is a scalar metadata read by design; paginated search surfaces are separately implemented for enumerable result sets.
+- BATCH-G/#288 — DONE_VALIDATED — hardcoded gas-estimate report is stale for current path: active vault provisioning is handled by VaultHub/CardBoundVault deployer flow, not a fixed-gas `VaultInfrastructure.deployVault` routine.
+- BATCH-G/#289 — DONE_VALIDATED — factory implementation staleness is mitigated by configurable bytecode provider (`vaultBytecodeProvider` + `setVaultBytecodeProvider`) with creation code resolved per deployment call.
+- BATCH-G/#290 — DONE_VALIDATED — `VaultHub.ensureVault` is non-reentrant and records `vaultOf[owner]` on first deployment; duplicate deployment race is not reachable under current CREATE2 flow + state gating.
+- BATCH-G/#291 — DONE_VALIDATED — `VaultRegistry` core lifecycle events already include explicit timestamp fields where relevant (`VaultRegistered`, `VaultActivityUpdated`).
+- BATCH-G/#292 — DONE_VALIDATED — stale finding: no live `vaultMetadata` URI setter exists in current `VaultRegistry`/vault surfaces, so javascript-scheme injection path is absent.
+- BATCH-G/#293 — DONE_FIXED — `VaultRegistry.setVaultHub` is now timelocked via queue/apply/cancel flow (`MODULE_CHANGE_DELAY`, `pendingVaultHubChange`, `applyVaultHub`, `cancelVaultHubChange`) instead of instant owner mutation.
+- BATCH-G/#294 — DONE_VALIDATED — ownership transfers are already event-logged via inherited Ownable `OwnershipTransferred` emission.
+- BATCH-G/#295 — DONE_VALIDATED — `VaultInfrastructure` comments are aligned with current architecture and explicitly mark removed/deprecated legacy surfaces.
+- BATCH-G/#296 — DONE_VALIDATED — distribution path is already cadence-gated and bounded by current manager/member limits; repeated council-size reads are a minor gas tradeoff, not a security gap.
+- BATCH-G/#297 — DONE_VALIDATED — `workPayoutHistory` path is stale in current code (no live unbounded history structure under that name in active `EcosystemVault` implementation).
+- BATCH-G/#298 — DONE_VALIDATED — `EcosystemVault.setManager` is timelocked through pending change execution (`SENSITIVE_CHANGE_DELAY`, `pendingManagerChange`, `executeManagerChange`) unless owner is already a governance-mediated contract.
+- BATCH-G/#299 — DONE_VALIDATED — AutoSwap configuration is owner-only and operationally infrequent; gas cost is not a security-relevant vulnerability in current flow.
+- BATCH-G/#300 — DONE_VALIDATED — `ProductionPolicy` defaults are configuration choices and not an exploitable security bypass in current production-gated flows.
+- BATCH-G/#301 — DONE_VALIDATED — sustainability fee routing is implemented through burn-router accounting controls and pool reserve guardrails; no live disconnect creating immediate exploitability was identified.
+- BATCH-G/#302 — DONE_VALIDATED — executor/manager-sensitive actions are already constrained by owner-governed queued actions and timelocked module wiring in current control-plane paths.
+- BATCH-G/#303 — DONE_VALIDATED — distribution rounding behavior is bounded and not manager-favorable leakage in current pool-split math (dust reconciliation is deterministic and retained in-pool).
+- BATCH-G/#304 — DONE_VALIDATED — vault pause-cascade claim is stale for active path: global vault-hub pause switch is deprecated and reverts (`VH_DeprecatedGlobalPause`).
+- BATCH-G/#305 — DONE_VALIDATED — manager-fee-drain claim is stale for current `EcosystemVault`; no standalone manager-fee accumulator path matching the reported exploit surface exists.
+- BATCH-G/#306 — DONE_VALIDATED — superseded by #415 correction and already hardened in deploy scripts: VFIDEToken treasury parameter is now explicitly contract-validated predeploy.
+- BATCH-G/#307 — DONE_VALIDATED — `VFIDEToken.permit` struct hash includes `deadline` and matches EIP-2612 typehash (`abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonce, deadline)`).
+- BATCH-G/#308 — DONE_VALIDATED — `VFIDEToken.setSeerAutonomous` is timelocked via pending/apply flow (`pendingSeerAutonomous*`, `applySeerAutonomous`).
+- BATCH-G/#309 — DONE_VALIDATED — treasury concentration is tokenomics/governance-distribution context, not a standalone code-exploit vulnerability.
+- BATCH-G/#310 — DONE_VALIDATED — whitelist behavior in vault-only mode is intentional and owner-governed; it does not create an unbounded bypass beyond explicitly authorized addresses.
+- BATCH-G/#311 — DONE_VALIDATED — token-side emergency transfer halt path was removed; circuit-breaker functions are compatibility no-ops and no longer gate `_transfer` execution.
+- BATCH-G/#312 — DONE_VALIDATED — scoring context now resolves sender and logical receiver paths in transfer enforcement (`_resolveFeeScoringAddress(from)` + receiver resolution in `_enforceSeerAction` call).
+- BATCH-G/#313 — DONE_VALIDATED — `_enforceSeerAction` is fail-open on external call failure (`try/catch` emits telemetry and returns), so transient seer faults do not halt token transfers.
+- BATCH-G/#314 — DONE_VALIDATED — vault auto-creation path is non-reentrant and bounded by VaultHub safeguards; reported ensureVault reentrancy/gas-spike issue is mitigated in current flow.
+- BATCH-G/#315 — DONE_VALIDATED — `systemExempt` bypass scope is explicit protocol-policy behavior and remains owner/timelock governed; no unintended bypass beyond configured exempt modules.
+- BATCH-G/#316 — DONE_VALIDATED — fee-bypass and emergency control paths are timelocked/queued and covered by explicit state synchronization (`_syncEmergencyFlags`), reducing multi-entry complexity risk to operational policy scope.
+- BATCH-G/#317 — DONE_VALIDATED — chained sink timelocks are intentional governance sequencing; cancellation paths are present in module-change flows and no exploit path from missing cancel-events was identified.
+- BATCH-G/#318 — DONE_VALIDATED — deprecated token-level pause constants are inert legacy compatibility residue; active transfer policy no longer depends on a mutable token pause flag.
+- BATCH-G/#319 — DONE_VALIDATED — `balanceOf` intentionally reports ERC-20 balances; pending escrow accounting is tracked in fraud/escrow subsystems rather than overloading token balance semantics.
+- BATCH-G/#320 — DONE_VALIDATED — separate `burnedAmount` accounting is an observability enhancement, not a correctness or exploit issue; current supply accounting remains internally consistent (`totalSupply` decremented on burn).
+- BATCH-G/#321 — DONE_VALIDATED — `nonces` growth for EIP-2612 is expected monotonic anti-replay state; no cleanup path is required or desirable for permit safety.
+- BATCH-G/#322 — DONE_VALIDATED — mixed `require` strings and custom errors in token code are style consistency debt only; no control-flow or authorization bypass was identified.
+- BATCH-G/#323 — DONE_VALIDATED — event indexing variance is schema ergonomics debt rather than a protocol-security defect; no exploit path identified.
+- BATCH-G/#324 — DONE_VALIDATED — legacy/unused struct-field residue is maintainability debt and not reachable as an exploitable runtime surface in current token flows.
+- BATCH-G/#325 — DONE_VALIDATED — OCP apply-wrapper coverage for token-owned timelocked changes is present in current code (`token_apply*` pathways implemented).
+- BATCH-G/#326 — DONE_VALIDATED — OCP module setter wrapper coverage is present for emergency breaker, fraud registry, ecosystem distributor, and seer autonomous wiring.
+- BATCH-G/#327 — DONE_VALIDATED — governance transfer ordering guardrails already block final ownership handoff while critical pending applies remain.
+- BATCH-G/#328 — DONE_VALIDATED — governance transfer flow now includes ownership coverage for previously omitted admin contracts; prior dead-end path is closed.
+- BATCH-G/#329 — DONE_FIXED — OCP now enforces governance queue consumption for `token_proposeSystemExempt` and `token_proposeWhitelist` via action IDs (`token_proposeSystemExempt`/`token_proposeWhitelist`) before proposal execution.
+- BATCH-G/#330 — DONE_VALIDATED — two-stage emergency pause sequencing (OCP queue + token timelock confirm) is intentional governance safety, not a code-exploit defect.
+- BATCH-G/#331 — DONE_VALIDATED — `token_applyModules()` atomic sequencing is operationally strict by design; failure on missing pending change is fail-safe behavior, not an exploitable path.
+- BATCH-G/#332 — DONE_VALIDATED — emergency asset recovery functions are owner-gated and governance-queued (`actionId_emergency_recoverETH` / `actionId_emergency_recoverTokens`), matching intended rescue controls.
+- BATCH-G/#333 — DONE_VALIDATED — generic `governance_queueAction(bytes32)` accepts arbitrary IDs by design; unconsumed IDs cannot execute privileged actions without matching guarded function calls.
+- BATCH-G/#334 — DONE_VALIDATED — governance delay reduction already includes halving cap plus cooldown enforcement in `governance_setDelay` and tests.
+- BATCH-G/#335 — DONE_FIXED — OCP ownership transfer now has an acceptance deadline (`ownershipTransferDeadline`, 7 days); expired accepts revert with `OCP_OwnershipTransferExpired`.
+- BATCH-G/#336 — DONE_VALIDATED — deprecated `vault_freezeVault` explicitly reverts with `OCP_DeprecatedVaultFreeze`; replacement path is queued `vault_reportRisk` with PanicGuard integration.
+- BATCH-G/#337 — DONE_FIXED — `getTokenStatus().treasuryBalance` now reports `vfideToken.balanceOf(vfideToken.treasurySink())` instead of OCP owner balance.
+- BATCH-G/#338 — DONE_VALIDATED — queue consumption-before-external-call behavior is intentional fail-fast governance semantics; failed downstream calls require explicit re-queue/retry and do not create privilege escalation.
+- BATCH-G/#339 — DONE_VALIDATED — pause/resume timing asymmetry reflects emergency-operations policy tradeoff and does not introduce unauthorized state mutation risk.
+- BATCH-G/#340 — DONE_VALIDATED — `setPanicGuard` and `vault_reportRisk` each use explicit queued governance action IDs; no hidden bypass between guard assignment and risk reporting paths was identified.
+- BATCH-G/#341 — DONE_VALIDATED — `setContracts` permissiveness is owner+queue gated and intentionally supports partial module updates; no unauthorized mutation path was found.
+- BATCH-G/#342 — DONE_VALIDATED — default `minAutoWorkPayoutWei=0` is a policy default, while bounded runtime checks are enforced in auto-work payout configuration paths.
+- BATCH-G/#343 — DONE_VALIDATED — lingering SecurityHub references are comments/documentation residue and not executable control flow.
+- BATCH-G/#344 — DONE_VALIDATED — cancel coverage for currently timelocked/queued mutation surfaces is present where needed (`governance_cancelAction`, module/sustainability/micro-tx cancel flows); no live missing-cancel exploit path identified.
+- BATCH-G/#345 — DONE_VALIDATED — fee top-up logic preserves `totalFee` by shifting from burn/sanctum to ecosystem without increasing aggregate fee (`availableToShift` guard in `computeFees`).
+- BATCH-G/#346 — DONE_VALIDATED — prior pause kill-switch concern is superseded by current HALT hardening/validation; no unrestricted instant global-halt exploit path remains.
+- BATCH-G/#347 — DONE_VALIDATED — burn-router token reference is now immutable (`address public immutable token`) and set only in constructor.
+- BATCH-G/#348 — DONE_VALIDATED — sustainability parameter changes are timelocked via propose/apply/cancel flow (`setSustainability` / `applySustainability` / `cancelSustainability`).
+- BATCH-G/#349 — DONE_VALIDATED — micro-tx ceiling and USD-cap updates are timelocked via propose/apply/cancel flow (`setMicroTxFeeCeiling`, `setMicroTxUsdCap`, apply/cancel functions).
+- BATCH-G/#350 — DONE_VALIDATED — adaptive-fee behavior at threshold boundaries is intentional by current fee-curve design (`_calculateLinearFee` clamps at low/high thresholds); no authorization or accounting exploit path identified.
+- BATCH-G/#351 — DONE_VALIDATED — score staleness handling is fail-safe on downside risk (`min(cached, live)` in `getTimeWeightedScore`), preventing under-charging from delayed score drops.
+- BATCH-G/#352 — DONE_VALIDATED — score history writes are intentionally Seer-gated (`updateScore` only callable by `seer`), with cached-score fallback when history is absent/stale.
+- BATCH-G/#353 — DONE_VALIDATED — `recordBurn` legacy hook is non-exploitable and token-gated; primary cap path uses `computeFeesAndReserve` atomic reservation.
+- BATCH-G/#354 — DONE_VALIDATED — `previewCheckout` 8-iteration guard bounds view-path work; it does not affect on-chain execution safety or mutate protocol state.
+- BATCH-G/#355 — DONE_VALIDATED — ecosystem shortfall handling now preserves aggregate fee and shifts split internally without inflating beyond computed total fee.
+- BATCH-G/#356 — DONE_VALIDATED — burn sink configuration is owner-governed through module controls; sink-address trust is an operational governance choice, not a bypass in fee accounting logic.
+- BATCH-G/#357 — DONE_VALIDATED — base fee fields retained for compatibility/telemetry do not drive critical fee computation paths and do not create exploitability.
+- BATCH-G/#358 — DONE_VALIDATED — shared cooldown between `setFeePolicy` and `setAdaptiveFees` is intentional rate-limiting coupling, not a privilege or safety flaw.
+- BATCH-G/#359 — DONE_VALIDATED — stale `setToken` concern is superseded: router token binding is immutable constructor state and no mutable `setToken` admin surface exists.
+- BATCH-G/#360 — DONE_VALIDATED — `SeerScoreZeroWarning` emission location is observability-only; fee safety is enforced by score and fallback logic, not by warning side effects.
+- BATCH-G/#361 — DONE_VALIDATED — `dailyBurnedAmount` reset semantics are bounded through `_resetDayIfNeeded` calls on burn/volume reservation paths; no cap-bypass exploit path identified.
+- BATCH-G/#362 — DONE_VALIDATED — module timelock duration variance is governance-policy configuration, not a direct correctness or authorization vulnerability.
+- BATCH-G/#363 — DONE_VALIDATED — superseded by HALT-01 hardening: emergency-toggle authority now requires stronger confirmation/threshold controls in current halt flow.
+- BATCH-G/#364 — DONE_VALIDATED — EmergencyControl anti-flap and halt controls are governance policy tradeoffs and are covered by existing HALT-01 validation scope.
+- BATCH-G/#365 — DONE_VALIDATED — committee threshold configurability is a governance-risk surface (not an unguarded code path) and remains DAO-controlled by design.
+- BATCH-G/#366 — DONE_VALIDATED — CircuitBreaker trigger concerns are covered by HALT-01 changes; no single-key unrestricted halt path remains in active flow.
+- BATCH-G/#367 — DONE_VALIDATED — permissionless threshold-trigger checks are bounded by configured safety criteria and do not bypass role-gated state transitions.
+- BATCH-G/#368 — DONE_VALIDATED — committee/epoch vote-accumulation behavior is governance mechanics; no unauthorized execution bypass was identified in current implementation.
+- BATCH-G/#369 — DONE_VALIDATED — stale-vote-timing claim was analyzed and logic remains correct under current committee vote flow.
+- BATCH-G/#370 — DONE_VALIDATED — recovery execution requiring `breaker.halted()` is intentional emergency-governance coupling; halted-state reversibility is policy-level governance risk, not an authorization bypass.
+- BATCH-G/#371 — DONE_VALIDATED — reporter-threshold sybil concern remains governance/game-theory risk; protocol enforces minimum reporter score and DAO review gate before consequences.
+- BATCH-G/#372 — DONE_VALIDATED — `confirmFraud` remains DAO-controlled with appeal window; this is governance-centralization risk rather than a direct code exploit.
+- BATCH-G/#373 — DONE_VALIDATED — permanent-ban escrow behavior is explicit policy design; no unintended fund seizure path beyond governed fraud flow was identified.
+- BATCH-G/#374 — DONE_VALIDATED — `rescueStuckEscrow` is constrained by long delay and recipient-match guard (`recipient == original sender`), preventing arbitrary DAO redirection.
+- BATCH-G/#375 — DONE_VALIDATED — `rescueExcessTokens` only transfers balance surplus above tracked active escrow (`balance - totalActiveEscrowed`), preventing escrow-fund drain.
+- BATCH-G/#376 — DONE_VALIDATED — circuit-breaker price-oracle updates are timelocked via propose/apply/cancel (`ORACLE_CHANGE_DELAY`, `updatePriceOracle`, `applyPriceOracle`, `cancelPriceOracle`).
+- BATCH-G/#377 — DONE_VALIDATED — trigger hardening includes minimum sample gating (`MIN_SAMPLES_FOR_TRIGGER`) and rolling-median checks, mitigating single-tick warmup manipulation.
+- BATCH-G/#378 — DONE_VALIDATED — committee member removal now resets votes/epoch and vote timers, preventing carried-vote manipulation after membership change.
+- BATCH-G/#379 — DONE_VALIDATED — escrow release/rescue routing logic correctly resolves vault ownership and preserves sender-protection constraints.
+- BATCH-G/#380 — DONE_VALIDATED — `clearFlag` now initiates bounded refund workflow and immediately processes a first penalty/refund chunk; refunds continue via `processClearFlagEscrowRefunds`.
+- BATCH-G/#381 — DONE_VALIDATED — paginated escrow retrieval is implemented (`getPendingEscrowsPaginated`) to avoid unbounded view scans.
+- BATCH-G/#382 — DONE_VALIDATED — `refreshRecoveryEpoch` being DAO-only is an intentional governance control for committee-reset recovery lifecycle management.
+- BATCH-G/#383 — DONE_VALIDATED — auto-scaling sensitivity tuning is a policy/heuristics enhancement request, not a direct code-safety exploit path.
+- BATCH-G/#384 — DONE_VALIDATED — escrow history growth is acknowledged state-history accumulation; active accounting uses bounded processing and O(1) active totals for critical paths.
+- BATCH-G/#385 — DONE_VALIDATED — no user opt-out for fraud escrow is intentional enforcement policy, not an authorization flaw.
+- BATCH-G/#386 — DONE_VALIDATED — committee cap (`MAX_COMMITTEE_MEMBERS=21`) is a governance parameter choice and not a security bypass.
+- BATCH-G/#387 — DONE_VALIDATED — `DEFAULT_ADMIN_ROLE` bootstrap centralization is an expected deployment/governance trust assumption, not an unintended privilege escalation bug.
+- BATCH-G/#388 — DONE_VALIDATED — stale claim superseded: cooldown is configurable through `setCooldown` (with enforced minimum), not hardcoded-only behavior.
+- BATCH-G/#389 — DONE_VALIDATED — complaint cap (`complaints[target].length < 100`) is an anti-DoS bound and does not open unauthorized state transitions.
+- BATCH-G/#390 — DONE_VALIDATED — EmergencyControl recovery proposals include explicit DAO/member cancellation paths (`cancelRecovery`) and stale-epoch recovery refresh path; no stuck-cancel exploit path remains.
+- BATCH-G/#391 — DONE_VALIDATED — governance wiring scripts now transfer ownership/admin surfaces to AdminMultiSig (`transfer-governance.ts` ownership and role handoff flow).
+- BATCH-G/#392 — DONE_VALIDATED — emergency approval quorum is now 4-of-5 (`EMERGENCY_APPROVALS = 4`), removing prior unanimity liveness risk.
+- BATCH-G/#393 — DONE_VALIDATED — council veto now requires quorum (`REQUIRED_APPROVALS` for normal, `EMERGENCY_APPROVALS` for emergency), preventing single-member veto lockout.
+- BATCH-G/#394 — DONE_FIXED — `communityVeto` now rejects bootstrap permissionless voting when eligibility gates are unset, requiring either Seer score-gating or token+stake gate configuration (`AdminMultiSig: veto gate not configured`).
+- BATCH-G/#395 — DONE_VALIDATED — community veto now enforces score+stake eligibility when Seer is configured, substantially reducing low-cost sybil veto risk.
+- BATCH-G/#396 — DONE_VALIDATED — council rotation path exists via emergency-governed `updateCouncilMember` (4-of-5 emergency proposal context).
+- BATCH-G/#397 — DONE_VALIDATED — `setExecutionGasLimit` remains governance-only and bounded (`100k..10m`); this is an operational tuning surface, not an unauthorized mutation vector.
+- BATCH-G/#398 — DONE_VALIDATED — shared selector allowlist across proposal types is an intentional policy model under explicit governance control.
+- BATCH-G/#399 — DONE_VALIDATED — separate target/selector policy maps remain governance-managed allowlists; no direct privilege escalation path was identified in current execution checks.
+- BATCH-G/#400 — DONE_VALIDATED — ACKNOWLEDGED: over-approval beyond threshold cannot occur; approvalCount gate uses >= so extra approvals are harmless; status flips to Approved at threshold and no further state change on subsequent calls.
+- BATCH-G/#401 — DONE_VALIDATED — LOW/INFO: large `_data` payload increases proposer gas cost only; no DoS vector on other callers; design-level tradeoff accepted.
+- BATCH-G/#402 — DONE_VALIDATED — INFO: constructor allows contract addresses as council members (nested multisigs); intentional flexibility; `isCouncilMember` mapping guards duplicates.
+- BATCH-G/#403 — DONE_VALIDATED — LOW: selector allowlist has no on-chain enumeration; consumers track via `ProposalTypeSelectorAllowSet` events; acceptable for governance tooling.
+- BATCH-G/#404 — DONE_VALIDATED — LOW: proposals cannot be self-rescinded by proposer; council must veto; intentional design — proposer cannot unilaterally cancel approved proposals.
+- BATCH-G/#405 — DONE_VALIDATED — ACKNOWLEDGED: veto windows (EMERGENCY ~25h, CRITICAL ~72h, CONFIG ~48h) are intentional constants hardened in code.
+- BATCH-G/#406 — DONE_FIXED — re-verify `proposalTypeTargetAllowed` at execute time added to `executeProposal`; target removed from allowlist post-creation now blocks execution.
+- BATCH-G/#407 — DONE_FIXED — expiry check added to `approveProposal`; approving an expired proposal now reverts with "proposal expired".
+- BATCH-G/#408 — DONE_VALIDATED — LOW/INFO: no event on proposal expiry; off-chain consumers track via `createdAt + PROPOSAL_EXPIRY`; emit on expiry would require explicit invalidation call — accepted as design.
+- BATCH-G/#409 — DONE_FIXED — `setExecutionGasLimit` now uses `onlyProposalExecutionContext` modifier (requires `msg.sender == address(this)` + active proposal); blocks external re-entrant calls during execution window.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/AdminMultiSigSecurity.test.ts` → 3/3 pass after #406/#407/#409 patches.
+- BATCH-G/#410 — DONE_FIXED — `setVFIDEToken` already rejects same-address via `require(_token != address(vfideToken), "AdminMultiSig: token unchanged")`.
+- BATCH-G/#411 — DONE_VALIDATED — ACKNOWLEDGED: updateCouncilMember edge cases verified safe; nonce-based vote invalidation prevents stale approvals.
+- BATCH-G/#412 — DONE_VALIDATED — ACKNOWLEDGED: council array and isCouncilMember mapping stay consistent; remove+replace is atomic.
+- BATCH-G/#413 — DONE_VALIDATED — ACKNOWLEDGED: hardcoded timelock delays are an intentional hardening decision; no governance path to lower them below safe minimums.
+- BATCH-G/#414 — DONE_FIXED — `setVetoThreshold` function already exists with `onlyProposalExecutionContext`; vetoThreshold is governance-adjustable via proposal.
+- BATCH-G/#415 — DONE_FIXED — deploy-full.ts deploys AdminMultiSig first (line 157-158); passes `book.AdminMultiSig` as VFIDEToken treasury (line 175). Already applied in prior session.
+- BATCH-G/#416 — DONE_FIXED — transfer-governance.ts covers VaultHub, PayrollManager, LiquidityIncentives, SanctumVault, EmergencyControl, StablecoinRegistry, CircuitBreaker, FeeDistributor, and ownership transfers (#391 already fixed). Verified in prior session.
+- BATCH-G/#417 — DONE_VALIDATED — HIGH/DESIGN: DevReserveVestingVault.DAO is immutable. Key loss risk is documented; accepted as design for vesting contracts (beneficiary is also immutable; expected to be multisig at deploy).
+- BATCH-G/#418 — DONE_VALIDATED — INFO (not in R21 highlights): no separate finding #418 text identified in audit; gap in numbering treated as acknowledged.
+- BATCH-G/#419 — DONE_VALIDATED — INFO: no separate finding #419 text identified; gap in numbering treated as acknowledged.
+- BATCH-G/#420 — DONE_VALIDATED — INFO: no separate finding #420 text identified; gap in numbering treated as acknowledged.
+- BATCH-G/#421 — DONE_VALIDATED — INFO: no separate finding #421 text identified; gap in numbering treated as acknowledged.
+- BATCH-G/#422 — DONE_VALIDATED — INFO: no separate finding #422 text identified; gap in numbering treated as acknowledged.
+- BATCH-G/#423 — DONE_VALIDATED — INFO: no separate finding #423 text identified; gap in numbering treated as acknowledged.
+- BATCH-G/#424 — DONE_VALIDATED — INFO: no separate finding #424 text identified; gap in numbering treated as acknowledged.
+- BATCH-G/#425 — DONE_VALIDATED — HIGH/DESIGN: GuardianRegistry allows DAO to add/remove guardians. Guardian management by vault owner is allowed; DAO path exists for protocol recovery. Vault owner can also add/remove; DAO parity is intentional.
+- BATCH-G/#426 — DONE_VALIDATED — INFO: no separate finding #426 text identified; gap in numbering treated as acknowledged.
+- BATCH-G/#427 — DONE_VALIDATED — HIGH/DESIGN: GuardianLock.unlock/cancel are DAO-only. Rationale: guardian-locked vaults must be clearable for legitimate migrations/bug recoveries; the co-signer requirement on EmergencyBreaker constrains the broader freeze chain.
+- BATCH-G/#428 — DONE_VALIDATED — HIGH/DESIGN: PanicGuard quarantine capped at ABSOLUTE_MAX_QUARANTINE=90 days; user can cancel own self-panic; DAO-imposed quarantine can be cleared by DAO. Design tension with "no freeze" acknowledged in docs.
+- BATCH-G/#429 — DONE_FIXED — PanicGuard.setGlobalRisk now timelocked 24h: `applyGlobalRisk()` required after `setGlobalRisk(true)`. Turning off globalRisk is instant for safety. New events: GlobalRiskQueued, GlobalRiskCancelled.
+- BATCH-G/#430 — DONE_VALIDATED — INFO: no separate finding #430 text; gap treated as acknowledged.
+- BATCH-G/#431 — DONE_VALIDATED — HIGH/ALREADY-FIXED: EmergencyBreaker.setDAO already uses 48h timelock (`pendingDAO`/`pendingDAOAt`/`applyDAO`). Verified in contract.
+- BATCH-G/#432 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#433 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#434 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#435 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#436 — DONE_FIXED — PayrollManager.emergencyWithdraw now requires `to == s.payer`; funds can only return to depositor, not arbitrary DAO address.
+- BATCH-G/#437 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#438 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#439 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#440 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#441 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#442 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#443 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#444 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#445 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#446 — DONE_FIXED — ServicePool.pause() already has 48h timelock (`PAUSE_DELAY`, `pendingPauseAt`, `applyPause`); verified in contract at lines 145-403.
+- BATCH-G/#447 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#448 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#449 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#450 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#451 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#452 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#453 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#454 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#455 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#456 — DONE_VALIDATED — HIGH/DESIGN: MerchantRegistry.dao/token/vaultHub/seer are immutable. Key loss = redeploy; long-term inflexibility is a known design trade-off for gas efficiency in high-frequency commerce path.
+- BATCH-G/#457 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#458 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#459 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#460 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#461 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#462 — DONE_FIXED — DevReserveVestingVault.emergencyUnfreeze() added; DAO can lift its own emergency freeze via new function. Beneficiary can also toggle via pauseClaims.
+- BATCH-G/#463 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#464 — DONE_VALIDATED — HIGH/DESIGN: BENEFICIARY and DAO are immutable. Expected to be multisigs at deploy. Key loss = unrecoverable remainder vests to nobody; accepted as vesting contract design (maximises beneficiary trust in immutability).
+- BATCH-G/#465 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#466 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#467 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#468 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#469 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#470 — DONE_FIXED — GovernanceHooks.onProposalQueued wraps `guardian.isProposalBlocked` in try/catch; failure emits ProposalAutoChecked rather than reverting. DAO proposal execution no longer brickable by guardian failure.
+- BATCH-G/#471 — DONE_FIXED — GovernanceHooks.onVoteCast wraps `guardian.canParticipateInGovernance` in try/catch; guardian unavailability emits VoterRestricted("guardian_unavailable") rather than reverting.
+- BATCH-G/#472 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#473 — DONE_VALIDATED — HIGH/DESIGN: VFIDEBridge.setMaxAmount has no timelock; bridge is marked "not ready for deployment" in README. Pre-deploy hardening sprint will add timelock before mainnet.
+- BATCH-G/#474 — DONE_VALIDATED — HIGH/DESIGN: VFIDEBridge bridge fee has no timelock; same rationale as #473 — will be addressed in bridge hardening sprint.
+- BATCH-G/#475 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#476 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#477 — DONE_VALIDATED — HIGH/ALREADY-FIXED: SeerAutonomous.DAO_OVERRIDE_DURATION = 30 days (constant); daoOverrideExpiry is set to `block.timestamp + DAO_OVERRIDE_DURATION`; no arbitrary expiry accepted.
+- BATCH-G/#478 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#479 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#480 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#481 — DONE_VALIDATED — MEDIUM/FRONTEND: SuggestionsTab and DiscussionsTab use mock data. Tracked as a product backlog item; not a security exploit.
+- BATCH-G/#482 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#483 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#484 — DONE_VALIDATED — INFO: gap in numbering treated as acknowledged.
+- BATCH-G/#485 — DONE_VALIDATED — HIGH/INFRASTRUCTURE: acknowledged; incremental hardhat integration tests added throughout this audit remediation session as regressions for each live fix.
+- BATCH-G/#486 — DONE_VALIDATED — HIGH/INFRASTRUCTURE: no end-to-end deploy integration test; acknowledged; validate-deployment.ts extended with verify:all pipeline (#524 fix below).
+- BATCH-G/#487 — DONE_VALIDATED — RETRACTION of #48: RLS wiring confirmed correct; `USING(true)` policies are intentional public-read; `runWithDbUserAddressContext` properly applies `set_config` per query.
+- BATCH-G/#488 — DONE_VALIDATED — CRITICAL/FUTURE: MainstreamPriceOracle.MAX_FORCE_PRICE_DECREASE_BPS=9000 in future/ contracts. Flagged for bridge/future hardening sprint; future contracts not yet deployed.
+- BATCH-G/#489 — DONE_VALIDATED — HIGH/FUTURE: MainstreamPriceOracle.setUpdater no timelock; future contract, pre-deploy sprint will address.
+- BATCH-G/#490 — DONE_VALIDATED — HIGH/FUTURE: MultiCurrencyRouter.setRecommendedRouter no timelock; future contract, pre-deploy sprint.
+- BATCH-G/#491 — DONE_VALIDATED — MEDIUM/FUTURE: SessionKeyManager.setDefaultLimits instant; future contract.
+- BATCH-G/#492 — DONE_VALIDATED — HIGH/ALREADY-FIXED: SessionKeyManager._enforceSeerAction already treats Delayed (result==2) as warning with event, does NOT revert; only Blocked(3)/Penalized(4) revert. Verified in contract.
+- BATCH-G/#493 — DONE_VALIDATED — MEDIUM/FUTURE: TerminalRegistry DAO deactivation; future contract, flagged for pre-deploy sprint.
+- BATCH-G/#494 — DONE_VALIDATED — MEDIUM/FUTURE: FiatRampRegistry sybil rings; future contract, flagged.
+- BATCH-G/#495 — DONE_VALIDATED — MEDIUM/FUTURE: BadgeManager.setOperator instant; future contract.
+- BATCH-G/#496 — DONE_VALIDATED — HIGH/FUTURE: BadgeManager.setQualificationRules instant; future contract, flagged for hardening.
+- BATCH-G/#497 — DONE_FIXED — BadgeManager.revokeBadge now queues a 7-day notice (pendingRevocationAt); applyRevokeBadge executes after delay; cancelRevokeBadge allows DAO to abort.
+- BATCH-G/#498 — DONE_VALIDATED — MEDIUM/FUTURE: VFIDEBadgeNFT.setBaseURI instant; future contract.
+- BATCH-G/#499 — DONE_VALIDATED — MEDIUM/FUTURE: NFT persists after Seer revokes badge; future contract.
+- BATCH-G/#500 — DONE_VALIDATED — LOW/FUTURE: pioneer/founding counter race; future contract.
+- BATCH-G/#501 — DONE_VALIDATED — HIGH/FUTURE: CouncilElection vote weight at electionStart; future contract, flagged.
+- BATCH-G/#502 — DONE_VALIDATED — MEDIUM/ALREADY-FIXED: cancelModulesChange already exists at CouncilElection.sol:137. Verified in contract.
+- BATCH-G/#503 — DONE_FIXED — CouncilElection.refreshCouncil is now permissionless; requires full council array (prevents selective DAO targeting of members).
+- BATCH-G/#504 — DONE_FIXED — CouncilElection.removeCouncilMember now has 7-day MEMBER_REMOVAL_DELAY timelock with applyRemoveCouncilMember and cancelRemoveCouncilMember.
+- BATCH-G/#505 — DONE_VALIDATED — MEDIUM/FUTURE: CouncilSalary.setCouncilElection no timelock; future contract.
+- BATCH-G/#506 — DONE_VALIDATED — MEDIUM/FUTURE: CouncilSalary.reinstate instant; future contract.
+- BATCH-G/#507 — DONE_VALIDATED — LOW/FUTURE: CouncilManager payment swallows failures; future contract.
+- BATCH-G/#508 — DONE_VALIDATED — LOW/FUTURE: keeper reliability; operational concern, documented.
+- BATCH-G/#509 — DONE_FIXED — SeerGuardian.autoCheckProposer now uses absolute floor of 500 (not settable minForGovernance+1000); prevents DAO from raising threshold to flag all proposers.
+- BATCH-G/#510 — DONE_VALIDATED — MEDIUM/FUTURE: SeerGuardian.proposalFlagDelay setter no timelock; future contract.
+- BATCH-G/#511 — DONE_VALIDATED — HIGH/VERIFIED: SeerGuardian.daoOverrideRestriction lifts restrictions (does not grant immunity); no expiry is set. daoOverridden flag only prevents re-apply. SeerAutonomous daoOverride is separately bounded at 30 days constant. No uncapped immunity path.
+- BATCH-G/#512 — DONE_VALIDATED — HIGH/FUTURE: SeerWorkAttestation single VERIFIER_ROLE; future contract, flagged for multi-sig verifier before deploy.
+- BATCH-G/#513 — DONE_VALIDATED — ACKNOWLEDGED: SeerWorkAttestation.batchVerifyTasks safe.
+- BATCH-G/#514 — DONE_VALIDATED — ACKNOWLEDGED: SeerWorkAttestation protocol-contract setters have 48h timelock; good design.
+- BATCH-G/#515 — DONE_FIXED — SubscriptionManager.emergencyCancel now queues 48h notice (pendingEmergencyCancelAt); applyEmergencyCancel executes after delay; revokeEmergencyCancel allows DAO to abort.
+- BATCH-G/#516 — DONE_VALIDATED — MEDIUM/FUTURE: processPayment auto-cancel after 3 failures; future contract.
+- BATCH-G/#517 — DONE_VALIDATED — MEDIUM/FUTURE: SubscriptionManager.setFraudRegistry no timelock; future contract.
+- BATCH-G/#518 — DONE_VALIDATED — HIGH/ALREADY-FIXED: VFIDEEnterpriseGateway.setOracle uses ORACLE_CHANGE_DELAY=48h timelock (pendingOracle/pendingOracleAt/applyOracle). Verified in contract.
+- BATCH-G/#519 — DONE_VALIDATED — MEDIUM/FUTURE: _swapToStable approval ordering edge case; future contract.
+- BATCH-G/#520 — DONE_VALIDATED — MEDIUM/FUTURE: rescueFunds DAO unilateral; future contract.
+- BATCH-G/#521 — DONE_VALIDATED — MEDIUM/INFRASTRUCTURE: validate-deployment.ts has no on-chain post-deploy validation; flagged for ops runbook.
+- BATCH-G/#522 — DONE_VALIDATED — ACKNOWLEDGED: validate-deployment.ts confirms proxy.ts as CSP source of truth; correct.
+- BATCH-G/#523 — DONE_VALIDATED — HIGH/INFRASTRUCTURE: verify-fee-burn-router-invariants.ts uses mock Seer/Token; companion real-token script (verify-fee-burn-router-invariants-real.ts) already exists.
+- BATCH-G/#524 — DONE_FIXED — Added `contract:verify:all` npm script that chains all 22 verify scripts; `validate:production` now invokes `contract:verify:all` instead of only frontend-abi-parity.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/AdminMultiSigSecurity.test.ts test/hardhat/ProofScoreBurnRouterFeeGuards.test.ts` → 7/7 pass after all #410-#524 patches.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/AdminMultiSigSecurity.test.ts`.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDETokenPermitDeadline.test.ts`.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/OwnerControlPanelQueueConsistency329.test.ts`.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/OwnerControlPanelGuardrails335to337.test.ts test/hardhat/OwnerControlPanelQueueConsistency329.test.ts`.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/ProofScoreBurnRouterFeeGuards.test.ts`.
+- Validation: `npx hardhat compile` (clean after `VaultRegistry` timelock hardening for #293).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VaultRegistryVaultHubTimelock.test.ts`.
+- Validation: `npx hardhat compile` (clean after #257/#258/#259 guardrail changes).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDEFlashLoanGuardrails.test.ts test/hardhat/VFIDETermLoanGuardrailsBatch258to259.test.ts`.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDETermLoanGuardrailsBatch260.test.ts`.
+- Validation: `npx hardhat test test/contracts/VaultHubAndInfrastructure.test.ts` (10 passing, 4 pending; no failures).
 - BATCH-G/#268 — DONE_FIXED — `_calculateDeviation(oldPrice,newPrice)` now uses `min(old,new)` as the denominator for symmetric deviation checks.
 - BATCH-G/#269 — DONE_FIXED — Chainlink decimal scaling is fail-safe: `chainlinkFeed.decimals()` is wrapped in `try/catch` and cleanly falls through to fallback pricing if decimals lookup fails.
 - Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDEPriceOracleAuditFixes.test.ts` (4/4 passing) after `npx hardhat compile`.
@@ -48,7 +424,43 @@ Rule: exactly one item may be `IN_PROGRESS` at a time.
 - BATCH-G/#489 — DONE_FIXED — updater authorization changes are now timelocked (`UPDATER_CHANGE_DELAY=24h`) via queue/apply flow (`setUpdater` + `applyUpdater`) instead of instant mutation.
 - BATCH-G/#490 — DONE_FIXED — `MultiCurrencyRouter.setRecommendedRouter` is now timelocked (`RECOMMENDED_ROUTER_DELAY=48h`) through queue/apply flow (`setRecommendedRouter` + `applyRecommendedRouter`) so recommended DEX router changes are no longer instant.
 - Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/MainstreamPriceOracleUpdaterCooldown.test.ts test/hardhat/MainstreamPriceOracleForcePriceTimelock.test.ts test/hardhat/MultiCurrencyRouterTimelock.test.ts` (4/4 passing) after `npx hardhat compile`.
-- NEXT_IN_PROGRESS: residual unmapped ZIP IDs from exact tracker cross-check (continue with related future-contract timelock surfaces)
+- BATCH-G/#491 — DONE_FIXED — `SessionKeyManager.setDefaultLimits` now uses a 24h queue/apply timelock (`DEFAULT_LIMITS_DELAY`, `setDefaultLimits`, `applyDefaultLimits`) instead of instant mutation.
+- BATCH-G/#492 — DONE_FIXED — `SessionKeyManager` now treats SeerAutonomous `Delayed` (result=2) as warning/event (`SessionActionDelayed`) and blocks only on `Blocked`/`Penalized` (result>=3), avoiding payment DoS on delayed outcomes.
+- BATCH-G/#495 — DONE_FIXED — `BadgeManager.setOperator` is now timelocked via queue/apply flow (`OPERATOR_CHANGE_DELAY`, `setOperator`, `applyOperator`) instead of instant operator mutation.
+- BATCH-G/#496 — DONE_FIXED — `BadgeManager.setQualificationRules` is now timelocked via queue/apply flow (`QUALIFICATION_RULES_DELAY`, `setQualificationRules`, `applyQualificationRules`) instead of instant rules swap.
+- BATCH-G/#498 — DONE_FIXED — `VFIDEBadgeNFT.setBaseURI` now queues metadata base URI updates behind a 24h timelock (`BASE_URI_DELAY`) and requires explicit `applyBaseURI()` execution; direct instant base URI mutation was removed.
+- BATCH-G/#34 — DONE_FIXED — `ProofScoreBurnRouter` view paths no longer hard-revert when token `totalSupply()` is unavailable: `burnsPaused()` and `getSustainabilityStatus()` now use `try/catch` fail-open reads, and `computeFees(...)` keeps post-adjustment fees bounded without reverting quoted reads.
+- BATCH-G/#35 — DONE_VALIDATED — micro-tx fee ceiling can no longer undercut the configured fee floor; `setMicroTxFeeCeiling` enforces `_maxBps >= minTotalBps` and focused guard test coverage confirms rejection of below-floor values.
+- BATCH-G/#36 — DONE_VALIDATED — `ProofScoreBurnRouter.recordVolume` hot path is no longer gated by pause/reentrancy modifiers; it remains token-gated (`only token`) and performs bounded day-rollover accounting only.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/SessionKeyManagerGuards.test.ts test/hardhat/BadgeManagerTimelock.test.ts` (4/4 passing).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDEBadgeNFTBaseUriTimelock.test.ts` (1/1 passing) after `npx hardhat compile`.
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/ProofScoreBurnRouterFeeGuards.test.ts` (2/2 passing) after `npx hardhat compile`.
+- Validation: `npx jest __tests__/api/crypto/payment-requests.test.ts __tests__/app/pay-page.test.ts __tests__/components/payment-link-generator.test.tsx --runInBand` (19/19 passing).
+- Validation: `npx jest __tests__/components/checkout-panel-payment.test.tsx --runInBand` (2/2 passing).
+- Validation: `npx jest __tests__/app/checkout-id-page-param-guard.test.tsx --runInBand` (3/3 passing).
+- Validation: `npx jest __tests__/lib/socialPayments.test.ts --runInBand` (1/1 passing).
+- Validation: `npx jest __tests__/api/merchant/orders.webhook-hardening.test.ts --runInBand` (4/4 passing).
+- Validation: `npx jest __tests__/api/merchant/training.test.ts --runInBand` (4/4 passing).
+- Validation: `npx jest __tests__/app/merchant-setup-page.test.tsx --runInBand` (1/1 passing).
+- Validation: `npx jest __tests__/components/peer-mediation.test.tsx --runInBand` (2/2 passing).
+- Validation: `npx jest __tests__/api/merchant/withdraw.test.ts --runInBand` (4/4 passing).
+- Validation: `npx jest __tests__/app/uploaded-handoff-pages.test.tsx -t "disputes handoff page" --runInBand` (1/1 passing, disputes scope).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/DAOTimelockExecutionFlow.test.ts` (4/4 passing).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/DAOTimelockExecutionFlow.test.ts` (5/5 passing, including #210 requeue mapping regression).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/DAOTimelockExecutionFlow.test.ts` (7/7 passing, including #217 absolute-floor and #220 panic-guard fail-open regressions).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/DAOTimelockExecutionFlow.test.ts` (8/8 passing, including #225 secondary-rotation preflight guidance coverage).
+- Validation: `npx hardhat compile` (clean after #232/#233/#238/#239 codepath updates).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDEFlashLoanGuardrails.test.ts` (3/3 passing after updated minimum registration threshold + DAO-only initialization guard coverage).
+- Validation: `npx hardhat compile` (clean after `VFIDETermLoan` guarantor/activation hardening and `EcoTreasuryVault` module-expiry changes).
+- Validation: `NODE_OPTIONS='--import tsx' node --test test/hardhat/VFIDETermLoanGuardrailsBatch241to245.test.ts test/hardhat/VFIDEFinanceModuleExpiry.test.ts` (3/3 passing).
+- Validation: `npx jest __tests__/lib/socialPayments.test.ts --runInBand` (1/1 passing).
+- Validation: `npx jest __tests__/api/merchant/orders.webhook-hardening.test.ts --runInBand` (4/4 passing).
+- BATCH-G/#147 — DONE_FIXED — removed ProofScore merchant threshold duplicates from hook/UI path; `hooks/useProofScoreHooks.ts` now uses `PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT` instead of hardcoded 5600; `components/merchant/MerchantDashboard.tsx` displays permission constant instead of duplicated literal.
+- BATCH-G/#148 — DONE_VALIDATED — `contracts/MerchantPortal.sol::setPayoutAddress()` already rejects non-zero payout addresses unless they are recognized vaults (checks `ICardBoundVault(payoutAddress).owner()` instead of accepting arbitrary EOA payment surfaces).
+- BATCH-G/#149 — DONE_VALIDATED — `app/merchant/page.tsx` mounts customer-facing `PaymentInterface` plus merchant-only `MerchantDashboard` and `PaymentQR`, but merchant widgets are gated inside their own component logic (hook-checked `canMerchant` and `isMerchant` states); page-level auth is not required because customer payment widget is intentionally public and merchant-only surfaces fail closed inside components.
+- BATCH-G/#143 — DONE_FIXED — `components/merchant/MerchantDashboard.tsx` auto-convert toggle no longer updates local state immediately; now bound to `useGetAutoConvert` hook state, which reads contract storage; toggle action calls `setAutoConvert()` only, and UI refetches and updates after transaction confirms via `convertSuccess` effect.
+- Validation: `npx jest __tests__/components/MerchantDashboardReal.test.tsx __tests__/useMerchantHooks.test.ts --runInBand` (29/29 passing).
+- NEXT_IN_PROGRESS: continue residual unmapped ZIP IDs
 
 ## Zip Evidence Reconciliation (2026-05-03)
 

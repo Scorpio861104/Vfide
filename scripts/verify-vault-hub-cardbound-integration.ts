@@ -25,8 +25,16 @@ async function expectRevert(fn: () => Promise<unknown>, message: string) {
   }
 }
 
+async function chainDeadline(provider: JsonRpcProvider, offsetSeconds = 3600): Promise<bigint> {
+  const latest = await provider.getBlock('latest');
+  if (!latest) {
+    throw new Error('Unable to read latest block for deadline calculation');
+  }
+  return BigInt(latest.timestamp + offsetSeconds);
+}
+
 async function main() {
-  const rpcUrl = process.env.RPC_URL ?? 'http://127.0.0.1:8570';
+  const rpcUrl = process.env.RPC_URL ?? 'http://127.0.0.1:8545';
   const provider = new JsonRpcProvider(rpcUrl);
 
   const deployer = await provider.getSigner(0);
@@ -34,7 +42,6 @@ async function main() {
   const ownerB = await provider.getSigner(2);
   const approver1 = await provider.getSigner(3);
   const approver2 = await provider.getSigner(4);
-  const approver3 = await provider.getSigner(5);
   const recoveryTarget = await provider.getSigner(6);
   const dao = await provider.getSigner(9);
 
@@ -54,7 +61,6 @@ async function main() {
   currentStep = 'deploy-hub';
   const hub = (await hubFactory.deploy(
     await token.getAddress(),
-    '0x0000000000000000000000000000000000000000',
     '0x0000000000000000000000000000000000000000',
     await dao.getAddress()
   )) as any;
@@ -101,7 +107,7 @@ async function main() {
   const chainId = (await provider.getNetwork()).chainId;
   const nonce = await vaultA.nextNonce();
   const epoch = await vaultA.walletEpoch();
-  const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600);
+  const deadline = await chainDeadline(provider);
   const amount = parseUnits('5', 18);
 
   const signature = await ownerA.signTypedData(
@@ -153,61 +159,25 @@ async function main() {
     throw new Error(`Expected transfer to vault B of ${amount}, got ${vaultBBalance}`);
   }
 
-  currentStep = 'configure-approvers';
-  await (await hub.setRecoveryApprover(await approver1.getAddress(), true)).wait();
-  await (await hub.setRecoveryApprover(await approver2.getAddress(), true)).wait();
-  await (await hub.setRecoveryApprover(await approver3.getAddress(), true)).wait();
-
-  const targetOwner = await recoveryTarget.getAddress();
-
-  currentStep = 'recovery-approvals';
-  await (await hub.connect(approver1).approveForceRecovery(vaultAAddr, targetOwner)).wait();
-  await (await hub.connect(approver2).approveForceRecovery(vaultAAddr, targetOwner)).wait();
-  await (await hub.connect(approver3).approveForceRecovery(vaultAAddr, targetOwner)).wait();
-
-  currentStep = 'early-finalize-reverts';
+  currentStep = 'recovery-disabled-guards';
+  await expectRevert(
+    async () => {
+      await hub.connect(approver1).approveForceRecovery(vaultAAddr, await recoveryTarget.getAddress());
+    },
+    'approveForceRecovery unexpectedly succeeded'
+  );
   await expectRevert(
     async () => {
       await hub.connect(dao).finalizeForceRecovery(vaultAAddr);
     },
-    'Finalize unexpectedly succeeded before timelock'
+    'finalizeForceRecovery unexpectedly succeeded'
   );
-
-  currentStep = 'timelock-elapse';
-  await provider.send('evm_increaseTime', [7 * 24 * 60 * 60 + 1]);
-  await provider.send('evm_mine', []);
-
-  currentStep = 'finalize-recovery';
-  await (await hub.connect(dao).finalizeForceRecovery(vaultAAddr, { gasLimit: 5_000_000 })).wait();
-
-  currentStep = 'assert-registry-updated';
-  const oldMapping = await hub.vaultOf(ownerAAddr);
-  if (oldMapping !== '0x0000000000000000000000000000000000000000') {
-    throw new Error('Old owner still mapped to recovered vault');
-  }
-  const newMapping = await hub.vaultOf(targetOwner);
-  if (newMapping !== vaultAAddr) {
-    throw new Error('New owner not mapped to recovered vault');
-  }
-  const ownerOfVault = await hub.ownerOfVault(vaultAAddr);
-  if (ownerOfVault !== targetOwner) {
-    throw new Error('ownerOfVault was not updated after recovery');
-  }
-
-  currentStep = 'assert-vault-owner-state';
-  const admin = await vaultA.admin();
-  const activeWallet = await vaultA.activeWallet();
-  const newEpoch = await vaultA.walletEpoch();
-
-  if (admin !== targetOwner) {
-    throw new Error('CardBoundVault admin not updated by force recovery');
-  }
-  if (activeWallet !== targetOwner) {
-    throw new Error('CardBoundVault active wallet not updated by force recovery');
-  }
-  if (newEpoch !== epoch + 1n) {
-    throw new Error('Wallet epoch did not increment during force recovery');
-  }
+  await expectRevert(
+    async () => {
+      await hub.connect(ownerA).requestDAORecovery(vaultAAddr, await recoveryTarget.getAddress());
+    },
+    'requestDAORecovery unexpectedly succeeded'
+  );
 
   console.log('VaultHub CardBound integration verification passed');
 }

@@ -77,12 +77,29 @@ function requiredEnv(name: string): string {
   return value;
 }
 
+function isLocalBootstrapNetwork(chainId: number): boolean {
+  return chainId === 31337;
+}
+
 async function main() {
   const [deployer] = await ethers.getSigners();
   const network = await ethers.provider.getNetwork();
   const chainId = Number(network.chainId);
   const isTestnetChain = TESTNET_CHAIN_IDS.has(chainId);
   const deployTestnetFaucet = parseBooleanEnv(process.env.DEPLOY_TESTNET_FAUCET);
+  const allowTemporaryDeployerBootstrap =
+    parseBooleanEnv(process.env.ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP) ||
+    isLocalBootstrapNetwork(chainId);
+
+  function bootstrapAddress(envName: string): string {
+    const configured = process.env[envName];
+    if (configured && configured.trim() !== '') return configured;
+    if (allowTemporaryDeployerBootstrap) return deployer.address;
+    throw new Error(
+      `Missing required env var: ${envName}. ` +
+      'Set explicit bootstrap sinks for non-local deployments, or set ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP=true only for deliberate local/testing exceptions.'
+    );
+  }
 
   if (deployTestnetFaucet && !isTestnetChain) {
     throw new Error(
@@ -97,6 +114,9 @@ async function main() {
 
   // #306 guard: VFIDEToken constructor requires treasury to be a deployed contract.
   const treasuryAddress = requiredEnv('TREASURY_ADDRESS');
+  const bootstrapSanctumSink = bootstrapAddress('BOOTSTRAP_SANCTUM_SINK_ADDRESS');
+  const bootstrapBurnSink = bootstrapAddress('BOOTSTRAP_BURN_SINK_ADDRESS');
+  const bootstrapEcosystemSink = bootstrapAddress('BOOTSTRAP_ECOSYSTEM_SINK_ADDRESS');
   const treasuryCode = await ethers.provider.getCode(treasuryAddress);
   if (!treasuryCode || treasuryCode === '0x') {
     throw new Error(`TREASURY_ADDRESS must be a deployed contract address. Received non-contract: ${treasuryAddress}`);
@@ -166,9 +186,9 @@ async function main() {
   // ProofScoreBurnRouter(seer, sanctumSink, burnSink, ecosystemSink, token)
   await deploy("ProofScoreBurnRouter",
     deployed.Seer,                // _seer
-    deployer.address,             // _sanctumSink (temp)
-    deployer.address,             // _burnSink (temp)
-    deployer.address,             // _ecosystemSink (temp)
+    bootstrapSanctumSink,         // _sanctumSink
+    bootstrapBurnSink,            // _burnSink
+    bootstrapEcosystemSink,       // _ecosystemSink
     deployed.VFIDEToken,          // _token
   );
   
@@ -215,8 +235,8 @@ async function main() {
   // FeeDistributor(token, burn, sanctum, daoPayroll, merchantPool, headhunterPool, admin)
   await deploy("FeeDistributor",
     deployed.VFIDEToken,          // _token
-    deployer.address,             // _burn (temp)
-    deployer.address,             // _sanctum (temp)
+    bootstrapBurnSink,            // _burn bootstrap sink
+    bootstrapSanctumSink,         // _sanctum bootstrap sink
     deployed.DAOPayrollPool,      // _daoPayroll
     deployed.MerchantCompetitionPool, // _merchantPool
     deployed.HeadhunterCompetitionPool, // _headhunterPool

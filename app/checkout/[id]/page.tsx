@@ -207,10 +207,14 @@ export default function CheckoutPage() {
         `INV-${invoice.invoice_number}`,
       );
 
+      if (!result || typeof result !== 'object' || !('success' in result) || !result.success || !('hash' in result) || typeof result.hash !== 'string' || result.hash.length === 0) {
+        throw new Error('Payment did not return a transaction hash');
+      }
+
       setStatus('confirming');
 
       // Mark invoice as paid
-      const hash = typeof result === 'string' ? result : '';
+      const hash = result.hash;
       setTxHash(hash);
 
       await fetch(`/api/merchant/checkout/${paymentLinkId}`, {

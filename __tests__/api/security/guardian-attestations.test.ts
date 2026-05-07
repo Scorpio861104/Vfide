@@ -13,9 +13,18 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/middleware', () => ({
-  requireAuth: jest.fn(),
-}));
+jest.mock('@/lib/auth/middleware', () => {
+  const requireAuth = jest.fn();
+  return {
+    requireAuth,
+    withAuth: (handler: (request: NextRequest, user: unknown) => unknown) => async (request: NextRequest, ...rest: unknown[]) => {
+      const authResult = await requireAuth(request);
+      if (!authResult?.user) return authResult;
+      return handler(request, authResult.user, ...rest);
+    },
+    isAdmin: jest.fn(() => false),
+  };
+});
 
 describe('/api/security/guardian-attestations', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
@@ -105,7 +114,9 @@ describe('/api/security/guardian-attestations', () => {
     );
 
     const response = await GET(
-      new NextRequest('http://localhost:3000/api/security/guardian-attestations?guardian=0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+      new NextRequest('http://localhost:3000/api/security/guardian-attestations?guardian=0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', {
+        headers: { 'x-test-owner': '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
+      })
     );
 
     const data = await response.json();

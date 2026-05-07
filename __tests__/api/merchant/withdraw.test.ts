@@ -12,6 +12,16 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 }));
 
 jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler: (request: NextRequest, user: { address: string }) => Promise<NextResponse>) => {
+    return async (request: NextRequest) => {
+      const { requireAuth } = require('@/lib/auth/middleware');
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+      return handler(request, authResult.user);
+    };
+  },
   requireAuth: jest.fn(),
 }));
 
@@ -38,7 +48,7 @@ describe('/api/merchant/withdraw', () => {
           token: 'USDC',
           provider: 'transak',
           network: 'mpesa',
-          status: 'pending',
+          status: 'requested',
           created_at: '2026-04-04T00:00:00.000Z',
         },
       ],
@@ -71,6 +81,7 @@ describe('/api/merchant/withdraw', () => {
 
   it('creates a withdrawal request and returns a provider redirect URL', async () => {
     query.mockResolvedValueOnce({ rows: [{ id: 42, registered: true }] });
+    query.mockResolvedValueOnce({ rows: [{ net_balance: '500.00' }] });
     query.mockResolvedValueOnce({
       rows: [
         {
@@ -81,7 +92,7 @@ describe('/api/merchant/withdraw', () => {
           provider: 'transak',
           mobile_number_hint: '***6789',
           network: 'mpesa',
-          status: 'pending',
+          status: 'requested',
           provider_tx_id: 'wd_42',
           created_at: '2026-04-04T00:00:00.000Z',
         },

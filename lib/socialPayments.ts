@@ -271,28 +271,32 @@ export async function getPostTipTotal(postId: string): Promise<{ eth: string; vf
 // Helper Functions
 // ============================================================================
 
+async function postNotification(type: string, userId: string, data: SocialTip | ContentPayment): Promise<void> {
+  try {
+    const response = await fetch('/api/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type,
+        userId,
+        data,
+      }),
+    });
+
+    if (!response.ok) {
+      logger.warn(`[socialPayments] notification dispatch failed for ${type}: ${response.status}`);
+    }
+  } catch (error) {
+    logger.warn(`[socialPayments] notification dispatch error for ${type}:`, error);
+  }
+}
+
 async function notifyTipReceived(tip: SocialTip): Promise<void> {
-  await fetch('/api/notifications', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'tip_received',
-      userId: tip.recipientAddress,
-      data: tip,
-    }),
-  });
+  await postNotification('tip_received', tip.recipientAddress, tip);
 }
 
 async function notifyContentPurchase(payment: ContentPayment): Promise<void> {
-  await fetch('/api/notifications', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'content_purchased',
-      userId: payment.sellerAddress,
-      data: payment,
-    }),
-  });
+  await postNotification('content_purchased', payment.sellerAddress, payment);
 }
 
 // ============================================================================

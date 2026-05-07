@@ -94,6 +94,7 @@ error FL_InsufficientBalance();
 error FL_ExceedsOrphanBalance();
 error FL_MinInitialDeposit();
 error FL_FeeExceeded();
+error FL_UnsupportedTokenBehavior();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
@@ -132,8 +133,8 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     uint256 public constant MAX_LENDERS = 500;
 
     /// @notice Minimum first deposit required to register as a lender.
-    /// @dev Prevents dust-amount sybil registrations from exhausting MAX_LENDERS.
-    uint256 public constant MIN_INITIAL_LENDER_DEPOSIT = 1 ether;
+    /// @dev Raised to harden against low-cost sybil slot exhaustion of MAX_LENDERS.
+    uint256 public constant MIN_INITIAL_LENDER_DEPOSIT = 100 ether;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              TYPES
@@ -289,9 +290,13 @@ contract VFIDEFlashLoan is ReentrancyGuard {
             lenderListIndex[msg.sender] = lenderList.length; // 1-indexed
         }
 
+        uint256 beforeBalance = vfideToken.balanceOf(address(this));
+        vfideToken.safeTransferFrom(msg.sender, address(this), amount);
+        uint256 received = vfideToken.balanceOf(address(this)) - beforeBalance;
+        if (received != amount) revert FL_UnsupportedTokenBehavior();
+
         info.balance += amount;
         totalTrackedBalance += amount;
-        vfideToken.safeTransferFrom(msg.sender, address(this), amount);
         emit LenderDeposited(msg.sender, amount, info.balance);
     }
 
@@ -527,7 +532,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     function findBestLender(uint256 amount) external view returns (address best, uint256 bestFee) {
         bestFee = type(uint256).max;
         uint256 len = lenderList.length;
-        for (uint256 i = 0; i < len && i < 200; i++) {
+        for (uint256 i = 0; i < len; i++) {
             LenderInfo storage info = lenders[lenderList[i]];
             if (!info.paused && info.balance >= amount && info.feeBps < bestFee) {
                 best = lenderList[i];

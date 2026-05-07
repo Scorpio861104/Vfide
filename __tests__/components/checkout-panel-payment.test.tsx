@@ -86,6 +86,22 @@ const renderCheckoutPanel = (onComplete = jest.fn()) => {
   return { onComplete };
 };
 
+const renderCheckoutPanelWithoutQuote = () => {
+  const checkoutModule = require('../../components/checkout/CheckoutPanel');
+  const { LocaleProvider } = require('../../lib/locale/LocaleProvider');
+  const CheckoutPanel = checkoutModule.CheckoutPanel as React.ComponentType<any>;
+
+  render(
+    <LocaleProvider>
+      <CheckoutPanel
+        items={[{ name: 'Kente Cloth', price: 20, qty: 1 }]}
+        merchantAddress="0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        merchantName="Kofi Fabrics"
+      />
+    </LocaleProvider>
+  );
+};
+
 describe('CheckoutPanel payment wiring', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -154,5 +170,12 @@ describe('CheckoutPanel payment wiring', () => {
         expect.objectContaining({ name: 'Kente Cloth', quantity: 1, unit_price: 20 }),
       ])
     );
+  });
+
+  it('disables payment when no live VFIDE quote is available', () => {
+    renderCheckoutPanelWithoutQuote();
+
+    expect(screen.getByText(/Live VFIDE pricing is temporarily unavailable/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Pay \$20\.20/i })).toBeDisabled();
   });
 });

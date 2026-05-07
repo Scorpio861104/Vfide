@@ -3,7 +3,7 @@
  */
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
@@ -32,6 +32,7 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
 
   // Step 2 state
   const [products, setProducts] = useState<QuickProduct[]>([]);
+  const productsRef = useRef<QuickProduct[]>([]);
 
   const step1Valid = businessName.trim().length >= 2 && category !== '';
 
@@ -43,6 +44,9 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
     setProducts(prev => prev.map(p => {
       if (p.id !== id) return p;
       if (field === 'imageFile' && value instanceof File) {
+        if (p.imagePreview?.startsWith('blob:')) {
+          URL.revokeObjectURL(p.imagePreview);
+        }
         return { ...p, imageFile: value, imagePreview: URL.createObjectURL(value) };
       }
       return { ...p, [field]: value };
@@ -50,7 +54,27 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
   }, []);
 
   const removeProduct = useCallback((id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    setProducts(prev => {
+      const target = prev.find(p => p.id === id);
+      if (target?.imagePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(target.imagePreview);
+      }
+      return prev.filter(p => p.id !== id);
+    });
+  }, []);
+
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  useEffect(() => {
+    return () => {
+      for (const product of productsRef.current) {
+        if (product.imagePreview?.startsWith('blob:')) {
+          URL.revokeObjectURL(product.imagePreview);
+        }
+      }
+    };
   }, []);
 
   const validProducts = products.filter(p => p.name.trim() && parseFloat(p.price) > 0);
@@ -85,7 +109,29 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
       }
 
       for (const product of validProducts) {
-        const images = product.imagePreview ? [{ url: product.imagePreview, alt: product.name }] : [];
+        let imageUrl: string | null = null;
+        if (product.imageFile) {
+          const formData = new FormData();
+          formData.append('file', product.imageFile);
+          formData.append('purpose', 'merchant-product');
+
+          const uploadRes = await fetch('/api/media/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!uploadRes.ok) {
+            const uploadData = await uploadRes.json().catch(() => ({}));
+            toast.error((uploadData as { error?: string }).error || `Failed to upload image for ${product.name}`);
+            setIsSubmitting(false);
+            return;
+          }
+
+          const uploadData = await uploadRes.json();
+          imageUrl = typeof uploadData?.url === 'string' ? uploadData.url : null;
+        }
+
+        const images = imageUrl ? [{ url: imageUrl, alt: product.name }] : [];
         await fetch('/api/merchant/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

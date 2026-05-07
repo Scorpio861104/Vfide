@@ -32,18 +32,6 @@ const mediationSteps = [
   'Escalate to formal appeals only if peer mediation does not resolve the case.',
 ];
 
-const DEFAULT_DISPUTE: PeerMediationDispute = {
-  id: 'preview-case',
-  buyerAddress: '0x7a12...42ef',
-  merchantAddress: '0x1fd0...90ab',
-  amount: '250',
-  reason: 'Return request pending review',
-  status: 'open',
-  mediatorName: 'Market elder',
-  proposedSplit: { buyerPercent: 50, merchantPercent: 50 },
-  mediationDeadline: Date.now() + (24 * 60 * 60 * 1000),
-};
-
 const shortAddress = (value: string) => value.length > 12 ? `${value.slice(0, 6)}...${value.slice(-4)}` : value;
 
 export default function PeerMediation({
@@ -54,11 +42,40 @@ export default function PeerMediation({
   onRejectResolution,
   onEscalate,
 }: PeerMediationProps) {
-  const currentDispute = useMemo<PeerMediationDispute>(() => ({
-    ...DEFAULT_DISPUTE,
-    ...dispute,
-    proposedSplit: dispute?.proposedSplit ?? DEFAULT_DISPUTE.proposedSplit,
-  }), [dispute]);
+  const currentDispute = useMemo<PeerMediationDispute | null>(() => {
+    if (!dispute?.id) {
+      return null;
+    }
+
+    return {
+      id: dispute.id,
+      buyerAddress: dispute.buyerAddress || '',
+      merchantAddress: dispute.merchantAddress || '',
+      amount: dispute.amount || '0',
+      reason: dispute.reason || 'Return request pending review',
+      status: dispute.status || 'open',
+      mediatorName: dispute.mediatorName,
+      proposedResolution: dispute.proposedResolution,
+      proposedSplit: dispute.proposedSplit,
+      mediationDeadline: dispute.mediationDeadline,
+    };
+  }, [dispute]);
+
+  if (!currentDispute) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-black/20 p-5 space-y-3">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-gray-200">
+          <Handshake size={14} /> Peer mediation preview
+        </div>
+        <p className="text-sm text-gray-300">
+          No live mediation case is available yet. Start with merchant returns, then sync a real dispute to preview mediation details.
+        </p>
+        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+          Merchant returns <ArrowRight size={14} />
+        </Link>
+      </div>
+    );
+  }
 
   const hoursRemaining = currentDispute.mediationDeadline
     ? Math.max(0, Math.floor((currentDispute.mediationDeadline - Date.now()) / (1000 * 60 * 60)))

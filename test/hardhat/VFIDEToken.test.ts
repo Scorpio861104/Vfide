@@ -172,19 +172,16 @@ describe("VFIDEToken", () => {
       const { token, owner, ethers } = await deployToken();
       const MAX = 7 * 24 * 60 * 60;
 
-      // Propose circuit breaker activation.
+      // Token-side circuit-breaker activation is now a no-op.
       await token.connect(owner).setCircuitBreaker(true, MAX);
-      // Timelock means circuit breaker is not active yet.
       assert.equal(await token.isCircuitBreakerActive(), false);
 
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
-      await token.connect(owner).confirmCircuitBreaker();
+      await assert.rejects(
+        () => token.connect(owner).confirmCircuitBreaker(),
+        /revert/
+      );
 
-      const cbActive = await token.isCircuitBreakerActive();
-      assert.equal(cbActive, true);
-
-      // H-02: circuit breaker no longer implies fee bypass.
+      // H-02: circuit breaker does not imply fee bypass.
       const feeBypassed = await token.isFeeBypassed();
       assert.equal(feeBypassed, false);
     });
@@ -192,19 +189,15 @@ describe("VFIDEToken", () => {
     it("cleans expired circuit breaker state on transfer", async () => {
       const { token, owner, user1, ethers } = await deployToken();
 
+      // No-op after #311, but kept for ABI compatibility.
       await token.connect(owner).setCircuitBreaker(true, 1);
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
-      await token.connect(owner).confirmCircuitBreaker();
 
       await ethers.provider.send("evm_increaseTime", [2]);
       await ethers.provider.send("evm_mine", []);
 
-      // Any transfer path call should prune expired emergency flags.
+      // Transfer should remain healthy with no token-side circuit breaker state.
       await token.connect(owner).transfer(user1.address, 1n);
 
-      assert.equal(await token.circuitBreaker(), false);
-      assert.equal(await token.circuitBreakerExpiry(), 0n);
       assert.equal(await token.isCircuitBreakerActive(), false);
       assert.equal(await token.isFeeBypassed(), false);
     });
@@ -212,11 +205,11 @@ describe("VFIDEToken", () => {
     it("cleans expired emergency flags via syncEmergencyFlags without transfer", async () => {
       const { token, owner, ethers } = await deployToken();
 
-      await token.connect(owner).setCircuitBreaker(true, 1);
+      // Circuit-breaker API is no-op; exercise real expiring flag via fee bypass.
+      await token.connect(owner).setFeeBypass(true, 1);
       await ethers.provider.send("evm_increaseTime", [H48]);
       await ethers.provider.send("evm_mine", []);
-      await token.connect(owner).confirmCircuitBreaker();
-      await token.connect(owner).setFeeBypass(true, 1);
+      await token.connect(owner).confirmFeeBypass();
 
       await ethers.provider.send("evm_increaseTime", [2]);
       await ethers.provider.send("evm_mine", []);
@@ -227,8 +220,7 @@ describe("VFIDEToken", () => {
 
       await token.connect(owner).syncEmergencyFlags();
 
-      assert.equal(await token.circuitBreaker(), false);
-      assert.equal(await token.circuitBreakerExpiry(), 0n);
+      assert.equal(await token.isCircuitBreakerActive(), false);
       assert.equal(await token.feeBypass(), false);
       assert.equal(await token.feeBypassExpiry(), 0n);
     });
@@ -424,12 +416,11 @@ describe("VFIDEToken", () => {
       const router = await Router.deploy(
         await seer.getAddress(),
         sanctumSink.address,
-        ethers.ZeroAddress,
+        burnSink.address,
         ecoSink.address,
+        await token.getAddress(),
       );
       await router.waitForDeployment();
-
-      await router.connect(owner).setToken(await token.getAddress());
 
       // Align token-level sink allowlist with router sink outputs.
       await token.connect(owner).setTreasurySink(ecoSink.address);
@@ -470,12 +461,11 @@ describe("VFIDEToken", () => {
       const router = await Router.deploy(
         await seer.getAddress(),
         sanctumSink.address,
-        ethers.ZeroAddress,
+        burnSink.address,
         ecoSink.address,
+        await token.getAddress(),
       );
       await router.waitForDeployment();
-
-      await router.connect(owner).setToken(await token.getAddress());
       await token.connect(owner).setTreasurySink(ecoSink.address);
       await token.connect(owner).setSanctumSink(sanctumSink.address);
       await token.connect(owner).setBurnRouter(await router.getAddress());
