@@ -968,7 +968,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             if (recipient == address(0)) {
                 recipient = vaultHub.ensureVault(merchant);
             }
-            
+
             // Calculate fee
             uint256 fee = (amount * protocolFeeBps) / 10000;
             netAmount = amount - fee;
