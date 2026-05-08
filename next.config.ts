@@ -68,13 +68,13 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Security headers — CSP is applied per-request in middleware.ts with a nonce.
+  // Security headers — CSP is applied per-request in proxy.ts with a nonce.
   async headers() {
     return [
       {
         source: '/:path*',
         headers: [
-          // Strict fallback CSP for non-middleware paths.
+          // Strict fallback CSP for non-proxy paths.
           {
             key: 'Content-Security-Policy',
             value: "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",

@@ -94,6 +94,27 @@ function main() {
     fail(`Unexpected NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID for mainnet deploy: ${chainId}`);
   }
 
+  // T-CHAIN-3-VARS FIX: cross-validate the three chain ID env vars used across the
+  // codebase. NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID alone is not enough — the API and
+  // frontend read NEXT_PUBLIC_CHAIN_ID and NEXT_PUBLIC_DEFAULT_CHAIN_ID
+  // independently. A mismatch causes silent testnet-vs-mainnet divergence
+  // between auth challenges, fee computation, and frontend signing.
+  const apiChainId = process.env.NEXT_PUBLIC_CHAIN_ID?.trim();
+  const frontendChainId = process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID?.trim();
+
+  if (!apiChainId) {
+    fail('NEXT_PUBLIC_CHAIN_ID is required (used by /api/auth/challenge, /api/crypto/fees, /api/crypto/price)');
+  }
+  if (!frontendChainId) {
+    fail('NEXT_PUBLIC_DEFAULT_CHAIN_ID is required (used by lib/testnet.ts and frontend chain default)');
+  }
+  if (apiChainId !== chainId) {
+    fail(`Chain ID mismatch: NEXT_PUBLIC_CHAIN_ID=${apiChainId} but NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID=${chainId}. All three chain ID env vars must match.`);
+  }
+  if (frontendChainId !== chainId) {
+    fail(`Chain ID mismatch: NEXT_PUBLIC_DEFAULT_CHAIN_ID=${frontendChainId} but NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID=${chainId}. All three chain ID env vars must match.`);
+  }
+
   console.log('✅ Mainnet environment validation passed.');
 }
 

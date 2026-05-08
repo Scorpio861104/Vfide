@@ -117,6 +117,17 @@ async function verifyRlsEnforcement(): Promise<void> {
   }
 }
 
+/**
+ * T-RLS-2 FIX: Public wrapper for synchronous startup-time RLS verification.
+ * Initializes the pool if not yet created, then runs the check. Throws on
+ * any failure so instrumentation.ts can fail-closed at boot.
+ */
+export async function verifyRlsEnforcementOrThrow(): Promise<void> {
+  // Initialize pool if not yet created (safe — getPool is idempotent)
+  getPool();
+  await verifyRlsEnforcement();
+}
+
 function getPool(): Pool {
   if (!_pool) {
     // Validate DATABASE_URL is set in production (at runtime, not build time)

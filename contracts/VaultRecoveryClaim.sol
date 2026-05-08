@@ -437,6 +437,16 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @param approve True to approve claim
      */
     function verifierVote(uint256 claimId, bool approve) external nonReentrant {
+        // NEW M1 FIX: The trusted-verifier vote path was never wired into finalizeClaim
+        // (MIN_VERIFIER_VOTES is declared but never checked). Rather than partially
+        // enabling it, this path is explicitly disabled. Recovery proceeds through the
+        // canonical guardian-approved path only (GuardianApproved → finalizeClaim).
+        // Re-enable in a future release after defining per-claim path semantics
+        // and updating finalizeClaim to enforce MIN_VERIFIER_VOTES on the verifier path.
+        revert("VRC: verifier vote disabled");
+        // unreachable, kept to prevent unused-parameter warnings
+        // solhint-disable-next-line
+        claimId; approve;
         RecoveryClaim storage claim = claims[claimId];
         
         if (claim.status != ClaimStatus.Pending && claim.status != ClaimStatus.GuardianApproved) {

@@ -23,6 +23,11 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   // Blockchain Configuration
   { name: 'NEXT_PUBLIC_CHAIN_ID', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID', required: false, category: 'blockchain', production: true },
+  // T-CHAIN-3-VARS FIX: NEXT_PUBLIC_DEFAULT_CHAIN_ID is read by lib/testnet.ts and the
+  // frontend chain default. Without an explicit production check, an unset value silently
+  // falls back to Base Sepolia (84532), causing the frontend to sign EIP-712 intents
+  // against the wrong chain in production.
+  { name: 'NEXT_PUBLIC_DEFAULT_CHAIN_ID', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_RPC_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_EXPLORER_URL', required: true, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_IS_TESTNET', required: true, category: 'blockchain' },

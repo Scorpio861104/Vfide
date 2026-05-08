@@ -168,7 +168,13 @@ contract CommerceEscrow {
         uint256 amount;
         State   state;
         bytes32 metaHash;
+        // M-COMMERCE-1 FIX: openedAt timestamp lets unfunded OPEN escrows be cancelled
+        // after OPEN_ESCROW_EXPIRY without funder action, preventing storage pollution.
+        uint64  openedAt;
     }
+
+    // M-COMMERCE-1 FIX: How long an OPEN (unfunded) escrow stays valid before anyone can cancel it.
+    uint256 public constant OPEN_ESCROW_EXPIRY = 7 days;
 
     mapping(uint256 => uint256) public escrowDeposited;
 
@@ -219,7 +225,9 @@ contract CommerceEscrow {
             sellerVault: sellerV,
             amount: amount,
             state: State.OPEN,
-            metaHash: metaHash
+            metaHash: metaHash,
+            // M-COMMERCE-1 FIX: stamp creation time so unfunded escrows can be cancelled after expiry
+            openedAt: uint64(block.timestamp)
         });
     }
 
@@ -261,6 +269,20 @@ contract CommerceEscrow {
         address buyerVaultNow = vaultHub.vaultOf(e.buyerOwner);
         if (buyerVaultNow == address(0)) revert COM_NotBuyer();
         token.safeTransfer(buyerVaultNow, e.amount);
+    }
+
+    /// @notice M-COMMERCE-1 FIX: Cancel an OPEN (unfunded) escrow after the expiry window.
+    /// @dev Permissionless after `openedAt + OPEN_ESCROW_EXPIRY` to prevent storage pollution
+    ///      from buyers who abandon checkout. Only OPEN escrows are cancellable here; FUNDED
+    ///      escrows must go through release/refund/dispute paths and require an actual transfer.
+    /// @param id Escrow id to cancel.
+    function cancelStaleOpen(uint256 id) external nonReentrant {
+        Escrow storage e = escrows[id];
+        if (e.state != State.OPEN) revert COM_BadState();
+        if (e.openedAt == 0 || block.timestamp < uint256(e.openedAt) + OPEN_ESCROW_EXPIRY) {
+            revert COM_BadState();
+        }
+        e.state = State.REFUNDED;
     }
 
     function dispute(uint256 id, string calldata /*reason*/) external nonReentrant {

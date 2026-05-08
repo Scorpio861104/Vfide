@@ -348,6 +348,9 @@ contract PayrollManager is ReentrancyGuard {
             }
             s.depositBalance -= due;
             s.lastWithdrawTime = block.timestamp;
+            // M5e FIX: clear pausedAccrued because `due = claimable(streamId)` already includes it.
+            // Without this, a pause→setRate→withdraw sequence double-counts the paused amount on next withdraw.
+            s.pausedAccrued = 0;
             emit Withdraw(streamId, s.payee, due);
             _safeTransferPay(s.token, s.payee, due);
         }

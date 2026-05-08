@@ -396,8 +396,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     /// @notice H-11 FIX: DAO can adjust per-epoch payout caps (in bps of pool).
+    /// @dev T20 FIX: cap individual epoch caps at 5000 bps (50%). Allowing up to MAX_BPS
+    ///      (10000 = 100%) would let a single epoch drain the entire pool to one channel,
+    ///      defeating the purpose of per-epoch limits. 5000 bps matches the conservative
+    ///      EXPENSE_EPOCH_CAP_BPS=2500 hardcoded ceiling for operations spend.
+    uint16 public constant MAX_INDIVIDUAL_EPOCH_CAP_BPS = 5000;
+
     function setEpochCaps(uint16 _merchantCapBps, uint16 _headhunterCapBps) external onlyOwner {
-        if (_merchantCapBps > MAX_BPS || _headhunterCapBps > MAX_BPS) revert ECO_BpsTooHigh();
+        if (_merchantCapBps > MAX_INDIVIDUAL_EPOCH_CAP_BPS || _headhunterCapBps > MAX_INDIVIDUAL_EPOCH_CAP_BPS) {
+            revert ECO_BpsTooHigh();
+        }
         merchantEpochCapBps = _merchantCapBps;
         headhunterEpochCapBps = _headhunterCapBps;
     }

@@ -61,8 +61,14 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
     secrets:
       - jwt_secret
-      - postgres_password
-    command: ["sh", "-c", "export JWT_SECRET=$(cat /run/secrets/jwt_secret) && export DATABASE_URL=postgresql://vfide_user:$(cat /run/secrets/postgres_password)@postgres:5432/vfide_db && node dist/index.js"]
+      - vfide_app_password
+    # T-DOCKER-RLS-MISCONFIG FIX: connect as vfide_app (NOBYPASSRLS) instead of vfide_user.
+    # The migrator legitimately needs vfide_user (SUPERUSER) to create roles and grants;
+    # the websocket only needs application-level access subject to RLS policies. Connecting
+    # as vfide_user would trigger the production RLS startup check and refuse to start.
+    # vfide_app is created by migration 20260422_010000_create_vfide_app_role.sql
+    # with password from a separate secret file.
+    command: ["sh", "-c", "export JWT_SECRET=$(cat /run/secrets/jwt_secret) && export DATABASE_URL=postgresql://vfide_app:$(cat /run/secrets/vfide_app_password)@postgres:5432/vfide_db && node dist/index.js"]
     logging:
       driver: json-file
       options:
@@ -86,6 +92,12 @@ secrets:
     file: ./.secrets/postgres_password
   jwt_secret:
     file: ./.secrets/jwt_secret
+  # T-DOCKER-RLS-MISCONFIG FIX: separate password for the application role (NOBYPASSRLS).
+  # Operator must:
+  #   1. After migrator runs, ALTER ROLE vfide_app WITH PASSWORD '<value of this secret>';
+  #   2. Place that value in ./.secrets/vfide_app_password
+  vfide_app_password:
+    file: ./.secrets/vfide_app_password
 
 networks:
   default:

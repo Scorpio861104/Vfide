@@ -46,10 +46,39 @@ const LINK_CHECKS: LinkCheck[] = [
 ];
 
 const OWNER_CHECKS: OwnerCheck[] = [
+  // Core token + vault layer
   { contractKey: 'vfideToken', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
   { contractKey: 'vaultHub', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
   { contractKey: 'proofScoreBurnRouter', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
   { contractKey: 'ownerControlPanel', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  // T-VERIFY-DEPLOY-INCOMPLETE FIX: extend coverage to all Ownable contracts so
+  // post-deployment governance handover can be verified end-to-end. The four entries
+  // above were the original audit set; the rest are required for mainnet readiness.
+  { contractKey: 'systemHandover', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'merchantPortal', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'seer', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'fraudRegistry', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'feeDistributor', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'ecosystemVault', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'sanctumVault', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'devReserveVestingVault', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'proofLedger', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'governanceHooks', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'vaultRegistry', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'vaultRecoveryClaim', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'circuitBreaker', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'vfidePriceOracle', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'emergencyControl', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'stablecoinRegistry', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'servicePool', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'liquidityIncentives', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'dutyDistributor', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'revenueSplitter', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'vfideTermLoan', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'vfideFlashLoan', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'vfideFinance', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'payrollManager', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
+  { contractKey: 'vfideCommerce', expectedEnv: 'EXPECTED_OWNER', expectedManifestKey: 'dao' },
 ];
 
 const PENDING_CHECKS: PendingCheck[] = [

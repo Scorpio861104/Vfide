@@ -21,7 +21,11 @@ ARTIFACTS_DIR="artifacts/contracts"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 TIMEOUT=900  # 15 minutes per contract
 MAX_DEPTH=24
-SOLC_VERSION="0.8.19"
+# T-MYTHRIL-WRONG-SOLC FIX: production uses 0.8.30 (per hardhat.config.ts).
+# Mythril compiled with 0.8.19 produced bytecode that diverged from production and could
+# not parse EIP-1153 transient storage features used by SeerPolicyGuard. Pinned to 0.8.30
+# to match production exactly.
+SOLC_VERSION="0.8.30"
 
 # Critical contracts (findings C-01 through C-06 + untested high-value)
 CRITICAL_CONTRACTS=(

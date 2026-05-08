@@ -570,6 +570,14 @@ contract DAO is ReentrancyGuard {
         require(target != address(0), "DAO: invalid target");
         require(bytes(description).length > 0, "DAO: empty description");
 
+        // H6 FIX: Forbid native-ETH-bearing proposals.
+        // The DAO->Timelock execution path does not forward msg.value, and DAOTimelock has
+        // no receive() and queueTx is not payable, so the timelock cannot be funded with ETH.
+        // Any proposal with value > 0 would revert at execute time. Reject at propose time
+        // with a clear error so operators are not surprised by a stuck-but-ripe timelock tx.
+        // VFIDE protocol operations are all token-based; native ETH is never required.
+        require(value == 0, "DAO: native ETH not supported");
+
         if (proposalCooldown > 0 && lastProposalAt[msg.sender] > 0) {
             uint256 readyAt = uint256(lastProposalAt[msg.sender]) + proposalCooldown;
             if (block.timestamp < readyAt) revert DAO_ProposalCooldownActive(readyAt);
@@ -788,8 +796,10 @@ contract DAO is ReentrancyGuard {
     ///      This enables post-deployment governance: DAO proposes → DAO queues in timelock →
     ///      DAO (via executeTimelockTx) executes the timelock transaction.
     ///      The timelock will internally call markExecuted() to transition the DAO proposal state.
+    /// @dev H6 FIX: Removed `payable`. Native-ETH-bearing proposals are forbidden at propose-time
+    ///      (see DAO.propose require(value == 0)), so this entry point cannot legitimately receive ETH.
     /// @param timelockId The ID of the queued transaction to execute (from queueTxFromDAO)
-    function executeTimelockTx(bytes32 timelockId) external payable {
+    function executeTimelockTx(bytes32 timelockId) external {
         // Execute the queued transaction via the timelock interface.
         // This will revert if not yet ripe, already executed, or if execution fails.
         // The timelock will call this DAO's markExecuted() to update the associated proposal state.

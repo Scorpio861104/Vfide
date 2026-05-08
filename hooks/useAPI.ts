@@ -121,11 +121,21 @@ export function useAuth() {
       return false;
     }
 
+    // T-USEAUTH-1 FIX: fail-closed on missing chainId rather than silently falling back
+    // to Base Sepolia (84532). The previous fallback meant a misconfigured wagmi/RPC
+    // setup on mainnet would generate testnet-bound auth challenges that production
+    // SIWE consumption would reject — but with confusing "challenge chain mismatch"
+    // errors instead of a clear "no chain detected" upstream.
+    if (!chainId || chainId <= 0) {
+      setError('No blockchain network detected. Please connect to a supported network.');
+      return false;
+    }
+
     setIsAuthenticating(true);
     setError(null);
 
     try {
-      const challenge = await apiClient.getAuthChallenge(address, chainId || 84532);
+      const challenge = await apiClient.getAuthChallenge(address, chainId);
       const message = challenge.message;
       const signature = await signMessageAsync({ message });
 

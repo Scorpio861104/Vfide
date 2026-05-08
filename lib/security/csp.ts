@@ -1,8 +1,9 @@
 /**
  * Shared CSP utilities.
  *
- * `middleware.ts` is the single runtime enforcement point, while these helpers keep
- * policy construction centralized for tests and deployment validation.
+ * `proxy.ts` is the single runtime enforcement point (Next.js 16 native convention,
+ * formerly `middleware.ts` in Next.js ≤15). These helpers keep policy construction
+ * centralized for tests and deployment validation.
  */
 
 function protocolHost(value: string): string {

@@ -23,9 +23,14 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     ///      (liquidity provision, lending, farming) from day one.  Individual vault owners
     ///      can still tighten limits at any time via CardBoundVault.setSpendLimits().
     ///      Changes to these defaults apply to new vaults only; existing vaults are unaffected.
-    uint256 public cardDefaultMaxPerTransfer = 500_000 * 1e18;
-    /// @notice Default daily transfer limit for newly created vaults.
-    uint256 public cardDefaultDailyLimit = 2_000_000 * 1e18;
+    // M5d FIX: tighten default per-transfer / daily limits for newly created vaults.
+    // Previous defaults (500K / 2M VFIDE) were too permissive for new users with no
+    // ProofScore established. New defaults (10K / 50K VFIDE) protect new users from
+    // single-transaction key-compromise drain. Users can raise via setSpendLimits
+    // (subject to SENSITIVE_ADMIN_DELAY timelock on the vault) once they understand
+    // the trade-off. DAO can adjust globally via setCardDefaults (48h timelock).
+    uint256 public cardDefaultMaxPerTransfer = 10_000 * 1e18;
+    uint256 public cardDefaultDailyLimit = 50_000 * 1e18;
     // M-3 FIX: Vaults have 30 days after creation to complete guardian setup.
     // After this window, certain critical operations require setup to be complete.
     uint256 public constant GUARDIAN_SETUP_GRACE = 30 days;

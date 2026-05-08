@@ -131,6 +131,11 @@ contract FraudRegistry is ReentrancyGuard {
 
     EscrowedTransfer[] public escrowedTransfers;
     mapping(address => uint256[]) public userEscrowIndices; // from → escrow indices
+    // M5g FIX: track active (not released, not cancelled) escrow count per user separately from
+    // the historical array length. Without this, after 500 lifetime escrows the user is permanently
+    // DoS'd from new transfers even after all earlier escrows have released. Cap is now applied to
+    // active count, not lifetime array length.
+    mapping(address => uint256) public userActiveEscrowCount;
     // H-3 FIX: Running total of tokens committed in active (unreleased/uncancelled) escrows
     uint256 public totalActiveEscrowed;
 
@@ -254,8 +259,11 @@ contract FraudRegistry is ReentrancyGuard {
             recipientOwner: recipientOwner
         }));
 
-        require(userEscrowIndices[from].length < 500, "FR: escrow limit");
+        // M5g FIX: cap on ACTIVE escrows per user, not lifetime array length.
+        // Prevents permanent user DoS after 500 historical escrows have released.
+        require(userActiveEscrowCount[from] < 500, "FR: escrow limit");
         userEscrowIndices[from].push(escrowIndex);
+        userActiveEscrowCount[from] += 1;
         // H-3 FIX: Track total actively escrowed tokens for O(1) excess calculation
         totalActiveEscrowed += amount;
 
@@ -274,6 +282,10 @@ contract FraudRegistry is ReentrancyGuard {
         e.released = true;
         // H-3 FIX: Decrement active escrow counter before transfer
         totalActiveEscrowed -= e.amount;
+        // M5g FIX: decrement per-user active count so the user can keep transacting after release
+        if (userActiveEscrowCount[e.from] > 0) {
+            userActiveEscrowCount[e.from] -= 1;
+        }
 
         // Resolve against the snapshot owner captured at escrow time.
         address releaseTarget = e.to;
@@ -320,6 +332,10 @@ contract FraudRegistry is ReentrancyGuard {
 
         e.cancelled = true;
         totalActiveEscrowed -= e.amount;
+        // M5g FIX: decrement per-user active count on rescue/cancel
+        if (userActiveEscrowCount[e.from] > 0) {
+            userActiveEscrowCount[e.from] -= 1;
+        }
         SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
 
         emit EscrowRescued(escrowIndex, e.from, e.amount);
@@ -487,6 +503,10 @@ contract FraudRegistry is ReentrancyGuard {
             if (!e.released && !e.cancelled) {
                 e.cancelled = true;
                 totalActiveEscrowed -= e.amount;
+                // M5g FIX: decrement per-user active count on clear-flag refund cancel
+                if (userActiveEscrowCount[e.from] > 0) {
+                    userActiveEscrowCount[e.from] -= 1;
+                }
                 SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
                 emit EscrowCancelledOnClear(escrowIndex, e.from, e.amount);
                 processed++;

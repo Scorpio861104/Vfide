@@ -82,6 +82,31 @@ interface Transaction {
 
 // ==================== FORMATTERS ====================
 
+/**
+ * T-CSV-INJECT-1 FIX: CSV Formula Injection Defense.
+ *
+ * Excel, Google Sheets, LibreOffice Calc, and Numbers interpret cells beginning with
+ * any of the characters `= + - @ \t \r` as formulas. A malicious memo or address that
+ * starts with these characters can exfiltrate data, execute remote calls (DDE), or
+ * crash the spreadsheet when a user opens the export.
+ *
+ * Mitigation per OWASP Formula Injection guidance: prefix dangerous leading characters
+ * with a single quote (which Excel suppresses on display but stops formula evaluation).
+ * Also strips embedded \r and \n that can break out of quoted cells in some readers.
+ */
+function escapeCsvCell(value: unknown): string {
+  let s = String(value ?? '');
+  // Strip control characters that can break CSV parsing or be used for injection.
+  // Keep printable characters; remove embedded newlines that Excel sometimes splits on.
+  s = s.replace(/[\u0000-\u001F\u007F]/g, ' ');
+  // If the value starts with a formula trigger character, prefix with a single quote.
+  if (s.length > 0 && /^[=+\-@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
+  // Standard CSV escaping: double inner quotes, wrap whole cell in quotes.
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
 function formatAsCSV(
   transactions: Transaction[],
   options: ExportOptions
@@ -124,7 +149,8 @@ function formatAsCSV(
         : '';
       row.push(String(memo));
     }
-    return row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',');
+    // T-CSV-INJECT-1 FIX: route every cell through escapeCsvCell.
+    return row.map(escapeCsvCell).join(',');
   });
 
   return [headers.join(','), ...rows].join('\n');
@@ -148,7 +174,7 @@ function formatTurboTaxCSV(transactions: Transaction[], _options: ExportOptions)
       tx.type === 'send' ? date : '',
       tx.type === 'send' ? tx.usd_value || '0' : '',
     ]
-      .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+      .map(escapeCsvCell)
       .join(',');
   });
 
@@ -179,7 +205,7 @@ function formatCoinTrackerCSV(transactions: Transaction[], _options: ExportOptio
       tx.fee ? 'ETH' : '',
       tx.type,
     ]
-      .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+      .map(escapeCsvCell)
       .join(',');
   });
 
@@ -221,7 +247,7 @@ function formatKoinlyCSV(transactions: Transaction[], _options: ExportOptions): 
       String(memo),
       tx.hash,
     ]
-      .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+      .map(escapeCsvCell)
       .join(',');
   });
 

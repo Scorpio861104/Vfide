@@ -1,6 +1,31 @@
 # VFIDE Protocol — Pre-Professional-Audit Review
 ## Phase 2: Backend / API / WebSocket — Consolidated Report
 
+> ## ⚠️ STALE-DOCUMENT WARNING — READ BEFORE ACTING
+>
+> This document was authored against **Next.js 15 conventions**. The codebase has
+> since been migrated to **Next.js 16.2.4**, which renames the runtime middleware
+> file from `middleware.ts` to `proxy.ts` (the function is `proxy()` instead of
+> `middleware()`). The codemod is part of the official Next.js 16 upgrade.
+>
+> **DO NOT FOLLOW any instruction in this document that says to "rename `proxy.ts`
+> to `middleware.ts`" or "create a `middleware.ts` file".** On Next.js 16,
+> `middleware.ts` is deprecated and the framework looks for `proxy.ts` at the
+> project root. Renaming back would silently disable all CSRF protection, security
+> headers, request size limits, and origin checks. Specifically:
+>
+> - **§ P2-C-01 ("Critical: middleware.ts naming")** — INVALID for Next.js 16.
+>   The current `proxy.ts` file IS the framework-recognized entry point. Verify
+>   its presence with `ls proxy.ts` (should exist) and `ls middleware.ts` (should
+>   NOT exist). The compatibility export `export const middleware = proxy` inside
+>   `proxy.ts` covers any older code that still imports `{ middleware }` from
+>   that file.
+> - Other findings remain accurate where they don't depend on the file naming.
+>
+> Source: official Next.js 16 release notes and codemod docs. Verified via
+> `package.json` (next ≥ 16.x) and the presence of `export const config` with
+> a `matcher` array in `proxy.ts`.
+
 **Prepared by:** Claude (Anthropic)
 **Date:** April 21, 2026
 **Commit under review:** `Vfide-main__6_.zip` (dated 2026-04-20)

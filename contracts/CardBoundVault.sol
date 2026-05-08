@@ -272,6 +272,15 @@ contract CardBoundVault is ReentrancyGuard {
     event LargePaymentThresholdSet(uint256 oldThreshold, uint256 newThreshold);
     event LargePaymentThresholdProposed(uint256 threshold, uint64 executeAfter);
 
+    /// @notice GUARDIAN-WARN-1: emitted on every outgoing payment/transfer made before the
+    /// vault has completed multi-guardian setup. The vault is operationally unprotected
+    /// against key compromise during this window. Frontends MUST surface a persistent
+    /// banner to the user until guardian setup is complete and indexers MUST track this
+    /// event for monitoring/alerting. The MAX_VFIDE_WITHOUT_GUARDIAN cap on incoming
+    /// transfers (50K VFIDE) limits peak loss exposure during this window.
+    event GuardianSetupIncomplete_Payment(address indexed merchant, address indexed token, uint256 amount, string operation);
+    event GuardianSetupIncomplete_Transfer(address indexed toVault, uint256 amount);
+
     error CBV_NotAdmin();
     error CBV_NotGuardian();
     error CBV_Zero();
@@ -758,8 +767,14 @@ contract CardBoundVault is ReentrancyGuard {
         nonReentrant
         whenNotPaused
     {
+        // GUARDIAN-WARN-1 FIX: warn-instead-of-revert. See executePayMerchant for full rationale.
+        // Recovery operations remain gated; everyday transfers are not.
         if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
-            revert CBV_GuardianSetupRequired();
+            emit GuardianSetupIncomplete_Transfer(intent.toVault, intent.amount);
+            address L = address(ledger);
+            if (L != address(0)) {
+                try IProofLedger(L).logEvent(admin, "guardian_warn_xfer", intent.amount, "no_guardians") {} catch {}
+            }
         }
         if (intent.vault != address(this)) revert CBV_InvalidSignature();
         if (intent.toVault == address(0) || intent.toVault == address(this) || intent.toVault == address(0x000000000000000000000000000000000000dEaD)) revert CBV_NotVault(); // CBV-02: block burn/dead addresses
@@ -820,8 +835,22 @@ contract CardBoundVault is ReentrancyGuard {
         nonReentrant
         whenNotPaused
     {
+        // GUARDIAN-WARN-1 FIX: Previously reverted with CBV_GuardianSetupRequired. That blocked
+        // every merchant payment from new users until they had configured 2+ guardians with at
+        // least one independent — a paralyzing UX hurdle for the protocol's core "tap to pay
+        // at the food truck" flow. Replaced with a warning event so frontends and indexers can
+        // surface a persistent banner. Peak loss exposure is bounded by MAX_VFIDE_WITHOUT_GUARDIAN
+        // (50K VFIDE) on the incoming side, so a compromised key cannot drain more than the cap
+        // before guardian setup catches up. Recovery operations (proposeWalletRotation,
+        // approveWalletRotation, finalizeWalletRotation) remain gated because they fundamentally
+        // require guardian quorum.
         if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
-            revert CBV_GuardianSetupRequired();
+            emit GuardianSetupIncomplete_Payment(intent.merchant, intent.token, intent.amount, "executePayMerchant");
+            // Also log to ProofLedger so off-chain indexers can show persistent UI warning.
+            address L = address(ledger);
+            if (L != address(0)) {
+                try IProofLedger(L).logEvent(admin, "guardian_warn_pay", intent.amount, "no_guardians") {} catch {}
+            }
         }
         if (msg.sender != intent.merchantPortal) revert CBV_NotMerchantPortal();
         if (intent.vault != address(this)) revert CBV_PayIntentInvalid();

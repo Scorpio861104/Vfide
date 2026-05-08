@@ -23,12 +23,31 @@ echo "3. Extracting ABIs for frontend..."
 mkdir -p lib/abis
 
 contracts=(
-  VFIDEToken BurnRouter CardBoundVault VaultHub MerchantPortal CommerceEscrow
-  Seer SeerView SeerSocial SeerAutonomous DAO DAOTimelock CouncilElection
-  CouncilManager BadgeRegistry BadgeManager GuardianRegistry EmergencyControl
-  CircuitBreaker SanctumVault SubscriptionManager PayrollManager StablecoinRegistry
-  VFIDEFlashLoan VFIDETermLoan AdminMultiSig SystemHandover VaultInfrastructure VaultRecovery
-  FeeDistributor VFIDETestnetFaucet VaultRegistry
+  # Core token + vault
+  VFIDEToken ProofScoreBurnRouter CardBoundVault CardBoundVaultDeployer VaultHub
+  ProofLedger StablecoinRegistry
+
+  # Commerce + merchant
+  MerchantPortal VFIDECommerce CommerceEscrow MerchantRegistry FraudRegistry
+
+  # Seer + governance
+  Seer DAO DAOTimelock GovernanceHooks AdminMultiSig SystemHandover
+  OwnerControlPanel EmergencyControl CircuitBreaker
+
+  # Lending + finance
+  VFIDEFlashLoan VFIDETermLoan PayrollManager VFIDEFinance VFIDEPriceOracle
+
+  # Treasury + distribution
+  FeeDistributor SanctumVault EcosystemVault EcosystemVaultView
+  DAOPayrollPool MerchantCompetitionPool HeadhunterCompetitionPool
+  ServicePool RevenueSplitter LiquidityIncentives DutyDistributor
+  DevReserveVestingVault
+
+  # Vault auxiliaries
+  VaultRegistry VaultRecoveryClaim VaultInfrastructure
+
+  # Testnet faucet
+  VFIDETestnetFaucet
 )
 
 for contract in "${contracts[@]}"; do

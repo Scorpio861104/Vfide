@@ -884,6 +884,10 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.amountRepaid >= totalDebt) {
             l.state = LoanState.REPAID;
             _closeLoan(l);
+            // M5f FIX: release guarantor commitments. Without this, guarantors of revenue-repaid
+            // loans have committedLiability locked permanently. All other repayment paths already
+            // call _releaseAllGuarantorCommitments after _closeLoan; this path was missing it.
+            _releaseAllGuarantorCommitments(id);
             totalLoans++;
             totalVolume += l.principal;
             if (address(seer) != address(0)) {
