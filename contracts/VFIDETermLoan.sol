@@ -129,6 +129,13 @@ contract VFIDETermLoan is ReentrancyGuard {
     uint64  public constant EXTRACTION_INTERVAL = 1 days;  // Daily extractions after default
     uint256 public constant EXTRACTION_RATE_PCT = 10;      // 10% of their liability per extraction
 
+    // F-SC-025 FIX: Bound how long a loan can sit in the COSIGNING state before
+    // either party can cancel and reclaim funds. Without this timeout, if the
+    // borrower's guardians never gather signatures the lender's principal was
+    // permanently locked in this contract and the borrower's activeLoanCount
+    // stayed incremented (preventing them from taking other loans).
+    uint64  public constant COSIGNING_TIMEOUT = 14 days;
+
     // ProofScore thresholds → max loan amount (in token units, 18 decimals)
     // DAO can adjust these via setScoreTiers()
     uint16 public constant TIER_1_SCORE = ScoringConstants.TIER_1;  // 50% – neutral
@@ -207,6 +214,10 @@ contract VFIDETermLoan is ReentrancyGuard {
     mapping(uint256 => uint8) public signatureCount;          // Loan → number of guarantor signatures
     mapping(uint256 => uint256) public guarantorLiabilityEach; // Loan → liability per guarantor
     mapping(uint256 => mapping(address => uint256)) public guarantorExtracted; // How much pulled from each
+    // F-SC-025 FIX: timestamp at which the loan entered COSIGNING. Used by
+    // cancelLoanCosigning to enforce COSIGNING_TIMEOUT before either the
+    // lender or the borrower can abort and reclaim funds/loan-slots.
+    mapping(uint256 => uint64) public cosigningStartedAt;
     mapping(address => uint256) public committedLiability; // Guarantor address → aggregate active liability
     mapping(address => uint256) public committedLiabilityBySource; // Approval source (vault/wallet) → aggregate active liability
     mapping(uint256 => uint64) public lastExtractionTime;     // When last extraction happened
@@ -315,6 +326,59 @@ contract VFIDETermLoan is ReentrancyGuard {
         emit LoanCancelled(id);
     }
 
+    /// @notice Cancel a stuck COSIGNING loan after timeout.
+    /// @dev F-SC-025 FIX: Without this function, a loan that the borrower
+    ///      accepted but whose guardians never signed sat in COSIGNING
+    ///      forever. Lender principal stayed locked in this contract and
+    ///      the borrower's activeLoanCount stayed incremented. There was
+    ///      no transition out of COSIGNING except `_activateLoan` (requires
+    ///      REQUIRED_GUARANTORS signatures). cancelLoan rejected COSIGNING
+    ///      (line 311 requires OPEN). claimDefault rejected COSIGNING
+    ///      (requires ACTIVE/GRACE/RESTRUCTURED). This function is the exit.
+    ///
+    ///      Either party (lender or borrower) can cancel after
+    ///      COSIGNING_TIMEOUT (14 days) elapses since acceptLoan. The
+    ///      lender's principal returns to them. Already-committed guarantor
+    ///      liability is released. The borrower's activeLoanCount is
+    ///      decremented so they can take other loans again.
+    function cancelLoanCosigning(uint256 id) external nonReentrant {
+        Loan storage l = loans[id];
+        if (l.state != LoanState.COSIGNING) revert TL_WrongState();
+        if (msg.sender != l.lender && msg.sender != l.borrower) revert TL_NotBorrower();
+        uint64 startedAt = cosigningStartedAt[id];
+        require(startedAt != 0, "TL: cosigning timestamp missing");
+        require(block.timestamp >= uint256(startedAt) + COSIGNING_TIMEOUT, "TL: timeout not elapsed");
+
+        l.state = LoanState.CANCELLED;
+
+        // Decrement loan counters: both lender and borrower were tracking this.
+        if (activeLoanCount[l.lender] > 0) {
+            activeLoanCount[l.lender]--;
+        }
+        if (activeLoanCount[l.borrower] > 0) {
+            activeLoanCount[l.borrower]--;
+        }
+
+        // Release any guarantor commitments that were made before timeout
+        // (signatureCount < REQUIRED_GUARANTORS, otherwise _activateLoan would
+        // have transitioned us out of COSIGNING already).
+        address[] storage signers = guarantors[id];
+        for (uint256 i = 0; i < signers.length; i++) {
+            address g = signers[i];
+            uint256 committed = guarantorCommittedLiability[id][g];
+            if (committed > 0) {
+                address source = guarantorVault[id][g];
+                if (source == address(0)) source = g;
+                _releaseGuarantorCommitment(id, g, source, committed);
+            }
+        }
+
+        // Refund lender's principal — this contract has been holding it since
+        // createLoan deposited it (line 303).
+        vfideToken.safeTransfer(_settlementRecipient(l.lender), l.principal);
+        emit LoanCancelled(id);
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     //                      2. BORROWER ACCEPTS + GUARANTORS SIGN
     // ═══════════════════════════════════════════════════════════════════════
@@ -341,6 +405,9 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         l.borrower = msg.sender;
         l.state = LoanState.COSIGNING;
+        // F-SC-025 FIX: stamp the moment we entered COSIGNING so cancellation
+        // after timeout becomes possible.
+        cosigningStartedAt[id] = uint64(block.timestamp);
         activeLoanCount[msg.sender]++;
 
         emit LoanAccepted(id, msg.sender, limit);
@@ -817,10 +884,23 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         // Reduced penalty: they came back and paid. Not forgiven, but recognized.
         if (address(seer) != address(0)) {
-            // Net effect: they already got -20.0 from default.
-            // Reward +10.0 back for making it right. Net: -10.0
-            try seer.reward(l.borrower, 100, "default_repaid_late") {} catch {}
-            // Relieve guarantors — give back some score
+            // F-SC-032 FIX: Only reward the borrower for late payment if they
+            // actually paid something (remaining > 0). When guarantors fully
+            // covered the default (remaining == 0) the borrower contributed
+            // nothing toward the residual; awarding +10.0 score for cleanup-
+            // only would be a free score pump across N defaulted loans (each
+            // giving +N×10.0). The "default_repaid_late" reward is conceptually
+            // the recognition for "they came back and paid", which is only
+            // true when the borrower transferred tokens above.
+            if (remaining > 0) {
+                // Net effect: they already got -20.0 from default.
+                // Reward +10.0 back for making it right. Net: -10.0
+                try seer.reward(l.borrower, 100, "default_repaid_late") {} catch {}
+            }
+            // Relieve guarantors — give back some score (this remains
+            // unconditional: guarantors fulfilled their commitment by
+            // covering the default, regardless of whether the borrower
+            // contributed any residual).
             address[] storage g = guarantors[id];
             for (uint256 i = 0; i < g.length; i++) {
                 try seer.reward(g[i], 50, "guarantor_relieved") {} catch {}

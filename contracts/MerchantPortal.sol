@@ -195,6 +195,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     mapping(address => bool) private merchantInList;
     mapping(address => uint256) private merchantIndexPlusOne;
 
+    // F-SC-021 FIX: 24-hour timelock state for payout-address changes. Without
+    // a delay, a single compromised merchant key would instantly redirect all
+    // subsequent revenue to the attacker. The propose/apply/cancel pattern
+    // gives merchants a window to detect the change before it takes effect.
+    uint64 public constant PAYOUT_ADDRESS_DELAY = 24 hours;
+    mapping(address => address) public pendingPayoutAddress;
+    mapping(address => uint64) public pendingPayoutAddressEffectiveAt;
+    event PayoutAddressProposed(address indexed merchant, address proposedAddress, uint64 effectiveAt);
+    event PayoutAddressProposalCancelled(address indexed merchant);
+
     /// Supported payment tokens (VFIDE + stablecoins)
     mapping(address => bool) public acceptedTokens;
     mapping(address => uint8) public acceptedTokenDecimals;
@@ -844,11 +854,55 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * Set a custom payout address (e.g. RevenueSplitter or Treasury)
      * If set to address(0), funds go to the merchant's Vault.
+     *
+     * F-SC-021 FIX: Converted from instant single-step to two-step
+     * propose/apply with a 24-hour timelock. The previous behavior allowed
+     * an attacker who compromised a merchant key to silently redirect ALL
+     * subsequent merchant revenue to an attacker-controlled vault in a
+     * single transaction. With the timelock the merchant has a 24-hour
+     * window to detect the change (via events / monitoring / on-chain
+     * notification) and call cancelPayoutAddressChange to nullify it.
+     *
+     * To CLEAR a payout (return to merchant vault), propose payout=address(0)
+     * and apply after the delay.
      */
-    function setPayoutAddress(address payout) external onlyMerchant {
+    function proposePayoutAddress(address payout) external onlyMerchant {
         if (!(payout == address(0) || vaultHub.isVault(payout))) revert MERCH_InvalidConfig();
-        merchants[msg.sender].payoutAddress = payout;
-        emit PayoutAddressSet(msg.sender, payout);
+        // Overwrite any prior pending proposal: a merchant who is mid-flight
+        // re-routing genuinely should be able to update without waiting for
+        // a stale proposal to expire. The 24h delay still applies from now.
+        pendingPayoutAddress[msg.sender] = payout;
+        pendingPayoutAddressEffectiveAt[msg.sender] = uint64(block.timestamp) + PAYOUT_ADDRESS_DELAY;
+        emit PayoutAddressProposed(msg.sender, payout, pendingPayoutAddressEffectiveAt[msg.sender]);
+    }
+
+    function applyPayoutAddress() external onlyMerchant {
+        uint64 effectiveAt = pendingPayoutAddressEffectiveAt[msg.sender];
+        require(effectiveAt != 0, "MP: no pending payout proposal");
+        require(block.timestamp >= effectiveAt, "MP: payout timelock not elapsed");
+        address proposed = pendingPayoutAddress[msg.sender];
+        // Re-validate that the destination is still a tracked vault (or zero
+        // for "use merchant vault"). VaultHub state could in principle have
+        // changed during the timelock window.
+        if (!(proposed == address(0) || vaultHub.isVault(proposed))) revert MERCH_InvalidConfig();
+        merchants[msg.sender].payoutAddress = proposed;
+        delete pendingPayoutAddress[msg.sender];
+        delete pendingPayoutAddressEffectiveAt[msg.sender];
+        emit PayoutAddressSet(msg.sender, proposed);
+    }
+
+    function cancelPayoutAddressChange() external onlyMerchant {
+        require(pendingPayoutAddressEffectiveAt[msg.sender] != 0, "MP: no pending payout proposal");
+        delete pendingPayoutAddress[msg.sender];
+        delete pendingPayoutAddressEffectiveAt[msg.sender];
+        emit PayoutAddressProposalCancelled(msg.sender);
+    }
+
+    /// @notice Legacy entrypoint retained for ABI compatibility. Reverts because
+    ///         instant single-step payout changes are no longer permitted.
+    function setPayoutAddress(address payout) external onlyMerchant {
+        payout;
+        revert("MP: use proposePayoutAddress + applyPayoutAddress");
     }
 
     // ─────────────────────────── Channel-Specific Payments

@@ -1204,6 +1204,16 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function _queueTokenApproval(address token, address spender, uint256 amount) internal {
+        // F-SC-041 FIX: Reject silently overwriting an existing pending
+        // approval. Without this guard a second approveVFIDE/approveERC20
+        // call would replace the previously-queued approval (which may have
+        // had a different spender or amount) without any event/error,
+        // making the queue state confusing for the admin and any UI that
+        // tracks pending approvals. If the admin needs to change a pending
+        // approval, they must call cancelTokenApproval() first to clear
+        // the slot deliberately.
+        require(pendingTokenApproval.executeAfter == 0, "CBV: pending approval exists");
+
         uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
         pendingTokenApproval = PendingTokenApproval({
             token: token,

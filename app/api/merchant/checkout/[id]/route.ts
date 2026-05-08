@@ -30,25 +30,42 @@ function getCheckoutRpcUrl(): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-async function verifySubmittedTransaction(hash: string): Promise<{ verified: boolean; confirmed: boolean }> {
+async function verifySubmittedTransaction(
+  hash: string,
+  expectedFrom: string,
+): Promise<{ verified: boolean; confirmed: boolean; senderMatches: boolean }> {
   const rpcUrl = getCheckoutRpcUrl();
-  if (!rpcUrl) return { verified: false, confirmed: false };
+  if (!rpcUrl) return { verified: false, confirmed: false, senderMatches: false };
 
   try {
     const client = createPublicClient({ transport: http(rpcUrl) });
-    const receipt = await client.getTransactionReceipt({ hash: hash as Hash });
+    // F-BE-033 FIX: Verify both the receipt (for confirmation status) and the
+    // transaction (for sender). Without the sender check the customer-facing
+    // checkout PATCH could be advanced to `pending_confirmation` by submitting
+    // ANY confirmed tx hash on-chain (e.g., a Uniswap swap, a friend's transfer
+    // elsewhere). The merchant's downstream verification was the only guard.
+    // We additionally require the tx.from to match the authenticated customer
+    // address so an attacker who guesses a payment_link_id cannot brick the
+    // invoice with an unrelated hash.
+    const [receipt, tx] = await Promise.all([
+      client.getTransactionReceipt({ hash: hash as Hash }),
+      client.getTransaction({ hash: hash as Hash }),
+    ]);
+    const txFrom = typeof tx?.from === 'string' ? tx.from.toLowerCase() : '';
+    const senderMatches = txFrom !== '' && txFrom === expectedFrom.toLowerCase();
     return {
       verified: true,
       confirmed: receipt.status === 'success',
+      senderMatches,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
     if (message.includes('not found') || message.includes('unknown') || message.includes('missing')) {
-      return { verified: true, confirmed: false };
+      return { verified: true, confirmed: false, senderMatches: false };
     }
 
     logger.warn('[Checkout PATCH] Transaction verification RPC failure', error);
-    return { verified: false, confirmed: false };
+    return { verified: false, confirmed: false, senderMatches: false };
   }
 }
 
@@ -184,12 +201,25 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
       // Require a valid transaction hash — payment confirmation should be verified on-chain
       const txHash = parsedBody.data.tx_hash;
 
-      const txVerification = await verifySubmittedTransaction(txHash);
+      const txVerification = await verifySubmittedTransaction(txHash, authAddress);
       if (!txVerification.verified) {
         return NextResponse.json({ error: 'Payment verification temporarily unavailable' }, { status: 503 });
       }
       if (!txVerification.confirmed) {
         return NextResponse.json({ error: 'Transaction hash not confirmed on-chain' }, { status: 400 });
+      }
+      // F-BE-033 FIX: tx must originate from the authenticated customer wallet.
+      // Note: this does NOT validate the recipient or value matches the invoice;
+      // that validation requires per-token-decoding logic and remains a manual
+      // step performed by the merchant when transitioning the invoice from
+      // `pending_confirmation` to `paid`. The from-check alone is sufficient
+      // to prevent arbitrary attackers from bricking invoices with unrelated
+      // confirmed hashes.
+      if (!txVerification.senderMatches) {
+        return NextResponse.json(
+          { error: 'Transaction sender does not match the authenticated customer' },
+          { status: 400 },
+        );
       }
 
       // Mark as pending_confirmation, not paid — merchant or backend job verifies on-chain.

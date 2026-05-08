@@ -129,6 +129,36 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       );
     }
 
+    // F-BE-036 FIX: validate that each returned item's product_id was
+    // actually present in the original order. Without this check a
+    // customer could file a return claiming items that were never on the
+    // order — passing through to the merchant dashboard and (when the
+    // merchant approves with status='completed') triggering inventory
+    // restocks for products the customer never bought.
+    const orderItemRows = await query<{ product_id: number | null }>(
+      `SELECT product_id FROM merchant_order_items WHERE order_id = $1`,
+      [orderId],
+    );
+    const validProductIds = new Set<string>();
+    for (const row of orderItemRows.rows) {
+      if (row.product_id != null) {
+        validProductIds.add(String(row.product_id));
+      }
+    }
+    for (const item of items) {
+      if (typeof item !== 'object' || item == null) continue;
+      const productId = String(((item as { product_id?: unknown }).product_id ?? '')).trim();
+      // Tolerate items without a product_id (the legacy items column allowed
+      // free-text rows). Only reject items that DO declare a product_id but
+      // that product_id was not in the original order.
+      if (productId && !validProductIds.has(productId)) {
+        return NextResponse.json(
+          { error: `Returned item product_id ${productId} was not in the original order` },
+          { status: 400 },
+        );
+      }
+    }
+
     const result = await query(
       `INSERT INTO merchant_returns (
          merchant_address, order_id, customer_address, items, type, reason
@@ -166,6 +196,63 @@ async function patchHandler(request: NextRequest) {
     const authResult = await requireOwnership(request, merchantAddress);
     if (authResult instanceof NextResponse) return authResult;
 
+    // F-BE-035 FIX: enforce a state machine and idempotency on returns
+    // updates. Previously the PATCH allowed any → any transitions and
+    // would re-run the inventory restock branch each time the status was
+    // re-set to 'completed', double-restocking products. We now:
+    //   1. read the current row,
+    //   2. require the requested status is a valid forward transition,
+    //   3. record whether items have already been restocked (in items JSON
+    //      using a `__restocked: true` marker on the row's items column,
+    //      stored back at the time of the FIRST completed transition).
+    const current = await query<{ status: string | null; items: unknown }>(
+      `SELECT status, items FROM merchant_returns WHERE id = $1 AND merchant_address = $2 LIMIT 1`,
+      [returnId, merchantAddress],
+    );
+    if (current.rows.length === 0) {
+      return NextResponse.json({ error: 'Return not found' }, { status: 404 });
+    }
+    const currentStatus = (current.rows[0]?.status || '').trim().toLowerCase();
+
+    // Permitted transitions. `cancelled` and `rejected` are terminal; from
+    // there no further status changes are accepted. `completed` is also
+    // terminal (idempotency below).
+    const validTransitions: Record<string, string[]> = {
+      pending: ['approved', 'rejected', 'cancelled'],
+      approved: ['completed', 'cancelled'],
+      rejected: [],
+      completed: [],
+      cancelled: [],
+    };
+    const allowed = validTransitions[currentStatus] ?? [];
+    if (!allowed.includes(status)) {
+      return NextResponse.json(
+        { error: `Cannot transition return from '${currentStatus || 'unknown'}' to '${status}'` },
+        { status: 400 },
+      );
+    }
+
+    // Inspect items JSON to read the restock marker, defaulting to false.
+    let parsedItemsRoot: unknown = current.rows[0]?.items;
+    if (typeof parsedItemsRoot === 'string') {
+      try {
+        parsedItemsRoot = JSON.parse(parsedItemsRoot);
+      } catch {
+        parsedItemsRoot = null;
+      }
+    }
+    const itemsRootObj =
+      parsedItemsRoot && typeof parsedItemsRoot === 'object' && !Array.isArray(parsedItemsRoot)
+        ? (parsedItemsRoot as Record<string, unknown>)
+        : null;
+    const itemsArray =
+      Array.isArray(parsedItemsRoot)
+        ? (parsedItemsRoot as unknown[])
+        : itemsRootObj && Array.isArray(itemsRootObj.items)
+          ? (itemsRootObj.items as unknown[])
+          : [];
+    const alreadyRestocked = !!(itemsRootObj && itemsRootObj.__restocked === true);
+
     await query(
       `UPDATE merchant_returns
           SET status = $3,
@@ -177,11 +264,13 @@ async function patchHandler(request: NextRequest) {
       [returnId, merchantAddress, status, refundAmount, creditAmount, merchantAddress],
     );
 
-    if (status === 'approved' || status === 'completed') {
-      const returnData = await query(`SELECT items FROM merchant_returns WHERE id = $1`, [returnId]);
-      const items = parseItems(returnData.rows[0]?.items);
-
-      for (const item of items) {
+    // Restock branch: only restock the FIRST time the return reaches
+    // 'approved' OR 'completed'. The state-machine guard above prevents
+    // re-entering completed from completed, but we add the explicit
+    // `__restocked` guard so any future transitions added below this
+    // file cannot accidentally double-restock.
+    if ((status === 'approved' || status === 'completed') && !alreadyRestocked) {
+      for (const item of itemsArray) {
         if (typeof item === 'object' && item && 'product_id' in item && 'quantity' in item) {
           const productId = String((item as { product_id?: unknown }).product_id ?? '');
           const quantity = Number((item as { quantity?: unknown }).quantity ?? 0);
@@ -195,6 +284,16 @@ async function patchHandler(request: NextRequest) {
           }
         }
       }
+      // Persist the restock marker so a future transition cannot duplicate
+      // the inventory write. We wrap the items array in an object that
+      // carries both the original list and the boolean marker.
+      const newItemsValue = itemsRootObj
+        ? { ...itemsRootObj, items: itemsArray, __restocked: true }
+        : { items: itemsArray, __restocked: true };
+      await query(
+        `UPDATE merchant_returns SET items = $3 WHERE id = $1 AND merchant_address = $2`,
+        [returnId, merchantAddress, JSON.stringify(newItemsValue)],
+      );
     }
 
     return NextResponse.json({ success: true });

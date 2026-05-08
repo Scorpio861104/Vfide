@@ -398,12 +398,28 @@ contract FraudRegistry is ReentrancyGuard {
 
         isPendingReview[target] = false;
         pendingReviewAt[target] = 0;
-        // Complaint count and history stay — on-chain record is permanent
-        // But no consequences are applied
 
         // N-M4 FIX: Process a bounded first chunk immediately so penalty application
         // does not depend entirely on a separate keeper call.
         _processDismissedComplaintPenalties(target, 20);
+
+        // F-SC-037 FIX: After the bounded penalty chunk runs, reset the trigger
+        // state so a single new complaint cannot reactivate pendingReview using
+        // the previously-dismissed count. Without these resets, complaintCount
+        // remained at >= COMPLAINTS_TO_FLAG and complaints[target] retained the
+        // old entries, which meant ONE new reporter at line 215 was enough to
+        // re-enter pending review with the same set of dismissed complaints —
+        // a harassment vector. We mirror clearFlag (lines 461-464): zero the
+        // count, drop the historical complaints array, reset the penalty
+        // cursor, and bump the per-target epoch so each previously-dismissed
+        // reporter must use a NEW per-reporter epoch slot before they can file
+        // again. The trade-off (matching clearFlag): any reporters beyond the
+        // first 20 inline-processed penalties are not punished. In typical
+        // cases COMPLAINTS_TO_FLAG <= 20 so all reporters are punished inline.
+        complaintCount[target] = 0;
+        delete complaints[target];
+        dismissedComplaintPenaltyCursor[target] = 0;
+        complaintEpoch[target] += 1;
 
         emit ComplaintsDismissedByDAO(target, msg.sender);
     }

@@ -225,7 +225,7 @@ contract PayrollManager is ReentrancyGuard {
      * @param rate Tokens per second (e.g. 3000 USDC / 30 days / 24h / 3600s)
      * @param initialDeposit Amount to deposit upfront
      */
-    function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external returns (uint256) {
+    function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external nonReentrant returns (uint256) {
         if (payee == address(0)) revert PM_InvalidPayee();
         require(supportedTokens[token], "PM: unsupported token");
         if (rate == 0) revert PM_InvalidRate();

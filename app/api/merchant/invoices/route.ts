@@ -290,11 +290,21 @@ async function patchHandler(request: NextRequest, user: JWTPayload) {
     const invoice = existing.rows[0]!;
 
     // Validate status transitions
+    // F-BE-034 FIX: include `pending_confirmation` so that invoices moved to that
+    // state by the customer-side checkout PATCH (POST /api/merchant/checkout/[id]
+    // with action='pay') can be advanced by the merchant to 'paid' or 'cancelled'.
+    // Without this entry the legitimate happy-path was a deadlock: customer
+    // submits tx_hash → state = pending_confirmation → no merchant transition
+    // is allowed → invoice stuck forever and `invoice.paid` webhook never fires.
+    // We also add `sent` and `viewed` as valid backward transitions from
+    // pending_confirmation so merchants can re-open an invoice if the on-chain
+    // confirmation is rejected (e.g., wrong recipient or amount).
     const validTransitions: Record<string, string[]> = {
       draft: ['sent', 'cancelled'],
       sent: ['viewed', 'paid', 'overdue', 'cancelled'],
       viewed: ['paid', 'overdue', 'cancelled'],
       overdue: ['paid', 'cancelled'],
+      pending_confirmation: ['paid', 'cancelled', 'sent', 'viewed'],
       paid: ['refunded'],
     };
 

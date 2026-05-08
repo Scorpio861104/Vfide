@@ -76,9 +76,38 @@ function getAllowedOrigin(origin: string | null): string | null {
 
 	// Allow Vercel preview deployments only outside strict production runtime.
 	// In production, require explicit preview environment semantics.
+	//
+	// F-FE-022 FIX: The previous matcher accepted ANY *.vercel.app origin,
+	// which means an attacker could deploy attacker-name.vercel.app and gain
+	// cross-site access to this app's preview API surface (including reading
+	// authenticated responses through the user's browser cookies if the
+	// browser had those cookies for the preview origin). We now require the
+	// hostname to look like a project preview deployment for THIS project
+	// (vfide-* or vfide.vercel.app). Operators with a different project
+	// name should set VERCEL_PREVIEW_HOST_PATTERN to a regex that matches
+	// their own preview hosts.
 	if (origin.endsWith('.vercel.app')) {
 		if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV === 'preview') {
-			allowed.add(origin);
+			let originHost = '';
+			try {
+				originHost = new URL(origin).hostname.toLowerCase();
+			} catch {
+				// fall through to deny
+			}
+			const customPattern = process.env.VERCEL_PREVIEW_HOST_PATTERN;
+			let projectRe: RegExp;
+			if (customPattern && customPattern.length > 0) {
+				try {
+					projectRe = new RegExp(customPattern);
+				} catch {
+					projectRe = /^vfide(?:-[a-z0-9-]+)?\.vercel\.app$/;
+				}
+			} else {
+				projectRe = /^vfide(?:-[a-z0-9-]+)?\.vercel\.app$/;
+			}
+			if (originHost && projectRe.test(originHost)) {
+				allowed.add(origin);
+			}
 		}
 	}
 

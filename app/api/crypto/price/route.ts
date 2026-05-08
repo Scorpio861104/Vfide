@@ -135,8 +135,36 @@ export async function GET(request: NextRequest) {
     }
     const forceRefresh = parsedRefresh;
     
-    // Fetch ETH price from CoinGecko
-    const coingeckoUrl = process.env.NEXT_PUBLIC_COINGECKO_API_URL || 'https://api.coingecko.com/api/v3/simple/price';
+    // F-BE-031 FIX: Prefer the server-only `COINGECKO_API_URL` env var when
+    // present, falling back to `NEXT_PUBLIC_COINGECKO_API_URL` for backward
+    // compatibility. NEXT_PUBLIC_* env vars are bundled into the client JS
+    // at build time, so anything that's only used server-side as a fetch
+    // target should ideally NOT be NEXT_PUBLIC_*. We additionally validate
+    // the resolved URL is HTTPS and resolves to a known CoinGecko hostname,
+    // so an operator misconfiguration cannot silently turn this into an
+    // SSRF target. Operators are recommended to migrate from
+    // NEXT_PUBLIC_COINGECKO_API_URL to COINGECKO_API_URL.
+    const rawCoingeckoUrl =
+      process.env.COINGECKO_API_URL ||
+      process.env.NEXT_PUBLIC_COINGECKO_API_URL ||
+      'https://api.coingecko.com/api/v3/simple/price';
+    let coingeckoUrl = rawCoingeckoUrl;
+    try {
+      const parsed = new URL(rawCoingeckoUrl);
+      const hostnameLower = parsed.hostname.toLowerCase();
+      const isHttps = parsed.protocol === 'https:';
+      const isApprovedHost =
+        hostnameLower === 'api.coingecko.com' ||
+        hostnameLower === 'pro-api.coingecko.com' ||
+        hostnameLower.endsWith('.coingecko.com');
+      if (!isHttps || !isApprovedHost) {
+        logger.warn('[crypto/price] COINGECKO_API_URL failed allowlist; falling back to default');
+        coingeckoUrl = 'https://api.coingecko.com/api/v3/simple/price';
+      }
+    } catch {
+      logger.warn('[crypto/price] COINGECKO_API_URL is not a valid URL; falling back to default');
+      coingeckoUrl = 'https://api.coingecko.com/api/v3/simple/price';
+    }
     const ethPriceResponse = await fetch(
       `${coingeckoUrl}?ids=ethereum&vs_currencies=usd`,
       { next: { revalidate: forceRefresh ? 0 : 60 } } // Cache for 60 seconds unless forced

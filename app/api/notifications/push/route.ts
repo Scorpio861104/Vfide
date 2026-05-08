@@ -139,9 +139,23 @@ export const DELETE = withAuth(async (request: NextRequest, user: JWTPayload) =>
     }
 
     await query(
-      `DELETE FROM push_subscriptions ps
-       USING users u
-       WHERE ps.user_id = u.id AND u.wallet_address = $1 AND ps.endpoint = $2`,
+      // F-BE-030 FIX: The codebase has TWO push subscription endpoints that
+      // write to the push_subscriptions table on different columns:
+      //   - /api/push/subscribe writes user_address only (user_id null)
+      //   - /api/notifications/push (POST above) writes user_id via users JOIN
+      // The original DELETE matched only via the user_id JOIN, which left
+      // every subscription created by /api/push/subscribe orphaned —
+      // unsubscribing did nothing for those rows, breaking GDPR delete and
+      // accumulating dead endpoints in the table. Match by EITHER column so
+      // both producers' rows can be removed by either endpoint owner. Using
+      // a subquery (rather than `USING users u`) so rows lacking a users
+      // table entry are still deleted via the user_address branch.
+      `DELETE FROM push_subscriptions
+       WHERE endpoint = $2
+         AND (
+           user_address = $1
+           OR user_id IN (SELECT id FROM users WHERE wallet_address = $1)
+         )`,
       [normalizedUserAddress, endpoint]
     );
 

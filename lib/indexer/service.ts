@@ -139,6 +139,14 @@ const INDEXED_EVENTS: EventDef[] = [
     },
   },
   {
+    // F-INFRA-006 NOTE: SeerSocial lives in contracts/future/ and is not
+    // deployed in the current mainnet target set. CONTRACT_ADDRESSES.SeerSocial
+    // resolves to an empty/undefined value in production, so the indexer
+    // engine silently skips this entry rather than failing. We deliberately
+    // keep the registration here so that when SeerSocial is deployed in a
+    // future release, indexing turns on automatically once the env var is
+    // set — no code change required. If the project decides not to deploy
+    // SeerSocial at all, this block can be removed in a future v19.x patch.
     contract: 'SeerSocial',
     address: CONTRACT_ADDRESSES.SeerSocial,
     event: 'Endorsed',

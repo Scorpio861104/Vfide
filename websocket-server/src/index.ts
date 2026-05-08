@@ -479,6 +479,41 @@ export function broadcast(msg: OutboundMessage, except?: string): void {
   const topic = extractTopicFromOutbound(msg);
 
   if (topic) {
+    // F-WS-001 FIX: For chat topics (chat.<addrA>_<addrB>) the broadcast
+    // payload's `from` field must match one of the two topic participants.
+    // Without this check, a Next.js code path that holds the
+    // WS_INTERNAL_SECRET could publish a message claiming any sender into a
+    // chat topic — including impersonating a user the recipient trusts. The
+    // delivery-time ACL above only validates the recipient is permitted to
+    // see the topic; it does not validate that the message's claimed sender
+    // is one of the two participants.
+    if (topic.startsWith('chat.')) {
+      const participants = topic.slice('chat.'.length).split('_');
+      if (participants.length !== 2) {
+        console.warn('[ws] dropping chat broadcast with malformed topic participants');
+        return;
+      }
+      const [a, b] = participants.map((entry) => entry.toLowerCase());
+      const addrRe = /^0x[a-f0-9]{40}$/;
+      if (!addrRe.test(a) || !addrRe.test(b)) {
+        console.warn('[ws] dropping chat broadcast with non-address participants');
+        return;
+      }
+      const payload = (msg.payload ?? {}) as Record<string, unknown>;
+      const fromRaw = payload.from;
+      if (typeof fromRaw !== 'string' || fromRaw.length === 0) {
+        console.warn('[ws] dropping chat broadcast missing payload.from');
+        return;
+      }
+      const fromLower = fromRaw.toLowerCase();
+      if (fromLower !== a && fromLower !== b) {
+        console.warn(
+          '[ws] dropping chat broadcast where payload.from is not a topic participant',
+        );
+        return;
+      }
+    }
+
     const subscriberSessions = topicSubscribers.get(topic);
     if (!subscriberSessions || subscriberSessions.size === 0) {
       return;

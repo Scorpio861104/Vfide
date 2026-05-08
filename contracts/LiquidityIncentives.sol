@@ -149,9 +149,17 @@ contract LiquidityIncentives is ReentrancyGuard {
 
         UserStake storage userStake = userStakes[lpToken][msg.sender];
 
-        if (userStake.stakedAt == 0) {
-            userStake.stakedAt = block.timestamp;
-        }
+        // F-SC-033 FIX: Always update stakedAt on every stake, not only the
+        // first one. The previous "if zero" guard meant a user who staked
+        // 1 wei at time T0 then a meaningful amount at time T0+11 months
+        // could withdraw the meaningful amount one month later (T0+12mo)
+        // because stakedAt was anchored to T0 — bypassing the cooldown for
+        // the much-larger second deposit. Refreshing the anchor on each
+        // stake ensures the cooldown applies to the most recent deposit
+        // size of stake. This is a behavioral change for any user who is
+        // already staked: their next stake() will reset their cooldown
+        // window. Documented in CHANGELOG.
+        userStake.stakedAt = block.timestamp;
 
         userStake.amount += amount;
         pool.totalStaked += amount;

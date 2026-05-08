@@ -236,6 +236,17 @@ contract CommerceEscrow {
         if (e.state != State.OPEN) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
 
+        // F-SC-024 FIX: Re-check merchant SUSPENDED status at funding time.
+        // The original code only checked SUSPENDED at open() (line 213).
+        // Auto-suspension can happen between open() and markFunded() via the
+        // 5-refunds / 3-disputes thresholds in MerchantRegistry (lines 111,
+        // 122). Without this check, an auto-suspended merchant could still
+        // receive funded escrows via pre-existing OPEN ones — bypassing the
+        // safety mechanism that suspended them in the first place.
+        MerchantRegistry.Merchant memory m = merchants.info(e.merchantOwner);
+        if (m.status == MerchantRegistry.Status.SUSPENDED) revert COM_Suspended();
+        if (m.status == MerchantRegistry.Status.DELISTED) revert COM_Delisted();
+
         // Defense in depth: only pull funds from the buyer vault that still belongs
         // to the escrow buyer owner at funding time.
         address currentBuyerVault = vaultHub.vaultOf(e.buyerOwner);
@@ -250,6 +261,18 @@ contract CommerceEscrow {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != dao) revert COM_NotAllowed();
+
+        // F-SC-024 FIX: Re-check merchant SUSPENDED status at release time.
+        // Mirrors the markFunded gate. If a merchant was auto-suspended after
+        // funding (e.g. they accumulated 5 refunds while this escrow sat in
+        // FUNDED state), releasing to them would bypass the suspension.
+        // Block release to a suspended/delisted merchant; the buyer can use
+        // the dispute / refund flow instead, which routes funds back to the
+        // buyer rather than to the now-restricted merchant.
+        MerchantRegistry.Merchant memory m = merchants.info(e.merchantOwner);
+        if (m.status == MerchantRegistry.Status.SUSPENDED) revert COM_Suspended();
+        if (m.status == MerchantRegistry.Status.DELISTED) revert COM_Delisted();
+
         e.state = State.RELEASED;
         // N-H15 FIX: Resolve seller vault at release-time so mid-flight vault rotation
         // does not orphan escrowed funds in a stale vault address.

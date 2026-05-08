@@ -9,6 +9,14 @@ interface IVFIDEBurnable {
     function burn(uint256 amount) external;
 }
 
+/// @dev Minimal interface for token decimals discovery (F-SC-030 fix).
+///      Used by migrateRewardToken to require old- and new-token decimals
+///      match before swapping the reward token, since pool balances are
+///      tracked in raw token units.
+interface IERC20MetadataDecimals {
+    function decimals() external view returns (uint8);
+}
+
 interface IVaultHubReferral_ECO {
     function vaultOf(address owner) external view returns (address);
 }
@@ -449,11 +457,33 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /// @notice Migrate to a new reward token while preserving pool accounting.
     /// @dev Owner must pre-fund this contract with at least the outstanding pool amount of the new token.
+    /// @dev F-SC-030 FIX: The pool balances (councilPool, merchantPool, etc.)
+    ///      are denominated in the OLD reward token's smallest unit. When
+    ///      migrating to a new token the comparison
+    ///      `IERC20(token).balanceOf(this) < outstanding` was a raw-units
+    ///      comparison that silently moved value if the two tokens had
+    ///      different decimals. Example: oldToken has 18 decimals, newToken
+    ///      has 6 decimals; pool of "1000 oldToken units" (1000e18) compared
+    ///      against "1000 newToken units" (1000e6) would be a 12-orders-of-
+    ///      magnitude undercount. We now require the two tokens to have the
+    ///      same decimals AND require the owner to explicitly acknowledge
+    ///      this is a same-decimals migration via a require-with-error.
+    ///      Cross-decimal migration is intentionally not supported here —
+    ///      it requires re-denominating every pool balance, which is a
+    ///      separate, higher-risk operation that should go through a
+    ///      dedicated function with explicit per-pool conversion factors.
     // slither-disable-next-line reentrancy-no-eth
     function migrateRewardToken(address token, address oldTokenSink) external onlyOwner nonReentrant {
         if (token == address(0)) revert ECO_Zero();
         address oldToken = address(rewardToken);
         if (token == oldToken) revert ECO_InvalidConfig();
+
+        // F-SC-030: enforce decimal-match. Both tokens must expose decimals()
+        // and they must be equal, else the pool-balance comparison below is
+        // not unit-consistent and tokens may be silently lost.
+        uint8 oldDecimals = IERC20MetadataDecimals(oldToken).decimals();
+        uint8 newDecimals = IERC20MetadataDecimals(token).decimals();
+        if (oldDecimals != newDecimals) revert ECO_InvalidConfig();
 
         _allocateIncoming();
         uint256 outstanding = councilPool + merchantPool + headhunterPool + operationsPool;
@@ -1069,6 +1099,89 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function endHeadhunterQuarter() external onlyManager {
         _endHeadhunterQuarterIfDue(true);
     }
+
+    /**
+     * @notice Claim the caller's proportional share of an ended quarter's
+     *         headhunter pool snapshot.
+     *
+     * @dev    F-SC-034 FIX: Previously the contract had ZERO writers to
+     *         `quarterClaimed`, while `previewHeadhunterReward` (in the View
+     *         contract) read it as if a claim path existed. The result was
+     *         that `endHeadhunterQuarter` snapshotted the pool and zeroed
+     *         `headhunterPool` (line 1378), but no path delivered tokens to
+     *         referrers. The snapshot funds remained inside this contract's
+     *         token balance and were re-absorbed by the next `_allocateIncoming`
+     *         call (75% redistributed across the other pools), permanently
+     *         denying headhunters their accrued rewards.
+     *
+     *         This claim function:
+     *           1. requires the (year, quarter) has been ended via
+     *              endHeadhunterQuarter,
+     *           2. requires the caller earned points in `year`,
+     *           3. requires the caller has not already claimed the same
+     *              (year, quarter),
+     *           4. computes share = poolSnapshot * referrerPoints / totalYearPoints
+     *              (totalYearPoints is the sum across `yearReferrers[year]`,
+     *              bounded above by MAX_REFERRERS_PER_YEAR = 200, so the
+     *              loop is gas-safe),
+     *           5. flips `quarterClaimed` BEFORE transferring tokens (CEI),
+     *           6. delivers tokens via the same stablecoin payout path used
+     *              by `_deliverWorkReward` so claims and work-rewards behave
+     *              identically and Howey-fix invariants hold.
+     *
+     *         Note: this function reads the live snapshot. Because all four
+     *         quarters in the same year share the same `yearPoints[year][r]`
+     *         denominator and snapshot pool, a referrer who earned points
+     *         in year Y can claim a share from each of the four quarters in
+     *         that year independently. This matches the existing
+     *         `previewHeadhunterReward` view shape (year, quarter, referrer).
+     */
+    function claimHeadhunterQuarterReward(uint256 year, uint256 quarter)
+        external
+        nonReentrant
+    {
+        if (quarter < 1 || quarter > 4) revert ECO_InvalidConfig();
+        if (!quarterEnded[year][quarter]) revert ECO_TooEarly();
+        if (quarterClaimed[year][quarter][msg.sender]) revert ECO_AlreadyExecuted();
+
+        uint16 callerPoints = yearPoints[year][msg.sender];
+        if (callerPoints == 0) revert ECO_NotEligible();
+
+        uint256 poolSnapshot = quarterPoolSnapshot[year][quarter];
+        if (poolSnapshot == 0) revert ECO_InsufficientFunds();
+
+        // Sum total year points across all referrers tracked for that year.
+        // The list is bounded by MAX_REFERRERS_PER_YEAR (200) at insertion,
+        // so this loop is O(<= 200) and gas-safe.
+        address[] storage referrers = yearReferrers[year];
+        uint256 totalPoints;
+        for (uint256 i = 0; i < referrers.length; i++) {
+            totalPoints += uint256(yearPoints[year][referrers[i]]);
+        }
+        if (totalPoints == 0) revert ECO_NotEligible();
+
+        uint256 share = (poolSnapshot * uint256(callerPoints)) / totalPoints;
+        if (share == 0) revert ECO_InsufficientFunds();
+
+        // CEI: flip claimed flag BEFORE delivery to defend against any
+        // re-entry from token callbacks downstream.
+        quarterClaimed[year][quarter][msg.sender] = true;
+
+        // Deliver via the same stablecoin path used by _deliverWorkReward
+        // so all referrer payouts go through one auditable channel.
+        _deliverWorkReward(msg.sender, share, "headhunter_quarter_claim");
+
+        emit HeadhunterQuarterClaimed(year, quarter, msg.sender, callerPoints, totalPoints, share);
+    }
+
+    event HeadhunterQuarterClaimed(
+        uint256 indexed year,
+        uint256 indexed quarter,
+        address indexed referrer,
+        uint16 referrerPoints,
+        uint256 totalYearPoints,
+        uint256 amountClaimed
+    );
 
     /**
      * @notice Pay fixed compensation for verified referral/acquisition work

@@ -196,48 +196,30 @@ export async function registerPasskey(walletAddress: string): Promise<boolean> {
 
 /**
  * Authenticate using passkey and return the linked wallet address
+ *
+ * F-FE-020 FIX: This function is currently NOT WIRED into authentication.
+ * The previous implementation (kept in source history) generated a challenge
+ * client-side, called navigator.credentials.get to surface the passkey UI,
+ * received an assertion from the authenticator, then DISCARDED THE ASSERTION
+ * and trusted whatever wallet address was sitting in localStorage under
+ * PASSKEY_CREDENTIAL_KEY. There was no server-side WebAuthn verification of
+ * the assertion, so the authenticator step was security theater — anyone
+ * with write access to the localStorage of the browser could mint an
+ * "authenticated" return value.
+ *
+ * Until a real /api/auth/webauthn/verify endpoint exists that:
+ *   1. consumes a server-issued challenge,
+ *   2. verifies the authenticator-supplied signature against the stored
+ *      credential public key, and
+ *   3. mints the JWT/session,
+ * this function intentionally throws so a future caller cannot accidentally
+ * re-introduce the discarded-assertion flow as if it were a real auth path.
  */
 export async function authenticateWithPasskey(): Promise<string | null> {
-  if (!isWebAuthnSupported()) {
-    throw new Error('WebAuthn is not supported in this browser');
-  }
-
-  const storedCredential = getStoredCredential();
-  if (!storedCredential) {
-    throw new Error('No passkey registered. Please connect wallet first.');
-  }
-
-  try {
-    const challenge = generateChallenge() as BufferSource;
-    
-    const assertion = await navigator.credentials.get({
-      publicKey: {
-        challenge,
-        rpId: window.location.hostname,
-        allowCredentials: [{
-          id: base64ToBuffer(storedCredential.credentialId),
-          type: 'public-key',
-          transports: ['internal'],
-        }],
-        userVerification: 'required',
-        timeout: 60000,
-      },
-    }) as PublicKeyCredential;
-
-    if (!assertion) {
-      throw new Error('Biometric authentication failed');
-    }
-
-    // Update last used timestamp
-    storedCredential.lastUsed = Date.now();
-    storedCredential.expiresAt = Date.now() + PASSKEY_CREDENTIAL_MAX_AGE_MS;
-    safeLocalStorage.setItem(PASSKEY_CREDENTIAL_KEY, JSON.stringify(storedCredential));
-
-    return storedCredential.walletAddress;
-  } catch (error) {
-    logger.error('Passkey authentication failed:', error);
-    throw error;
-  }
+  throw new Error(
+    'authenticateWithPasskey is disabled: server-side WebAuthn verification is not implemented. ' +
+      'Use SIWE wallet authentication instead.',
+  );
 }
 
 /**
