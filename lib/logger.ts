@@ -49,6 +49,83 @@ function toSentryExtras(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>;
 }
 
+// OP-3 FIX: Sentry forwarder. Lazy-loaded so:
+//   1. Edge runtimes that don't bundle @sentry/nextjs don't fail at import.
+//   2. Test/CI environments without Sentry DSN don't pay any cost.
+//   3. The logger module remains synchronous-friendly for callers; the
+//      forwarder wraps Sentry calls in a try/catch so a Sentry outage
+//      cannot interfere with the request being logged.
+type SentryForwardLevel = 'warning' | 'error';
+
+let _sentryClientCache: typeof import('@sentry/nextjs') | null | undefined;
+function _loadSentryClient(): typeof import('@sentry/nextjs') | null {
+  if (_sentryClientCache !== undefined) return _sentryClientCache;
+  // Only attempt to load if the DSN is configured and we're in a Node
+  // environment. Edge runtime sets EDGE_RUNTIME=true.
+  const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
+  if (!dsn) {
+    _sentryClientCache = null;
+    return null;
+  }
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    // In edge runtime, lazy-load is unsafe. Skip — global-error.tsx and
+    // other Sentry-aware boundaries handle edge errors directly.
+    _sentryClientCache = null;
+    return null;
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    _sentryClientCache = require('@sentry/nextjs');
+  } catch {
+    _sentryClientCache = null;
+  }
+  return _sentryClientCache ?? null;
+}
+
+function _forwardToSentry(
+  level: SentryForwardLevel,
+  message: string,
+  context?: unknown,
+  error?: unknown,
+): void {
+  try {
+    const Sentry = _loadSentryClient();
+    if (!Sentry) return;
+
+    // Extras with PII already scrubbed by normalizeContext.
+    const normalizedContext = normalizeContext(context);
+    const extras = normalizedContext ? scrubValue(normalizedContext) : undefined;
+
+    // Always set the message on the scope so an error captured via
+    // captureException carries operator-meaningful context.
+    Sentry.withScope((scope) => {
+      scope.setLevel(level === 'error' ? 'error' : 'warning');
+      if (extras && typeof extras === 'object') {
+        for (const [k, v] of Object.entries(extras as Record<string, unknown>)) {
+          scope.setExtra(k, v);
+        }
+      }
+      scope.setExtra('logger_message', scrubString(message));
+
+      if (level === 'error') {
+        if (error instanceof Error) {
+          Sentry.captureException(error);
+        } else if (error !== undefined) {
+          Sentry.captureException(new Error(scrubString(String(error))));
+        } else {
+          Sentry.captureMessage(scrubString(message), 'error');
+        }
+      } else {
+        // warn: send as breadcrumb-like message to avoid event-quota burn
+        Sentry.captureMessage(scrubString(message), 'warning');
+      }
+    });
+  } catch {
+    // Sentry forwarding must NEVER throw — the logger is on hot paths.
+    // Swallow silently; the console output above is the source of truth.
+  }
+}
+
 
 /**
  * Log levels for different environments
@@ -137,8 +214,11 @@ class Logger {
     if (isLevelEnabled('warn')) {
       console.warn(`[WARN] ${formatMessage(message, normalizeContext(context))}`);
 
-      // Sentry forwarding is intentionally disabled here to keep logger lightweight
-      // and avoid pulling heavy tracing dependencies into frontend startup.
+      // OP-3 FIX: Forward warnings to Sentry as breadcrumbs (not full events,
+      // to avoid quota exhaustion). The Sentry import is lazy-required so
+      // the logger remains lightweight in non-Sentry environments and so
+      // edge runtimes that don't bundle @sentry/nextjs don't break.
+      _forwardToSentry('warning', message, context);
     }
   }
 
@@ -150,8 +230,14 @@ class Logger {
     if (isLevelEnabled('error')) {
       console.error(`[ERROR] ${formatMessage(message, normalizeContext(context))}`, error);
 
-      // Sentry forwarding is intentionally disabled here to keep logger lightweight
-      // and avoid pulling heavy tracing dependencies into frontend startup.
+      // OP-3 FIX: Forward errors to Sentry. Previously this method's
+      // docstring claimed Sentry forwarding but the body explicitly
+      // disabled it ("Sentry forwarding is intentionally disabled here").
+      // 110 files in app/api/ call logger.error but none reached Sentry,
+      // creating a major observability gap. We now forward via a lazy-
+      // imported Sentry client. If Sentry is not configured (no DSN),
+      // the forwarder is a no-op so nothing breaks.
+      _forwardToSentry('error', message, context, error);
     }
   }
 

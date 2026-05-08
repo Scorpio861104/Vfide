@@ -6,13 +6,47 @@
  * 
  * IMPORTANT: All module setters use 48h timelocks.
  * After deploy, wait 48h then run: npx hardhat run scripts/apply-all.ts --network baseSepolia
+ *
+ * OP-2 FIX: addresses are checkpointed to .deployments/${network}.json after
+ * EACH successful contract deployment, not only at the end. If the deploy
+ * crashes mid-run on contract 16 of 18, the 15 already-deployed addresses
+ * are preserved on disk and can be re-loaded by a follow-up run, instead
+ * of being lost (forcing a full redeploy).
  */
 
 import hre from "hardhat";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 const ethers = (hre as any).ethers;
 const TESTNET_CHAIN_IDS = new Set([31337, 84532, 11155111, 80002]);
 const EIP170_RUNTIME_LIMIT = 24_576;
+
+// OP-2 FIX: deployment book persistence — match the schema used by
+// scripts/future/deploy-phase{2,3,4,5}.ts so the same .deployments/
+// directory is shared by all deploy phases.
+type DeploymentBook = Record<string, string>;
+
+function deploymentBookPath(networkName: string): string {
+  return path.join(process.cwd(), '.deployments', `${networkName}.json`);
+}
+
+function readDeploymentBook(networkName: string): DeploymentBook {
+  const filePath = deploymentBookPath(networkName);
+  if (!fs.existsSync(filePath)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8')) as DeploymentBook;
+  } catch (e) {
+    console.warn(`[deploy-all] Failed to parse existing book at ${filePath}; starting fresh.`);
+    return {};
+  }
+}
+
+function writeDeploymentBook(networkName: string, book: DeploymentBook): void {
+  const dirPath = path.join(process.cwd(), '.deployments');
+  fs.mkdirSync(dirPath, { recursive: true });
+  fs.writeFileSync(deploymentBookPath(networkName), JSON.stringify(book, null, 2));
+}
 
 const DEPLOYMENT_CONTRACTS = [
   "ProofLedger",
@@ -127,16 +161,34 @@ async function main() {
     : DEPLOYMENT_CONTRACTS.filter((name) => name !== 'VFIDETestnetFaucet');
   await assertDeploymentBytecodeLimits(contractSet);
   console.log("Bytecode size preflight: all deployment contracts are within EIP-170 runtime limit.");
-  
-  const deployed: Record<string, string> = {};
-  
+
+  // OP-2 FIX: Resume from a previous partial deploy if present.
+  // The book is keyed by network name (`hre.network.name`) so testnet/mainnet
+  // deployments don't overwrite each other.
+  const networkName = hre.network?.name || `chain-${chainId}`;
+  const deployed: Record<string, string> = readDeploymentBook(networkName);
+  if (Object.keys(deployed).length > 0) {
+    console.log(`\n📂 Resuming from existing deployment book: ${deploymentBookPath(networkName)}`);
+    console.log(`   ${Object.keys(deployed).length} contract(s) already deployed; will skip those that have addresses.`);
+  } else {
+    console.log(`\n📂 Fresh deployment — book will be written to: ${deploymentBookPath(networkName)}`);
+  }
+
   async function deploy(name: string, ...args: any[]) {
+    // OP-2: skip if already deployed in a prior partial run
+    if (deployed[name] && /^0x[a-fA-F0-9]{40}$/.test(deployed[name])) {
+      console.log(`\n  ⏭️  ${name} already deployed at ${deployed[name]} — skipping.`);
+      return await ethers.getContractAt(name, deployed[name]);
+    }
     console.log(`\n  Deploying ${name}...`);
     const Factory = await ethers.getContractFactory(name);
     const contract = await Factory.deploy(...args);
     await contract.waitForDeployment();
     const addr = await contract.getAddress();
     deployed[name] = addr;
+    // OP-2 FIX: checkpoint AFTER each successful deploy so a later crash
+    // doesn't lose this address.
+    writeDeploymentBook(networkName, deployed);
     console.log(`  ✅ ${name}: ${addr}`);
     return contract;
   }
@@ -489,4 +541,12 @@ async function main() {
   console.log("⚠️  IMPORTANT: Transfer ownership to multisig before mainnet announcement.");
 }
 
-main().catch(console.error);
+// OP-1 FIX: propagate non-zero exit on failure so CI/CD pipelines
+// (and the deploy.sh wrapper) actually detect deploy errors. The
+// previous `main().catch(console.error)` swallowed errors and returned
+// exit code 0, making a partially-deployed system look like a successful
+// deploy.
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

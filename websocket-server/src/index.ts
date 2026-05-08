@@ -114,10 +114,46 @@ const wss = new WebSocketServer({
 // Set WS_INTERNAL_SECRET env to a long random string; the Next.js API must send
 // the same value. If the env is unset in production, all POST /event calls are
 // rejected (fail-closed).
+//
+// OP-13 FIX: Zero-downtime rotation support. A second secret can be
+// supplied via PREV_WS_INTERNAL_SECRET during the transition window.
+// The bridge accepts either the current OR previous secret while the
+// rotation is in progress; once all callers are migrated, remove
+// PREV_WS_INTERNAL_SECRET. Without this, rotating the WS internal
+// secret required atomic deploy of the WS server and EVERY caller —
+// any drift caused message-bridge outage.
 const WS_INTERNAL_SECRET = process.env.WS_INTERNAL_SECRET || '';
+const PREV_WS_INTERNAL_SECRET = process.env.PREV_WS_INTERNAL_SECRET || '';
 
 if (IS_PRODUCTION && !WS_INTERNAL_SECRET) {
   console.warn('[ws] WARNING: WS_INTERNAL_SECRET is not set. POST /event will be rejected in production.');
+}
+if (PREV_WS_INTERNAL_SECRET) {
+  console.info('[ws] PREV_WS_INTERNAL_SECRET is set — rotation window active. Remove this env var once all callers are migrated to the new secret.');
+}
+
+/**
+ * OP-13: Constant-time check of a presented secret against the current
+ * AND (if set) previous WS_INTERNAL_SECRET. Always performs both checks
+ * to avoid leaking timing differences about which secret matched.
+ */
+function _isInternalSecretAuthorized(providedSecret: string | undefined): boolean {
+  if (typeof providedSecret !== 'string' || providedSecret.length === 0) {
+    return false;
+  }
+  const provided = Buffer.from(providedSecret, 'utf8');
+  let matched = false;
+  for (const candidate of [WS_INTERNAL_SECRET, PREV_WS_INTERNAL_SECRET]) {
+    if (!candidate) continue;
+    const expected = Buffer.from(candidate, 'utf8');
+    if (expected.length !== provided.length) continue;
+    if (timingSafeEqual(expected, provided)) {
+      matched = true;
+      // Keep iterating to maintain constant-time across both candidates;
+      // do not short-circuit once matched.
+    }
+  }
+  return matched;
 }
 
 server.on('request', (req, res) => {
@@ -133,14 +169,8 @@ server.on('request', (req, res) => {
     const headerSecretRaw = req.headers['x-internal-secret'];
     const providedSecret = Array.isArray(headerSecretRaw) ? headerSecretRaw[0] : headerSecretRaw;
 
-    let isAuthorized = false;
-    if (WS_INTERNAL_SECRET && typeof providedSecret === 'string') {
-      const expected = Buffer.from(WS_INTERNAL_SECRET, 'utf8');
-      const provided = Buffer.from(providedSecret, 'utf8');
-      if (expected.length === provided.length) {
-        isAuthorized = timingSafeEqual(expected, provided);
-      }
-    }
+    // OP-13: verification now accepts current OR previous secret during rotation window.
+    const isAuthorized = WS_INTERNAL_SECRET ? _isInternalSecretAuthorized(providedSecret) : false;
 
     if (!isAuthorized) {
       res.writeHead(401, { 'content-type': 'application/json' });

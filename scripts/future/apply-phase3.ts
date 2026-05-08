@@ -66,4 +66,12 @@ async function main() {
   console.log("  5. Run SystemHandover after 6 months to burn dev keys");
 }
 
-main().catch(console.error);
+// OP-1 FIX: propagate non-zero exit on failure so CI/CD pipelines
+// (and the deploy.sh wrapper) actually detect deploy errors. The
+// previous `main().catch(console.error)` swallowed errors and returned
+// exit code 0, making a partially-deployed system look like a successful
+// deploy.
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
