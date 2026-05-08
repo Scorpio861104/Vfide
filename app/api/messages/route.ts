@@ -452,7 +452,15 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
     const notificationEvent = {
       type: 'notification',
       payload: {
-        topic: 'notifications',
+        // F-BE-013 FIX: scope notification to a per-recipient topic. Previously
+        // every authenticated WS subscriber to the global 'notifications' topic
+        // received metadata for EVERY message between EVERY pair of users on
+        // the platform: messageId, sender, recipient, created_at. That's a
+        // wholesale leak of message-graph metadata to every connected client.
+        // Per-user topic format: 'notifications.<recipient>'. The WS server
+        // (isAuthorizedForTopic) gates this so only the recipient address can
+        // subscribe to their own notifications topic.
+        topic: `notifications.${to.toLowerCase()}`,
         category: 'message',
         recipient: to.toLowerCase(),
         sender: from.toLowerCase(),

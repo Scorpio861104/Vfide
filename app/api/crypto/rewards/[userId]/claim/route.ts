@@ -120,9 +120,16 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload, cont
     }
 
     // Verify rewards on-chain if they have a source contract.
-    // Fail-safe: block the claim when a supported verifier returns false or throws.
-    // Unsupported verifier contracts are skipped explicitly because the historical
-    // UserRewards ABI is a phantom dependency in this repository.
+    // F-BE-024 FIX: was fail-OPEN when verifier was 'unsupported' (the
+    // historical UserRewards ABI is a phantom dependency). That meant ANY
+    // reward row with a non-null source_contract column could be claimed
+    // based purely on DB state, with no on-chain proof of eligibility. This
+    // changes the policy to fail-CLOSED: a reward bearing a source_contract
+    // we cannot verify is treated as un-claimable until a real verifier
+    // contract is wired up. Operators who want to disable rewards entirely
+    // can leave this path; operators rolling out new reward sources must
+    // implement verifyRewardOnChain support before tagging rewards with
+    // that contract address.
     for (const reward of rewardsCheck.rows) {
       if (reward.source_contract) {
         try {
@@ -135,6 +142,19 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload, cont
             return NextResponse.json(
               { error: `Reward ${reward.id} is not claimable on-chain` },
               { status: 403 }
+            );
+          }
+          if (verification.status === 'unsupported') {
+            // F-BE-024 FIX: fail-closed instead of accepting unverified claims
+            logger.warn(
+              `[Reward Claim] Refusing claim for reward ${reward.id}: source_contract ${reward.source_contract} has no supported on-chain verifier`,
+            );
+            return NextResponse.json(
+              {
+                error: 'Reward source has no on-chain verifier configured. Claims are blocked until verification is available.',
+                rewardId: reward.id,
+              },
+              { status: 503 },
             );
           }
         } catch (error) {

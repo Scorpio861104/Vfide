@@ -59,13 +59,36 @@ const nextConfig: NextConfig = {
 
   // Keep unfinished stealth functionality non-routable until the EIP-5564 flow is fully implemented.
   async redirects() {
-    return [
+    const redirects = [
       {
         source: '/stealth',
         destination: '/docs',
         permanent: false,
       },
     ];
+
+    // F-FE-014 FIX: paper-wallet route generates and DISPLAYS private keys
+    // and mnemonics in the browser. Even if the page never transmits them,
+    // shipping a "click here to generate keys" page in a multi-tenant DeFi
+    // app is a phishing magnet — attackers will iframe-clickjack it,
+    // browser extensions can read DOM contents, screen-recording trojans
+    // can capture it, and customer-support trust-but-verify flows can be
+    // socially engineered around it. Gate the route behind an explicit
+    // opt-in env var so it's NOT routable in default production builds.
+    if (process.env.NEXT_PUBLIC_ENABLE_PAPER_WALLET !== 'true') {
+      redirects.push({
+        source: '/paper-wallet',
+        destination: '/wallet',
+        permanent: false,
+      });
+      redirects.push({
+        source: '/paper-wallet/:path*',
+        destination: '/wallet',
+        permanent: false,
+      });
+    }
+
+    return redirects;
   },
 
   // Security headers — CSP is applied per-request in proxy.ts with a nonce.

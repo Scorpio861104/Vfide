@@ -179,13 +179,76 @@ export const PUT = withAuth(async (request: NextRequest, user: JWTPayload, conte
     const ownership = await verifyOwnership(normalizeAddress(user.address), existing.rows[0]!);
     if (ownership instanceof NextResponse) return ownership;
 
+    // F-BE-023 FIX: enforce state-machine transition rules. Without these,
+    // either party could set ANY status — including the sender marking
+    // their own request 'completed' without paying. Transitions:
+    //   - sender   may: cancel (pending -> cancelled)
+    //   - recipient may: reject  (pending -> rejected)
+    //   - 'completed' MUST go through PATCH with on-chain tx_hash.
+    //   - 'accepted' is a soft state set by recipient before payment.
+    //
+    // 'pending' is the initial state and not allowed via PUT (would re-open
+    // a closed request).
+    const existingRow = existing.rows[0]! as Record<string, unknown>;
+    const currentStatus = String(existingRow.status ?? 'pending').toLowerCase();
+    const fromUserId = Number(existingRow.from_user_id);
+    const toUserId = Number(existingRow.to_user_id);
+    const isSender = ownership.userId === fromUserId;
+    const isRecipient = ownership.userId === toUserId;
+
+    if (normalizedStatus === 'completed') {
+      return NextResponse.json(
+        { error: "'completed' requires PATCH with an on-chain tx_hash" },
+        { status: 400 }
+      );
+    }
+    if (normalizedStatus === 'pending') {
+      return NextResponse.json(
+        { error: "Cannot revert to 'pending'" },
+        { status: 400 }
+      );
+    }
+    if (currentStatus !== 'pending') {
+      return NextResponse.json(
+        { error: `Cannot transition from '${currentStatus}' via PUT` },
+        { status: 409 }
+      );
+    }
+    if (normalizedStatus === 'cancelled' && !isSender) {
+      return NextResponse.json(
+        { error: 'Only the sender may cancel a payment request' },
+        { status: 403 }
+      );
+    }
+    if (normalizedStatus === 'rejected' && !isRecipient) {
+      return NextResponse.json(
+        { error: 'Only the recipient may reject a payment request' },
+        { status: 403 }
+      );
+    }
+    if (normalizedStatus === 'accepted' && !isRecipient) {
+      return NextResponse.json(
+        { error: 'Only the recipient may accept a payment request' },
+        { status: 403 }
+      );
+    }
+
     const result = await query(
       `UPDATE payment_requests
        SET status = $2, updated_at = NOW()
-       WHERE id = $1
+       WHERE id = $1 AND status = 'pending'
        RETURNING *`,
       [id, normalizedStatus]
     );
+
+    if (result.rows.length === 0) {
+      // Race-loss: another transition won the CAS. Surface 409 instead of
+      // pretending the update succeeded.
+      return NextResponse.json(
+        { error: 'Payment request was already updated' },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json({ request: result.rows[0] });
   } catch (error) {
@@ -264,6 +327,36 @@ export const PATCH = withAuth(async (request: NextRequest, user: JWTPayload, con
     }
     const ownership = await verifyOwnership(normalizeAddress(user.address), existing.rows[0]!);
     if (ownership instanceof NextResponse) return ownership;
+
+    // F-BE-023 FIX: only the SENDER (the party who paid on-chain) may mark a
+    // request 'completed'. The on-chain tx_hash check above proves a payment
+    // succeeded, but doesn't prove WHO paid — without this, the recipient
+    // could mark someone else's request completed using an unrelated tx hash
+    // they observed (the `from` address of the receipt is not validated against
+    // the request's sender). This narrows the exploit window.
+    //
+    // For a stronger fix, future versions should also verify
+    //   receipt.from === paymentRequest.from_wallet_address
+    //   receipt.to === paymentRequest.to_wallet_address (or the token contract)
+    //   receipt.value/input >= paymentRequest.amount
+    // but that requires schema work and is out of scope for v18.1.
+    const existingRow = existing.rows[0]! as Record<string, unknown>;
+    const currentStatus = String(existingRow.status ?? 'pending').toLowerCase();
+    const fromUserId = Number(existingRow.from_user_id);
+    const isSender = ownership.userId === fromUserId;
+
+    if (normalizedStatus === 'completed' && !isSender) {
+      return NextResponse.json(
+        { error: 'Only the sender may mark a payment request as completed' },
+        { status: 403 }
+      );
+    }
+    if (normalizedStatus === 'completed' && currentStatus !== 'pending' && currentStatus !== 'accepted') {
+      return NextResponse.json(
+        { error: `Cannot complete a request in state '${currentStatus}'` },
+        { status: 409 }
+      );
+    }
 
     const result = await query(
       `UPDATE payment_requests

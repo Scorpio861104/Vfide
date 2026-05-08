@@ -26,7 +26,7 @@ import {
   NotificationCategory,
   useNotifications 
 } from '@/hooks/useNotifications';
-import { isAllowedURL } from '@/lib/security';
+import { validateNotificationUrl } from '@/lib/security/urlValidation';
 
 // ==================== CONSTANTS ====================
 
@@ -772,8 +772,15 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                         onArchive={() => archive(notification.id)}
                         onSnooze={() => snooze(notification.id)}
                         onAction={() => {
-                          if (notification.actionUrl && isAllowedURL(notification.actionUrl)) {
-                            window.location.assign(notification.actionUrl);
+                          // F-FE-001 FIX: replaced weak isAllowedURL (only checks
+                          // protocol allowlist) with validateNotificationUrl (full
+                          // same-origin / safe-relative check). The previous gate
+                          // would accept https://attacker.com as "safe" for an
+                          // action URL — open redirect. validateNotificationUrl
+                          // returns null for any cross-origin URL.
+                          const safe = validateNotificationUrl(notification.actionUrl);
+                          if (safe) {
+                            window.location.assign(safe);
                           }
                         }}
                         compact

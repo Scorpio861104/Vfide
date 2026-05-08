@@ -135,26 +135,25 @@ function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
 }
 
 /**
- * Get client identifier for rate limiting
+ * Get client identifier for rate limiting.
+ *
+ * F-BE-002 FIX: User-Agent is no longer mixed into the bucket key. Including UA
+ * lets any attacker bypass strict per-IP limits (e.g. auth: 10/min) by simply
+ * rotating the User-Agent header — each unique UA gets its own bucket. The IP
+ * alone is the correct shared resource for rate limiting.
+ *
+ * F-BE-029 FIX: simpleHash() was a 32-bit Java-style string hash truncated to
+ * 8 hex chars; collision-prone and provided no real entropy. With UA dropped,
+ * we no longer need a hash at all.
+ *
+ * IPv6 note: getRequestIp returns the full address from x-forwarded-for /
+ * x-real-ip / connection. For shared-prefix abuse (mobile carriers behind
+ * the same /64), operators can layer additional auth-flow gates rather than
+ * widening the rate-limit key.
  */
 export function getClientIdentifier(request: NextRequest): string {
   const { ip } = getRequestIp(request.headers);
-
-  // Include user agent for additional uniqueness
-  const userAgent = request.headers.get('user-agent') || 'unknown';
-  const hash = simpleHash(userAgent);
-
-  return `${ip}:${hash}`;
-}
-
-function simpleHash(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16).slice(0, 8);
+  return ip;
 }
 
 /**

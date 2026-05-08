@@ -177,6 +177,11 @@ export function generateToken(address: string, chainId?: number): TokenResponse 
     expiresIn: JWT_EXPIRES_IN,
     issuer: JWT_ISSUER,
     audience: JWT_AUDIENCE,
+    // F-BE-004 FIX: pin algorithm explicitly. Without this, jsonwebtoken defaults
+    // to HS256 on sign (correct), but verify accepts ALL algorithms in the secret's
+    // class, allowing algorithm-confusion attacks if a public key ever becomes
+    // available. Pinning sign+verify to a single algorithm closes the family.
+    algorithm: 'HS256',
   });
 
   return {
@@ -193,7 +198,17 @@ export function generateToken(address: string, chainId?: number): TokenResponse 
  * Also checks if the token has been explicitly revoked.
  */
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
-  const verifyOptions = { issuer: JWT_ISSUER, audience: JWT_AUDIENCE };
+  // F-BE-004 FIX: pin algorithms allowlist. Without this, jsonwebtoken accepts
+  // any algorithm in the same family as the secret (HS256, HS384, HS512), and
+  // critically, if RS-keyed code paths are ever added, the same secret could
+  // be exploited as an HMAC key against a token signed with the public key.
+  // Single-algorithm pinning is the universally recommended defense against
+  // jwt algorithm-confusion attacks.
+  const verifyOptions = {
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+    algorithms: ['HS256'] as jwt.Algorithm[],
+  };
 
   // Try the current secret first
   let decoded: JWTPayload | null = null;

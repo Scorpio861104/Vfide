@@ -29,6 +29,9 @@ import {
 import Link from 'next/link';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { safeLocalStorage } from '@/lib/utils';
+// F-FE-001 + F-FE-005 FIX: validate notification.href before rendering as <Link>
+// to prevent javascript:, data:, vbscript:, and open-redirect URLs.
+import { validateNotificationUrl } from '@/lib/security/urlValidation';
 
 // ==================== TYPES ====================
 
@@ -223,7 +226,15 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
           <div className={`absolute left-0 top-0 bottom-0 w-1 ${priorityColors[notification.priority]}`} />
 
           <Link
-            href={notification.href || '#'}
+            href={(() => {
+              // F-FE-001 + F-FE-005 FIX: validate notification.href before rendering.
+              // Without this, a compromised notification (server-side or via XSS-induced
+              // localStorage poisoning) can carry javascript:, data:, or open-redirect
+              // URLs that fire when the user clicks. validateNotificationUrl returns null
+              // for any URL that is not same-origin / relative + safe protocol.
+              const safe = validateNotificationUrl(notification.href);
+              return safe || '#';
+            })()}
             onClick={() => {
               onRead();
               onClose();

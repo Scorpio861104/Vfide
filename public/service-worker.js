@@ -155,8 +155,27 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  // Get URL from notification data
-  const urlToOpen = event.notification.data?.url || '/';
+  // F-FE-008 FIX: validate notification URL before opening. Without this, a
+  // compromised push payload (server breach OR a stolen push subscription
+  // replayed by the attacker through the legit push provider) can drive every
+  // affected user's browser to attacker-controlled URLs the moment they click
+  // a notification. Same-origin only; reject any cross-origin or non-http(s).
+  function safeUrl(rawUrl) {
+    if (typeof rawUrl !== 'string' || rawUrl.length === 0) return '/';
+    // Allow same-origin relative paths starting with single slash
+    if (rawUrl.startsWith('/') && !rawUrl.startsWith('//')) return rawUrl;
+    try {
+      const parsed = new URL(rawUrl, self.registration.scope);
+      const scopeOrigin = new URL(self.registration.scope).origin;
+      if (parsed.origin !== scopeOrigin) return '/';
+      if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return '/';
+      return parsed.pathname + parsed.search + parsed.hash;
+    } catch (e) {
+      return '/';
+    }
+  }
+
+  const urlToOpen = safeUrl(event.notification.data?.url);
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

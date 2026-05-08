@@ -87,33 +87,64 @@ function isValidUrl(url: string): boolean {
     const hostname = parsed.hostname.toLowerCase();
     if (!hostname) return false;
 
-    // Block obvious local targets.
+    // F-BE-007 FIX: also block 0.0.0.0 (Linux: routes to localhost and any
+    // bound interface), explicit `0.x.x.x` (this-network), and reject any
+    // hostname that contains non-DNS-safe characters which can hide
+    // alternate-form numeric encodings (octal 0177.0.0.1, hex 0x7f000001,
+    // dotless decimal 2130706433). When isIP() returns 0 (not a numeric IP)
+    // and the hostname doesn't match a strict DNS label pattern, refuse it.
     if (hostname === 'localhost' || hostname.endsWith('.local')) return false;
 
     // Block private/link-local/loopback literal IPs.
     const ipVersion = isIP(hostname);
     if (ipVersion === 4) {
-      if (
-        hostname.startsWith('10.') ||
-        hostname.startsWith('127.') ||
-        hostname.startsWith('192.168.') ||
-        hostname.startsWith('169.254.')
-      ) {
-        return false;
-      }
-
       const octets = hostname.split('.').map((v) => Number(v));
-      const secondOctet = octets.length === 4 ? octets[1] : undefined;
-      if (octets.length === 4 && octets[0] === 172 && typeof secondOctet === 'number' && secondOctet >= 16 && secondOctet <= 31) {
+      if (octets.length !== 4 || octets.some((o) => !Number.isInteger(o) || o < 0 || o > 255)) {
         return false;
       }
+      const a = octets[0]!;
+      const b = octets[1]!;
+      // F-BE-007 FIX: 0.0.0.0/8 is "this network" (RFC 1122) and on Linux
+      // routes to localhost. Adding 100.64.0.0/10 (CGNAT, RFC 6598) which
+      // can also expose internal infrastructure.
+      if (a === 0) return false;
+      if (a === 10 || a === 127) return false;
+      if (a === 192 && b === 168) return false;
+      if (a === 169 && b === 254) return false;
+      if (a === 172 && b >= 16 && b <= 31) return false;
+      if (a === 100 && b >= 64 && b <= 127) return false;
     }
 
     if (ipVersion === 6) {
       const normalized = hostname.replace(/\[|\]/g, '').toLowerCase();
-      if (normalized === '::1' || normalized.startsWith('fe80:') || normalized.startsWith('fc') || normalized.startsWith('fd')) {
-        return false;
+      if (normalized === '::1' || normalized === '::') return false;
+      if (normalized.startsWith('fe80:') || normalized.startsWith('fc') || normalized.startsWith('fd')) return false;
+      // F-BE-007 FIX: IPv4-mapped IPv6 (::ffff:a.b.c.d) tunnels through to
+      // the underlying IPv4 stack; previous logic only caught ::ffff:127.x
+      // and ::ffff:10.x. Cover the full mapped private/loopback space and
+      // also block ::ffff:0.0.0.0 -> ::ffff:0.x.x.x and IPv4-compatible
+      // (deprecated) ::a.b.c.d form.
+      const v4MappedMatch = normalized.match(/^::ffff:(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+      const v4CompatMatch = normalized.match(/^::(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+      const v4Match = v4MappedMatch || v4CompatMatch;
+      if (v4Match) {
+        const a = Number(v4Match[1]);
+        const b = Number(v4Match[2]);
+        if (a === 0 || a === 10 || a === 127) return false;
+        if (a === 192 && b === 168) return false;
+        if (a === 169 && b === 254) return false;
+        if (a === 172 && b >= 16 && b <= 31) return false;
+        if (a === 100 && b >= 64 && b <= 127) return false;
       }
+    }
+
+    // F-BE-007 FIX: when not a numeric IP, require strict DNS-label format
+    // to refuse alternate numeric encodings (hex 0x7f000001, octal 0177...,
+    // dotless decimal 2130706433) that some URL parsers would later treat as
+    // an IP address during DNS resolution.
+    if (ipVersion === 0) {
+      const dnsLabel = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/;
+      if (!dnsLabel.test(hostname)) return false;
     }
 
     return true;

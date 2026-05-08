@@ -14,7 +14,12 @@ function normalizeMerchantAddress(value: string | null): string | null {
 }
 
 function generateGiftCardCode(): string {
-  return `GC-${randomBytes(4).toString('hex').toUpperCase()}`;
+  // F-BE-015 FIX: was randomBytes(4) = 32 bits = 4.3B codes. With ~10K active
+  // cards in a popular merchant base, birthday-paradox collision probability
+  // becomes meaningful, and a 32-bit bearer is brute-forceable in minutes.
+  // 16 bytes = 128 bits matches industry baseline for unguessable bearer
+  // tokens. Format remains GC-<hex> for human readability.
+  return `GC-${randomBytes(16).toString('hex').toUpperCase()}`;
 }
 
 function serializeGiftCard(row: Record<string, unknown>) {
@@ -121,6 +126,27 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // F-BE-012 FIX: minting a gift card creates a bearer credential redeemable
+    // for `amount` of value at the merchant. Without an ownership gate, ANY
+    // authenticated user could call POST with {merchantAddress, amount: 1000000}
+    // to create unlimited gift cards bearing any merchant's name.
+    //
+    // The merchant must mint their own gift cards. End-customer purchase flow:
+    //   1) Customer pays merchant on-chain (or holds VFIDE balance equivalent)
+    //   2) Merchant verifies payment, calls POST as the merchant
+    //   3) Merchant delivers code to customer
+    //   4) Bearer (customer/recipient) redeems via PATCH with code
+    //
+    // This is consistent with all other merchant-side mutations in this codebase
+    // (coupons, products, locations, staff, etc. all derive merchant_address
+    // from auth.address, never trusting body.merchantAddress).
+    if (purchaserAddress !== merchantAddress) {
+      return NextResponse.json(
+        { error: 'Only the merchant can mint gift cards for their own merchant_address' },
+        { status: 403 },
+      );
+    }
+
     const code = generateGiftCardCode();
     const expiresAt = Number.isFinite(expiresInDays) && expiresInDays > 0
       ? new Date(Date.now() + expiresInDays * 86400000).toISOString()
@@ -154,7 +180,7 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
   }
 }
 
-async function patchHandler(request: NextRequest) {
+async function patchHandler(request: NextRequest, user: JWTPayload) {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -166,6 +192,26 @@ async function patchHandler(request: NextRequest) {
 
     if (!code || !merchantAddress || !Number.isFinite(redeemAmount) || redeemAmount <= 0) {
       return NextResponse.json({ error: 'code, merchantAddress, and positive redeemAmount required' }, { status: 400 });
+    }
+
+    // F-BE-012 FIX: redemption is a merchant-side action — the merchant's POS
+    // (logged in as the merchant) records the redemption. Without this gate,
+    // any authenticated user knowing a gift card code AND a merchant address
+    // could PATCH `remaining_amount -= redeemAmount`, draining card value
+    // without ever exchanging it for goods. Combined with the F-BE-015 entropy
+    // fix (128-bit codes), redemption now requires both the bearer code AND
+    // merchant authentication.
+    const authAddress = typeof user.address === 'string'
+      ? user.address.trim().toLowerCase()
+      : '';
+    if (!authAddress || !ADDRESS_REGEX.test(authAddress)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (authAddress !== merchantAddress) {
+      return NextResponse.json(
+        { error: 'Only the merchant can record redemptions for their own merchant_address' },
+        { status: 403 },
+      );
     }
 
     const result = await query(

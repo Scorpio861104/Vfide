@@ -103,6 +103,32 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // F-BE-011 FIX: verify the authenticated user actually owns this order
+    // before allowing them to file a return against it. Without this check,
+    // ANY authenticated user could file return requests for ANY merchant's
+    // ANY order_id — flooding the merchant with bogus returns, polluting
+    // their dashboard, and (when status==completed by merchant) potentially
+    // triggering refund flows for orders that aren't theirs to refund.
+    //
+    // The order must exist with the claimed merchant_address AND the
+    // authenticated address must be the order's customer_address.
+    const orderCheck = await query<{ customer_address: string | null }>(
+      `SELECT customer_address FROM merchant_orders
+        WHERE id = $1 AND merchant_address = $2
+        LIMIT 1`,
+      [orderId, merchantAddress],
+    );
+    if (orderCheck.rows.length === 0) {
+      return NextResponse.json({ error: 'Order not found for this merchant' }, { status: 404 });
+    }
+    const orderCustomer = (orderCheck.rows[0]?.customer_address || '').trim().toLowerCase();
+    if (orderCustomer !== customerAddress) {
+      return NextResponse.json(
+        { error: 'You can only file returns for your own orders' },
+        { status: 403 },
+      );
+    }
+
     const result = await query(
       `INSERT INTO merchant_returns (
          merchant_address, order_id, customer_address, items, type, reason

@@ -57,8 +57,40 @@ export function getConnectSrcAllowlist(env: NodeJS.ProcessEnv = process.env): st
   return [...allowlist].join(' ');
 }
 
-export function buildCsp(nonce: string, env: NodeJS.ProcessEnv = process.env): string {
+export interface BuildCspOptions {
+  /**
+   * F-FE-004 FIX: when true, emit frame-ancestors that allows merchant pages
+   * to embed this route via iframe. Without this, the entire embed feature
+   * is DOA — proxy.ts X-Frame-Options:DENY plus this CSP frame-ancestors:none
+   * make /embed routes un-embeddable in any parent.
+   *
+   * Operators can tighten by setting NEXT_PUBLIC_EMBED_ALLOWED_ANCESTORS to a
+   * space-separated list (e.g. "https://*.merchantsite.com https://shop.example.io").
+   * When unset, defaults to "https:" — any HTTPS parent. Defense-in-depth still
+   * applies via per-merchant API auth: an attacker can frame a customer's checkout
+   * widget but cannot mint orders on the merchant's behalf without the merchant's
+   * signed key/JWT.
+   */
+  embeddable?: boolean;
+}
+
+export function buildCsp(
+  nonce: string,
+  options: BuildCspOptions = {},
+  env: NodeJS.ProcessEnv = process.env,
+): string {
   const connectSrc = getConnectSrcAllowlist(env);
+
+  // F-FE-004 FIX: path-aware frame-ancestors. Embeddable routes get a
+  // permissive (but HTTPS-only) ancestor allowlist; everything else stays
+  // 'none' (default deny).
+  let frameAncestors: string;
+  if (options.embeddable) {
+    const explicit = (env.NEXT_PUBLIC_EMBED_ALLOWED_ANCESTORS ?? '').trim();
+    frameAncestors = explicit.length > 0 ? `frame-ancestors ${explicit}` : "frame-ancestors https:";
+  } else {
+    frameAncestors = "frame-ancestors 'none'";
+  }
 
   return [
     "default-src 'self'",
@@ -72,7 +104,7 @@ export function buildCsp(nonce: string, env: NodeJS.ProcessEnv = process.env): s
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'",
+    frameAncestors,
     ...(env.NODE_ENV === 'production' ? ['upgrade-insecure-requests'] : []),
   ].join('; ');
 }

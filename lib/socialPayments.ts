@@ -66,8 +66,14 @@ export async function tipPost(
   currency: 'ETH' | 'VFIDE',
   message?: string
 ): Promise<SocialTip> {
-  // Validate inputs
-  validateAmount(amount);
+  // F-FE-006 FIX: validateAmount returns {valid, error} — previous code discarded
+  // the result, allowing NaN, negative, and over-limit amounts to flow into
+  // sendPayment(). Throw on invalid input so the bad transaction never gets
+  // submitted to the wallet for signing.
+  const amountCheck = validateAmount(amount);
+  if (!amountCheck.valid) {
+    throw new Error(amountCheck.error || 'Invalid amount');
+  }
   validateEthereumAddress(recipientAddress);
 
   try {
@@ -115,7 +121,11 @@ export async function tipComment(
   currency: 'ETH' | 'VFIDE',
   message?: string
 ): Promise<SocialTip> {
-  validateAmount(amount);
+  // F-FE-006 FIX: check validateAmount return; throw on invalid.
+  const amountCheck = validateAmount(amount);
+  if (!amountCheck.valid) {
+    throw new Error(amountCheck.error || 'Invalid amount');
+  }
   validateEthereumAddress(recipientAddress);
 
   try {
@@ -164,7 +174,11 @@ export async function purchaseContent(
   currency: 'ETH' | 'VFIDE',
   sellerAddress: string
 ): Promise<ContentPayment> {
-  validateAmount(price);
+  // F-FE-006 FIX: check validateAmount return; throw on invalid.
+  const priceCheck = validateAmount(price);
+  if (!priceCheck.valid) {
+    throw new Error(priceCheck.error || 'Invalid amount');
+  }
   validateEthereumAddress(sellerAddress);
 
   try {

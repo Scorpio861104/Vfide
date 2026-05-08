@@ -3,6 +3,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTransactionSounds } from './useTransactionSounds';
 import { safeLocalStorage } from '@/lib/utils';
+// F-FE-001 FIX: validate notification actionUrl to prevent javascript:/data:/
+// open-redirect URLs from firing when users click desktop notifications.
+import { validateNotificationUrl } from '@/lib/security/urlValidation';
 
 // ==================== TYPES ====================
 
@@ -176,7 +179,14 @@ export function useNotifications() {
       n.onclick = () => {
         window.focus();
         if (notification.actionUrl) {
-          window.location.href = notification.actionUrl;
+          // F-FE-001 FIX: validate actionUrl before navigation. Without this,
+          // a notification carrying javascript: or cross-origin URL would
+          // execute / redirect on user click. validateNotificationUrl returns
+          // null for any URL that isn't same-origin/relative + safe protocol.
+          const safe = validateNotificationUrl(notification.actionUrl);
+          if (safe) {
+            window.location.href = safe;
+          }
         }
         n.close();
       };

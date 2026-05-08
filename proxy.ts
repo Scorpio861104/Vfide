@@ -27,14 +27,29 @@ const MAX_BODY_SIZES = {
 	pages: Infinity,
 };
 
-function applySecurityHeaders(response: NextResponse, nonce: string, csp: string): NextResponse {
+function applySecurityHeaders(response: NextResponse, nonce: string, csp: string, isEmbeddable = false): NextResponse {
 	response.headers.set('x-nonce', nonce);
 	response.headers.set('Content-Security-Policy', csp);
-	response.headers.set('X-Frame-Options', 'DENY');
+	// F-FE-004 FIX: previously applied X-Frame-Options:DENY unconditionally,
+	// which made the entire embed feature DOA — /embed pages exist for the
+	// purpose of being framed by merchant sites. The fix is path-aware:
+	// embeddable routes (callers pass isEmbeddable=true) get NO X-Frame-Options
+	// header so frame-ancestors in the CSP can govern allowed parents
+	// instead. Non-embeddable routes still get DENY (default deny).
+	if (!isEmbeddable) {
+		response.headers.set('X-Frame-Options', 'DENY');
+	}
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 	return response;
+}
+
+// F-FE-004 FIX: detect embeddable routes. Currently only the merchant
+// commerce embed surface. Add additional patterns here as new embed
+// routes are introduced.
+function isEmbeddablePath(pathname: string): boolean {
+	return pathname.startsWith('/embed/') || pathname === '/embed';
 }
 
 function applyCorsHeaders(response: NextResponse, corsOrigin: string | null): NextResponse {
@@ -117,7 +132,11 @@ function formatBytes(bytes: number): string {
 export function proxy(request: NextRequest) {
 	const pathname = new URL(request.url).pathname;
 	const nonce = generateNonce();
-	const csp = buildCsp(nonce);
+	// F-FE-004 FIX: build CSP with embed-aware frame-ancestors.
+	// Non-embed routes get the strict 'frame-ancestors none'.
+	// Embed routes get a buildCsp variant that allows http(s):/embed parents.
+	const isEmbeddable = isEmbeddablePath(pathname);
+	const csp = buildCsp(nonce, { embeddable: isEmbeddable });
 	const requestOrigin = request.headers.get('origin');
 	const corsOrigin = pathname.startsWith('/api/')
 		? getAllowedOrigin(requestOrigin)
@@ -130,7 +149,7 @@ export function proxy(request: NextRequest) {
 			},
 			{ status: 403 }
 		);
-		return applySecurityHeaders(response, nonce, csp);
+		return applySecurityHeaders(response, nonce, csp, isEmbeddable);
 	}
 
 	// --- CORS for API routes ---
@@ -143,7 +162,7 @@ export function proxy(request: NextRequest) {
 		preflightResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-csrf-token');
 		preflightResponse.headers.set('Access-Control-Allow-Credentials', 'true');
 		preflightResponse.headers.set('Access-Control-Max-Age', '86400');
-		return applySecurityHeaders(preflightResponse, nonce, csp);
+		return applySecurityHeaders(preflightResponse, nonce, csp, isEmbeddable);
 	}
 
 	// Check request body size for write operations (POST, PUT, PATCH, DELETE)
@@ -154,7 +173,7 @@ export function proxy(request: NextRequest) {
 				{ error: 'Transfer-Encoding is not supported for state-changing requests' },
 				{ status: 400 }
 			);
-			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp), corsOrigin);
+			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp, isEmbeddable), corsOrigin);
 		}
 
 		const contentLength = request.headers.get('content-length');
@@ -167,7 +186,7 @@ export function proxy(request: NextRequest) {
 				},
 				{ status: 411 }
 			);
-			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp), corsOrigin);
+			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp, isEmbeddable), corsOrigin);
 		}
 
 		const bodySize = parseInt(contentLength, 10);
@@ -178,7 +197,7 @@ export function proxy(request: NextRequest) {
 				},
 				{ status: 400 }
 			);
-			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp), corsOrigin);
+			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp, isEmbeddable), corsOrigin);
 		}
 
 		const maxSize = getBodySizeLimit(pathname);
@@ -200,19 +219,19 @@ export function proxy(request: NextRequest) {
 					},
 				}
 			);
-			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp), corsOrigin);
+			return applyCorsHeaders(applySecurityHeaders(response, nonce, csp, isEmbeddable), corsOrigin);
 		}
 
 		// Validate Content-Type for write operations
 		const contentTypeError = validateContentType(request);
 		if (contentTypeError) {
-			return applyCorsHeaders(applySecurityHeaders(contentTypeError, nonce, csp), corsOrigin);
+			return applyCorsHeaders(applySecurityHeaders(contentTypeError, nonce, csp, isEmbeddable), corsOrigin);
 		}
 
 		// Validate CSRF token for state-changing operations
 		const csrfError = validateCSRF(request);
 		if (csrfError) {
-			return applyCorsHeaders(applySecurityHeaders(csrfError, nonce, csp), corsOrigin);
+			return applyCorsHeaders(applySecurityHeaders(csrfError, nonce, csp, isEmbeddable), corsOrigin);
 		}
 	}
 

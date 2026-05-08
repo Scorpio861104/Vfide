@@ -11,7 +11,7 @@ import {
     AttachmentType,
     formatFileSize
 } from '@/lib/attachments';
-import { safeWindowOpen } from '@/lib/security/urlValidation';
+import { safeWindowOpen, isExternalUrlSafe } from '@/lib/security/urlValidation';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     Download,
@@ -25,6 +25,17 @@ import {
     X,
 } from 'lucide-react';
 import React, { useState } from 'react';
+
+// F-FE-005 FIX: helper to validate attachment URLs before rendering as <a href>.
+// Attachment URLs come from the server but the server stores arbitrary user-
+// supplied data via the upload flow. A poisoned URL field (server compromise
+// or DB corruption) carrying javascript: would XSS users on click. Render '#'
+// (no-op anchor) when the URL fails validation; React's noopener/noreferrer
+// rel attributes do NOT block javascript: protocol — only validation does.
+function safeAttachmentUrl(url: string | undefined | null): string {
+  if (!url) return '#';
+  return isExternalUrlSafe(url, { allowRelative: true }) ? url : '#';
+}
 
 interface AttachmentViewerProps {
   attachments: Attachment[];
@@ -174,7 +185,7 @@ function VideoAttachment({ attachment, compact }: VideoAttachmentProps) {
           <div className="text-gray-400 text-xs">{formatFileSize(attachment.size)}</div>
         </div>
         <a
-          href={attachment.url}
+          href={safeAttachmentUrl(attachment.url)}
           download={attachment.name}
           className="ml-2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 rounded-lg transition-colors"
         >
@@ -212,7 +223,7 @@ function FileAttachment({ attachment, compact: _compact }: FileAttachmentProps) 
 
       <div className="flex items-center gap-1">
         <a
-          href={attachment.url}
+          href={safeAttachmentUrl(attachment.url)}
           download={attachment.name}
           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 rounded-lg transition-colors"
           title="Download"
@@ -220,7 +231,7 @@ function FileAttachment({ attachment, compact: _compact }: FileAttachmentProps) 
           <Download className="w-4 h-4" />
         </a>
         <a
-          href={attachment.url}
+          href={safeAttachmentUrl(attachment.url)}
           target="_blank"
           rel="noopener noreferrer"
           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -335,7 +346,7 @@ function ImageLightbox({ images, initialIndex, onClose }: ImageLightboxProps) {
 
       {/* Download Button */}
       <a
-        href={currentImage.url}
+        href={safeAttachmentUrl(currentImage.url)}
         download={currentImage.name}
         onClick={(e) => e.stopPropagation()}
         className="absolute bottom-4 right-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"

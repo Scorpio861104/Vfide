@@ -3,6 +3,8 @@
 import { motion } from 'framer-motion';
 import { Notification, NotificationStatus, formatTimeAgo, getSeverityColor, getNotificationIcon } from '@/config/notification-hub';
 import { Check, X, ChevronRight } from 'lucide-react';
+// F-FE-005 FIX: validate notification.actionUrl before rendering as <a href>.
+import { validateNotificationUrl } from '@/lib/security/urlValidation';
 
 interface NotificationListProps {
   notifications: Notification[];
@@ -90,15 +92,20 @@ export function NotificationList({
                 {notification.message}
               </p>
 
-              {notification.actionUrl && (
-                <a
-                  href={notification.actionUrl}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  {notification.actionLabel || 'View'}
-                  <ChevronRight className="w-3 h-3" />
-                </a>
-              )}
+              {(() => {
+                // F-FE-005 FIX: validate before rendering. Refusing to render
+                // is preferable to rendering an unsafe link.
+                const safe = validateNotificationUrl(notification.actionUrl);
+                return safe ? (
+                  <a
+                    href={safe}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    {notification.actionLabel || 'View'}
+                    <ChevronRight className="w-3 h-3" />
+                  </a>
+                ) : null;
+              })()}
             </div>
 
             {/* Actions */}

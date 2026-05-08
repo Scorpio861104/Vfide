@@ -264,12 +264,17 @@ export function chatTopic(addrA: string, addrB: string): string {
 }
 
 function isAllowedTopic(topic: string): boolean {
-  if (topic === 'governance' || topic === 'notifications') {
+  // F-BE-013 FIX: removed global 'notifications' topic. Was reachable by ANY
+  // authenticated subscriber and broadcast EVERY message metadata pair to
+  // EVERY connected client — wholesale leak of platform message graph.
+  // Per-user notification topic 'notifications.<address>' replaces it; the
+  // subscriber-self check is enforced in isAuthorizedForTopic below.
+  if (topic === 'governance') {
     return true;
   }
 
   // Keep topic surface explicit to reduce accidental over-subscription.
-  const topicPrefixes = ['chat.', 'proposal.', 'presence.'];
+  const topicPrefixes = ['chat.', 'proposal.', 'presence.', 'notifications.'];
   return topicPrefixes.some((prefix) => topic.startsWith(prefix));
 }
 
@@ -418,6 +423,13 @@ function isAuthorizedForTopic(client: AuthenticatedSocket, topic: string, refres
 
   if (topic.startsWith('presence.')) {
     const subject = topic.slice('presence.'.length).toLowerCase();
+    return /^0x[a-f0-9]{40}$/.test(subject) && subject === client.vfideAddress.toLowerCase();
+  }
+
+  // F-BE-013 FIX: per-user notification topic. Subscriber MUST be the
+  // address embedded in the topic. Mirrors the presence.<address> pattern.
+  if (topic.startsWith('notifications.')) {
+    const subject = topic.slice('notifications.'.length).toLowerCase();
     return /^0x[a-f0-9]{40}$/.test(subject) && subject === client.vfideAddress.toLowerCase();
   }
 

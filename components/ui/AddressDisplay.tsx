@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, ExternalLink, User } from 'lucide-react';
 import { useENS, formatAddressWithENS } from '@/hooks/useENS';
 import Image from 'next/image';
+// F-FE-005 FIX: ENS profile URLs are user-supplied. Validate before rendering
+// as <a href> to prevent javascript:/data: URI XSS.
+import { isExternalUrlSafe } from '@/lib/security/urlValidation';
 
 export interface ENSProfile {
   address: string;
@@ -149,7 +152,7 @@ function ProfilePopover({ profile }: { profile: ENSProfile }) {
             {profile.github}
           </a>
         )}
-        {profile.url && (
+        {profile.url && isExternalUrlSafe(profile.url, { allowRelative: false }) && (
           <a
             href={profile.url}
             target="_blank"

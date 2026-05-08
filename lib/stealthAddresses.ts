@@ -8,6 +8,9 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+// F-FE-003 FIX: import wagmi sign-message hook so the stealth-storage key
+// derives from a wallet signature instead of the public address.
+import { useSignMessage } from 'wagmi';
 
 // ============================================================================
 // Types
@@ -400,6 +403,35 @@ export function calculatePrivacyScore(
 const STEALTH_SALT_KEY = 'vfide-stealth-salt';
 const PBKDF2_ITERATIONS = 100000;
 
+/**
+ * F-FE-003 FIX: deterministic message the user signs to derive their stealth
+ * storage key. The signature has 256 bits of entropy that an attacker reading
+ * localStorage CANNOT reconstruct without access to the user's wallet private
+ * key — closing the gap where the previous KDF input was the PUBLIC wallet
+ * address (which anyone can read on-chain).
+ *
+ * The message is fixed and address-bound so:
+ *   1. The same wallet always derives the same storage key (stable across
+ *      sessions, no re-encryption needed)
+ *   2. Different wallets cannot share a key (address binding)
+ *   3. Operators can grep this string to confirm wallets see a clear
+ *      explanation of what they're signing
+ */
+export const STEALTH_STORAGE_SIGNATURE_MESSAGE = (address: string): string => {
+  const lower = address.toLowerCase();
+  return [
+    'VFIDE Stealth Storage Key',
+    '',
+    'This signature derives the encryption key for your stealth wallet keys',
+    'stored on this device. Signing is FREE and does not authorize any',
+    'transaction or transfer.',
+    '',
+    `Wallet: ${lower}`,
+    'Domain: vfide.io',
+    'Version: 1',
+  ].join('\n');
+};
+
 interface StoredStealthKeys {
   metaAddress: StealthMetaAddress;
   spendingPrivKey: string;
@@ -413,11 +445,42 @@ interface EncryptedStealthStorage {
 }
 
 /**
- * Derive an AES-256-GCM key from the user's wallet address using PBKDF2.
- * A device-specific random salt is persisted in localStorage so that a
- * raw localStorage dump from another device cannot be trivially decrypted.
+ * F-FE-003 FIX: deprecated — refuse to derive a storage key from the public
+ * wallet address. Anyone reading the user's on-chain address (which is, by
+ * definition, public) plus the localStorage salt could recompute this key
+ * and decrypt the stealth keys. The replacement is `deriveStorageKeyFromSignature`
+ * which takes a high-entropy wallet signature as KDF input.
+ *
+ * Callers (the useStealth hook in this file) MUST migrate to
+ * deriveStorageKeyFromSignature. The address-based variant is left in place
+ * as an explicit-throw stub for the next major version cycle so that
+ * accidental rollback gets caught loudly at runtime instead of silently
+ * re-introducing the vulnerability.
  */
-export async function deriveStorageKey(userAddress: string): Promise<CryptoKey> {
+export async function deriveStorageKey(_userAddress: string): Promise<CryptoKey> {
+  throw new Error(
+    '[Stealth] deriveStorageKey(address) is removed (F-FE-003). ' +
+    'Use deriveStorageKeyFromSignature(signature, address) instead. ' +
+    'Callers must obtain a wallet signature over STEALTH_STORAGE_SIGNATURE_MESSAGE(address) first.'
+  );
+}
+
+/**
+ * F-FE-003 FIX: derive AES-256-GCM key from a wallet signature over a
+ * deterministic message. The signature carries 256+ bits of entropy and is
+ * not derivable from any public information.
+ */
+export async function deriveStorageKeyFromSignature(
+  signature: string,
+  userAddress: string,
+): Promise<CryptoKey> {
+  if (!signature || !signature.startsWith('0x') || signature.length < 132) {
+    throw new Error('[Stealth] Invalid signature for storage-key derivation');
+  }
+  if (!userAddress) {
+    throw new Error('[Stealth] userAddress required');
+  }
+
   let saltHex = localStorage.getItem(STEALTH_SALT_KEY);
   if (!saltHex) {
     const salt = randomBytes(16);
@@ -426,10 +489,19 @@ export async function deriveStorageKey(userAddress: string): Promise<CryptoKey> 
   }
   const saltBytes = hexToBytes(saltHex);
 
-  const encoder = new TextEncoder();
+  // F-FE-003 FIX: KDF input is the raw signature bytes plus a domain-bound
+  // address tag, NOT the public address. An attacker reading localStorage
+  // (salt + ciphertext) cannot reconstruct this without also having the user's
+  // private key.
+  const sigBytes = hexToBytes(signature.slice(2));
+  const addrTag = new TextEncoder().encode(`vfide-stealth-v1:${userAddress.toLowerCase()}`);
+  const kdfInput = new Uint8Array(sigBytes.length + addrTag.length);
+  kdfInput.set(sigBytes, 0);
+  kdfInput.set(addrTag, sigBytes.length);
+
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    encoder.encode(userAddress.toLowerCase()),
+    kdfInput,
     'PBKDF2',
     false,
     ['deriveKey']
@@ -451,12 +523,19 @@ export async function deriveStorageKey(userAddress: string): Promise<CryptoKey> 
 
 /**
  * Encrypt stealth private keys with AES-256-GCM before writing to localStorage.
+ *
+ * F-FE-003 FIX: now requires a wallet signature (over
+ * STEALTH_STORAGE_SIGNATURE_MESSAGE(address)) instead of deriving the key
+ * from the public address. The signature parameter must be obtained by the
+ * caller via wagmi's useSignMessage(). See the useStealth hook below for
+ * the canonical call pattern.
  */
 export async function encryptStealthKeys(
   keys: StoredStealthKeys,
-  userAddress: string
+  userAddress: string,
+  signature: string,
 ): Promise<string> {
-  const cryptoKey = await deriveStorageKey(userAddress);
+  const cryptoKey = await deriveStorageKeyFromSignature(signature, userAddress);
   const iv = randomBytes(12);
   const encoder = new TextEncoder();
   const plaintext = encoder.encode(JSON.stringify(keys));
@@ -477,11 +556,15 @@ export async function encryptStealthKeys(
 
 /**
  * Decrypt stealth private keys from localStorage.
- * Also handles migration from the legacy plain-text format.
+ *
+ * F-FE-003 FIX: now requires a wallet signature. Legacy plain-text format
+ * still flows through (and should be re-encrypted on first save), but
+ * the encrypted format requires the signature parameter.
  */
 export async function decryptStealthKeys(
   stored: string,
-  userAddress: string
+  userAddress: string,
+  signature: string,
 ): Promise<StoredStealthKeys> {
   const parsed: EncryptedStealthStorage | StoredStealthKeys = JSON.parse(stored);
 
@@ -491,7 +574,7 @@ export async function decryptStealthKeys(
   }
 
   const { iv, ciphertext } = parsed as EncryptedStealthStorage;
-  const cryptoKey = await deriveStorageKey(userAddress);
+  const cryptoKey = await deriveStorageKeyFromSignature(signature, userAddress);
   const ivBytes = hexToBytes(iv);
   const ciphertextBytes = hexToBytes(ciphertext);
 
@@ -515,6 +598,8 @@ export function useStealth(userAddress: string | undefined) {
   const [viewingPrivKey, setViewingPrivKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // F-FE-003 FIX: wagmi signature hook used to derive the storage key.
+  const { signMessageAsync } = useSignMessage();
 
   // Initialize or load stealth keys
   const initialize = useCallback(async () => {
@@ -527,9 +612,17 @@ export function useStealth(userAddress: string | undefined) {
       // Check for existing keys in encrypted storage
       const storedKeys = localStorage.getItem(`vfide-stealth-${userAddress}`);
 
+      // F-FE-003 FIX: obtain wallet signature once per init. The user sees
+      // a single Sign prompt in their wallet on first stealth use. The
+      // signature is deterministic for (wallet, message), so the same wallet
+      // always produces the same key — no key rotation needed across sessions.
+      // The signature is held only in memory for the lifetime of this call.
+      const message = STEALTH_STORAGE_SIGNATURE_MESSAGE(userAddress);
+      const signature = await signMessageAsync({ message });
+
       if (storedKeys) {
         const { metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk } =
-          await decryptStealthKeys(storedKeys, userAddress);
+          await decryptStealthKeys(storedKeys, userAddress, signature);
         setProfile({
           metaAddress,
           receivedPayments: [],
@@ -553,7 +646,8 @@ export function useStealth(userAddress: string | undefined) {
         // Persist keys using AES-GCM encrypted storage
         const encrypted = await encryptStealthKeys(
           { metaAddress, spendingPrivKey: spk, viewingPrivKey: vpk },
-          userAddress
+          userAddress,
+          signature,
         );
         localStorage.setItem(`vfide-stealth-${userAddress}`, encrypted);
       }
@@ -562,7 +656,7 @@ export function useStealth(userAddress: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [userAddress]);
+  }, [userAddress, signMessageAsync]);
 
   // Generate address for receiving
   const getReceiveAddress = useCallback(async () => {
