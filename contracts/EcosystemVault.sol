@@ -257,6 +257,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public lastQuarterPayout;
     mapping(uint256 => mapping(address => uint16)) public yearPoints; // year => referrer => points (accumulates all year)
     mapping(uint256 => address[]) public yearReferrers; // year => list of referrers
+    /// @notice POW-4 cached denominator for headhunter claim calculation.
+    ///         Sum of all yearPoints[year][*]. Updated incrementally in
+    ///         `_awardPoints` and read O(1) by `claimHeadhunterQuarterReward`.
+    mapping(uint256 => uint256) public totalYearPoints;
     mapping(uint256 => mapping(uint256 => uint256)) public quarterPoolSnapshot; // year => quarter => pool amount
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public quarterClaimed; // year => quarter => referrer => claimed
     mapping(uint256 => mapping(uint256 => bool)) public quarterEnded; // year => quarter => ended
@@ -1021,14 +1025,22 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     function _awardPoints(address referrer, uint16 points, address referred, bool isMerchant) internal {
-        // Add to year tracking (points accumulate all year)
+        // POW-4 FIX: removed MAX_REFERRERS_PER_YEAR check at insertion. The
+        // cap was placed because `claimHeadhunterQuarterReward` summed
+        // `yearReferrers[year]` to compute the denominator, and an
+        // unbounded array would have caused gas-amplification on claim.
+        // We now maintain `totalYearPoints[year]` as an incrementally-
+        // updated denominator (see below), so the claim function does
+        // O(1) work and the on-insertion cap is no longer needed. The
+        // 201st-referrer-of-the-year hard wall — which would have shut
+        // out new referrers from earning anything for the rest of the
+        // year — is removed as a side effect.
         if (yearPoints[currentYear][referrer] == 0) {
-            // Cap array to prevent gas issues
-            if (yearReferrers[currentYear].length >= MAX_REFERRERS_PER_YEAR) revert ECO_ArrayCapReached();
             yearReferrers[currentYear].push(referrer);
         }
         yearPoints[currentYear][referrer] += points;
-        
+        totalYearPoints[currentYear] += uint256(points);
+
         emit ReferralRecorded(referrer, referred, isMerchant, points);
     }
 
@@ -1121,9 +1133,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      *           3. requires the caller has not already claimed the same
      *              (year, quarter),
      *           4. computes share = poolSnapshot * referrerPoints / totalYearPoints
-     *              (totalYearPoints is the sum across `yearReferrers[year]`,
-     *              bounded above by MAX_REFERRERS_PER_YEAR = 200, so the
-     *              loop is gas-safe),
+     *              (totalYearPoints is read from the incrementally-
+     *              maintained `totalYearPoints[year]` mapping; constant-
+     *              time read, no loop, no cap),
      *           5. flips `quarterClaimed` BEFORE transferring tokens (CEI),
      *           6. delivers tokens via the same stablecoin payout path used
      *              by `_deliverWorkReward` so claims and work-rewards behave
@@ -1150,14 +1162,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 poolSnapshot = quarterPoolSnapshot[year][quarter];
         if (poolSnapshot == 0) revert ECO_InsufficientFunds();
 
-        // Sum total year points across all referrers tracked for that year.
-        // The list is bounded by MAX_REFERRERS_PER_YEAR (200) at insertion,
-        // so this loop is O(<= 200) and gas-safe.
-        address[] storage referrers = yearReferrers[year];
-        uint256 totalPoints;
-        for (uint256 i = 0; i < referrers.length; i++) {
-            totalPoints += uint256(yearPoints[year][referrers[i]]);
-        }
+        // POW-4: O(1) denominator read via the cached `totalYearPoints[year]`
+        // that `_awardPoints` increments on every credit. This replaces the
+        // previous loop over `yearReferrers[year]` (which was O(n) up to
+        // MAX_REFERRERS_PER_YEAR=200 and required the on-insertion cap).
+        uint256 totalPoints = totalYearPoints[year];
         if (totalPoints == 0) revert ECO_NotEligible();
 
         uint256 share = (poolSnapshot * uint256(callerPoints)) / totalPoints;

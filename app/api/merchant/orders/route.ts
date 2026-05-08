@@ -115,6 +115,20 @@ async function getHandler(request: NextRequest, user: JWTPayload) {
   const { searchParams } = new URL(request.url);
   const role = searchParams.get('role') || 'merchant';  // merchant or customer
   const status = searchParams.get('status');
+  // POW-8 FIX: date-range filtering. A merchant pulling "orders in March"
+  // previously had to page through ALL historical orders and filter
+  // client-side. With this, the server pushes the time range into SQL
+  // and uses the existing `idx_orders_created` index. Both bounds are
+  // optional; either alone is honored. Invalid dates are silently
+  // ignored (no error) so unknown clients don't break.
+  const fromDateRaw = searchParams.get('from_date');
+  const toDateRaw = searchParams.get('to_date');
+  const fromDate = fromDateRaw && !Number.isNaN(Date.parse(fromDateRaw))
+    ? new Date(fromDateRaw).toISOString()
+    : null;
+  const toDate = toDateRaw && !Number.isNaN(Date.parse(toDateRaw))
+    ? new Date(toDateRaw).toISOString()
+    : null;
   const page = Math.max(1, Number(searchParams.get('page')) || 1);
   const limit = Math.min(100, Math.max(1, Number(searchParams.get('limit')) || 20));
   const offset = (page - 1) * limit;
@@ -134,6 +148,16 @@ async function getHandler(request: NextRequest, user: JWTPayload) {
     if (status && VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) {
       conditions.push(`o.status = $${pi++}`);
       params.push(status);
+    }
+
+    // POW-8: date-range conditions. Both index-friendly via idx_orders_created.
+    if (fromDate) {
+      conditions.push(`o.created_at >= $${pi++}`);
+      params.push(fromDate);
+    }
+    if (toDate) {
+      conditions.push(`o.created_at <= $${pi++}`);
+      params.push(toDate);
     }
 
     const where = conditions.join(' AND ');

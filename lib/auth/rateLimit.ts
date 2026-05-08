@@ -6,6 +6,7 @@
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 import { logger } from '@/lib/logger';
 import { getRequestIp } from '@/lib/security/requestContext';
 
@@ -153,7 +154,90 @@ function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
  */
 export function getClientIdentifier(request: NextRequest): string {
   const { ip } = getRequestIp(request.headers);
+
+  // POW-3 FIX: For authenticated requests, key the bucket as `${ip}|${addr}`
+  // so multiple users behind a single NAT gateway (a busy merchant office,
+  // a shared coffee shop wifi) don't collide on each other's rate-limit
+  // budget. Without this, the typical merchant office with 4 staff hitting
+  // the API from one egress IP shared a single 30/min write quota and ran
+  // out during normal lunch-rush operations.
+  //
+  // Verification rules:
+  //   1. We only peek the JWT signature with the current/previous HS256
+  //      secret — no revocation check, no DB lookup. This keeps the
+  //      rate-limit path zero-I/O and identical in cost to the IP-only
+  //      path. Forged or expired JWTs do not affect the bucket key
+  //      because signature verification fails — those requests fall back
+  //      to IP-only keying. (That is the conservative, correct behavior:
+  //      an attacker who cannot forge a valid signature gets no benefit
+  //      from supplying random JWTs.)
+  //   2. If the token is valid but its `sub`/`address` claim is missing
+  //      or malformed, we fall back to IP-only keying.
+  //   3. We accept the token from either the Authorization: Bearer header
+  //      or the `accessToken` cookie, matching the rest of the auth stack.
+  //
+  // Note: this verification is intentionally signature-only. Revocation
+  // is enforced later by withAuth on protected routes; an attacker
+  // presenting a revoked-but-valid-signature token will eventually be
+  // rejected by withAuth, and meanwhile their rate-limit bucket is at
+  // most their own — no benefit to them.
+  const addr = _peekAddressFromRequest(request);
+  if (addr) {
+    return `${ip}|${addr}`;
+  }
   return ip;
+}
+
+const ADDRESS_KEY_REGEX = /^0x[a-f0-9]{40}$/;
+
+function _peekAddressFromRequest(request: NextRequest): string | null {
+  try {
+    const authHeader = request.headers.get('authorization') || '';
+    let token: string | null = null;
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (match) {
+      token = (match[1] || '').trim() || null;
+    }
+    if (!token) {
+      const cookieToken = request.cookies?.get?.('accessToken')?.value;
+      if (typeof cookieToken === 'string' && cookieToken.length > 0) {
+        token = cookieToken;
+      }
+    }
+    if (!token) return null;
+
+    // Try current secret first, then prev for rotation window.
+    const currentSecret = process.env.JWT_SECRET || '';
+    const prevSecret = process.env.PREV_JWT_SECRET || '';
+    if (!currentSecret) return null;
+
+    let decoded: jwt.JwtPayload | string | null = null;
+    const verifyOpts: jwt.VerifyOptions = { algorithms: ['HS256'] };
+    try {
+      decoded = jwt.verify(token, currentSecret, verifyOpts);
+    } catch {
+      if (prevSecret) {
+        try {
+          decoded = jwt.verify(token, prevSecret, verifyOpts);
+        } catch {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+
+    if (!decoded || typeof decoded === 'string') return null;
+    const candidate =
+      (decoded as { address?: unknown; sub?: unknown }).address ??
+      (decoded as { sub?: unknown }).sub;
+    if (typeof candidate !== 'string') return null;
+    const lower = candidate.toLowerCase().trim();
+    if (!ADDRESS_KEY_REGEX.test(lower)) return null;
+    return lower;
+  } catch {
+    return null;
+  }
 }
 
 /**

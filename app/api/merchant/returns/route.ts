@@ -53,6 +53,15 @@ async function getHandler(request: NextRequest) {
   if (authResult instanceof NextResponse) return authResult;
 
   const status = request.nextUrl.searchParams.get('status')?.trim().toLowerCase();
+  // POW-8 FIX: date-range filtering on returns listing.
+  const fromDateRaw = request.nextUrl.searchParams.get('from_date');
+  const toDateRaw = request.nextUrl.searchParams.get('to_date');
+  const fromDate = fromDateRaw && !Number.isNaN(Date.parse(fromDateRaw))
+    ? new Date(fromDateRaw).toISOString()
+    : null;
+  const toDate = toDateRaw && !Number.isNaN(Date.parse(toDateRaw))
+    ? new Date(toDateRaw).toISOString()
+    : null;
 
   try {
     const filters = ['merchant_address = $1'];
@@ -61,6 +70,14 @@ async function getHandler(request: NextRequest) {
     if (status) {
       filters.push(`status = $${params.length + 1}`);
       params.push(status);
+    }
+    if (fromDate) {
+      filters.push(`created_at >= $${params.length + 1}`);
+      params.push(fromDate);
+    }
+    if (toDate) {
+      filters.push(`created_at <= $${params.length + 1}`);
+      params.push(toDate);
     }
 
     const result = await query(

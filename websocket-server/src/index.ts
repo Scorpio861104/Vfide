@@ -550,7 +550,32 @@ function extractTopicFromOutbound(msg: OutboundMessage): string | null {
   return topic;
 }
 
+// POW-10 FIX: per-client topic-subscription cap. The set was previously
+// unbounded — a client could subscribe to thousands of topics, growing the
+// per-client memory footprint and inflating the per-broadcast iteration
+// cost. 200 is generous (a power user with hundreds of active conversations
+// + presence channels still fits) while preventing pathological clients.
+const MAX_TOPICS_PER_CLIENT = 200;
+
 function subscribeClientToTopic(client: AuthenticatedSocket, topic: string): void {
+  if (client.subscribedTopics.size >= MAX_TOPICS_PER_CLIENT && !client.subscribedTopics.has(topic)) {
+    // Silently drop the new subscription rather than disconnecting the
+    // client; this is a soft cap. The client is told via a server-sent
+    // error message so the UI can display it.
+    try {
+      client.send(JSON.stringify({
+        type: 'error',
+        payload: {
+          code: 'topic_cap_reached',
+          topic,
+          limit: MAX_TOPICS_PER_CLIENT,
+        },
+      }));
+    } catch {
+      /* socket may be closing; ignore */
+    }
+    return;
+  }
   client.subscribedTopics.add(topic);
   const subscribers = topicSubscribers.get(topic) || new Set<string>();
   subscribers.add(client.sessionId);

@@ -149,24 +149,53 @@ contract LiquidityIncentives is ReentrancyGuard {
 
         UserStake storage userStake = userStakes[lpToken][msg.sender];
 
-        // F-SC-033 FIX: Always update stakedAt on every stake, not only the
-        // first one. The previous "if zero" guard meant a user who staked
-        // 1 wei at time T0 then a meaningful amount at time T0+11 months
-        // could withdraw the meaningful amount one month later (T0+12mo)
-        // because stakedAt was anchored to T0 — bypassing the cooldown for
-        // the much-larger second deposit. Refreshing the anchor on each
-        // stake ensures the cooldown applies to the most recent deposit
-        // size of stake. This is a behavioral change for any user who is
-        // already staked: their next stake() will reset their cooldown
-        // window. Documented in CHANGELOG.
-        userStake.stakedAt = block.timestamp;
+        // F-SC-033 v2 (POW-5 errata): amount-weighted anchor.
+        //
+        // The v19.1 patch for F-SC-033 hard-refreshed `stakedAt = block.timestamp`
+        // on every stake. That over-corrected — a power user dollar-cost-averaging
+        // weekly into the LP pool would never satisfy `block.timestamp >= stakedAt
+        // + unstakeCooldown` because each weekly stake reset the anchor. They
+        // could never unstake during active deposit periods.
+        //
+        // Worse, the original F-SC-033 "bug" had nearly null economic value:
+        // this contract has NO REWARDS by design (Howey-compliance, see file
+        // header). The unstake cooldown is purely anti-spam. The "1 wei stake
+        // 11 months ago, then stake big, unstake big" path the v1 fix tried to
+        // close was unexploitable — there is nothing to extract.
+        //
+        // The correct shape is amount-weighted: small additions barely move
+        // the anchor, large additions delay unstake proportionally.
+        //   newStakedAt = (oldStakedAt * oldAmount + block.timestamp * newAmount)
+        //               / (oldAmount + newAmount)
+        //
+        // This:
+        //   - Preserves the anti-bypass property: an attacker who staked 1 wei
+        //     11 months ago and now stakes 100K cannot unstake 1 month later;
+        //     the new stakedAt is dominated by the 100K * now component.
+        //   - Doesn't break DCA stakers: a user with a 1000-token balance
+        //     who adds 10 tokens this week sees stakedAt move forward by
+        //     only ~1% of (now - oldStakedAt). Their cooldown clock still
+        //     advances toward maturity.
+        //   - On first stake (oldAmount == 0), divides by newAmount only, so
+        //     newStakedAt == block.timestamp. Same as the original behavior.
+        if (userStake.amount == 0) {
+            userStake.stakedAt = block.timestamp;
+        } else {
+            // Use uint256 math; both terms fit easily within 256 bits because
+            // amounts are LP token balances (typically far below 2^128) and
+            // timestamps are seconds since 1970 (~ 2^31).
+            uint256 oldAmount = userStake.amount;
+            uint256 oldStakedAt = userStake.stakedAt;
+            uint256 newAnchor = (oldStakedAt * oldAmount + block.timestamp * amount) / (oldAmount + amount);
+            userStake.stakedAt = newAnchor;
+        }
 
         userStake.amount += amount;
         pool.totalStaked += amount;
 
         // Interaction after state effects; transaction reverts atomically on transfer failure.
         IERC20(lpToken).safeTransferFrom(msg.sender, address(this), amount);
-        
+
         emit Staked(msg.sender, lpToken, amount);
     }
     

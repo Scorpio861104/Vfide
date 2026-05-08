@@ -61,6 +61,15 @@ contract MerchantRegistry {
     uint8  public autoSuspendRefunds = 5;
     uint8  public autoSuspendDisputes = 3;
 
+    // POW-1 decay tracking: per-merchant timestamp of most recent strike,
+    // used by _applyRefundDecay / _applyDisputeDecay to subtract one from
+    // the counter for every full 90-day window of clean operation. This
+    // makes the "5 lifetime refunds → permanent ban" rule a "5 refunds in
+    // any rolling 90-day window" rule.
+    mapping(address => uint64) public lastRefundAt;
+    mapping(address => uint64) public lastDisputeAt;
+    uint64 public constant STRIKE_DECAY_INTERVAL = 90 days;
+
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
     constructor(address _dao, address _token, address _hub, address _seer, address _ledger) {
@@ -107,7 +116,16 @@ contract MerchantRegistry {
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
+        // POW-1 FIX (recovery support): decay refund counter by 1 for every
+        // 90 days of clean operation since lastRefundAt. This prevents
+        // long-running merchants from accumulating lifetime refunds and
+        // hitting permanent suspension. A coffee shop running for 3 years
+        // with 4 customer refunds spread evenly across the years should
+        // never be suspended by the threshold; the counter decays back to
+        // ~0 between events.
+        _applyRefundDecay(m);
         m.refunds += 1;
+        lastRefundAt[owner] = uint64(block.timestamp);
         if (m.refunds >= autoSuspendRefunds) {
             m.status = Status.SUSPENDED;
             emit AutoFlagged(owner, "refund_threshold");
@@ -118,10 +136,66 @@ contract MerchantRegistry {
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
+        // POW-1 FIX: same decay rule applied to disputes (separate clock).
+        _applyDisputeDecay(m);
         m.disputes += 1;
+        lastDisputeAt[owner] = uint64(block.timestamp);
         if (m.disputes >= autoSuspendDisputes) {
             m.status = Status.SUSPENDED;
             emit AutoFlagged(owner, "dispute_threshold");
+        }
+    }
+
+    /// @notice POW-1 FIX: DAO-only path to lift an auto-suspension and let
+    ///         the merchant resume operations. Resets the strike counters
+    ///         to zero. Intended for cases where the merchant has resolved
+    ///         the underlying issue (refund disputes settled, complaints
+    ///         retracted, etc.) and demonstrated good standing.
+    ///
+    ///         Without this function, hitting the 5-refund or 3-dispute
+    ///         threshold permanently bricked a merchant account because:
+    ///           - no other code path wrote `m.status` back to ACTIVE
+    ///           - addMerchant rejects re-registration if status != NONE
+    ///         Running a real-world business will eventually accumulate
+    ///         5 refunds over its lifetime; the protocol must have a
+    ///         recovery path or it cannot host long-running merchants.
+    function unsuspendMerchant(address owner) external onlyDAO {
+        Merchant storage m = merchants[owner];
+        if (m.status != Status.SUSPENDED) revert COM_NotAllowed();
+        m.status = Status.ACTIVE;
+        m.refunds = 0;
+        m.disputes = 0;
+        lastRefundAt[owner] = uint64(block.timestamp);
+        lastDisputeAt[owner] = uint64(block.timestamp);
+        emit MerchantStatus(owner, Status.ACTIVE, "dao_unsuspend");
+    }
+
+    // POW-1 decay tracking moved to top of contract (next to merchants mapping)
+    // for consistency with the rest of the state-variable layout.
+
+    function _applyRefundDecay(Merchant storage m) internal {
+        uint64 last = lastRefundAt[m.owner];
+        if (last == 0 || m.refunds == 0) return;
+        uint64 elapsed = uint64(block.timestamp) - last;
+        uint64 decaySteps = elapsed / STRIKE_DECAY_INTERVAL;
+        if (decaySteps == 0) return;
+        if (decaySteps >= m.refunds) {
+            m.refunds = 0;
+        } else {
+            m.refunds -= uint32(decaySteps);
+        }
+    }
+
+    function _applyDisputeDecay(Merchant storage m) internal {
+        uint64 last = lastDisputeAt[m.owner];
+        if (last == 0 || m.disputes == 0) return;
+        uint64 elapsed = uint64(block.timestamp) - last;
+        uint64 decaySteps = elapsed / STRIKE_DECAY_INTERVAL;
+        if (decaySteps == 0) return;
+        if (decaySteps >= m.disputes) {
+            m.disputes = 0;
+        } else {
+            m.disputes -= uint32(decaySteps);
         }
     }
 

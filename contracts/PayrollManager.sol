@@ -588,6 +588,49 @@ contract PayrollManager is ReentrancyGuard {
         }
         emit StreamExpired(streamId, msg.sender, remaining);
     }
+
+    /// @notice POW-13 FIX: Reclaim multiple expired streams in one call.
+    ///         A power business that ran 200 payroll streams for a year
+    ///         hits MAX_STREAM_DURATION and all streams expire. The
+    ///         per-payer slot count (capped at 200) does NOT decrement
+    ///         until each stream is individually claimed via
+    ///         `claimExpiredStream`. Without a batch helper, the payer
+    ///         had to send 200 individual transactions to free their
+    ///         slots before they could start a new round of payroll.
+    ///
+    ///         This helper iterates the supplied stream IDs and reclaims
+    ///         each that belongs to the caller and is past its expiry.
+    ///         IDs that are not the caller's, not expired, or already
+    ///         inactive are silently skipped (no revert) so a partially-
+    ///         valid batch does not waste the entire transaction.
+    ///
+    ///         Bounded to 100 IDs per call to keep gas usage predictable.
+    function claimExpiredStreamBatch(uint256[] calldata streamIds) external nonReentrant {
+        require(streamIds.length <= 100, "PM: batch too large");
+        for (uint256 i = 0; i < streamIds.length; i++) {
+            uint256 streamId = streamIds[i];
+            Stream storage s = streams[streamId];
+            if (!s.active) continue;
+            if (block.timestamp < s.expiryTime) continue;
+            if (msg.sender != s.payer && msg.sender != s.payee) continue;
+
+            uint256 payeeClaimable = claimable(streamId);
+            uint256 remaining = s.depositBalance;
+            s.depositBalance = 0;
+            s.active = false;
+            s.pausedAccrued = 0;
+            _decrementActiveCounts(s.payer, s.payee);
+
+            if (payeeClaimable > 0) {
+                _safeTransferPay(s.token, s.payee, payeeClaimable);
+            }
+            uint256 toReturn = remaining > payeeClaimable ? remaining - payeeClaimable : 0;
+            if (toReturn > 0) {
+                _safeTransferPay(s.token, s.payer, toReturn);
+            }
+            emit StreamExpired(streamId, msg.sender, remaining);
+        }
+    }
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              VIEW FUNCTIONS

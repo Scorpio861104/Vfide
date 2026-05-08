@@ -93,7 +93,13 @@ contract CardBoundVault is ReentrancyGuard {
 
     // ── Withdrawal Queue (large transfer protection) ────────────
     uint256 public constant WITHDRAWAL_DELAY = 7 days;
-    uint8 public constant MAX_QUEUED = 20; // Max pending per vault
+    // POW-6 FIX: raised cap from 20 to 50. Power merchants paying multiple
+    // vendors weekly hit the 20-slot ceiling within 2 weeks of normal
+    // operations and were blocked from new large transfers until items
+    // cleared (7-day delay). 50 covers a typical small-business cadence
+    // (~7 vendors paid weekly) for ~7 weeks of in-flight items, well
+    // beyond the 7-day clear cycle. uint8 still fits 50.
+    uint8 public constant MAX_QUEUED = 50; // Max pending per vault
 
     struct QueuedWithdrawal {
         address toVault;
@@ -113,7 +119,10 @@ contract CardBoundVault is ReentrancyGuard {
         // ── Merchant-Payment Queue (C1 FIX: large payment threshold protection) ──
         uint256 public largePaymentThreshold;
         uint8 public activeQueuedPayments;
-        uint8 public constant MAX_QUEUED_PAYMENTS = 20;
+        // POW-6 FIX: raised cap from 20 to 50. Same rationale as MAX_QUEUED
+        // above — busy merchants paying suppliers/employees frequently hit
+        // the 20 ceiling.
+        uint8 public constant MAX_QUEUED_PAYMENTS = 50;
 
         struct QueuedPayment {
             address token;
