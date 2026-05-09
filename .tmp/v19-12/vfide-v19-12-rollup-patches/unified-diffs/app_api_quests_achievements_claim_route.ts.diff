@@ -1,0 +1,21 @@
+--- /home/claude/v19-12-baseline/Vfide-main/app/api/quests/achievements/claim/route.ts	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/app/api/quests/achievements/claim/route.ts	2026-05-09 01:56:22.912550935 +0000
+@@ -115,7 +115,9 @@
+ 
+       const userId = userResult.rows[0].id;
+ 
+-      // Check if achievement is unlocked and not claimed
++      // v19.9 RACE FIX: lock the achievement progress row with FOR
++      // UPDATE so concurrent claim attempts can't double-credit XP /
++      // badges. Same shape as the daily and weekly quest claim fixes.
+       const progressResult = await client.query(`
+         SELECT uap.*, am.reward_xp, am.reward_vfide, am.reward_badge, am.title
+         FROM user_achievement_progress uap
+@@ -124,6 +126,7 @@
+           AND uap.milestone_id = $2
+           AND uap.unlocked = true 
+           AND uap.claimed = false
++        FOR UPDATE OF uap
+       `, [userId, parsedMilestoneId]);
+ 
+       if (progressResult.rows.length === 0) {

@@ -1,0 +1,30 @@
+--- /home/claude/v19-12-baseline/Vfide-main/app/merchant/gift-cards/page.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/app/merchant/gift-cards/page.tsx	2026-05-09 01:15:50.285398437 +0000
+@@ -10,6 +10,10 @@
+ import { Footer } from '@/components/layout/Footer';
+ import { useLocale } from '@/lib/locale/LocaleProvider';
+ import { safeWindowOpen } from '@/lib/security/urlValidation';
++// v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper for gift-card codes.
++// Gift card codes are most often shared via WhatsApp / Messenger from
++// in-app browsers — primary failure path before this fix.
++import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+ 
+ interface GiftCardRecord {
+   id: string;
+@@ -91,11 +95,13 @@
+   }, [address, amount, recipientName, message, loadCards]);
+ 
+   const copyCode = useCallback(async (code: string) => {
+-    try {
+-      await navigator.clipboard.writeText(code);
++    // v19.10 BCOMPAT-1 FIX: helper falls back to legacy execCommand
++    // when the modern Clipboard API is blocked (in-app browsers).
++    const ok = await copyToClipboardSafe(code);
++    if (ok) {
+       setCopiedCode(code);
+       window.setTimeout(() => setCopiedCode(null), 1500);
+-    } catch {
++    } else {
+       setCopiedCode(null);
+     }
+   }, []);

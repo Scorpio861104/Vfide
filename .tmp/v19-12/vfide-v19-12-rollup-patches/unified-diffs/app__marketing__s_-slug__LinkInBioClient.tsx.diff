@@ -1,0 +1,30 @@
+--- /home/claude/v19-12-baseline/Vfide-main/app/(marketing)/s/[slug]/LinkInBioClient.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/app/(marketing)/s/[slug]/LinkInBioClient.tsx	2026-05-09 01:15:19.259504536 +0000
+@@ -3,6 +3,8 @@
+ import { useState } from 'react';
+ import Image from 'next/image';
+ import { MessageCircle, Phone, Mail, ExternalLink, Package, QrCode, Shield, Share2, Copy, Check } from 'lucide-react';
++// v19.10 BCOMPAT-1 FIX: in-app browser clipboard fallback.
++import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+ 
+ interface Product {
+   id: string;
+@@ -36,10 +38,14 @@
+   const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/store/${slug}` : `/store/${slug}`;
+   const payUrl = typeof window !== 'undefined' ? `${window.location.origin}/pay/${slug}` : `/pay/${slug}`;
+ 
+-  const copyLink = () => {
+-    navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : '');
+-    setCopied(true);
+-    setTimeout(() => setCopied(false), 2000);
++  const copyLink = async () => {
++    // v19.10 BCOMPAT-1 FIX: helper handles in-app browser fallback.
++    const url = typeof window !== 'undefined' ? window.location.href : '';
++    const ok = await copyToClipboardSafe(url);
++    if (ok) {
++      setCopied(true);
++      setTimeout(() => setCopied(false), 2000);
++    }
+   };
+ 
+   return (

@@ -1,0 +1,30 @@
+--- /home/claude/v19-12-baseline/Vfide-main/components/ui/EtherscanLink.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/components/ui/EtherscanLink.tsx	2026-05-09 01:14:23.993373475 +0000
+@@ -3,6 +3,11 @@
+ import { ExternalLink, Copy, Check } from 'lucide-react';
+ import { useEffect, useState } from 'react';
+ import { useChainId } from 'wagmi';
++// v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper. Etherscan-style
++// copy buttons are tapped from in-app browsers all the time (users
++// sharing addresses or tx hashes via WhatsApp, Twitter, etc), so
++// failing silently here is high-impact UX.
++import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+ 
+ const EXPLORER_URLS: Record<number, string> = {
+   1: 'https://etherscan.io',
+@@ -50,8 +55,13 @@
+   const handleCopy = async (e: React.MouseEvent) => {
+     e.preventDefault();
+     e.stopPropagation();
+-    if (value) await navigator.clipboard.writeText(value);
+-    setCopied(true);
++    if (value) {
++      // v19.10 BCOMPAT-1 FIX: only flip to "copied" state on actual
++      // success. Previously the success indicator showed even when
++      // the clipboard write threw — misleading the user.
++      const ok = await copyToClipboardSafe(value);
++      if (ok) setCopied(true);
++    }
+   };
+ 
+   useEffect(() => {

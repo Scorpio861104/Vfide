@@ -1,0 +1,86 @@
+--- /home/claude/v19-12-baseline/Vfide-main/components/merchant/SetupStepBusiness.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/components/merchant/SetupStepBusiness.tsx	2026-05-09 01:57:07.760806101 +0000
+@@ -31,9 +31,22 @@
+       <div className="space-y-5">
+         <div>
+           <label className="text-sm text-gray-400 mb-1.5 block">Business name *</label>
+-          <input type="text" value={businessName} onChange={(e) =>  setBusinessName(e.target.value)}
+-            maxLength={100} autoFocus
+-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/20" />
++          <input
++            type="text"
++            value={businessName}
++            onChange={(e) =>  setBusinessName(e.target.value)}
++            maxLength={100}
++            autoFocus
++            // v19.9 MOB-1 FIX: mobile keyboard hints + 44px tap target.
++            // Business names are short freeform text — sentence-cap is
++            // friendly, but autocorrect can corrupt brand names so we
++            // turn it off.
++            inputMode="text"
++            autoComplete="organization"
++            autoCapitalize="sentences"
++            autoCorrect="off"
++            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
++          />
+         </div>
+ 
+         <div>
+@@ -54,20 +67,51 @@
+         <div className="grid grid-cols-2 gap-3">
+           <div>
+             <label className="text-sm text-gray-400 mb-1.5 block">City</label>
+-            <input type="text" value={city} onChange={(e) =>  setCity(e.target.value)} maxLength={100}
+-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
++            <input
++              type="text"
++              value={city}
++              onChange={(e) =>  setCity(e.target.value)}
++              maxLength={100}
++              // v19.9 MOB-1 FIX: city/country use proper autocomplete
++              // hints so iOS / Android can offer the user's saved
++              // address.
++              inputMode="text"
++              autoComplete="address-level2"
++              autoCapitalize="words"
++              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
++            />
+           </div>
+           <div>
+             <label className="text-sm text-gray-400 mb-1.5 block">Country</label>
+-            <input type="text" value={country} onChange={(e) =>  setCountry(e.target.value)} maxLength={100}
+-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
++            <input
++              type="text"
++              value={country}
++              onChange={(e) =>  setCountry(e.target.value)}
++              maxLength={100}
++              inputMode="text"
++              autoComplete="country-name"
++              autoCapitalize="words"
++              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
++            />
+           </div>
+         </div>
+ 
+         <div>
+           <label className="text-sm text-gray-400 mb-1.5 block">Tagline</label>
+-          <input type="text" value={tagline} onChange={(e) =>  setTagline(e.target.value)} maxLength={200}
+-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
++          <input
++            type="text"
++            value={tagline}
++            onChange={(e) =>  setTagline(e.target.value)}
++            maxLength={200}
++            // v19.9 MOB-1 FIX: tagline is freeform marketing copy —
++            // sentence-cap is helpful, but autocorrect can mangle
++            // intentional brand wordplay.
++            inputMode="text"
++            autoComplete="off"
++            autoCapitalize="sentences"
++            autoCorrect="off"
++            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
++          />
+         </div>
+       </div>
+ 

@@ -1,0 +1,128 @@
+# System Handover Runbook (v19.10 REC-1)
+
+## Purpose
+
+This runbook covers the **once-per-protocol-lifetime** event of executing the SystemHandover, which permanently transfers VFIDE from a developer-administered system to a fully decentralized, non-custodial protocol.
+
+Specifically: this is the moment the developer key is burned and `OwnerControlPanel` admin transitions to the `DAOTimelock`. After this event, **no one** — not Anthropic, not the developer, not the multisig signers — can freeze, lock, seize, or reassign user funds.
+
+This runbook should be executed approximately **6 months after mainnet deployment** (or when the deployment validation criteria below are met, whichever is later).
+
+## When to execute
+
+Execute SystemHandover when **all** of the following are true:
+
+1. The system has been live on mainnet for at least 6 months without unresolved critical incidents.
+2. At least one full incident-and-resolution cycle has been completed (paid disputes, governance vote, parameter change).
+3. ProofScore distribution shows healthy organic activity (median >2000 across active users).
+4. The DAO has at least 100 distinct active voters with non-trivial stake.
+5. DAOTimelock has been verified to execute scheduled actions correctly via at least 3 timelock rotations.
+6. All critical findings from the latest external audit are resolved.
+7. The KEY_MANAGEMENT_PLAN's "Production owner privileges must not remain on a single EOA" requirement has been met for at least 90 days continuously.
+
+If any of these are not yet true, **delay the handover**. There is no penalty for delaying, and the cost of a premature handover is extreme: any latent admin-controllable bug becomes permanently unfixable.
+
+## Pre-execution checklist
+
+The day of execution, run through:
+
+- [ ] Verify current `OwnerControlPanel.owner()` matches the expected developer EOA.
+- [ ] Verify `DAOTimelock.address` is the correct, deployed timelock with the intended delay configuration.
+- [ ] Run `npm run -s test:integration -- --grep handover` against a mainnet fork to confirm the transition behaves as expected.
+- [ ] Confirm the DAO has a queued proposal that, if the timelock works, will execute first as a smoke test.
+- [ ] Pause non-critical infrastructure: scheduled jobs, indexer reseeds, webhook backfills.
+- [ ] Notify all guardians and council members that handover will be initiated within the next 24 hours.
+- [ ] Post a public announcement (24-hour pre-notice) with the planned tx hash submission window.
+- [ ] Confirm two operators are available on-call during the execution window.
+- [ ] Confirm cold-storage backup of all keys/secrets is complete and verified.
+- [ ] Run `node scripts/verify-admin-roles.ts --network <mainnet>` (v19.11 COMP-1) and confirm exit 0 across all 22 AccessControl contracts.
+
+## Execution
+
+### Step 1 — Submit the handover transaction
+
+```bash
+# Run from the contracts repo with the deployer key in cold storage
+npm run -s scripts:execute-handover -- --network <mainnet> --confirm
+```
+
+The script:
+1. Calls `OwnerControlPanel.queueHandover(daoTimelockAddress)`
+2. Waits for the queue period (typically 7 days as configured in `OwnerControlPanel`)
+3. Calls `OwnerControlPanel.applyHandover()` after the delay
+4. Verifies `OwnerControlPanel.owner() == daoTimelockAddress` post-execution
+5. Calls `OwnerControlPanel.burnDeveloperKey()` to permanently disable any latent admin paths
+
+After step 5, the developer EOA's role is permanently revoked. **There is no undo.**
+
+### Step 2 — Verify post-state
+
+Run the verification script:
+```bash
+npm run -s verify:handover -- --network <mainnet>
+node scripts/verify-admin-roles.ts --network <mainnet>
+```
+
+Expected output:
+- `OwnerControlPanel.owner()` returns the `DAOTimelock` address
+- `OwnerControlPanel.developerKey()` returns the zero address
+- All admin-gated functions revert when called from any address other than DAOTimelock
+- DAO can successfully schedule and execute a no-op proposal end-to-end
+- `verify-admin-roles.ts` reports DAOTimelock as the holder of DEFAULT_ADMIN_ROLE on every AccessControl contract
+
+If any check fails, **do not proceed** to public announcement. Investigate first.
+
+### Step 3 — Public attestation
+
+Once verification passes:
+1. Post the handover transaction hashes (queue + apply + burn) to the public communications channel.
+2. Update the project README to reflect the new ownership state.
+3. Update DEPLOYMENT.md to remove the developer-EOA-controlled section.
+4. Sign and publish a written attestation noting the handover date, tx hashes, and verifying operators.
+5. Remove deployer EOA references from any remaining operational tooling.
+
+## Rollback
+
+There is no rollback after Step 1's `applyHandover()` succeeds. Plan accordingly.
+
+If something goes wrong **before** `applyHandover()`:
+- During the queue window: call `OwnerControlPanel.cancelHandover()` from the developer EOA.
+- After the queue completes but before `applyHandover()`: same — cancel before applying.
+
+After `applyHandover()` returns successfully, the only path forward is via DAO governance (which now controls all admin functions). There is no going back to the developer-controlled state.
+
+## Communication template
+
+```
+Subject: VFIDE SystemHandover Execution — [DATE]
+
+VFIDE has completed the SystemHandover, permanently transitioning to a 
+fully non-custodial, DAO-governed protocol.
+
+Details:
+- Queue tx: 0x...
+- Apply tx: 0x...
+- Burn tx:  0x...
+- New owner: <DAOTimelock address>
+- Verification report: <link>
+
+After this event, no individual or entity can freeze, lock, seize, or 
+reassign user funds. All admin actions now flow through DAO governance 
+with the configured timelock.
+
+This is the foundation we built VFIDE for.
+```
+
+## Why a runbook exists for this
+
+The SystemHandover is one of the highest-stakes operational events in the protocol's lifetime. It cannot be rolled back. It permanently changes the security model. It must be executed once, correctly, and not before all the deployment-validation criteria above are met.
+
+A runbook reduces the chance that the operator on the day of execution forgets a step under pressure. It also serves as transparency for the community: the procedure is public, the criteria for triggering it are public, and the verification steps are public.
+
+## See also
+
+- `KEY_MANAGEMENT_PLAN.md` — privileged-key topology before and after handover
+- `CONTRACT_EMERGENCY_RUNBOOK.md` — emergency actions available before handover (mostly become unavailable after)
+- `CRITICAL_OPERATION_DUAL_APPROVAL_POLICY.md` — operational controls for critical events including this one
+- `MICRO_CHUNK_RISK_BACKLOG.md` — pre-handover items that must be cleared
+- `scripts/verify-admin-roles.ts` (v19.11 COMP-1) — used in the verification step

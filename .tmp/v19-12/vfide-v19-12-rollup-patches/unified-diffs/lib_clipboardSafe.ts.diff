@@ -1,0 +1,72 @@
+--- /dev/null	2026-05-05 02:29:52.314674630 +0000
++++ /home/claude/v19-12-rollup/modified-files/lib/clipboardSafe.ts	2026-05-09 01:12:44.785327039 +0000
+@@ -0,0 +1,69 @@
++/**
++ * v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper.
++ *
++ * Background:
++ *   navigator.clipboard.writeText() throws DOMException silently in
++ *   several environments where VFIDE users actually live:
++ *     - iOS in-app browsers (Twitter, Facebook, Instagram, WhatsApp,
++ *       Telegram, Discord, etc.) — they enforce stricter clipboard
++ *       permissions than the standalone Safari/Chrome
++ *     - Pages served over HTTP (the modern API requires HTTPS)
++ *     - Some embedded WebViews
++ *     - Android browsers without the focus-on-document requirement met
++ *
++ *   The user clicks "Copy", sees no toast, nothing happens, retries,
++ *   same result. This is one of the most-reported "your app is broken"
++ *   complaints in crypto-adjacent dapps because so much traffic comes
++ *   from social shares.
++ *
++ * Solution:
++ *   Try the modern API first; on failure (which we MUST detect by
++ *   catching the rejection — not assuming success) fall back to the
++ *   legacy execCommand('copy') flow. If both fail, return false so
++ *   the caller can surface a "long-press to copy manually" hint.
++ *
++ *   The legacy fallback uses a hidden textarea + selection. It works
++ *   in every browser that supports execCommand (functionally all of
++ *   them, including in-app WebViews, even though execCommand is
++ *   deprecated — deprecation hasn't translated to removal yet).
++ *
++ * Returns: true if the value was written to clipboard, false otherwise.
++ *   Callers MUST check the return value. The previous pattern of
++ *   "call writeText then unconditionally show 'Copied!' toast" was
++ *   misleading users — we'd show success even when the write threw.
++ */
++export async function copyToClipboardSafe(text: string): Promise<boolean> {
++  // Path 1: modern Clipboard API
++  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
++    try {
++      await navigator.clipboard.writeText(text);
++      return true;
++    } catch {
++      // Fall through to legacy path. Common reasons this throws:
++      //   - DOMException: Document is not focused
++      //   - DOMException: Write permission denied
++      //   - DOMException: NotAllowedError (in-app browser policy)
++    }
++  }
++
++  // Path 2: legacy execCommand fallback
++  if (typeof document === 'undefined') return false;
++  try {
++    const textarea = document.createElement('textarea');
++    textarea.value = text;
++    // Position offscreen so the user doesn't see it briefly during selection
++    textarea.style.position = 'fixed';
++    textarea.style.top = '-9999px';
++    textarea.style.left = '-9999px';
++    textarea.setAttribute('readonly', '');
++    textarea.setAttribute('aria-hidden', 'true');
++    document.body.appendChild(textarea);
++    textarea.select();
++    textarea.setSelectionRange(0, text.length); // iOS needs explicit range
++    const ok = document.execCommand('copy');
++    document.body.removeChild(textarea);
++    return ok;
++  } catch {
++    return false;
++  }
++}

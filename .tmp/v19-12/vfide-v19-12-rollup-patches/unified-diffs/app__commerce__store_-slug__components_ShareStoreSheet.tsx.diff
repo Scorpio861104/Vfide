@@ -1,0 +1,40 @@
+--- /home/claude/v19-12-baseline/Vfide-main/app/(commerce)/store/[slug]/components/ShareStoreSheet.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/app/(commerce)/store/[slug]/components/ShareStoreSheet.tsx	2026-05-09 01:15:02.405660630 +0000
+@@ -3,6 +3,8 @@
+ import { useState } from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+ import { X, Copy, Check, MessageCircle, Share2, QrCode } from 'lucide-react';
++// v19.10 BCOMPAT-1 FIX: in-app browser clipboard fallback.
++import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+ 
+ interface ShareStoreSheetProps {
+   show: boolean;
+@@ -16,10 +18,13 @@
+   const storeUrl = typeof window !== 'undefined' ? `${window.location.origin}/store/${slug}` : `/store/${slug}`;
+   const whatsappText = encodeURIComponent(`Check out ${storeName} on VFIDE! ${storeUrl}`);
+ 
+-  const copyLink = () => {
+-    navigator.clipboard.writeText(storeUrl);
+-    setCopied(true);
+-    setTimeout(() => setCopied(false), 2000);
++  const copyLink = async () => {
++    // v19.10 BCOMPAT-1 FIX: only flag copied on success.
++    const ok = await copyToClipboardSafe(storeUrl);
++    if (ok) {
++      setCopied(true);
++      setTimeout(() => setCopied(false), 2000);
++    }
+   };
+ 
+   const shareNative = async () => {
+@@ -28,7 +33,9 @@
+         await navigator.share({ title: storeName, text: `Shop at ${storeName} on VFIDE`, url: storeUrl });
+       } catch { /* cancelled */ }
+     } else {
+-      copyLink();
++      // v19.10 BCOMPAT-1 FIX: shareNative falls through to copy when
++      // Web Share API unavailable; await the now-async copyLink.
++      await copyLink();
+     }
+   };
+ 

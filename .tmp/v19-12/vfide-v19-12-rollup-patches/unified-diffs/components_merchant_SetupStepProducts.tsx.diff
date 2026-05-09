@@ -1,0 +1,62 @@
+--- /home/claude/v19-12-baseline/Vfide-main/components/merchant/SetupStepProducts.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/components/merchant/SetupStepProducts.tsx	2026-05-09 01:57:26.164184418 +0000
+@@ -56,19 +56,53 @@
+               </button>
+ 
+               <div className="flex-1 space-y-2">
+-                <input type="text" value={product.name} onChange={(e) =>  updateProduct(product.id, 'name', e.target.value)}
++                <input
++                  type="text"
++                  value={product.name}
++                  onChange={(e) =>  updateProduct(product.id, 'name', e.target.value)}
+                   maxLength={200}
+-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
++                  placeholder="Product name"
++                  // v19.9 MOB-1 FIX: product names — proper-noun-ish so
++                  // sentence-cap helps, but autocorrect mangles brand
++                  // names; 44px tap target on mobile.
++                  inputMode="text"
++                  autoComplete="off"
++                  autoCapitalize="sentences"
++                  autoCorrect="off"
++                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
++                />
+                 <div className="flex gap-2">
+                   <div className="relative flex-1">
+                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+-                    <input type="number" step="0.01" min="0" value={product.price}
++                    <input
++                      type="number"
++                      step="0.01"
++                      min="0"
++                      value={product.price}
+                       onChange={(e) =>  updateProduct(product.id, 'price', e.target.value)}
+-                      className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
++                      placeholder="0.00"
++                      // v19.9 MOB-1 FIX: numeric keypad on mobile.
++                      // inputMode="decimal" gives the decimal-aware
++                      // keypad (with a '.' key) instead of the integer
++                      // keypad ("numeric").
++                      inputMode="decimal"
++                      pattern="[0-9]*[.,]?[0-9]*"
++                      autoComplete="off"
++                      className="w-full pl-7 pr-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
++                    />
+                   </div>
+-                  <input type="text" value={product.description} onChange={(e) =>  updateProduct(product.id, 'description', e.target.value)}
++                  <input
++                    type="text"
++                    value={product.description}
++                    onChange={(e) =>  updateProduct(product.id, 'description', e.target.value)}
+                     maxLength={200}
+-                    className="flex-[2] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
++                    placeholder="Short description"
++                    // v19.9 MOB-1 FIX: free-text description.
++                    inputMode="text"
++                    autoComplete="off"
++                    autoCapitalize="sentences"
++                    className="flex-[2] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
++                  />
+                 </div>
+               </div>
+ 

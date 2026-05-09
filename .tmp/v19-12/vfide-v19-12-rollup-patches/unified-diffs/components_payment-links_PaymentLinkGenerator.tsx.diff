@@ -1,0 +1,29 @@
+--- /home/claude/v19-12-baseline/Vfide-main/components/payment-links/PaymentLinkGenerator.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/components/payment-links/PaymentLinkGenerator.tsx	2026-05-09 01:14:42.768060067 +0000
+@@ -4,6 +4,10 @@
+ import { isAddress } from 'viem';
+ import { useLocale } from '@/lib/locale/LocaleProvider';
+ import { safeWindowOpen } from '@/lib/security/urlValidation';
++// v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper. Payment links
++// are the central conversion path on social channels — failing the
++// copy step here loses sales.
++import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+ 
+ export function PaymentLinkGenerator({
+   merchantSlug,
+@@ -25,7 +29,14 @@
+       ? `${baseUrl}/pay?to=${encodeURIComponent(normalizedMerchantAddress)}&amount=${amount}&source=link${description ? `&desc=${encodeURIComponent(description)}` : ''}`
+       : `${baseUrl}/store/${encodeURIComponent(merchantSlug)}?amount=${amount}${description ? `&desc=${encodeURIComponent(description)}` : ''}`
+     : '';
+-  const copy = () => { navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 2000); };
++  const copy = async () => {
++    // v19.10 BCOMPAT-1 FIX: only mark as copied on actual success.
++    const ok = await copyToClipboardSafe(link);
++    if (ok) {
++      setCopied(true);
++      setTimeout(() => setCopied(false), 2000);
++    }
++  };
+   const whatsapp = () => safeWindowOpen(`https://wa.me/?text=${encodeURIComponent(`Pay ${merchantName} ${formatCurrency(parseFloat(amount))}: ${link}`)}`, {
+     allowRelative: false,
+     allowedHosts: ['wa.me'],

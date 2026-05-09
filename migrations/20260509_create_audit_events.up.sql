@@ -1,0 +1,72 @@
+-- v19.8 COMP-3 FIX: audit_events table for privileged-action logging.
+--
+-- Append-only by design. There is no UPDATE path in the application
+-- code (lib/audit/auditLog.ts only INSERTs). The pseudonymization
+-- code does run an UPDATE for GDPR erasure, but it changes only the
+-- identity columns — never the event_type, details, outcome, or
+-- timestamp. The original facts of the action remain.
+--
+-- Retention: this table grows indefinitely. Operators should consider
+-- archival to cold storage (S3 Glacier or equivalent) for events older
+-- than the retention period required by their jurisdiction. Common
+-- retention: 7 years for financial compliance, 3 years for general
+-- privacy regimes. A separate archive script can SELECT older rows,
+-- write them to long-term storage, and DELETE — that's a maintenance
+-- task, not part of this migration.
+
+CREATE TABLE IF NOT EXISTS audit_events (
+  id BIGSERIAL PRIMARY KEY,
+  -- Who took the action. Lowercased wallet address for end users,
+  -- 'service:<name>' for system actors, 'pseudo:<hash>' after GDPR
+  -- pseudonymization.
+  actor_identity TEXT NOT NULL,
+  -- Best-effort forensics info; nullable because some actors are
+  -- internal services that don't have IPs (e.g. cron jobs).
+  actor_ip TEXT,
+  actor_user_agent TEXT,
+  -- The event taxonomy from lib/audit/auditLog.ts. Stored as TEXT for
+  -- forward compatibility (new event types don't require migrations).
+  event_type TEXT NOT NULL,
+  -- Whose data was affected, if different from actor. NULL when the
+  -- action affects only the actor themselves (most common).
+  target_identity TEXT,
+  -- Free-form structured details. JSONB for indexable querying.
+  details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  -- Outcome enum (kept as TEXT with a CHECK to allow forward extension).
+  outcome TEXT NOT NULL CHECK (outcome IN ('success', 'failure', 'denied')),
+  -- Reason for non-success outcomes. NULL for success.
+  reason TEXT,
+  -- Server-set timestamp; never trust client-provided times.
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+-- Index for compliance review by actor (most common query: "show me
+-- everything user X did").
+CREATE INDEX IF NOT EXISTS idx_audit_events_actor
+  ON audit_events (actor_identity, created_at DESC);
+
+-- Index for "everything done TO user X" queries (support investigations).
+CREATE INDEX IF NOT EXISTS idx_audit_events_target
+  ON audit_events (target_identity, created_at DESC)
+  WHERE target_identity IS NOT NULL;
+
+-- Index for event-type scoped queries ("show me all role grants").
+CREATE INDEX IF NOT EXISTS idx_audit_events_event_type
+  ON audit_events (event_type, created_at DESC);
+
+-- Index for time-range queries with ORDER BY (used by cursor pagination).
+CREATE INDEX IF NOT EXISTS idx_audit_events_created_at
+  ON audit_events (created_at DESC, id DESC);
+
+-- Index for failure investigation: ops dashboards typically pull
+-- "recent failures" across all actors.
+CREATE INDEX IF NOT EXISTS idx_audit_events_failures
+  ON audit_events (outcome, created_at DESC)
+  WHERE outcome != 'success';
+
+COMMENT ON TABLE audit_events IS
+  'v19.8 COMP-3: append-only audit trail for privileged actions. See lib/audit/auditLog.ts.';
+COMMENT ON COLUMN audit_events.actor_identity IS
+  'Lowercased wallet address for end users; service:<name> for system actors; pseudo:<hash> after GDPR pseudonymization.';
+COMMENT ON COLUMN audit_events.details IS
+  'Structured event details. Keep small (<2KB recommended). Avoid PII when possible.';

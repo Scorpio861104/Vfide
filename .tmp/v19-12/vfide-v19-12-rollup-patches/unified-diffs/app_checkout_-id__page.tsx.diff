@@ -1,0 +1,26 @@
+--- /home/claude/v19-12-baseline/Vfide-main/app/checkout/[id]/page.tsx	2026-05-09 01:07:29.000000000 +0000
++++ /home/claude/v19-12-rollup/modified-files/app/checkout/[id]/page.tsx	2026-05-09 01:15:31.638466744 +0000
+@@ -19,6 +19,8 @@
+ import { useOptionalPreferences } from '@/lib/preferences/userPreferences';
+ import { logger } from '@/lib/logger';
+ import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink, Copy } from 'lucide-react';
++// v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper.
++import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+ 
+ interface InvoiceItem {
+   description: string;
+@@ -247,10 +249,10 @@
+   const explorerBase = getExplorerBase(chainId);
+ 
+   const copyToClipboard = async (value: string, label: string) => {
+-    try {
+-      await navigator.clipboard.writeText(value);
+-    } catch (error) {
+-      logger.warn(`[checkout] failed to copy ${label}:`, error);
++    // v19.10 BCOMPAT-1 FIX: helper handles iOS in-app browser fallback path.
++    const ok = await copyToClipboardSafe(value);
++    if (!ok) {
++      logger.warn(`[checkout] both clipboard paths failed for ${label}`);
+     }
+   };
+ 
