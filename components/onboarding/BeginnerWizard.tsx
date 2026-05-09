@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, ReactNode } from "react";
+import { useState, useRef, useEffect, ReactNode } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useAccount } from "wagmi";
 import { Wallet, Smartphone, Link, Building2, PartyPopper } from "lucide-react";
+// A11Y FOLLOW-UP FIX: focus trap for the wizard dialog.
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 interface Step {
   id: number;
@@ -20,6 +22,19 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
   const [showWizard, setShowWizard] = useState(true);
   const { isConnected } = useAccount();
   const shouldReduceMotion = useReducedMotion();
+  // A11Y FOLLOW-UP FIX: focus trap + Escape-to-close. Without this,
+  // tabbing past the wizard's "Next" button leaks focus into the page
+  // underneath, which is invisible while the backdrop is up.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, showWizard);
+  useEffect(() => {
+    if (!showWizard) return;
+    const node = dialogRef.current;
+    if (!node) return;
+    const handler = () => setShowWizard(false);
+    node.addEventListener('focustrap-escape', handler);
+    return () => node.removeEventListener('focustrap-escape', handler);
+  }, [showWizard]);
 
   const steps: Step[] = [
     {
@@ -115,13 +130,19 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
       }}
     >
       <motion.div
+        ref={dialogRef}
         initial={shouldReduceMotion ? false : { scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         className="bg-zinc-800 border-2 border-cyan-400 rounded-2xl p-8 max-w-2xl w-full relative"
+        // A11Y FOLLOW-UP FIX: dialog semantics for screen readers.
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="beginner-wizard-title"
       >
         {/* Close Button */}
         <button
           onClick={skipWizard}
+          aria-label="Skip wizard and close"
           className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-2xl"
         >
           ×
@@ -152,7 +173,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-cyan-400/10 rounded-full border border-cyan-400/30">
                 {currentStepData?.icon}
               </div>
-              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
+              <h2 id="beginner-wizard-title" className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
                 {currentStepData?.title}
               </h2>
               <p className="text-lg text-zinc-400 leading-relaxed font-(family-name:--font-body) max-w-xl mx-auto">

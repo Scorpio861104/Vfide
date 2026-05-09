@@ -142,8 +142,17 @@ export function WalletSwitcher() {
                         type="text"
                         value={editLabel}
                         onChange={(e) =>  setEditLabel(e.target.value)}
-                       
-                        className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none focus:border-cyan-500"
+                        // MOB-1 FOLLOW-UP: wallet labels are short freeform
+                        // names (e.g. "Daily Wallet", "Cold Storage"); allow
+                        // sentence-case auto-cap but disable auto-correct
+                        // (corrupts addresses-as-labels) and spell-check.
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="sentences"
+                        spellCheck={false}
+                        inputMode="text"
+                        aria-label="Wallet label"
+                        className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none focus:border-cyan-500 min-h-[44px]"
                         autoFocus
                       />
                       <button

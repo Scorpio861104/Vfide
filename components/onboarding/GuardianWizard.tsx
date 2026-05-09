@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, ReactNode } from "react";
+import { useState, useRef, useEffect, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { encodeFunctionData } from "viem";
 import { useSimpleVault } from "@/hooks/useSimpleVault";
 import { useVaultHub } from "@/hooks/useVaultHub";
 import { CARD_BOUND_VAULT_ABI } from "@/lib/contracts";
 import { Shield, Users, PenLine, CheckCircle } from "lucide-react";
+// A11Y FOLLOW-UP FIX: focus trap so the wizard's input fields and
+// step navigation are reachable by keyboard without leaking focus.
+import { useFocusTrap } from "@/lib/hooks/useFocusTrap";
 
 interface Step {
   icon: ReactNode;
@@ -21,6 +24,18 @@ export function GuardianWizard({ onClose, onComplete }: { onClose: () => void; o
   const [guardians, setGuardians] = useState(['', '', '']);
   const { executeVaultAction, userMessage, actionStatus } = useSimpleVault();
   const { vaultAddress } = useVaultHub();
+  // A11Y FOLLOW-UP FIX: focus trap. The wizard collects guardian
+  // addresses across multiple input fields; without trapping, keyboard
+  // users tab past the last input straight into the page underneath.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, true);
+  useEffect(() => {
+    const node = dialogRef.current;
+    if (!node) return;
+    const handler = () => onClose();
+    node.addEventListener('focustrap-escape', handler);
+    return () => node.removeEventListener('focustrap-escape', handler);
+  }, [onClose]);
 
   const steps: Step[] = [
     {
@@ -93,12 +108,18 @@ export function GuardianWizard({ onClose, onComplete }: { onClose: () => void; o
       }}
     >
       <motion.div
+        ref={dialogRef}
         initial={{ scale: 0.9 }}
         animate={{ scale: 1 }}
         className="bg-zinc-800 border-2 border-emerald-500 rounded-2xl p-8 max-w-2xl w-full"
+        // A11Y FOLLOW-UP FIX: dialog semantics linked to the visible step heading.
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="guardian-wizard-title"
       >
         <button
           onClick={onClose}
+          aria-label="Close guardian wizard"
           className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 text-2xl"
         >
           ×
@@ -126,7 +147,7 @@ export function GuardianWizard({ onClose, onComplete }: { onClose: () => void; o
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-emerald-500/10 rounded-full border border-emerald-500/30">
                 {steps[step]?.icon}
               </div>
-              <h2 className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
+              <h2 id="guardian-wizard-title" className="text-3xl font-bold text-zinc-100 mb-3 font-(family-name:--font-display)">
                 {steps[step]?.title}
               </h2>
               <p className="text-lg text-zinc-400 leading-relaxed font-(family-name:--font-body)">

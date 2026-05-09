@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { getBadgeById } from '@/lib/badge-registry'
 import { cn } from '@/lib/utils'
 
@@ -33,6 +34,12 @@ export function BadgeDisplay({
   className,
 }: BadgeDisplayProps) {
   const badge = getBadgeById(badgeId)
+  // BCOMPAT-4 FIX: tap-to-toggle tooltip for mobile/touch.
+  // The previous implementation used `hidden group-hover:block` which
+  // is invisible to mobile users (no hover events on touch). Now the
+  // tooltip is controlled state — visible on hover (desktop) OR when
+  // tapped (mobile). Tapping the badge a second time hides it.
+  const [showTooltip, setShowTooltip] = useState(false)
   
   if (!badge) {
     return (
@@ -43,7 +50,20 @@ export function BadgeDisplay({
   }
   
   return (
-    <div className={cn('group relative', className)}>
+    <div
+      className={cn('group relative', className)}
+      // BCOMPAT-4 FIX: enable tap-to-toggle on touch devices. We use
+      // onClick (not just touch events) so it works on hybrid devices
+      // (laptops with touchscreens). aria-expanded gives screen
+      // reader users feedback that the tooltip toggles.
+      onClick={() => setShowTooltip((v) => !v)}
+      onMouseLeave={() => setShowTooltip(false)}
+      role="button"
+      aria-label={`${badge.displayName}, ${badge.rarity} badge. Tap for details.`}
+      aria-expanded={showTooltip}
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowTooltip((v) => !v); } }}
+    >
       {/* Badge Icon */}
       <div
         className={cn(
@@ -77,8 +97,15 @@ export function BadgeDisplay({
         )}
       </div>
       
-      {/* Hover Tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-50">
+      {/* Hover or Tap Tooltip */}
+      {/* BCOMPAT-4 FIX: visible when EITHER showTooltip state is true
+          (tap path) OR group-hover is active (desktop hover path).
+          The CSS class combination means desktop hover continues to
+          work even without a click; mobile users can toggle via tap. */}
+      <div className={cn(
+        "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50",
+        showTooltip ? "block" : "hidden group-hover:block"
+      )}>
         <div className="bg-popover border border-border rounded-lg shadow-lg p-3 w-64">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl">{badge.icon}</span>

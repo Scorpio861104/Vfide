@@ -21,6 +21,40 @@ contract CardBoundVaultDeployer {
         uint256 dailyLimit,
         address ledger
     ) external view returns (address predicted) {
+        // XCHAIN-4 FIX: chain-aware CREATE2 prediction.
+        //
+        // Standard EVM (Base, Polygon, Optimism, Arbitrum, Mainnet)
+        // uses the formula:
+        //   address = keccak256(0xff || deployer || salt || keccak256(creationCode))[12:]
+        //
+        // zkSync Era uses a different formula:
+        //   address = keccak256(zksyncCreate2Prefix || deployer || salt
+        //              || keccak256(bytecodeHash) || keccak256(constructorInputHash))[12:]
+        // where zksyncCreate2Prefix = keccak256("zksyncCreate2") and
+        // bytecodeHash is the EraVM-specific bytecode-hash artifact
+        // produced by the zksolc compiler, NOT keccak256 of the
+        // creation bytecode. This artifact is not available from
+        // within Solidity at runtime — it lives only in the
+        // compilation output.
+        //
+        // Because the zksolc artifact isn't reachable from inside the
+        // contract, we do NOT attempt zkSync-formula prediction here.
+        // Instead, we detect the chain at runtime and:
+        //   - On standard EVM chains: return the EVM-formula prediction (existing behavior)
+        //   - On zkSync chains (324 mainnet, 300 testnet): revert with
+        //     a clear error directing the caller to use the off-chain
+        //     zkSync address-prediction utility (see lib/crypto/zkSyncAddress.ts)
+        //
+        // The frontend's `useVaultOperations` hook (and any other
+        // caller of `predict`) must check the chain ID first and route
+        // to the off-chain predictor on zkSync. This is enforced via
+        // the lib/crypto/zkSyncAddress.ts helper added in v19.11.
+        uint256 chainId = block.chainid;
+        if (chainId == 324 || chainId == 300) {
+            // zkSync mainnet (324) or zkSync Sepolia (300)
+            revert("CBD_zkSync_predict_off-chain_only");
+        }
+
         bytes32 salt = _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger);
         bytes32 codeHash = keccak256(
             _creationCode(hub, vfideToken, owner_, guardianThreshold, maxPerTransfer, dailyLimit, ledger)

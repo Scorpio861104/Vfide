@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Command, X } from 'lucide-react';
 import { useKeyboardShortcuts, SHORTCUTS, KeyboardShortcut } from '@/hooks/useKeyboardShortcuts';
+// A11Y FOLLOW-UP FIX: focus trap so keyboard users can't tab out of the
+// open shortcuts panel into the page underneath.
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 
 interface ShortcutsPanelProps {
   customShortcuts?: KeyboardShortcut[];
@@ -11,6 +14,22 @@ interface ShortcutsPanelProps {
 
 export function KeyboardShortcutsPanel({ customShortcuts = [] }: ShortcutsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  // Wire focus trap to the panel ref. The hook handles initial focus,
+  // Tab cycling, and focus restoration on close.
+  useFocusTrap(dialogRef, isOpen);
+
+  // A11Y FOLLOW-UP FIX: also wire Escape-to-close via the focustrap-escape
+  // event the hook dispatches. This is in addition to the existing
+  // SHORTCUTS.CLOSE keyboard handler, so the panel responds correctly
+  // whether the user presses Esc inside or outside the modal context.
+  useEffect(() => {
+    const handler = () => setIsOpen(false);
+    const node = dialogRef.current;
+    if (!node) return;
+    node.addEventListener('focustrap-escape', handler);
+    return () => node.removeEventListener('focustrap-escape', handler);
+  }, [isOpen]);
 
   const defaultShortcuts = [
     { ...SHORTCUTS.SEARCH, handler: () => {} },
@@ -68,15 +87,21 @@ export function KeyboardShortcutsPanel({ customShortcuts = [] }: ShortcutsPanelP
 
             {/* Panel */}
             <motion.div
+              ref={dialogRef}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl z-50 overflow-hidden"
+              // A11Y FOLLOW-UP FIX: announce as a dialog and link the
+              // accessible name to the visible heading via id.
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="keyboard-shortcuts-title"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-zinc-800">
                 <div>
-                  <h2 className="text-xl font-bold text-zinc-100">Keyboard Shortcuts</h2>
+                  <h2 id="keyboard-shortcuts-title" className="text-xl font-bold text-zinc-100">Keyboard Shortcuts</h2>
                   <p className="text-sm text-zinc-500 mt-1">Navigate faster with keyboard shortcuts</p>
                 </div>
                 <button

@@ -63,9 +63,21 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
                 ))}
               </select>
             ) : (
-              <input type="text" value={selectedContract} onChange={(e) =>  setSelectedContract(e.target.value as Address)}
-               
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 font-mono" required />
+              <input
+                type="text"
+                value={selectedContract}
+                onChange={(e) =>  setSelectedContract(e.target.value as Address)}
+                // MOB-1 FOLLOW-UP: avoid auto-corrupting hex addresses on mobile
+                // (autocapitalize/autocorrect default to "on" on iOS Safari).
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                inputMode="text"
+                placeholder="0x..."
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 font-mono min-h-[44px]"
+                required
+              />
             )}
           </div>
 
@@ -85,9 +97,17 @@ export function CreateSessionDialog({ isOpen, onClose, onSubmit, targetContracts
 
           <div>
             <label className="block text-sm font-medium mb-1">Max Transactions</label>
-            <input type="number" value={maxCalls} onChange={(e) =>  setMaxCalls(parseInt(e.target.value) || 1)}
-              min={1} max={1000}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900" />
+            <input
+              type="number"
+              value={maxCalls}
+              onChange={(e) =>  setMaxCalls(parseInt(e.target.value) || 1)}
+              min={1}
+              max={1000}
+              // MOB-1 FOLLOW-UP: numeric keypad on mobile.
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 min-h-[44px]"
+            />
           </div>
 
           <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-700 dark:text-amber-400">

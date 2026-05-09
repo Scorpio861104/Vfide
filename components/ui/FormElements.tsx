@@ -1,8 +1,12 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
+// A11Y FOLLOW-UP FIX: focus trap. The base Modal component is the
+// most-used wrapper in the codebase; getting focus management right
+// here pays off across dozens of consumer screens.
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap'
 
 // =============================================================================
 // PREMIUM MODAL - Beautiful animated modal dialogs
@@ -27,6 +31,23 @@ export function Modal({
   size = 'md',
   showCloseButton = true 
 }: ModalProps) {
+  // A11Y FOLLOW-UP FIX: ref for focus trap and Escape handling.
+  // We generate a stable id per modal instance so aria-labelledby
+  // can point to the visible title heading.
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2, 9)}`)
+  useFocusTrap(dialogRef, isOpen)
+
+  // Escape-to-close via the focustrap-escape event the hook dispatches.
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = () => onClose()
+    const node = dialogRef.current
+    if (!node) return
+    node.addEventListener('focustrap-escape', handler)
+    return () => node.removeEventListener('focustrap-escape', handler)
+  }, [isOpen, onClose])
+
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -63,6 +84,7 @@ export function Modal({
           {/* Modal Container */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <motion.div
+              ref={dialogRef}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -73,13 +95,20 @@ export function Modal({
                 border border-white/10 rounded-3xl shadow-2xl
                 pointer-events-auto
               `}
+              // A11Y FOLLOW-UP FIX: dialog semantics. The aria-labelledby
+              // points to the visible heading when one is present; for
+              // title-less modals it falls through (still announced as
+              // a dialog, just without a programmatic label).
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={title ? titleId.current : undefined}
             >
               {/* Header */}
               {(title || showCloseButton) && (
                 <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-gradient-to-b from-zinc-800 to-transparent z-10">
                   <div>
                     {title && (
-                      <h2 className="text-2xl font-bold text-zinc-100">{title}</h2>
+                      <h2 id={titleId.current} className="text-2xl font-bold text-zinc-100">{title}</h2>
                     )}
                     {subtitle && (
                       <p className="text-zinc-400 mt-1">{subtitle}</p>

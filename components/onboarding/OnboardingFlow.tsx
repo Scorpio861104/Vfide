@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle, 
@@ -17,6 +17,9 @@ import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import Confetti from 'react-confetti';
 import { safeLocalStorage } from '@/lib/utils';
+// A11Y FOLLOW-UP FIX: focus trap for the celebratory reward modal so
+// keyboard users can dismiss with Escape and tab to "Continue".
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap';
 
 // ==================== TYPES ====================
 
@@ -277,6 +280,20 @@ interface RewardModalProps {
 }
 
 function RewardModal({ reward, onClose }: RewardModalProps) {
+  // A11Y FOLLOW-UP FIX: focus trap + Escape-to-close. Reward modals
+  // pop up after onboarding milestones; without this, keyboard and
+  // screen-reader users hit a dead-end after Continue is announced.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, !!reward);
+  useEffect(() => {
+    if (!reward) return;
+    const node = dialogRef.current;
+    if (!node) return;
+    const handler = () => onClose();
+    node.addEventListener('focustrap-escape', handler);
+    return () => node.removeEventListener('focustrap-escape', handler);
+  }, [reward, onClose]);
+
   if (!reward) return null;
 
   const icons = {
@@ -301,11 +318,16 @@ function RewardModal({ reward, onClose }: RewardModalProps) {
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
       />
       <motion.div
+        ref={dialogRef}
         initial={{ opacity: 0, scale: 0.8, y: 50 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 50 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50"
+        // A11Y FOLLOW-UP FIX: dialog semantics linked to the heading id below.
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reward-modal-title"
       >
         <div className={`
           bg-gradient-to-br ${colors[reward.type]} 
@@ -326,7 +348,7 @@ function RewardModal({ reward, onClose }: RewardModalProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 id="reward-modal-title" className="text-2xl font-bold text-white mb-2">
               {reward.type === 'points' ? `+${reward.value} Points!` :
                reward.type === 'badge' ? `Badge Unlocked!` :
                `Feature Unlocked!`}

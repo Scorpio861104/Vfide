@@ -5,12 +5,15 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Share2, X, Trophy, Sparkles } from 'lucide-react'
 import { safeWindowOpen } from '@/lib/security/urlValidation'
 import { useChainId } from 'wagmi'
 import { getExplorerLink } from '@/components/ui/EtherscanLink'
+// A11Y FOLLOW-UP FIX: focus trap so the close button is reachable by
+// keyboard and screen-reader users without leaking focus into the page.
+import { useFocusTrap } from '@/lib/hooks/useFocusTrap'
 
 interface TransactionSuccessProps {
   isOpen: boolean
@@ -100,6 +103,18 @@ export function TransactionSuccess({
   type = 'payment'
 }: TransactionSuccessProps) {
   const chainId = useChainId()
+  // A11Y FOLLOW-UP FIX: ref + focus trap. Auto-close after 5s still
+  // works; Escape (via the focustrap-escape event) and Tab cycling
+  // are now handled correctly.
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(dialogRef, isOpen)
+  useEffect(() => {
+    const handler = () => onClose()
+    const node = dialogRef.current
+    if (!node) return
+    node.addEventListener('focustrap-escape', handler)
+    return () => node.removeEventListener('focustrap-escape', handler)
+  }, [isOpen, onClose])
   useEffect(() => {
     if (isOpen) {
       // Auto-close after 5 seconds
@@ -145,15 +160,21 @@ export function TransactionSuccess({
 
           {/* Success Card */}
           <motion.div
+            ref={dialogRef}
             initial={{ scale: 0.8, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.8, y: 20 }}
             onClick={(e) => e.stopPropagation()}
             className="relative bg-gradient-to-br from-zinc-800 to-zinc-900 border-2 border-emerald-500 rounded-2xl p-8 max-w-md w-full text-center"
+            // A11Y FOLLOW-UP FIX: dialog semantics for screen readers.
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transaction-success-title"
           >
             {/* Close button */}
             <button 
               onClick={onClose}
+              aria-label="Close"
               className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100"
             >
               <X size={20} />
@@ -175,6 +196,7 @@ export function TransactionSuccess({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="text-2xl font-bold text-zinc-100 mb-2"
+              id="transaction-success-title"
             >
               {titles[type]}
             </motion.h2>
