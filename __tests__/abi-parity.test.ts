@@ -15,7 +15,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const describeIfEnabled = process.env.RUN_ABI_PARITY === '1' ? describe : describe.skip;
+const describeIfEnabled = describe;
 
 function loadABI(abiName: string): string[] {
   const filePath = path.join(__dirname, '..', 'lib', 'abis', `${abiName}.json`);
