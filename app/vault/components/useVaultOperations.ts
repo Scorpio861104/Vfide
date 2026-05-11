@@ -9,7 +9,7 @@ import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultBalance } from '@/lib/vfide-hooks';
 import { safeParseFloat } from '@/lib/validation';
 import { devLog } from '@/lib/utils';
-import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, VFIDETokenABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, VFIDETokenABI, ZERO_ADDRESS, isConfiguredContractAddress, isCardBoundVaultMode } from '@/lib/contracts';
 
 export interface QueuedWithdrawal {
   index: bigint;
@@ -388,13 +388,33 @@ export function useVaultOperations() {
   };
 
   const handleSetNextOfKin = async () => {
-    showToast('Next of Kin is not available in vault-only mode.', 'error');
-    return;
+    if (!newNextOfKinAddress || !isAddress(newNextOfKinAddress)) {
+      showToast('Invalid address format', 'error');
+      return;
+    }
+    try {
+      await recovery.setNextOfKinAddress(newNextOfKinAddress as `0x${string}`);
+      showToast('Next of Kin updated successfully', 'success');
+      setNewNextOfKinAddress('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      showToast('Failed to set Next of Kin: ' + message.slice(0, 50), 'error');
+    }
   };
 
   const handleAddGuardian = async () => {
-    showToast('Manage vault guardians from the Guardians dashboard.', 'error');
-    return;
+    if (!newGuardianAddress || !isAddress(newGuardianAddress)) {
+      showToast('Invalid address format', 'error');
+      return;
+    }
+    try {
+      await recovery.addGuardian(newGuardianAddress as `0x${string}`);
+      showToast('Guardian added successfully', 'success');
+      setNewGuardianAddress('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      showToast('Failed to add guardian: ' + message.slice(0, 50), 'error');
+    }
   };
 
   const hasNextOfKin = false;
@@ -402,7 +422,7 @@ export function useVaultOperations() {
   return {
     // Identity
     address,
-    cardBoundMode: true,
+    cardBoundMode: isCardBoundVaultMode(),
     // Vault hub
     ...vaultHub,
     // Balances
