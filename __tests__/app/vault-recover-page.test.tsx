@@ -36,6 +36,12 @@ jest.mock('@/lib/contracts', () => ({
     new Error(`[VFIDE] ${name} contract not configured.`),
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
 }));
+  jest.mock('@/lib/contracts/future-contracts', () => ({
+    isFutureFeaturesEnabled: () => true,
+    getFutureContractAddresses: () => ({
+      BadgeNFT: '0x4444444444444444444444444444444444444444',
+    }),
+  }));
 
 jest.mock('wagmi', () => ({
   useAccount: () => ({
@@ -138,11 +144,37 @@ describe('Vault recover page logic pathways', () => {
     const foundVault = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
     const ownerAddress = '0xcccccccccccccccccccccccccccccccccccccccc';
 
-    mockReadContract
-      .mockResolvedValueOnce(foundVault)
-      .mockResolvedValueOnce([ownerAddress, 1n, false, true])
-      .mockResolvedValueOnce(1234n)
-      .mockResolvedValueOnce(2n);
+      mockReadContract.mockImplementation((params: any) => {
+        const { functionName } = params;
+        switch (functionName) {
+          case 'searchByRecoveryId':
+            return Promise.resolve(foundVault);
+          case 'getVaultInfo':
+            return Promise.resolve([ownerAddress, 1n, false, true]);
+          case 'getScore':
+            return Promise.resolve(1234n);
+          case 'balanceOf':
+            return Promise.resolve(2n);
+          default:
+            return Promise.reject(new Error(`Unknown function: ${functionName}`));
+        }
+      });
+      mockReadContract.mockClear();
+      mockReadContract.mockImplementation((params: any) => {
+        const { functionName } = params;
+        switch (functionName) {
+          case 'searchByRecoveryId':
+            return Promise.resolve(foundVault);
+          case 'getVaultInfo':
+            return Promise.resolve([ownerAddress, 1n, false, true]);
+          case 'getScore':
+            return Promise.resolve(1234n);
+          case 'balanceOf':
+            return Promise.resolve(2n);
+          default:
+            return Promise.reject(new Error(`Unknown function: ${functionName}`));
+        }
+      });
 
     renderVaultRecoverPage();
 
