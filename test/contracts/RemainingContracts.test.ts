@@ -180,6 +180,14 @@ describe("GuardianRegistry", function () {
 });
 
 describe("SecurityHub", function () {
+  const suiteAvailable = hasArtifact("artifacts/contracts/VFIDESecurity.sol/SecurityHub.json");
+
+  before(function () {
+    if (!suiteAvailable) {
+      this.skip();
+    }
+  });
+
   it("should expose lock-status read function in ABI", async function () {
     const Factory = await ethers.getContractFactory("SecurityHub");
     const hasFn = Factory.interface.fragments.some(

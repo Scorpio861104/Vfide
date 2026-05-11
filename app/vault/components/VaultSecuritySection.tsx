@@ -5,11 +5,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, Clock, Lock, Shield } from 'lucide-react';
 
 import { GlassCard } from '@/components/ui/GlassCard';
-import { useCanSelfPanic, useQuarantineStatus, useSelfPanic } from '@/lib/vfide-hooks';
+import { useQuarantineStatus, useSelfPanic } from '@/lib/vfide-hooks';
 
 export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
-  const panicData = useCanSelfPanic();
   const { selfPanic, isPanicking, isAvailable: isPanicAvailable, supportsDuration } = useSelfPanic();
   
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
@@ -32,9 +31,8 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
   const isQuarantined = quarantineData.isQuarantined || hasTimer;
   const remainingHours = Math.floor(quarantineRemaining / 3600);
   const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60);
-  
-  const cooldownRemaining = Math.max(0, (panicData.lastPanicTime + panicData.cooldownSeconds) - now);
-  const canPanic = isPanicAvailable && cooldownRemaining === 0 && !isQuarantined;
+
+  const canPanic = isPanicAvailable && !isQuarantined;
   
   const handlePanic = () => {
     if (!canPanic || isPanicking) return;

@@ -149,7 +149,7 @@ export function useVaultOperations() {
   };
 
   const handleWithdraw = async () => {
-    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
       showToast('Enter a valid amount', 'error');
       return;
     }
