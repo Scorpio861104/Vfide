@@ -33,6 +33,34 @@ const ROOT = process.cwd();
 const ABI_DIR = path.join(ROOT, "lib", "abis");
 const ARTIFACT_ROOT = path.join(ROOT, "artifacts", "contracts");
 
+/**
+ * Hand-curated ABIs that intentionally have no Solidity source.
+ * Standard interfaces (ERC-20, ERC-721, etc.) live here. Never overwritten.
+ */
+const SKIP_LIST = new Set<string>([
+  "ERC20",
+]);
+
+/**
+ * `lib/abis/<X>.json` sources its ABI from a differently-named contract.
+ * Used when a contract was renamed in Solidity but the frontend's import
+ * symbol stayed the same to avoid churn.
+ */
+const RENAME_MAP: Record<string, string> = {
+  DevReserveVesting:  "DevReserveVestingVault",
+  MainstreamPayments: "MainstreamPriceOracle",
+};
+
+/**
+ * `lib/abis/<X>.json` is a hand-merged ABI of multiple contracts that live
+ * in the same Solidity file. Used by lib/contracts.ts to expose a single
+ * symbol covering both surfaces. The merge is order-preserving — duplicate
+ * entries (by name + inputs signature) from later contracts override earlier.
+ */
+const MERGE_MAP: Record<string, string[]> = {
+  VFIDECommerce: ["MerchantRegistry", "CommerceEscrow"],
+};
+
 interface AbiFn {
   type: string;
   name?: string;
@@ -107,17 +135,60 @@ function main() {
   for (const file of abiFiles) {
     const name = path.basename(file, ".json");
     const abiPath = path.join(ABI_DIR, file);
-    const artifactPath = findArtifactJson(name);
 
-    if (!artifactPath) {
-      console.error(`  ❌ ${name}: no artifact found (contract missing or rename?)`);
-      missingArtifacts += 1;
+    // ── Hand-curated: no artifact lookup, never written. ──────────────────
+    if (SKIP_LIST.has(name)) {
+      console.log(`  ⏭  ${name}: hand-curated, skipped`);
       continue;
+    }
+
+    let fresh: AbiFn[];
+
+    // ── Multi-contract merge ──────────────────────────────────────────────
+    if (MERGE_MAP[name]) {
+      const parts = MERGE_MAP[name];
+      const merged: AbiFn[] = [];
+      const seen = new Set<string>();
+      let allFound = true;
+      for (const part of parts) {
+        const ap = findArtifactJson(part);
+        if (!ap) {
+          console.error(`  ❌ ${name}: merge component "${part}" has no artifact`);
+          missingArtifacts += 1;
+          allFound = false;
+          break;
+        }
+        const partAbi = readJson<{ abi: AbiFn[] }>(ap).abi;
+        for (const item of partAbi) {
+          // Dedupe by type + name + stringified inputs/outputs
+          const key = JSON.stringify({
+            t: item.type,
+            n: item.name,
+            i: (item as any).inputs,
+          });
+          if (seen.has(key)) continue;
+          seen.add(key);
+          merged.push(item);
+        }
+      }
+      if (!allFound) continue;
+      fresh = merged;
+    } else {
+      // ── Standard single-contract lookup ─────────────────────────────────
+      const contractName = RENAME_MAP[name] ?? name;
+      const artifactPath = findArtifactJson(contractName);
+      if (!artifactPath) {
+        console.error(
+          `  ❌ ${name}: no artifact found (looked for "${contractName}.json")`,
+        );
+        missingArtifacts += 1;
+        continue;
+      }
+      fresh = readJson<{ abi: AbiFn[] }>(artifactPath).abi;
     }
 
     const current = readJson<AbiFn[] | { abi: AbiFn[] }>(abiPath);
     const currentAbi = Array.isArray(current) ? current : current.abi ?? [];
-    const fresh = readJson<{ abi: AbiFn[] }>(artifactPath).abi;
 
     const before = fnNames(currentAbi);
     const after = fnNames(fresh);

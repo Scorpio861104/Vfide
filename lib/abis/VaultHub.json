@@ -32,6 +32,11 @@
   },
   {
     "inputs": [],
+    "name": "VH_DeprecatedGlobalPause",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "VH_GuardianSetupRequired",
     "type": "error"
   },

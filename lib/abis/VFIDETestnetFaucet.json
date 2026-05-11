@@ -82,6 +82,11 @@
   },
   {
     "inputs": [],
+    "name": "Faucet_ReferrerChainTooDeep",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "Faucet_ReferrerNotEligible",
     "type": "error"
   },

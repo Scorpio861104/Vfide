@@ -82,15 +82,18 @@ function record(name: string, ok: boolean, detail: string): void {
 
 async function main() {
   const ethers = await resolveEthers();
-  const [signer] = await ethers.getSigners();
-  const network = process.env.HARDHAT_NETWORK ?? "hardhat";
+  const signers = await ethers.getSigners();
+  const signer = signers[0] ?? null;
+  const networkArgIndex = process.argv.indexOf("--network");
+  const cliNetwork = networkArgIndex >= 0 ? process.argv[networkArgIndex + 1] : undefined;
+  const network = cliNetwork || (hre as any).network?.name || process.env.HARDHAT_NETWORK || "hardhat";
   const chainId = Number((await ethers.provider.getNetwork()).chainId);
 
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║  VFIDE Testnet Readiness Check             ║");
   console.log("╚══════════════════════════════════════════╝");
   console.log(`  Network  : ${network} (chainId ${chainId})`);
-  console.log(`  Signer   : ${signer.address}\n`);
+  console.log(`  Signer   : ${signer?.address ?? "(none)"}\n`);
 
   // ── 1. Chain id ──────────────────────────────────────────────────────────
   console.log("═══ 1. Chain ═══");

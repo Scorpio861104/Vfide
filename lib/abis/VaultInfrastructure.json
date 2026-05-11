@@ -1000,38 +1000,5 @@
     ],
     "stateMutability": "view",
     "type": "function"
-  },
-  {
-    "type": "function",
-    "name": "getRecoveryStatus",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "active",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "proposedOwner",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "approvals",
-        "type": "uint8",
-        "internalType": "uint8"
-      },
-      {
-        "name": "expiryTime",
-        "type": "uint64",
-        "internalType": "uint64"
-      },
-      {
-        "name": "guardianThreshold",
-        "type": "uint8",
-        "internalType": "uint8"
-      }
-    ],
-    "stateMutability": "view"
   }
 ]

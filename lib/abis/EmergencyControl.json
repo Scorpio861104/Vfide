@@ -562,6 +562,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "THRESHOLD_CHANGE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -591,6 +604,13 @@
   {
     "inputs": [],
     "name": "applyModules",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyThreshold",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -677,6 +697,13 @@
       }
     ],
     "name": "cancelRecovery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelThreshold",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1023,6 +1050,32 @@
   {
     "inputs": [],
     "name": "pendingModulesAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingThreshold",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingThresholdAt",
     "outputs": [
       {
         "internalType": "uint64",

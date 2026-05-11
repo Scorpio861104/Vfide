@@ -57,6 +57,11 @@
   },
   {
     "inputs": [],
+    "name": "CBV_DelayActive",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_Expired",
     "type": "error"
   },
@@ -102,12 +107,27 @@
   },
   {
     "inputs": [],
+    "name": "CBV_NoPending",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_NoRotation",
     "type": "error"
   },
   {
     "inputs": [],
+    "name": "CBV_NoSeparationNeeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_NotAdmin",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_NotAuthorized",
     "type": "error"
   },
   {
@@ -132,12 +152,42 @@
   },
   {
     "inputs": [],
+    "name": "CBV_PauseAlreadyApproved",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_Paused",
     "type": "error"
   },
   {
     "inputs": [],
     "name": "CBV_PayIntentInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_PayIntentTokenInvalid",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_PaymentQueueAlreadyProcessed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_PaymentQueueFull",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_PaymentQueueInvalidIndex",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_PaymentQueueNotReady",
     "type": "error"
   },
   {
@@ -178,6 +228,11 @@
   {
     "inputs": [],
     "name": "CBV_RotationNotReady",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_SameAdmin",
     "type": "error"
   },
   {
@@ -324,6 +379,25 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "string",
+        "name": "context",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "reason",
+        "type": "bytes"
+      }
+    ],
+    "name": "ExternalCallFailed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "guardian",
         "type": "address"
@@ -373,6 +447,31 @@
         "type": "address"
       },
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "pauseNonce",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "approvals",
+        "type": "uint8"
+      }
+    ],
+    "name": "GuardianPauseApproved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "guardian",
+        "type": "address"
+      },
+      {
         "indexed": false,
         "internalType": "bool",
         "name": "active",
@@ -386,6 +485,56 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "operation",
+        "type": "string"
+      }
+    ],
+    "name": "GuardianSetupIncomplete_Payment",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "toVault",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "GuardianSetupIncomplete_Transfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "uint8",
         "name": "threshold",
@@ -393,6 +542,44 @@
       }
     ],
     "name": "GuardianThresholdSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "threshold",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "name": "LargePaymentThresholdProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "oldThreshold",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newThreshold",
+        "type": "uint256"
+      }
+    ],
+    "name": "LargePaymentThresholdSet",
     "type": "event"
   },
   {
@@ -558,6 +745,131 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "queueIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "by",
+        "type": "address"
+      }
+    ],
+    "name": "PaymentQueueCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "queueIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "PaymentQueueExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "queueIndex",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "name": "PaymentQueued",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "activeWallet",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "RecoveryAdminSeparated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "since",
+        "type": "uint64"
+      }
+    ],
+    "name": "RecoveryAdminUnseparated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "oldWallet",
         "type": "address"
@@ -582,6 +894,25 @@
       }
     ],
     "name": "RecoveryRotationExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "daysUnseparated",
+        "type": "uint64"
+      }
+    ],
+    "name": "RecoverySplitReminderEmitted",
     "type": "event"
   },
   {
@@ -943,7 +1274,33 @@
   },
   {
     "inputs": [],
+    "name": "MAX_PAUSE_WINDOW",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MAX_QUEUED",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_QUEUED_PAYMENTS",
     "outputs": [
       {
         "internalType": "uint8",
@@ -1054,6 +1411,19 @@
   },
   {
     "inputs": [],
+    "name": "activeQueuedPayments",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "activeQueuedWithdrawals",
     "outputs": [
       {
@@ -1094,6 +1464,13 @@
   {
     "inputs": [],
     "name": "applyGuardianChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyLargePaymentThreshold",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1210,6 +1587,19 @@
   {
     "inputs": [],
     "name": "cancelLargeTransferThresholdChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "queueIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "cancelQueuedPayment",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1360,6 +1750,19 @@
       }
     ],
     "name": "executePayMerchant",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "queueIndex",
+        "type": "uint256"
+      }
+    ],
+    "name": "executeQueuedPayment",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1607,6 +2010,19 @@
   },
   {
     "inputs": [],
+    "name": "largePaymentThreshold",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "largeTransferThreshold",
     "outputs": [
       {
@@ -1675,6 +2091,75 @@
     "name": "pause",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "pauseApprovalByGuardian",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "pauseApprovalCount",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pauseNonce",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pauseUntil",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1762,6 +2247,70 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "paymentQueue",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "requestTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "executed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "cancelled",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "intentNonce",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "recipientCodeHashAtQueue",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "pendingAdmin",
     "outputs": [
@@ -1819,6 +2368,24 @@
       {
         "internalType": "uint64",
         "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingLargePaymentThresholdChange",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "threshold",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "executeAfter",
         "type": "uint64"
       }
     ],
@@ -1995,6 +2562,55 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "recoveryAdminSeparationStatus",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "unseparated",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint64",
+        "name": "since",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "daysSince",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "recoveryAdminUnseparated",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "recoveryUnseparatedSince",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -2124,6 +2740,19 @@
         "type": "uint256"
       }
     ],
+    "name": "setLargePaymentThreshold",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_threshold",
+        "type": "uint256"
+      }
+    ],
     "name": "setLargeTransferThreshold",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -2171,6 +2800,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newAdmin",
+        "type": "address"
+      }
+    ],
+    "name": "splitAdminFromActive",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

@@ -377,6 +377,19 @@
   },
   {
     "inputs": [],
+    "name": "beneficiaryVaultAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "claim",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -424,6 +437,13 @@
   {
     "inputs": [],
     "name": "emergencyFreeze",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyUnfreeze",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
