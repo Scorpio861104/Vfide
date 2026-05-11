@@ -76,35 +76,7 @@ function buildMenu(text: string): string {
   }
 
   if (normalizedText === '1') {
-    return 'CON Enter merchant code (e.g., SHOP001):';
-  }
-
-  if (parts[0] === '1' && level === 2) {
-    const merchantCode = lastInput.toUpperCase();
-    if (!MERCHANT_CODE_REGEX.test(merchantCode)) {
-      return 'END Invalid merchant code format.';
-    }
-    return `CON Pay merchant ${merchantCode}\nEnter amount:`;
-  }
-
-  if (parts[0] === '1' && level === 3) {
-    const merchantCode = parts[1]?.toUpperCase() || '';
-    const amountValue = Number(parts[2]);
-    if (!MERCHANT_CODE_REGEX.test(merchantCode)) {
-      return 'END Invalid merchant code format.';
-    }
-    if (!Number.isFinite(amountValue) || amountValue <= 0 || amountValue > 1_000_000) {
-      return 'END Invalid payment amount.';
-    }
-    return `CON Pay ${amountValue} VFIDE to ${merchantCode}?\n1. Confirm\n2. Cancel`;
-  }
-
-  if (parts[0] === '1' && level === 4 && lastInput === '1') {
-    return 'END VFIDE USSD payments are coming soon. No payment was submitted.';
-  }
-
-  if (parts[0] === '1' && level === 4 && lastInput === '2') {
-    return 'END Payment cancelled.';
+    return 'END Merchant payments are currently available in the VFIDE app only. Open vfide.io to complete payment.';
   }
 
   if (normalizedText === '2') {

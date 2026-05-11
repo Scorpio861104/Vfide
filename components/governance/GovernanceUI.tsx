@@ -331,11 +331,12 @@ function StatCard({ label, value, icon, index = 0 }: StatCardProps) {
 interface ProposalCardProps {
   proposal: Proposal;
   onVote: (proposalId: string, direction: 'for' | 'against' | 'abstain') => void;
+  votingEnabled?: boolean;
   index?: number;
   showConfetti?: boolean;
 }
 
-function ProposalCard({ proposal, onVote, index = 0, showConfetti = false }: ProposalCardProps) {
+function ProposalCard({ proposal, onVote, votingEnabled = true, index = 0, showConfetti = false }: ProposalCardProps) {
   const totalVotes = proposal.forVotes + proposal.againstVotes + proposal.abstainVotes;
   const forPercent = getVotePercentage(proposal.forVotes, totalVotes);
   const againstPercent = getVotePercentage(proposal.againstVotes, totalVotes);
@@ -346,6 +347,7 @@ function ProposalCard({ proposal, onVote, index = 0, showConfetti = false }: Pro
   const { playSuccess } = useTransactionSounds();
 
   const handleVote = (direction: 'for' | 'against' | 'abstain') => {
+    if (!votingEnabled) return;
     setVotingDirection(direction);
     playSuccess();
     onVote(proposal.id, direction);
@@ -524,6 +526,7 @@ function ProposalCard({ proposal, onVote, index = 0, showConfetti = false }: Pro
           <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <MobileButton
               onClick={() => handleVote('for')}
+              disabled={!votingEnabled}
               className={`w-full bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-1 ${
                 votingDirection === 'for' ? 'ring-2 ring-green-300 ring-offset-2' : ''
               }`}
@@ -535,6 +538,7 @@ function ProposalCard({ proposal, onVote, index = 0, showConfetti = false }: Pro
           <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <MobileButton
               onClick={() => handleVote('against')}
+              disabled={!votingEnabled}
               className={`w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-1 ${
                 votingDirection === 'against' ? 'ring-2 ring-red-300 ring-offset-2' : ''
               }`}
@@ -546,6 +550,7 @@ function ProposalCard({ proposal, onVote, index = 0, showConfetti = false }: Pro
           <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <MobileButton
               onClick={() => handleVote('abstain')}
+              disabled={!votingEnabled}
               className={`w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-3 rounded-lg text-sm transition-colors flex items-center justify-center gap-1 ${
                 votingDirection === 'abstain' ? 'ring-2 ring-gray-300 ring-offset-2' : ''
               }`}
@@ -696,9 +701,7 @@ export default function GovernanceUI() {
   const [stats] = useState(getInitialGovernanceStats());
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [delegateeAddress, setDelegateeAddress] = useState('');
-  const [votesAmount, setVotesAmount] = useState('');
-  const [delegateError, setDelegateError] = useState('');
+  const votingEnabled = false;
 
   const filteredProposals = proposals.filter((p) => {
     const statusMatch = filterStatus === 'all' || p.status === filterStatus;
@@ -707,11 +710,8 @@ export default function GovernanceUI() {
   });
 
   const handleVote = (proposalId: string, direction: 'for' | 'against' | 'abstain') => {
+    if (!votingEnabled) return;
     const weight = 0;
-    if (weight <= 0) {
-      setDelegateError('Vote weight data is unavailable in this UI preview.');
-      return;
-    }
     const newVote: Vote = {
       id: `vote-${Date.now()}`,
       proposalId,
@@ -736,26 +736,6 @@ export default function GovernanceUI() {
         return p;
       })
     );
-  };
-
-  // DAO v1 intentionally does not expose on-chain delegation calls.
-  // Keep this tab as a read-only preview until a timelocked DAO upgrade adds delegate/undelegate functions.
-  const handleDelegate = () => {
-    if (!delegateeAddress || !votesAmount) return;
-
-    // Validate address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(delegateeAddress)) {
-      setDelegateError('Invalid address format');
-      return;
-    }
-
-    const parsedVotes = safeParseInt(votesAmount, 0);
-    if (parsedVotes <= 0) {
-      setDelegateError('Delegation is unavailable in DAO v1. Entered amount is ignored.');
-      return;
-    }
-
-    setDelegateError('Delegation actions are disabled until DAO delegation is activated on-chain.');
   };
 
   const handleRevokeDelegation = (delegator: string) => {
@@ -810,6 +790,12 @@ export default function GovernanceUI() {
         </div>
       </div>
 
+      {!votingEnabled && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+          Voting is read-only in this view until wallet vote-weight syncing is enabled.
+        </div>
+      )}
+
       {/* Proposals List */}
       <div className="space-y-4">
         <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -822,6 +808,7 @@ export default function GovernanceUI() {
               key={proposal.id}
               proposal={proposal}
               onVote={handleVote}
+              votingEnabled={votingEnabled}
               index={idx}
             />
           ))}
@@ -835,46 +822,6 @@ export default function GovernanceUI() {
     <div className="space-y-6">
       <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
         Delegation is read-only in DAO v1. The contract emits delegation events but does not yet expose delegation transactions.
-      </div>
-
-      {/* Delegate Form */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 border border-gray-200 dark:border-gray-700">
-        <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white mb-4">
-          Delegate Your Votes
-        </h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Delegatee Address
-            </label>
-            <MobileInput
-              type="text"
-             
-              value={delegateeAddress}
-              onChange={(e) => { setDelegateeAddress(e.target.value); setDelegateError(''); }}
-            />
-            {delegateError && (
-              <p className="mt-1 text-sm text-red-500">{delegateError}</p>
-            )}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Votes to Delegate (millions)
-            </label>
-            <MobileInput
-              type="number"
-             
-              value={votesAmount}
-              onChange={(e) => setVotesAmount(e.target.value)}
-            />
-          </div>
-          <MobileButton
-            onClick={handleDelegate}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Delegation Unavailable
-          </MobileButton>
-        </div>
       </div>
 
       {/* Active Delegations */}

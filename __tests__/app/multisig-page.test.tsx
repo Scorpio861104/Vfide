@@ -40,23 +40,20 @@ describe('Multisig page logic pathways', () => {
     expect(screen.queryByRole('button', { name: /New Transaction/i })).toBeNull();
   });
 
-  it('renders signer and transaction summaries when connected', () => {
+  it('renders live-data empty states when connected', () => {
     renderMultisigPage();
 
     expect(screen.getByRole('button', { name: /New Transaction/i })).toBeTruthy();
-    expect(screen.getByText('3')).toBeTruthy();
-    expect(screen.getByText('2 of 3')).toBeTruthy();
-    expect(screen.getByText(/Team expenses Q1/i)).toBeTruthy();
-    expect(screen.getByText(/Contractor payment/i)).toBeTruthy();
-    expect(screen.getByText(/\(1\/2\)/i)).toBeTruthy();
-    expect(screen.getByText(/\(2\/2\)/i)).toBeTruthy();
+    expect(screen.getByText(/Multisig live data is not connected in this environment yet/i)).toBeTruthy();
+    expect(screen.getByText(/No live signer records available/i)).toBeTruthy();
+    expect(screen.getByText(/No live multisig transactions found/i)).toBeTruthy();
   });
 
-  it('shows action controls for pending transaction cards', () => {
+  it('does not show transaction action controls without live transactions', () => {
     renderMultisigPage();
 
     fireEvent.click(screen.getByRole('button', { name: /New Transaction/i }));
-    expect(screen.getByRole('button', { name: /Confirm/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Reject/i })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /Confirm/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Reject/i })).toBeNull();
   });
 });

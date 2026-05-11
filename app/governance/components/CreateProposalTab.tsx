@@ -68,7 +68,7 @@ export function CreateProposalTab({
     proposal.description.length <= VALIDATION.DESC_MAX
 
   const handleSubmit = () => {
-    if (!isValid || !canPropose || isCreating || !onPropose) return
+    if (!isValid || !DAO_DEPLOYED || !canPropose || isCreating || !onPropose) return
 
     // Sanitize user inputs to prevent XSS
     const sanitizedTitle = sanitizeString(proposal.title, 100)
@@ -118,7 +118,7 @@ export function CreateProposalTab({
 
               {!DAO_DEPLOYED && (
                 <div className="bg-cyan-400/10 border border-cyan-400/50 rounded-lg p-3 mb-4 text-sm text-cyan-400">
-                  DAO proposal contracts are not deployed on this network yet. Proposal submission is disabled until deployment.
+                  DAO proposal contracts are not deployed on this network yet. Switch to the supported governance network to submit proposals.
                 </div>
               )}
 
@@ -225,10 +225,14 @@ export function CreateProposalTab({
                 <div className="flex justify-end">
                   <button
                     onClick={handleSubmit}
-                    disabled={!isValid || !canPropose || isCreating}
+                    disabled={!isValid || !DAO_DEPLOYED || !canPropose || isCreating}
                     className="px-6 py-3 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
                   >
-                    {isCreating ? "Submitting..." : "🚀 Submit Proposal"}
+                    {isCreating
+                      ? "Submitting..."
+                      : !DAO_DEPLOYED
+                        ? "DAO Unavailable On This Network"
+                        : "🚀 Submit Proposal"}
                   </button>
                 </div>
               </div>

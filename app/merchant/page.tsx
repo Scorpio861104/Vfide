@@ -28,6 +28,11 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 
+// Import merchant components
+import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
+import { PaymentInterface } from '@/components/merchant/PaymentInterface';
+import { PaymentQR } from '@/components/merchant/PaymentQR';
+
 interface HubLink {
   href: string;
   icon: typeof FileText;
@@ -107,8 +112,63 @@ export default function MerchantPage() {
               )}
             </motion.div>
 
-            {isConnected ? (
-              <div className="space-y-12">
+            {/* Always show these sections */}
+            <h2 className="text-3xl font-bold text-white mb-8">Merchant Portal</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">Merchant Dashboard</h3>
+                <MerchantDashboard />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-4">Make Payment</h3>
+                <PaymentInterface />
+              </div>
+            </div>
+
+            <div className="my-12">
+              <h2 className="text-2xl font-bold text-white mb-6">Generate Payment QR Code</h2>
+              <PaymentQR />
+            </div>
+
+            {/* Comparison Table */}
+            <div className="mt-12 max-w-2xl mx-auto mb-12">
+              <h2 className="mb-6 text-center text-2xl font-bold text-white">vs Traditional Processors</h2>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 p-4">
+                  <div className="font-semibold text-white">Processor</div>
+                  <div className="font-semibold text-white">Processing Fee</div>
+                </div>
+                {processors.map((p) => (
+                  <div key={p.name} className={`flex items-center justify-between rounded-xl border p-4 ${p.name === 'VFIDE' ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-white/5'}`}>
+                    <div className="font-semibold text-white">{p.name}</div>
+                    <div className="font-mono text-cyan-300">{p.fee}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-zinc-500 mt-3 text-center">
+                * Burn fees of 0.25–5% and Base gas apply. Merchant pays nothing.
+              </p>
+            </div>
+
+            {/* Getting Started Section */}
+            <div className="mt-12 max-w-2xl mx-auto mb-12">
+              <h2 className="mb-6 text-center text-2xl font-bold text-white">Getting Started</h2>
+              <div className="space-y-3">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div className="font-semibold text-white mb-1">Register Your Business</div>
+                </div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div className="font-semibold text-white mb-1">Configure Settings</div>
+                </div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div className="font-semibold text-white mb-1">Start Accepting Payments</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Module sections when connected */}
+            {isConnected && (
+              <div className="space-y-12 mt-12">
                 <ModuleSection title="Sales & checkout" links={SALES_MODULES} />
                 <ModuleSection title="Customers" links={CUSTOMER_MODULES} />
                 <ModuleSection title="Operations" links={OPS_MODULES} />
@@ -126,21 +186,6 @@ export default function MerchantPage() {
                     </p>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="mt-8 max-w-2xl mx-auto">
-                <h2 className="mb-6 text-center text-xl font-semibold text-white">vs Traditional Processors</h2>
-                <div className="space-y-2">
-                  {processors.map((p) => (
-                    <div key={p.name} className={`flex items-center justify-between rounded-xl border p-4 ${p.name === 'VFIDE' ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-white/5'}`}>
-                      <div className="font-semibold text-white">{p.name}</div>
-                      <div className="font-mono text-cyan-300">{p.fee}</div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-zinc-500 mt-3 text-center">
-                  * Burn fees of 0.25–5% and Base gas apply. Merchant pays nothing.
-                </p>
               </div>
             )}
           </div>

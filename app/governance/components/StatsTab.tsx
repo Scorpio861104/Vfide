@@ -3,10 +3,20 @@
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
 
 export function StatsTab() {
+  const hasLiveStats = false
+
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
         <SampleDataBanner />
+        {!hasLiveStats ? (
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 text-center">
+            <h2 className="text-2xl font-bold text-zinc-100 mb-2">Governance Analytics</h2>
+            <p className="text-zinc-400">
+              Live governance analytics are unavailable in this environment until indexer sync is enabled.
+            </p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
             <h2 className="text-2xl font-bold text-zinc-100 mb-6">DAO Statistics</h2>
@@ -94,6 +104,7 @@ export function StatsTab() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </section>
   )

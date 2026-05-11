@@ -32,10 +32,6 @@ const renderSecurityCenterPage = () => {
   return render(<SecurityCenterPage />);
 };
 
-jest.mock('@/components/security/TwoFactorSetup', () => ({
-  TwoFactorSetup: () => <div data-testid="two-factor-setup">TwoFactorSetup</div>,
-}));
-
 jest.mock('@/components/security/BiometricSetup', () => ({
   BiometricSetup: () => <div data-testid="biometric-setup">BiometricSetup</div>,
 }));
@@ -46,10 +42,6 @@ jest.mock('@/components/security/SecurityLogsDashboard', () => ({
 
 jest.mock('@/components/security/ThreatDetectionPanel', () => ({
   ThreatDetectionPanel: () => <div data-testid="threat-detection-panel">ThreatDetectionPanel</div>,
-}));
-
-jest.mock('@/hooks/useTwoFactorAuth', () => ({
-  useTwoFactorAuth: () => mockTwoFactorState,
 }));
 
 jest.mock('@/hooks/useBiometricAuth', () => ({
@@ -93,13 +85,12 @@ describe('Security center page logic pathways', () => {
     };
   });
 
-  it('navigates from overview to 2FA setup via quick action', () => {
+  it('shows 2FA as unavailable and disables the quick action', () => {
     renderSecurityCenterPage();
 
     expect(screen.getByText(/Security Center/i)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Configure 2FA/i }));
-
-    expect(screen.getByTestId('two-factor-setup')).toBeTruthy();
+    expect(screen.getByText(/Temporarily unavailable in this release/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Configure 2FA/i })).toBeDisabled();
   });
 
   it('runs anomaly scan and switches to threat detection tab', () => {

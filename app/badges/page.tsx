@@ -20,8 +20,8 @@ export default function BadgesPage() {
       <div className="min-h-screen bg-zinc-950 pt-20">
         <div className="container mx-auto px-4 max-w-6xl py-8">
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-white mb-2">Achievements</motion.h1>
-          <p className="text-white/60 mb-8">Earn achievements through real activity</p>
+            className="text-4xl font-bold text-white mb-2">Badges</motion.h1>
+          <p className="text-white/60 mb-8">Earn badges through real activity</p>
 
           <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
             {TAB_IDS.map(id => (

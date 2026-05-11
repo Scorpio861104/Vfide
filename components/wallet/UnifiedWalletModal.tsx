@@ -268,7 +268,7 @@ export function UnifiedWalletModal({
                   </div>
 
                   <div className="rounded-xl border border-amber-300/30 bg-amber-50/60 p-3 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
-                    Email/social embedded wallet login is disabled until the provider integration is fully wired and audited.
+                    Use your wallet app to continue. In the connect dialog, choose your provider and approve the WalletConnect request.
                   </div>
                 </div>
               </>

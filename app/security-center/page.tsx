@@ -3,27 +3,23 @@
 export const dynamic = 'force-dynamic';
 
 import React, { useState } from 'react';
-import { TwoFactorSetup } from '@/components/security/TwoFactorSetup';
 import { BiometricSetup } from '@/components/security/BiometricSetup';
 import { SecurityLogsDashboard } from '@/components/security/SecurityLogsDashboard';
 import { ThreatDetectionPanel } from '@/components/security/ThreatDetectionPanel';
-import { useTwoFactorAuth } from '@/hooks/useTwoFactorAuth';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useThreatDetection } from '@/hooks/useThreatDetection';
 
-type TabView = 'overview' | '2fa' | 'biometric' | 'logs' | 'threats';
+type TabView = 'overview' | 'biometric' | 'logs' | 'threats';
 
 export default function SecurityCenterPage() {
   const [activeTab, setActiveTab] = useState<TabView>('overview');
-  const twoFactor = useTwoFactorAuth();
   const biometric = useBiometricAuth();
   const logs = useSecurityLogs();
   const threats = useThreatDetection();
 
   const tabs: Array<{ id: TabView; label: string; icon: string }> = [
     { id: 'overview', label: 'Overview', icon: '🏠' },
-    { id: '2fa', label: 'Two-Factor Auth', icon: '🔐' },
     { id: 'biometric', label: 'Biometric', icon: '👤' },
     { id: 'logs', label: 'Security Logs', icon: '📝' },
     { id: 'threats', label: 'Threat Detection', icon: '🛡️' }
@@ -71,26 +67,14 @@ export default function SecurityCenterPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* 2FA Status */}
-                <div className={`p-6 rounded-lg border-2 ${
-                  twoFactor.isEnabled
-                    ? 'bg-green-50 dark:bg-green-900/20 border-green-500'
-                    : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500'
-                }`}>
-                  <div className="text-3xl mb-3">{twoFactor.isEnabled ? '✅' : '⚠️'}</div>
+                <div className="p-6 rounded-lg border-2 bg-gray-50 dark:bg-gray-900/20 border-gray-400 dark:border-gray-600">
+                  <div className="text-3xl mb-3">⏸️</div>
                   <div className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     Two-Factor Auth
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {twoFactor.isEnabled ? `Enabled (${twoFactor.method})` : 'Not enabled'}
+                    Temporarily unavailable in this release.
                   </div>
-                  {!twoFactor.isEnabled && (
-                    <button
-                      onClick={() => setActiveTab('2fa')}
-                      className="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      Set up now →
-                    </button>
-                  )}
                 </div>
 
                 {/* Biometric Status */}
@@ -172,7 +156,7 @@ export default function SecurityCenterPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
-                  onClick={() => setActiveTab('2fa')}
+                  disabled
                   className="p-4 text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
                 >
                   <div className="text-2xl mb-2">🔐</div>
@@ -180,7 +164,7 @@ export default function SecurityCenterPage() {
                     Configure 2FA
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    Set up two-factor authentication
+                    Coming in a future release
                   </div>
                 </button>
                 <button
@@ -246,7 +230,6 @@ export default function SecurityCenterPage() {
           </div>
         )}
 
-        {activeTab === '2fa' && <TwoFactorSetup />}
         {activeTab === 'biometric' && <BiometricSetup />}
         {activeTab === 'logs' && <SecurityLogsDashboard />}
         {activeTab === 'threats' && <ThreatDetectionPanel />}

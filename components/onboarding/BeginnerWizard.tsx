@@ -47,7 +47,7 @@ export function BeginnerWizard({ onComplete }: { onComplete?: () => void }) {
       id: 2,
       icon: <Smartphone className={iconClass} />,
       title: "Choose the easiest wallet setup",
-      description: "Use an existing wallet app like MetaMask or Coinbase Wallet. Embedded email/social wallet onboarding is temporarily disabled while security hardening is completed.",
+      description: "Use a trusted wallet app like MetaMask or Coinbase Wallet, then come back and connect it to VFIDE.",
       action: (
         <div className="mt-4 w-full max-w-xl space-y-4">
           <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
