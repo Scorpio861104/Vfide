@@ -454,6 +454,175 @@ export function usePayMerchant() {
   }
 }
 
+/**
+ * Vault-native merchant payment: builds a PayIntent, signs it with EIP-712,
+ * and submits it directly to CardBoundVault.executePayMerchant.
+ *
+ * Use this instead of usePayMerchant when the payment must flow through the
+ * vault's own spend-limit and guardian-protection logic (i.e. the vault is
+ * the transaction sender, not the MerchantPortal).
+ */
+export function useVaultPayMerchant() {
+  const CONTRACT_ADDRESSES = useContractAddresses();
+  const { address } = useAccount()
+  const chainId = useChainId()
+  const publicClient = usePublicClient()
+  const { signTypedDataAsync } = useSignTypedData()
+  const { writeContractAsync, data, isPending } = useWriteContract()
+  const [error, setError] = useState<string | null>(null)
+
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: data,
+  })
+  const isAvailable =
+    isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub) &&
+    isConfiguredContractAddress(CONTRACT_ADDRESSES.MerchantPortal)
+
+  const vaultPayMerchant = async (
+    merchant: `0x${string}`,
+    token: `0x${string}`,
+    amount: string
+  ) => {
+    setError(null)
+    try {
+      if (!isAvailable) {
+        throw new Error('VaultHub or MerchantPortal is not configured in this environment')
+      }
+      if (!address) {
+        throw new Error('Wallet not connected')
+      }
+      if (!isAddress(merchant) || merchant.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Merchant must be a valid non-zero address')
+      }
+      if (!isAddress(token) || token.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Payment token must be a valid non-zero address')
+      }
+      if (!amount || Number(amount) <= 0) {
+        throw new Error('Amount must be greater than zero')
+      }
+      if (chainId !== CURRENT_CHAIN_ID) {
+        throw new Error('Switch to the configured network before paying merchants')
+      }
+      if (!publicClient) {
+        throw new Error('Wallet client not available')
+      }
+
+      const customerVault = await publicClient.readContract({
+        address: CONTRACT_ADDRESSES.VaultHub,
+        abi: VaultHubABI,
+        functionName: 'vaultOf',
+        args: [address],
+      }) as `0x${string}`
+
+      if (!isAddress(customerVault) || customerVault.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('No customer vault found. Please initialize your vault first.')
+      }
+
+      const merchantInfo = await publicClient.readContract({
+        address: CONTRACT_ADDRESSES.MerchantPortal,
+        abi: MerchantPortalIntentABI,
+        functionName: 'merchants',
+        args: [merchant],
+      }) as readonly [boolean, boolean, string, string, bigint, bigint, bigint, `0x${string}`]
+
+      const payoutAddress = merchantInfo[7]
+      const merchantVault = await publicClient.readContract({
+        address: CONTRACT_ADDRESSES.VaultHub,
+        abi: VaultHubABI,
+        functionName: 'vaultOf',
+        args: [merchant],
+      }) as `0x${string}`
+
+      const recipient = payoutAddress && payoutAddress.toLowerCase() !== ZERO_ADDRESS
+        ? payoutAddress
+        : merchantVault
+
+      if (!isAddress(recipient) || recipient.toLowerCase() === ZERO_ADDRESS) {
+        throw new Error('Merchant recipient vault is not initialized. Ask merchant to initialize vault or set payout address.')
+      }
+
+      const nonce = await publicClient.readContract({
+        address: customerVault,
+        abi: CardBoundVaultABI,
+        functionName: 'nextNonce',
+      }) as bigint
+
+      const walletEpoch = await publicClient.readContract({
+        address: customerVault,
+        abi: CardBoundVaultABI,
+        functionName: 'walletEpoch',
+      }) as bigint
+
+      const amountWei = parseEther(amount)
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 600)
+      const intent = {
+        vault: customerVault,
+        merchantPortal: CONTRACT_ADDRESSES.MerchantPortal,
+        token,
+        merchant,
+        recipient,
+        amount: amountWei,
+        nonce,
+        walletEpoch,
+        deadline,
+        chainId: BigInt(CURRENT_CHAIN_ID),
+      }
+
+      const signature = await signTypedDataAsync({
+        domain: {
+          name: 'CardBoundVault',
+          version: '1',
+          chainId: CURRENT_CHAIN_ID,
+          verifyingContract: customerVault,
+        },
+        types: {
+          PayIntent: [
+            { name: 'vault', type: 'address' },
+            { name: 'merchantPortal', type: 'address' },
+            { name: 'token', type: 'address' },
+            { name: 'merchant', type: 'address' },
+            { name: 'recipient', type: 'address' },
+            { name: 'amount', type: 'uint256' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'walletEpoch', type: 'uint64' },
+            { name: 'deadline', type: 'uint64' },
+            { name: 'chainId', type: 'uint256' },
+          ],
+        },
+        primaryType: 'PayIntent',
+        message: intent,
+      })
+
+      const hash = await writeContractAsync({
+        address: customerVault,
+        abi: CardBoundVaultABI,
+        functionName: 'executePayMerchant',
+        args: [intent, signature],
+        chainId: CURRENT_CHAIN_ID,
+      })
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash })
+      }
+      return { success: true, hash }
+    } catch (err: unknown) {
+      logError('vaultPayMerchant', err);
+      const parsed = parseContractError(err);
+      const errorMsg = `Failed to execute vault payment: ${parsed.userMessage}`;
+      setError(errorMsg)
+      return { success: false, error: errorMsg }
+    }
+  }
+
+  return {
+    vaultPayMerchant,
+    isPaying: isPending || isConfirming,
+    isSuccess,
+    txHash: data,
+    error,
+    isAvailable,
+  }
+}
+
 // Type matches MerchantPortal.sol getCustomerTrustScore return:
 // (uint16 score, bool highTrust, bool lowTrust, bool eligible)
 type CustomerTrustInfo = [bigint, boolean, boolean, boolean]
