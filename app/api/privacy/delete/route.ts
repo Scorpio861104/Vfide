@@ -6,7 +6,6 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
-import { getRequestIp } from '@/lib/security/requestContext';
 // v19.8 COMP-3 FIX: privacy/delete is a high-stakes privileged action
 // (irreversible, regulator-relevant); always audit-log it. Failure to
 // write the audit event must not block the request — the deletion
@@ -58,10 +57,11 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
     // exists when the request is actually queued. The audit write
     // failure is non-blocking (logged via writeAuditEvent's internal
     // catch).
-    const { ip } = getRequestIp(request.headers);
     void writeAuditEvent({
       actorIdentity: walletAddress,
-      actorIp: ip || undefined,
+      actorIp: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        ?? request.headers.get('x-real-ip')
+        ?? undefined,
       actorUserAgent: request.headers.get('user-agent') ?? undefined,
       eventType: 'privacy.deletion.requested',
       targetIdentity: walletAddress, // self-service

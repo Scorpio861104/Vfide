@@ -6,8 +6,6 @@
  */
 
 import * as dotenv from 'dotenv';
-import { logger } from '@/lib/logger';
-
 // Load local env files when running validation via npm scripts.
 dotenv.config({ path: '.env.local' });
 dotenv.config();
@@ -165,8 +163,17 @@ export function validateProductionEnvironment(): ValidationResult {
     frontendOnlyEnv !== 'false' &&
     missingServerSecrets;
   const frontendOnly = frontendOnlyEnv === 'true' || autoFrontendOnly;
-  const strictProduction = isProduction && !frontendOnly;
+  // NEXT_PUBLIC_IS_TESTNET defaults to "treat as testnet" (true) unless
+  // explicitly set to "false". Mainnet deployments MUST set
+  // NEXT_PUBLIC_IS_TESTNET=false in the deploy environment.
   const isTestnet = process.env.NEXT_PUBLIC_IS_TESTNET !== 'false';
+  // strictProduction triggers the `production: true` env-var checks
+  // (contract addresses etc). We skip these on testnet because addresses
+  // aren't available until after `deploy-full.ts` runs locally and the
+  // operator copies them back into Vercel. Once NEXT_PUBLIC_IS_TESTNET
+  // is explicitly set to "false" (mainnet), strictProduction fires
+  // and missing addresses fail the build.
+  const strictProduction = isProduction && !frontendOnly && !isTestnet;
 
   if (frontendOnly) {
     result.info.push('✅ FRONTEND_SELF_CONTAINED mode enabled (server-only requirements relaxed)');
@@ -354,7 +361,11 @@ export function validateProductionEnvironment(): ValidationResult {
       result.valid = false;
     }
   } else if (redisConfigured.length === 0) {
-    if (isProduction && !frontendOnly) {
+    // On mainnet (strictProduction = isProduction && !frontendOnly && !isTestnet),
+    // Redis must be configured — distributed rate limiting and JWT revocation
+    // need it. On testnet we accept degraded-mode in-memory rate limiting so
+    // operators don't have to provision Redis just for a preview deploy.
+    if (strictProduction) {
       result.errors.push('❌ Redis is required in production - distributed rate limiting and token revocation cannot run safely without it');
       result.valid = false;
     } else {
@@ -366,32 +377,32 @@ export function validateProductionEnvironment(): ValidationResult {
 }
 
 export function printValidationResults(result: ValidationResult): void {
-  logger.info('\n🔍 Production Environment Validation\n');
-  logger.info('='.repeat(50));
+  console.log('\n🔍 Production Environment Validation\n');
+  console.log('='.repeat(50));
 
   if (result.errors.length > 0) {
-    logger.info('\n❌ ERRORS (Must Fix):');
-    result.errors.forEach(err => logger.info(`  ${err}`));
+    console.log('\n❌ ERRORS (Must Fix):');
+    result.errors.forEach(err => console.log(`  ${err}`));
   }
 
   if (result.warnings.length > 0) {
-    logger.info('\n⚠️  WARNINGS (Recommended):');
-    result.warnings.forEach(warn => logger.info(`  ${warn}`));
+    console.log('\n⚠️  WARNINGS (Recommended):');
+    result.warnings.forEach(warn => console.log(`  ${warn}`));
   }
 
   if (result.info.length > 0 && process.env.VERBOSE) {
-    logger.info('\n✅ CONFIGURED:');
-    result.info.forEach(info => logger.info(`  ${info}`));
+    console.log('\n✅ CONFIGURED:');
+    result.info.forEach(info => console.log(`  ${info}`));
   }
 
-  logger.info('\n' + '='.repeat(50));
-  logger.info(result.valid ? '✅ Environment validation passed' : '❌ Environment validation failed');
-  logger.info('='.repeat(50) + '\n');
+  console.log('\n' + '='.repeat(50));
+  console.log(result.valid ? '✅ Environment validation passed' : '❌ Environment validation failed');
+  console.log('='.repeat(50) + '\n');
 
   if (!result.valid) {
-    logger.info('Missing required variables:');
-    result.missing.forEach(name => logger.info(`  - ${name}`));
-    logger.info('');
+    console.log('Missing required variables:');
+    result.missing.forEach(name => console.log(`  - ${name}`));
+    console.log('');
   }
 }
 
@@ -409,24 +420,24 @@ if (isMainModule) {
 
   if (isCI && !result.valid) {
     if (frontendOnly) {
-      logger.info('⚠️  Running in CI/Deployment with frontend-only mode enabled');
-      logger.info('⚠️  Backend-only integrations may be disabled by missing variables');
+      console.log('⚠️  Running in CI/Deployment with frontend-only mode enabled');
+      console.log('⚠️  Backend-only integrations may be disabled by missing variables');
       process.exit(0);
     }
 
-    logger.info('❌ Running in CI/Deployment environment - validation errors must be fixed');
-    logger.info('❌ Configure all required environment variables in your deployment platform');
+    console.log('❌ Running in CI/Deployment environment - validation errors must be fixed');
+    console.log('❌ Configure all required environment variables in your deployment platform');
     process.exit(1); // Fail the build to prevent deployment with missing config
   }
 
   if (!isCI && !result.valid) {
     const isProduction = process.env.NODE_ENV === 'production';
     if (isProduction && !frontendOnly) {
-      logger.info('❌ Production environment detected with validation errors — refusing to start');
-      logger.info('❌ Configure all required environment variables before deploying');
+      console.log('❌ Production environment detected with validation errors — refusing to start');
+      console.log('❌ Configure all required environment variables before deploying');
       process.exit(1);
     }
-    logger.info('⚠️  Local environment has missing/partial config; continuing outside CI/deployment');
+    console.log('⚠️  Local environment has missing/partial config; continuing outside CI/deployment');
     process.exit(0);
   }
 

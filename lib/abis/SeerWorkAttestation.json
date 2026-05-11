@@ -33,27 +33,12 @@
   },
   {
     "inputs": [],
-    "name": "ChangeNotReady",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "InvalidCategory",
     "type": "error"
   },
   {
     "inputs": [],
     "name": "InvalidEvidence",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NoPendingChange",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "PendingChangeExists",
     "type": "error"
   },
   {
@@ -85,87 +70,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint8",
-        "name": "category",
-        "type": "uint8"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "taskId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "caller",
-        "type": "address"
-      }
-    ],
-    "name": "DuplicateTaskSkipped",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "flagger",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "flagId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "verifier",
-        "type": "address"
-      }
-    ],
-    "name": "FraudFlagAttestationFinalized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "flagger",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "flagId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "readyAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "FraudFlagAttestationQueued",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "string",
         "name": "name",
@@ -179,61 +83,6 @@
       }
     ],
     "name": "ProtocolContractUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [],
-    "name": "ProtocolContractsChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "dao",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "bridge",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "social",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "panic",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "workPayment",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "ProtocolContractsChangeProposed",
     "type": "event"
   },
   {
@@ -382,32 +231,6 @@
   },
   {
     "inputs": [],
-    "name": "FRAUD_FLAG_ATTESTATION_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MODULE_CHANGE_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "SEER_CORE_ROLE",
     "outputs": [
       {
@@ -441,13 +264,6 @@
       }
     ],
     "name": "addVerifier",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "applyProtocolContracts",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -494,13 +310,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "cancelProtocolContractsChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint8",
@@ -530,19 +339,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "flagId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "finalizeFraudFlagAttestation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -861,73 +657,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "pendingFraudAttestation",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "flagger",
-        "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "readyAt",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingProtocolContracts",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "dao",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "bridge",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "social",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "panic",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "workPayment",
-        "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "verifier",
         "type": "address"
@@ -1161,25 +890,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
-      }
-    ],
-    "name": "workerTaskCount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",

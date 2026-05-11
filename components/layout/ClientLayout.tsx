@@ -5,6 +5,7 @@ import { registerServiceWorker } from '@/lib/sw-register';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { AppShell } from '@/components/navigation';
+import { LiveProofScoreProvider } from '@/components/navigation/LiveProofScoreProvider';
 import { RealtimeProvider, UserProvider } from '@/lib/data';
 
 interface ClientLayoutProps {
@@ -46,7 +47,9 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   return (
     <RealtimeProvider wsUrl={process.env.NEXT_PUBLIC_WEBSOCKET_URL}>
       <UserProvider address={address}>
-        <AppShell>{children}</AppShell>
+        <LiveProofScoreProvider>
+          <AppShell>{children}</AppShell>
+        </LiveProofScoreProvider>
       </UserProvider>
     </RealtimeProvider>
   );

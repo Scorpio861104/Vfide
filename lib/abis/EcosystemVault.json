@@ -102,11 +102,6 @@
   },
   {
     "inputs": [],
-    "name": "ECO_NotEligible",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "ECO_TimelockNotPassed",
     "type": "error"
   },
@@ -487,49 +482,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "year",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "quarter",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "referrer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "referrerPoints",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "totalYearPoints",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amountClaimed",
-        "type": "uint256"
-      }
-    ],
-    "name": "HeadhunterQuarterClaimed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "uint256",
         "name": "year",
@@ -852,25 +804,6 @@
       }
     ],
     "name": "ReferralRecorded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "oldHub",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newHub",
-        "type": "address"
-      }
-    ],
-    "name": "ReferralVaultHubUpdated",
     "type": "event"
   },
   {
@@ -1255,19 +1188,6 @@
   },
   {
     "inputs": [],
-    "name": "MAX_INDIVIDUAL_EPOCH_CAP_BPS",
-    "outputs": [
-      {
-        "internalType": "uint16",
-        "name": "",
-        "type": "uint16"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MAX_MERCHANTS_PER_PERIOD",
     "outputs": [
       {
@@ -1339,19 +1259,6 @@
         "internalType": "uint8",
         "name": "",
         "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MIN_USER_VAULT_BALANCE",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1716,24 +1623,6 @@
       }
     ],
     "name": "cancelWithdraw",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "year",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "quarter",
-        "type": "uint256"
-      }
-    ],
-    "name": "claimHeadhunterQuarterReward",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2298,25 +2187,6 @@
   {
     "inputs": [],
     "name": "merchantEpochStart",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "merchantLifetimeTxCount",
     "outputs": [
       {
         "internalType": "uint256",
@@ -3158,19 +3028,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "referralVaultHub",
-    "outputs": [
-      {
-        "internalType": "contract IVaultHubReferral_ECO",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -3417,19 +3274,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "hub",
-        "type": "address"
-      }
-    ],
-    "name": "setReferralVaultHub",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "token",
         "type": "address"
       }
@@ -3597,25 +3441,6 @@
   {
     "inputs": [],
     "name": "totalReceived",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "totalYearPoints",
     "outputs": [
       {
         "internalType": "uint256",

@@ -231,62 +231,6 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "newLimit",
-        "type": "uint16"
-      }
-    ],
-    "name": "DAORateLimitChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "enum SeerAutonomous.RestrictionLevel",
-        "name": "level",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SeerAutonomous.ActionType",
-        "name": "action",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "newLimit",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      }
-    ],
-    "name": "DAORateLimitChangeQueued",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "enum SeerAutonomous.RestrictionLevel",
-        "name": "level",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum SeerAutonomous.ActionType",
-        "name": "action",
-        "type": "uint8"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
         "name": "oldLimit",
         "type": "uint16"
       },
@@ -467,50 +411,6 @@
       }
     ],
     "name": "ModulesSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "authorized",
-        "type": "bool"
-      }
-    ],
-    "name": "OperatorChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "authorized",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      }
-    ],
-    "name": "OperatorChangeQueued",
     "type": "event"
   },
   {
@@ -716,38 +616,12 @@
   },
   {
     "inputs": [],
-    "name": "DAO_RATE_LIMIT_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MAX_COUNTERPARTY_SCAN",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "OPERATOR_CHANGE_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -827,20 +701,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "applyOperatorChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "applyRateLimitChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -930,20 +790,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelOperatorChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelRateLimitChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1531,67 +1377,6 @@
         "internalType": "string",
         "name": "reason",
         "type": "string"
-      },
-      {
-        "internalType": "bool",
-        "name": "exists",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingOperatorChange",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "authorized",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bool",
-        "name": "exists",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingRateLimitChange",
-    "outputs": [
-      {
-        "internalType": "enum SeerAutonomous.RestrictionLevel",
-        "name": "level",
-        "type": "uint8"
-      },
-      {
-        "internalType": "enum SeerAutonomous.ActionType",
-        "name": "action",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint16",
-        "name": "limit",
-        "type": "uint16"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
       },
       {
         "internalType": "bool",

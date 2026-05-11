@@ -89,7 +89,7 @@ interface QuickAction {
 }
 
 const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
-  { id: 'scan', label: 'Scan QR', icon: <QrCode size={18} />, href: '/pay', color: '#06B6D4' },
+  { id: 'scan', label: 'Scan QR', icon: <QrCode size={18} />, href: '/scan', color: '#06B6D4' },
   { id: 'pos', label: 'POS', icon: <ShoppingCart size={18} />, href: '/pos', color: '#10B981' },
   { id: 'send', label: 'Send', icon: <Send size={18} />, href: '/pay', color: '#8B5CF6' },
 ];

@@ -505,19 +505,6 @@
   },
   {
     "inputs": [],
-    "name": "MEMBER_REMOVAL_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MIN_COUNCIL_SIZE",
     "outputs": [
       {
@@ -606,19 +593,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "member",
-        "type": "address"
-      }
-    ],
-    "name": "applyRemoveCouncilMember",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "user",
         "type": "address"
       }
@@ -693,19 +667,6 @@
   {
     "inputs": [],
     "name": "cancelModulesChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "member",
-        "type": "address"
-      }
-    ],
-    "name": "cancelRemoveCouncilMember",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1137,25 +1098,6 @@
       {
         "internalType": "uint64",
         "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "pendingRemovalAt",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
         "type": "uint64"
       }
     ],

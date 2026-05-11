@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import './globals.css';
 import '@/lib/ssr-animations.css';
 import { CoreProviders } from '@/lib/providers/CoreProviders';
+import { ClientLayout } from '@/components/layout/ClientLayout';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://vfide.app'),
@@ -19,7 +20,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning data-csp-nonce={nonce || undefined}>
       <body className="bg-zinc-950 text-white antialiased">
-        <CoreProviders>{children}</CoreProviders>
+        <CoreProviders>
+          <ClientLayout>{children}</ClientLayout>
+        </CoreProviders>
       </body>
     </html>
   );

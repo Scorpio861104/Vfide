@@ -22,11 +22,6 @@
   },
   {
     "inputs": [],
-    "name": "SPG_NoPending",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "SPG_NotDAO",
     "type": "error"
   },
@@ -37,45 +32,8 @@
   },
   {
     "inputs": [],
-    "name": "SPG_TimelockActive",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "SPG_Zero",
     "type": "error"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "cancelledDAO",
-        "type": "address"
-      }
-    ],
-    "name": "DAOChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "pendingDAO",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "DAOChangeQueued",
-    "type": "event"
   },
   {
     "anonymous": false,
@@ -189,63 +147,12 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "pendingSeer",
-        "type": "address"
-      }
-    ],
-    "name": "SeerMigrationCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "oldSeer",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newSeer",
-        "type": "address"
-      }
-    ],
-    "name": "SeerMigrationStarted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "oldSeer",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "newSeer",
         "type": "address"
       }
     ],
     "name": "SeerSet",
     "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "DAO_ROTATION_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [],
@@ -326,33 +233,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "applyDAO",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_seer",
-        "type": "address"
-      }
-    ],
-    "name": "beginSeerMigration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelDAO",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "bytes4",
@@ -381,62 +261,9 @@
         "internalType": "uint8",
         "name": "pclass",
         "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paramHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "cancelPolicyChangeWithParams",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelSeerMigration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint8",
-        "name": "pclass",
-        "type": "uint8"
       }
     ],
     "name": "consume",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint8",
-        "name": "pclass",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paramHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "consumeWithParams",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -452,13 +279,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "finalizeSeerMigration",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -483,74 +303,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint8",
-        "name": "pclass",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paramHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getPolicyChangeIdWithHash",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingDAO",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingDAOAt",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingSeer",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -602,40 +354,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes4",
-        "name": "selector",
-        "type": "bytes4"
-      },
-      {
-        "internalType": "uint8",
-        "name": "pclass",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "paramHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "schedulePolicyChangeWithParams",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "changeId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint64",
-        "name": "readyAt",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "seer",
     "outputs": [
@@ -643,19 +361,6 @@
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "seerMigrationInProgress",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",

@@ -22,21 +22,6 @@
   },
   {
     "inputs": [],
-    "name": "GH_DAOAlreadyOwns",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "GH_DelayActive",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "GH_NoPending",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "GH_NotAuthorized",
     "type": "error"
   },
@@ -90,43 +75,6 @@
   },
   {
     "anonymous": false,
-    "inputs": [],
-    "name": "ModulesCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "ledger",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "seer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "guardian",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "ModulesProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
     "inputs": [
       {
         "indexed": false,
@@ -148,25 +96,6 @@
       }
     ],
     "name": "ModulesSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "dao",
-        "type": "address"
-      }
-    ],
-    "name": "OwnershipClaimedByDAO",
     "type": "event"
   },
   {
@@ -234,40 +163,6 @@
   },
   {
     "inputs": [],
-    "name": "MODULE_CHANGE_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "applyModules",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelModules",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "claimOwnershipForDAO",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "dao",
     "outputs": [
       {
@@ -287,19 +182,6 @@
         "internalType": "contract ISeerGuardian_GH",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "hasPendingModules",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -411,57 +293,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingModules",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "ledger",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "seer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "guardian",
-        "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_ledger",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_seer",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_guardian",
-        "type": "address"
-      }
-    ],
-    "name": "proposeModules",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

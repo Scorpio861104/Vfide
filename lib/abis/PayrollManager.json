@@ -238,38 +238,6 @@
     "inputs": [
       {
         "indexed": true,
-        "internalType": "address",
-        "name": "pendingSeer",
-        "type": "address"
-      }
-    ],
-    "name": "SeerChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "pendingSeer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "SeerChangeProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
         "internalType": "uint256",
         "name": "streamId",
         "type": "uint256"
@@ -370,50 +338,6 @@
       }
     ],
     "name": "StreamResumed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "supported",
-        "type": "bool"
-      }
-    ],
-    "name": "SupportedTokenChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "supported",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "name": "SupportedTokenChangeProposed",
     "type": "event"
   },
   {
@@ -558,32 +482,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "SEER_CHANGE_DELAY_PM",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "SUPPORTED_TOKEN_CHANGE_DELAY_PM",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -656,20 +554,6 @@
   },
   {
     "inputs": [],
-    "name": "applySeer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "applySupportedToken",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "cancelDAOChange",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -702,13 +586,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "cancelSeerChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -722,13 +599,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "cancelSupportedTokenChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -737,19 +607,6 @@
       }
     ],
     "name": "claimExpiredStream",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "streamIds",
-        "type": "uint256[]"
-      }
-    ],
-    "name": "claimExpiredStreamBatch",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1259,60 +1116,6 @@
         "internalType": "uint256",
         "name": "validFrom",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingSeerAt_PM",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingSeer_PM",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingSupportedTokenChange",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "supported",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bool",
-        "name": "exists",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",

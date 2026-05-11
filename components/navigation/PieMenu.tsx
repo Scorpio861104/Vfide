@@ -5,6 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { VFIDEMark } from '@/components/ui';
 import {
+  ProofScoreRing,
+  QuickActions,
+  useHaptics,
+  useLongPress,
+  PaymentRipple,
+} from './PieMenuEnhancements';
+import {
   Home,
   LayoutDashboard,
   Cpu,
@@ -469,19 +476,26 @@ function CompactTile({
 interface TriggerButtonProps {
   isOpen: boolean;
   onClick: () => void;
+  onLongPress: () => void;
   activeCategory?: NavItem;
+  proofScore: number;
 }
 
-function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) {
+function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScore }: TriggerButtonProps) {
+  // Long-press handlers — 400ms threshold. On long-press we fire onLongPress
+  // (which opens the merchant quick-actions); on a normal tap onClick fires.
+  const longPress = useLongPress(onLongPress, onClick, 400);
+
   return (
-    <motion.button
-      onClick={onClick}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
-      aria-expanded={isOpen}
-      aria-controls="pie-menu-panel"
-      className="relative w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
+    <ProofScoreRing score={proofScore} size={56}>
+      <motion.button
+        {...longPress}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu (long-press for quick actions)'}
+        aria-expanded={isOpen}
+        aria-controls="pie-menu-panel"
+        className="relative w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
       style={{
         background: isOpen
           ? `linear-gradient(145deg, ${activeCategory?.color || '#6366f1'}25 0%, #2a2a38 40%, #1e1e28 100%)`
@@ -635,6 +649,7 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
         </AnimatePresence>
       </div>
     </motion.button>
+    </ProofScoreRing>
   );
 }
 
@@ -642,14 +657,63 @@ function TriggerButton({ isOpen, onClick, activeCategory }: TriggerButtonProps) 
 // MAIN PIE MENU - SLIDE OUT STYLE
 // ============================================================================
 
+/**
+ * PieMenuContext — optional context for injecting a live ProofScore into the
+ * PieMenu's ring. Place a <PieMenuContextProvider score={...}> high in your
+ * app tree, populated by wagmi/Seer.getScore. Without a provider, the ring
+ * defaults to 5000 (neutral / amber).
+ *
+ * Example:
+ *   const { data: score } = useReadContract({
+ *     ...SeerContract,
+ *     functionName: 'getScore',
+ *     args: [address],
+ *   });
+ *   <PieMenuContextProvider score={Number(score ?? 5000)}>
+ *     <AppShell />
+ *   </PieMenuContextProvider>
+ */
+const PieMenuScoreContext = React.createContext<number>(5000);
+
+export function PieMenuContextProvider({
+  score,
+  children,
+}: {
+  score: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <PieMenuScoreContext.Provider value={score}>
+      {children}
+    </PieMenuScoreContext.Provider>
+  );
+}
+
+function usePieMenuScore(): number {
+  return React.useContext(PieMenuScoreContext);
+}
+
 export function PieMenu() {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<NavItem | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  // Long-press merchant quick-actions overlay
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
+  const haptics = useHaptics();
+
+  // ProofScore for the ring around the V button. Source: usePieMenuContext()
+  // when available (lets a parent provider supply the live on-chain score
+  // via wagmi), otherwise fall back to a neutral 5000 so the ring renders.
+  // To wire a live score: in your layout, wrap the app with
+  // <PieMenuContextProvider score={proofScore} /> and read the wagmi
+  // `useReadContract({ ...Seer, functionName: 'getScore', args: [address] })`
+  // value into it. The ring colors are red < 5000 < amber < 6500 < cyan
+  // < 8000 < emerald.
+  const proofScore = usePieMenuScore();
   
   // Close menu on outside click
   useEffect(() => {
@@ -974,11 +1038,30 @@ export function PieMenu() {
           )}
         </AnimatePresence>
         
+        {/* Long-press merchant quick-actions overlay (fans out above the V button) */}
+        <QuickActions
+          visible={quickActionsOpen}
+          onSelect={(href) => {
+            setQuickActionsOpen(false);
+            haptics.medium();
+            router.push(href);
+          }}
+          anchorX={0}
+          anchorY={0}
+        />
+
         {/* Trigger Button */}
         <TriggerButton
           isOpen={isOpen}
           onClick={toggleMenu}
+          onLongPress={() => {
+            haptics.heavy();
+            setQuickActionsOpen(true);
+            // Auto-dismiss the overlay after 4s if nothing tapped
+            setTimeout(() => setQuickActionsOpen(false), 4000);
+          }}
           activeCategory={activeCategory || undefined}
+          proofScore={proofScore}
         />
       </div>
     </nav>

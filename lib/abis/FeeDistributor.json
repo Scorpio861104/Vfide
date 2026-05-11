@@ -322,63 +322,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "source",
-        "type": "address"
-      }
-    ],
-    "name": "FeeSourceChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "source",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "authorized",
-        "type": "bool"
-      }
-    ],
-    "name": "FeeSourceChangeExecuted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "source",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "authorized",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "effectiveTime",
-        "type": "uint256"
-      }
-    ],
-    "name": "FeeSourceChangeProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "uint256",
         "name": "oldAmount",
@@ -654,19 +597,6 @@
   },
   {
     "inputs": [],
-    "name": "FEE_SOURCE_CHANGE_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MAX_BPS",
     "outputs": [
       {
@@ -731,13 +661,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "applyFeeSourceChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -772,13 +695,6 @@
   {
     "inputs": [],
     "name": "cancelDestinationChange",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cancelFeeSourceChange",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1050,34 +966,6 @@
         "internalType": "address",
         "name": "addr",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "effectiveTime",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "pending",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingFeeSourceChange",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "source",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "authorized",
-        "type": "bool"
       },
       {
         "internalType": "uint256",

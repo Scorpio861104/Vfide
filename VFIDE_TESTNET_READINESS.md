@@ -1,7 +1,7 @@
 # VFIDE Testnet Readiness — Consolidated Status
 
 **Last updated:** 2026-05-11
-**Scope:** Three-session review and remediation of the VFIDE codebase
+**Scope:** Four-session review and remediation of the VFIDE codebase
   targeting "100% mainnet parity" testnet announcement readiness.
 
 This document is the single source of truth for what's been changed,
@@ -14,12 +14,10 @@ state of the repo.
 
 ## 1. Bottom-line readiness
 
-**You are NOT yet ready to announce testnet.** You are close.
-
-Code-level fixes are done. The remaining gaps are operational steps
-(running migrations, running real Hardhat compile, deploying, exercising
-the full flow) plus one writer-role-split migration that's not yet
-written.
+**You are NOT yet ready to announce testnet.** You are close. ALL
+code-level work is now complete. The remaining gaps are operational
+steps that require your machine: running migrations, running the real
+Hardhat compile, deploying, exercising the full flow.
 
 The single most important sentence in this document: **testnet and
 mainnet now use the same canonical deployment path with no parallel
@@ -87,11 +85,14 @@ is `VFIDETestnetFaucet`. Everything else is bit-for-bit identical.**
 
 ### Frontend / API / DB
 
-- **Root `middleware.ts`** — Was missing entirely. Without it, Next.js
-  16 never executed `proxy.ts`, which means no CSRF validation, no CSP
-  nonce, no request-size limits, no Content-Type validation, and no
-  CORS enforcement on any API route — despite all that logic being
-  fully implemented. Created as a thin re-export shim of `proxy.ts`.
+- **Security stack via `proxy.ts` (NOT middleware.ts).** Earlier rounds
+  of this review wrongly claimed Next.js middleware was missing and
+  added a `middleware.ts` shim. That was incorrect — the codebase
+  deliberately uses `proxy.ts` invoked by a separate proxy layer
+  (`next.config.ts` documents: "CSP is applied per-request in proxy.ts
+  with a nonce"). The shim was removed. `validate-frontend-ready.ts` now
+  guards AGAINST a stray middleware.ts so the same wrong fix can't be
+  re-applied.
 - **Faucet API chain-agnostic** — `app/api/faucet/claim/route.ts` no
   longer hardcodes `baseSepolia`. `resolveTestnetChain()` maps
   `NEXT_PUBLIC_DEFAULT_CHAIN_ID` to its viem chain definition for all 6
@@ -167,9 +168,11 @@ Five new scripts:
   balance, EcosystemVault.isManager(faucet), 6 module DAO ownerships,
   env-var parity.
 - **`scripts/validate-frontend-ready.ts`** (new) — Hardhat-free
-  pre-flight: middleware.ts present, proxy.ts exports correct surface,
-  CSRF wired, /api/csrf route exists, lib/db.ts RLS context wired,
-  4 expected migrations present, critical env vars set.
+  pre-flight: proxy.ts has its security surface (validateCSRF, CSP
+  nonce, body-size limits), no stray middleware.ts exists, /api/csrf
+  route exists, CSRF exempt list excludes high-value paths, lib/db.ts
+  RLS context wired, instrumentation.ts boot-time RLS check wired, all
+  5 expected migrations present, critical env vars set.
 - **`scripts/compile-with-solcjs.cjs`** (new) — Standalone Solidity
   compile using pure-JS solc. Bypass for sandboxed/air-gapped
   environments where the Hardhat binary downloader fails.
@@ -207,29 +210,13 @@ These are real, not nits. Status is honest.
 
 ### Code-level work I did NOT do
 
-5. **Writer-role split for Pattern F tables.** 25 tables remain
-   open-read with no write protection: `daily_quests`,
-   `platform_categories`, `prize_tiers`, `monthly_prize_pool`,
-   `achievement_milestones`, `weekly_challenges`,
-   `merchant_webhook_deliveries`, `merchant_invoice_items`,
-   `merchant_order_items`, `merchant_product_variants`,
-   `merchant_digital_assets`, `merchant_digital_deliveries`,
-   `coupon_redemptions`, `installment_payments`, `audit_events`,
-   `security_alert_dispatches`, `security_webhook_replay_events`,
-   `flashloan_lanes`, `flashloan_lane_events`, `vault_identities`,
-   `merchant_wholesale_group_buys`, `seer_analytics_daily_rollup`,
-   `seer_reason_code_daily_rollup`, `performance_metrics`,
-   `indexed_events`, `indexer_state`.
-
-   **Effort:** ~50 lines of SQL, one migration. Pattern:
-   - Create `vfide_app_writer` role with NOBYPASSRLS
-   - Grant INSERT/UPDATE/DELETE to `vfide_app_writer` only on Pattern F
-     tables
-   - Revoke INSERT/UPDATE/DELETE from `vfide_app` on those tables
-   - Update DATABASE_URL split — service-writer connections use the
-     writer role; user-context connections use the standard role
-   - Frontend code unaffected because user-driven flows never insert
-     into Pattern F tables
+5. **Writer-role split for Pattern F tables — CLOSED in 2026-05-11
+   round.** See migration `20260511_160000_split_writer_role.sql`.
+   Operationally requires you to add `DATABASE_URL_WRITER` env var for
+   backend jobs (indexer, webhook handlers, cron) — until those switch
+   to the writer role, their writes will hit `permission denied`. The
+   frontend's `DATABASE_URL` (vfide_app role) is unaffected and reads
+   continue to work normally.
 
 6. **Frontend wagmi call audit against new ABIs.** 11 ABIs gained
    functions. None of the existing imports break (only additions, with
@@ -334,12 +321,18 @@ psql "$DATABASE_URL_ADMIN" -f migrations/20260503_120000_create_app_role_rls_enf
 psql "$DATABASE_URL_ADMIN" -f migrations/20260510_120000_grant_vfide_app_and_baseline_rls.sql
 psql "$DATABASE_URL_ADMIN" -f migrations/20260510_140000_complete_rls_baseline.sql
 psql "$DATABASE_URL_ADMIN" -f migrations/20260510_141500_normalize_legacy_rls_lower.sql
+psql "$DATABASE_URL_ADMIN" -f migrations/20260511_160000_split_writer_role.sql
 ```
+
+After the last migration, set `DATABASE_URL_WRITER` for backend jobs
+(indexer, webhook handlers, cron tasks). Format:
+`postgresql://vfide_app_writer:PASSWORD@host/vfide`. The frontend's
+`DATABASE_URL` (vfide_app role) remains unchanged.
 
 Read the NOTICE output of `20260510_120000`. It lists the tables that
 have no obvious owner column. Those are mostly handled by
-`20260510_140000`. Anything still in that NOTICE list after migration
-140000 needs manual policy review before mainnet.
+`20260510_140000` and `20260511_160000`. Anything still in that NOTICE
+list after migration 160000 needs manual policy review before mainnet.
 
 ### Step 4: deploy
 
@@ -426,7 +419,6 @@ not on mainnet.
 ### Added
 
 ```
-middleware.ts                                                         (3-line re-export shim)
 TESTNET_RUNBOOK.md                                                    (operator runbook)
 VFIDE_TESTNET_READINESS.md                                            (this file)
 scripts/compile-with-solcjs.cjs                                       (sandbox fallback)
@@ -517,7 +509,7 @@ These should all pass before announce. Each can be wired into CI.
 
 ```bash
 # Static — fast, hardhat-free
-npm run validate:frontend             # middleware, CSRF, RLS wiring, migrations present
+npm run validate:frontend             # proxy.ts, CSRF, RLS wiring, migrations present
 npm run sync-abis:check               # ABIs match contract surface
 
 # Compile — requires solc network access OR npm run compile:solcjs as fallback
