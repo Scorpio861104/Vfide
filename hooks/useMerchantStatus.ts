@@ -13,15 +13,15 @@ export function useMerchantStatus(address?: `0x${string}`) {
   const { data, isError, isLoading } = useReadContract({
     address: addresses.MerchantPortal,
     abi: MerchantPortalABI,
-    functionName: 'getMerchantInfo',
+    functionName: 'merchants',
     args: address ? [address] : undefined,
     query: {
       enabled: !!address && isAvailable,
     }
   })
 
-  // getMerchantInfo returns: (registered, suspended, businessName, category, registeredAt, totalVolume, txCount)
-  const info = data as [boolean, boolean, string, string, bigint, bigint, bigint] | undefined
+  // merchants() returns: (registered, suspended, businessName, category, registeredAt, totalVolume, txCount, payoutAddress)
+  const info = data as [boolean, boolean, string, string, bigint, bigint, bigint, `0x${string}`] | undefined
 
   return {
     isMerchant: info?.[0] || false,

@@ -28,7 +28,12 @@ export async function GET(
   try {
     const { key } = await params;
     const relativePath = key.join('/').replace(/\.\./g, '');
-    const absolutePath = resolve('/tmp/vfide-media', relativePath);
+    const BASE_DIR = resolve('/tmp/vfide-media');
+    const absolutePath = resolve(BASE_DIR, relativePath);
+    // Guard against path traversal — resolved path must stay within base dir
+    if (!absolutePath.startsWith(BASE_DIR + '/') && absolutePath !== BASE_DIR) {
+      return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
+    }
     const file = await readFile(absolutePath);
     const extension = relativePath.split('.').pop()?.toLowerCase() || 'bin';
 

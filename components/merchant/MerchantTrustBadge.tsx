@@ -61,7 +61,7 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
   const { data: merchantInfo } = useReadContract({
     address: CONTRACT_ADDRESSES.MerchantPortal,
     abi: MerchantPortalABI,
-    functionName: 'getMerchantInfo',
+    functionName: 'merchants',
     args: [merchantAddress],
     query: { enabled: isMerchantPortalAvailable },
   });
@@ -72,8 +72,8 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
     const tier = getScoreTier(score);
     const feeRate = getFeeRate(score);
 
-    // merchantInfo: (registered, suspended, businessName, category, registeredAt, totalVolume, txCount)
-    const mInfo = merchantInfo as [boolean, boolean, string, string, bigint, bigint, bigint] | undefined;
+    // merchants() returns: (registered, suspended, businessName, category, registeredAt, totalVolume, txCount, payoutAddress)
+    const mInfo = merchantInfo as [boolean, boolean, string, string, bigint, bigint, bigint, `0x${string}`] | undefined;
     const isRegistered = mInfo?.[0] || false;
     const registeredAt = mInfo?.[4] ? safeBigIntToNumber(mInfo[4], 0) : 0;
     const totalVolume = mInfo?.[5] ? formatEther(mInfo[5]) : '0';

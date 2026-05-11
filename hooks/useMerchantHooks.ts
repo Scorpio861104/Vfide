@@ -14,9 +14,9 @@ import { safeBigIntToNumber } from '@/lib/validation';
 // MERCHANT HOOKS - No processor fees (burn + gas apply)
 // ============================================
 
-// Type matches MerchantPortal.sol getMerchantInfo return:
-// (bool registered, bool suspended, string businessName, string category, uint64 registeredAt, uint256 totalVolume, uint256 txCount)
-type MerchantInfo = [boolean, boolean, string, string, bigint, bigint, bigint]
+// Type matches MerchantPortal.sol merchants() mapping getter:
+// (bool registered, bool suspended, string businessName, string category, uint64 registeredAt, uint256 totalVolume, uint256 txCount, address payoutAddress)
+type MerchantInfo = [boolean, boolean, string, string, bigint, bigint, bigint, `0x${string}`]
 
 const MerchantPortalIntentABI = [
   {
@@ -72,7 +72,7 @@ export function useIsMerchant(address?: `0x${string}`) {
   const { data: merchantInfo, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.MerchantPortal,
     abi: MerchantPortalABI,
-    functionName: 'getMerchantInfo',
+    functionName: 'merchants',
     args: targetAddress ? [targetAddress] : undefined,
     query: {
       enabled: !!targetAddress && isAvailable,
