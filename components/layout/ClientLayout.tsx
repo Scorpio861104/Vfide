@@ -11,9 +11,6 @@ interface ClientLayoutProps {
   children: ReactNode;
 }
 
-// Register service worker for PWA offline support
-if (typeof window !== "undefined") { registerServiceWorker(); }
-
 function useRouteAnnouncement(pathname: string) {
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -41,9 +38,7 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!('serviceWorker' in navigator) || process.env.NODE_ENV !== 'production') return;
-    navigator.serviceWorker.register('/service-worker.js', { scope: '/' }).catch(() => {});
+    registerServiceWorker();
   }, []);
 
   useRouteAnnouncement(pathname);

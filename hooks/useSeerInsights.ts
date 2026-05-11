@@ -79,7 +79,7 @@ const SA_CHALLENGE_RESOLVED_CODE_EVENT = parseAbiItem(
 );
 
 const SG_AUTO_RESTRICTION_APPLIED_CODE_EVENT = parseAbiItem(
-  'event AutoRestrictionAppliedCode(address indexed subject, uint8 rtype, uint16 indexed reasonCode, string reason)'
+  'event AutoRestrictionApplied(address indexed subject, uint8 rtype, uint16 indexed reasonCode, string reason)'
 );
 
 const SG_PENALTY_APPLIED_CODE_EVENT = parseAbiItem(

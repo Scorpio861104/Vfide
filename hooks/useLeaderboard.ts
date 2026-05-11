@@ -148,7 +148,7 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & { refetch
       try {
         const scoreEvents = await publicClient.getLogs({
           address: CONTRACT_ADDRESSES.Seer,
-          event: parseAbiItem('event ScoreUpdated(address indexed subject, uint16 newScore, string reason)'),
+          event: parseAbiItem('event ScoreSet(address indexed subject, uint16 oldScore, uint16 newScore, string reason)'),
           fromBlock: 'earliest',
           toBlock: 'latest',
         });
@@ -160,24 +160,6 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & { refetch
         });
       } catch {
         // Events may not be available, continue with seed addresses
-      }
-
-      // Also try reward events
-      try {
-        const rewardEvents = await publicClient.getLogs({
-          address: CONTRACT_ADDRESSES.Seer,
-          event: parseAbiItem('event UserRewarded(address indexed user, uint16 delta, string reason)'),
-          fromBlock: 'earliest',
-          toBlock: 'latest',
-        });
-        
-        rewardEvents.forEach(event => {
-          if (event.args.user) {
-            addresses.add(event.args.user as `0x${string}`);
-          }
-        });
-      } catch {
-        // Continue
       }
 
       // Fetch scores for all addresses

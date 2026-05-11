@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAccount } from 'wagmi'
 import { sanitizeString } from '@/lib/validation'
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
 
 interface Reply {
   id: number
@@ -50,6 +51,7 @@ export function DiscussionThread({ discussion, onBack, onReplyAdded }: Discussio
   return (
     <section className="py-8">
       <div className="container mx-auto px-4 max-w-4xl">
+        <SampleDataBanner />
         <button onClick={onBack} className="mb-4 text-cyan-400 hover:underline flex items-center gap-2">← Back to Discussions</button>
 
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6 mb-6">

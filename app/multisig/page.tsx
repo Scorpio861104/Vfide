@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 interface Signer {
   address: string;
@@ -77,6 +78,7 @@ export default function MultisigPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 pt-20 pb-24 md:pb-8 space-y-6">
+      <SampleDataBanner />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
