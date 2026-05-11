@@ -43,20 +43,21 @@ export async function GET(
       [id],
     );
 
-    if (result.rows.length === 0) {
+    const link: Record<string, unknown> | undefined = result.rows[0];
+
+    if (!link) {
       return NextResponse.json({ error: 'Payment link not found or no longer active' }, { status: 404 });
     }
 
-    const link = result.rows[0];
-
     // Expiry check
-    if (link.expires_at && new Date(link.expires_at).getTime() < Date.now()) {
+    const expiresAt = link.expires_at as string | null | undefined;
+    if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
       return NextResponse.json({ error: 'Payment link has expired' }, { status: 410 });
     }
 
     // Usage limit check
-    const usesCap = link.single_use ? 1 : (link.max_uses ?? null);
-    if (usesCap !== null && Number(link.uses) >= Number(usesCap)) {
+    const usesCap = link.single_use ? 1 : ((link.max_uses as number | null) ?? null);
+    if (usesCap !== null && Number(link.uses as number) >= Number(usesCap)) {
       return NextResponse.json({ error: 'Payment link has reached its usage limit' }, { status: 410 });
     }
 
