@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { CheckCircle2, CreditCard, Loader2 } from 'lucide-react';
-import { formatUnits, isAddress, maxUint256 } from 'viem';
+import { formatUnits, isAddress } from 'viem';
 import { useReadContract, useWriteContract } from 'wagmi';
 
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -35,6 +35,13 @@ export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantA
     },
   });
 
+  const { data: dailyTransferLimit } = useReadContract({
+    address: vaultAddress || undefined,
+    abi: CARD_BOUND_VAULT_ABI,
+    functionName: 'dailyTransferLimit',
+    query: { enabled: cardBoundMode && !!vaultAddress },
+  });
+
   const { data: stablecoinAllowance, refetch: refetchStablecoinAllowance } = useReadContract({
     address: stablecoinReady ? stablecoinAddress as `0x${string}` : undefined,
     abi: ERC20ABI,
@@ -51,20 +58,24 @@ export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantA
 
   const currentVfideAllowance = typeof vfideAllowance === 'bigint' ? vfideAllowance : 0n;
   const currentStablecoinAllowance = typeof stablecoinAllowance === 'bigint' ? stablecoinAllowance : 0n;
+  const approvalAmount = typeof dailyTransferLimit === 'bigint' ? dailyTransferLimit : 0n;
 
   const handleApproveVfide = async () => {
     if (!merchantPortalReady) {
       showToast('MerchantPortal is not configured in this environment.', 'error');
       return;
     }
-
+    if (approvalAmount === 0n) {
+      showToast('Vault daily transfer limit not loaded. Please wait and retry.', 'error');
+      return;
+    }
     setIsApprovingVfide(true);
     try {
       await writeContractAsync({
         address: vaultAddress,
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'approveVFIDE',
-        args: [merchantPortalAddress, maxUint256],
+        args: [merchantPortalAddress, approvalAmount],
       });
       await refetchVfideAllowance();
       showToast('MerchantPortal was approved to pull VFIDE from this vault.', 'success');
@@ -81,6 +92,10 @@ export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantA
       showToast('MerchantPortal is not configured in this environment.', 'error');
       return;
     }
+    if (approvalAmount === 0n) {
+      showToast('Vault daily transfer limit not loaded. Please wait and retry.', 'error');
+      return;
+    }
     if (!stablecoinReady) {
       showToast('Enter a valid stablecoin token address.', 'error');
       return;
@@ -92,7 +107,7 @@ export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantA
         address: vaultAddress,
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'approveERC20',
-        args: [stablecoinAddress as `0x${string}`, merchantPortalAddress, maxUint256],
+        args: [stablecoinAddress as `0x${string}`, merchantPortalAddress, approvalAmount],
       });
       await refetchStablecoinAllowance();
       showToast('MerchantPortal was approved to pull the selected stablecoin.', 'success');

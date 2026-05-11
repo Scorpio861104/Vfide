@@ -701,24 +701,24 @@ export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
   })
 
   const cancelInheritance = async () => {
-    if (true) { // CardBoundVault-only:
-      return { success: false, error: `CardBoundVault uses different operation model` }
+    if (!isCardBoundVaultMode()) {
+      try {
+        const hash = await writeContractAsync({
+          address: vaultAddress,
+          abi: VAULT_ABI,
+          functionName: 'guardianCancelInheritance',
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash })
+        }
+        setTxHash(hash)
+        return { success: true, txHash: hash }
+      } catch {
+        return { success: false, error: 'Transaction failed' }
+      }
     }
 
-    try {
-      const hash = await writeContractAsync({
-        address: vaultAddress,
-        abi: VAULT_ABI,
-        functionName: 'guardianCancelInheritance',
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      setTxHash(hash)
-      return { success: true, txHash: hash }
-    } catch {
-      return { success: false, error: 'Transaction failed' }
-    }
+    return { success: false, error: `CardBoundVault uses different operation model` }
   }
 
   return {
