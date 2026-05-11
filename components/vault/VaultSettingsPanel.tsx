@@ -33,6 +33,9 @@ import {
   useSetBalanceSnapshotMode,
   useUpdateBalanceSnapshot,
   usePendingTransaction,
+  useApprovePendingTransaction,
+  useExecutePendingTransaction,
+  useCleanupExpiredTransaction,
 } from '@/lib/vfide-hooks'
 import { isCardBoundVaultMode } from '@/lib/contracts'
 import { safeParseInt } from '@/lib/validation';
@@ -58,6 +61,9 @@ export function VaultSettingsPanel() {
 
   const { setSnapshotMode, isLoading: settingSnapshot } = useSetBalanceSnapshotMode(safeVaultAddress)
   const { updateSnapshot, isLoading: updatingSnapshot } = useUpdateBalanceSnapshot(safeVaultAddress)
+  const { approve, isLoading: approving } = useApprovePendingTransaction(safeVaultAddress)
+  const { execute, isLoading: executing } = useExecutePendingTransaction(safeVaultAddress)
+  const { cleanup, isLoading: cleaning } = useCleanupExpiredTransaction(safeVaultAddress)
 
   if (!address || !vaultAddress) {
     return (
@@ -107,6 +113,18 @@ export function VaultSettingsPanel() {
 
   const handleUpdateSnapshot = async () => {
     await updateSnapshot()
+  }
+
+  const handleApproveTx = async () => {
+    await approve(selectedTxId)
+  }
+
+  const handleExecuteTx = async () => {
+    await execute(selectedTxId)
+  }
+
+  const handleCleanupTx = async () => {
+    await cleanup(selectedTxId)
   }
 
 

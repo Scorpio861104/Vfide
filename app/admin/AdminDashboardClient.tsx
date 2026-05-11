@@ -298,29 +298,11 @@ export default function AdminPanel() {
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
 
-  const { data: pendingCircuitBreakerActiveRaw } = useReadContract({
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-    functionName: 'pendingCircuitBreakerActive',
-    query: { enabled: IS_TOKEN_DEPLOYED },
-  });
-  const pendingCircuitBreakerActive = pendingCircuitBreakerActiveRaw as boolean | undefined;
-
-  const { data: pendingCircuitBreakerDurationRaw } = useReadContract({
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-    functionName: 'pendingCircuitBreakerDuration',
-    query: { enabled: IS_TOKEN_DEPLOYED },
-  });
-  const pendingCircuitBreakerDuration = pendingCircuitBreakerDurationRaw as bigint | undefined;
-
-  const { data: pendingCircuitBreakerAtRaw } = useReadContract({
-    address: TOKEN_ADDRESS,
-    abi: TOKEN_ABI,
-    functionName: 'pendingCircuitBreakerAt',
-    query: { enabled: IS_TOKEN_DEPLOYED },
-  });
-  const pendingCircuitBreakerAt = pendingCircuitBreakerAtRaw as bigint | undefined;
+  // Circuit breaker pending state was removed from VFIDEToken.
+  // Keep these as undefined so the panel remains backward-compatible.
+  const pendingCircuitBreakerActive: boolean | undefined = undefined;
+  const pendingCircuitBreakerDuration: bigint | undefined = undefined;
+  const pendingCircuitBreakerAt: bigint | undefined = undefined;
 
   const { data: pendingVaultHubRaw } = useReadContract({
     address: TOKEN_ADDRESS,

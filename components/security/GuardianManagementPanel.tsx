@@ -11,6 +11,7 @@ import {
   useUserVault, 
   useVaultGuardians, 
   useInheritanceStatus,
+  useGuardianCancelInheritance,
 } from '@/lib/vfide-hooks'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts'
