@@ -8,17 +8,40 @@
  */
 'use client';
 
-import { ReactNode } from 'react';
-import { WagmiProvider } from 'wagmi';
+import { ReactNode, useEffect, useRef } from 'react';
+import { WagmiProvider, useAccount } from 'wagmi';
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { wagmiConfig } from '@/lib/wagmi';
 import { SecurityProvider } from '@/providers/SecurityProvider';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
+import { useAuth } from '@/hooks/useAPI';
 
 function WalletPersistenceManager({ children }: { children: ReactNode }) {
   useWalletPersistence();
   return <>{children}</>;
+}
+
+/**
+ * Triggers SIWE challenge-sign when a wallet connects for the first time
+ * in the session. Re-runs if address changes (account switch).
+ */
+function WalletAuthManager() {
+  const { isConnected, address } = useAccount();
+  const { authenticate, isAuthenticated } = useAuth();
+  const lastAuthAddress = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (isConnected && address && !isAuthenticated && lastAuthAddress.current !== address) {
+      lastAuthAddress.current = address;
+      void authenticate();
+    }
+    if (!isConnected) {
+      lastAuthAddress.current = undefined;
+    }
+  }, [isConnected, address, isAuthenticated, authenticate]);
+
+  return null;
 }
 
 // Single QueryClient instance — shared across all authenticated routes.
@@ -45,6 +68,7 @@ export function Web3Providers({ children }: { children: ReactNode }) {
         */}
         <RainbowKitProvider>
           <SecurityProvider>
+            <WalletAuthManager />
             <WalletPersistenceManager>{children}</WalletPersistenceManager>
           </SecurityProvider>
         </RainbowKitProvider>

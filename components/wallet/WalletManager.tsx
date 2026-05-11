@@ -8,6 +8,7 @@
  * - Multi-chain support with easy switching
  * - Real-time balance tracking
  * - Connection status indicators
+ * - Sample data banner shown while default/demo data is displayed
  * - Transaction history per wallet
  * - Wallet nicknames/labels
  * - Security features (auto-disconnect, session timeout)
@@ -24,6 +25,7 @@ import { responsiveGrids, ResponsiveContainer } from '@/lib/mobile';
 import { safeParseFloat } from '@/lib/validation';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Wallet, Link2, Coins, Settings, CheckCircle2, X, Edit3, Power } from 'lucide-react';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 // Animated counter for balances
 function AnimatedBalance({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
@@ -821,6 +823,7 @@ export default function WalletManager() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-6 md:py-8">
       <ResponsiveContainer>
+        <SampleDataBanner />
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">

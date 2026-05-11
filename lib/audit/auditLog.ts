@@ -233,7 +233,7 @@ export async function queryAuditEvents(opts: AuditQueryOptions): Promise<AuditQu
     LIMIT $${params.length}
   `;
 
-  const result = await query(sql, params);
+  const result = await query(sql, params as (string | number | boolean | null | Date | undefined | unknown[])[]);
   const events = result.rows.map((r: Record<string, unknown>) => ({
     id: String(r.id),
     actorIdentity: String(r.actor_identity),
