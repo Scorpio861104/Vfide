@@ -306,62 +306,6 @@ export function usePayReferralWorkReward() {
 }
 
 /**
- * Manager hook: pay next unlocked referral level reward (milestone-based).
- */
-export function usePayReferralLevelReward() {
-  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
-  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
-  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
-  const { writeContract, isPending, isSuccess, error } = useWriteContract();
-
-  const payReferralLevelReward = async (
-    worker: `0x${string}`,
-    year: bigint,
-    reason: string
-  ) => {
-    writeContract({
-      address: ECOSYSTEM_VAULT_ADDRESS,
-      abi: EcosystemVaultABI,
-      functionName: 'payReferralLevelReward',
-      args: [worker, year, reason],
-    });
-  };
-
-  return {
-    payReferralLevelReward,
-    isPending,
-    isSuccess,
-    error: error as Error | null,
-  };
-}
-
-/**
- * Self-claim hook: claim all currently unlocked referral level rewards for the connected wallet.
- */
-export function useClaimReferralLevelRewards() {
-  const { EcosystemVault: ECOSYSTEM_VAULT_ADDRESS_, EcosystemVaultView: _EVV } = useContractAddresses();
-  const ECOSYSTEM_VAULT_ADDRESS = ECOSYSTEM_VAULT_ADDRESS_;
-  const ECOSYSTEM_VAULT_VIEW_ADDRESS = _EVV || ECOSYSTEM_VAULT_ADDRESS_;
-  const { writeContract, isPending, isSuccess, error } = useWriteContract();
-
-  const claimReferralLevelRewards = async (year: bigint, reason: string) => {
-    writeContract({
-      address: ECOSYSTEM_VAULT_ADDRESS,
-      abi: EcosystemVaultABI,
-      functionName: 'claimReferralLevelRewards',
-      args: [year, reason],
-    });
-  };
-
-  return {
-    claimReferralLevelRewards,
-    isPending,
-    isSuccess,
-    error: error as Error | null,
-  };
-}
-
-/**
  * Manager hook: pay fixed merchant work reward from merchant pool.
  */
 export function usePayMerchantWorkReward() {

@@ -52,7 +52,7 @@ describe('useMerchantHooks', () => {
       const result = useReadContract({
         address: MOCK_MERCHANT as `0x${string}`,
         abi: [],
-        functionName: 'getMerchantInfo',
+        functionName: 'merchants',
         args: [MOCK_MERCHANT],
       })
       
@@ -73,7 +73,7 @@ describe('useMerchantHooks', () => {
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],
-        functionName: 'getMerchantInfo',
+        functionName: 'merchants',
         args: [MOCK_USER],
       })
       
@@ -93,7 +93,7 @@ describe('useMerchantHooks', () => {
       const result = useReadContract({
         address: MOCK_MERCHANT as `0x${string}`,
         abi: [],
-        functionName: 'getMerchantInfo',
+        functionName: 'merchants',
         args: [MOCK_MERCHANT],
       })
       

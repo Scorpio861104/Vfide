@@ -4,7 +4,7 @@ import { useContractAddresses } from './useContractAddresses'
 
 /**
  * Check if an address is a registered merchant
- * Uses getMerchantInfo which returns (registered, suspended, businessName, category, registeredAt, totalVolume, txCount)
+ * Calls merchants() mapping which returns (registered, suspended, businessName, category, registeredAt, totalVolume, txCount, payoutAddress)
  */
 export function useMerchantStatus(address?: `0x${string}`) {
   const addresses = useContractAddresses();
