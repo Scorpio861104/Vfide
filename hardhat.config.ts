@@ -78,22 +78,8 @@ const config: VfideHardhatConfig = {
           },
         },
       },
-      // Deploy-once script — runs:1 is correct (no runtime calls, minimise bytecode to stay under 24KB).
-      "contracts/DeployPhases3to6.sol": {
-        version: "0.8.30",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 1,
-          },
-          metadata: {
-            bytecodeHash: "none",
-          },
-          viaIR: true,
-        },
-      },
       // Admin-only, infrequent calls — runs:1 acceptable; not a user-facing hot path.
-      "contracts/BadgeManager.sol": {
+      "contracts/future/BadgeManager.sol": {
         version: "0.8.30",
         settings: {
           optimizer: {
@@ -117,20 +103,9 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
-      // Deploy-once script — runs:1 is correct.
-      "contracts/DeployPhase1.sol": {
-        version: "0.8.30",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 1,
-          },
-          viaIR: true,
-        },
-      },
       // SeerAutonomous is large (1222 lines) and near the 24KB bytecode limit; runs:1 retained.
       // Candidate for runs:50 once contract size is confirmed: `npx hardhat size-contracts`.
-      "contracts/SeerAutonomous.sol": {
+      "contracts/future/SeerAutonomous.sol": {
         version: "0.8.30",
         settings: {
           optimizer: {
@@ -228,20 +203,6 @@ const config: VfideHardhatConfig = {
           viaIR: true,
         },
       },
-      // Deploy-once script — runs:1 is correct.
-      "contracts/DeployPhase1Governance.sol": {
-        version: "0.8.30",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 1,
-          },
-          metadata: {
-            bytecodeHash: "none",
-          },
-          viaIR: true,
-        },
-      },
     },
   },
   networks: {
@@ -273,6 +234,24 @@ const config: VfideHardhatConfig = {
       accounts,
       chainId: 80002,
     },
+    zkSyncSepolia: {
+      type: "http" as const,
+      url: process.env.ZKSYNC_SEPOLIA_RPC_URL || "https://sepolia.era.zksync.dev",
+      accounts,
+      chainId: 300,
+    },
+    arbitrumSepolia: {
+      type: "http" as const,
+      url: process.env.ARBITRUM_SEPOLIA_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc",
+      accounts,
+      chainId: 421614,
+    },
+    optimismSepolia: {
+      type: "http" as const,
+      url: process.env.OPTIMISM_SEPOLIA_RPC_URL || "https://sepolia.optimism.io",
+      accounts,
+      chainId: 11155420,
+    },
     mainnet: {
       type: "http" as const,
       url: process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com",
@@ -297,9 +276,23 @@ const config: VfideHardhatConfig = {
       accounts,
       chainId: 324,
     },
+    arbitrum: {
+      type: "http" as const,
+      url: process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc",
+      accounts,
+      chainId: 42161,
+    },
+    optimism: {
+      type: "http" as const,
+      url: process.env.OPTIMISM_RPC_URL || "https://mainnet.optimism.io",
+      accounts,
+      chainId: 10,
+    },
   },
   // ── Etherscan / Sourcify verification ───────────────────────
-  // Set BASESCAN_API_KEY, ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY in .env
+  // Set BASESCAN_API_KEY, ETHERSCAN_API_KEY, POLYGONSCAN_API_KEY,
+  // ARBISCAN_API_KEY, OPTIMISTIC_ETHERSCAN_API_KEY in .env.
+  // zkSync uses an Etherscan-style endpoint; key is ZKSYNC_BLOCKEXPLORER_API_KEY.
   etherscan: {
     apiKey: {
       baseSepolia: process.env.BASESCAN_API_KEY || "",
@@ -308,6 +301,10 @@ const config: VfideHardhatConfig = {
       mainnet: process.env.ETHERSCAN_API_KEY || "",
       polygon: process.env.POLYGONSCAN_API_KEY || "",
       polygonAmoy: process.env.POLYGONSCAN_API_KEY || "",
+      arbitrum: process.env.ARBISCAN_API_KEY || "",
+      arbitrumSepolia: process.env.ARBISCAN_API_KEY || "",
+      optimism: process.env.OPTIMISTIC_ETHERSCAN_API_KEY || "",
+      optimismSepolia: process.env.OPTIMISTIC_ETHERSCAN_API_KEY || "",
     },
     customChains: [
       {
@@ -332,6 +329,22 @@ const config: VfideHardhatConfig = {
         urls: {
           apiURL: "https://api-amoy.polygonscan.com/api",
           browserURL: "https://amoy.polygonscan.com",
+        },
+      },
+      {
+        network: "arbitrumSepolia",
+        chainId: 421614,
+        urls: {
+          apiURL: "https://api-sepolia.arbiscan.io/api",
+          browserURL: "https://sepolia.arbiscan.io",
+        },
+      },
+      {
+        network: "optimismSepolia",
+        chainId: 11155420,
+        urls: {
+          apiURL: "https://api-sepolia-optimistic.etherscan.io/api",
+          browserURL: "https://sepolia-optimism.etherscan.io",
         },
       },
     ],

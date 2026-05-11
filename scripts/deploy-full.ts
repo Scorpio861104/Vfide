@@ -80,11 +80,41 @@ function isLocalBootstrapNetwork(network: string): boolean {
   return network === "hardhat" || network === "localhost" || network === "local";
 }
 
+/**
+ * Testnet chain IDs that match VFIDETestnetFaucet's internal allowlist.
+ * Keep in sync with `_isSupportedTestnetChain` in
+ * `contracts/testnet/VFIDETestnetFaucet.sol`.
+ */
+const TESTNET_CHAIN_IDS = new Set<number>([
+  31337,    // Hardhat / local
+  84532,    // Base Sepolia
+  80002,    // Polygon Amoy
+  300,      // zkSync Sepolia
+  11155111, // Ethereum Sepolia
+  421614,   // Arbitrum Sepolia
+  11155420, // Optimism Sepolia
+]);
+
+function parseBooleanEnv(value: string | undefined): boolean {
+  return (value ?? "").trim().toLowerCase() === "true";
+}
+
 async function main() {
   const ethers = await resolveEthers();
   const [deployer] = await ethers.getSigners();
   const network = process.env.HARDHAT_NETWORK ?? "hardhat";
   const book = readBook(network);
+  const provider = ethers.provider;
+  const chainId = Number((await provider.getNetwork()).chainId);
+  const isTestnetChain = TESTNET_CHAIN_IDS.has(chainId);
+  const deployTestnetFaucet = parseBooleanEnv(process.env.DEPLOY_TESTNET_FAUCET);
+
+  if (deployTestnetFaucet && !isTestnetChain) {
+    throw new Error(
+      `DEPLOY_TESTNET_FAUCET=true is not allowed on chainId ${chainId}. ` +
+      `Disable DEPLOY_TESTNET_FAUCET for production/mainnet deployments.`,
+    );
+  }
   const allowTemporaryDeployerBootstrap =
     process.env.ALLOW_TEMPORARY_DEPLOYER_BOOTSTRAP === "true" ||
     isLocalBootstrapNetwork(network);
@@ -116,7 +146,9 @@ async function main() {
   console.log("\n╔══════════════════════════════════════════╗");
   console.log("║  VFIDE Full System Deployment             ║");
   console.log("╚══════════════════════════════════════════╝");
-  console.log(`  Network  : ${network}`);
+  console.log(`  Network  : ${network} (chainId ${chainId})`);
+  console.log(`  Testnet  : ${isTestnetChain ? "yes" : "no — MAINNET PATH"}`);
+  console.log(`  Faucet   : ${deployTestnetFaucet && isTestnetChain ? "will deploy" : "skipped"}`);
   console.log(`  Deployer : ${deployer.address}`);
   console.log(
     `  Balance  : ${ethers.formatEther(await ethers.provider.getBalance(deployer.address))} ETH`,
@@ -311,11 +343,24 @@ async function main() {
     book.VFIDEToken,
   );
 
-  await deploy(
-    "VFIDETestnetFaucet",
-    book.VFIDEToken,
-    bootstrap.faucetOwner,
-  );
+  // VFIDETestnetFaucet — TESTNET ONLY, behind explicit opt-in.
+  // The faucet's own constructor enforces the same chainId allowlist
+  // (TESTNET_CHAIN_IDS), but we gate at the script level too so a
+  // misconfigured mainnet run fails fast with a clear message instead
+  // of burning gas on a constructor revert.
+  if (isTestnetChain && deployTestnetFaucet) {
+    await deploy(
+      "VFIDETestnetFaucet",
+      book.VFIDEToken,
+      bootstrap.faucetOwner,
+    );
+  } else {
+    if (!book.VFIDETestnetFaucet) book.VFIDETestnetFaucet = ethers.ZeroAddress;
+    console.log(
+      `  ⏭  Skipping VFIDETestnetFaucet (chainId ${chainId}, ` +
+      `DEPLOY_TESTNET_FAUCET=${process.env.DEPLOY_TESTNET_FAUCET ?? "unset"})`,
+    );
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   //  LAYER 8: Governance / Admin helpers  (formerly phase 2)
@@ -423,6 +468,36 @@ async function main() {
     const registry = await ethers.getContractAt("MerchantRegistry", book.MerchantRegistry);
     await call("MerchantRegistry.setAuthorizedEscrow → CommerceEscrow", () =>
       registry.setAuthorizedEscrow(book.CommerceEscrow),
+    );
+  }
+
+  // ── Faucet ↔ EcosystemVault wiring ───────────────────────────────────────
+  // The faucet records referrals on EcosystemVault.registerUserReferral,
+  // which is `onlyManager`. Without these two calls, every faucet claim's
+  // referral is silently dropped (the call is wrapped in try/catch on the
+  // faucet side), and the headhunter competition pool starves on testnet.
+  //
+  // EcosystemVault.setManager is timelocked (SENSITIVE_CHANGE_DELAY = 2 days)
+  // when the owner is an EOA, so this `setManager` call only QUEUES the
+  // change.  apply-full.ts calls `executeManagerChange()` after the delay.
+  //
+  // This wiring is testnet-only, mirroring the faucet deploy gate above.
+  if (
+    isTestnetChain &&
+    deployTestnetFaucet &&
+    book.VFIDETestnetFaucet &&
+    book.VFIDETestnetFaucet !== ethers.ZeroAddress &&
+    book.EcosystemVault
+  ) {
+    const ecosystemVault = await ethers.getContractAt("EcosystemVault", book.EcosystemVault);
+    const faucet = await ethers.getContractAt("VFIDETestnetFaucet", book.VFIDETestnetFaucet);
+
+    await call("EcosystemVault.setManager(Faucet) → queued (2d timelock)", () =>
+      ecosystemVault.setManager(book.VFIDETestnetFaucet, true),
+    );
+    // Faucet.setEcosystemVault has no timelock — owner-only immediate.
+    await call("Faucet.setEcosystemVault → EcosystemVault", () =>
+      faucet.setEcosystemVault(book.EcosystemVault),
     );
   }
 

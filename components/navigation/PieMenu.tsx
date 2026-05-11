@@ -23,7 +23,6 @@ import {
   Camera,
   Mail,
   Banknote,
-  Scroll,
   Gavel,
   AlertTriangle,
   Target,
@@ -170,7 +169,7 @@ const navigationItems: NavItem[] = [
     dataOnboarding: 'nav-governance',
     children: [
       { id: 'dao-hub', label: 'DAO Hub', href: '/dao-hub', icon: Crown, color: '#6366F1', badge: 'DAO' },
-      { id: 'governance-main', label: 'Proposals', href: '/governance', icon: Scroll, color: '#6366F1', dataOnboarding: 'nav-governance' },
+      { id: 'governance-main', label: 'Proposals', href: '/governance', icon: FileText, color: '#6366F1', dataOnboarding: 'nav-governance' },
       { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1', dataOnboarding: 'nav-council' },
       { id: 'appeals', label: 'Appeals', href: '/appeals', icon: AlertTriangle, color: '#6366F1' },
       { id: 'treasury', label: 'Treasury', href: '/treasury', icon: Landmark, color: '#6366F1' },

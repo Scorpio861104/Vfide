@@ -2,9 +2,16 @@ import { logger } from '@/lib/logger';
 import { withAuth } from '@/lib/auth/middleware';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod4';
-import { createWalletClient, createPublicClient, http, isAddress } from 'viem';
+import { createWalletClient, createPublicClient, http, isAddress, type Chain } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { baseSepolia } from 'viem/chains';
+import {
+  baseSepolia,
+  polygonAmoy,
+  zkSyncSepoliaTestnet,
+  sepolia,
+  arbitrumSepolia,
+  optimismSepolia,
+} from 'viem/chains';
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import type { JWTPayload } from '@/lib/auth/jwt';
 
@@ -18,6 +25,58 @@ const claimSchema = z.object({
 
 function isTestnetEnvironment(): boolean {
   return process.env.NEXT_PUBLIC_IS_TESTNET === 'true';
+}
+
+/**
+ * Resolve the active testnet chain + default RPC URL from
+ * NEXT_PUBLIC_DEFAULT_CHAIN_ID.  Mirrors the chain ID set used by
+ * `contracts/testnet/VFIDETestnetFaucet.sol::_isSupportedTestnetChain`.
+ *
+ * Returns `null` if the configured chain id is not a recognised testnet.
+ */
+function resolveTestnetChain(): { chain: Chain; defaultRpc: string; rpcEnvKey: string } | null {
+  const raw = (process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID ?? '84532').trim();
+  const chainId = Number.parseInt(raw, 10);
+  switch (chainId) {
+    case 84532:
+      return {
+        chain: baseSepolia,
+        defaultRpc: 'https://sepolia.base.org',
+        rpcEnvKey: 'NEXT_PUBLIC_BASE_SEPOLIA_RPC',
+      };
+    case 80002:
+      return {
+        chain: polygonAmoy,
+        defaultRpc: 'https://rpc-amoy.polygon.technology',
+        rpcEnvKey: 'NEXT_PUBLIC_POLYGON_AMOY_RPC',
+      };
+    case 300:
+      return {
+        chain: zkSyncSepoliaTestnet,
+        defaultRpc: 'https://sepolia.era.zksync.dev',
+        rpcEnvKey: 'NEXT_PUBLIC_ZKSYNC_SEPOLIA_RPC',
+      };
+    case 11155111:
+      return {
+        chain: sepolia,
+        defaultRpc: 'https://ethereum-sepolia-rpc.publicnode.com',
+        rpcEnvKey: 'NEXT_PUBLIC_SEPOLIA_RPC',
+      };
+    case 421614:
+      return {
+        chain: arbitrumSepolia,
+        defaultRpc: 'https://sepolia-rollup.arbitrum.io/rpc',
+        rpcEnvKey: 'NEXT_PUBLIC_ARBITRUM_SEPOLIA_RPC',
+      };
+    case 11155420:
+      return {
+        chain: optimismSepolia,
+        defaultRpc: 'https://sepolia.optimism.io',
+        rpcEnvKey: 'NEXT_PUBLIC_OPTIMISM_SEPOLIA_RPC',
+      };
+    default:
+      return null;
+  }
 }
 
 function isUnsafeLocalSignerEnabled(): boolean {
@@ -59,7 +118,11 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
 
     const faucetAddress = CONTRACT_ADDRESSES.VFIDETestnetFaucet;
     const operatorKey = process.env.FAUCET_OPERATOR_PRIVATE_KEY;
-    const rpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
+    const chainConfig = resolveTestnetChain();
+    if (!chainConfig) {
+      return NextResponse.json({ error: 'Unsupported testnet chain' }, { status: 503 });
+    }
+    const rpcUrl = process.env[chainConfig.rpcEnvKey] || chainConfig.defaultRpc;
 
     if (!isConfiguredContractAddress(faucetAddress)) {
       return NextResponse.json({ error: 'Faucet not configured' }, { status: 503 });
@@ -73,9 +136,9 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
       return NextResponse.json({ error: 'Faucet signer unavailable' }, { status: 503 });
     }
 
-    const publicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) });
+    const publicClient = createPublicClient({ chain: chainConfig.chain, transport: http(rpcUrl) });
     const account = privateKeyToAccount(operatorKey as `0x${string}`);
-    const walletClient = createWalletClient({ account, chain: baseSepolia, transport: http(rpcUrl) });
+    const walletClient = createWalletClient({ account, chain: chainConfig.chain, transport: http(rpcUrl) });
 
     const remaining = await publicClient.readContract({
       address: faucetAddress, abi: VFIDETestnetFaucetABI,
@@ -131,10 +194,14 @@ export async function GET() {
 
   try {
     const faucetAddress = CONTRACT_ADDRESSES.VFIDETestnetFaucet;
-    const rpcUrl = process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC || 'https://sepolia.base.org';
+    const chainConfig = resolveTestnetChain();
+    if (!chainConfig) {
+      return NextResponse.json({ error: 'Unsupported testnet chain' }, { status: 503 });
+    }
+    const rpcUrl = process.env[chainConfig.rpcEnvKey] || chainConfig.defaultRpc;
     if (!isConfiguredContractAddress(faucetAddress)) return NextResponse.json({ error: 'Faucet not configured' }, { status: 503 });
 
-    const publicClient = createPublicClient({ chain: baseSepolia, transport: http(rpcUrl) });
+    const publicClient = createPublicClient({ chain: chainConfig.chain, transport: http(rpcUrl) });
     const remaining = await publicClient.readContract({
       address: faucetAddress, abi: VFIDETestnetFaucetABI, functionName: 'getRemainingToday',
     });

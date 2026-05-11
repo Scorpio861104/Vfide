@@ -1,7 +1,7 @@
 /**
  * VFIDE Wiring Finalization — Phase 2
  * 
- * Run 48 hours after apply-all.ts (Phase 1).
+ * Run 48 hours after apply-full.ts (Phase 1).
  * Confirms FraudRegistry exemption, proposes FlashLoan exemption.
  * Wait 48h then run scripts/future/apply-phase3.ts.
  * 

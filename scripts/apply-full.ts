@@ -140,6 +140,37 @@ async function main() {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  //  Other timelocked DAO transfers (also queued in deploy-full.ts).
+  //  Each contract has its own pending-DAO state and apply function:
+  //    - MerchantPortal.applyDAO          (DAO_CHANGE_DELAY)
+  //    - VFIDEFlashLoan.applyDAO          (DAO_CHANGE_DELAY)
+  //    - VFIDETermLoan.applyDAO           (DAO_CHANGE_DELAY_TL)
+  //    - FraudRegistry.applyDAO_FR        (DAO_CHANGE_DELAY_FR — note name)
+  //  All are `onlyDAO`; at this point the current DAO is still the deployer.
+  // ══════════════════════════════════════════════════════════════════════════
+  console.log("\n═══ Module DAO Transfers ═══");
+  const moduleDaoTransfers: Array<{
+    name: string;
+    bookKey: string;
+    factoryName: string;
+    fn: string;
+  }> = [
+    { name: "MerchantPortal", bookKey: "MerchantPortal", factoryName: "MerchantPortal", fn: "applyDAO" },
+    { name: "VFIDEFlashLoan", bookKey: "VFIDEFlashLoan", factoryName: "VFIDEFlashLoan", fn: "applyDAO" },
+    { name: "VFIDETermLoan",  bookKey: "VFIDETermLoan",  factoryName: "VFIDETermLoan",  fn: "applyDAO" },
+    { name: "FraudRegistry",  bookKey: "FraudRegistry",  factoryName: "FraudRegistry",  fn: "applyDAO_FR" },
+  ];
+  for (const { name, bookKey, factoryName, fn } of moduleDaoTransfers) {
+    const addr = book[bookKey];
+    if (!addr) {
+      console.log(`  ⏭  ${name}: not in book; skipped`);
+      continue;
+    }
+    const c = await ethers.getContractAt(factoryName, addr);
+    await call(`${name}.${fn} → DAO`, () => (c as any)[fn]());
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   //  Serialised system-exemption queue
   //  Inspect which exemption is currently pending, confirm it, then propose
   //  the next one (if any remain).
@@ -207,6 +238,20 @@ async function main() {
     const hub = await ethers.getContractAt("VaultHub", hubAddr);
     await call("VaultHub.applyRecoveryApprover (SeerGuardian)", () =>
       hub.applyRecoveryApprover(),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  EcosystemVault: execute queued manager change for the testnet faucet
+  //  (queued in deploy-full.ts; SENSITIVE_CHANGE_DELAY = 2 days).
+  //  Idempotent — reverts with ECO_NoPendingChange if nothing pending.
+  // ══════════════════════════════════════════════════════════════════════════
+  const ecoAddr = book.EcosystemVault ?? process.env.NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS;
+  if (ecoAddr) {
+    console.log("\n═══ EcosystemVault Manager Change ═══");
+    const eco = await ethers.getContractAt("EcosystemVault", ecoAddr);
+    await call("EcosystemVault.executeManagerChange (Faucet)", () =>
+      eco.executeManagerChange(),
     );
   }
 

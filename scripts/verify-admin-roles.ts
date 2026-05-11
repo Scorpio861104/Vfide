@@ -37,7 +37,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-// Matches the structure deploy-all.ts checkpoints to .deployments/<network>.json (per OP-2)
+// Matches the structure deploy-full.ts checkpoints to .deployments/<network>.json (per OP-2)
 type DeploymentManifest = {
   network: string;
   chainId: number;
@@ -99,7 +99,7 @@ async function main() {
   const manifestPath = join(process.cwd(), '.deployments', `${network}.json`);
   if (!existsSync(manifestPath)) {
     console.error(`[verify-admin-roles] FATAL: deployment manifest not found at ${manifestPath}`);
-    console.error('[verify-admin-roles] Run deploy-all.ts first; manifest is checkpointed by OP-2.');
+    console.error('[verify-admin-roles] Run deploy-full.ts first; manifest is checkpointed by OP-2.');
     process.exit(2);
   }
 
