@@ -3,6 +3,7 @@
 // Extracted from page.tsx — verify imports
 import { GlassCard } from '@/components/ui/GlassCard';
 import { motion } from 'framer-motion';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 export function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
   const disbursements = [
@@ -14,6 +15,7 @@ export function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
 
   return (
     <div className="space-y-6">
+      <SampleDataBanner />
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-zinc-100">Disbursement Proposals</h2>
         {isConnected && (

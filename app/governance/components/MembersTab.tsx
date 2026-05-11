@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { exportCSV } from "@/components/export/csv-export"
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
 
 export function MembersTab({ searchQuery }: { searchQuery: string }) {
   const [sortBy, setSortBy] = useState<"score" | "votes" | "participation">("score")
@@ -29,6 +30,7 @@ export function MembersTab({ searchQuery }: { searchQuery: string }) {
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
+        <SampleDataBanner />
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">

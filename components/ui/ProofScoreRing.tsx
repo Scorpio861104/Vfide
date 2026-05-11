@@ -146,7 +146,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
     { label: 'Vault Created', value: 500, icon: '🏦' },
     { label: 'Transactions', value: Math.min(Math.max(0, (score - 5500) * 0.4), 1500), icon: '💳' },
     { label: 'Governance', value: Math.min(250, Math.max(0, (score - 6000) * 0.2)), icon: '🗳️' },
-    { label: 'Badges', value: Math.min(500, Math.max(0, (score - 6500) * 0.3)), icon: '🏆' },
+    { label: 'Achievements', value: Math.min(500, Math.max(0, (score - 6500) * 0.3)), icon: '🏆' },
     ...(xpLevel != null
       ? [{ label: `XP Level ${xpLevel} Bonus`, value: xpBonus, icon: '⚡' }]
       : []),
@@ -211,7 +211,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
           />
         </div>
         <p className="text-xs text-zinc-500 mt-3 text-center">
-          💡 Increase your score through governance, badges, transactions, and levelling up your XP
+          💡 Increase your score through governance, achievements, transactions, and levelling up your XP
         </p>
       </div>
 

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { isAddress } from 'viem';
 import { Shield, Users, Clock } from 'lucide-react';
-import { USER_VAULT_ABI, ZERO_ADDRESS, isCardBoundVaultMode } from '@/lib/contracts';
+import { USER_VAULT_ABI, ZERO_ADDRESS, isCardBoundVaultMode, VaultInfrastructureABI } from '@/lib/contracts';
 import { safeLocalStorage } from '@/lib/utils';
 
 type WatchedVault = {
@@ -476,7 +476,7 @@ function GuardianResponsibilitiesCard({
 
   const { data: recoveryStatus } = useReadContract({
     address: entry.address,
-    abi: USER_VAULT_ABI,
+    abi: VaultInfrastructureABI,
     functionName: 'getRecoveryStatus',
     query: { enabled: recoverySupported },
   });
@@ -551,7 +551,7 @@ function GuardianPendingRecoveryCard({
 
   const { data: recoveryStatus, refetch: refetchRecoveryStatus } = useReadContract({
     address: entry.address,
-    abi: USER_VAULT_ABI,
+    abi: VaultInfrastructureABI,
     functionName: 'getRecoveryStatus',
     query: { enabled: recoverySupported, refetchInterval: 15000 },
   });

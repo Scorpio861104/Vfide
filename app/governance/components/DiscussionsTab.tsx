@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useAccount } from "wagmi"
 import { sanitizeString } from "@/lib/validation"
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
 
 interface Discussion {
   id: number
@@ -275,6 +276,7 @@ export function DiscussionsTab({ searchQuery }: { searchQuery: string }) {
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
+        <SampleDataBanner />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-zinc-100 mb-2">💬 Community Discussions</h2>

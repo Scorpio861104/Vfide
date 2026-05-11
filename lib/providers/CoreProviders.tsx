@@ -7,6 +7,7 @@ import { AdaptiveProvider } from '@/lib/adaptive';
 import { OnboardingProvider } from '@/components/onboarding';
 import { ToastProvider } from '@/components/ui/toast';
 import { Web3Providers } from './Web3Providers';
+import { ClientLayout } from '@/components/layout/ClientLayout';
 
 export function CoreProviders({ children }: { children: ReactNode }) {
   return (
@@ -15,7 +16,7 @@ export function CoreProviders({ children }: { children: ReactNode }) {
         <AdaptiveProvider>
           <OnboardingProvider>
             <ToastProvider>
-              <Web3Providers>{children}</Web3Providers>
+              <Web3Providers><ClientLayout>{children}</ClientLayout></Web3Providers>
             </ToastProvider>
           </OnboardingProvider>
         </AdaptiveProvider>

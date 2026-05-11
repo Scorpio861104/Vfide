@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle2 as CheckCircle, Clock, Vote } from 'lucide-react';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 export function VotingTab({ isConnected }: { isConnected: boolean }) {
   const removalVotes = [
@@ -17,6 +18,7 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
 
   return (
     <div className="space-y-8">
+      <SampleDataBanner />
       {/* Voting Overview */}
       <motion.div 
         initial={{ opacity: 0 }}

@@ -186,7 +186,7 @@ const navigationItems: NavItem[] = [
       { id: 'leaderboard', label: 'Leaderboard', href: '/leaderboard', icon: Crown, color: '#EC4899' },
       { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
       { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
-      { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
+      { id: 'badges', label: 'Achievements', href: '/badges', icon: Star, color: '#EC4899' },
       { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Tag, color: '#EC4899' },
       { id: 'rewards', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
       { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },

@@ -125,8 +125,8 @@ const INDEXED_EVENTS: EventDef[] = [
   {
     contract: 'Seer',
     address: CONTRACT_ADDRESSES.Seer,
-    event: 'ScoreUpdated',
-    abi: 'event ScoreUpdated(address indexed subject, uint16 oldScore, uint16 newScore, address indexed by)',
+    event: 'ScoreSet',
+    abi: 'event ScoreSet(address indexed subject, uint16 oldScore, uint16 newScore, string reason)',
     handler: async (log, args) => {
       await storeEvent('score_update', {
         subject: args.subject as string,
@@ -149,8 +149,8 @@ const INDEXED_EVENTS: EventDef[] = [
     // SeerSocial at all, this block can be removed in a future v19.x patch.
     contract: 'SeerSocial',
     address: CONTRACT_ADDRESSES.SeerSocial,
-    event: 'Endorsed',
-    abi: 'event Endorsed(address indexed endorser, address indexed subject, string reason)',
+    event: 'UserEndorsed',
+    abi: 'event UserEndorsed(address indexed endorser, address indexed subject, uint16 weight, uint64 expiry, string reason)',
     handler: async (log, args) => {
       await storeEvent('endorsement', {
         endorser: args.endorser as string,
@@ -165,7 +165,7 @@ const INDEXED_EVENTS: EventDef[] = [
     contract: 'MerchantPortal',
     address: CONTRACT_ADDRESSES.MerchantPortal,
     event: 'PaymentProcessed',
-    abi: 'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, string orderId)',
+    abi: 'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)',
     handler: async (log, args) => {
       await storeEvent('payment', {
         customer: args.customer as string,

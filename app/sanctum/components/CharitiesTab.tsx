@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle, ExternalLink } from 'lucide-react';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 export function CharitiesTab() {
   const charities = [
@@ -16,6 +17,7 @@ export function CharitiesTab() {
 
   return (
     <div className="space-y-6">
+      <SampleDataBanner />
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-zinc-100">Approved Charities</h2>
         <div className="text-sm text-zinc-400">DAO-verified organizations</div>

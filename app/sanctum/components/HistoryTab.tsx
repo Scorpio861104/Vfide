@@ -2,6 +2,8 @@
 
 // Extracted from page.tsx — verify imports
 
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
+
 const DEFAULT_CHAIN_ID = 8453;
 const TX_EXPLORER_BY_CHAIN: Record<number, string> = {
   1: 'https://etherscan.io',
@@ -26,6 +28,7 @@ export function HistoryTab() {
 
   return (
     <div className="space-y-6">
+      <SampleDataBanner />
       <h2 className="text-2xl font-bold text-zinc-100">Transaction History</h2>
 
       <div className="bg-zinc-800 border border-zinc-700 rounded-xl overflow-hidden">

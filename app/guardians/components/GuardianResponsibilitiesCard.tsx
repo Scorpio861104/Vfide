@@ -10,6 +10,7 @@ import {
   ZERO_ADDRESS,
   isConfiguredContractAddress,
   isCardBoundVaultMode,
+  VaultInfrastructureABI,
 } from '@/lib/contracts';
 import { shortAddress, type WatchedVault } from './types';
 
@@ -67,7 +68,7 @@ export function GuardianResponsibilitiesCard({
 
   const { data: recoveryStatus } = useReadContract({
     address: entry.address,
-    abi: USER_VAULT_ABI,
+    abi: VaultInfrastructureABI,
     functionName: 'getRecoveryStatus',
     query: { enabled: recoverySupported },
   });

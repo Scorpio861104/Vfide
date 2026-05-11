@@ -263,8 +263,8 @@ export function NotificationSettings({ userId }: NotificationSettingsProps) {
             />
             <NotificationTypeToggle
               icon={Award}
-              label="Badges"
-              description="New badges you've earned"
+              label="Achievements"
+              description="New achievements you've earned"
               enabled={preferences.types[NotificationType.BADGE_EARNED]}
               onToggle={() => handleToggleType(NotificationType.BADGE_EARNED)}
             />
@@ -404,7 +404,7 @@ function getTypeLabel(type: NotificationType): string {
     [NotificationType.MENTION]: 'Mentions',
     [NotificationType.REACTION]: 'Reactions',
     [NotificationType.GROUP_INVITE]: 'Group Invites',
-    [NotificationType.BADGE_EARNED]: 'Badges',
+    [NotificationType.BADGE_EARNED]: 'Achievements',
     [NotificationType.ANNOUNCEMENT]: 'Announcements',
   };
   return labels[type] || type;

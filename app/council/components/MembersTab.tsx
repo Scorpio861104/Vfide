@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { Calendar, Crown, TrendingUp } from 'lucide-react';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 export function MembersTab() {
   const members = [
@@ -64,6 +65,7 @@ export function MembersTab() {
 
   return (
     <div className="space-y-8">
+      <SampleDataBanner />
       {/* Members List */}
       <motion.div 
         initial={{ opacity: 0 }}

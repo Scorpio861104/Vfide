@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useAccount } from "wagmi"
 import { sanitizeString } from "@/lib/validation"
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
 import { useCopyWithId } from "@/lib/hooks/useCopyToClipboard"
 
 const PROMOTION_THRESHOLD = 50
@@ -211,6 +212,7 @@ export function SuggestionsTab() {
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4">
+        <SampleDataBanner />
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-zinc-100">💡 Submit & Vote on Ideas</h2>

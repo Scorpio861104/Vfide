@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from "react"
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
 
 interface CouncilTabProps {
   councilMembers?: Array<{
@@ -74,6 +75,7 @@ export function CouncilTab({
   return (
     <section className="py-12">
       <div className="container mx-auto px-3 sm:px-4">
+        <SampleDataBanner />
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-2/3 space-y-6">
             <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
