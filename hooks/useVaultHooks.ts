@@ -143,7 +143,7 @@ export function useVaultBalance() {
   const { data: pendingTxData } = useReadContracts({
     contracts: pendingContracts,
     query: {
-      enabled: !!vaultAddress && pendingCount > 0,
+      enabled: false, // pendingTransactions removed from CardBoundVault - uses withdrawal queue instead
     }
   })
 
