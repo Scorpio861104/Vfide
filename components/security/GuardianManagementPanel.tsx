@@ -10,7 +10,6 @@ import { MyGuardiansTab } from '@/app/guardians/components/MyGuardiansTab'
 import { 
   useUserVault, 
   useVaultGuardians, 
-  useGuardianCancelInheritance,
   useInheritanceStatus,
 } from '@/lib/vfide-hooks'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
