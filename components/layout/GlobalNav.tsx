@@ -12,6 +12,7 @@ import { VaultStatusModal } from "../vault/VaultStatusModal";
 import { FaucetButton } from "../wallet/FaucetButton";
 import { QuickWalletConnect } from "../wallet/QuickWalletConnect";
 import { NetworkSwitcher } from "../wallet/NetworkSwitcher";
+import { VFIDEMark } from "../ui/VFIDEMark";
 import {
   MetalDashboardIcon,
   MetalVaultIcon,
@@ -161,47 +162,13 @@ export function GlobalNav() {
       <div className="container mx-auto px-3 sm:px-4 py-3">
         <div className="flex items-center justify-between gap-2">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">\n            <motion.svg 
-              width="40" 
-              height="40" 
-              viewBox="0 0 40 40" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg" 
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <motion.div 
               whileHover={{ scale: 1.1, rotate: 5 }}
               transition={{ type: "spring", stiffness: 400 }}
             >
-              {/* Shield background */}
-              <path 
-                d="M20 2L35 8V18C35 28 28 35 20 38C12 35 5 28 5 18V8L20 2Z" 
-                fill="url(#shield-gradient)" 
-                stroke="url(#shield-stroke)" 
-                strokeWidth="1.5"
-              />
-              
-              {/* V letterform */}
-              <path 
-                d="M12 12L20 28L28 12" 
-                stroke="#F8F8FC" 
-                strokeWidth="3" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              />
-              
-              {/* Accent lines */}
-              <path d="M15 10H25" stroke="#00F0FF" strokeWidth="1" opacity="0.6"/>
-              <circle cx="20" cy="30" r="1.5" fill="#00F0FF"/>
-              
-              <defs>
-                <linearGradient id="shield-gradient" x1="20" y1="2" x2="20" y2="38" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#1A1A1D"/>
-                  <stop offset="1" stopColor="#0F0F12"/>
-                </linearGradient>
-                <linearGradient id="shield-stroke" x1="5" y1="2" x2="35" y2="38" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#00F0FF"/>
-                  <stop offset="1" stopColor="#0080FF"/>
-                </linearGradient>
-              </defs>
-            </motion.svg>
+              <VFIDEMark size={40} glowing={false} animated={false} />
+            </motion.div>
             <span className="text-2xl font-(family-name:--font-display) font-bold text-zinc-50 group-hover:text-cyan-400 transition-colors">
               VFIDE
             </span>

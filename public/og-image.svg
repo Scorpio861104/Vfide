@@ -12,11 +12,13 @@
     <line x1="0" y1="500" x2="1200" y2="500" stroke="#00F0FF" stroke-width="1"/>
   </g>
   
-  <!-- Logo shield -->
-  <g transform="translate(100, 165)">
-    <path d="M150 0L300 50V150C300 250 225 325 150 350C75 325 0 250 0 150V50L150 0Z" fill="#1A1A1D" stroke="#00F0FF" stroke-width="4"/>
-    <path d="M75 75L150 225L225 75" stroke="#F5F3E8" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="150" cy="280" r="8" fill="#00F0FF"/>
+  <!-- Logo mark -->
+  <g transform="translate(100, 155)">
+    <path d="M72 56H114L192 320L176 320L72 56Z" fill="#1E2E3C"/>
+    <path d="M328 56H286L208 320H224L328 56Z" fill="#2A3F4F"/>
+    <path d="M72 56L200 370L328 56" stroke="#17E8F0" stroke-width="3" opacity="0.8"/>
+    <circle cx="200" cy="370" r="7" fill="#00E8F0"/>
+    <circle cx="200" cy="370" r="14" fill="#00E8F0" fill-opacity="0.14"/>
   </g>
   
   <!-- Text -->

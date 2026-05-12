@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Code2, X, MessageCircle, ExternalLink } from "lucide-react";
+import { VFIDEMark } from "../ui/VFIDEMark";
 
 type FooterLink = {
   href: string;
@@ -58,16 +59,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-3 lg:col-span-2">
             <Link href="/" className="inline-flex items-center gap-3 mb-4 group">
-              <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 2L35 8V18C35 28 28 35 20 38C12 35 5 28 5 18V8L20 2Z" fill="url(#footer-shield)" stroke="#00F0FF" strokeWidth="1"/>
-                <path d="M12 12L20 28L28 12" stroke="#F8F8FC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <defs>
-                  <linearGradient id="footer-shield" x1="20" y1="2" x2="20" y2="38" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#1A1A1D"/>
-                    <stop offset="1" stopColor="#0F0F12"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+              <VFIDEMark size={32} glowing={false} animated={false} />
               <span className="text-xl font-[family-name:var(--font-display)] font-bold text-zinc-50 group-hover:text-cyan-400 transition-colors">
                 VFIDE
               </span>
