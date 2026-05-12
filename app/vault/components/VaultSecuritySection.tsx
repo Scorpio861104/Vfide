@@ -1,5 +1,19 @@
 'use client';
 
+/**
+ * VaultSecuritySection — Emergency-pause / "panic button" panel.
+ *
+ * Pre-cleanup, this component branched on `supportsDuration` from
+ * `useSelfPanic` and rendered a duration dropdown (1h / 6h / 24h /
+ * 3d / 7d) for the case where it was true. The CardBoundVault `pause()`
+ * function takes no duration argument and stays paused until manually
+ * unpaused, so `supportsDuration` is hard-coded to false. The duration
+ * dropdown branch was never reachable — removed.
+ *
+ * Also dropped the unused `panicDuration` state and the unused
+ * `durationHours` parameter on `selfPanic`.
+ */
+
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, Clock, Lock, Shield } from 'lucide-react';
@@ -9,23 +23,22 @@ import { useQuarantineStatus, useSelfPanic } from '@/lib/vfide-hooks';
 
 export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
   const quarantineData = useQuarantineStatus(vaultAddress || undefined);
-  const { selfPanic, isPanicking, isAvailable: isPanicAvailable, supportsDuration } = useSelfPanic();
-  
+  const { selfPanic, isPanicking, isAvailable: isPanicAvailable } = useSelfPanic();
+
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
-  const [panicDuration, setPanicDuration] = useState(24);
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
-  
+
   useEffect(() => {
     // Update time every minute for countdown
     const interval = setInterval(() => {
       setNow(Math.floor(Date.now() / 1000));
     }, 60000);
-    
+
     return () => {
       clearInterval(interval);
     };
   }, []);
-  
+
   const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
   const hasTimer = quarantineData.supportsTimer && quarantineRemaining > 0;
   const isQuarantined = quarantineData.isQuarantined || hasTimer;
@@ -33,10 +46,10 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
   const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60);
 
   const canPanic = isPanicAvailable && !isQuarantined;
-  
+
   const handlePanic = () => {
     if (!canPanic || isPanicking) return;
-    selfPanic(panicDuration);
+    selfPanic();
     setShowPanicConfirm(false);
   };
 
@@ -45,17 +58,17 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
   return (
     <section className="py-8">
       <div className="container mx-auto px-4 max-w-6xl">
-        <GlassCard 
-          className={`p-6 ${isQuarantined ? 'border-red-500/50' : 'border-white/10'}`} 
+        <GlassCard
+          className={`p-6 ${isQuarantined ? 'border-red-500/50' : 'border-white/10'}`}
           hover={false}
           gradient={isQuarantined ? "red" : undefined}
         >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <motion.div 
+            <div className="flex items-center gap-4 min-w-0">
+              <motion.div
                 animate={isQuarantined ? { scale: [1, 1.1, 1] } : {}}
                 transition={{ duration: 2, repeat: Infinity }}
-                className={`p-4 rounded-2xl ${isQuarantined ? 'bg-red-500/20' : 'bg-cyan-500/20'}`}
+                className={`p-4 rounded-2xl flex-shrink-0 ${isQuarantined ? 'bg-red-500/20' : 'bg-cyan-500/20'}`}
               >
                 {isQuarantined ? (
                   <Lock className="w-8 h-8 text-red-400" />
@@ -63,12 +76,12 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   <Shield className="w-8 h-8 text-cyan-400" />
                 )}
               </motion.div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-xl font-bold text-white">
                   {isQuarantined ? 'Vault Quarantined' : 'Emergency Security'}
                 </h3>
                 <p className="text-white/60 text-sm">
-                  {isQuarantined 
+                  {isQuarantined
                     ? hasTimer
                       ? `Locked for ${remainingHours}h ${remainingMinutes}m`
                       : 'Paused until you explicitly unpause the vault'
@@ -81,7 +94,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                 )}
               </div>
             </div>
-            
+
             <AnimatePresence mode="wait">
               {!showPanicConfirm ? (
                 <motion.button
@@ -93,10 +106,10 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   whileTap={{ scale: canPanic ? 0.95 : 1 }}
                   onClick={() => setShowPanicConfirm(true)}
                   disabled={!canPanic || isQuarantined}
-                  className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 ${
-                    isQuarantined 
+                  className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 flex-shrink-0 ${
+                    isQuarantined
                       ? 'bg-white/10 text-white/40 cursor-not-allowed'
-                      : canPanic 
+                      : canPanic
                         ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25'
                         : 'bg-white/10 text-white/40 cursor-not-allowed'
                   }`}
@@ -112,23 +125,9 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
                   exit={{ opacity: 0, scale: 0.9 }}
                   className="flex flex-col sm:flex-row items-center gap-3"
                 >
-                  {supportsDuration ? (
-                    <select
-                      value={panicDuration}
-                      onChange={(e) => setPanicDuration(Number(e.target.value))}
-                      className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white"
-                    >
-                      <option value={1}>1 hour</option>
-                      <option value={6}>6 hours</option>
-                      <option value={24}>24 hours</option>
-                      <option value={72}>3 days</option>
-                      <option value={168}>7 days</option>
-                    </select>
-                  ) : (
-                    <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white/70 text-sm">
-                      This action pauses the vault until it is manually unpaused.
-                    </div>
-                  )}
+                  <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white/70 text-sm">
+                    This action pauses the vault until it is manually unpaused.
+                  </div>
                   <button
                     onClick={handlePanic}
                     disabled={isPanicking}
@@ -146,7 +145,7 @@ export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${stri
               )}
             </AnimatePresence>
           </div>
-          
+
           {isQuarantined && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}

@@ -27,7 +27,6 @@ export function useVaultOperations() {
   const { vaultAddress } = vaultHub;
   const hasVaultAddress = !!vaultAddress && isAddress(vaultAddress) && vaultAddress !== ZERO_ADDRESS;
   const { balance: vaultBalance, isLoading: isLoadingBalance } = useVaultBalance();
-  const usdValue = '0.00'; // requires live price feed
 
   const recovery = useVaultRecovery(vaultAddress);
 
@@ -396,7 +395,6 @@ export function useVaultOperations() {
     // Balances
     vaultBalance,
     isLoadingBalance,
-    usdValue,
     // Recovery
     ...recovery,
     // Withdraw / transfer state + handler

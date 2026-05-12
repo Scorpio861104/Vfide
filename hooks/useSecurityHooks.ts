@@ -80,8 +80,13 @@ export function useCanSelfPanic() {
 }
 
 /**
- * Self-panic: Lock your own vault immediately
- * NOTE: Returns isAvailable=false if PanicGuard is not deployed
+ * Self-panic: Lock your own vault immediately.
+ *
+ * Calls `pause()` on the CardBoundVault. The pause is unconditional —
+ * the vault stays paused until the owner explicitly unpauses it. The
+ * `supportsDuration` flag returned below is therefore always `false`,
+ * and the UI surfaces a static "manual unpause required" notice rather
+ * than a duration picker.
  */
 export function useSelfPanic() {
   const CONTRACT_ADDRESSES = useContractAddresses();
@@ -103,14 +108,14 @@ export function useSelfPanic() {
     functionName: 'paused',
     query: { enabled: !!resolvedVaultAddress },
   })
-  
+
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
   })
-  
+
   const isAvailable = !!resolvedVaultAddress && !paused
-  
-  const selfPanic = (durationHours: number = 24) => {
+
+  const selfPanic = () => {
     if (!isAvailable) {
       if (process.env.NODE_ENV === 'development') {
         logger.error('Vault is unavailable or already paused - selfPanic unavailable')
@@ -124,17 +129,16 @@ export function useSelfPanic() {
         abi: ACTIVE_VAULT_ABI,
         functionName: 'pause',
       })
-      return
     }
   }
-  
+
   return {
     selfPanic,
     isPanicking: isPending || isConfirming,
     isSuccess,
     txHash: data,
     isAvailable,
-    supportsDuration: false,
+    supportsDuration: false as const,
   }
 }
 

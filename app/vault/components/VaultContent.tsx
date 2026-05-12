@@ -44,7 +44,6 @@ export function VaultContent() {
             <VaultOverviewStats
               vaultBalance={ops.vaultBalance}
               isLoadingBalance={ops.isLoadingBalance}
-              usdValue={ops.usdValue}
               guardianCount={ops.guardianCount}
             />
 

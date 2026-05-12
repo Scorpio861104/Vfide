@@ -1,9 +1,19 @@
 /**
  * useLeaderboard - Fetch real leaderboard data from Seer contract
- * 
+ *
  * Since there's no built-in "getTopScorers" function in the contract,
- * we use events to track score changes and build a leaderboard.
- * For production, this should be replaced with a subgraph/indexer.
+ * we scan `ScoreSet` events to collect addresses that have ever had a
+ * score change, then read each one's current score. For production,
+ * this should be replaced with a subgraph or indexer; today this
+ * means the leaderboard is bounded by event-log query limits.
+ *
+ * Pre-cleanup, this hook seeded its address set with three hardcoded
+ * Ethereum addresses labeled "Known active addresses on testnet". They
+ * weren't actually known active addresses on our testnet — they're
+ * arbitrary mainnet addresses, and they were filtered out anyway by
+ * `score > 0` since they have no on-chain score in this contract. Also
+ * dropped: a fake `badges: Math.floor(score / 1000)` field that was in
+ * the type but never rendered. Real badge counts need a BadgeNFT read.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -24,7 +34,6 @@ export interface LeaderboardEntry {
   score: number;
   tier: string;
   change: number;
-  badges: number;
 }
 
 interface LeaderboardState {
@@ -41,14 +50,6 @@ interface LeaderboardState {
 
 const CACHE_KEY = 'vfide_leaderboard_cache';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// Known active addresses on testnet (seed addresses for initial data)
-// These will be augmented by event scanning
-const SEED_ADDRESSES: `0x${string}`[] = [
-  '0x742d35Cc6634C0532925a3b844Bc9e7595f8bEb1',
-  '0x8ba1f109551bD432803012645Ac136ddd64DBA72',
-  '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B',
-];
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -141,8 +142,8 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & { refetch
     try {
       setState(prev => ({ ...prev, isLoading: !cached }));
 
-      // Collect unique addresses from events
-      const addresses = new Set<`0x${string}`>(SEED_ADDRESSES);
+      // Collect unique addresses from ScoreSet events
+      const addresses = new Set<`0x${string}`>();
       
       // Try to get addresses from ProofScore events if available
       try {
@@ -159,7 +160,8 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & { refetch
           }
         });
       } catch {
-        // Events may not be available, continue with seed addresses
+        // Events query failed (RPC limit, log lookback, etc). The address
+        // set may be empty in this case; the leaderboard will render empty.
       }
 
       // Fetch scores for all addresses
@@ -200,8 +202,7 @@ export function useLeaderboard(limit: number = 50): LeaderboardState & { refetch
           address: item.address,
           score: item.score,
           tier: getTierFromScore(item.score),
-          change: 0, // Would need historical data to calculate
-          badges: Math.floor(item.score / 1000), // Estimate based on score
+          change: 0, // Requires historical data to populate; left at 0
         });
       });
 

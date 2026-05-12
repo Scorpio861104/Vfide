@@ -7,6 +7,8 @@ import { useAccount } from 'wagmi';
 import { AppShell } from '@/components/navigation';
 import { LiveProofScoreProvider } from '@/components/navigation/LiveProofScoreProvider';
 import { RealtimeProvider, UserProvider } from '@/lib/data';
+import { WizardMount } from '@/components/wizard/WizardMount';
+import { WizardStateProvider } from '@/components/wizard/useWizardState';
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -48,7 +50,10 @@ export function ClientLayout({ children }: ClientLayoutProps) {
     <RealtimeProvider wsUrl={process.env.NEXT_PUBLIC_WEBSOCKET_URL}>
       <UserProvider address={address}>
         <LiveProofScoreProvider>
-          <AppShell>{children}</AppShell>
+          <WizardStateProvider>
+            <AppShell>{children}</AppShell>
+            <WizardMount />
+          </WizardStateProvider>
         </LiveProofScoreProvider>
       </UserProvider>
     </RealtimeProvider>

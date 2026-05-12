@@ -1,5 +1,287 @@
 # Changelog
 
+## 2026-05-12 (Round 12) — Vault setup wizard
+
+Earlier rounds deleted the legacy `OnboardingManager` → `HelpCenter` →
+`SetupWizard` → `GuardianWizard` chain (1,441 lines) because its core
+`useSimpleVault.executeVaultAction` always errored and nothing in the
+running app actually rendered the wizard. So the app had no onboarding
+flow at all. This round rebuilds one — a real, chapter-based wizard
+that walks new users through everything their vault needs, calls real
+contracts at every step, and can be turned off and back on.
+
+### What was asked for
+
+> Full system wizard that can be turned off and on. Chapters, after
+> each section it asks if they want to continue. Vault create
+> required, everything else skippable. All six steps.
+
+### What was built
+
+**`components/wizard/`** — 13 new files:
+
+- `useWizardState.tsx` — Context-backed shared state (a previous attempt
+  used per-component `useState`, which meant the launcher page and the
+  overlay had separate copies that only resynced through localStorage on
+  reload — fixed by moving state into a Context, mounted in `ClientLayout`).
+  Persists to localStorage, listens for `storage` events so two open tabs
+  stay in sync, auto-pauses after every chapter except `welcome` and the
+  one before `done`.
+
+- `VaultSetupWizard.tsx` — modal shell, progress bar, the "continue or
+  pause here?" prompt between chapters, X close, all the chapter-routing
+  glue. Calls `useOnboarding.completeStep('account')` when the
+  CreateVault chapter completes so the legacy `OnboardingProvider`
+  stays consistent.
+
+- `WizardMount.tsx` — auto-launches for first-time users (connected
+  wallet + no vault + wizard enabled + no completed/skipped chapters
+  yet), suppressed on `/checkout`, `/legal`, `/api`. Force-opens when
+  the URL has `?wizard=1`, and clears the param on close to avoid a
+  "X doesn't actually close it" loop.
+
+- `ChapterShell.tsx` — consistent header (chapter index, required
+  badge), body, error/info notice, footer with Skip link (only when
+  `onSkip` is provided — required chapters don't get one).
+
+- `chapters/WelcomeChapter.tsx` — orientation card with six-feature
+  grid explaining what's coming. "Skip this step" turns the wizard off
+  entirely (not just skip-and-advance), since the user clicked Skip on
+  the *entire* wizard not a specific feature.
+
+- `chapters/CreateVaultChapter.tsx` — required. Handles every state:
+  not connected (ConnectButton), wrong chain (chain-switch button via
+  RainbowKit), VaultHub not configured (helpful error, no skip
+  available), loading, already-has-vault (Continue), or create flow
+  (calls `useVaultHub.createVault` which hits `VaultHub.ensureVault`).
+  Refetches `vaultOf` after a successful tx so `hasVault` flips.
+
+- `chapters/SpendLimitsChapter.tsx` — three input fields (per-transfer,
+  per-day, large-transfer threshold) with current on-chain values
+  shown as hints. "Use sensible defaults" button (100/500/50 VFIDE).
+  Two sequential writes — `setSpendLimits` then
+  `setLargeTransferThreshold` — with `waitForTransactionReceipt`
+  between them so the user sees both confirmations before moving on.
+  Validates `perTransfer ≤ perDay` and rejects zero/negative inputs.
+
+- `chapters/GuardiansChapter.tsx` — address input + Add button. Calls
+  `useVaultRecovery.addGuardian` which hits `CardBoundVault.setGuardian`.
+  Blocks self-as-guardian (owner can't be their own guardian — the
+  contract requires at least one *independent* guardian for the
+  finalize call). Re-reads `guardianCount` after every add so the
+  visible count is the on-chain count, not session-only state.
+
+- `chapters/FinalizeGuardiansChapter.tsx` — picks a threshold (≥2,
+  ≤guardianCount) via labelled buttons ("2 of 3", "3 of 3"…), then runs
+  two txs: `setGuardianThreshold` (bootstrap-only, only fires if the
+  threshold actually changed) and `VaultHub.completeGuardianSetup`.
+  Reads `guardianSetupComplete` from the hub so re-running the wizard
+  on a finalized vault shows a Continue button instead of trying to
+  re-finalize.
+
+- `chapters/MerchantApprovalChapter.tsx` — optional. Reads VFIDE
+  allowance via `ERC20.allowance(vault, MerchantPortal)` from the token
+  contract (NOT a `vfideAllowance` getter on the vault — that doesn't
+  exist; matches the existing `MerchantApprovalPanel` pattern). Approves
+  up to `dailyTransferLimit`. Honest about scope ("only needed if you
+  pay merchants directly from your vault"), and guards against the case
+  where `dailyTransferLimit` is still 0 (suggests skipping or going back
+  to spend limits).
+
+- `chapters/ProofScoreChapter.tsx` — explainer only, no on-chain
+  action. Shows live ProofScore from `useProofScore` (real
+  `Seer.getScore` read), live burn-fee percentage, fee schedule by
+  tier, and links to `/marketplace` + `/proofscore`.
+
+- `chapters/DoneChapter.tsx` — recap: each chapter labelled Completed
+  / Skipped / Not visited, "Required" badge on the vault chapter if it
+  somehow wasn't completed. Quick-link grid to Vault / Guardians /
+  Marketplace. "Turn off the wizard" button.
+
+- `index.ts` — barrel export.
+
+**`app/onboarding/page.tsx`** — stable URL the user can bookmark or
+return to. Shows current progress (n of m chapters completed), Resume
+button (sets `?wizard=1` so `WizardMount` force-opens), and Start over
+(reset state). If the wizard is currently turned off, the launch button
+re-enables it.
+
+**`components/layout/ClientLayout.tsx`** — wraps the child tree in
+`<WizardStateProvider>` and renders `<WizardMount />` so the wizard is
+available globally.
+
+**`components/layout/Footer.tsx`** — added "Setup wizard" link in the
+resources section so the wizard has a permanent, discoverable entry
+point even after the user turns off auto-launch.
+
+### Skippability behaviour
+
+Per the user's request: vault create is required (no skip button in
+the shell), everything else is skippable. Skipping a chapter still
+counts as "moved past" — the wizard advances to the next chapter and
+the recap lists it as Skipped. The Welcome chapter's "Skip" means "I
+don't want this wizard at all" (turns it off entirely); within-chapter
+skip on optional chapters just moves the user forward.
+
+### "Chapters" pattern
+
+After completing or skipping any chapter except `welcome` and the one
+immediately before `done`, the wizard pauses and shows: *"{Just
+finished} · done. Keep going to {Next chapter}, or pause here and come
+back later."* Two buttons: Continue (resume), or Pause here (turn the
+wizard off; progress saved). This is the explicit user-requested flow.
+
+### Off-by-default-on-known-users
+
+The wizard auto-shows once per session for users with no vault and no
+prior wizard engagement (empty `completedChapters` and `skippedChapters`).
+It does NOT pop up on every page navigation, and it does NOT pop up
+again after the user has touched it at all (since touching it implies
+they know it exists). Re-entry is always via the Footer link or
+`/onboarding`.
+
+### TypeScript
+
+Clean throughout. The Context refactor caught a real bug — the original
+per-component `useWizardState` instances were not sharing state in
+memory, which would have broken the launcher → overlay handoff. Found
+during a self-review reading the WizardMount code top-to-bottom, before
+the user saw it.
+
+### No real function lost
+
+The wizard is purely additive. No existing component or page was
+deleted or restricted in this round. The two modified files
+(`ClientLayout.tsx`, `Footer.tsx`) only had additions. The
+`OnboardingProvider.completeStep('account')` sync call uses the
+existing public API of the legacy provider at the natural moment.
+
+---
+
+## 2026-05-12 (Rounds 10–11) — Pretend-data sweep
+
+After the wallet/vault campaign closed cleanly, I went back across the
+whole codebase looking for the same anti-pattern in other surfaces —
+"UI that looks real but isn't connected to a real backend.\" Found more
+than I expected.
+
+### Real bugs found and fixed
+
+**Elections page rendered fake candidates as if registered.**
+`app/elections/page.tsx` imported `SEED_CANDIDATES` from
+`lib/data/seed.ts` (the same fixture file that powered the legacy fake
+feed) and rendered them as a real candidate leaderboard, complete with
+vote counts and a "Winning" badge for everyone in the top N. The fake
+addresses were `0xd3m0…` literals. Dropped the import, replaced with
+empty array — the page now shows its genuine "No candidates registered
+yet" empty state. The vote button was already disabled with a tooltip
+explaining the contract isn't deployed; that part was honest.
+
+**`/feed` and `/social-payments` rendered seed posts as live activity.**
+The legacy `SocialFeed` component (650 lines, `components/social/SocialFeed.tsx`)
+mounted on both pages, rendering `SEED_POSTS` (Kofi Textiles, Amara's
+Kitchen, etc.) with hardcoded engagement numbers and no-op
+Like/Bookmark/Share. The working `/social-hub` page already exists and
+uses the real `/api/community/posts` endpoint.
+
+- `/feed` → server-side redirect to `/social-hub`. The previous page
+  said "for backward compatibility" but still mounted the fake feed.
+- `/social-payments` → dropped the "Social Feed" tab and its
+  `SocialFeed` mount. Other tabs already said "live data pending"
+  honestly. Added a link pointing users to `/social-hub` for the real
+  feed.
+- `SocialFeed.tsx` → no longer imported anywhere. Deleted (650 lines).
+- `lib/data/seed.ts` → no consumers left. Deleted (197 lines).
+
+**Social hub had pretend Like/Bookmark/Story handlers.**
+Three `onClick={() => {}}` no-ops on the social-hub page (Story tap,
+Like, Bookmark). `handlePost` was adding posts to local state only —
+never POSTed to `/api/community/posts` even though the route exists.
+
+Fixed: `handlePost` does optimistic insert + real POST + rollback on
+error. Story row removed (no fetch, no handler — pretend UI). The
+Like/Bookmark `() => {}` no-ops are kept with a comment explaining
+there's no API endpoint yet — better than silent dead handlers. Also
+deleted the orphaned `app/social-hub/components/StoryRing.tsx`.
+
+**`useLeaderboard` seeded with three random Ethereum addresses
+labeled "Known active addresses on testnet".** They weren't — they
+were arbitrary mainnet addresses (`0x742d35Cc…`, etc.) with no score
+in our Seer contract. Always filtered out by the `score > 0` gate, so
+they didn't show in the UI, but the seeding was misleading. Also
+dropped the `badges: Math.floor(score / 1000)` field which was in the
+type but never rendered (real badge counts need a `BadgeNFT` read).
+
+**`UserProfile.tsx` was a 1446-line orphan with fake initial state.**
+`getInitialProfile()` returned a default profile of "John Doe" with
+email `john.doe@example.com`, location "San Francisco, CA", website
+`vfide.example/johndoe`. `getInitialStats()` returned hardcoded fake
+stats (`totalActivities: 142, badgesEarned: 4, votescast: 17,
+proofScore: 8700`). The component had no consumers outside two test
+files. Deleted the component + both test files (1446 + ~200 lines).
+The real profile page (`app/profile/page.tsx`) uses
+`components/profile/ProfileSettings.tsx`, which I verified is fine.
+
+**`VaultOverviewStats` showed "$0 USD" and fake guardian limits.**
+- `usdValue` hardcoded to `'0.00'` ("requires live price feed") →
+  removed the USD row entirely until a price feed exists.
+- `Guardians: N/5` with an arbitrary `/5` ceiling the contract doesn't
+  enforce → dropped to just `N`.
+- "3+ guardians unlock recovery mode" → aligned with actual on-chain
+  threshold (≥2).
+- Static "ACTIVE • All systems secure" card that didn't check anything
+  → removed entirely. Real pause/quarantine state lives in
+  `VaultSecuritySection` which subscribes to the on-chain `paused()`
+  flag.
+
+**`useSelfPanic` had a fake `durationHours` parameter.** Accepted
+`durationHours: number = 24`, threaded through `panicDuration` state
+and a 1h/6h/24h/3d/7d dropdown — but `vault.pause()` takes no
+duration. The dropdown was gated by `supportsDuration: false`, so it
+never rendered, but the parameter and the unreached branch were
+misleading. Cleaned up the hook signature and dropped the dropdown
+branch from `VaultSecuritySection`.
+
+### `isCardBoundVaultMode()` finally deleted
+
+Removed the function from `lib/contracts.ts:301` and the test mock.
+Deleted `lib/vaultMode.ts` entirely (orphaned). Collapsed the trivial
+`resolveVaultImplementation()` indirection — just assigns the literal
+`'cardbound'` now. The test mock's `VaultImplementation` type
+tightened from `'uservault' | 'cardbound'` to just `'cardbound'`.
+Every callsite has been cleaned up over the previous rounds; the
+function and its alternates were the last vestige.
+
+### Strict dead-component scan: clean
+
+Ran the export-symbol-aware `dead_components.py` against the full
+post-cleanup tree. **Zero truly dead components.** The 68 hits from
+the loose scan reported earlier are all barrel re-exports that the
+loose regex couldn't see through. Earlier rounds were thorough.
+
+### Merchant/checkout audit: clean
+
+Spot-checked the checkout page (`app/checkout/[id]/page.tsx`) and
+`usePayMerchant` — both are real EIP-712 signed payment flows. Three
+orphan hooks in `useMerchantHooks.ts` (`useProcessPayment`,
+`useSetMerchantPullPermit`, `useVaultPayMerchant`) are real working
+primitives for flows the UI hasn't built yet — left in place rather
+than deleted, since they're forward-looking surfaces with concrete
+contract calls. Documented intent.
+
+### Cumulative since rounds 5–9
+
+- 650 lines (`SocialFeed.tsx`) + 197 lines (`seed.ts`) + 1446 lines
+  (`UserProfile.tsx` + tests) = ~2,300 additional lines of unreachable
+  or fake-data code deleted this campaign
+- 5 distinct fake-content surfaces dismantled (Elections candidates,
+  `/feed`, `/social-payments` feed tab, Social Hub Like/Bookmark
+  handlers, leaderboard seed addresses)
+- 4 misleading parameters removed (`durationHours` on `useSelfPanic`,
+  `useVault` on `usePayment`, `badges` on leaderboard entries, the
+  hardcoded `$0 USD` field)
+- TypeScript clean throughout
+
 ## 2026-05-12 (Rounds 5–9) — Non-CardBound dead-code surgery
 
 Across five iterative rounds the entire `cardBoundMode` runtime branch

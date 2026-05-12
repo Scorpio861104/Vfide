@@ -31,6 +31,7 @@ const footerLinks: {
   ],
   resources: [
     { href: "/docs", label: "Documentation" },
+    { href: "/onboarding", label: "Setup wizard" },
     { href: "/about", label: "About" },
     { href: "/support", label: "Support" },
   ],

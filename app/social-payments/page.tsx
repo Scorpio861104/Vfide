@@ -4,17 +4,19 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Social Payments Dashboard
- * 
- * Unified view of social and financial activities.
- * Seamlessly blends cryptocurrency payments with social interactions.
+ *
+ * Pre-cleanup, this page mounted the legacy `SocialFeed` component in
+ * its "Social Feed" tab, which rendered SEED_POSTS as if real. Dropped
+ * that tab — the production social feed lives at /social-hub with real
+ * /api/community/posts data. The remaining tabs ("All Activity",
+ * "Earnings") are already honest: they say "live data pending" or
+ * "not available yet" until backend indexers exist.
  */
 
-
-
-import { SocialFeed } from '@/components/social/SocialFeed';
 import { UnifiedActivityFeed } from '@/components/social/UnifiedActivityFeed';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import {
     ArrowDownLeft,
     ArrowUpRight,
@@ -31,7 +33,7 @@ import { useState } from 'react';
 
 export default function SocialPaymentsDashboard() {
   const { address: _address, isConnected: _isConnected } = useAccount();
-  const [activeTab, setActiveTab] = useState<'feed' | 'activity' | 'earnings'>('feed');
+  const [activeTab, setActiveTab] = useState<'activity' | 'earnings'>('activity');
 
   const statsUnavailable = 'Live data pending';
 
@@ -149,10 +151,23 @@ export default function SocialPaymentsDashboard() {
           </div>
         </motion.div>
 
+        {/* Link to the real social experience */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="mb-8 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-cyan-100"
+        >
+          Looking for the community feed?{' '}
+          <Link href="/social-hub" className="underline hover:text-cyan-200">
+            Go to Social Hub
+          </Link>{' '}
+          — it pulls live posts from the community API.
+        </motion.div>
+
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-zinc-800">
           {[
-            { id: 'feed' as const, label: 'Social Feed', icon: MessageCircle },
             { id: 'activity' as const, label: 'All Activity', icon: TrendingUp },
             { id: 'earnings' as const, label: 'Earnings', icon: DollarSign },
           ].map((tab) => (
@@ -178,12 +193,6 @@ export default function SocialPaymentsDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {activeTab === 'feed' && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-              <SocialFeed onPostCreated={() => {/* Post created */}} />
-            </div>
-          )}
-
           {activeTab === 'activity' && (
             <UnifiedActivityFeed filter="all" limit={50} />
           )}

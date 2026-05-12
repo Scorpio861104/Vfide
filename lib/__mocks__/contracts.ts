@@ -141,12 +141,11 @@ export const VAULT_HUB_ABI = [
 export const BADGE_NFT_ABI = [] as const
 export const STABLECOIN_REGISTRY_ABI = [] as const
 
-export type VaultImplementation = 'uservault' | 'cardbound'
+export type VaultImplementation = 'cardbound'
 export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation = 'cardbound'
 export const ACTIVE_VAULT_ABI = [] as const
 export const USER_VAULT_ABI = [] as const
 export const CARD_BOUND_VAULT_ABI = [] as const
-export const isCardBoundVaultMode = () => ACTIVE_VAULT_IMPLEMENTATION === 'cardbound'
 export const isConfiguredContractAddress = (address?: string | null): address is `0x${string}` =>
   typeof address === 'string' &&
   address !== ZERO_ADDRESS &&

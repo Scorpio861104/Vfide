@@ -8,7 +8,6 @@ import { useAccount, useReadContract } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { SEED_CANDIDATES } from '@/lib/data/seed';
 import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import { CouncilElectionABI } from '@/lib/abis/future';
 import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
@@ -48,9 +47,14 @@ const DEFAULT_ELECTION: ElectionInfo = {
 
 export default function ElectionsPage() {
   const { isConnected } = useAccount();
-  const [candidates] = useState<Candidate[]>(SEED_CANDIDATES.map(c => ({
-    ...c, registered: true, elected: false, badges: c.badges,
-  })));
+
+  // Pre-cleanup, the candidates list was seeded with SEED_CANDIDATES from
+  // lib/data/seed.ts — fake people with fake addresses like 0xd3m0...1a01,
+  // each shown with vote counts and a "Winning" badge. A visitor could not
+  // tell these from real registered candidates. Removed. The page now shows
+  // an empty state until the CouncilElection contract is deployed and a
+  // real candidate registry hook is wired up.
+  const [candidates] = useState<Candidate[]>([]);
   const [proposals, setProposals] = useState<ProposalPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewError, setPreviewError] = useState<string | null>(null);

@@ -12,7 +12,6 @@ import { PageWrapper } from '@/components/ui/PageLayout';
 
 import { CreatePostCard } from './components/CreatePostCard';
 import { PostCard } from './components/PostCard';
-import { StoryRing } from './components/StoryRing';
 import { TrendingSidebar } from './components/TrendingSidebar';
 
 type FeedFilter = 'all' | 'following' | 'trending';
@@ -20,9 +19,7 @@ type FeedFilter = 'all' | 'following' | 'trending';
 export default function SocialHubPage() {
   const { isConnected, address } = useAccount();
   const [posts, setPosts] = useState<any[]>([]);
-  const [stories, setStories] = useState<any[]>([]);
-  const [trending, setTrending] = useState<any[]>([]);
-  const [suggested, setSuggested] = useState<any[]>([]);
+  const [postError, setPostError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FeedFilter>('all');
 
   useEffect(() => {
@@ -49,30 +46,57 @@ export default function SocialHubPage() {
     return posts;
   }, [filter, posts]);
 
-  const handlePost = (content: string) => {
-    setPosts((prev) => [
-      {
-        id: `draft-${Date.now()}`,
-        author: {
-          address: address ?? 'You',
-          name: 'You',
-          avatar: '✨',
-          verified: true,
-          proofScore: 100,
-        },
-        content,
-        timestamp: Date.now(),
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        views: 0,
-        liked: false,
-        bookmarked: false,
-        isFollowing: true,
-        tags: [],
+  const handlePost = async (content: string) => {
+    setPostError(null);
+
+    // Optimistic insert so the UI feels snappy. We replace the optimistic
+    // row when the server returns the real post.
+    const optimisticId = `draft-${Date.now()}`;
+    const optimistic = {
+      id: optimisticId,
+      author: {
+        address: address ?? 'You',
+        name: 'You',
+        avatar: '✨',
+        verified: true,
+        proofScore: 100,
       },
-      ...prev,
-    ]);
+      author_address: address,
+      content,
+      timestamp: Date.now(),
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      views: 0,
+      liked: false,
+      bookmarked: false,
+      isFollowing: true,
+      tags: [],
+    };
+    setPosts((prev) => [optimistic, ...prev]);
+
+    try {
+      const response = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authorAddress: address, content }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(typeof payload?.error === 'string' ? payload.error : `Post failed (${response.status})`);
+      }
+
+      const payload = await response.json();
+      const realPost = payload.post;
+      if (realPost) {
+        setPosts((prev) => prev.map((p) => (p.id === optimisticId ? realPost : p)));
+      }
+    } catch (err) {
+      setPostError(err instanceof Error ? err.message : 'Failed to publish post');
+      // Roll back the optimistic insert
+      setPosts((prev) => prev.filter((p) => p.id !== optimisticId));
+    }
   };
 
   if (!isConnected) {
@@ -82,7 +106,7 @@ export default function SocialHubPage() {
           <PageWrapper>
             <div className="mx-auto max-w-3xl px-4 py-16 text-center text-white">
               <h1 className="mb-4 text-4xl font-bold">Connect to Join the Conversation</h1>
-              <p className="mb-8 text-white/60">Sign in with your wallet to unlock the VFIDE social feed, stories, and community reactions.</p>
+              <p className="mb-8 text-white/60">Sign in with your wallet to unlock the VFIDE social feed.</p>
               <div className="flex justify-center">
                 <ConnectButton />
               </div>
@@ -125,17 +149,25 @@ export default function SocialHubPage() {
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               <div className="space-y-6 lg:col-span-2">
-                {stories.length > 0 && (
-                  <div className="flex gap-3 overflow-x-auto pb-2">
-                    {stories.map((story, index) => (
-                      <StoryRing key={index} story={story} onClick={() => {}} />
-                    ))}
-                  </div>
-                )}
+                {/* Stories were previously rendered with an always-empty `stories`
+                    array and an `onClick={() => {}}` no-op. There's no story
+                    fetch endpoint or tap handler implemented yet, so the row is
+                    omitted entirely rather than showing pretend UI. */}
 
                 <CreatePostCard onPost={handlePost} />
 
+                {postError && (
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                    {postError}
+                  </div>
+                )}
+
                 {filteredPosts.map((post, index) => (
+                  // Note: Like and Bookmark previously had `() => {}` no-op
+                  // handlers — there's no /api/community/posts/[id]/like or
+                  // /bookmark route yet, so the buttons are kept visually for
+                  // layout consistency but PostCard now no-ops them safely.
+                  // When the API exists, lift these to optimistic POST calls.
                   <PostCard key={post.id || index} post={post} onLike={() => {}} onBookmark={() => {}} />
                 ))}
 
@@ -158,7 +190,7 @@ export default function SocialHubPage() {
               </div>
 
               <div className="hidden lg:block">
-                <TrendingSidebar trending={trending} suggested={suggested} />
+                <TrendingSidebar trending={[]} suggested={[]} />
               </div>
             </div>
           </div>

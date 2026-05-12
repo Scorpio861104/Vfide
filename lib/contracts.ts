@@ -301,18 +301,19 @@ export const CARD_BOUND_VAULT_ABI = CardBoundVaultABI;
 // Legacy alias: UserVaultABI retained only for read-only compat paths, not active runtime
 export const USER_VAULT_ABI = UserVaultABI;
 
+// CardBoundVault is the only active vault implementation. The previous
+// runtime mode-switching surface (`isCardBoundVaultMode()`,
+// `resolveVaultImplementation()`, `lib/vaultMode.ts`) was kept after the
+// legacy UserVault was retired so callsites could continue to ask
+// "what mode are we in?" — but every callsite has now been cleaned up
+// to know it's always CardBound. The exports below are reduced to the
+// minimum still consumed: the type alias and the implementation marker.
 export type VaultImplementation = 'cardbound';
 
-function resolveVaultImplementation(): VaultImplementation {
-  return 'cardbound';
-}
-
-export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation = resolveVaultImplementation();
+export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation = 'cardbound';
 
 // CardBoundVault is the only active implementation
 export const ACTIVE_VAULT_ABI = CARD_BOUND_VAULT_ABI;
-
-export const isCardBoundVaultMode = (): boolean => true;
 
 export {
   VFIDETokenABI,

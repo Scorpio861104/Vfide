@@ -1,7 +1,7 @@
 'use client';
 
 interface LeaderboardTabProps {
-  entries: Array<{ rank: number; address: `0x${string}`; score: number; tier: string; badges: number }>;
+  entries: Array<{ rank: number; address: `0x${string}`; score: number; tier: string }>;
 }
 
 function Podium({ entries }: LeaderboardTabProps) {

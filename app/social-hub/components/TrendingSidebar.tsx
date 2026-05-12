@@ -5,7 +5,6 @@ import {
   Award,
   Camera,
   MessageCircle,
-  Rss,
   Shield,
   TrendingUp,
   Users,
@@ -39,10 +38,9 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
             Quick Access
           </h3>
         <div className="space-y-2">
-          <Link href="/feed" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
-            <Rss className="w-5 h-5" />
-            <span>Activity Feed</span>
-          </Link>
+          {/* "Activity Feed" link previously pointed at /feed, which now
+              redirects back to /social-hub. Removed to avoid a redirect
+              loop from this sidebar mounted on /social-hub itself. */}
           <Link href="/stories" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <Camera className="w-5 h-5" />
             <span>Stories</span>
