@@ -167,7 +167,11 @@ export function useHaptics() {
     if (canVibrate) navigator.vibrate(25);
   }, [canVibrate]);
 
-  return { tap, success, error, heavy, canVibrate };
+  const medium = useCallback(() => {
+    if (canVibrate) navigator.vibrate(15);
+  }, [canVibrate]);
+
+  return { tap, medium, success, error, heavy, canVibrate };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
