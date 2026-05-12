@@ -1,5 +1,165 @@
 # Changelog
 
+## 2026-05-12 (Round 14) — Wow factor: live ProofScore, fee river, Monument backdrop
+
+Feedback from the previous round: the frontend was competent but
+looked like every other DeFi product. The landing was generic — a
+slow rotating logo, three feature cards, a number-counter strip, a
+"how it works" section. The whole tree shared the same Tailwind +
+Framer-Motion default aesthetic: dark zinc, gradient buttons, glass
+cards, lucide icons in colored squares. Nothing on the page made
+someone stop and say "wait, what is that?"
+
+The diagnosis was that VFIDE has three things most protocols don't —
+a live reputation engine on a 0-10000 scale, an unusual five-way fee
+distribution model, and a designed brand mark (the Monument) — but
+none of those were doing real work on the landing page. The
+reputation engine was buried three screens down. The fee distribution
+existed only in a whitepaper. The Monument was a 140px logo.
+
+This round puts all three of them in the foreground.
+
+### LiveProofScoreHero — the product thesis in 5 seconds
+
+**`app/components/LiveProofScoreHero.tsx`** — replaces the previous
+HeroVisualization (a logo with three pulsing rings and three orbit
+dots). The new widget is an interactive ProofScore engine:
+
+- Draggable slider from 0 → 10,000
+- Live tier badge that changes label + color across the seven tiers
+  (Risky → Low Trust → Neutral → Governance → Trusted → Council → Elite)
+- Big tabular-nums score readout
+- Buyer fee % on a $50 sample payment, computed against the same curve
+  the on-chain `ProofScoreBurnRouter` uses (linear-interpolated between
+  the contract anchors at 4000/5000/7000/8000)
+- Live fee curve SVG showing the score's position along the burn-fee
+  curve, with a pulsing cursor at the current position
+- The $X.XX sample fee broken down into the canonical five-way split
+  (35% burn / 20% Sanctum / 20% merchant / 15% payroll / 10%
+  headhunter), with spring-animated bars
+- Capability strip ("Can vote / Can sell / Council eligible / Can
+  endorse others") with each capability lighting up when the score
+  crosses its threshold
+- Auto-demo mode: before the visitor touches the slider, the score
+  gently sweeps 0 → 10k → 0 in a smoothstep so the page is alive
+  when someone arrives. Stops the instant they grab the slider — the
+  page feels like it's responding to them
+- Honest disclosure that the demo math mirrors the on-chain router
+  and that the user's actual score replaces the slider once they
+  connect
+
+This is the page's new center of gravity. A visitor can see the
+entire product mechanic — trust score → fee curve → fee distribution
+— in one widget, before reading any copy.
+
+### FeeFlowRiver — the protocol's economy made visible
+
+**`app/components/FeeFlowRiver.tsx`** — live animated SVG sitting in
+its own section below the hero. Transactions arrive on the left as
+particles, hit a central split node, and fan out into five labeled
+pools on the right with running dollar totals:
+
+- 800×220 SVG, particles are simple circles with `cx`/`cy` updated
+  every frame from a single rAF loop
+- Each particle carries a random $0.50..$8.50 value, weighted by the
+  canonical 35/20/20/15/10 split to pick which pool it flows toward
+- Cubic-bezier paths for both entry (left → split) and exit (split →
+  pool); particles sample the path at u ∈ [0..1] for smooth flow
+- Running totals tick upward with a brief Framer fade when they change
+- Five honest labels with their real percentages and helper text
+  ("permanently removed from supply", "charity + community grants",
+  "top-merchant volume rewards", "elected council pay", "rewards for
+  inviting active users")
+
+Performance: single rAF loop, particles mutated in place, React
+re-render throttled to ~30Hz via a forceRender counter. Single shared
+time origin between the loop and the JSX render so particle positions
+line up exactly with their stored `t0` — a real bug I caught during
+self-review where the render and loop were reading two slightly
+different `performance.now()` values.
+
+Disclosure: a clear caveat line under the river says the numbers are
+illustrative until VFIDE is on mainnet. No pretending this is real
+on-chain activity yet.
+
+### MonumentBackdrop — the brand mark as page architecture
+
+**`app/components/MonumentBackdrop.tsx`** — the canonical Monument
+SVG (from `public/icon.svg`) rendered at page-scale as a structural
+background element. Sits behind the hero and the fee river:
+
+- Faceted V arms in faint gradients so it doesn't compete with
+  foreground text
+- Inner traced edge in the brand cyan, opacity modulated by intensity
+- Luminous vertex at the bottom with four concentric circles of
+  decreasing opacity — that's the visual hook
+- `intensity` prop (0..1) drives vertex glow, aura ellipse scale, and
+  edge stroke opacity. When unset, an autonomous 6-second sine pulse
+  runs at ~20Hz so the system looks like it's breathing
+- Optional `vertexHex` override so the backdrop can adopt the
+  user's current tier color when wired up
+
+Two `variant` modes: `'hero'` (anchored behind the hero block,
+~1100px max height) and `'full'` (fills the section it's placed in).
+
+The brand stops being decoration and becomes the page architecture —
+the Monument is now a thing you experience, not just see.
+
+### Landing page restructure
+
+**`app/page.tsx`** — rewritten. Same five-section flow but the
+weight has shifted:
+
+1. **Hero** — text on the left, `<LiveProofScoreHero />` on the
+   right, Monument backdrop, hero tagline now uses a cyan→violet
+   gradient on the word "earn"
+2. **OnboardingPathChooser** — unchanged
+3. **FeeFlowRiver** — new section, also backed by the Monument
+4. **Stats strip** — unchanged
+5. **How it works** — slightly tightened copy with a sub-headline
+   that connects to the new visuals
+6. **FeeSavingsCalculator** — unchanged
+7. **60-second start** — unchanged
+
+`HeroVisualization.tsx` was removed — it's the old rings+dots widget
+and nothing else referenced it.
+
+Two correctness fixes to the section stacking: added `isolate` to
+both hero and fee-river sections so the backdrop's `-z-10` doesn't
+tunnel behind the page background. Tailwind's `isolation-isolate`
+utility creates a new stacking context, which is what we need for
+absolutely-positioned negative-z children to stay scoped.
+
+### Behaviour under reduced motion
+
+Every animated piece checks `prefers-reduced-motion` (via the
+existing `usePrefersReducedMotion` hook and Framer's `useReducedMotion`):
+
+- LiveProofScoreHero: auto-demo disabled; user must drive the slider
+- FeeFlowRiver: particles disabled; static splits + pools shown
+- MonumentBackdrop: pulse disabled; renders at full intensity statically
+
+So the page degrades gracefully for users who've opted out of motion.
+
+### TypeScript and dead-component scan
+
+`npx tsc --noEmit` clean. Strict dead-component scan: 0 truly dead
+components.
+
+### What this round did not do
+
+- The new widgets are pure visuals + math; no on-chain data wired in
+  yet. Future round: when VFIDE token is deployed,
+  `useWatchContractEvent('Transfer')` can feed real particle spawns
+  into FeeFlowRiver, and `MonumentBackdrop` can take its `intensity`
+  from `useProofScore` for the connected user.
+- The other merchant audit items (real refund flow on Returns,
+  real-time payment listener on the merchant home, fixing the merchant
+  home info architecture, receipt sending UI) are still pending —
+  this round was about the landing page.
+
+---
+
 ## 2026-05-12 (Round 13) — Earnings & Payouts (with three backend bugfixes underneath)
 
 Original ask was "build a power-user merchant earnings & payouts page."
