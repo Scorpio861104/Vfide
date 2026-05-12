@@ -2,7 +2,7 @@
  * PieMenu Enhancements — Bolt-on modules for the existing PieMenu
  *
  * 1. ProofScoreRing — Glowing ring around the V button showing trust level
- * 2. QuickActions — Long-press V for 3 instant actions (no full menu needed)
+ * 2. QuickActions — Long-press V for a quick navigation fanout (no full menu needed)
  * 3. useHaptics — Web Vibration API for native-feel feedback
  * 4. SmartRecents — Tracks most-visited pages, shows them first
  * 5. NotificationPulse — V button ripples when payments arrive
@@ -15,7 +15,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { Search, Star, QrCode, Send, ShoppingCart, Zap, Bell } from 'lucide-react';
+import { Search, Star, Home, LayoutDashboard, Shield, Store, MessageCircle, Vote } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -77,7 +77,7 @@ export function ProofScoreRing({ score, size = 56, children }: ProofScoreRingPro
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  2. QUICK ACTIONS — Long-press V for instant actions
+//  2. QUICK ACTIONS — Long-press V for instant navigation
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface QuickAction {
@@ -89,9 +89,12 @@ interface QuickAction {
 }
 
 const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
-  { id: 'scan', label: 'Scan QR', icon: <QrCode size={18} />, href: '/scan', color: '#06B6D4' },
-  { id: 'pos', label: 'POS', icon: <ShoppingCart size={18} />, href: '/pos', color: '#10B981' },
-  { id: 'send', label: 'Send', icon: <Send size={18} />, href: '/pay', color: '#8B5CF6' },
+  { id: 'home', label: 'Home', icon: <Home size={18} />, href: '/', color: '#F8F8FC' },
+  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, href: '/dashboard', color: '#00F0FF' },
+  { id: 'vault', label: 'Vault', icon: <Shield size={18} />, href: '/vault', color: '#8B5CF6' },
+  { id: 'merchant', label: 'Merchant', icon: <Store size={18} />, href: '/merchant', color: '#10B981' },
+  { id: 'social', label: 'Social', icon: <MessageCircle size={18} />, href: '/social-hub', color: '#F59E0B' },
+  { id: 'governance', label: 'Governance', icon: <Vote size={18} />, href: '/governance', color: '#6366F1' },
 ];
 
 interface QuickActionsProps {
@@ -108,9 +111,11 @@ export function QuickActions({ actions = DEFAULT_QUICK_ACTIONS, visible, onSelec
       {visible && (
         <div className="fixed z-[101]" style={{ left: anchorX, top: anchorY }}>
           {actions.map((action, i) => {
-            // Fan out in an arc above the button
-            const angle = -90 - 40 + (i * 40); // -130, -90, -50 degrees
-            const radius = 72;
+            // Fan out in a broad arc above the button
+            const startAngle = -140;
+            const angleStep = actions.length > 1 ? 280 / (actions.length - 1) : 0;
+            const angle = startAngle + (i * angleStep);
+            const radius = 76;
             const x = Math.cos((angle * Math.PI) / 180) * radius;
             const y = Math.sin((angle * Math.PI) / 180) * radius;
 

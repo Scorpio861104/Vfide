@@ -479,20 +479,22 @@ interface TriggerButtonProps {
   onLongPress: () => void;
   activeCategory?: NavItem;
   proofScore: number;
+  buttonRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScore }: TriggerButtonProps) {
+function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScore, buttonRef }: TriggerButtonProps) {
   // Long-press handlers — 400ms threshold. On long-press we fire onLongPress
-  // (which opens the merchant quick-actions); on a normal tap onClick fires.
+  // (which opens the navigation quick-actions); on a normal tap onClick fires.
   const longPress = useLongPress(onLongPress, onClick, 400);
 
   return (
     <ProofScoreRing score={proofScore} size={56}>
       <motion.button
+        ref={buttonRef}
         {...longPress}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu (long-press for quick actions)'}
+        aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu (long-press for quick navigation)'}
         aria-expanded={isOpen}
         aria-controls="pie-menu-panel"
         className="relative w-12 h-12 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden"
@@ -699,9 +701,11 @@ export function PieMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<NavItem | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  // Long-press merchant quick-actions overlay
+  // Long-press navigation quick-actions overlay
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [quickActionsAnchor, setQuickActionsAnchor] = useState({ x: 0, y: 0 });
   const menuRef = useRef<HTMLDivElement>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
   const audioRef = useRef<AudioContext | null>(null);
   const haptics = useHaptics();
 
@@ -1038,7 +1042,7 @@ export function PieMenu() {
           )}
         </AnimatePresence>
         
-        {/* Long-press merchant quick-actions overlay (fans out above the V button) */}
+        {/* Long-press navigation quick-menu overlay (fans out above the V button) */}
         <QuickActions
           visible={quickActionsOpen}
           onSelect={(href) => {
@@ -1046,16 +1050,24 @@ export function PieMenu() {
             haptics.medium();
             router.push(href);
           }}
-          anchorX={0}
-          anchorY={0}
+          anchorX={quickActionsAnchor.x}
+          anchorY={quickActionsAnchor.y}
         />
 
         {/* Trigger Button */}
         <TriggerButton
+          buttonRef={triggerButtonRef}
           isOpen={isOpen}
           onClick={toggleMenu}
           onLongPress={() => {
             haptics.heavy();
+            const rect = triggerButtonRef.current?.getBoundingClientRect();
+            if (rect) {
+              setQuickActionsAnchor({
+                x: Math.max(12, rect.left + rect.width / 2 - 144),
+                y: Math.max(12, rect.top - 112),
+              });
+            }
             setQuickActionsOpen(true);
             // Auto-dismiss the overlay after 4s if nothing tapped
             setTimeout(() => setQuickActionsOpen(false), 4000);
