@@ -48,8 +48,8 @@ export function VFIDEMark({
       )}
 
       <motion.img
-        src="/branding/vfide-mark-primary.svg"
-        alt="VFIDE logo"
+        src="/icon.svg"
+        alt="VFIDE v.Five logo"
         width={size}
         height={height}
         className="relative z-10 select-none"

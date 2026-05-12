@@ -414,24 +414,50 @@ export function useLongPress(
 ) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLong = useRef(false);
+  const touchActiveRef = useRef(false);
+  const touchResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const start = useCallback(() => {
+  const start = useCallback((event: React.TouchEvent | React.MouseEvent) => {
+    // Ignore synthetic mouse events that follow touch interactions.
+    if (event.type === 'mousedown' && touchActiveRef.current) return;
+
+    if (event.type === 'touchstart') {
+      touchActiveRef.current = true;
+      if (touchResetTimerRef.current) clearTimeout(touchResetTimerRef.current);
+    }
+
     isLong.current = false;
+    if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       isLong.current = true;
       onLongPress();
     }, delay);
   }, [onLongPress, delay]);
 
-  const end = useCallback(() => {
+  const end = useCallback((event: React.TouchEvent | React.MouseEvent) => {
+    if (event.type === 'mouseup' && touchActiveRef.current) return;
+
     if (timerRef.current) clearTimeout(timerRef.current);
     if (!isLong.current) onTap();
     isLong.current = false;
+
+    if (event.type === 'touchend') {
+      touchResetTimerRef.current = setTimeout(() => {
+        touchActiveRef.current = false;
+      }, 350);
+    }
   }, [onTap]);
 
-  const cancel = useCallback(() => {
+  const cancel = useCallback((event: React.TouchEvent | React.MouseEvent) => {
+    if (event.type === 'mouseleave' && touchActiveRef.current) return;
+
     if (timerRef.current) clearTimeout(timerRef.current);
     isLong.current = false;
+
+    if (event.type === 'touchcancel') {
+      touchActiveRef.current = false;
+      if (touchResetTimerRef.current) clearTimeout(touchResetTimerRef.current);
+    }
   }, []);
 
   return {
