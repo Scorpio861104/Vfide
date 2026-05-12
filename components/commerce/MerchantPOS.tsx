@@ -197,33 +197,50 @@ export function MerchantPOS() {
     eventName: 'PaymentProcessed',
     onLogs(logs) {
       if (!address || !showQRPayment || !pendingPaymentRef.current) return
-      
+
       for (const log of logs) {
-        const args = (log as unknown as { args: { customer?: `0x${string}`, merchant?: `0x${string}`, amount?: bigint } }).args
+        const args = (log as unknown as { args: { customer?: `0x${string}`, merchant?: `0x${string}`, amount?: bigint, token?: `0x${string}` } }).args
+        const txHash = (log as unknown as { transactionHash?: `0x${string}` }).transactionHash
         // Check if this payment is for us
         if (args.merchant?.toLowerCase() === address.toLowerCase()) {
           const receivedAmount = args.amount ? safeParseFloat(formatEther(args.amount), 0) : 0
           const expectedAmount = safeParseFloat(pendingPaymentRef.current.expectedAmount, 0)
-          
+
           // Allow 1% tolerance for rounding (only if expectedAmount > 0)
           if (expectedAmount > 0 && Math.abs(receivedAmount - expectedAmount) / expectedAmount < 0.01) {
-            // Payment confirmed! Complete the sale automatically
-            handlePaymentConfirmed(args.customer || '0x0000000000000000000000000000000000000000', receivedAmount.toFixed(2))
+            // Payment confirmed! Complete the sale automatically.
+            // Pass the on-chain token address (from the event) and tx hash
+            // so the /api/merchant/payments/confirm call can succeed —
+            // before this round both fields were missing, the schema
+            // validator rejected the POST, and no confirmation rows were
+            // ever written. Without confirmation rows the merchant
+            // withdrawal flow can't find any balance to draw down.
+            handlePaymentConfirmed(
+              args.customer || '0x0000000000000000000000000000000000000000',
+              receivedAmount.toFixed(2),
+              args.token,
+              txHash,
+            )
           }
         }
       }
     },
     enabled: isMerchantPortalAvailable && showQRPayment && !!address,
   })
-  
+
   // Handle confirmed payment from blockchain event
-  const handlePaymentConfirmed = useCallback((customerAddress: `0x${string}` | string, amount: string) => {
+  const handlePaymentConfirmed = useCallback((
+    customerAddress: `0x${string}` | string,
+    amount: string,
+    tokenAddress?: `0x${string}`,
+    txHash?: `0x${string}`,
+  ) => {
     if (!pendingPaymentRef.current) return
-    
+
     // Capture and clear pending ref FIRST to prevent double-processing
     const pending = pendingPaymentRef.current
     pendingPaymentRef.current = null
-    
+
     const timestamp = new Date().getTime()
     const sale: Sale = {
       id: timestamp.toString(),
@@ -236,22 +253,40 @@ export function MerchantPOS() {
       customerEmail: undefined,
       emailSent: false,
     }
-    
+
     setSalesHistory(prev => [sale, ...prev])
     setCurrentSale(sale)
     setShowQRPayment(false)
     setShowEmailPrompt(true) // Ask for email after payment confirmed
     clearCart()
 
-    // Notify server for webhook dispatch (fire-and-forget)
+    // Notify server for webhook dispatch + confirmation record.
+    //
+    // The API requires `token` as a 0x address (not the "VFIDE" symbol)
+    // and `tx_hash` as the on-chain payment tx hash. Both come from the
+    // PaymentProcessed event log we just decoded. We use the resolved
+    // VFIDE token address as a fallback if the event token field was
+    // missing — though the event signature has it as the third indexed
+    // arg, so it should always be present.
+    const resolvedToken = tokenAddress || CONTRACT_ADDRESSES.VFIDEToken
+    if (!txHash || !resolvedToken) {
+      // Can't form a valid confirmation request without these. Skip the
+      // POST entirely rather than send a request the server will reject.
+      // The on-chain payment still went through; the sale is recorded
+      // locally; the webhook/confirmation row just won't be created.
+      // A future round can add a fallback that polls for the receipt.
+      return
+    }
+
     fetch('/api/merchant/payments/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         customer_address: customerAddress,
         amount,
-        token: 'VFIDE',
+        token: resolvedToken,
         order_id: sale.id,
+        tx_hash: txHash,
       }),
     }).catch(() => { /* non-critical */ })
   }, [subtotal, processorFees.vfide])

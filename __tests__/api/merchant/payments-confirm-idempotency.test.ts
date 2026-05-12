@@ -1,5 +1,19 @@
 import { NextRequest } from 'next/server';
-import { POST } from '../../../app/api/merchant/payments/confirm/route';
+
+const mockMerchant = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+const mockToken = '0x3333333333333333333333333333333333333333';
+
+// Set env vars BEFORE importing the route, since CONTRACT_ADDRESSES.VFIDEToken
+// is computed at module-load time. `mockToken` matches the token in the
+// mocked PaymentProcessed event so isAcceptedSettlementToken accepts it.
+process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS = mockToken;
+
+jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler: any) => async (req: NextRequest, ctx?: any) => {
+    return handler(req, { address: mockMerchant }, ctx);
+  },
+  requireAuth: jest.fn(),
+}));
 
 jest.mock('@/lib/db', () => ({
   query: jest.fn(),
@@ -9,55 +23,54 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
-jest.mock('@/lib/auth/middleware', () => ({
-  requireAuth: jest.fn(),
-}));
-
 jest.mock('@/lib/webhooks/merchantWebhookDispatcher', () => ({
   dispatchWebhook: jest.fn(),
 }));
 
-jest.mock('viem', () => ({
-  createPublicClient: jest.fn(() => ({
-    getTransactionReceipt: jest.fn(async () => ({
-      status: 'success',
-      to: '0x1111111111111111111111111111111111111111',
-      blockNumber: 10n,
-      logs: [{ address: '0x1111111111111111111111111111111111111111', data: '0x', topics: [] }],
+// Use real parseUnits/formatUnits from viem so amount math is correct.
+jest.mock('viem', () => {
+  const actual = jest.requireActual('viem');
+  return {
+    ...actual,
+    createPublicClient: jest.fn(() => ({
+      getTransactionReceipt: jest.fn(async () => ({
+        status: 'success',
+        to: '0x1111111111111111111111111111111111111111',
+        blockNumber: 10n,
+        logs: [{ address: '0x1111111111111111111111111111111111111111', data: '0x', topics: [] }],
+      })),
+      getBlockNumber: jest.fn(async () => 12n),
+      readContract: jest.fn(async () => 18),
     })),
-    getBlockNumber: jest.fn(async () => 12n),
-  })),
-  decodeEventLog: jest.fn(() => ({
-    eventName: 'PaymentProcessed',
-    args: {
-      customer: '0x2222222222222222222222222222222222222222',
-      merchant: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-      token: '0x3333333333333333333333333333333333333333',
-      amount: 1000n,
-      orderId: 'order-1',
-    },
-  })),
-  getAddress: jest.fn((value: string) => value.toLowerCase()),
-  http: jest.fn(() => ({})),
-  isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
-  parseAbiItem: jest.fn(() => ({})),
-}));
+    decodeEventLog: jest.fn(() => ({
+      eventName: 'PaymentProcessed',
+      args: {
+        customer: '0x2222222222222222222222222222222222222222',
+        merchant: mockMerchant,
+        token: '0x3333333333333333333333333333333333333333',
+        // "1000" decimal × 10^18 = 1e21 wei
+        amount: 10n ** 18n * 1000n,
+        orderId: 'order-1',
+      },
+    })),
+    getAddress: jest.fn((value: string) => value.toLowerCase()),
+    http: jest.fn(() => ({})),
+    parseAbiItem: jest.fn(() => ({})),
+  };
+});
+
+import { POST } from '../../../app/api/merchant/payments/confirm/route';
 
 describe('/api/merchant/payments/confirm idempotency', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
-  const { requireAuth } = require('@/lib/auth/middleware');
   const { dispatchWebhook } = require('@/lib/webhooks/merchantWebhookDispatcher');
 
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.RPC_URL = 'https://rpc.example.test';
     process.env.MERCHANT_PORTAL_ADDRESS = '0x1111111111111111111111111111111111111111';
-
     withRateLimit.mockResolvedValue(null);
-    requireAuth.mockResolvedValue({
-      user: { address: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
-    });
   });
 
   it('dispatches webhook on first unique tx_hash confirmation', async () => {

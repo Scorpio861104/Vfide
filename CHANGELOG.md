@@ -1,5 +1,198 @@
 # Changelog
 
+## 2026-05-12 (Round 13) — Earnings & Payouts (with three backend bugfixes underneath)
+
+Original ask was "build a power-user merchant earnings & payouts page."
+While verifying what already existed, I found that the entire data
+pipeline feeding that page was broken — the `/api/merchant/withdraw`
+balance check was guaranteed to return 0 forever, because no
+confirmation rows were being written by either of the two callsites
+that should have been writing them. So a frontend on top of that would
+have been a UI that always says "0 available" and rejects every
+withdrawal. Fixed the backend first, then built the page.
+
+### Backend bug #1 — `payments/confirm` decimal/wei mismatch
+
+The confirm endpoint's `parseAmountToUnits` parsed `"5"` (the form
+input) as the literal bigint `5n` (5 wei), then compared it against
+the on-chain event's `args.amount` which is `5_000_000_000_000_000_000n`
+(5 VFIDE in wei). They never matched → every confirm POST returned 422
+→ no rows ever inserted.
+
+**Fix:** rewrote `parseAmountToUnits(value, decimals)` to accept
+decimal strings (`"5"`, `"5.50"`) and convert via viem's `parseUnits`
+against the *actual* token decimals. Token decimals are read on-chain
+via `decimals()` with a per-process cache. The schema now requires
+`token` as a 0x address (no more `"VFIDE"` symbol strings) and
+`amount` matches the decimal-string regex `/^[0-9]+(\.[0-9]+)?$/`.
+
+Stored data is normalized: confirmations table now keys `token` as
+lowercase address consistently. The webhook payload includes the wei
+amount (canonical on-chain value) for downstream consumers.
+
+### Backend bug #2 — `withdraw` balance comparison broken three ways
+
+The balance check had three independent bugs:
+
+1. SQL filter `($2 = 'VFIDE' OR token IS NOT NULL)` summed *all*
+   tokens regardless of which one the user requested — VFIDE earnings
+   would count toward USDC withdrawals and vice versa.
+2. The token in the WHERE clause compared the request's symbol
+   (`'USDC'`) against confirmations' token (an address) — never
+   matched.
+3. `parseFloat(net_balance)` compared a wei sum (~1e18) against the
+   user's small human amount (`5`) — `5 > 1e18` is always false, so
+   any amount up to ~1e18 would pass the balance check even with zero
+   actual balance.
+
+**Fix:** new `resolveTokenConfig(symbol)` that maps the symbol to
+{address, decimals} via env vars (`NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS`,
+`NEXT_PUBLIC_USDC_ADDRESS`, etc.). Stablecoin env vars don't exist
+yet for this environment — those tokens get a clear 422 explaining
+which env var is missing, rather than silently summing the wrong rows.
+Balance query now filters confirmations by `LOWER(token) = $address`
+and divides the wei sum by `POWER(10, decimals)` to get human units
+before comparing.
+
+GET handler now also returns a `balances` array per token with
+`{token, confirmed_wei, reserved_wei}` so the new payouts page can
+render available balance without re-implementing the math.
+
+### Backend bug #3 — `MerchantPOS.tsx` confirm payload
+
+The POS sent `{ token: 'VFIDE', /* no tx_hash */ }`. Schema requires
+both. Every POST returned 400 → no confirmation rows from the POS.
+
+**Fix:** extract `transactionHash` from the `useWatchContractEvent`
+log object and `args.token` from the decoded event. Both flow through
+`handlePaymentConfirmed` into the POST. If either is missing (rare —
+both come from the event), skip the POST entirely rather than send
+something the server will reject. Inline comment explaining the
+historical bug so the next person doesn't redo it.
+
+### Tests — 14 passing
+
+Updated all three test files to match the new contracts:
+
+- `payments-confirm.test.ts` — uses real `parseUnits`/`formatUnits`
+  via `jest.requireActual('viem')`, mocks the on-chain `decimals()`
+  read to return 18, includes `token` in all valid payloads, adds a
+  new test for "missing token returns 400", updates the
+  "missing chain config" test to expect 503 since failure now happens
+  earlier (during decimals resolution).
+- `payments-confirm-idempotency.test.ts` — same pattern; event amount
+  mocked as `10n ** 18n * 1000n` to match a decimal `"1000"` request.
+- `withdraw.test.ts` — adds env-var setup for USDC/VFIDE addresses,
+  tests the new `balances` field in GET response, tests
+  `resolveTokenConfig` 422 path for unconfigured tokens, tests the
+  insufficient-balance 422 (now reports `available` field), tests the
+  happy path.
+
+A critical pattern discovered along the way: the `withAuth` mock has
+to be set up *at import time* (inside `jest.mock`'s factory function),
+not in `beforeEach`. The route exports `export const POST = withAuth(handler)`
+which runs when the module loads — by the time `beforeEach` fires,
+`POST` is already bound to whatever `withAuth` returned at import
+(undefined if the mock was `jest.fn()` with no implementation).
+Documented inline so anyone touching these tests later understands
+why the mock is structured that way.
+
+### The actual feature: `/merchant/payouts` page
+
+Now that confirmations flow and balances are real, built the page:
+
+**`app/merchant/payouts/page.tsx`** — three sections:
+
+1. *Available balances grid* — one card per configured token (VFIDE
+   today, stablecoins as ops adds the env vars). Each card shows the
+   available balance (confirmed − reserved), the lifetime confirmed
+   amount, and any amount currently reserved by in-flight withdrawals.
+   Disabled "Cash out" button if balance is 0 or the token isn't
+   configured. Honest about: "Available = confirmed earnings minus
+   any cash-out requests still in flight."
+
+2. *Recent payouts table* — 50 most recent withdrawal rows: timestamp,
+   provider tx ID, amount, provider, settlement rail, masked mobile
+   hint (last 4), status badge (Awaiting provider / Pending /
+   Processing / Completed / Failed / Cancelled). Honest disclosure
+   that the status stays "Awaiting provider" until a provider webhook
+   updates it (a future round adds the webhook handlers).
+
+3. *CashOutModal* — provider picker (5 options, each labelled with
+   region coverage), settlement rail picker (6 options with region
+   notes), mobile number / IBAN field with a "we store only the last
+   4 digits" notice, decimal amount field with "Use full balance"
+   shortcut. Validates amount client-side using bigint arithmetic
+   (avoid float drift). On submit, POSTs to `/api/merchant/withdraw`;
+   on success shows the success state with an "Open {Provider}" button
+   that opens the redirect URL in a new tab. Honest about: "VFIDE
+   never holds your fiat. Fees and exchange rates are shown by the
+   provider before you confirm."
+
+**`lib/payoutTokens.ts`** — shared client/server config that maps
+token symbols to addresses + decimals. Tokens whose env var is missing
+or malformed are excluded from the picker so users can't request
+something the API would reject.
+
+**`app/merchant/page.tsx`** — adds an "Earnings & payouts" section
+at the top of the connected-merchant module grid (above Sales &
+checkout). Lucide `Banknote` icon added to the import set.
+
+### Discoveries — what I'm not yet fixing
+
+Things I found in the merchant audit that aren't in scope this round
+(documented so the next round can prioritise):
+
+- The merchant home (`/merchant`) renders `<PaymentInterface />`,
+  which is a customer-paying-merchant UI ("enter merchant address +
+  amount + order ID"). Merchants shouldn't see this on their own
+  dashboard. To remove next round.
+- The "Getting Started" section on `/merchant` has three label cards
+  with no actions, links, or checkmarks. Just three labels. To
+  replace with a real progress checklist.
+- Returns approval (`PATCH /api/merchant/returns`) updates the DB and
+  restocks inventory but never fires an on-chain transfer back to the
+  customer. The customer doesn't get their money back. To wire up
+  next round.
+- `useWatchContractEvent` for `PaymentReceived` isn't used anywhere
+  in the merchant surface. A POS station running the merchant page
+  can't ding the merchant when payment arrives. To add next round.
+- `/api/merchant/receipts` and `/api/merchant/receipts/sms` endpoints
+  exist with zero frontend consumers. To wire next round.
+- 11 of the other merchant API tests (locations, returns, suppliers,
+  etc.) are failing because their `withAuth` mocks are pre-existing
+  broken in the same way I fixed for payments/withdraw. Same one-line
+  fix pattern applies. Pre-existing — not introduced this round.
+
+### TypeScript: clean throughout
+
+Six new/modified files, all `npx tsc --noEmit` clean. Strict
+dead-component scan: 0 truly dead components.
+
+### Final-mile fixes (continuation of the same round)
+
+- `withdraw.test.ts` was rewritten to match the new contract. Sets the
+  `NEXT_PUBLIC_USDC_ADDRESS` / `NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS` env
+  vars **before** the route import so the module-load-time
+  `resolveTokenConfig` calls see them. Five scenarios covered: GET
+  returns balances summary; bad enums get 400; unconfigured token gets
+  422; insufficient balance gets 422 + `available` field; happy path
+  creates a row and returns the Transak redirect URL. All 14 tests
+  across the three rewritten files pass.
+- Two strict-mode TS errors surfaced when the existing
+  `app/merchant/payouts/page.tsx` and
+  `components/merchant/payouts/CashOutModal.tsx` were typechecked in
+  the fresh build (string-split destructure where the second element
+  is typed as possibly undefined, and a `Record<string, ...>` lookup
+  under `noUncheckedIndexedAccess`). Fixed both by guarding with
+  `parts[1] ?? ''` and explicit fallback.
+- Confirmed (and deleted) a duplicate `lib/merchant/payoutTokens.ts`
+  I'd started building before noticing the existing `lib/payoutTokens.ts`.
+  No regression — the existing module is more complete and the page
+  was already importing from it.
+
+---
+
 ## 2026-05-12 (Round 12) — Vault setup wizard
 
 Earlier rounds deleted the legacy `OnboardingManager` → `HelpCenter` →

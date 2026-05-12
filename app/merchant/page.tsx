@@ -25,6 +25,7 @@ import {
   Truck,
   Boxes,
   GraduationCap,
+  Banknote,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 
@@ -73,6 +74,10 @@ const BUSINESS_MODULES: HubLink[] = [
 
 const SETUP_MODULES: HubLink[] = [
   { href: '/merchant/setup',          icon: Store,       label: 'Merchant setup', description: 'Configure your storefront and payouts.' },
+];
+
+const EARNINGS_MODULES: HubLink[] = [
+  { href: '/merchant/payouts',        icon: Banknote,    label: 'Earnings & payouts', description: 'See confirmed earnings and cash out to mobile money, bank, or airtime.' },
 ];
 
 const processors = [
@@ -169,6 +174,7 @@ export default function MerchantPage() {
             {/* Module sections when connected */}
             {isConnected && (
               <div className="space-y-12 mt-12">
+                <ModuleSection title="Earnings & payouts" links={EARNINGS_MODULES} />
                 <ModuleSection title="Sales & checkout" links={SALES_MODULES} />
                 <ModuleSection title="Customers" links={CUSTOMER_MODULES} />
                 <ModuleSection title="Operations" links={OPS_MODULES} />

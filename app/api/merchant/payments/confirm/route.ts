@@ -8,7 +8,7 @@ import type { JWTPayload } from '@/lib/auth/jwt';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/middleware';
-import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem } from 'viem';
+import { createPublicClient, decodeEventLog, getAddress, http, parseAbiItem, parseUnits } from 'viem';
 
 import { withRateLimit } from '@/lib/auth/rateLimit';
 import { CONTRACT_ADDRESSES, StablecoinRegistryABI, isConfiguredContractAddress } from '@/lib/contracts';
@@ -23,8 +23,16 @@ const INTEGER_STRING_REGEX = /^\d+$/;
 const DEFAULT_MIN_CONFIRMATIONS = 2n;
 const merchantPaymentConfirmSchema = z.object({
   customer_address: z.string().trim().toLowerCase().regex(ADDRESS_LIKE_REGEX),
-  amount: z.union([z.string(), z.number()]),
-  token: z.string().trim().optional(),
+  // Decimal amount in the token's natural unit, e.g. "5" for 5 VFIDE or
+  // "5.50" for 5.50 USDC. The API converts to wei using the token's
+  // on-chain decimals() before matching against the chain event.
+  amount: z.union([
+    z.string().trim().regex(/^[0-9]+(\.[0-9]+)?$/, 'amount must be a positive decimal string'),
+    z.number().positive(),
+  ]),
+  // Token contract address (NOT a symbol). Required so we can read the
+  // token's decimals and convert the user-supplied amount to wei.
+  token: z.string().trim().regex(ADDRESS_LIKE_REGEX, 'token must be a 0x address'),
   order_id: z.string().trim().optional(),
   tx_hash: z.string().regex(TX_HASH_REGEX),
 });
@@ -41,7 +49,7 @@ async function claimPaymentConfirmationIdempotency(params: {
   txHash: string;
   customer: string;
   amount: bigint;
-  token?: string;
+  token: string;
   orderId?: string;
 }): Promise<boolean> {
   const result = await query<{ id: string }>(
@@ -61,7 +69,7 @@ async function claimPaymentConfirmationIdempotency(params: {
       params.txHash.toLowerCase(),
       params.customer.toLowerCase(),
       params.amount.toString(),
-      params.token ?? null,
+      params.token.toLowerCase(),
       params.orderId ?? null,
     ]
   );
@@ -69,19 +77,81 @@ async function claimPaymentConfirmationIdempotency(params: {
   return result.rows.length > 0;
 }
 
-function parseAmountToUnits(value: unknown): bigint | null {
+/**
+ * Parse a user-supplied decimal amount (e.g. "5", "5.50") into wei using the
+ * supplied token decimals.
+ *
+ * Historical note: this function previously parsed `"5"` as the literal
+ * bigint `5n` and required callers to pre-convert to wei. None of the
+ * frontend callers actually did that — they sent decimal strings like
+ * `"5"` for "5 VFIDE", and the on-chain event amount is always wei. The
+ * mismatch meant the verification step on line below (`args.amount !==
+ * params.amount`) never matched, and zero confirmations were written.
+ *
+ * The fix is to make the API treat the wire format as a decimal value in
+ * the token's natural unit (5 VFIDE, 5.50 USDC, etc.) and convert to wei
+ * here using `parseUnits` against the *actual* token decimals — which we
+ * have to learn at runtime since stablecoins differ (USDC=6, DAI=18).
+ *
+ * Returns null for invalid input (negative, NaN, more decimal places than
+ * the token allows, etc.).
+ */
+function parseAmountToUnits(value: unknown, decimals: number): bigint | null {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 30) {
+    return null;
+  }
+
+  let text: string;
   if (typeof value === 'number') {
-    if (!Number.isInteger(value) || value <= 0) return null;
-    return BigInt(value);
+    if (!Number.isFinite(value) || value <= 0) return null;
+    text = value.toString();
+  } else if (typeof value === 'string') {
+    text = value.trim();
+    if (text === '') return null;
+  } else {
+    return null;
   }
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!INTEGER_STRING_REGEX.test(trimmed) || trimmed === '0') return null;
-    return BigInt(trimmed);
-  }
+  // Allow only digits and at most one decimal point. Reject scientific
+  // notation, signs, anything weird.
+  if (!/^[0-9]+(\.[0-9]+)?$/.test(text)) return null;
 
-  return null;
+  try {
+    const units = parseUnits(text as `${number}`, decimals);
+    if (units <= 0n) return null;
+    return units;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read decimals() from a token contract. Caches per-process.
+ */
+const TOKEN_DECIMALS_CACHE = new Map<string, number>();
+
+async function readTokenDecimals(
+  client: ReturnType<typeof createPublicClient>,
+  tokenAddress: string,
+): Promise<number | null> {
+  const key = tokenAddress.toLowerCase();
+  const cached = TOKEN_DECIMALS_CACHE.get(key);
+  if (typeof cached === 'number') return cached;
+
+  try {
+    const decimals = await client.readContract({
+      address: getAddress(tokenAddress),
+      abi: [parseAbiItem('function decimals() view returns (uint8)')],
+      functionName: 'decimals',
+    });
+    const num = Number(decimals);
+    if (!Number.isInteger(num) || num < 0 || num > 30) return null;
+    TOKEN_DECIMALS_CACHE.set(key, num);
+    return num;
+  } catch (error) {
+    logger.warn('[Merchant Payment Confirm] Failed to read token decimals', error);
+    return null;
+  }
 }
 
 function getMerchantPortalAddress(): string | null {
@@ -149,7 +219,7 @@ async function verifyPaymentEventOnChain(params: {
   merchant: string;
   customer: string;
   amount: bigint;
-  token?: string;
+  token: string;
   orderId?: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const rpcUrl = getRpcUrl();
@@ -162,7 +232,7 @@ async function verifyPaymentEventOnChain(params: {
   const expectedMerchant = getAddress(params.merchant);
   const expectedCustomer = getAddress(params.customer);
   const expectedPortal = getAddress(merchantPortalAddress);
-  const expectedToken = params.token && ADDRESS_LIKE_REGEX.test(params.token) ? getAddress(params.token) : null;
+  const expectedToken = getAddress(params.token);
 
   const client = createPublicClient({ transport: http(rpcUrl) });
 
@@ -213,7 +283,7 @@ async function verifyPaymentEventOnChain(params: {
       if (getAddress(args.merchant) !== expectedMerchant) continue;
       if (args.amount !== params.amount) continue;
       if (typeof params.orderId === 'string' && params.orderId.length > 0 && args.orderId !== params.orderId) continue;
-      if (expectedToken && eventToken !== expectedToken) continue;
+      if (eventToken !== expectedToken) continue;
 
       return { ok: true };
     } catch (error) {
@@ -251,9 +321,28 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload, cont
 
   const { customer_address, amount, token, order_id, tx_hash } = body;
 
-  const amountUnits = parseAmountToUnits(amount);
+  // Resolve token decimals on-chain so we can convert the user-supplied
+  // decimal amount (e.g. "5.50") into wei. Without this step the verify
+  // function below compares mismatched units and never confirms anything.
+  const rpcUrl = getRpcUrl();
+  if (!rpcUrl) {
+    return NextResponse.json(
+      { error: 'Payment confirmation is unavailable due to missing chain configuration' },
+      { status: 503 },
+    );
+  }
+  const sharedClient = createPublicClient({ transport: http(rpcUrl) });
+  const tokenDecimals = await readTokenDecimals(sharedClient, token);
+  if (tokenDecimals === null) {
+    return NextResponse.json(
+      { error: 'Could not read token decimals — check the token address and RPC connectivity' },
+      { status: 422 },
+    );
+  }
+
+  const amountUnits = parseAmountToUnits(amount, tokenDecimals);
   if (amountUnits === null) {
-    return NextResponse.json({ error: 'amount required' }, { status: 400 });
+    return NextResponse.json({ error: 'amount must be a positive decimal value' }, { status: 400 });
   }
 
   const verification = await verifyPaymentEventOnChain({
@@ -261,7 +350,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload, cont
     merchant: authAddress,
     customer: customer_address,
     amount: amountUnits,
-    token: typeof token === 'string' ? token : undefined,
+    token,
     orderId: typeof order_id === 'string' ? order_id : undefined,
   });
 
@@ -274,7 +363,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload, cont
     txHash: tx_hash,
     customer: customer_address,
     amount: amountUnits,
-    token: typeof token === 'string' ? token : undefined,
+    token,
     orderId: typeof order_id === 'string' ? order_id : undefined,
   });
 
@@ -286,7 +375,7 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload, cont
   await dispatchWebhook(authAddress, 'payment.completed', {
     customer_address: customer_address.toLowerCase(),
     amount: amountUnits.toString(),
-    token: token || 'VFIDE',
+    token,
     order_id: order_id || undefined,
     tx_hash,
     confirmed_at: new Date().toISOString(),
