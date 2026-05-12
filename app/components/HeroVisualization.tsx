@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { VFIDEMark } from '@/components/ui';
 
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
@@ -22,7 +23,7 @@ export function HeroVisualization() {
           <div className="absolute inset-8 rounded-full border border-cyan-400/10" />
         </motion.div>
         
-        {/* Central shield */}
+        {/* Central logo */}
         <motion.div
           initial={{ opacity: 0, y: 30, rotateY: -20 }}
           animate={{ opacity: 1, y: 0, rotateY: 0 }}
@@ -30,55 +31,7 @@ export function HeroVisualization() {
           className="relative z-10"
           style={{ perspective: '1000px' }}
         >
-          <svg 
-            width="140" 
-            height="170"
-            className="sm:w-45 sm:h-55"
-            viewBox="0 0 100 120" 
-            style={{ width: '140px', height: '170px' }}
-            preserveAspectRatio="xMidYMid meet"
-          >
-            <defs>
-              <linearGradient id="hero-shield-gradient" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#1a1a2e" />
-                <stop offset="100%" stopColor="#0a0a15" />
-              </linearGradient>
-              <linearGradient id="hero-accent-gradient" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#00F0FF" />
-                <stop offset="100%" stopColor="#0080FF" />
-              </linearGradient>
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-            
-            {/* Shield body */}
-            <path 
-              d="M50 5 L90 20 V55 C90 85 70 105 50 115 C30 105 10 85 10 55 V20 L50 5Z" 
-              fill="url(#hero-shield-gradient)" 
-              stroke="url(#hero-accent-gradient)" 
-              strokeWidth="1.5"
-            />
-            
-            {/* V letterform */}
-            <path 
-              d="M30 35 L50 85 L70 35" 
-              fill="none" 
-              stroke="#F8F8FC" 
-              strokeWidth="6" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-              filter="url(#glow)"
-            />
-            
-            {/* Accent details */}
-            <circle cx="50" cy="98" r="3" fill="#00F0FF" filter="url(#glow)" />
-            <path d="M35 25 L65 25" stroke="#00F0FF" strokeWidth="1" opacity="0.6" />
-          </svg>
+          <VFIDEMark size={140} glowing={false} animated={false} className="sm:scale-110" />
         </motion.div>
         
         {/* Orbiting elements */}
