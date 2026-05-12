@@ -9,8 +9,9 @@ import { toast } from '@/lib/toast';
 
 export default function BudgetsPage() {
   const { address } = useAccount();
-  const { budgets, spendingByCategory, setBudget, loading: _loading } = useFinancialIntelligence(address);
+  const { budgets, spendingByCategory, setBudget, removeBudget, loading: _loading } = useFinancialIntelligence(address);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newBudget, setNewBudget] = useState({
     category: '',
     limit: '',
@@ -24,7 +25,7 @@ export default function BudgetsPage() {
     }
 
     setBudget({
-      id: Date.now().toString(),
+      id: editingId ?? Date.now().toString(),
       category: newBudget.category,
       limit: parseFloat(newBudget.limit),
       spent: 0,
@@ -33,9 +34,26 @@ export default function BudgetsPage() {
     });
 
     setShowCreateModal(false);
+    setEditingId(null);
     setNewBudget({ category: '', limit: '', period: 'monthly' });
-    toast.success('Budget created');
-  }, [newBudget, setBudget]);
+    toast.success(editingId ? 'Budget updated' : 'Budget created');
+  }, [newBudget, setBudget, editingId]);
+
+  const handleEdit = useCallback((budget: Budget) => {
+    setEditingId(budget.id);
+    setNewBudget({
+      category: budget.category,
+      limit: String(budget.limit),
+      period: budget.period as 'daily' | 'weekly' | 'monthly',
+    });
+    setShowCreateModal(true);
+  }, []);
+
+  const handleDelete = useCallback((budget: Budget) => {
+    if (typeof window !== 'undefined' && !window.confirm(`Delete budget for ${budget.category}?`)) return;
+    removeBudget(budget.id);
+    toast.success('Budget deleted');
+  }, [removeBudget]);
 
   const getSpentAmount = (category: string) => {
     const cat = spendingByCategory.find(c => c.name === category);
@@ -130,10 +148,16 @@ export default function BudgetsPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <button className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm hover:bg-muted/80">
+                  <button
+                    onClick={() => handleEdit(budget)}
+                    className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm hover:bg-muted/80"
+                  >
                     Edit
                   </button>
-                  <button className="px-3 py-2 bg-red-500/10 text-red-500 rounded-lg text-sm">
+                  <button
+                    onClick={() => handleDelete(budget)}
+                    className="px-3 py-2 bg-red-500/10 text-red-500 rounded-lg text-sm hover:bg-red-500/20"
+                  >
                     Delete
                   </button>
                 </div>
@@ -168,12 +192,19 @@ export default function BudgetsPage() {
         )}
       </div>
 
-      {/* Create Modal */}
+      {/* Create / Edit Modal */}
       {showCreateModal && (
         <>
-          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50" onClick={() => setShowCreateModal(false)} />
+          <div
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+            onClick={() => {
+              setShowCreateModal(false);
+              setEditingId(null);
+              setNewBudget({ category: '', limit: '', period: 'monthly' });
+            }}
+          />
           <div className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md bg-card border rounded-2xl p-6 z-50 space-y-4">
-            <h2 className="text-xl font-bold">Create Budget</h2>
+            <h2 className="text-xl font-bold">{editingId ? 'Edit Budget' : 'Create Budget'}</h2>
 
             <div>
               <label className="text-sm text-muted-foreground block mb-1">Category</label>
@@ -219,7 +250,11 @@ export default function BudgetsPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setEditingId(null);
+                  setNewBudget({ category: '', limit: '', period: 'monthly' });
+                }}
                 className="flex-1 px-4 py-3 bg-muted rounded-lg hover:bg-muted/80"
               >
                 Cancel
@@ -228,7 +263,7 @@ export default function BudgetsPage() {
                 onClick={handleCreate}
                 className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
               >
-                Create
+                {editingId ? 'Save' : 'Create'}
               </button>
             </div>
           </div>

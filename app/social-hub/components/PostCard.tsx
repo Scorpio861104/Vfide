@@ -91,10 +91,18 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
           </button>
           {showMenu && (
             <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg py-1 min-w-37.5 z-10">
-              <button className="w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-700 flex items-center gap-2">
+              <button
+                disabled
+                title="Reporting requires a moderation backend that isn't wired up yet."
+                className="w-full px-4 py-2 text-left text-sm text-zinc-500 cursor-not-allowed flex items-center gap-2"
+              >
                 <Flag className="w-4 h-4" /> Report
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm text-zinc-400 hover:bg-zinc-700 flex items-center gap-2">
+              <button
+                disabled
+                title="Following requires a social-graph API that isn't built yet."
+                className="w-full px-4 py-2 text-left text-sm text-zinc-500 cursor-not-allowed flex items-center gap-2"
+              >
                 <UserPlus className="w-4 h-4" /> {post.isFollowing ? 'Unfollow' : 'Follow'}
               </button>
             </div>
@@ -147,12 +155,20 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
           <span className="text-sm">{formatNumber(post.likes)}</span>
         </button>
         
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
+        <button
+          disabled
+          title="Comment requires the /api/community/posts/[id]/comments endpoint, not built yet."
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-500 cursor-not-allowed"
+        >
           <MessageSquare className="w-5 h-5" />
           <span className="text-sm">{formatNumber(post.comments)}</span>
         </button>
         
-        <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
+        <button
+          disabled
+          title="Repost requires a share/repost API endpoint that isn't built yet."
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-500 cursor-not-allowed"
+        >
           <Repeat2 className="w-5 h-5" />
           <span className="text-sm">{formatNumber(post.shares)}</span>
         </button>
@@ -166,7 +182,11 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
           <Bookmark className={`w-5 h-5 ${post.bookmarked ? 'fill-current' : ''}`} />
         </button>
         
-        <button className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors">
+        <button
+          disabled
+          title="External share requires Web Share API or copy-link integration, not wired up yet."
+          className="p-2 rounded-lg text-zinc-500 cursor-not-allowed"
+        >
           <Share2 className="w-5 h-5" />
         </button>
       </div>

@@ -88,10 +88,18 @@ export function SanctumTab({ isConnected }: { isConnected: boolean }) {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition-colors">
+                  <button
+                    disabled
+                    title="Sanctum disbursement approval requires multi-sig signers — wire to DAO governance proposals instead."
+                    className="flex-1 bg-green-600/40 text-white/60 font-bold py-2 rounded-lg cursor-not-allowed"
+                  >
                     Approve
                   </button>
-                  <button className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors">
+                  <button
+                    disabled
+                    title="Sanctum disbursement rejection requires multi-sig signers — wire to DAO governance proposals instead."
+                    className="flex-1 bg-red-600/40 text-white/60 font-bold py-2 rounded-lg cursor-not-allowed"
+                  >
                     Reject
                   </button>
                 </div>

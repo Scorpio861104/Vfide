@@ -30,7 +30,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
       <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto bg-zinc-900 border-zinc-700 text-zinc-100">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <DialogTitle className="text-2xl font-bold text-zinc-100 mb-2">
                 {lesson.title}
               </DialogTitle>

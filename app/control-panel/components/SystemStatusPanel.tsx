@@ -75,16 +75,19 @@ export function SystemStatusPanel() {
               icon="🛡️"
               title="Enable All Howey-Safe Mode"
               description="Protect all contracts"
+              disabledReason="Howey-Safe Mode is enabled per-contract via the DAO. Open /governance to draft a parameter proposal."
             />
             <QuickActionButton
               icon="🔄"
               title="Configure Auto-Swap"
               description="Set up stablecoin payments"
+              disabledReason="Auto-swap configuration UI isn't built yet. The SwapRouter contract address is configured in lib/contracts.ts."
             />
             <QuickActionButton
               icon="⚡"
               title="Production Setup"
               description="One-click deployment"
+              disabledReason="Production deployment is a multi-step scripted process — see scripts/deploy/ and the deployment runbook."
             />
           </div>
         </div>
@@ -148,11 +151,24 @@ type QuickActionButtonProps = {
   icon: string;
   title: string;
   description: string;
+  onClick?: () => void;
+  /** Tooltip explaining why the action isn't wired up (used when onClick is absent) */
+  disabledReason?: string;
 };
 
-function QuickActionButton({ icon, title, description }: QuickActionButtonProps) {
+function QuickActionButton({ icon, title, description, onClick, disabledReason }: QuickActionButtonProps) {
+  const isDisabled = !onClick;
   return (
-    <button className="w-full p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-left">
+    <button
+      onClick={onClick}
+      disabled={isDisabled}
+      title={isDisabled ? (disabledReason ?? 'Not wired up yet.') : undefined}
+      className={`w-full p-4 rounded-lg border border-white/10 transition-colors text-left ${
+        isDisabled
+          ? 'bg-white/3 cursor-not-allowed opacity-60'
+          : 'bg-white/5 hover:bg-white/10'
+      }`}
+    >
       <div className="flex items-center gap-3">
         <span className="text-2xl">{icon}</span>
         <div>

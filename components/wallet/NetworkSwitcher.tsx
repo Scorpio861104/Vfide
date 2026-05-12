@@ -141,7 +141,7 @@ export function NetworkSwitcher() {
                       className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: network.color }}
                     />
-                    <span className="flex-1 text-left text-sm">{network.name}</span>
+                    <span className="flex-1 min-w-0 text-left text-sm truncate">{network.name}</span>
                     {isActive && <Check size={16} className="text-cyan-400" />}
                   </button>
                 );

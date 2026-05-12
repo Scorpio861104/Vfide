@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { Sparkles } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { Address } from '@/components/ui/Address';
 
 /**
  * CreatorDashboard - Comprehensive analytics and earnings management for creators
@@ -345,7 +346,9 @@ export function CreatorDashboard() {
                   </motion.div>
                   <div>
                     <div className="font-medium">{supporter.displayName}</div>
-                    <div className="text-sm text-gray-500">{supporter.address}</div>
+                    <div className="text-sm text-gray-500">
+                      <Address address={supporter.address} />
+                    </div>
                   </div>
                 </div>
                 <motion.div 
@@ -400,7 +403,9 @@ export function CreatorDashboard() {
                   >
                     +{tx.amount} ETH
                   </motion.div>
-                  <div className="text-sm text-gray-500">{tx.from}</div>
+                  <div className="text-sm text-gray-500">
+                    <Address address={tx.from} />
+                  </div>
                 </div>
               </motion.div>
             ))}

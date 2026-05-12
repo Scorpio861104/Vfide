@@ -533,7 +533,7 @@ export function GroupMessaging() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col">
+      <div className="flex-1 min-w-0 bg-zinc-950 border border-zinc-800 rounded-xl flex flex-col">
         {selectedGroup ? (
           <>
             {/* Group Header */}
@@ -563,13 +563,17 @@ export function GroupMessaging() {
                 {showGroupMenu && (
                   <div className="absolute right-0 top-12 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-10">
                     <button
-                      className="w-full px-4 py-2 text-left text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 rounded-t-lg"
+                      disabled
+                      title="Group settings UI requires a /api/social/groups/:id endpoint that isn't built yet."
+                      className="w-full px-4 py-2 text-left text-zinc-500 flex items-center gap-2 rounded-t-lg cursor-not-allowed"
                     >
                       <Settings className="w-4 h-4" />
                       Group Settings
                     </button>
                     <button
-                      className="w-full px-4 py-2 text-left text-zinc-100 hover:bg-zinc-800 flex items-center gap-2"
+                      disabled
+                      title="Adding members requires a /api/social/groups/:id/members endpoint that isn't built yet."
+                      className="w-full px-4 py-2 text-left text-zinc-500 flex items-center gap-2 cursor-not-allowed"
                     >
                       <UserPlus className="w-4 h-4" />
                       Add Members

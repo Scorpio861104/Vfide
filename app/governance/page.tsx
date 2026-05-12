@@ -38,7 +38,7 @@ export default function GovernancePage() {
             ))}
           </div>
 
-          {activeTab === 'proposals' && <ProposalsTab />}
+          {activeTab === 'proposals' && <ProposalsTab onCreateProposal={() => setActiveTab('create')} />}
           {activeTab === 'create' && <CreateTab />}
           {activeTab === 'council' && <CouncilTab />}
           {activeTab === 'stats' && <StatsTab />}

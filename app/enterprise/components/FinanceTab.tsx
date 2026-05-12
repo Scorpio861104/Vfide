@@ -65,7 +65,11 @@ export function FinanceTab() {
             <Zap className="text-cyan-400 mb-3" size={24} />
             <div className="text-zinc-100 font-bold mb-1">Send VFIDE</div>
             <div className="text-xs text-zinc-400 mb-3">DAO-approved disbursements</div>
-            <button className="w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
+            <button
+              disabled
+              title="Treasury sends require a DAO governance proposal. Open /governance to draft one."
+              className="w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed"
+            >
               DAO Only
             </button>
           </div>
@@ -73,7 +77,11 @@ export function FinanceTab() {
             <Shield className="text-purple-400 mb-3" size={24} />
             <div className="text-zinc-100 font-bold mb-1">Rescue Tokens</div>
             <div className="text-xs text-zinc-400 mb-3">Recover accidentally sent tokens</div>
-            <button className="w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
+            <button
+              disabled
+              title="Token rescue requires a DAO governance proposal. Open /governance to draft one."
+              className="w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed"
+            >
               DAO Only
             </button>
           </div>

@@ -215,7 +215,7 @@ export function EnhancedWalletConnect({ onSuccess, showOnboarding = true }: Enha
           >
             <div className="flex items-start gap-3">
               <AlertCircle className="text-red-400 flex-shrink-0 mt-0.5" size={20} />
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-red-400 mb-1">
                   {userError.title}
                 </p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useReferralActivity } from '@/hooks/useHeadhunterHooks';
+import { Address } from '@/components/ui/Address';
 
 export function ActivityTab() {
   const { activity, isLoading } = useReferralActivity();
@@ -20,7 +21,9 @@ export function ActivityTab() {
             {activity.map((item) => (
               <div key={item.id} className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
                 <div className="text-white font-semibold">{item.type === 'merchant' ? 'Merchant referral' : 'User referral'}</div>
-                <div className="text-sm text-gray-300">{item.address}</div>
+                <div className="text-sm text-gray-300">
+                  <Address address={item.address} />
+                </div>
                 <div className="text-xs text-cyan-300 mt-1">{item.status} • +{item.points} point{item.points === 1 ? '' : 's'}</div>
               </div>
             ))}

@@ -45,7 +45,11 @@ export function CharitiesTab() {
                 <div className="text-2xl font-bold text-pink-400">{charity.totalReceived.toLocaleString()}</div>
                 <div className="text-xs text-zinc-400">VFIDE received</div>
               </div>
-              <button className="text-cyan-400 text-sm hover:underline flex items-center gap-1">
+              <button
+                disabled
+                title="A charity detail page isn't built yet. Charity metadata flows through DAO governance proposals at /governance."
+                className="text-cyan-400/40 text-sm cursor-not-allowed flex items-center gap-1"
+              >
                 View Details <ExternalLink size={12} />
               </button>
             </div>

@@ -318,15 +318,29 @@ function TaxesTab({ taxSummary }: TaxesTabProps) {
 
       {/* Export Options */}
       <div className="bg-card rounded-xl p-4 border">
-        <h4 className="font-medium mb-4">Export Tax Report</h4>
+        <h4 className="font-medium mb-2">Export Tax Report</h4>
+        <p className="text-xs text-muted-foreground mb-3">
+          Detailed tax exports live on the dedicated tax page, which has the full transaction list.
+        </p>
         <div className="flex flex-wrap gap-2">
-          <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90">
-            Export CSV
-          </button>
-          <button className="px-4 py-2 bg-muted text-muted-foreground rounded-lg text-sm hover:bg-muted/80">
+          <a
+            href="/taxes"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
+          >
+            Open Tax Report
+          </a>
+          <button
+            disabled
+            title="PDF export requires server-side PDF generation (jsPDF or Puppeteer). Not wired up yet."
+            className="px-4 py-2 bg-muted text-muted-foreground rounded-lg text-sm opacity-50 cursor-not-allowed"
+          >
             Export PDF
           </button>
-          <button className="px-4 py-2 bg-muted text-muted-foreground rounded-lg text-sm hover:bg-muted/80">
+          <button
+            disabled
+            title="TurboTax import format (.tax2024) requires a server-side converter that maps cost-basis events. Not built yet."
+            className="px-4 py-2 bg-muted text-muted-foreground rounded-lg text-sm opacity-50 cursor-not-allowed"
+          >
             TurboTax Format
           </button>
         </div>

@@ -436,7 +436,7 @@ function OnboardingChecklist() {
                   <Circle className="w-5 h-5 text-zinc-600" />
                 )}
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <p className={`font-medium ${step.isComplete ? 'text-green-400 line-through' : 'text-zinc-200'}`}>
                   {step.title}
                 </p>

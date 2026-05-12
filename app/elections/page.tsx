@@ -284,7 +284,11 @@ export default function ElectionsPage() {
                           )}
                           <p className="text-gray-600 text-xs font-mono">{c.address}</p>
                           {isConnected && !hasVoted && (
-                            <button className="w-full py-2.5 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-bold rounded-xl text-sm flex items-center justify-center gap-2">
+                            <button
+                              disabled
+                              title="Council voting requires the CouncilElection contract (in contracts/future/) to be deployed and a useWriteContract path wired up. Not enabled in this build."
+                              className="w-full py-2.5 bg-cyan-500/10 border border-cyan-500/15 text-cyan-400/40 font-bold rounded-xl text-sm flex items-center justify-center gap-2 cursor-not-allowed"
+                            >
                               <Vote size={14} />Vote for this candidate
                             </button>
                           )}

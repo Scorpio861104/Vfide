@@ -377,7 +377,12 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
               Error
             </div>
           )}
-          <button className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors">
+          <button
+            disabled
+            title="Conversation settings (mute, leave, search) require a /api/social/conversations endpoint that isn't built yet."
+            className="p-2 rounded-lg text-zinc-500 cursor-not-allowed"
+            aria-label="More options"
+          >
             <MoreVertical className="w-5 h-5" />
           </button>
         </div>
@@ -590,9 +595,11 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         )}
         
         <div className="flex items-end gap-2">
-          <button 
+          <button
+            disabled
             aria-label="Open emoji picker"
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            title="Emoji picker isn't wired up to the messaging composer yet."
+            className="p-2 rounded-lg text-zinc-500 cursor-not-allowed"
           >
             <Smile className="w-5 h-5" />
           </button>
@@ -616,9 +623,11 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
             />
           </div>
 
-          <button 
+          <button
+            disabled
             aria-label="Attach file"
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+            title="File attachments require encrypted storage + the /api/upload endpoint, not built yet."
+            className="p-2 rounded-lg text-zinc-500 cursor-not-allowed"
           >
             <Paperclip className="w-5 h-5" />
           </button>

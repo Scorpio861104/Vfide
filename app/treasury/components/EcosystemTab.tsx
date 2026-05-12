@@ -70,14 +70,22 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
             <div className="p-4 bg-zinc-900 rounded-lg">
               <div className="text-zinc-400 text-sm mb-1">Merchant Rewards</div>
               <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
-              <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
+              <button
+                disabled
+                title="Claim button enables when there are merchant rewards available. Visit /merchant to earn."
+                className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed"
+              >
                 No Rewards Available
               </button>
             </div>
             <div className="p-4 bg-zinc-900 rounded-lg">
               <div className="text-zinc-400 text-sm mb-1">Headhunter Bounties</div>
               <div className="text-2xl font-bold text-cyan-400">0 VFIDE</div>
-              <button className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed">
+              <button
+                disabled
+                title="Claim button enables when there are headhunter bounties available. Visit /headhunter to refer."
+                className="mt-3 w-full bg-zinc-700 text-zinc-500 font-bold py-2 rounded-lg cursor-not-allowed"
+              >
                 No Bounties Available
               </button>
             </div>

@@ -18,7 +18,7 @@ export function ProposalCard({ proposal: prop, onVote, onFinalize, onViewDetails
   return (
     <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400 transition-colors">
       <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-cyan-400 text-sm font-bold mb-2">{prop.type}</div>
           <h3 className="text-xl font-bold text-zinc-100 mb-2">{prop.title}</h3>
           <p className="text-zinc-400 text-sm">Proposed by {prop.author} • Ends in {prop.timeLeft}</p>

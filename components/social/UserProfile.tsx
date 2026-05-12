@@ -175,15 +175,27 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
           {/* Action Buttons */}
           <div className="flex gap-2 shrink-0">
             {isOwnProfile ? (
-              <button className="px-6 py-3 bg-cyan-400/20 border border-cyan-400 text-cyan-400 rounded-lg hover:bg-cyan-400/30 transition-colors font-semibold">
+              <button
+                disabled
+                title="Profile editing requires a /api/social/profile PUT endpoint that isn't built yet."
+                className="px-6 py-3 bg-cyan-400/20 border border-cyan-400/40 text-cyan-400/60 rounded-lg cursor-not-allowed font-semibold"
+              >
                 Edit Profile
               </button>
             ) : (
               <>
-                <button className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg hover:bg-cyan-400 transition-colors font-semibold">
+                <button
+                  disabled
+                  title="Following requires a social-graph API that isn't built yet."
+                  className="px-4 py-2 bg-cyan-400/40 text-zinc-950/60 rounded-lg cursor-not-allowed font-semibold"
+                >
                   {user.isFollowing ? 'Following' : 'Follow'}
                 </button>
-                <button className="px-4 py-2 bg-violet-400 text-white rounded-lg hover:bg-purple-500 transition-colors font-semibold">
+                <button
+                  disabled
+                  title="Friend requests require a /api/social/friend-requests endpoint that isn't built yet."
+                  className="px-4 py-2 bg-violet-400/40 text-white/60 rounded-lg cursor-not-allowed font-semibold"
+                >
                   {user.isFriend ? 'Friends' : 'Add Friend'}
                 </button>
               </>
@@ -221,11 +233,19 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                         </>
                       )}
                     </button>
-                    <button className="w-full text-left px-4 py-3 text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 transition-colors border-b border-zinc-700">
+                    <button
+                      disabled
+                      title="Direct X (Twitter) share intent isn't wired up yet."
+                      className="w-full text-left px-4 py-3 text-zinc-500 cursor-not-allowed flex items-center gap-2 border-b border-zinc-700"
+                    >
                       <Share2 className="w-4 h-4" />
                       Share on X
                     </button>
-                    <button className="w-full text-left px-4 py-3 text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 transition-colors">
+                    <button
+                      disabled
+                      title="Direct-message sharing requires the messaging API to be live."
+                      className="w-full text-left px-4 py-3 text-zinc-500 cursor-not-allowed flex items-center gap-2"
+                    >
                       <MessageCircle className="w-4 h-4" />
                       Share Message
                     </button>
@@ -413,7 +433,11 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                       <div className="text-zinc-400 text-xs">Proof Score</div>
                     </div>
                   </div>
-                  <button className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded hover:border-violet-400 transition-colors text-sm font-semibold">
+                  <button
+                    disabled
+                    title="Friend profile detail page isn't wired up — friend records don't include a URL slug or wallet address to link to."
+                    className="w-full px-3 py-2 bg-zinc-800/60 border border-zinc-700/60 text-zinc-500 rounded text-sm font-semibold cursor-not-allowed"
+                  >
                     View Profile
                   </button>
                 </motion.div>
@@ -444,7 +468,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                     <div className={`text-4xl shrink-0 ${achievement.isUnlocked ? 'opacity-100' : 'opacity-50'}`}>
                       {achievement.icon}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-zinc-100 mb-1">{achievement.title}</h4>
                       <p className="text-zinc-400 text-sm mb-3">{achievement.description}</p>
                       <div className="w-full bg-zinc-950 rounded-full h-2 overflow-hidden">

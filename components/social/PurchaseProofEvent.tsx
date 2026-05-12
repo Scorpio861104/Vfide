@@ -32,7 +32,7 @@ export function PurchaseProofEvent({
         <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
           <ShoppingCart size={14} className="text-emerald-400" />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-sm text-gray-300">
             <span className="text-white font-medium">{buyer.name || shortAddr(buyer.address)}</span>
             <span className="text-emerald-400 text-xs ml-1.5 inline-flex items-center gap-0.5">

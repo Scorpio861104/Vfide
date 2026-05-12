@@ -106,13 +106,21 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
                 </div>
                 <span className="text-xs text-zinc-500">{user.mutualFriends} mutual</span>
               </div>
-              <button className="px-3 py-1 bg-cyan-400 text-zinc-950 text-sm font-semibold rounded-full hover:bg-cyan-400 transition-colors">
+              <button
+                disabled
+                title="Following requires a social-graph API that isn't built yet."
+                className="px-3 py-1 bg-cyan-400/40 text-zinc-950/60 text-sm font-semibold rounded-full cursor-not-allowed"
+              >
                 Follow
               </button>
             </div>
           ))}
         </div>
-        <button className="w-full mt-4 text-cyan-400 text-sm hover:underline">
+        <button
+          disabled
+          title="Pagination not wired up — only the initial trending users are returned."
+          className="w-full mt-4 text-cyan-400/40 text-sm cursor-not-allowed"
+        >
           Show more
         </button>
       </div>

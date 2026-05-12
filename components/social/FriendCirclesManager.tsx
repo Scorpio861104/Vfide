@@ -544,7 +544,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                           >
                             {isSelected && <Check className="w-3 h-3 text-zinc-950" />}
                           </button>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="font-semibold text-zinc-100">
                               {friend.alias || formatAddress(friend.address)}
                             </div>

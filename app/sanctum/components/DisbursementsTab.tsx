@@ -19,7 +19,11 @@ export function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-zinc-100">Disbursement Proposals</h2>
         {isConnected && (
-          <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-bold transition-colors">
+          <button
+            disabled
+            title="Sanctum proposals are created via the DAO governance flow — open /governance to draft a treasury proposal."
+            className="px-4 py-2 bg-pink-500/40 text-white/60 rounded-lg font-bold cursor-not-allowed"
+          >
             + New Proposal
           </button>
         )}
@@ -50,10 +54,18 @@ export function DisbursementsTab({ isConnected }: { isConnected: boolean }) {
             </div>
             {d.status === 'pending' && isConnected && (
               <div className="mt-4 pt-4 border-t border-zinc-700 flex gap-3">
-                <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold">
+                <button
+                  disabled
+                  title="Approval is done via the DAO governance vote — open /governance and find proposal #{d.id} to vote."
+                  className="px-4 py-2 bg-green-600/40 text-white/60 rounded-lg text-sm font-bold cursor-not-allowed"
+                >
                   Approve
                 </button>
-                <button className="px-4 py-2 bg-zinc-700 hover:bg-zinc-700 text-zinc-100 rounded-lg text-sm font-bold">
+                <button
+                  disabled
+                  title="A detail view for sanctum proposals isn't built — the underlying DAO proposal at /governance has the full details."
+                  className="px-4 py-2 bg-zinc-700 text-zinc-500 rounded-lg text-sm font-bold cursor-not-allowed"
+                >
                   View Details
                 </button>
               </div>

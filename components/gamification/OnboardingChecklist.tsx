@@ -356,7 +356,7 @@ function ChecklistItemCard({ item, onComplete: _onComplete }: { item: ChecklistI
             <Circle className="w-5 h-5" />
           )}
         </motion.div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h4 className={`font-bold mb-1 ${item.completed ? 'text-white' : 'text-white'}`}>
             {item.title}
           </h4>

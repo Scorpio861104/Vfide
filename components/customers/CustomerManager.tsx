@@ -12,6 +12,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Search, Plus, Star, Clock, DollarSign, MessageCircle, Tag, TrendingUp, UserPlus } from 'lucide-react';
+import { Address } from '@/components/ui/Address';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export interface Customer {
@@ -187,7 +188,9 @@ export function CustomerManager({ customers = [], customerOrders = {}, isLoading
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-white">{detail.name || 'Customer profile'}</h3>
-                <p className="text-xs text-gray-500">{detail.walletAddress}</p>
+                <p className="text-xs text-gray-500">
+                  <Address address={detail.walletAddress} />
+                </p>
               </div>
               <button
                 type="button"

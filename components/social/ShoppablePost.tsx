@@ -101,11 +101,19 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
           <Heart size={16} className={isLiked ? 'text-red-400 fill-red-400' : 'text-gray-500 group-hover:text-red-400'} />
           <span className={isLiked ? 'text-red-400' : 'text-gray-500'}>{likeCount}</span>
         </button>
-        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-cyan-400 transition-colors">
+        <button
+          disabled
+          title="Comments on shoppable posts require a /api/social/posts/:id/comments endpoint that isn't built yet."
+          className="flex items-center gap-1.5 text-sm text-gray-500/60 cursor-not-allowed"
+        >
           <MessageCircle size={16} />
           <span>{comments}</span>
         </button>
-        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-cyan-400 transition-colors">
+        <button
+          disabled
+          title="Sharing requires Web Share API or copy-link integration, not wired up yet."
+          className="flex items-center gap-1.5 text-sm text-gray-500/60 cursor-not-allowed"
+        >
           <Share2 size={16} />
         </button>
         <Link

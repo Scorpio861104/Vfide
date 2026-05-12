@@ -246,7 +246,7 @@ export function ClaimFlowModal({
                           item.color === 'amber' ? 'text-amber-400' : 'text-emerald-400'
                         }`} />
                       </div>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-white">{item.title}</p>
                         <p className="text-xs text-gray-500">{item.desc}</p>
                       </div>

@@ -44,16 +44,32 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
                 className="flex items-center justify-between pt-3 border-t border-zinc-700 mt-3"
               >
                 <div className="flex gap-2">
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-cyan-400">
+                  <button
+                    disabled
+                    title="Image upload requires the /api/upload endpoint, not built yet."
+                    className="p-2 rounded-lg text-cyan-400/40 cursor-not-allowed"
+                  >
                     <ImageIcon className="w-5 h-5" />
                   </button>
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-violet-400">
+                  <button
+                    disabled
+                    title="Video upload requires media storage + the /api/upload endpoint, not built yet."
+                    className="p-2 rounded-lg text-violet-400/40 cursor-not-allowed"
+                  >
                     <Video className="w-5 h-5" />
                   </button>
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-pink-400">
+                  <button
+                    disabled
+                    title="Emoji picker isn't wired into the editor yet."
+                    className="p-2 rounded-lg text-pink-400/40 cursor-not-allowed"
+                  >
                     <Smile className="w-5 h-5" />
                   </button>
-                  <button className="p-2 hover:bg-zinc-700 rounded-lg transition-colors text-emerald-500">
+                  <button
+                    disabled
+                    title="Location tagging requires geolocation permission flow + storage, not built yet."
+                    className="p-2 rounded-lg text-emerald-500/40 cursor-not-allowed"
+                  >
                     <MapPin className="w-5 h-5" />
                   </button>
                 </div>

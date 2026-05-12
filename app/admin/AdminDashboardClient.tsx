@@ -2762,13 +2762,25 @@ export default function AdminPanel() {
                 <div className="bg-black/30 rounded-lg p-3">
                   <p className="text-gray-400 mb-2">Connect notification services:</p>
                   <div className="space-y-1">
-                    <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors">
+                    <button
+                      disabled
+                      title="Email-alerts integration not wired up. Requires SMTP credentials + /api/admin/notifications/email endpoint."
+                      className="text-gray-500 text-xs cursor-not-allowed opacity-60"
+                    >
                       → Email Alerts
                     </button>
-                    <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors block">
+                    <button
+                      disabled
+                      title="Discord webhook integration not wired up. Requires webhook URL config + /api/admin/notifications/discord endpoint."
+                      className="text-gray-500 text-xs cursor-not-allowed opacity-60 block"
+                    >
                       → Discord Webhook
                     </button>
-                    <button className="text-gray-500 text-xs hover:text-blue-400 transition-colors block">
+                    <button
+                      disabled
+                      title="Telegram bot integration not wired up. Requires bot token + /api/admin/notifications/telegram endpoint."
+                      className="text-gray-500 text-xs cursor-not-allowed opacity-60 block"
+                    >
                       → Telegram Bot
                     </button>
                   </div>

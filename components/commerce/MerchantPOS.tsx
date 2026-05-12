@@ -40,6 +40,7 @@ export function MerchantPOS() {
   // Product Management — DB-backed, persisted via /api/merchant/products
   const [products, setProducts] = useState<Product[]>([])
   const [productsLoaded, setProductsLoaded] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<string>('All')
 
   // Fetch products from DB on mount
   useEffect(() => {
@@ -149,6 +150,12 @@ export function MerchantPOS() {
     const uniqueCategories = new Set(products.map(p => p.category));
     return ['All', ...Array.from(uniqueCategories)];
   }, [products]);
+
+  // Apply category filter
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === 'All') return products;
+    return products.filter(p => p.category === selectedCategory);
+  }, [products, selectedCategory]);
   
   // Track pending payment for event matching
   const pendingPaymentRef = useRef<{
@@ -511,7 +518,13 @@ export function MerchantPOS() {
                   {productCategories.map(cat => (
                     <button
                       key={cat}
-                      className="px-4 py-2 rounded-lg bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20 transition-colors text-sm"
+                      onClick={() => setSelectedCategory(cat)}
+                      aria-pressed={selectedCategory === cat}
+                      className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                        selectedCategory === cat
+                          ? 'bg-cyan-400 text-zinc-950 font-semibold'
+                          : 'bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20'
+                      }`}
                     >
                       {cat}
                     </button>
@@ -520,7 +533,7 @@ export function MerchantPOS() {
                 
                 {/* Product Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {products.map(product => (
+                  {filteredProducts.map(product => (
                     <motion.button
                       key={product.id}
                       onClick={() => addToCart(product)}
@@ -565,7 +578,7 @@ export function MerchantPOS() {
                         key={item.id}
                         className="flex items-center justify-between bg-zinc-950 rounded-lg p-3"
                       >
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-zinc-100">{item.name}</h4>
                           <p className="text-sm text-emerald-400">${item.price.toFixed(2)}</p>
                         </div>

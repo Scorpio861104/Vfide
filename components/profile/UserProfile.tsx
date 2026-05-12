@@ -591,7 +591,7 @@ function ActivityItem({ activity, index = 0 }: ActivityItemProps) {
       >
         {getActivityIcon(activity.type)}
       </motion.div>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white">{activity.title}</p>
         <p className="text-xs text-zinc-400">{formatTimeAgo(activity.timestamp)}</p>
       </div>
@@ -819,7 +819,7 @@ export default function UserProfile() {
           </div>
 
           {/* Profile Info */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {isEditing ? (
               <div className="space-y-4">
                 <div>

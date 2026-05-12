@@ -109,8 +109,8 @@ export function BadgeDisplay({
         <div className="bg-popover border border-border rounded-lg shadow-lg p-3 w-64">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl">{badge.icon}</span>
-            <div className="flex-1">
-              <div className="font-semibold text-sm">{badge.displayName}</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm truncate">{badge.displayName}</div>
               <div className="text-xs text-muted-foreground capitalize">{badge.rarity}</div>
             </div>
           </div>

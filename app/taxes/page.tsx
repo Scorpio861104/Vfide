@@ -104,10 +104,38 @@ export default function TaxesPage() {
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h3 className="font-medium">Tax Events ({taxEvents.length})</h3>
           <div className="flex gap-2">
-            <button className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm">
+            <button
+              onClick={() => {
+                if (taxEvents.length === 0) return;
+                const headers = ['Date', 'Type', 'Token', 'Amount (USD)', 'Gain/Loss (USD)'];
+                const rows = taxEvents.map((e) => [
+                  new Date(e.timestamp).toISOString().split('T')[0],
+                  e.type,
+                  e.token,
+                  e.amount.toFixed(2),
+                  e.gain !== undefined ? e.gain.toFixed(2) : '',
+                ]);
+                const csv = [headers, ...rows]
+                  .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+                  .join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tax-events-${year}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              disabled={taxEvents.length === 0}
+              className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Export CSV
             </button>
-            <button className="px-3 py-1.5 bg-muted rounded-lg text-sm">
+            <button
+              disabled
+              title="PDF export requires a server-side PDF generation pipeline (jsPDF or Puppeteer). Not wired up yet."
+              className="px-3 py-1.5 bg-muted rounded-lg text-sm opacity-50 cursor-not-allowed"
+            >
               Export PDF
             </button>
           </div>
@@ -161,10 +189,12 @@ export default function TaxesPage() {
           {['FIFO', 'LIFO', 'HIFO'].map((method) => (
             <button
               key={method}
-              className={`px-4 py-2 rounded-lg text-sm ${
+              disabled
+              title="Cost-basis switching requires per-method recalculation in useFinancialIntelligence (not implemented). FIFO is hard-coded today."
+              className={`px-4 py-2 rounded-lg text-sm cursor-not-allowed ${
                 method === 'FIFO'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
+                  ? 'bg-primary text-primary-foreground opacity-90'
+                  : 'bg-muted text-muted-foreground opacity-40'
               }`}
             >
               {method}
@@ -172,7 +202,8 @@ export default function TaxesPage() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          FIFO (First In, First Out) is the default and most commonly used method.
+          FIFO (First In, First Out) is the default and currently the only method implemented.
+          LIFO and HIFO are placeholders pending a per-method calculation rewrite.
         </p>
       </div>
     </div>

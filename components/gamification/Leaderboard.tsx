@@ -270,8 +270,8 @@ export function Leaderboard() {
                   </div>
 
                   {/* User Info */}
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-zinc-100">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-zinc-100 truncate">
                       {entry.alias || `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`}
                       {isCurrentUser && (
                         <span className="ml-2 text-xs text-cyan-400">(You)</span>

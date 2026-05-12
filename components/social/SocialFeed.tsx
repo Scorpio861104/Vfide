@@ -385,10 +385,18 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
 
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
-              <button className="p-2 text-zinc-400 hover:text-cyan-400 hover:bg-zinc-800 rounded-lg transition-colors">
+              <button
+                disabled
+                title="Image upload requires the /api/upload endpoint, not built yet."
+                className="p-2 text-zinc-400/40 rounded-lg cursor-not-allowed"
+              >
                 <ImageIcon className="w-5 h-5" />
               </button>
-              <button className="p-2 text-zinc-400 hover:text-violet-400 hover:bg-zinc-800 rounded-lg transition-colors">
+              <button
+                disabled
+                title="Emoji picker isn't wired up to the composer yet."
+                className="p-2 text-zinc-400/40 rounded-lg cursor-not-allowed"
+              >
                 <Smile className="w-5 h-5" />
               </button>
             </div>
@@ -450,7 +458,11 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
 
                     <div className="flex gap-2 shrink-0">
                       <span className="text-2xl">{getPostIcon(post.type)}</span>
-                      <button className="p-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded transition-colors opacity-0 group-hover:opacity-100">
+                      <button
+                        disabled
+                        title="Post overflow menu (mute, report, copy link) requires a backend that isn't built yet."
+                        className="p-2 text-zinc-500 rounded cursor-not-allowed opacity-0 group-hover:opacity-100"
+                      >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
                     </div>
@@ -530,7 +542,11 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                       className="flex-1"
                     />
 
-                    <button className="flex-1 px-3 py-2 bg-zinc-800 text-zinc-400 hover:border-emerald-500 border border-transparent rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2">
+                    <button
+                      disabled
+                      title="Share-to-feed requires a /api/social/share endpoint that isn't built yet."
+                      className="flex-1 px-3 py-2 bg-zinc-800 text-zinc-500 border border-transparent rounded-lg font-semibold text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                    >
                       <Share2 className="w-4 h-4" />
                       Share
                     </button>
@@ -569,7 +585,11 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                                 </div>
                                 <p className="text-sm text-zinc-300 mb-2">{comment.content}</p>
                                 <div className="flex items-center gap-3 text-xs text-zinc-500">
-                                  <button className="hover:text-pink-400 transition-colors">
+                                  <button
+                                    disabled
+                                    title="Comment reactions require a /api/social/comments/:id/like endpoint that isn't built yet."
+                                    className="cursor-not-allowed opacity-60"
+                                  >
                                     {comment.liked ? '❤️' : '🤍'} {comment.likes}
                                   </button>
                                   <span>Reply</span>
@@ -590,7 +610,11 @@ export function SocialFeed({ onPostCreated }: SocialFeedProps) {
                              
                               className="flex-1 bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-zinc-100  focus:outline-none focus:border-cyan-400 text-sm"
                              aria-label="Write a reply..." />
-                            <button className="p-2 bg-cyan-400 text-zinc-950 rounded hover:bg-cyan-400 transition-colors">
+                            <button
+                              disabled
+                              title="Comment posting requires a /api/social/comments POST endpoint that isn't built yet."
+                              className="p-2 bg-cyan-400/40 text-zinc-950/60 rounded cursor-not-allowed"
+                            >
                               <Send className="w-4 h-4" />
                             </button>
                           </div>

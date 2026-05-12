@@ -55,7 +55,7 @@ export function SetupStepProducts({
                 )}
               </button>
 
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 min-w-0 space-y-2">
                 <input
                   type="text"
                   value={product.name}

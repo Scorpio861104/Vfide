@@ -20,11 +20,13 @@ export function ProposalsTab({
   activeProposalIds,
   onVote,
   onFinalize,
+  onCreateProposal,
 }: {
   searchQuery?: string
   activeProposalIds?: readonly bigint[]
   onVote?: (proposalId: bigint, support: boolean) => void
   onFinalize?: (proposalId: bigint) => void
+  onCreateProposal?: () => void
 }) {
   const publicClient = usePublicClient()
   const isAvailable = isConfiguredContractAddress(DAO_ADDRESS)
@@ -150,7 +152,7 @@ export function ProposalsTab({
         className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400 transition-colors"
       >
         <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-cyan-400 text-sm font-bold mb-2">
               {prop.type}
             </div>
@@ -249,7 +251,11 @@ export function ProposalsTab({
                 >
                   📊 Export CSV
                 </button>
-                <button className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform">
+                <button
+                  onClick={() => onCreateProposal?.()}
+                  disabled={!onCreateProposal}
+                  className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
                   Create Proposal
                 </button>
               </div>
@@ -361,10 +367,24 @@ export function ProposalsTab({
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button className="flex-1 px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-emerald-500/90">
+                <button
+                  onClick={() => {
+                    onVote?.(BigInt(selectedProposal.id), true);
+                    setSelectedProposal(null);
+                  }}
+                  disabled={!onVote}
+                  className="flex-1 px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-emerald-500/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Vote FOR
                 </button>
-                <button className="flex-1 px-6 py-3 bg-red-600 text-zinc-100 rounded-lg font-bold hover:bg-red-600/90">
+                <button
+                  onClick={() => {
+                    onVote?.(BigInt(selectedProposal.id), false);
+                    setSelectedProposal(null);
+                  }}
+                  disabled={!onVote}
+                  className="flex-1 px-6 py-3 bg-red-600 text-zinc-100 rounded-lg font-bold hover:bg-red-600/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   Vote AGAINST
                 </button>
               </div>

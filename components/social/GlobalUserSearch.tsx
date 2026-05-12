@@ -98,14 +98,16 @@ export function GlobalUserSearch() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className="p-2 bg-cyan-400/20 text-cyan-400 border border-cyan-400/30 rounded-lg hover:bg-cyan-400/30 transition-colors"
-                    title="Send Friend Request"
+                    disabled
+                    className="p-2 bg-cyan-400/10 text-cyan-400/40 border border-cyan-400/15 rounded-lg cursor-not-allowed"
+                    title="Friend requests require a /api/social/friend-requests endpoint that isn't built yet."
                   >
                     <UserPlus className="w-4 h-4" />
                   </button>
                   <button
-                    className="p-2 bg-violet-400/20 text-violet-400 border border-violet-400/30 rounded-lg hover:bg-violet-400/30 transition-colors"
-                    title="Message"
+                    disabled
+                    className="p-2 bg-violet-400/10 text-violet-400/40 border border-violet-400/15 rounded-lg cursor-not-allowed"
+                    title="Direct messaging from search isn't wired up yet — open the Messages tab to start a conversation."
                   >
                     <MessageCircle className="w-4 h-4" />
                   </button>

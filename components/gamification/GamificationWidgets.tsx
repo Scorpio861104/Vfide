@@ -233,7 +233,7 @@ export function AchievementsList({ userAddress }: { userAddress: string }) {
                 <div className="bg-zinc-900 rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="text-3xl">{achievement.icon}</div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-zinc-100 mb-1">{achievement.name}</h4>
                       <p className="text-xs text-zinc-400 mb-2">{achievement.description}</p>
                       <div className="flex items-center gap-2">

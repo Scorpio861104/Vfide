@@ -194,7 +194,7 @@ function OnRampModal({
                 className="flex items-center gap-3 p-4 bg-white/3 border border-white/10 rounded-xl hover:border-white/20 transition-colors"
               >
                 <span className="text-2xl">{provider.logoEmoji}</span>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="text-white font-bold text-sm">{provider.name}</div>
                   <div className="text-gray-500 text-xs">{provider.description}</div>
                 </div>

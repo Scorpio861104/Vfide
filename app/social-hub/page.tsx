@@ -147,7 +147,12 @@ export default function SocialHubPage() {
                   </div>
                 )}
 
-                <button type="button" className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-cyan-300 hover:bg-white/10">
+                <button
+                  type="button"
+                  disabled
+                  title="Pagination requires cursor support in /api/community/posts. Only the initial page is returned today."
+                  className="w-full rounded-xl border border-white/10 bg-white/3 px-4 py-3 text-sm font-semibold text-cyan-300/40 cursor-not-allowed"
+                >
                   Load More Posts
                 </button>
               </div>

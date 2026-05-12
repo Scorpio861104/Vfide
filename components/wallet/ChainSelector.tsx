@@ -216,7 +216,7 @@ export function ChainSelector({ onChainSelect, showOnlyReady = false, compact = 
                   {chain.icon}
                 </div>
                 
-                <div className="flex-1 text-left">
+                <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-white">{chain.name}</span>
                     <AnimatePresence>

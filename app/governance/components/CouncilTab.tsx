@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from "react"
+import Link from "next/link"
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
 
 interface CouncilTabProps {
@@ -136,9 +137,12 @@ export function CouncilTab({
                   <h3 className="text-xl font-bold text-zinc-100">📅 Election Events</h3>
                   <p className="text-zinc-400">Important milestones and community touchpoints.</p>
                 </div>
-                <button className="px-4 py-2 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all">
+                <Link
+                  href="/elections"
+                  className="px-4 py-2 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all"
+                >
                   View Schedule
-                </button>
+                </Link>
               </div>
 
               <div className="space-y-3">
@@ -202,10 +206,18 @@ export function CouncilTab({
             <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-5">
               <h3 className="text-lg font-bold text-zinc-100 mb-3">Community Actions</h3>
               <div className="space-y-2 text-sm text-zinc-400">
-                <button className="w-full px-4 py-2 bg-cyan-400 text-zinc-900 font-bold rounded-lg hover:opacity-90 transition-all">
+                <button
+                  disabled
+                  title="Council nominations require an election contract + registration window flow that isn't built yet."
+                  className="w-full px-4 py-2 bg-cyan-400/40 text-zinc-900/60 font-bold rounded-lg cursor-not-allowed"
+                >
                   Nominate Candidate
                 </button>
-                <button className="w-full px-4 py-2 bg-zinc-900 text-zinc-400 font-bold rounded-lg border border-zinc-700 hover:text-cyan-400 transition-all">
+                <button
+                  disabled
+                  title="The council charter document hasn't been authored yet."
+                  className="w-full px-4 py-2 bg-zinc-900 text-zinc-500 font-bold rounded-lg border border-zinc-700 cursor-not-allowed"
+                >
                   View Charter
                 </button>
               </div>

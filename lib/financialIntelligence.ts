@@ -662,6 +662,14 @@ export function useFinancialIntelligence(userAddress: string | undefined) {
     });
   }, [userAddress]);
 
+  const removeBudget = useCallback((budgetId: string) => {
+    setBudgets((prev) => {
+      const updated = prev.filter((b) => b.id !== budgetId);
+      localStorage.setItem(`vfide-budgets-${userAddress}`, JSON.stringify(updated));
+      return updated;
+    });
+  }, [userAddress]);
+
   const checkBudgetAlert = useCallback((category: string): Budget | null => {
     const budget = budgets.find((b) => b.category === category && b.alerts);
     if (!budget) return null;
@@ -685,6 +693,7 @@ export function useFinancialIntelligence(userAddress: string | undefined) {
     addTransaction,
     updateHoldings,
     setBudget,
+    removeBudget,
     checkBudgetAlert,
   };
 }

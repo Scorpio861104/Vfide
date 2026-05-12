@@ -21,6 +21,7 @@ import { logger } from '@/lib/logger';
 import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink, Copy } from 'lucide-react';
 // v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper.
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 interface InvoiceItem {
   description: string;
@@ -444,7 +445,7 @@ export default function CheckoutPage() {
                   {!isConnected ? (
                     <div className="text-center">
                       <p className="text-sm text-gray-500 mb-3">Connect your wallet to pay</p>
-                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">Connect Wallet</button>
+                      <ConnectButton />
                     </div>
                   ) : (
                     <button

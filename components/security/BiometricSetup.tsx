@@ -102,7 +102,7 @@ export function BiometricSetup({
                   key={cred.id}
                   className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg"
                 >
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-900 dark:text-gray-100">{cred.name}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {cred.type} • Added {cred.createdAt.toLocaleDateString()}

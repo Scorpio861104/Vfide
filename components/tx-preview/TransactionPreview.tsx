@@ -142,13 +142,13 @@ export function TransactionPreview(props: TransactionPreviewProps) {
         <div className="p-5 space-y-4">
           {/* Flow visualization */}
           <div className="flex items-center gap-3 p-4 bg-white/3 border border-white/5 rounded-xl">
-            <div className="flex-1 text-center">
+            <div className="flex-1 min-w-0 text-center">
               <div className="text-gray-500 text-xs mb-1">You</div>
               <div className="text-white font-mono text-sm">{formatNumber(tknTotal, 2)}</div>
               <div className="text-gray-500 text-xs">{token}</div>
             </div>
             <ArrowRight size={20} className="text-cyan-400 flex-shrink-0" />
-            <div className="flex-1 text-center">
+            <div className="flex-1 min-w-0 text-center">
               <div className="text-gray-500 text-xs mb-1">{label.preposition}</div>
               <div className="text-white font-bold text-sm truncate">{to}</div>
               <div className="text-gray-500 text-xs font-mono">{toAddress.slice(0, 6)}...{toAddress.slice(-4)}</div>
