@@ -414,13 +414,13 @@ export function FavoriteStar({ itemId, isFavorite, onToggle, color = '#F59E0B' }
 
 export function useLongPress(
   onLongPress: () => void,
-  onTap: () => void,
   delay = 400
 ) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLong = useRef(false);
   const touchActiveRef = useRef(false);
   const touchResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressClickRef = useRef(false);
 
   const start = useCallback((event: React.TouchEvent | React.MouseEvent) => {
     // Ignore synthetic mouse events that follow touch interactions.
@@ -435,6 +435,7 @@ export function useLongPress(
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       isLong.current = true;
+      suppressClickRef.current = true;
       onLongPress();
     }, delay);
   }, [onLongPress, delay]);
@@ -443,7 +444,7 @@ export function useLongPress(
     if (event.type === 'mouseup' && touchActiveRef.current) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    if (!isLong.current) onTap();
+    suppressClickRef.current = isLong.current;
     isLong.current = false;
 
     if (event.type === 'touchend') {
@@ -451,7 +452,7 @@ export function useLongPress(
         touchActiveRef.current = false;
       }, 350);
     }
-  }, [onTap]);
+  }, []);
 
   const cancel = useCallback((event: React.TouchEvent | React.MouseEvent) => {
     if (event.type === 'mouseleave' && touchActiveRef.current) return;
@@ -472,6 +473,12 @@ export function useLongPress(
     onMouseDown: start,
     onMouseUp: end,
     onMouseLeave: cancel,
+    onClickCapture: (event: React.MouseEvent) => {
+      if (!suppressClickRef.current) return;
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClickRef.current = false;
+    },
   };
 }
 

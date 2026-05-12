@@ -484,13 +484,14 @@ interface TriggerButtonProps {
 
 function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScore, buttonRef }: TriggerButtonProps) {
   // Long-press handlers — 400ms threshold. On long-press we fire onLongPress
-  // (which opens the navigation quick-actions); on a normal tap onClick fires.
-  const longPress = useLongPress(onLongPress, onClick, 400);
+  // (which opens the navigation quick-actions); a normal tap uses onClick.
+  const longPress = useLongPress(onLongPress, 400);
 
   return (
     <ProofScoreRing score={proofScore} size={56}>
       <motion.button
         ref={buttonRef}
+        onClick={onClick}
         {...longPress}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
