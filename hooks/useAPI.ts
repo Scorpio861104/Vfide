@@ -113,6 +113,10 @@ export function useAuth() {
   const chainId = useChainId();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  // Initial-mount session check. While true, WalletAuthManager (and any
+  // other consumer) must wait before triggering SIWE — otherwise users
+  // with a valid httpOnly cookie get re-prompted on every page load.
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const authenticate = useCallback(async () => {
@@ -160,22 +164,38 @@ export function useAuth() {
     setIsAuthenticated(false);
   }, []);
 
-  // Check if token is valid on mount
+  // Initial session check. We ALWAYS hit verifyToken on mount, not just
+  // when there's an in-memory token — the JWT lives in an httpOnly cookie
+  // that the in-memory state has no visibility into. Skipping this when
+  // `this.token` is null (the previous behavior) meant authenticated users
+  // who refreshed the page would have isAuthenticated=false on next render,
+  // which then triggered WalletAuthManager to re-prompt SIWE even though
+  // the cookie was still valid.
   useEffect(() => {
-    const token = apiClient.getToken();
-    if (token) {
-      apiClient.verifyToken()
-        .then(() => setIsAuthenticated(true))
-        .catch(() => {
-          apiClient.clearToken();
-          setIsAuthenticated(false);
-        });
-    }
+    let cancelled = false;
+    apiClient.verifyToken()
+      .then((result) => {
+        if (cancelled) return;
+        // verifyToken returns { valid: true, address } on success;
+        // throws on 401/expired.
+        if (result?.valid) setIsAuthenticated(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // 401 or network error — treat as unauthenticated. Don't clear
+        // tokens here; the cookie is server-managed.
+        setIsAuthenticated(false);
+      })
+      .finally(() => {
+        if (!cancelled) setIsCheckingSession(false);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   return {
     isAuthenticated,
     isAuthenticating,
+    isCheckingSession,
     error,
     authenticate,
     logout,

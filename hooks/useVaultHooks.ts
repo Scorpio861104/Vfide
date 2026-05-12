@@ -1,33 +1,36 @@
 'use client'
 
-import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContracts, usePublicClient, useChainId } from 'wagmi'
-import { parseEther, formatEther, type Abi } from 'viem'
-import { useState, useEffect } from 'react'
-import { ACTIVE_VAULT_IMPLEMENTATION, ACTIVE_VAULT_ABI, isCardBoundVaultMode, isConfiguredContractAddress } from '../lib/contracts'
+/**
+ * Vault hooks — minimal surface kept after dead-code surgery.
+ *
+ * The pre-cleanup file was 758 lines and exported 17 hooks, most of
+ * which were legacy non-CardBound UserVault helpers (balance snapshot
+ * mode, abnormal-tx threshold, pending-tx queue approve/execute/cleanup,
+ * setGuardian, transferVFIDE, guardian-cancel-inheritance,
+ * inheritance-status, guardian-maturity reads). Every legacy hook either:
+ *   (a) had `enabled: false` queries that never fired,
+ *   (b) threw or returned an error unconditionally because the active
+ *       vault is CardBound, or
+ *   (c) had zero consumers across the codebase.
+ *
+ * Kept: `useUserVault` (vault-of lookup) and `useVaultBalance` (token
+ * balance + Zustand sync). Both are CardBound-clean.
+ *
+ * For createVault, transfers, guardian setup, and recovery operations,
+ * use `useVaultHub`, `useVaultRecovery`, and `useVaultOperations` —
+ * which are CardBound-native by design.
+ */
+
+import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
+import { formatEther } from 'viem'
+import { useEffect } from 'react'
+import { ACTIVE_VAULT_IMPLEMENTATION, isConfiguredContractAddress } from '../lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI } from '../lib/abis'
-import { CURRENT_CHAIN_ID } from '../lib/testnet'
-import { validateAddress } from '../lib/validation'
-import { parseContractError, logError } from '@/lib/errorHandling';
 import { useAppStore } from '@/lib/store/appStore';
 
-// ============================================
-// VAULT HOOKS - Non-custodial vault management
-// 
-// CardBoundVault is the sole active vault implementation with:
-// - Wallet-based authorization (ATM-card model)
-// - Guardian management with maturity periods
-// - Next of Kin (inheritance) functionality  
-// - Recovery mechanisms
-// - 7-day withdrawal queue protection
-// ============================================
-
-// VaultHub orchestrates all vault operations
 const HUB_ABI = VaultHubABI
-
-// CardBoundVault: the active vault implementation
-const VAULT_ABI = ACTIVE_VAULT_ABI
 
 export function useUserVault() {
   const CONTRACT_ADDRESSES = useContractAddresses();
@@ -55,54 +58,16 @@ export function useUserVault() {
   }
 }
 
-export function useCreateVault() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const chainId = useChainId()
-  const publicClient = usePublicClient()
-  const { address } = useAccount()
-  const { writeContractAsync, data, isPending } = useWriteContract()
-  const hasVaultHubConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub)
-  
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: data,
-  })
-  
-  // VaultHub ensureVault() creates if doesn't exist, returns existing vault if it does
-  const createVault = async () => {
-    if (!address) return null
-    if (!hasVaultHubConfig) {
-      throw new Error('VaultHub is not configured in this environment')
-    }
-    if (chainId !== CURRENT_CHAIN_ID) {
-      throw new Error('Switch to the configured network before creating a vault')
-    }
-    const hash = await writeContractAsync({
-      address: CONTRACT_ADDRESSES.VaultHub,
-      abi: HUB_ABI,
-      functionName: 'ensureVault',
-      args: [address],
-      chainId: CURRENT_CHAIN_ID,
-    })
-    if (publicClient) {
-      await publicClient.waitForTransactionReceipt({ hash })
-    }
-    return hash
-  }
-  
-  return {
-    createVault,
-    isCreating: isPending || isConfirming,
-    isSuccess,
-    txHash: data,
-  }
-}
+// Note: vault creation lives in `useVaultHub` (createVault) and operates
+// on the same VaultHub.ensureVault() entrypoint as the legacy hook used
+// to. There's no callsite for a second creator hook here.
 
 export function useVaultBalance() {
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { vaultAddress } = useUserVault()
   const setVault = useAppStore((state) => state.setVault)
   const hasTokenConfig = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken)
-  
+
   const { data: balance, isLoading, refetch } = useReadContract({
     address: CONTRACT_ADDRESSES.VFIDEToken,
     abi: VFIDETokenABI,
@@ -114,644 +79,33 @@ export function useVaultBalance() {
     }
   })
 
-  // CardBoundVault uses withdrawal queue instead of pending tx; disabled for now
-  const { data: pendingTxCount } = useReadContract({
-    address: vaultAddress ?? undefined,
-    abi: VAULT_ABI,
-    functionName: 'pendingTxCount',
-    query: {
-      enabled: false, // CardBoundVault doesn't use pendingTxCount
-      refetchInterval: 5000,
-    }
-  })
-
-  // Cap at MAX_PENDING_TX_READ to avoid creating an excessively large batch of
-  // contract reads. UserVault enforces a practical limit of ~10 pending
-  // transactions, but we guard against unexpectedly large values from stale/local data
-  // or misconfigured contracts.
-  const MAX_PENDING_TX_READ = 50
-  const pendingCount = Math.min(Number((pendingTxCount as bigint) || 0n), MAX_PENDING_TX_READ)
-
-  // Batch-read all pending transactions to sum their locked amounts
-  const pendingContracts = Array.from({ length: pendingCount }, (_, i) => ({
-    address: vaultAddress as `0x${string}`,
-    abi: VAULT_ABI as Abi,
-    functionName: 'pendingTransactions' as const,
-    args: [BigInt(i)] as const,
-  }))
-
-  const { data: pendingTxData } = useReadContracts({
-    contracts: pendingContracts,
-    query: {
-      enabled: false, // pendingTransactions removed from CardBoundVault - uses withdrawal queue instead
-    }
-  })
-
-  // PendingTransaction tuple: [toVault, amount, requestTime, approved, executed]
-  type PendingTxTuple = [string, bigint, bigint, boolean, boolean]
-
-  // Sum amounts of pending transactions that are not yet executed
-  const lockedBalanceRaw = (pendingTxData ?? []).reduce((sum, result) => {
-    if (result.status !== 'success' || !result.result) return sum
-    const tx = result.result as PendingTxTuple
-    const executed = tx[4]
-    if (!executed) {
-      return sum + tx[1]
-    }
-    return sum
-  }, 0n)
-
+  // Note: CardBoundVault uses a withdrawal queue (see useVaultOperations
+  // queuedWithdrawals state) rather than the legacy `pendingTransactions`
+  // array. The pre-cleanup version of this hook batched reads of
+  // pendingTransactions[i] to compute a locked-balance figure, all gated
+  // by `enabled: false`. That dead batch was removed; locked balance is
+  // now tracked via the withdrawal queue surface instead.
   const formattedBalance = balance ? formatEther(balance as bigint) : '0';
-  const formattedLockedBalance = formatEther(lockedBalanceRaw);
-  
+
   // Sync with Zustand store for global state access
   useEffect(() => {
     if (vaultAddress && balance !== undefined) {
       setVault({
         address: vaultAddress,
         balance: formattedBalance,
-        lockedBalance: formattedLockedBalance,
+        lockedBalance: '0',
         lastUpdated: Date.now(),
       });
     }
-  }, [vaultAddress, balance, formattedBalance, formattedLockedBalance, setVault]);
-  
+  }, [vaultAddress, balance, formattedBalance, setVault]);
+
   return {
     balance: formattedBalance,
     balanceRaw: (balance as bigint) || 0n,
-    lockedBalance: formattedLockedBalance,
-    lockedBalanceRaw,
+    lockedBalance: '0',
+    lockedBalanceRaw: 0n,
     isLoading,
     refetch,
   }
 }
 
-export function useTransferVFIDE() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const chainId = useChainId()
-  const { vaultAddress } = useUserVault()
-  const { writeContract, data, isPending } = useWriteContract()
-  
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: data,
-  })
-  
-  const transfer = (toVault: `0x${string}`, amount: string) => {
-    if (!vaultAddress) return
-    // CardBoundVault: use queueWithdrawal or vault-to-vault transfer via VaultHub
-    throw new Error('Use CardBoundVault vault-to-vault transfer flow (via queueWithdrawal or ensureVault)')
-    
-    // Validate recipient address
-    const validation = validateAddress(toVault)
-    if (!validation.valid) {
-      throw new Error(validation.error || 'Invalid recipient vault address')
-    }
-    
-    // Validate amount
-    const amountNum = parseFloat(amount)
-    if (isNaN(amountNum) || amountNum <= 0) {
-      throw new Error('Amount must be a positive number')
-    }
-    
-    if (chainId !== CURRENT_CHAIN_ID) {
-      throw new Error('Switch to the configured network before transferring VFIDE')
-    }
-
-    // UserVault uses 'transferVFIDE' function (matches ABI)
-    writeContract({
-      address: vaultAddress as `0x${string}`,
-      abi: VAULT_ABI,
-      functionName: 'transferVFIDE',
-      args: [toVault, parseEther(amount)],
-      chainId: CURRENT_CHAIN_ID,
-    })
-  }
-  
-  return {
-    transfer,
-    isTransferring: isPending || isConfirming,
-    isSuccess,
-    txHash: data,
-    isSupported: false, // CardBoundVault uses different transfer model
-  }
-}
-
-// ============================================================================
-// VAULT MANAGEMENT HOOKS (VaultInfrastructure.sol enhancements)
-// ============================================================================
-
-/**
- * Get vault's guardian info with maturity status
- */
-export function useVaultGuardiansDetailed(vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const { data: guardianCount } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'guardianCount',
-    query: {
-      enabled: !!vaultAddress,
-    }
-  })
-
-  return {
-    guardianCount: guardianCount || 0,
-  }
-}
-
-/**
- * Check if guardian is mature (past 7-day maturity period)
- */
-export function useIsGuardianMature(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-
-  const { data: isMature } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'isGuardianMature',
-    args: guardianAddress ? [guardianAddress] : undefined,
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress && !!guardianAddress,
-    }
-  })
-
-  return {
-    isMature: false, // CardBoundVault uses different maturity model
-  }
-}
-
-/**
- * Add or remove guardian
- * UserVault uses address-based guardian management: setGuardian(address g, bool active)
- * @param guardianAddress Address of the guardian
- * @param active True to add, false to remove
- */
-export function useSetGuardian(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const publicClient = usePublicClient()
-  const { writeContractAsync } = useWriteContract()
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const cardBoundMode = isCardBoundVaultMode()
-
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
-    hash: txHash || undefined,
-  })
-
-  // Fixed: setGuardian(address g, bool active) matches actual ABI
-  const setGuardian = async (guardianAddress: `0x${string}`, active: boolean) => {
-    setError(null)
-
-    if (cardBoundMode) {
-      setError(`CardBoundVault uses different operation model`)
-      return { success: false, error: `CardBoundVault uses different operation model` }
-    }
-    
-    // Validate guardian address (don't allow zero address for adding)
-    const addressValidation = validateAddress(guardianAddress, { allowZeroAddress: !active })
-    if (!addressValidation.valid) {
-      setError(addressValidation.error || 'Invalid guardian address')
-      return { success: false, error: addressValidation.error }
-    }
-    
-    try {
-      const hash = await writeContractAsync({
-        address: vaultAddress,
-        abi: VAULT_ABI,
-        functionName: 'setGuardian',
-        args: [guardianAddress, active],
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      setTxHash(hash)
-      return { success: true, txHash: hash }
-    } catch (err: unknown) {
-      logError('setGuardian', err);
-      const parsed = parseContractError(err);
-      setError(parsed.userMessage);
-      return { success: false, error: parsed.userMessage }
-    }
-  }
-
-  // Convenience wrappers for add/remove
-  const addGuardian = async (guardianAddress: `0x${string}`) => {
-    return setGuardian(guardianAddress, true)
-  }
-
-  const removeGuardian = async (guardianAddress: `0x${string}`) => {
-    return setGuardian(guardianAddress, false)
-  }
-
-  return {
-    setGuardian,
-    addGuardian,
-    removeGuardian,
-    txHash,
-    isSuccess,
-    isLoading,
-    error,
-  }
-}
-
-/**
- * Get abnormal transaction threshold (dynamic based on settings)
- */
-export function useAbnormalTransactionThreshold(vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-
-  const { data: threshold } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'abnormalTransactionThreshold',
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress,
-    }
-  })
-
-  const { data: usePercentage } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'usePercentageThreshold',
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress,
-    }
-  })
-
-  const { data: percentageBps } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'abnormalTransactionPercentageBps',
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress,
-    }
-  })
-
-  return {
-    threshold: (threshold as bigint) || 0n,
-    usePercentage: usePercentage || false,
-    percentageBps: percentageBps ? Number(percentageBps) : 0,
-  }
-}
-
-/**
- * Set balance snapshot mode for abnormal transaction detection
- */
-export function useSetBalanceSnapshotMode(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const publicClient = usePublicClient()
-  const { writeContractAsync } = useWriteContract()
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
-    hash: txHash || undefined,
-  })
-
-  const setSnapshotMode = async (useSnapshot: boolean) => {
-    if (true) { // CardBoundVault-only:
-      return { success: false, error: `CardBoundVault uses different operation model` }
-    }
-
-    try {
-      const hash = await writeContractAsync({
-        address: vaultAddress,
-        abi: VAULT_ABI,
-        functionName: 'setBalanceSnapshotMode',
-        args: [useSnapshot],
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      setTxHash(hash)
-      return { success: true, txHash: hash }
-    } catch (err: unknown) {
-      logError('setSnapshotMode', err);
-      const parsed = parseContractError(err);
-      return { success: false, error: parsed.userMessage }
-    }
-  }
-
-  return {
-    setSnapshotMode,
-    txHash,
-    isSuccess,
-    isLoading,
-  }
-}
-
-/**
- * Update balance snapshot
- */
-export function useUpdateBalanceSnapshot(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const publicClient = usePublicClient()
-  const { writeContractAsync } = useWriteContract()
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
-    hash: txHash || undefined,
-  })
-
-  const updateSnapshot = async () => {
-    if (true) { // CardBoundVault-only:
-      return { success: false, error: `CardBoundVault uses different operation model` }
-    }
-
-    try {
-      const hash = await writeContractAsync({
-        address: vaultAddress,
-        abi: VAULT_ABI,
-        functionName: 'updateBalanceSnapshot',
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      setTxHash(hash)
-      return { success: true, txHash: hash }
-    } catch (err: unknown) {
-      logError('updateSnapshot', err);
-      const parsed = parseContractError(err);
-      return { success: false, error: parsed.userMessage }
-    }
-  }
-
-  return {
-    updateSnapshot,
-    txHash,
-    isSuccess,
-    isLoading,
-  }
-}
-
-/**
- * Get balance snapshot info
- */
-export function useBalanceSnapshot(vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-
-  const { data: useSnapshot } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'useBalanceSnapshot',
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress,
-    }
-  })
-
-  const { data: snapshot } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'balanceSnapshot',
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress,
-    }
-  })
-
-  return {
-    useSnapshot: useSnapshot || false,
-    snapshot: (snapshot as bigint) || 0n,
-  }
-}
-
-/**
- * Get pending transaction details
- */
-export function usePendingTransaction(vaultAddress?: `0x${string}`, txId?: number) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-
-  const { data: pendingTx } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'pendingTransactions',
-    args: txId !== undefined ? [BigInt(txId)] : undefined,
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress && txId !== undefined,
-    }
-  })
-
-  const { data: pendingTxCount } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'pendingTxCount',
-    query: {
-      enabled: false, // CardBoundVault: !!vaultAddress,
-    }
-  })
-
-  const tx = pendingTx as [string, bigint, bigint, boolean, boolean] | undefined
-
-  return {
-    pendingTx: tx ? {
-      toVault: tx[0],
-      amount: tx[1],
-      requestTime: tx[2],
-      approved: tx[3],
-      executed: tx[4],
-    } : null,
-    pendingTxCount: (pendingTxCount as bigint) || 0n,
-  }
-}
-
-/**
- * Approve pending abnormal transaction
- */
-export function useApprovePendingTransaction(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const publicClient = usePublicClient()
-  const { writeContractAsync } = useWriteContract()
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
-    hash: txHash || undefined,
-  })
-
-  const approve = async (txId: number) => {
-    if (true) { // CardBoundVault-only:
-      return { success: false, error: `CardBoundVault uses different operation model` }
-    }
-
-    try {
-      const hash = await writeContractAsync({
-        address: vaultAddress,
-        abi: VAULT_ABI,
-        functionName: 'approvePendingTransaction',
-        args: [BigInt(txId)],
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      setTxHash(hash)
-      return { success: true, txHash: hash }
-    } catch (err: unknown) {
-      logError('approvePendingTransaction', err);
-      const parsed = parseContractError(err);
-      return { success: false, error: parsed.userMessage }
-    }
-  }
-
-  return {
-    approve,
-    txHash,
-    isSuccess,
-    isLoading,
-  }
-}
-
-/**
- * Execute approved pending transaction
- */
-export function useExecutePendingTransaction(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const publicClient = usePublicClient()
-  const { writeContractAsync } = useWriteContract()
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
-    hash: txHash || undefined,
-  })
-
-  const execute = async (txId: number) => {
-    if (true) { // CardBoundVault-only:
-      return { success: false, error: `CardBoundVault uses different operation model` }
-    }
-
-    try {
-      const hash = await writeContractAsync({
-        address: vaultAddress,
-        abi: VAULT_ABI,
-        functionName: 'executePendingTransaction',
-        args: [BigInt(txId)],
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      setTxHash(hash)
-      return { success: true, txHash: hash }
-    } catch (err: unknown) {
-      logError('executePendingTransaction', err);
-      const parsed = parseContractError(err);
-      return { success: false, error: parsed.userMessage }
-    }
-  }
-
-  return {
-    execute,
-    txHash,
-    isSuccess,
-    isLoading,
-  }
-}
-
-/**
- * Cleanup expired pending transaction
- */
-export function useCleanupExpiredTransaction(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const publicClient = usePublicClient()
-  const { writeContractAsync } = useWriteContract()
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
-    hash: txHash || undefined,
-  })
-
-  const cleanup = async (txId: number) => {
-    if (true) { // CardBoundVault-only:
-      return { success: false, error: `CardBoundVault uses different operation model` }
-    }
-
-    try {
-      const hash = await writeContractAsync({
-        address: vaultAddress,
-        abi: VAULT_ABI,
-        functionName: 'cleanupExpiredTransaction',
-        args: [BigInt(txId)],
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
-      }
-      setTxHash(hash)
-      return { success: true, txHash: hash }
-    } catch (err: unknown) {
-      logError('cleanupExpiredTransaction', err);
-      const parsed = parseContractError(err);
-      return { success: false, error: parsed.userMessage }
-    }
-  }
-
-  return {
-    cleanup,
-    txHash,
-    isSuccess,
-    isLoading,
-  }
-}
-
-/**
- * Guardian votes to cancel fraudulent inheritance request
- */
-export function useGuardianCancelInheritance(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const publicClient = usePublicClient()
-  const { writeContractAsync } = useWriteContract()
-  const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
-
-  const { isSuccess, isLoading } = useWaitForTransactionReceipt({
-    hash: txHash || undefined,
-  })
-
-  const cancelInheritance = async () => {
-    if (!isCardBoundVaultMode()) {
-      try {
-        const hash = await writeContractAsync({
-          address: vaultAddress,
-          abi: VAULT_ABI,
-          functionName: 'guardianCancelInheritance',
-        })
-        if (publicClient) {
-          await publicClient.waitForTransactionReceipt({ hash })
-        }
-        setTxHash(hash)
-        return { success: true, txHash: hash }
-      } catch {
-        return { success: false, error: 'Transaction failed' }
-      }
-    }
-
-    return { success: false, error: `CardBoundVault uses different operation model` }
-  }
-
-  return {
-    cancelInheritance,
-    txHash,
-    isSuccess,
-    isLoading,
-  }
-}
-
-/**
- * Get inheritance request status with cancellation tracking
- */
-export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const cardBoundMode = isCardBoundVaultMode()
-
-  const { data: nextOfKin } = useReadContract({
-    address: vaultAddress,
-    abi: VAULT_ABI,
-    functionName: 'nextOfKin',
-    query: {
-      enabled: !cardBoundMode && !!vaultAddress,
-    }
-  })
-
-  const resolvedNextOfKin = cardBoundMode
-    ? ZERO_ADDRESS
-    : ((nextOfKin as `0x${string}` | undefined) ?? ZERO_ADDRESS)
-  const hasNextOfKin = !cardBoundMode && !!vaultAddress && resolvedNextOfKin !== ZERO_ADDRESS
-
-  return {
-    nextOfKin: resolvedNextOfKin,
-    hasNextOfKin,
-  }
-}

@@ -1,5 +1,18 @@
 'use client';
 
+/**
+ * WithdrawModal — sign and submit a vault-to-vault transfer.
+ *
+ * Pre-cleanup this modal had a parallel legacy "Withdraw to wallet" mode
+ * with a 24-hour cooldown notice and a "Use my wallet address" shortcut.
+ * `handleWithdraw` in useVaultOperations.ts only implements the CardBound
+ * vault-to-vault flow (signed TransferIntent → executeVaultToVaultTransfer),
+ * so the legacy UI was unreachable. Removed all `cardBoundMode` branches.
+ *
+ * Note: the modal name is kept as "WithdrawModal" for filename stability
+ * but the user-facing copy is "Transfer to Vault" throughout.
+ */
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpFromLine, X, Loader2 } from 'lucide-react';
 import { safeParseFloat } from '@/lib/validation';
@@ -7,9 +20,7 @@ import { safeParseFloat } from '@/lib/validation';
 interface WithdrawModalProps {
   show: boolean;
   onClose: () => void;
-  cardBoundMode: boolean;
   vaultBalance: string;
-  address: string | undefined;
   withdrawAmount: string;
   setWithdrawAmount: (v: string) => void;
   withdrawRecipient: string;
@@ -19,7 +30,7 @@ interface WithdrawModalProps {
 }
 
 export function WithdrawModal({
-  show, onClose, cardBoundMode, vaultBalance, address,
+  show, onClose, vaultBalance,
   withdrawAmount, setWithdrawAmount,
   withdrawRecipient, setWithdrawRecipient,
   isWithdrawing, onWithdraw,
@@ -42,14 +53,15 @@ export function WithdrawModal({
             className="bg-zinc-900 border border-white/10 rounded-2xl max-w-md w-full p-6"
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <ArrowUpFromLine className="text-amber-400" size={24} />
-                {cardBoundMode ? 'Transfer VFIDE to Vault' : 'Withdraw VFIDE'}
+              <h3 className="text-xl font-bold text-white flex items-center gap-2 min-w-0">
+                <ArrowUpFromLine className="text-amber-400 flex-shrink-0" size={24} />
+                <span className="truncate">Transfer VFIDE to Vault</span>
               </h3>
               <button
                 onClick={() => !isWithdrawing && onClose()}
                 disabled={isWithdrawing}
-                className="text-white/60 hover:text-white disabled:opacity-50"
+                className="text-white/60 hover:text-white disabled:opacity-50 flex-shrink-0"
+                aria-label="Close"
               >
                 <X size={24} />
               </button>
@@ -64,42 +76,30 @@ export function WithdrawModal({
 
             <div className="mb-4">
               <label className="block text-white/60 text-sm mb-2">
-                {cardBoundMode ? 'Destination Vault Address' : 'Recipient Address'}
+                Destination Vault Address
               </label>
               <input
                 type="text"
                 value={withdrawRecipient}
-                onChange={(e) =>  setWithdrawRecipient(e.target.value)}
-                placeholder={cardBoundMode ? '0x... destination vault address' : '0x... recipient wallet address'}
-               
+                onChange={(e) => setWithdrawRecipient(e.target.value)}
+                placeholder="0x... destination vault address"
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
               />
-              {address && (
-                <button
-                  onClick={() => setWithdrawRecipient(address)}
-                  disabled={cardBoundMode}
-                  className="text-cyan-400 text-xs mt-1 hover:underline"
-                >
-                  Use my wallet address
-                </button>
-              )}
-              {cardBoundMode && (
-                <div className="text-white/50 text-xs mt-2">
-                  Enter the recipient vault address, not the recipient wallet address.
-                </div>
-              )}
+              <div className="text-white/50 text-xs mt-2">
+                Enter the recipient&apos;s vault address (not their wallet address). The destination
+                must be a registered vault.
+              </div>
             </div>
 
             <div className="mb-4">
               <label className="block text-white/60 text-sm mb-2">
-                {cardBoundMode ? 'Amount to Transfer' : 'Amount to Withdraw'}
+                Amount to Transfer
               </label>
               <div className="relative">
                 <input
                   type="number"
                   value={withdrawAmount}
-                  onChange={(e) =>  setWithdrawAmount(e.target.value)}
-                 
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyan-500/50 pr-20"
                 />
                 <button
@@ -111,21 +111,13 @@ export function WithdrawModal({
               </div>
             </div>
 
-            {cardBoundMode ? (
-              <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
-                <div className="text-cyan-300 text-sm font-bold mb-1">CardBound Signed Transfer</div>
-                <div className="text-white/70 text-xs">
-                  You will sign a TransferIntent and execute a vault-to-vault transfer. Destination must be a registered vault.
-                </div>
+            <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
+              <div className="text-cyan-300 text-sm font-bold mb-1">CardBound Signed Transfer</div>
+              <div className="text-white/70 text-xs">
+                You&apos;ll sign a TransferIntent and execute a vault-to-vault transfer. Funds move
+                directly between the two vaults — no wallet round-trip required.
               </div>
-            ) : (
-              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-                <div className="text-amber-400 text-sm font-bold mb-1">⚠️ 24-Hour Cooldown</div>
-                <div className="text-white/60 text-xs">
-                  Withdrawals have a 24-hour cooldown period between transactions for security.
-                </div>
-              </div>
-            )}
+            </div>
 
             <motion.button
               whileHover={{ scale: isWithdrawing ? 1 : 1.02 }}
@@ -137,12 +129,12 @@ export function WithdrawModal({
               {isWithdrawing ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  {cardBoundMode ? 'Transferring...' : 'Withdrawing...'}
+                  Transferring...
                 </>
               ) : (
                 <>
                   <ArrowUpFromLine size={20} />
-                  {cardBoundMode ? 'Transfer to Vault' : 'Withdraw from Vault'}
+                  Transfer to Vault
                 </>
               )}
             </motion.button>

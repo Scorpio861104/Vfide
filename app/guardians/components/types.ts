@@ -2,7 +2,7 @@ export { shortAddress } from "@/lib/format";
 export { ZERO_ADDRESS } from "@/lib/contracts";
 // ── Guardian types & constants ──────────────────────────────────────────────
 
-export type TabType = 'overview' | 'my-guardians' | 'next-of-kin' | 'recovery' | 'responsibilities' | 'pending';
+export type TabType = 'overview' | 'my-guardians' | 'recovery' | 'responsibilities' | 'pending';
 
 export type WatchedVault = {
   address: `0x${string}`;
@@ -19,15 +19,8 @@ export type GuardianAttestationRecord = {
   expiresAt: number;
 };
 
-export type NextOfKinWatchedVault = {
-  address: `0x${string}`;
-  label: string;
-  addedAt: number;
-};
-
 // ── Constants ───────────────────────────────────────────────────────────────
 export const GUARDIAN_WATCHLIST_KEY = 'vfide.guardian-watchlist.v1';
-export const NEXT_OF_KIN_WATCHLIST_KEY = 'vfide.next-of-kin-watchlist.v1';
 export const MAX_WATCHLIST_ENTRIES = 50;
 export const MAX_WATCHLIST_LABEL_LENGTH = 40;
 export const MIN_ADD_INTERVAL_MS = 800;

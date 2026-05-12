@@ -3,21 +3,26 @@
 export const dynamic = 'force-dynamic';
 
 /**
- * Vault Settings Page - Advanced vault management and configuration
+ * Vault Settings Page
+ *
+ * Pre-cleanup, this page showed legacy UserVault features (Balance
+ * Snapshot, Abnormal TX Detection, Pending TX Queue, Guardian Maturity,
+ * Recovery Protection, Inheritance Guard) that are not exposed by the
+ * active CardBound vault contract. Both panels short-circuited or
+ * fell back to placeholders. The feature-cards grid below them
+ * described capabilities the user could never actually use.
+ *
+ * Rewrote to honestly describe the CardBound-only feature set.
  */
-
 
 import { Footer } from '@/components/layout/Footer'
 import { VaultSettingsPanel } from '@/components/vault/VaultSettingsPanel'
 import { GuardianManagementPanel } from '@/components/security/GuardianManagementPanel'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
-import { isCardBoundVaultMode } from '@/lib/contracts'
 import { Vault, Shield, Settings } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function VaultSettingsPage() {
-  const cardBoundMode = isCardBoundVaultMode()
-
   return (
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white pt-20">
@@ -30,123 +35,116 @@ export default function VaultSettingsPage() {
             <h1 className="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400">
               Vault Settings
             </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Advanced security configuration and transaction management
-          </p>
-        </div>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              CardBound vault security configuration and guardian management
+            </p>
+          </div>
 
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 gap-8 mb-12">
-          {/* Vault Settings */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Settings className="w-6 h-6 text-purple-400" />
-              <h2 className="text-2xl font-bold">Transaction Controls</h2>
-            </div>
-            <ErrorBoundary>
-              <VaultSettingsPanel />
-            </ErrorBoundary>
-          </motion.div>
+          {/* Content Grid */}
+          <div className="grid grid-cols-1 gap-8 mb-12">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <Settings className="w-6 h-6 text-purple-400" />
+                <h2 className="text-2xl font-bold">Transaction Controls</h2>
+              </div>
+              <ErrorBoundary>
+                <VaultSettingsPanel />
+              </ErrorBoundary>
+            </motion.div>
 
-          {/* Guardian Management */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-6 h-6 text-blue-400" />
-              <h2 className="text-2xl font-bold">Guardian Protection</h2>
-            </div>
-            <ErrorBoundary>
-              <GuardianManagementPanel />
-            </ErrorBoundary>
-          </motion.div>
-        </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Shield className="w-6 h-6 text-blue-400" />
+                <h2 className="text-2xl font-bold">Guardian Protection</h2>
+              </div>
+              <ErrorBoundary>
+                <GuardianManagementPanel />
+              </ErrorBoundary>
+            </motion.div>
+          </div>
 
-        {/* Features Grid */}
-        <div className="bg-gradient-to-br from-purple-900/10 to-blue-900/10 border border-purple-500/20 rounded-2xl p-8">
-          <h3 className="text-2xl font-bold mb-6 text-center">Advanced Security Features</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-3 bg-purple-600/20 border-2 border-purple-500 rounded-xl flex items-center justify-center">
-                <span className="text-3xl">📸</span>
-              </div>
-              <div className="font-bold text-purple-400 mb-2">Balance Snapshot</div>
-              <div className="text-xs text-gray-400">
-                Lock balance reference for percentage thresholds to prevent manipulation via draining
-              </div>
-            </div>
+          {/* Features Grid — CardBound features only */}
+          <div className="bg-gradient-to-br from-purple-900/10 to-blue-900/10 border border-purple-500/20 rounded-2xl p-8">
+            <h3 className="text-2xl font-bold mb-6 text-center">CardBound Security Features</h3>
 
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-3 bg-orange-600/20 border-2 border-orange-500 rounded-xl flex items-center justify-center">
-                <span className="text-3xl">🚨</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-cyan-600/20 border-2 border-cyan-500 rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🔑</span>
+                </div>
+                <div className="font-bold text-cyan-400 mb-2">Wallet Rotation</div>
+                <div className="text-xs text-gray-400">
+                  Move the active signer for the vault to a new wallet address with guardian approval and a timelock
+                </div>
               </div>
-              <div className="font-bold text-orange-400 mb-2">Abnormal TX Detection</div>
-              <div className="text-xs text-gray-400">
-                Automatic flagging of large transactions requiring manual approval before execution
-              </div>
-            </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-3 bg-blue-600/20 border-2 border-blue-500 rounded-xl flex items-center justify-center">
-                <span className="text-3xl">⏰</span>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-amber-600/20 border-2 border-amber-500 rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">⏳</span>
+                </div>
+                <div className="font-bold text-amber-400 mb-2">Withdrawal Queue</div>
+                <div className="text-xs text-gray-400">
+                  Large withdrawals enter a timelocked queue that the owner can cancel before execution
+                </div>
               </div>
-              <div className="font-bold text-blue-400 mb-2">Pending TX Queue</div>
-              <div className="text-xs text-gray-400">
-                Review, approve, execute, or cleanup flagged transactions with 24-hour expiry
-              </div>
-            </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-3 bg-green-600/20 border-2 border-green-500 rounded-xl flex items-center justify-center">
-                <span className="text-3xl">🛡️</span>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-blue-600/20 border-2 border-blue-500 rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🛡️</span>
+                </div>
+                <div className="font-bold text-blue-400 mb-2">Guardian Threshold</div>
+                <div className="text-xs text-gray-400">
+                  M-of-N guardians must approve wallet rotation. Threshold is set when guardian setup is finalized.
+                </div>
               </div>
-              <div className="font-bold text-green-400 mb-2">Guardian Maturity</div>
-              <div className="text-xs text-gray-400">
-                7-day maturity period for new guardians prevents flash endorsement attacks
-              </div>
-            </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-3 bg-red-600/20 border-2 border-red-500 rounded-xl flex items-center justify-center">
-                <span className="text-3xl">🚫</span>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-green-600/20 border-2 border-green-500 rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">📜</span>
+                </div>
+                <div className="font-bold text-green-400 mb-2">Spend Limits</div>
+                <div className="text-xs text-gray-400">
+                  Per-transfer and per-day spend caps, plus a large-transfer threshold that triggers the queue
+                </div>
               </div>
-              <div className="font-bold text-red-400 mb-2">Recovery Protection</div>
-              <div className="text-xs text-gray-400">
-                Cannot remove guardians during active recovery to prevent vote manipulation
-              </div>
-            </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-3 bg-yellow-600/20 border-2 border-yellow-500 rounded-xl flex items-center justify-center">
-                <span className="text-3xl">⚖️</span>
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-yellow-600/20 border-2 border-yellow-500 rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">⚖️</span>
+                </div>
+                <div className="font-bold text-yellow-400 mb-2">Guardian Governance</div>
+                <div className="text-xs text-gray-400">
+                  Guardians approve wallet-rotation and vault-protection actions; no legacy inheritance claims
+                </div>
               </div>
-              <div className="font-bold text-yellow-400 mb-2">{cardBoundMode ? 'Guardian Governance' : 'Inheritance Guard'}</div>
-              <div className="text-xs text-gray-400">
-                {cardBoundMode
-                  ? 'Guardians approve wallet-rotation and vault-protection actions instead of legacy inheritance claims'
-                  : 'Guardians can cancel fraudulent inheritance claims when owner is unreachable'}
+
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-pink-600/20 border-2 border-pink-500 rounded-xl flex items-center justify-center">
+                  <span className="text-3xl">🔒</span>
+                </div>
+                <div className="font-bold text-pink-400 mb-2">Hub-Managed Recovery</div>
+                <div className="text-xs text-gray-400">
+                  The VaultHub coordinates guardian-setup completion, expiry, and pending-rotation finalization
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Best Practices */}
-        <div className="mt-8 bg-blue-900/10 border border-blue-500/20 rounded-xl p-6">
-          <h3 className="font-bold text-lg mb-3 text-blue-400">Security Best Practices</h3>
-          <div className="space-y-2 text-sm text-gray-400">
-            <div><strong className="text-white">1. Enable Snapshot Mode:</strong> If using percentage-based thresholds, enable snapshot mode after deposits to prevent threshold lowering attacks</div>
-            <div><strong className="text-white">2. Set Reasonable Thresholds:</strong> Balance security (high threshold) with usability (low threshold). Typical: 10-50% or 10k-100k VFIDE</div>
-            <div><strong className="text-white">3. Monitor Pending Transactions:</strong> Check pending queue regularly and cleanup expired transactions to optimize gas costs</div>
-            <div><strong className="text-white">4. Guardian Diversity:</strong> Choose guardians from different devices/locations to prevent single point of failure</div>
-            <div><strong className="text-white">5. Wait for Maturity:</strong> Do not rely on new guardians for 7 days until maturity period passes</div>
+          {/* Best Practices */}
+          <div className="mt-8 bg-blue-900/10 border border-blue-500/20 rounded-xl p-6">
+            <h3 className="font-bold text-lg mb-3 text-blue-400">Security Best Practices</h3>
+            <div className="space-y-2 text-sm text-gray-400">
+              <div><strong className="text-white">1. Complete Guardian Setup:</strong> Add at least 2 guardians, set a threshold of at least 2, then finalize setup before the grace window expires</div>
+              <div><strong className="text-white">2. Configure Spend Limits:</strong> Set per-transfer and per-day caps that match your real spending patterns; the large-transfer threshold queues anything above it</div>
+              <div><strong className="text-white">3. Guardian Diversity:</strong> Choose guardians from different devices/locations to prevent single points of failure</div>
+              <div><strong className="text-white">4. Verify Rotations Off-Chain:</strong> Before approving a wallet rotation as a guardian, confirm with the owner through a separate channel</div>
+              <div><strong className="text-white">5. Use the Withdrawal Queue:</strong> The queue is your last line of defence — keep the large-transfer threshold tight enough to catch unexpected drains</div>
+            </div>
           </div>
-        </div>
         </div>
         <Footer />
       </div>

@@ -6,7 +6,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
 import { Shield, Plus, Key } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
-import { isCardBoundVaultMode } from '@/lib/contracts';
 import { devLog } from '@/lib/utils';
 
 interface VaultHeaderProps {
@@ -25,7 +24,6 @@ export function VaultHeader({
   isOnCorrectChain, expectedChainName, refetchVault,
 }: VaultHeaderProps) {
   const { showToast } = useToast();
-  const cardBoundMode = isCardBoundVaultMode();
 
   return (
     <section className="relative py-12 border-b border-white/5">
@@ -38,9 +36,7 @@ export function VaultHeader({
             </motion.span>
           </h1>
           <p className="text-xl text-white/60 mb-6">
-            {cardBoundMode
-              ? 'Self-custody with guardian-backed wallet rotation, recovery, and queued transfer protection'
-              : 'Self-custody with dual protection: recovery + inheritance'}
+            Self-custody with guardian-backed wallet rotation, recovery, and queued transfer protection
           </p>
         </motion.div>
 
@@ -155,12 +151,10 @@ export function VaultHeader({
               <GlassCard className="p-5 border-cyan-500/30" gradient="cyan">
                 <div className="flex items-center gap-3 mb-2">
                   <Key className="text-cyan-400" size={24} />
-                  <span className="text-cyan-400 font-bold">{cardBoundMode ? 'Wallet Rotation' : 'Chain of Return'}</span>
+                  <span className="text-cyan-400 font-bold">Wallet Rotation</span>
                 </div>
                 <p className="text-white/60 text-sm">
-                  {cardBoundMode
-                    ? 'Lost wallet? Guardians approve a signer rotation so you regain control without using the legacy inheritance surface.'
-                    : 'Lost wallet? Guardians verify your identity and help YOU regain access.'}
+                  Lost wallet? Guardians approve a signer rotation so you regain control of the vault.
                 </p>
               </GlassCard>
             </motion.div>
@@ -168,12 +162,10 @@ export function VaultHeader({
               <GlassCard className="p-5 border-amber-500/30" gradient="gold">
                 <div className="flex items-center gap-3 mb-2">
                   <Shield className="text-amber-400" size={24} />
-                  <span className="text-amber-400 font-bold">{cardBoundMode ? 'Guardian Protections' : 'Next of Kin'}</span>
+                  <span className="text-amber-400 font-bold">Guardian Protections</span>
                 </div>
                 <p className="text-white/60 text-sm">
-                  {cardBoundMode
-                    ? 'Guardian setup, queued withdrawal review, and transfer guardrails stay active while legacy next-of-kin inheritance remains unavailable.'
-                    : 'Estate planning. If you die, guardians verify and your HEIR inherits.'}
+                  Guardian setup, queued withdrawal review, and transfer guardrails protect your vault from unauthorized drain.
                 </p>
               </GlassCard>
             </motion.div>

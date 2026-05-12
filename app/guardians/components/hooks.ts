@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { isAddress } from 'viem';
 
-import type { WatchedVault, NextOfKinWatchedVault, GuardianAttestationRecord } from './types';
+import type { WatchedVault, GuardianAttestationRecord } from './types';
 import {
   GUARDIAN_WATCHLIST_KEY,
-  NEXT_OF_KIN_WATCHLIST_KEY,
   MAX_WATCHLIST_ENTRIES,
   MAX_WATCHLIST_LABEL_LENGTH,
   MIN_ADD_INTERVAL_MS,
@@ -64,67 +63,6 @@ export function useGuardianWatchlist() {
     save(next);
     setLastAddAt(now);
     return { ok: true, message: 'Vault added to guardian watchlist.' };
-  };
-
-  const removeEntry = (address: string) => {
-    const normalized = address.toLowerCase();
-    const next = entries.filter((entry) => entry.address.toLowerCase() !== normalized);
-    save(next);
-  };
-
-  return { entries, addEntry, removeEntry };
-}
-
-// ── useNextOfKinWatchlist ───────────────────────────────────────────────────
-export function useNextOfKinWatchlist() {
-  const [entries, setEntries] = useState<NextOfKinWatchedVault[]>([]);
-  const [lastAddAt, setLastAddAt] = useState(0);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const raw = window.localStorage.getItem(NEXT_OF_KIN_WATCHLIST_KEY);
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw) as Array<{ address: string; label?: string; addedAt?: number }>;
-      const normalized = parsed
-        .filter((item) => isAddress(item.address))
-        .map((item) => ({
-          address: item.address.toLowerCase() as `0x${string}`,
-          label: (item.label || '').trim().slice(0, MAX_WATCHLIST_LABEL_LENGTH),
-          addedAt: item.addedAt || Date.now(),
-        }));
-      setEntries(normalized.slice(0, MAX_WATCHLIST_ENTRIES));
-    } catch {
-      setEntries([]);
-    }
-  }, []);
-
-  const save = (next: NextOfKinWatchedVault[]) => {
-    setEntries(next);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(NEXT_OF_KIN_WATCHLIST_KEY, JSON.stringify(next));
-    }
-  };
-
-  const addEntry = (address: string, label: string) => {
-    const now = Date.now();
-    if (now - lastAddAt < MIN_ADD_INTERVAL_MS) {
-      return { ok: false, message: 'Please wait a moment before adding another vault.' };
-    }
-    if (entries.length >= MAX_WATCHLIST_ENTRIES) {
-      return { ok: false, message: `Watchlist limit reached (${MAX_WATCHLIST_ENTRIES} vaults). Remove one before adding another.` };
-    }
-    const normalized = address.toLowerCase() as `0x${string}`;
-    if (!isAddress(normalized)) return { ok: false, message: 'Enter a valid vault address.' };
-    if (entries.some((entry) => entry.address.toLowerCase() === normalized)) {
-      return { ok: false, message: 'Vault is already in your Next of Kin inbox.' };
-    }
-    const cleanLabel = label.trim().slice(0, MAX_WATCHLIST_LABEL_LENGTH);
-    const next = [{ address: normalized, label: cleanLabel, addedAt: now }, ...entries];
-    save(next);
-    setLastAddAt(now);
-    return { ok: true, message: 'Vault added to Next of Kin inbox.' };
   };
 
   const removeEntry = (address: string) => {

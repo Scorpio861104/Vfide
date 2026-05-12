@@ -10,11 +10,10 @@ import { useToast } from '@/components/ui/toast';
 import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, ERC20ABI, isConfiguredContractAddress } from '@/lib/contracts';
 
 type MerchantApprovalPanelProps = {
-  cardBoundMode: boolean;
   vaultAddress: `0x${string}` | null | undefined;
 };
 
-export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantApprovalPanelProps) {
+export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelProps) {
   const { showToast } = useToast();
   const { writeContractAsync } = useWriteContract();
   const [stablecoinAddress, setStablecoinAddress] = useState('');
@@ -31,7 +30,7 @@ export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantA
     functionName: 'allowance',
     args: vaultAddress && merchantPortalReady ? [vaultAddress, merchantPortalAddress] : undefined,
     query: {
-      enabled: cardBoundMode && !!vaultAddress && merchantPortalReady,
+      enabled: !!vaultAddress && merchantPortalReady,
     },
   });
 
@@ -39,7 +38,7 @@ export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantA
     address: vaultAddress || undefined,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'dailyTransferLimit',
-    query: { enabled: cardBoundMode && !!vaultAddress },
+    query: { enabled: !!vaultAddress },
   });
 
   const { data: stablecoinAllowance, refetch: refetchStablecoinAllowance } = useReadContract({
@@ -48,11 +47,11 @@ export function MerchantApprovalPanel({ cardBoundMode, vaultAddress }: MerchantA
     functionName: 'allowance',
     args: vaultAddress && merchantPortalReady && stablecoinReady ? [vaultAddress, merchantPortalAddress] : undefined,
     query: {
-      enabled: cardBoundMode && !!vaultAddress && merchantPortalReady && stablecoinReady,
+      enabled: !!vaultAddress && merchantPortalReady && stablecoinReady,
     },
   });
 
-  if (!cardBoundMode || !vaultAddress) {
+  if (!vaultAddress) {
     return null;
   }
 

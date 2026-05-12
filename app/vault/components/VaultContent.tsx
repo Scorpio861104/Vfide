@@ -13,7 +13,6 @@ import { MerchantApprovalPanel } from './MerchantApprovalPanel';
 import { VaultSecuritySection } from './VaultSecuritySection';
 import { VaultRecoveryPanel } from './VaultRecoveryPanel';
 import { VaultQueueSection } from './VaultQueueSection';
-import { DepositModal } from './DepositModal';
 import { WithdrawModal } from './WithdrawModal';
 
 export function VaultContent() {
@@ -50,21 +49,16 @@ export function VaultContent() {
             />
 
             <VaultQuickActions
-              cardBoundMode={ops.cardBoundMode}
-              onDeposit={() => ops.setShowDepositModal(true)}
-              onWithdraw={() => ops.setShowWithdrawModal(true)}
               onTransfer={() => { ops.setWithdrawRecipient(''); ops.setShowWithdrawModal(true); }}
             />
 
             <MerchantApprovalPanel
-              cardBoundMode={ops.cardBoundMode}
               vaultAddress={ops.vaultAddress}
             />
 
             <VaultSecuritySection vaultAddress={ops.vaultAddress} />
 
             <VaultQueueSection
-              cardBoundMode={ops.cardBoundMode}
               vaultAddress={ops.vaultAddress}
               queuedWithdrawals={ops.queuedWithdrawals}
               activeQueuedWithdrawals={ops.activeQueuedWithdrawals}
@@ -89,21 +83,8 @@ export function VaultContent() {
             />
 
             <VaultRecoveryPanel
-              cardBoundMode={ops.cardBoundMode}
-              address={ops.address}
-              vaultOwner={ops.vaultOwner}
-              hasNextOfKin={ops.hasNextOfKin}
-              nextOfKin={ops.nextOfKin}
-              inheritanceStatus={ops.inheritanceStatus}
               guardianCount={ops.guardianCount}
               isUserGuardian={ops.isUserGuardian}
-              isWritePending={ops.isWritePending}
-              newNextOfKinAddress={ops.newNextOfKinAddress}
-              setNewNextOfKinAddress={ops.setNewNextOfKinAddress}
-              handleSetNextOfKin={ops.handleSetNextOfKin}
-              newGuardianAddress={ops.newGuardianAddress}
-              setNewGuardianAddress={ops.setNewGuardianAddress}
-              handleAddGuardian={ops.handleAddGuardian}
             />
 
             {/* Transaction History */}
@@ -121,23 +102,10 @@ export function VaultContent() {
           </>
         )}
 
-        <DepositModal
-          show={ops.showDepositModal}
-          onClose={() => ops.setShowDepositModal(false)}
-          walletBalanceFormatted={ops.walletBalanceFormatted}
-          depositAmount={ops.depositAmount}
-          setDepositAmount={ops.setDepositAmount}
-          isDepositing={ops.isDepositing}
-          depositStep={ops.depositStep}
-          onDeposit={ops.handleDeposit}
-        />
-
         <WithdrawModal
           show={ops.showWithdrawModal}
           onClose={() => ops.setShowWithdrawModal(false)}
-          cardBoundMode={ops.cardBoundMode}
           vaultBalance={ops.vaultBalance}
-          address={ops.address}
           withdrawAmount={ops.withdrawAmount}
           setWithdrawAmount={ops.setWithdrawAmount}
           withdrawRecipient={ops.withdrawRecipient}

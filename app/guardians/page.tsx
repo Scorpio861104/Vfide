@@ -6,25 +6,27 @@ import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Heart, Key, FileText, Clock } from "lucide-react";
-import { isCardBoundVaultMode } from '@/lib/contracts';
+import { Shield, Users, Key, FileText, Clock } from "lucide-react";
 
 import type { TabType } from './components/types';
 
 // ── Lazy-loaded tab components (code-split per tab) ─────────────────────────
 const OverviewTab = lazy(() => import('./components/OverviewTab').then(m => ({ default: m.OverviewTab })));
 const MyGuardiansTab = lazy(() => import('./components/MyGuardiansTab').then(m => ({ default: m.MyGuardiansTab })));
-const NextOfKinTab = lazy(() => import('./components/NextOfKinTab').then(m => ({ default: m.NextOfKinTab })));
 const RecoveryTab = lazy(() => import('./components/RecoveryTab').then(m => ({ default: m.RecoveryTab })));
 const ResponsibilitiesTab = lazy(() => import('./components/ResponsibilitiesTab').then(m => ({ default: m.ResponsibilitiesTab })));
 const PendingActionsTab = lazy(() => import('./components/PendingActionsTab').then(m => ({ default: m.PendingActionsTab })));
 
 // ── Config ──────────────────────────────────────────────────────────────────
+// "Next of Kin" was a legacy inheritance flow for the non-CardBound vault
+// implementation. CardBound is the only mode in this build (see
+// isCardBoundVaultMode in lib/contracts.ts), so the Next-of-Kin tab —
+// along with its 255-line panel and 7 always-throw stub functions in
+// useVaultRecovery — was dead UI and has been removed.
 const TAB_CONFIG = [
   { id: 'overview' as const, label: 'Overview', icon: Shield },
   { id: 'my-guardians' as const, label: 'My Guardians', icon: Users },
-  { id: 'next-of-kin' as const, label: 'Next of Kin', icon: Heart },
-  { id: 'recovery' as const, label: 'Chain of Return', icon: Key },
+  { id: 'recovery' as const, label: 'Wallet Rotation', icon: Key },
   { id: 'responsibilities' as const, label: 'Responsibilities', icon: FileText },
   { id: 'pending' as const, label: 'Pending Actions', icon: Clock },
 ] as const;
@@ -32,7 +34,6 @@ const TAB_CONFIG = [
 const COLOR_MAP: Record<TabType, { gradient: string; shadow: string }> = {
   overview: { gradient: 'from-cyan-500 to-blue-500', shadow: 'shadow-cyan-500/25' },
   'my-guardians': { gradient: 'from-purple-500 to-violet-500', shadow: 'shadow-purple-500/25' },
-  'next-of-kin': { gradient: 'from-pink-500 to-rose-500', shadow: 'shadow-pink-500/25' },
   recovery: { gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/25' },
   responsibilities: { gradient: 'from-emerald-500 to-green-500', shadow: 'shadow-emerald-500/25' },
   pending: { gradient: 'from-red-500 to-orange-500', shadow: 'shadow-red-500/25' },
@@ -52,15 +53,8 @@ function TabSkeleton() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
   const { isConnected } = useAccount();
-  const cardBoundMode = isCardBoundVaultMode();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
-  const visibleTabs = TAB_CONFIG
-    .filter((tab) => !cardBoundMode || tab.id !== 'next-of-kin')
-    .map((tab) => (
-      cardBoundMode && tab.id === 'recovery'
-        ? { ...tab, label: 'Wallet Rotation' }
-        : tab
-    ));
+  const visibleTabs = TAB_CONFIG;
 
   return (
     <>
@@ -123,13 +117,10 @@ export default function GuardiansPage() {
           <Suspense fallback={<TabSkeleton />}>
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && (
-                <div key="overview" role="tabpanel" id="tabpanel-overview"><OverviewTab cardBoundMode={cardBoundMode} /></div>
+                <div key="overview" role="tabpanel" id="tabpanel-overview"><OverviewTab /></div>
               )}
               {activeTab === 'my-guardians' && (
                 <div key="my-guardians" role="tabpanel" id="tabpanel-my-guardians"><MyGuardiansTab isConnected={isConnected} /></div>
-              )}
-              {!cardBoundMode && activeTab === 'next-of-kin' && (
-                <div key="next-of-kin" role="tabpanel" id="tabpanel-next-of-kin"><NextOfKinTab isConnected={isConnected} /></div>
               )}
               {activeTab === 'recovery' && (
                 <div key="recovery" role="tabpanel" id="tabpanel-recovery"><RecoveryTab isConnected={isConnected} /></div>

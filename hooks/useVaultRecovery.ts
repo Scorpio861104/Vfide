@@ -41,10 +41,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     }
   };
 
-  const assertInheritanceSupported = () => {
-    throw new Error('Inheritance is not supported in vault-only mode');
-  };
-
   const assertNonZeroAddress = (value: string, label: string) => {
     if (!isAddress(value) || value.toLowerCase() === ZERO_ADDRESS.toLowerCase()) {
       throw new Error(`${label} must be a valid non-zero address`);
@@ -130,28 +126,15 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     };
   }, [cardBoundPendingRotation, cardBoundGuardianThreshold, now]);
 
-  // Derive inheritance status from contract data using useMemo
-  const inheritanceStatus: InheritanceStatus = useMemo(() => {
-    return {
-      isActive: false,
-      approvals: 0,
-      threshold: 0,
-      denied: false,
-      expiryTime: null,
-      daysRemaining: null,
-    };
-  }, []);
-
   // Update time every minute for countdown calculations
   useEffect(() => {
-    const hasActiveStatus = recoveryStatus.expiryTime || inheritanceStatus.expiryTime;
-    if (!hasActiveStatus) return;
-    
+    if (!recoveryStatus.expiryTime) return;
+
     const interval = setInterval(() => {
       setNow(Date.now());
     }, 60000);
     return () => clearInterval(interval);
-  }, [recoveryStatus.expiryTime, inheritanceStatus.expiryTime]);
+  }, [recoveryStatus.expiryTime]);
 
   // Watch recovery events to update status in real-time
   useWatchContractEvent({
@@ -173,20 +156,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
       refetchCardBoundPendingRotation();
     },
   });
-
-  // ========================
-  // NEXT OF KIN FUNCTIONS
-  // ========================
-  
-  /**
-   * Set the Next of Kin address for inheritance
-   * The Next of Kin can claim the vault assets after a 1-year waiting period
-   */
-  const setNextOfKinAddress = async (nextOfKinAddress: `0x${string}`) => {
-    assertInheritanceSupported();
-    assertNonZeroAddress(nextOfKinAddress, 'Next of Kin address');
-    throw new Error('Next of Kin is not supported in vault-only mode');
-  };
 
   // ========================
   // GUARDIAN FUNCTIONS
@@ -311,54 +280,6 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
   // INHERITANCE FUNCTIONS
   // ========================
   
-  /**
-   * Request inheritance claim (by Next of Kin)
-   */
-  const requestInheritance = async () => {
-    assertInheritanceSupported();
-    throw new Error('Inheritance is not supported in vault-only mode');
-  };
-
-  /**
-   * Approve inheritance claim (by a guardian)
-   */
-  const approveInheritance = async () => {
-    assertInheritanceSupported();
-    throw new Error('Inheritance is not supported in vault-only mode');
-  };
-
-  /**
-   * Deny inheritance claim (by owner)
-   */
-  const denyInheritance = async () => {
-    assertInheritanceSupported();
-    throw new Error('Inheritance is not supported in vault-only mode');
-  };
-
-  /**
-   * Finalize inheritance (after waiting period + approvals)
-   */
-  const finalizeInheritance = async () => {
-    assertInheritanceSupported();
-    throw new Error('Inheritance is not supported in vault-only mode');
-  };
-
-  /**
-   * Cancel inheritance claim (by owner)
-   */
-  const cancelInheritance = async () => {
-    assertInheritanceSupported();
-    throw new Error('Inheritance is not supported in vault-only mode');
-  };
-
-  /**
-   * Cancel inheritance claim (by a guardian)
-   */
-  const guardianCancelInheritance = async () => {
-    assertInheritanceSupported();
-    throw new Error('Inheritance is not supported in vault-only mode');
-  };
-
   return {
     // State
     vaultOwner,
@@ -366,39 +287,23 @@ export function useVaultRecovery(vaultAddress?: `0x${string}`) {
     guardians: undefined,
     isUserGuardian: !!isUserGuardian,
     isUserGuardianMature: !!isUserGuardian,
-    nextOfKin: undefined,
     recoveryStatus,
-    inheritanceStatus,
     isWritePending,
     recoverySupported,
     inheritanceSupported,
-    
-    // Next of Kin
-    setNextOfKinAddress,
-    
+
     // Guardian management
     setGuardian,
     addGuardian,
     removeGuardian,
-    
+
     // Recovery
     requestRecovery,
     approveRecovery,
     finalizeRecovery,
     cancelRecovery,
-    
-    // Inheritance
-    requestInheritance,
-    approveInheritance,
-    denyInheritance,
-    finalizeInheritance,
-    cancelInheritance,
-    guardianCancelInheritance,
-    
     // Refetch functions
     refetchRecoveryState: refetchCardBoundPendingRotation,
-    refetchInheritanceState: () => Promise.resolve(),
-    refetchNextOfKin: () => Promise.resolve(),
     refetchGuardians: () => Promise.resolve(),
   };
 }

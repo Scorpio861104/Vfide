@@ -8,7 +8,6 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import type { QueuedWithdrawal } from './useVaultOperations';
 
 interface VaultQueueSectionProps {
-  cardBoundMode: boolean;
   vaultAddress: `0x${string}` | null | undefined;
   queuedWithdrawals: QueuedWithdrawal[];
   activeQueuedWithdrawals: number;
@@ -59,7 +58,6 @@ function formatTimeRemaining(seconds: number) {
 }
 
 export function VaultQueueSection({
-  cardBoundMode,
   vaultAddress,
   queuedWithdrawals,
   activeQueuedWithdrawals,
@@ -101,7 +99,7 @@ export function VaultQueueSection({
       : 0n;
   }, [dailyTransferLimit, remainingDailyCapacity]);
 
-  if (!cardBoundMode || !vaultAddress) {
+  if (!vaultAddress) {
     return null;
   }
 

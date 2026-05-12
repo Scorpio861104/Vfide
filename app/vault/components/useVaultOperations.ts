@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { useAccount, useWriteContract, useReadContract, useChainId, useSignTypedData } from 'wagmi';
-import { isAddress, parseUnits, formatUnits } from 'viem';
+import { isAddress, parseUnits } from 'viem';
 import { useToast } from '@/components/ui/toast';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultBalance } from '@/lib/vfide-hooks';
 import { safeParseFloat } from '@/lib/validation';
-import { devLog } from '@/lib/utils';
-import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, VFIDETokenABI, ZERO_ADDRESS, isConfiguredContractAddress, isCardBoundVaultMode } from '@/lib/contracts';
+import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 
 export interface QueuedWithdrawal {
   index: bigint;
@@ -22,7 +21,6 @@ export function useVaultOperations() {
   const { address } = useAccount();
   const chainId = useChainId();
   const { signTypedDataAsync } = useSignTypedData();
-  const isVfideTokenAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
   const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
 
   const vaultHub = useVaultHub();
@@ -34,14 +32,17 @@ export function useVaultOperations() {
   const recovery = useVaultRecovery(vaultAddress);
 
   // Deposit/Withdraw state
-  const [showDepositModal, setShowDepositModal] = useState(false);
+  //
+  // Note: there's no deposit modal anymore. CardBound vaults receive
+  // funds via vault-to-vault transfers (signed TransferIntent) or
+  // protocol-level mints, not via a per-user "deposit from wallet"
+  // flow. The previous handleDeposit was an always-toast stub for the
+  // legacy UserVault deposit-via-execute() path; both the stub and the
+  // DepositModal that consumed it have been removed.
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
-  const [depositAmount, setDepositAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawRecipient, setWithdrawRecipient] = useState('');
-  const [isDepositing, setIsDepositing] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [depositStep, setDepositStep] = useState<'approve' | 'deposit'>('approve');
   const [pendingQueueActionIndex, setPendingQueueActionIndex] = useState<bigint | null>(null);
   const [pendingQueueActionType, setPendingQueueActionType] = useState<'execute' | 'cancel' | null>(null);
   const [spendLimitPerTransfer, setSpendLimitPerTransfer] = useState('');
@@ -50,20 +51,10 @@ export function useVaultOperations() {
   const [isUpdatingSpendLimits, setIsUpdatingSpendLimits] = useState(false);
   const [isUpdatingLargeTransferThreshold, setIsUpdatingLargeTransferThreshold] = useState(false);
 
-  // Guardian/NextOfKin form state
+  // Guardian form state
   const [newGuardianAddress, setNewGuardianAddress] = useState('');
-  const [newNextOfKinAddress, setNewNextOfKinAddress] = useState('');
 
   const { writeContractAsync } = useWriteContract();
-
-  const { data: walletBalance } = useReadContract({
-    address: CONTRACT_ADDRESSES.VFIDEToken,
-    abi: VFIDETokenABI,
-    functionName: 'balanceOf',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address && isVfideTokenAvailable },
-  });
-  const walletBalanceFormatted = walletBalance ? formatUnits(walletBalance as bigint, 18) : '0';
 
   const { data: transferNonce } = useReadContract({
     address: vaultAddress || undefined,
@@ -142,11 +133,6 @@ export function useVaultOperations() {
       executeAfter: executeAfters[position] ?? 0n,
     }));
   }, [pendingQueuedWithdrawalData]);
-
-  const handleDeposit = async () => {
-    showToast('Vault-only mode disables direct wallet deposits here. Use vault-to-vault transfer.', 'error');
-    return;
-  };
 
   const handleWithdraw = async () => {
     if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
@@ -387,21 +373,6 @@ export function useVaultOperations() {
     }
   };
 
-  const handleSetNextOfKin = async () => {
-    if (!newNextOfKinAddress || !isAddress(newNextOfKinAddress)) {
-      showToast('Invalid address format', 'error');
-      return;
-    }
-    try {
-      await recovery.setNextOfKinAddress(newNextOfKinAddress as `0x${string}`);
-      showToast('Next of Kin updated successfully', 'success');
-      setNewNextOfKinAddress('');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      showToast('Failed to set Next of Kin: ' + message.slice(0, 50), 'error');
-    }
-  };
-
   const handleAddGuardian = async () => {
     if (!newGuardianAddress || !isAddress(newGuardianAddress)) {
       showToast('Invalid address format', 'error');
@@ -417,28 +388,18 @@ export function useVaultOperations() {
     }
   };
 
-  const hasNextOfKin = false;
-
   return {
     // Identity
     address,
-    cardBoundMode: isCardBoundVaultMode(),
     // Vault hub
     ...vaultHub,
     // Balances
     vaultBalance,
     isLoadingBalance,
     usdValue,
-    walletBalanceFormatted,
     // Recovery
     ...recovery,
-    hasNextOfKin,
-    // Deposit state + handler
-    showDepositModal, setShowDepositModal,
-    depositAmount, setDepositAmount,
-    isDepositing, depositStep,
-    handleDeposit,
-    // Withdraw state + handler
+    // Withdraw / transfer state + handler
     showWithdrawModal, setShowWithdrawModal,
     withdrawAmount, setWithdrawAmount,
     withdrawRecipient, setWithdrawRecipient,
@@ -464,10 +425,8 @@ export function useVaultOperations() {
     handleCancelQueuedWithdrawal,
     handleSetSpendLimits,
     handleSetLargeTransferThreshold,
-    // Guardian/NextOfKin form
+    // Guardian form
     newGuardianAddress, setNewGuardianAddress,
-    newNextOfKinAddress, setNewNextOfKinAddress,
-    handleSetNextOfKin,
     handleAddGuardian,
   };
 }

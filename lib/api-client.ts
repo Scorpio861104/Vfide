@@ -60,10 +60,19 @@ export class APIClient {
   }
 
   /**
-   * Get authentication token
+   * Get the auth token, if any.
+   *
+   * In production the JWT is held in an httpOnly cookie set by the auth
+   * route (see lib/auth/cookieAuth.ts). The cookie is sent automatically
+   * with `credentials: 'include'`, so this method can legitimately return
+   * null and the request will still authenticate via the cookie.
+   *
+   * The in-memory `this.token` exists as a backup path for clients that
+   * received a token in the JSON body (legacy auth response shape), and
+   * for environments where cookies are unavailable (e.g. cross-origin
+   * dev where SameSite=Strict would block the cookie).
    */
   getToken(): string | null {
-    if (this.token) return this.token;
     return this.token;
   }
 

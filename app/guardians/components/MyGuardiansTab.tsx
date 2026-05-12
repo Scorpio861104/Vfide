@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Shield, Users, UserMinus, CheckCircle2, FileText, AlertTriangle } from 'lucide-react';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
-import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isCardBoundVaultMode, isConfiguredContractAddress } from '@/lib/contracts';
+import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
 
 import { AddGuardianForm } from './AddGuardianForm';
@@ -17,7 +17,6 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  const cardBoundMode = isCardBoundVaultMode();
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { signMessageAsync } = useSignMessage();
@@ -55,7 +54,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
     address: vaultAddress,
     abi: ACTIVE_VAULT_ABI,
     functionName: 'pendingGuardianChange',
-    query: { enabled: cardBoundMode && !!vaultAddress },
+    query: { enabled: !!vaultAddress },
   });
 
   const guardianList = guardians || [];
@@ -82,7 +81,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const handleAddGuardian = async () => {
     clearNotices();
     try {
-      if (cardBoundMode && guardianSetupComplete && vaultAddress) {
+      if (guardianSetupComplete && vaultAddress) {
         const hash = await writeContractAsync({
           address: vaultAddress,
           abi: ACTIVE_VAULT_ABI,
@@ -105,7 +104,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const handleRemoveGuardian = async (guardianAddress: `0x${string}`) => {
     clearNotices();
     try {
-      if (cardBoundMode && guardianSetupComplete && vaultAddress) {
+      if (guardianSetupComplete && vaultAddress) {
         const hash = await writeContractAsync({
           address: vaultAddress,
           abi: ACTIVE_VAULT_ABI,
@@ -284,7 +283,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         </div>
       )}
 
-      {cardBoundMode && guardianSetupComplete && hasPendingGuardianChange && (
+      {guardianSetupComplete && hasPendingGuardianChange && (
         <div className="rounded-2xl p-6 border border-cyan-500/30 bg-cyan-500/10">
           <h3 className="text-lg font-bold text-white mb-2">Pending Guardian Change</h3>
           <p className="text-sm text-gray-200 mb-3">
@@ -349,8 +348,8 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         <h3 className="text-xl font-bold text-white mb-4">Your Guardians</h3>
         {guardianList.length === 0 ? (
           <div className="p-6 bg-black/30 border border-white/10 rounded-xl text-center">
-            <p className="text-gray-400">{cardBoundMode && guardianCountOnChain > 0 ? 'Guardian addresses are not enumerable from the current CardBound view.' : 'No guardians set yet.'}</p>
-            <p className="text-gray-500 text-sm mt-1">{cardBoundMode && guardianCountOnChain > 0 ? 'The vault reports guardians on-chain, but this UI cannot list each address from the active ABI yet.' : 'Add trusted contacts to secure recovery.'}</p>
+            <p className="text-gray-400">{guardianCountOnChain > 0 ? 'Guardian addresses are not enumerable from the current CardBound view.' : 'No guardians set yet.'}</p>
+            <p className="text-gray-500 text-sm mt-1">{guardianCountOnChain > 0 ? 'The vault reports guardians on-chain, but this UI cannot list each address from the active ABI yet.' : 'Add trusted contacts to secure recovery.'}</p>
           </div>
         ) : (
           <div className="space-y-3">

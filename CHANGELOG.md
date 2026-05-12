@@ -1,5 +1,172 @@
 # Changelog
 
+## 2026-05-12 (Rounds 5–9) — Non-CardBound dead-code surgery
+
+Across five iterative rounds the entire `cardBoundMode` runtime branch
+was removed from the frontend. `isCardBoundVaultMode()` in
+`lib/contracts.ts:315` is hard-coded to `true` and has been for some
+time; this surgery removed everything that asked.
+
+### Why this is a big deal
+
+Before this work, dozens of UI files carried parallel implementations
+of the same feature — one CardBound, one legacy UserVault. The legacy
+branches were never reachable, but they:
+
+- created the illusion of features that didn't actually work (Deposit
+  Funds, Withdraw Funds, inheritance/Next-of-Kin promo cards,
+  "Inheritance Cancellation Voting" panels)
+- imported large amounts of dead code (orphan hook chains,
+  always-disabled `useReadContract` calls, stub handlers that just
+  toasted error messages)
+- made the codebase confusing to navigate — half the conditional
+  branches in a file are answering a question the runtime never asks
+
+After this work: zero `cardBoundMode` references in any non-comment
+source. The function itself stays as a safety guard.
+
+### Round-by-round
+
+**Round 5 — Critical wallet-auth bug fix + pretend features**
+
+Two real production bugs:
+
+1. `ClientLayout` rendered twice. `app/layout.tsx` wrapped
+   `<CoreProviders><ClientLayout>` while `CoreProviders` already
+   includes `<ClientLayout>`. Result: two AppShells, two WebSocket
+   connections, duplicate nav. Fixed.
+
+2. SIWE re-prompt on every page reload. Server uses httpOnly cookie
+   auth but `useAuth` only called `verifyToken()` when an in-memory
+   token was non-null. Fixed: `getToken()` cleaned,
+   `useAuth` always calls `verifyToken()` on mount, added
+   `isCheckingSession` state; `WalletAuthManager` waits for it.
+
+Pretend-feature pages (`/streaming`, `/multisig`, `/time-locks`,
+`/reporting`, `/agent`, `/lending`) routed to `ComingSoonPage`.
+Storage-only pages wired to real APIs: `useNotificationHub`,
+governance `HistoryTab` (real `Voted` events), `ScoreSimulatorTab`,
+`lib/financialIntelligence.ts`, `/taxes`, `/budgets`, `/price-alerts`.
+Removed lying `useThreatDetection` stubs.
+
+**Round 6 — Next-of-Kin inheritance UI removed**
+
+`useVaultRecovery.ts`: 7 always-throw stubs (the legacy NoK functions)
+removed. `useVaultOperations.ts`: `handleSetNextOfKin` removed.
+`VaultRecoveryPanel.tsx`: 185 → 75 lines, CardBound only.
+`NextOfKinTab.tsx` deleted (255 lines). `NextOfKinInboxCard.tsx`
+deleted. `useNextOfKinWatchlist` hook deleted (60 lines).
+`NextOfKinWatchedVault` type deleted. `'next-of-kin'` removed from
+`TabType` enum. All guardian-page NoK references removed.
+
+`lib/wallet/`, `lib/compliance/` directories deleted entirely
+(unused). `components/wallet/index.ts` +
+`EnhancedNetworkBanner.tsx` + `EnhancedWalletConnect.tsx` deleted.
+`app/guardians/components/GuardianManagementTabs.tsx` deleted (753
+lines, unused after NoK removal).
+
+**Round 7 — Guardian tree CardBound cleanup**
+
+Rewrote 4 guardian files clean, patched 3 more, eliminating 95
+`cardBoundMode` references from the guardian tree:
+
+- `PendingActionsTab.tsx` — dropped 3 dead branches
+- `OverviewTab.tsx` — collapsed to CardBound only, dropped NoK promo
+- `MyGuardiansTab.tsx` — dropped variable + 7 ternaries
+- `RecoveryActivePanel.tsx` — full rewrite, dropped `cancelRecovery`
+  button + 7-day maturity wait UI
+- `RecoveryTab.tsx` — full rewrite, CardBound only
+- `RecoveryTimeline.tsx` — full rewrite, dropped legacy 5-step alt
+  and "NoK without guardians" guardrails card
+- `GuardianPendingRecoveryCard.tsx` — full rewrite, dropped 4 disabled
+  `USER_VAULT_ABI` reads
+- `hooks/usePayment.ts` — dropped `useVault: true` option (always
+  errored, zero callers)
+- `app/page.tsx` — dropped dead NoK alternate text on home
+
+**Round 8 — Onboarding chain + legacy vault hooks**
+
+Deleted orphan onboarding chain (1,441 lines):
+`OnboardingManager` → `HelpCenter` → `SetupWizard` → `GuardianWizard`
+→ `useSimpleVault`. All five imported each other, none had external
+consumers, and `useSimpleVault.executeVaultAction` always errored in
+CardBound mode. The `GuardianWizard` would have failed at runtime if
+anything had ever rendered it.
+
+`hooks/useVaultHooks.ts` 758 → ~150 lines (611 lines removed):
+dropped 11 legacy hooks (`useCreateVault`, `useTransferVFIDE`,
+`useVaultGuardiansDetailed`, `useIsGuardianMature`, `useSetGuardian`,
+`useAbnormalTransactionThreshold`, `useSetBalanceSnapshotMode`,
+`useUpdateBalanceSnapshot`, `useBalanceSnapshot`,
+`usePendingTransaction`, `useApprovePendingTransaction`,
+`useExecutePendingTransaction`, `useCleanupExpiredTransaction`,
+`useGuardianCancelInheritance`, `useInheritanceStatus`). Every one
+had `enabled: false`, threw unconditionally, or had zero consumers.
+Simplified `useVaultBalance` by dropping its dead `pendingTransactions`
+batch read.
+
+`components/vault/VaultSettingsPanel.tsx` 396 → 70 lines: was an
+`if (cardBoundMode) return <Placeholder />` short-circuit + 286 lines
+of legacy UserVault UI that never rendered.
+
+`components/security/GuardianManagementPanel.tsx` 493 → 23 lines: same
+short-circuit pattern. Replaced with a thin re-export of
+`MyGuardiansTab`. The 460-line `LegacyGuardianManagementPanel` was
+unreachable.
+
+`app/vault/settings/page.tsx` rewritten: was advertising legacy
+features (Balance Snapshot, Abnormal TX Detection, Pending TX Queue,
+Inheritance Guard) that the user could never actually use. Now
+describes the real CardBound feature set.
+
+**Round 9 — Vault tree dead UI removal + deposit/withdraw decision**
+
+Made a product decision on the long-standing Deposit/Withdraw UI:
+`handleDeposit` in `useVaultOperations` is a stub that always toasts
+an error (legacy execute() path that doesn't exist in CardBound mode).
+`handleWithdraw` is fully implemented as an EIP-712 signed
+`executeVaultToVaultTransfer`. Conclusion: the **only** working flow
+is "Transfer to Vault". Removed the misleading buttons entirely.
+
+Files rewritten:
+- `WithdrawModal.tsx` — full rewrite as vault-to-vault transfer only;
+  11 `cardBoundMode` ternaries gone, 24-hour cooldown notice gone,
+  "Use my wallet address" shortcut gone
+- `VaultQuickActions.tsx` — full rewrite to a single-action panel
+  (Transfer to Vault); was previously rendering two dead buttons
+  with a "this is disabled in CardBound mode" info banner
+- `VaultContent.tsx` — dropped `cardBoundMode` props on 4 children,
+  dropped `DepositModal` import + render
+
+Files patched:
+- `MerchantApprovalPanel.tsx` — dropped prop + 3 dead `enabled` guards
+- `VaultQueueSection.tsx` — dropped prop from interface + destructure
+- `VaultHeader.tsx` — dropped variable + 3 ternaries (description,
+  two feature cards)
+- `OnboardingTour.tsx` — dropped variable + 4 ternaries
+- `useVaultOperations.ts` — dropped deposit state cluster
+  (`showDepositModal`, `depositAmount`, `isDepositing`, `depositStep`,
+  `handleDeposit` stub), dropped `walletBalance` +
+  `walletBalanceFormatted` reads (only used by DepositModal), dropped
+  `cardBoundMode` from return type, dropped unused imports
+
+Deleted dead files (798 lines):
+- `app/vault/components/DepositModal.tsx` (107)
+- `components/modals/DepositModal.tsx` (162, unused)
+- `components/modals/SwapModal.tsx` (191, unused)
+- `components/modals/TransactionModal.tsx` (145, unused)
+- `components/modals/WithdrawModal.tsx` (193, unused — different from
+  the active vault one)
+
+### Cumulative totals (rounds 5–9)
+
+- ~3,000+ lines of unreachable code deleted
+- 95 `cardBoundMode` references → 0
+- 2 production bugs fixed (double ClientLayout, SIWE re-prompt)
+- ~10 misleading UI surfaces removed (Deposit Funds button, NoK promo
+  cards, "Inheritance Guard" feature card, etc.)
+- TypeScript clean throughout
+
 ## 2026-05-12 (Round 4) — Dead buttons + overflow sweep
 
 User said: "I found a lot of overflow and dead buttons. End-to-end search

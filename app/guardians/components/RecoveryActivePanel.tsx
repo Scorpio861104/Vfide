@@ -1,10 +1,25 @@
 'use client';
 
+/**
+ * RecoveryActivePanel — shown when there's an active wallet rotation.
+ *
+ * Pre-cleanup, this panel had a parallel non-CardBound recovery flow
+ * (with a "Cancel Recovery" button, a 7-day-maturity guard before
+ * guardians could approve, and different terminology like "Active
+ * Recovery Request" vs "Expires In"). That flow doesn't exist in this
+ * build — `isCardBoundVaultMode()` is hard-coded to true and the legacy
+ * `cancelRecovery` path on the recovery hook throws unconditionally.
+ * All non-CardBound branches removed.
+ *
+ * Note: `isUserGuardianMature` is intentionally NOT consulted here.
+ * Maturity is checked on-chain at vote time for CardBound vaults; the
+ * frontend doesn't need to enforce a frontend-side 7-day wait.
+ */
+
 import { motion } from 'framer-motion';
 import { AlertCircle } from 'lucide-react';
 
 interface RecoveryActivePanelProps {
-  cardBoundMode?: boolean;
   recoveryStatus: {
     isActive: boolean;
     approvals: number;
@@ -13,19 +28,19 @@ interface RecoveryActivePanelProps {
     proposedOwner: string | null;
   };
   isUserGuardian: boolean;
-  isUserGuardianMature: boolean;
   isWritePending: boolean;
   hasVault: boolean;
   onFinalize: () => void;
-  onCancel: () => void;
   onApprove: () => void;
 }
 
 export function RecoveryActivePanel({
-  cardBoundMode = false,
-  recoveryStatus, isUserGuardian, isUserGuardianMature,
-  isWritePending, hasVault,
-  onFinalize, onCancel, onApprove,
+  recoveryStatus,
+  isUserGuardian,
+  isWritePending,
+  hasVault,
+  onFinalize,
+  onApprove,
 }: RecoveryActivePanelProps) {
   return (
     <motion.div
@@ -35,24 +50,28 @@ export function RecoveryActivePanel({
     >
       <h3 className="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2">
         <AlertCircle size={20} />
-        {cardBoundMode ? 'Active Wallet Rotation' : 'Active Recovery Request'}
+        Active Wallet Rotation
       </h3>
 
       <div className="bg-black/30 border border-white/10 rounded-xl p-4 mb-4 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-        <div>
+        <div className="min-w-0">
           <div className="text-gray-500">Approvals</div>
-          <div className="text-white font-bold">{recoveryStatus.approvals}/{recoveryStatus.threshold}</div>
+          <div className="text-white font-bold">
+            {recoveryStatus.approvals}/{recoveryStatus.threshold}
+          </div>
         </div>
-        <div>
-          <div className="text-gray-500">{cardBoundMode ? 'Proposed Wallet' : 'Proposed Owner'}</div>
+        <div className="min-w-0">
+          <div className="text-gray-500">Proposed Wallet</div>
           <div className="text-white font-mono text-xs truncate">
             {recoveryStatus.proposedOwner ?? 'n/a'}
           </div>
         </div>
-        <div>
-          <div className="text-gray-500">{cardBoundMode ? 'Activates In' : 'Expires In'}</div>
+        <div className="min-w-0">
+          <div className="text-gray-500">Activates In</div>
           <div className="text-white font-bold">
-            {recoveryStatus.daysRemaining !== null ? `${recoveryStatus.daysRemaining} days` : 'n/a'}
+            {recoveryStatus.daysRemaining !== null
+              ? `${recoveryStatus.daysRemaining} day${recoveryStatus.daysRemaining === 1 ? '' : 's'}`
+              : 'n/a'}
           </div>
         </div>
       </div>
@@ -63,28 +82,13 @@ export function RecoveryActivePanel({
           whileTap={{ scale: 0.98 }}
           onClick={onFinalize}
           disabled={isWritePending || !hasVault}
-          className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25"
+          className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25 disabled:opacity-50"
         >
-          {cardBoundMode ? 'Finalize Rotation' : 'Finalize Recovery'}
+          Finalize Rotation
         </motion.button>
-        {!cardBoundMode && (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onCancel}
-            disabled={isWritePending || !hasVault}
-            className="px-6 py-3 border border-red-500/50 text-red-400 rounded-xl font-bold hover:bg-red-500/10 transition-colors disabled:opacity-50"
-          >
-            Cancel Recovery
-          </motion.button>
-        )}
       </div>
 
-      {isUserGuardian && !cardBoundMode && !isUserGuardianMature && (
-        <p className="text-amber-300 text-sm mt-3">You are a guardian but still in the 7-day maturity period and cannot approve yet.</p>
-      )}
-
-      {isUserGuardian && (cardBoundMode || isUserGuardianMature) && (
+      {isUserGuardian && (
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
@@ -92,7 +96,7 @@ export function RecoveryActivePanel({
           disabled={isWritePending || !hasVault}
           className="w-full mt-3 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50"
         >
-          {cardBoundMode ? 'Approve Rotation (Guardian)' : 'Approve Recovery (Guardian)'}
+          Approve Rotation (Guardian)
         </motion.button>
       )}
     </motion.div>

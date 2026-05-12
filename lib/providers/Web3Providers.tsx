@@ -25,21 +25,36 @@ function WalletPersistenceManager({ children }: { children: ReactNode }) {
 /**
  * Triggers SIWE challenge-sign when a wallet connects for the first time
  * in the session. Re-runs if address changes (account switch).
+ *
+ * Important behaviors:
+ *   1. Waits for `isCheckingSession` to clear before triggering — otherwise
+ *      users with a valid httpOnly cookie get re-prompted on every page
+ *      reload while the cookie check is still in flight.
+ *   2. Tracks the last attempted address so a single failed/refused signin
+ *      doesn't loop. The user must explicitly retry by disconnecting and
+ *      reconnecting (or by triggering a manual sign-in flow).
  */
 function WalletAuthManager() {
   const { isConnected, address } = useAccount();
-  const { authenticate, isAuthenticated } = useAuth();
-  const lastAuthAddress = useRef<string | undefined>(undefined);
+  const { authenticate, isAuthenticated, isCheckingSession, isAuthenticating } = useAuth();
+  const lastAttemptAddress = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    if (isConnected && address && !isAuthenticated && lastAuthAddress.current !== address) {
-      lastAuthAddress.current = address;
-      void authenticate();
-    }
+    // Wait for the initial verifyToken() round-trip; if the cookie is
+    // valid we'll already be authenticated by the time this resolves.
+    if (isCheckingSession) return;
+    if (isAuthenticating) return;
     if (!isConnected) {
-      lastAuthAddress.current = undefined;
+      lastAttemptAddress.current = undefined;
+      return;
     }
-  }, [isConnected, address, isAuthenticated, authenticate]);
+    if (!address) return;
+    if (isAuthenticated) return;
+    // Already tried for this address in this session — don't loop.
+    if (lastAttemptAddress.current === address) return;
+    lastAttemptAddress.current = address;
+    void authenticate();
+  }, [isConnected, address, isAuthenticated, isCheckingSession, isAuthenticating, authenticate]);
 
   return null;
 }
