@@ -15,7 +15,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { Search, Star, Home, LayoutDashboard, Shield, Store, MessageCircle, Vote } from 'lucide-react';
+import { Search, Star, Store, ShoppingCart, Send, Repeat, Banknote, QrCode } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -89,12 +89,12 @@ interface QuickAction {
 }
 
 const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
-  { id: 'home', label: 'Home', icon: <Home size={18} />, href: '/', color: '#F8F8FC' },
-  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} />, href: '/dashboard', color: '#00F0FF' },
-  { id: 'vault', label: 'Vault', icon: <Shield size={18} />, href: '/vault', color: '#8B5CF6' },
-  { id: 'merchant', label: 'Merchant', icon: <Store size={18} />, href: '/merchant', color: '#10B981' },
-  { id: 'social', label: 'Social', icon: <MessageCircle size={18} />, href: '/social-hub', color: '#F59E0B' },
-  { id: 'governance', label: 'Governance', icon: <Vote size={18} />, href: '/governance', color: '#6366F1' },
+  { id: 'merchant-hub', label: 'Merchant Hub', icon: <Store size={18} />, href: '/merchant', color: '#10B981' },
+  { id: 'pos', label: 'POS', icon: <ShoppingCart size={18} />, href: '/pos', color: '#06B6D4' },
+  { id: 'quick-pay', label: 'Quick Pay', icon: <Send size={18} />, href: '/pay', color: '#8B5CF6' },
+  { id: 'subscriptions', label: 'Subscriptions', icon: <Repeat size={18} />, href: '/subscriptions', color: '#F59E0B' },
+  { id: 'payroll', label: 'Payroll', icon: <Banknote size={18} />, href: '/payroll', color: '#14B8A6' },
+  { id: 'qr', label: 'QR', icon: <QrCode size={18} />, href: '/merchant', color: '#22C55E' },
 ];
 
 interface QuickActionsProps {
