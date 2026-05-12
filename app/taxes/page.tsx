@@ -24,6 +24,22 @@ export default function TaxesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 pt-20 pb-24 md:pb-8 space-y-6">
+      {/* Tax accuracy disclaimer — required because the figures here are
+          computed client-side from the transactions table this wallet has
+          recorded. Off-platform transactions, on-chain transfers not
+          captured by VFIDE, gas fees on other chains, and cost-basis
+          assumptions all materially affect a real tax return. */}
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
+        <strong className="text-amber-300">Not tax advice.</strong>{' '}
+        <span className="text-amber-100">
+          This report is computed from transactions VFIDE has recorded for
+          your wallet. It does not include off-platform activity, transfers
+          on other chains, cost-basis adjustments, or jurisdiction-specific
+          rules. Use it as a starting point and consult a qualified tax
+          professional before filing.
+        </span>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

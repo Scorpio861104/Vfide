@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { Calendar, CheckCircle2 as CheckCircle, DollarSign } from 'lucide-react';
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean }) {
   // Salary is NOT fixed - funded by ecosystem fees, distributed every 120 days
@@ -10,6 +11,7 @@ export function SalaryTab({ isConnected: _isConnected }: { isConnected: boolean 
 
   return (
     <div className="space-y-8">
+      <SampleDataBanner label="Council salary distribution begins in 2026. The figures below are illustrative placeholders until the first period completes." />
       {/* Salary Overview */}
       <motion.div 
         initial={{ opacity: 0 }}

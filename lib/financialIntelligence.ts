@@ -528,25 +528,89 @@ export function useFinancialIntelligence(userAddress: string | undefined) {
       return;
     }
 
-    // Load data from storage/API
+    let cancelled = false;
+
+    /**
+     * Source of truth for transactions is the server (/api/crypto/transactions/[address]).
+     * localStorage is used only as an offline cache so the page still shows
+     * something usable if the API is unreachable. This is critical for tax
+     * reporting in particular — a per-browser localStorage view will miss
+     * transactions made from any other device, producing an incomplete tax
+     * report the user might naively trust.
+     *
+     * Holdings and budgets remain client-side because the API doesn't yet
+     * have endpoints for them.
+     */
     const loadData = async () => {
       try {
-        // In production, fetch from API/indexer
-        const storedTx = localStorage.getItem(`vfide-tx-${userAddress}`);
+        // Always attempt API first
+        let apiSuccess = false;
+        try {
+          const response = await fetch(`/api/crypto/transactions/${userAddress}?limit=100`);
+          if (response.ok) {
+            const data = await response.json();
+            const apiTxs: Array<Record<string, unknown>> = Array.isArray(data.transactions)
+              ? data.transactions
+              : [];
+            // Adapter: map flat API rows → UI Transaction shape. The API stores
+            // strings for amount/token; the UI wants numbers + USD values.
+            const mapped: Transaction[] = apiTxs.map((row) => {
+              const amount = typeof row.amount === 'string' ? Number(row.amount) : (row.amount as number) ?? 0;
+              const tokenAmount = typeof row.token_amount === 'string' ? Number(row.token_amount) : undefined;
+              const isVfide = (row.currency as string)?.toUpperCase() === 'VFIDE';
+              return {
+                id: String(row.id ?? ''),
+                type: (row.type as Transaction['type']) ?? 'send',
+                amount: tokenAmount ?? amount,
+                token: ((row.currency as string) ?? 'VFIDE'),
+                usdValue: Number.isFinite(amount) ? amount : 0,
+                timestamp: row.timestamp
+                  ? new Date(row.timestamp as string).getTime()
+                  : row.created_at
+                  ? new Date(row.created_at as string).getTime()
+                  : 0,
+                to: (row.to_address as string | undefined) ?? undefined,
+                from: (row.from_address as string | undefined) ?? undefined,
+                note: (row.message as string | undefined) ?? undefined,
+                txHash: (row.tx_hash as string | undefined) ?? undefined,
+              };
+            }).filter((t) => t.timestamp > 0);
+
+            if (!cancelled) {
+              setTransactions(mapped);
+              // Refresh the local cache so offline reads are also up to date
+              try {
+                localStorage.setItem(`vfide-tx-${userAddress}`, JSON.stringify(mapped));
+              } catch {}
+              apiSuccess = true;
+            }
+          }
+        } catch (apiErr) {
+          logger.warn('[FinancialIntelligence] API fetch failed, falling back to cache:', apiErr);
+        }
+
+        // Fall back to localStorage if API didn't succeed
+        if (!apiSuccess && !cancelled) {
+          const storedTx = localStorage.getItem(`vfide-tx-${userAddress}`);
+          if (storedTx) setTransactions(JSON.parse(storedTx));
+        }
+
+        // Holdings and budgets are client-side only
         const storedHoldings = localStorage.getItem(`vfide-holdings-${userAddress}`);
         const storedBudgets = localStorage.getItem(`vfide-budgets-${userAddress}`);
-
-        if (storedTx) setTransactions(JSON.parse(storedTx));
-        if (storedHoldings) setHoldings(JSON.parse(storedHoldings));
-        if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
+        if (!cancelled) {
+          if (storedHoldings) setHoldings(JSON.parse(storedHoldings));
+          if (storedBudgets) setBudgets(JSON.parse(storedBudgets));
+        }
       } catch (error) {
         logger.error('Failed to load financial data:', error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     loadData();
+    return () => { cancelled = true; };
   }, [userAddress]);
 
   const spendingByCategory = useMemo(

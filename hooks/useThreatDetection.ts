@@ -70,10 +70,20 @@ const generateThreatId = (): string => {
   return `threat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-const checkUnusualLocation = (): boolean => {
-  // In production: Compare with known locations from backend
-  return false;
-};
+// NOTE: server-side checks (unusual location / suspicious IP / brute-force
+// across sessions) require a backend that doesn't exist yet — they're
+// genuinely useful but cannot be implemented purely client-side.
+//
+// What CAN be done in the browser:
+//   - Device fingerprint comparison (this hook does that — see
+//     checkUnusualDevice below)
+//   - Client-side rate limiting on user actions (also done)
+//
+// Previously this file shipped checkUnusualLocation and checkSuspiciousIp
+// stubs that always returned false but were called as if they were real.
+// They've been removed so the panel only reports on signals it actually
+// has, instead of producing an illusory "all clear" from sources it never
+// checked.
 
 const checkUnusualDevice = (currentDevice: DeviceFingerprint): boolean => {
   if (typeof window === 'undefined') return false;
@@ -91,11 +101,6 @@ const checkUnusualDevice = (currentDevice: DeviceFingerprint): boolean => {
   } catch (_error) {
     return false;
   }
-};
-
-const checkSuspiciousIp = (): boolean => {
-  // In production: Check against threat intelligence databases
-  return false;
 };
 
 export const useThreatDetection = (): UseThreatDetectionResult => {
@@ -147,24 +152,9 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
 
   const detectAnomalies = useCallback(async (): Promise<ThreatDetectionResult> => {
     const deviceFingerprint = generateDeviceFingerprint();
-    const unusualLocation = checkUnusualLocation();
     const unusualDevice = checkUnusualDevice(deviceFingerprint);
-    const suspiciousIp = checkSuspiciousIp();
 
     const detectedThreats: ThreatAlert[] = [];
-
-    if (unusualLocation) {
-      const threat: ThreatAlert = {
-        id: generateThreatId(),
-        type: 'unusual_location',
-        severity: 'medium',
-        detected: new Date(),
-        message: 'Login from unusual location detected',
-        details: { location: deviceFingerprint.timezone },
-        resolved: false
-      };
-      detectedThreats.push(threat);
-    }
 
     if (unusualDevice) {
       const threat: ThreatAlert = {
@@ -172,21 +162,8 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
         type: 'unusual_device',
         severity: 'medium',
         detected: new Date(),
-        message: 'New device detected',
+        message: 'Browser fingerprint changed since your last visit',
         details: { device: deviceFingerprint.userAgent },
-        resolved: false
-      };
-      detectedThreats.push(threat);
-    }
-
-    if (suspiciousIp) {
-      const threat: ThreatAlert = {
-        id: generateThreatId(),
-        type: 'suspicious_ip',
-        severity: 'high',
-        detected: new Date(),
-        message: 'Suspicious IP address detected',
-        details: {},
         resolved: false
       };
       detectedThreats.push(threat);
@@ -200,25 +177,26 @@ export const useThreatDetection = (): UseThreatDetectionResult => {
       });
     }
 
+    // Client-side risk score is based on the only signals we actually have:
+    // device fingerprint changes and locally-observed rate-limit breaches.
+    // Server-side signals (failed-auth tracking, IP reputation, geo) are
+    // not counted because they would require a backend that doesn't exist
+    // yet, and feeding them constant `false` would be misleading.
     const score = calculateRiskScore({
       failedAttempts: 0,
-      unusualLocation,
+      unusualLocation: false,
       unusualDevice,
       rapidRequests: false,
-      suspiciousIp,
+      suspiciousIp: false,
       noTwoFactor: false
     });
 
     const recommendations: string[] = [];
-    if (unusualLocation || unusualDevice) {
-      recommendations.push('Enable two-factor authentication for additional security');
-    }
-    if (suspiciousIp) {
-      recommendations.push('Change your password immediately');
-      recommendations.push('Review recent security logs');
+    if (unusualDevice) {
+      recommendations.push('You appear to be on a new device or browser. If that\'s unexpected, disconnect your wallet and reconnect from your usual device.');
     }
     if (detectedThreats.length === 0) {
-      recommendations.push('Your account security looks good');
+      recommendations.push('No client-side anomalies detected. Note: server-side threat signals (IP reputation, geographic anomalies, cross-session brute-force tracking) are not yet wired up.');
     }
 
     return {

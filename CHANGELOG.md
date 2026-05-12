@@ -1,5 +1,117 @@
 # Changelog
 
+## 2026-05-12 (later) — Round 3 fixes (deeper audit, lib/ layer)
+
+After Round 2, ran the scanners again to catch anything missed. Three
+more issues surfaced — all real, all now fixed.
+
+### Tax report was localStorage-only (most dangerous finding of this round)
+
+`/taxes` and `/budgets` both load from `useFinancialIntelligence` in
+`lib/financialIntelligence.ts`. That hook was reading transactions from
+`localStorage[vfide-tx-${address}]` only — never the server. A user
+with a wallet they've used on multiple devices would see an *incomplete*
+tax report from whichever browser they happened to be in. The code had
+a comment "In production, fetch from API/indexer" that was never acted on.
+
+Fix: `useFinancialIntelligence` now fetches from
+`/api/crypto/transactions/[address]` first (the existing endpoint accepts
+either a numeric userId or a wallet address with proper auth), with
+localStorage as offline cache only. Adapter maps the flat API row shape
+(user_address, from_address, to_address, token_amount, currency,
+message, tx_hash, created_at) into the UI's Transaction type.
+
+Additionally, added an explicit "not tax advice" disclaimer at the top
+of `/taxes` covering off-platform activity, other chains, cost-basis
+adjustments, and jurisdiction-specific rules. Added a "saved on this
+device only" banner at the top of `/budgets` because budgets remain
+client-side (no API yet) and users need to know they won't sync.
+
+### Dead CommandBar with fake "execute transactions" loop
+
+`components/CommandBar.tsx` was a natural-language + voice command bar
+that, on user input like "Send 100 VFIDE to alice.eth", would:
+- Parse via `lib/naturalLanguage.ts`
+- Iterate over a fake execution plan
+- Show `toast.info('Executing: ...')` for each step
+- `await new Promise(r => setTimeout(r, 1000))` — **just sleeping**
+- Show `toast.success('All actions completed')`
+- Comment said "In production, this would actually execute the transactions"
+
+It would have completely deceived a voice user about sending money. But
+nothing mounted CommandBar — it was 378 lines of dead UI plus its
+naturalLanguage and voiceCommands dependencies. Deleted all three:
+`components/CommandBar.tsx`, `lib/naturalLanguage.ts`, `lib/voiceCommands.ts`.
+
+### Type-check status
+
+`npx tsc --noEmit -p tsconfig.json` passes with zero errors across the
+full codebase after all three rounds of changes.
+
+## 2026-05-12 — Frontend Audit Round 2 (Pretend-Features Removal)
+
+Did a deep audit of the frontend after the merchant-OS round. Goal:
+find UIs that pretend to work but actually don't, and either make them
+honest or wire them to real backends.
+
+### Severity-1 fixes (fake "success" UI replaced with honest coming-soon)
+
+These pages used to show success toasts and decorative buttons with no
+onClick handlers. A user could "create a stream" or "add a signer" and
+believe they did something real when nothing on-chain or server-side
+happened. Replaced with explicit `ComingSoonPage` explaining what the
+feature does, what's needed to ship it, and pointing to the closest
+real alternative today.
+
+| Page | Was | Now |
+|------|-----|-----|
+| `/streaming` | "Stream created successfully" toast on client-only `setStreams([newStream])` | Honest description of payment streaming; points to `/merchant/subscriptions` |
+| `/multisig` | Hardcoded `required=0`, "Add Signer" / "Approve" buttons with no handlers | Explains M-of-N multisig; points to `/guardians` for today's protection |
+| `/time-locks` | `setTimeLocks([])` and buttons with no handlers | Explains tiered transaction delays; points to `/vault` withdrawal queue |
+| `/reporting` | 457-line `useReportingAnalytics` hook that wrote "scheduled reports" to localStorage | Points to `/merchant/analytics` for the real, merchant-scoped version |
+| `/agent` | localStorage-only audit log for cash-handling agents (dangerous — agents handle real money) | Coming-soon with requirements (server audit log, KYC, regulatory review) |
+
+### Severity-2 fixes (localStorage masquerading as backend → wired to real APIs)
+
+| Hook / Page | Was | Now |
+|------|-----|-----|
+| `useNotificationHub` / `/notifications` | 400 lines of localStorage state; real `/api/notifications` endpoint existed but was never called | Rewrote to use API as source of truth, with per-wallet localStorage cache for offline. Adapter maps API shape → UI Notification type. Mutations (markAsRead, markAllAsRead) hit the API with optimistic local update and revert-on-failure |
+| `useThreatDetection` / `/security-center` | Three "checks" — `checkUnusualLocation()` always returned `false`, `checkSuspiciousIp()` always returned `false`, only `checkUnusualDevice()` was real. The hook emitted "Your account security looks good" recommendations from sources it never actually consulted | Removed the lying stubs. Kept the real device-fingerprint comparison and client-side rate limiting. Risk score now reflects only the signals we actually have. `detectAnomalies()` is explicit that "server-side signals (IP reputation, geographic anomalies, cross-session brute-force tracking) are not yet wired up" |
+| `/price-alerts/ActiveTab` | Fetched price once on mount and never again. Had `Bell` icons but never called `Notification(...)`. localStorage with no disclosure | Polls `/api/crypto/price` every 30s. Fires Web Notifications when thresholds trigger (with permission request UI). Throttles re-fires (30 min per alert). Explicit banner that alerts are local-only and only fire while a tab is open. Permission state UI |
+
+### Severity-3 fixes (fake data labeled as real)
+
+| File | Was | Now |
+|------|-----|-----|
+| `app/governance/components/HistoryTab.tsx` | 8 hardcoded fake votes in user's "Your Voting History" | Real implementation reading `Voted(uint256, address, bool)` events from DAO contract via `publicClient.getLogs`, filtered by connected wallet, enriched with `getProposalDetails` for proposal title + final status. Proper empty/loading/error/not-deployed states |
+| `app/council/components/SalaryTab.tsx` | One placeholder period row, no disclosure | Added `SampleDataBanner` |
+| `app/dashboard/components/ScoreSimulatorTab.tsx` | Made-up scoring formula `transactions * 50 + governanceVotes * 100 + ...` that bore no relation to the actual Seer contract | Rewrote against real Seer constants (max 100/call, 200/day per operator pair, 300/day total, 100/month decay toward NEUTRAL=5000). 5 activity-level scenarios over 1-24 months. Trajectory sparkline. Explicit "how scoring actually works" disclosure box |
+
+### Dead code removed
+
+- `components/dashboard/VFIDEDashboard.tsx` — 9.8KB, never rendered anywhere
+- `components/dashboard/VFIDEDashboardSections.tsx` — had `MOCK_SCORE = 7420`, `MOCK_BALANCE = "12,847.32"`, `MOCK_ADDRESS`. Was only imported by VFIDEDashboard. Both deleted together
+- `components/dashboard/index.ts` — barrel cleaned, removed broken exports
+- `hooks/useTwoFactorAuth.ts` — 319 lines, zero callsites. `TwoFactorSetup` component is correctly gated as "coming soon" so the hook had nothing to power
+
+### New reusable component
+
+`components/feedback/ComingSoonPage.tsx` — used by all 5 honest-replacement pages. Has slots for: title, tagline, description of what the feature would do, requirements list of what's needed to ship it, and an optional "use this instead today" link to the closest real feature.
+
+### Type-check status
+
+After all changes: `npx tsc --noEmit -p tsconfig.json` passes cleanly with zero errors across the entire codebase. The Seer-contract event signature in HistoryTab matches the contract's `event Voted(uint256 id, address voter, bool support)` declaration (DAO.sol:44).
+
+### What's still pending
+
+These were flagged in the audit but left as-is intentionally:
+
+- `/social-payments` & the 5 broken `/api/social/*` endpoints — page already says "Live tip history is not available yet"; consistent self-disclosure, no user-facing lie. Build the feature when there's appetite, or remove the page.
+- `/api/admin/metrics/dashboard` — silently fails; admin tooling, no end-user impact.
+- `/api/crypto/ens/[address]` — silently falls back to raw address. Cosmetic only.
+- Embedded wallet stub (`lib/wallet/VFIDEWalletProvider.tsx`) — throws by design until Privy/Web3Auth/Magic SDK installation decision is made. Properly self-disclosed.
+- `components/security/TwoFactorSetup.tsx` — explicit "2FA not in this release" UI. Correct as-is.
+
 ## 2026-05-11 (night, part 2) — Merchant OS + Broken API Endpoint Audit
 
 User pushed back: "things are still not finished." Right. Did a proper

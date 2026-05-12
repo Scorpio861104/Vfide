@@ -49,6 +49,16 @@ export default function BudgetsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 pt-20 pb-24 md:pb-8 space-y-6">
+      {/* Budgets are stored locally in this browser; spending is computed
+          from server-backed transactions, but the budget thresholds themselves
+          don't sync across devices. Be explicit so users don't expect to see
+          the same budgets on their phone. */}
+      <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 text-xs text-blue-200">
+        Budgets are saved on this device only — they won&apos;t appear on other
+        devices you sign in from. Spending totals are still computed from your
+        full transaction history.
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
