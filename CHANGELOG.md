@@ -1,5 +1,222 @@
 # Changelog
 
+## 2026-05-12 (Round 15) — Frontend-wide memorability: ticker, Monument corner, numeric voice
+
+Round 14 made the homepage feel distinctive. The honest follow-up
+question was "what about the other 100+ pages?" — a user clicking
+between /vault, /governance, /treasury, /marketplace, /merchant,
+/proofscore would still feel like they were tabbing through screens
+in a generic crypto product. The wow had to extend across the entire
+surface, not just the hero.
+
+This round adds three **through-line elements** that show up on every
+page so the product reads as one place, not a collection of routes.
+
+### 1. ProtocolTicker — pinned strip below the top nav, everywhere
+
+**`components/navigation/ProtocolTicker.tsx`** — a thin 28px strip
+pinned at `top-14` (just below the fixed TopNav) on every page that
+shows chrome. Recent payments, burns, score changes, governance votes
+scroll right-to-left at a calm 35 px/sec.
+
+Design:
+- **Continuous scroll, no visible reset.** The event list is rendered
+  twice end-to-end; when the inner track's `translateX` crosses one
+  copy's width, it snaps by exactly that width — invisible to the
+  user because the second copy is already in position.
+- **Transform-based animation, single rAF loop.** No setInterval, no
+  React re-render per frame. The track moves via direct DOM mutation.
+- **Pause-on-hover** so users can read items. State held in a ref so
+  pausing doesn't restart the rAF loop.
+- **Pulse-dot "live" indicator** on the right edge with a "demo"
+  badge until the protocol is on mainnet. Honest about the synthetic
+  source.
+- **Respects `prefers-reduced-motion`.** Falls back to a static
+  snapshot.
+
+Each row carries a kind-specific lucide icon tinted to the event's
+ProofScore tier color, so the strip reads as a colored stream of
+activity rather than a homogenous gray.
+
+### 2. MonumentCorner — small persistent brand mark, bottom-right
+
+**`components/navigation/MonumentCorner.tsx`** — a 48×48 button in
+the bottom-right corner of every chrome-bearing page. Inside it,
+the Monument mini-mark (the V monogram with a vertex glow).
+
+Three jobs:
+- **Be a recognizable artifact present everywhere.** Linear's L,
+  Vercel's triangle, Slack's lozenge — VFIDE didn't have one. The
+  Monument was being used as a 140px logo and nowhere else. Now it
+  appears on every page in a consistent place.
+- **Pulse the vertex on every protocol event.** Each new event from
+  the shared `useProtocolPulse` hook fires a brief radial glow at the
+  vertex, color-matched to the event's tier. So even on a static
+  page (settings, governance, an admin screen), the system feels
+  alive.
+- **Peek overlay on click.** A 360px popover lists the last 12
+  events with kind icons, formatted amounts/scores via `<Numeric>`,
+  and relative-time timestamps. Plus a link to `/treasury` for the
+  full view.
+
+The vertex tint adopts the **dominant tier color** of the last 8
+events — so if the network is mostly small high-trust payments,
+the corner glows cyan/violet; mostly low-trust risky activity, it
+glows orange/rose. The brand mark becomes a live signal of network
+health.
+
+### 3. useProtocolPulse — unified data source
+
+**`hooks/useProtocolPulse.ts`** — the shared heartbeat that both
+the ticker and the corner read from. Means the two elements always
+agree on what "the protocol is doing right now" looks like.
+
+Two modes:
+- **`'demo'`** (current default): synthetic events generated locally
+  with realistic distributions — 55% payments ($2–$482 skewed
+  toward small), 25% burns (0.1–12 VFIDE), 13% score changes, 5%
+  guardian, 2% governance. Every event has a `synthetic: true` flag
+  so the UI can label them honestly.
+- **`'live'`** (future): swap in `useWatchContractEvent` for the
+  VFIDE Transfer event + MerchantPortal PaymentProcessed. Same event
+  shape returned, so consumers don't need to know which mode is on.
+
+Updates throttled to 10 Hz max so heavy event flow doesn't thrash
+React. Buffer caps at 30 events.
+
+### 4. Numerical voice — strategic adoption of `<Numeric>`
+
+A previous session built a `<Numeric>` component with `font-numeric`
+(JetBrains Mono + tabular-nums + slashed-zero + ss01) backing every
+monetary value, score, percentage, and timestamp. It was complete
+but only used in 3 places. This round adopts it on the highest-
+visibility numeric surfaces:
+
+- **`/proofscore` live score card** — the 5xl score readout and the
+  burn-fee percentage. The biggest single number the product shows
+  is now in the canonical voice.
+- **`/merchant` processor comparison table** — the headline pitch
+  ("VFIDE 0% vs Square 2.6% + $0.10"). The fee column was
+  `font-mono`; switched to `font-numeric` for the full feature
+  treatment.
+- **Ticker rows** — every amount, score, burn quantity, and
+  timestamp uses `<Numeric>` with appropriate format variants
+  (`currency`, `token`, `score`, `time`).
+- **Monument corner overlay** — same.
+
+`<Numeric>` is now the single answer for "how should this number
+look?" anywhere in the product. As future rounds touch other pages,
+they can swap raw `font-mono tabular-nums` for `<Numeric ... />`
+incrementally — no big migration needed since the visual baseline
+already matches.
+
+### 5. Hook reorganization
+
+The `usePrefersReducedMotion` hook existed in two locations
+(`app/components/` and `app/merchant/components/`) — both private
+to their app trees, neither importable from the global navigation
+components. Hoisted the canonical version to
+**`hooks/usePrefersReducedMotion.ts`** and replaced both legacy
+locations with re-export stubs so existing callsites keep working
+without touching them.
+
+### Mounting
+
+**`components/navigation/AppShell.tsx`** — the existing global
+shell now mounts the ticker (pinned, fixed), wraps `children` in a
+`pt-7` div to make room for it, and mounts `MonumentCorner` after
+the PieMenu. The same `EXCLUDED_PATHS` (`/embed`, `/s/`) that
+already gated the PieMenu now also gates the ticker and corner —
+embedded checkouts and short-link redirects stay chrome-free.
+
+### Why this matters
+
+The previous round's wow elements (LiveProofScoreHero, FeeFlowRiver,
+MonumentBackdrop) live on the homepage. They're great there but
+disappear the moment the user navigates anywhere else. The three
+new elements here are present **on every chrome-bearing page**:
+
+- The ticker means the visitor always sees the network moving.
+- The Monument corner means the brand is always anchoring the
+  bottom-right and pulsing when things happen.
+- `<Numeric>` means every number across the product feels like part
+  of the same intentional typography system.
+
+A user clicking from `/marketplace` to `/vault` to `/governance`
+now sees consistent activity, consistent brand presence, and
+consistent numerical voice. The product reads as one place.
+
+### TypeScript clean, dead-component scan clean
+
+`npx tsc --noEmit -p tsconfig.json` — clean. Strict dead-component
+scan: 0 truly dead. The legacy `usePrefersReducedMotion` files were
+replaced with re-export stubs (one-line shims) so the existing
+callsites that import from them still work — no migration touches.
+
+### What this round did not do
+
+- The ticker + Monument run on synthetic data. When VFIDE is
+  deployed, `useProtocolPulse` can swap to `useWatchContractEvent`
+  in one place and both consumers light up with real data.
+- The other items on the merchant audit (real refund flow, real-time
+  payment listener on the merchant home, fixing the merchant home
+  info architecture, receipt sending UI) are still pending — this
+  round was about frontend-wide memorability.
+- The remaining ~330 numeric callsites that still use raw
+  `font-mono tabular-nums` can be migrated to `<Numeric>` opportunistically
+  as their pages are touched. The system is in place; adoption is a
+  background tax.
+
+### Final-mile fixes (continuation of the same round)
+
+A holistic audit of the wiring before zipping revealed a real gap:
+
+**TopNav and BottomTabBar weren't actually mounted.** Both
+components were complete and exported, but no parent in the tree
+rendered them. The `AppShell` mounted only the ticker, pie menu, and
+Monument corner — and even had a comment referring to "the (also-fixed)
+TopNav" as though it were rendering. Pages still had `pt-20` /
+`pt-24` paying tribute to a top nav that didn't paint. The visible
+result: empty space at the top of every page, no nav for users to
+move between sections.
+
+Fix in `components/navigation/AppShell.tsx`: mount `<TopNav />` and
+`<BottomTabBar />` alongside the existing ticker + pie + corner.
+Inline comment documents the history. With the chrome restored, four
+layout bugs surfaced:
+
+1. **ProtocolTicker at `top-14` was floating in empty space on
+   mobile** (no TopNav, since it's `hidden md:flex`). Made the top
+   position responsive: `top-0 md:top-14`.
+2. **MonumentCorner overlapped BottomTabBar on mobile** — both
+   occupied the bottom ~64px. Made the corner's bottom position
+   responsive: `bottom-20 md:bottom-4`. Same fix on the peek overlay
+   (`bottom-36 md:bottom-20`).
+3. **PieMenu and BottomTabBar competed on mobile** — both primary
+   navs at the bottom of the viewport. Added `hidden md:block` to
+   PieMenu since BottomTabBar provides the same function on mobile.
+4. **Mobile content was hidden under the 64px BottomTabBar.** Added
+   `pb-20 md:pb-0` to the AppShell wrapper.
+
+**Numeric adoption expanded** to three more high-visibility surfaces:
+- `components/analytics/MerchantAnalytics.tsx` — stat cards (Total
+  Revenue, Transactions, AOV), top-product revenue list, % change
+  indicator
+- `app/governance/components/ProposalCard.tsx` — vote counts (FOR /
+  AGAINST), proposal ID, quorum progress
+- `app/governance/components/ProposalsTab.tsx` — the inline duplicate
+  of the proposal card markup, plus the detail modal's vote summary
+
+Held off on `FeeSavingsTracker.tsx` (uses `useLocale` for i18n —
+converting would be a downgrade) and `MerchantPayouts` (already uses
+`font-numeric` utility directly with precise wei→decimal handling
+that `<Numeric>` doesn't yet do).
+
+All 14 of the merchant-API tests from earlier rounds still pass on
+the first run. TypeScript clean. Dead-component scan: 0.
+
+---
+
 ## 2026-05-12 (Round 14) — Wow factor: live ProofScore, fee river, Monument backdrop
 
 Feedback from the previous round: the frontend was competent but

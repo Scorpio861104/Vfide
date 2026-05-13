@@ -13,6 +13,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, DollarSign, ShoppingCart, Package, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
 import { ExportCSVButton } from '@/components/export/ExportCSVButton';
+import { Numeric } from '@/components/ui/Numeric';
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -90,20 +91,20 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           label="Total Revenue"
-          value={`$${data.totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+          value={<Numeric value={data.totalRevenue} format="currency" size="2xl" weight={700} />}
           change={data.revenueChange}
           icon={DollarSign}
           color="cyan"
         />
         <StatCard
           label="Transactions"
-          value={data.transactionCount.toLocaleString()}
+          value={<Numeric value={data.transactionCount} format="integer" size="2xl" weight={700} />}
           icon={ShoppingCart}
           color="emerald"
         />
         <StatCard
           label="Avg Order Value"
-          value={`$${data.averageOrderValue.toFixed(2)}`}
+          value={<Numeric value={data.averageOrderValue} format="currency" size="2xl" weight={700} />}
           icon={TrendingUp}
           color="amber"
         />
@@ -128,9 +129,13 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
                     <div className="text-gray-500 text-xs">{product.count} sold</div>
                   </div>
                 </div>
-                <div className="text-cyan-400 font-mono font-bold text-sm">
-                  ${product.revenue.toFixed(2)}
-                </div>
+                <Numeric
+                  value={product.revenue}
+                  format="currency"
+                  size="sm"
+                  weight={700}
+                  tone="accent"
+                />
               </div>
             ))}
           </div>
@@ -172,7 +177,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
 
 function StatCard({ label, value, change, icon: Icon, color }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   change?: number;
   icon: React.ComponentType<{ size: number; className: string }>;
   color: 'cyan' | 'emerald' | 'amber';
@@ -196,11 +201,12 @@ function StatCard({ label, value, change, icon: Icon, color }: {
           <Icon size={18} className={c.text} />
         </div>
       </div>
-      <div className="text-2xl font-bold text-white">{value}</div>
+      <div className="text-2xl text-white">{value}</div>
       {change !== undefined && (
-        <div className={`flex items-center gap-1 mt-1 text-sm font-bold ${change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+        <div className={`flex items-center gap-1 mt-1 text-sm ${change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
           {change >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
-          {Math.abs(change).toFixed(1)}% vs prior period
+          <Numeric value={Math.abs(change)} format="percent" precision={1} size="sm" weight={600} className={change >= 0 ? 'text-emerald-400' : 'text-red-400'} />
+          <span className="text-gray-500 font-normal ml-1">vs prior period</span>
         </div>
       )}
     </motion.div>

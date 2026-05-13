@@ -225,6 +225,21 @@
 
 @layer utilities {
   /* ==========================================
+   * NUMERICAL TYPOGRAPHY
+   * The product's "numeric voice" — every monetary value,
+   * score, count, percentage, and timestamp uses this.
+   * Backed by JetBrains Mono loaded via next/font in
+   * app/layout.tsx. The .font-numeric class is the
+   * primary entrypoint; the <Numeric> component wraps
+   * common formatting patterns on top of it.
+   * ========================================== */
+  .font-numeric {
+    font-family: var(--font-numeric), ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-feature-settings: "tnum" 1, "zero" 1, "ss01" 1;
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  /* ==========================================
    * SEMANTIC COLOR UTILITIES
    * Use these instead of raw Tailwind colors
    * ========================================== */

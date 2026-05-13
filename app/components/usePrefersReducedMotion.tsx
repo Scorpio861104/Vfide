@@ -1,26 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+/**
+ * Re-export of the canonical hook in @/hooks/usePrefersReducedMotion.
+ *
+ * Several files under app/components import from this local path; the
+ * canonical home was hoisted to /hooks so global chrome components
+ * (ProtocolTicker, MonumentCorner) can share it. Keeping this stub
+ * in place avoids touching every callsite at once.
+ */
 
-export function usePrefersReducedMotion() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
-
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
-
-    updatePreference();
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', updatePreference);
-      return () => mediaQuery.removeEventListener('change', updatePreference);
-    }
-
-    mediaQuery.addListener(updatePreference);
-    return () => mediaQuery.removeListener(updatePreference);
-  }, []);
-
-  return prefersReducedMotion;
-}
+export { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';

@@ -34,10 +34,11 @@
  * are absolutely-positioned circles inside it. No layout thrash.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Activity } from 'lucide-react';
 
+import { Numeric } from '@/components/ui/Numeric';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
 type PoolId = 'burn' | 'sanctum' | 'merchant' | 'payroll' | 'headhunt';
@@ -335,14 +336,15 @@ export function FeeFlowRiver() {
                   {p.pct}%
                 </span>
               </div>
-              <div className="mt-1 font-mono text-lg tabular-nums text-white">
+              <div className="mt-1 text-lg text-white">
                 <motion.span
                   key={Math.floor(totals[p.id] * 100)}
                   initial={{ opacity: 0.5, y: -2 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.18 }}
+                  className="inline-block"
                 >
-                  ${totals[p.id].toFixed(2)}
+                  <Numeric value={totals[p.id]} format="currency" size="lg" weight={500} />
                 </motion.span>
               </div>
             </div>

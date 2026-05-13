@@ -837,7 +837,7 @@ export function PieMenu() {
   return (
     <nav 
       ref={menuRef}
-      className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-24 z-100 sm:bottom-6 sm:right-24"
+      className="hidden md:block fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-24 z-100 sm:bottom-6 sm:right-24"
       aria-label="Main navigation"
     >
       {/* Backdrop */}

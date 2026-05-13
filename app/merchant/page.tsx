@@ -146,7 +146,7 @@ export default function MerchantPage() {
                 {processors.map((p) => (
                   <div key={p.name} className={`flex items-center justify-between rounded-xl border p-4 ${p.name === 'VFIDE' ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-white/5'}`}>
                     <div className="font-semibold text-white">{p.name}</div>
-                    <div className="font-mono text-cyan-300">{p.fee}</div>
+                    <div className="font-numeric text-cyan-300">{p.fee}</div>
                   </div>
                 ))}
               </div>

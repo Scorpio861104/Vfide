@@ -7,6 +7,7 @@ import { useAccount } from 'wagmi';
 import { useProofScore } from '@/hooks/useProofScore';
 import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
 import { ProofScoreSimulator } from '@/components/proofscore/ProofScoreSimulator';
+import { Numeric } from '@/components/ui/Numeric';
 
 const TIERS = [
   { range: '0–3,499', label: 'Risky',      note: 'Start building trust through activity and secure behaviour.',     color: 'border-red-500/30    bg-red-500/5'    },
@@ -52,9 +53,28 @@ export default function ProofScorePage() {
               )}
               <div className="text-center sm:text-left">
                 <div className="text-sm text-cyan-300 font-semibold uppercase tracking-widest mb-1">Your Score</div>
-                <div className="text-5xl font-bold text-white mb-1">{isLoading ? '—' : score.toLocaleString()}</div>
+                <div className="mb-1">
+                  <Numeric
+                    value={isLoading ? null : score}
+                    format="score"
+                    size="5xl"
+                    weight={700}
+                    className="text-white"
+                    flush
+                  />
+                </div>
                 <div className="text-lg font-semibold text-cyan-400 mb-2">{isLoading ? '' : getTierLabel(score)}</div>
-                <div className="text-sm text-white/50">Transfer fee: <span className="text-emerald-400 font-semibold">{isLoading ? '—' : `${burnFee.toFixed(2)}%`}</span></div>
+                <div className="text-sm text-white/50">
+                  Transfer fee:{' '}
+                  <Numeric
+                    value={isLoading ? null : burnFee}
+                    format="percent"
+                    precision={2}
+                    size="sm"
+                    weight={600}
+                    tone="positive"
+                  />
+                </div>
               </div>
             </div>
           )}

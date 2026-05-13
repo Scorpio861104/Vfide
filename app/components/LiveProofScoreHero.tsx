@@ -37,6 +37,7 @@ import {
 import { motion, useReducedMotion } from 'framer-motion';
 import { ShieldCheck, Sparkles, ArrowDownRight, Info } from 'lucide-react';
 
+import { Numeric } from '@/components/ui/Numeric';
 import { usePrefersReducedMotion } from './usePrefersReducedMotion';
 
 // ── Math (mirrors useProofScore + on-chain ProofScoreBurnRouter) ──────
@@ -180,19 +181,21 @@ export function LiveProofScoreHero() {
             >
               <Sparkles size={12} /> {tier.label}
             </div>
-            <div className="font-mono text-6xl font-bold leading-none tabular-nums text-white sm:text-7xl">
-              {score.toLocaleString('en-US')}
+            <div className="leading-none">
+              <Numeric value={score} format="score" size="6xl" weight={700} flush />
             </div>
             <div className="mt-1 text-[11px] uppercase tracking-widest text-gray-500">ProofScore</div>
           </div>
 
           <div className="text-right">
-            <div className="text-[11px] uppercase tracking-widest text-gray-500">Fee on ${DEMO_AMOUNT}</div>
-            <div className="font-mono text-4xl font-bold leading-none tabular-nums text-white sm:text-5xl">
-              {feePct < 1 ? feePct.toFixed(2) : feePct.toFixed(1)}<span className="text-2xl text-gray-500">%</span>
+            <div className="text-[11px] uppercase tracking-widest text-gray-500">
+              Fee on <Numeric value={DEMO_AMOUNT} format="currency" precision={0} size="xs" tone="muted" weight={500} />
             </div>
-            <div className="mt-1 text-xs text-gray-400 tabular-nums">
-              = ${feeAmount.toFixed(2)}
+            <div className="leading-none">
+              <Numeric value={feePct} format="percent" size="5xl" weight={700} flush />
+            </div>
+            <div className="mt-1 text-xs text-gray-400">
+              = <Numeric value={feeAmount} format="currency" size="xs" tone="muted" />
             </div>
           </div>
         </div>
@@ -239,7 +242,9 @@ export function LiveProofScoreHero() {
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <ArrowDownRight size={12} />
-              <span>Where the ${feeAmount.toFixed(2)} fee goes</span>
+              <span>
+                Where the <Numeric value={feeAmount} format="currency" size="xs" weight={500} /> fee goes
+              </span>
             </div>
             <button
               type="button"
@@ -267,11 +272,12 @@ export function LiveProofScoreHero() {
                     transition={{ type: 'spring', stiffness: 180, damping: 22 }}
                   />
                 </div>
-                <div className="w-20 text-right font-mono text-xs tabular-nums text-gray-300">
-                  ${a.amount.toFixed(2)}
+                <div className="w-20 text-right">
+                  <Numeric value={a.amount} format="currency" size="xs" weight={500} tone="neutral" />
                 </div>
-                <div className="w-10 text-right text-[10px] text-gray-500 tabular-nums">
-                  {a.pct}%
+                <div className="w-10 text-right">
+                  <Numeric value={a.pct} format="integer" size="xs" tone="muted" weight={500} />
+                  <span className="text-[10px] text-gray-500">%</span>
                 </div>
               </div>
             ))}

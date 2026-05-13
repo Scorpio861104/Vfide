@@ -302,15 +302,15 @@ export default function MerchantPayoutsPage() {
                             <span className="text-sm uppercase tracking-wider text-gray-400">{b.tokenConfig.label}</span>
                             {b.reservedWei > 0n && (
                               <span className="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-md px-2 py-0.5">
-                                {formatTokenAmount(b.reservedWei, b.tokenConfig.decimals)} reserved
+                                <span className="font-numeric">{formatTokenAmount(b.reservedWei, b.tokenConfig.decimals)}</span> reserved
                               </span>
                             )}
                           </div>
-                          <div className="mb-1 text-3xl font-bold tracking-tight">
+                          <div className="mb-1 font-numeric text-3xl font-bold tracking-tight">
                             {formatTokenAmount(b.availableWei, b.tokenConfig.decimals)}
                           </div>
                           <div className="text-xs text-gray-500 mb-4">
-                            Earned: {formatTokenAmount(b.confirmedWei, b.tokenConfig.decimals)}
+                            Earned: <span className="font-numeric">{formatTokenAmount(b.confirmedWei, b.tokenConfig.decimals)}</span>
                           </div>
                           <button
                             type="button"

@@ -2,6 +2,7 @@
 
 import { Sparkles } from 'lucide-react';
 import { GOVERNANCE_QUORUM_VOTES } from '@/lib/constants';
+import { Numeric } from '@/components/ui/Numeric';
 import type { Proposal } from './types';
 
 interface ProposalCardProps {
@@ -14,6 +15,7 @@ interface ProposalCardProps {
 export function ProposalCard({ proposal: prop, onVote, onFinalize, onViewDetails }: ProposalCardProps) {
   const total = prop.forVotes + prop.againstVotes;
   const forPercent = total > 0 ? Math.round((prop.forVotes / total) * 100) : 0;
+  const quorumReached = total >= GOVERNANCE_QUORUM_VOTES;
 
   return (
     <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400 transition-colors">
@@ -23,13 +25,21 @@ export function ProposalCard({ proposal: prop, onVote, onFinalize, onViewDetails
           <h3 className="text-xl font-bold text-zinc-100 mb-2">{prop.title}</h3>
           <p className="text-zinc-400 text-sm">Proposed by {prop.author} • Ends in {prop.timeLeft}</p>
         </div>
-        <div className="text-right"><div className="text-2xl font-bold text-zinc-100">#{prop.id}</div></div>
+        <div className="text-right text-zinc-100 text-2xl font-bold">
+          #<Numeric value={prop.id} format="integer" size="2xl" weight={700} className="text-zinc-100" />
+        </div>
       </div>
 
       <div className="mb-4">
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-emerald-500">FOR: {prop.forVotes.toLocaleString()} votes ({forPercent}%)</span>
-          <span className="text-red-600">AGAINST: {prop.againstVotes.toLocaleString()} votes ({100 - forPercent}%)</span>
+          <span className="text-emerald-500">
+            FOR: <Numeric value={prop.forVotes} format="integer" size="sm" weight={600} className="text-emerald-500" /> votes
+            {' '}(<Numeric value={forPercent} format="integer" size="sm" weight={500} className="text-emerald-500" />%)
+          </span>
+          <span className="text-red-600">
+            AGAINST: <Numeric value={prop.againstVotes} format="integer" size="sm" weight={600} className="text-red-600" /> votes
+            {' '}(<Numeric value={100 - forPercent} format="integer" size="sm" weight={500} className="text-red-600" />%)
+          </span>
         </div>
         <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
           <div className="h-full bg-emerald-500" style={{ width: `${forPercent}%` }} />
@@ -38,16 +48,19 @@ export function ProposalCard({ proposal: prop, onVote, onFinalize, onViewDetails
         <div className="mt-3 space-y-2">
           <div className="flex justify-between text-xs">
             <span className="text-zinc-400">Quorum Progress</span>
-            <span className={total >= GOVERNANCE_QUORUM_VOTES ? 'text-emerald-500' : 'text-amber-400'}>
-              {total.toLocaleString()} / {GOVERNANCE_QUORUM_VOTES.toLocaleString()}{' '}
-              {total >= GOVERNANCE_QUORUM_VOTES ? '✓' : `(${Math.round((total / GOVERNANCE_QUORUM_VOTES) * 100)}%)`}
+            <span className={quorumReached ? 'text-emerald-500' : 'text-amber-400'}>
+              <Numeric value={total} format="integer" size="xs" weight={500} className={quorumReached ? 'text-emerald-500' : 'text-amber-400'} />
+              {' / '}
+              <Numeric value={GOVERNANCE_QUORUM_VOTES} format="integer" size="xs" weight={500} className={quorumReached ? 'text-emerald-500' : 'text-amber-400'} />
+              {' '}
+              {quorumReached ? '✓' : <>(<Numeric value={Math.round((total / GOVERNANCE_QUORUM_VOTES) * 100)} format="integer" size="xs" weight={500} className="text-amber-400" />%)</>}
             </span>
           </div>
           <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-            <div className={`h-full transition-all ${total >= GOVERNANCE_QUORUM_VOTES ? 'bg-emerald-500' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
+            <div className={`h-full transition-all ${quorumReached ? 'bg-emerald-500' : 'bg-gradient-to-r from-amber-400 to-orange-500'}`}
               style={{ width: `${Math.min(100, (total / GOVERNANCE_QUORUM_VOTES) * 100)}%` }} />
           </div>
-          {total >= GOVERNANCE_QUORUM_VOTES && (
+          {quorumReached && (
             <div className="text-xs text-emerald-500 flex items-center gap-1"><Sparkles className="w-3 h-3" /> Quorum reached!</div>
           )}
         </div>

@@ -2,6 +2,10 @@
 // VFIDE UI COMPONENTS - Central Export
 // =============================================================================
 
+// Numerical typography (used by every page that displays a number)
+export { Numeric } from './Numeric';
+export type { NumericFormat, NumericTone, NumericSize, NumericProps } from './Numeric';
+
 // Buttons & Inputs
 export { LoadingButton } from './LoadingButton';
 

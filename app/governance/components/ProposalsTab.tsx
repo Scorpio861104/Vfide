@@ -9,6 +9,7 @@ import { DAOABI } from "@/lib/abis"
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts"
 import { GOVERNANCE_QUORUM_VOTES } from "@/lib/constants"
 import { VirtualizedList } from "@/lib/ux/performanceUtils"
+import { Numeric } from "@/components/ui/Numeric"
 
 import { useCountdown } from "./useCountdown"
 import type { Proposal } from "./types"
@@ -159,15 +160,21 @@ export function ProposalsTab({
             <h3 className="text-xl font-bold text-zinc-100 mb-2">{prop.title}</h3>
             <p className="text-zinc-400 text-sm">Proposed by {prop.author} • Ends in {prop.timeLeft}</p>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-zinc-100">#{prop.id}</div>
+          <div className="text-right text-zinc-100 text-2xl font-bold">
+            #<Numeric value={prop.id} format="integer" size="2xl" weight={700} className="text-zinc-100" />
           </div>
         </div>
 
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-emerald-500">FOR: {prop.forVotes.toLocaleString()} votes ({forPercent}%)</span>
-            <span className="text-red-600">AGAINST: {prop.againstVotes.toLocaleString()} votes ({100 - forPercent}%)</span>
+            <span className="text-emerald-500">
+              FOR: <Numeric value={prop.forVotes} format="integer" size="sm" weight={600} className="text-emerald-500" /> votes
+              {' '}(<Numeric value={forPercent} format="integer" size="sm" weight={500} className="text-emerald-500" />%)
+            </span>
+            <span className="text-red-600">
+              AGAINST: <Numeric value={prop.againstVotes} format="integer" size="sm" weight={600} className="text-red-600" /> votes
+              {' '}(<Numeric value={100 - forPercent} format="integer" size="sm" weight={500} className="text-red-600" />%)
+            </span>
           </div>
           <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500" style={{ width: `${forPercent}%` }} />
@@ -177,8 +184,11 @@ export function ProposalsTab({
             <div className="flex justify-between text-xs">
               <span className="text-zinc-400">Quorum Progress</span>
               <span className={total >= GOVERNANCE_QUORUM_VOTES ? "text-emerald-500" : "text-amber-400"}>
-                {total.toLocaleString()} / {GOVERNANCE_QUORUM_VOTES.toLocaleString()} {" "}
-                {total >= GOVERNANCE_QUORUM_VOTES ? "✓" : `(${Math.round((total / GOVERNANCE_QUORUM_VOTES) * 100)}%)`}
+                <Numeric value={total} format="integer" size="xs" weight={500} className={total >= GOVERNANCE_QUORUM_VOTES ? "text-emerald-500" : "text-amber-400"} />
+                {' / '}
+                <Numeric value={GOVERNANCE_QUORUM_VOTES} format="integer" size="xs" weight={500} className={total >= GOVERNANCE_QUORUM_VOTES ? "text-emerald-500" : "text-amber-400"} />
+                {' '}
+                {total >= GOVERNANCE_QUORUM_VOTES ? "✓" : <>(<Numeric value={Math.round((total / GOVERNANCE_QUORUM_VOTES) * 100)} format="integer" size="xs" weight={500} className="text-amber-400" />%)</>}
               </span>
             </div>
             <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
@@ -354,8 +364,12 @@ export function ProposalsTab({
                 <div className="text-zinc-400 text-sm mb-2">Voting Results</div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-emerald-500">FOR: {selectedProposal.forVotes.toLocaleString()} votes</span>
-                    <span className="text-red-600">AGAINST: {selectedProposal.againstVotes.toLocaleString()} votes</span>
+                    <span className="text-emerald-500">
+                      FOR: <Numeric value={selectedProposal.forVotes} format="integer" weight={600} className="text-emerald-500" /> votes
+                    </span>
+                    <span className="text-red-600">
+                      AGAINST: <Numeric value={selectedProposal.againstVotes} format="integer" weight={600} className="text-red-600" /> votes
+                    </span>
                   </div>
                   <div className="w-full h-3 bg-zinc-900 rounded-full overflow-hidden">
                     <div
