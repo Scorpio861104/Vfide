@@ -1,0 +1,281 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * /me — User hub.
+ *
+ * The "Me" tab in the top nav previously mapped 18 routes (vault,
+ * governance, council, elections, disputes, proofscore, etc.) to a
+ * single section but only ever landed users on /profile. That meant
+ * 17 of those 18 routes had no discoverable way to reach them from
+ * the nav — the user had to know the URLs.
+ *
+ * This page is the missing map. It groups the destinations by what
+ * the user is actually trying to do:
+ *
+ *   - Identity & trust:   profile, proofscore, badges, achievements, leaderboard
+ *   - Money:              vault, payouts, rewards, sanctum
+ *   - Security:           guardians, security-center, settings, notifications
+ *   - Governance:         governance, dao-hub, council, elections, disputes
+ *   - Engagement:         quests
+ *
+ * Each card shows what's there in one line so a user can decide where
+ * to go without clicking around. Live data (your ProofScore, your tier,
+ * your vault status) appears at the top when connected — the page also
+ * works as a snapshot, not just a directory.
+ */
+
+import { useAccount } from 'wagmi';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import {
+  User,
+  Shield,
+  Vote,
+  Award,
+  Trophy,
+  Target,
+  Briefcase,
+  Heart,
+  Gift,
+  Settings,
+  Bell,
+  Lock,
+  Users,
+  Gavel,
+  Crown,
+  ScrollText,
+  Sparkles,
+  ArrowRight,
+  Wallet,
+} from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+
+import { Footer } from '@/components/layout/Footer';
+import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
+import { Numeric } from '@/components/ui/Numeric';
+import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
+import { useProofScore } from '@/hooks/useProofScore';
+
+// ── Section groupings ──────────────────────────────────────────────
+
+const IDENTITY: HubLink[] = [
+  { href: '/profile',      icon: User,       label: 'Profile',       description: 'Display name, avatar, bio. Public side of your identity.' },
+  { href: '/proofscore',   icon: Sparkles,   label: 'ProofScore',    description: 'Your trust score, the fee curve, and how to improve.' },
+  { href: '/badges',       icon: Award,      label: 'Badges',        description: 'On-chain achievements badges earned on-chain.' },
+  { href: '/achievements', icon: Trophy,     label: 'Achievements',  description: 'Milestone tracker with completion progress.' },
+  { href: '/leaderboard',  icon: Crown,      label: 'Leaderboard',   description: 'Top ProofScores, top merchants, top contributors.' },
+];
+
+const MONEY: HubLink[] = [
+  { href: '/vault',             icon: Wallet,    label: 'Vault',          description: 'Your non-custodial vault — balance, queue, spend limits.' },
+  { href: '/merchant/payouts',  icon: Briefcase, label: 'Earnings',       description: 'Confirmed revenue and cash-out, for merchants.' },
+  { href: '/rewards',           icon: Gift,      label: 'Rewards',        description: 'Pool earnings from merchant + referral programs.' },
+  { href: '/sanctum',           icon: Heart,     label: 'Sanctum',        description: 'Charity allocations and grants funded by protocol fees.' },
+];
+
+const SECURITY: HubLink[] = [
+  { href: '/guardians',        icon: Shield,   label: 'Guardians',       description: 'Trusted addresses that can help with vault recovery.' },
+  { href: '/security-center',  icon: Lock,     label: 'Security center', description: 'Session activity, signing keys, device trust.' },
+  { href: '/settings',         icon: Settings, label: 'Settings',        description: 'Account preferences, notifications, privacy.' },
+  { href: '/notifications',    icon: Bell,     label: 'Notifications',   description: 'Activity stream and notification preferences.' },
+];
+
+const GOVERNANCE: HubLink[] = [
+  { href: '/governance', icon: Vote,       label: 'Governance',  description: 'Vote on proposals. Requires ProofScore \u2265 5,400.' },
+  { href: '/dao-hub',    icon: Users,      label: 'DAO hub',     description: 'Community hub for active DAO contributors.' },
+  { href: '/council',    icon: Crown,      label: 'Council',     description: 'Elected council members and their roles.' },
+  { href: '/elections',  icon: ScrollText, label: 'Elections',   description: 'Active and upcoming council elections.' },
+  { href: '/disputes',   icon: Gavel,      label: 'Disputes',    description: 'Filed disputes and their resolution status.' },
+];
+
+const ENGAGEMENT: HubLink[] = [
+  { href: '/quests', icon: Target, label: 'Quests', description: 'Time-bound objectives that earn ProofScore and tokens.' },
+];
+
+// ── Page ────────────────────────────────────────────────────────────
+
+export default function MeHubPage() {
+  const { address, isConnected } = useAccount();
+  const { score, tierName, burnFee, isLoading } = useProofScore();
+
+  if (!isConnected) {
+    return (
+      <>
+        <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+          <div className="container mx-auto max-w-3xl px-4 py-12 text-center">
+            <User size={48} className="mx-auto mb-4 text-cyan-300" />
+            <h1 className="mb-2 text-3xl font-bold">Your VFIDE</h1>
+            <p className="mb-6 max-w-md mx-auto text-gray-400">
+              Connect your wallet to see your ProofScore, your vault, your governance position, and the rest of your VFIDE account.
+            </p>
+            <div className="inline-block">
+              <ConnectButton />
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+        <div className="container mx-auto max-w-5xl px-4 pb-16">
+
+          {/* Header: tier badge + name + ProofScore snapshot */}
+          <motion.header
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-10 flex flex-wrap items-end justify-between gap-6"
+          >
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
+                <User size={12} /> Your account
+              </div>
+              <h1 className="text-4xl font-bold sm:text-5xl">Your VFIDE</h1>
+              {address && (
+                <div className="mt-2 font-mono text-sm text-gray-500">
+                  {address.slice(0, 6)}...{address.slice(-4)}
+                </div>
+              )}
+            </div>
+
+            {/* Live ProofScore snapshot */}
+            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3">
+              {isLoading ? (
+                <div className="h-14 w-14 animate-pulse rounded-full bg-white/5" />
+              ) : (
+                <ProofScoreRing score={score} size="md" />
+              )}
+              <div>
+                <div className="text-[11px] uppercase tracking-widest text-gray-500">ProofScore</div>
+                <div className="flex items-baseline gap-2">
+                  {isLoading ? (
+                    <span className="font-numeric text-2xl text-gray-600">—</span>
+                  ) : (
+                    <Numeric value={score} format="score" size="2xl" weight={700} className="text-white" />
+                  )}
+                  {!isLoading && (
+                    <span className="text-sm text-cyan-300">{tierName}</span>
+                  )}
+                </div>
+                <div className="mt-0.5 text-[11px] text-gray-500">
+                  Fee:{' '}
+                  {isLoading ? (
+                    <span className="font-numeric text-gray-600">—</span>
+                  ) : (
+                    <Numeric
+                      value={burnFee}
+                      format="percent"
+                      size="xs"
+                      weight={600}
+                      tone="positive"
+                    />
+                  )}{' '}
+                  on your next payment
+                </div>
+              </div>
+            </div>
+          </motion.header>
+
+          {/* Discoverable map of everything under "Me" */}
+          <div className="space-y-10">
+            <HubSection title="Identity & trust" links={IDENTITY} />
+            <HubSection title="Money"             links={MONEY} />
+            <HubSection title="Security"          links={SECURITY} />
+            <HubSection title="Governance"        links={GOVERNANCE} />
+            <HubSection title="Engagement"        links={ENGAGEMENT} />
+          </div>
+
+          {/* Quick "what to do next" suggestion based on score tier */}
+          {!isLoading && (
+            <div className="mt-12 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+              <div className="mb-2 text-xs uppercase tracking-widest text-cyan-300">Next step</div>
+              <NextStep score={score} />
+            </div>
+          )}
+        </div>
+      </div>
+      <Footer />
+    </>
+  );
+}
+
+// ── Next-step suggester ────────────────────────────────────────────
+
+function NextStep({ score }: { score: number }) {
+  // Map the user's current tier to a single concrete action they can
+  // take to advance. Keeps the hub from feeling like a passive directory.
+  if (score < 5000) {
+    return (
+      <p className="text-gray-300">
+        Build your trust score by completing a few payments and{' '}
+        <Link href="/quests" className="text-cyan-300 hover:text-cyan-200">
+          taking on a quest <ArrowRight size={12} className="inline" />
+        </Link>
+        . Most new users cross into Neutral after their first 5\u201310 confirmed transactions.
+      </p>
+    );
+  }
+  if (score < 5400) {
+    return (
+      <p className="text-gray-300">
+        Almost at Governance tier. A few more confirmed payments unlocks the ability to{' '}
+        <Link href="/governance" className="text-cyan-300 hover:text-cyan-200">
+          vote on proposals <ArrowRight size={12} className="inline" />
+        </Link>
+        .
+      </p>
+    );
+  }
+  if (score < 5600) {
+    return (
+      <p className="text-gray-300">
+        You can vote now — try{' '}
+        <Link href="/governance" className="text-cyan-300 hover:text-cyan-200">
+          the active proposals <ArrowRight size={12} className="inline" />
+        </Link>
+        . At 5,600 you also unlock merchant registration.
+      </p>
+    );
+  }
+  if (score < 7000) {
+    return (
+      <p className="text-gray-300">
+        You're a Trusted user. Consider{' '}
+        <Link href="/merchant/setup" className="text-cyan-300 hover:text-cyan-200">
+          opening a store <ArrowRight size={12} className="inline" />
+        </Link>{' '}
+        or earning more through{' '}
+        <Link href="/quests" className="text-cyan-300 hover:text-cyan-200">
+          quests <ArrowRight size={12} className="inline" />
+        </Link>
+        .
+      </p>
+    );
+  }
+  if (score < 8000) {
+    return (
+      <p className="text-gray-300">
+        Council-eligible. If you're active in the community, watch{' '}
+        <Link href="/elections" className="text-cyan-300 hover:text-cyan-200">
+          upcoming elections <ArrowRight size={12} className="inline" />
+        </Link>{' '}
+        for a chance to stand for council.
+      </p>
+    );
+  }
+  return (
+    <p className="text-gray-300">
+      Elite tier. You can{' '}
+      <Link href="/profile" className="text-cyan-300 hover:text-cyan-200">
+        endorse other users <ArrowRight size={12} className="inline" />
+      </Link>{' '}
+      to help them build trust, and you're paying the minimum 0.25% fee on every payment.
+    </p>
+  );
+}

@@ -28,18 +28,12 @@ import {
   Banknote,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
 
 // Import merchant components
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
-
-interface HubLink {
-  href: string;
-  icon: typeof FileText;
-  label: string;
-  description: string;
-}
 
 const SALES_MODULES: HubLink[] = [
   { href: '/merchant/inventory',      icon: Package,     label: 'Inventory',      description: 'Products, stock levels, low-stock alerts.' },
@@ -174,12 +168,12 @@ export default function MerchantPage() {
             {/* Module sections when connected */}
             {isConnected && (
               <div className="space-y-12 mt-12">
-                <ModuleSection title="Earnings & payouts" links={EARNINGS_MODULES} />
-                <ModuleSection title="Sales & checkout" links={SALES_MODULES} />
-                <ModuleSection title="Customers" links={CUSTOMER_MODULES} />
-                <ModuleSection title="Operations" links={OPS_MODULES} />
-                <ModuleSection title="Business" links={BUSINESS_MODULES} />
-                <ModuleSection title="Setup" links={SETUP_MODULES} />
+                <HubSection title="Earnings & payouts" links={EARNINGS_MODULES} />
+                <HubSection title="Sales & checkout" links={SALES_MODULES} />
+                <HubSection title="Customers" links={CUSTOMER_MODULES} />
+                <HubSection title="Operations" links={OPS_MODULES} />
+                <HubSection title="Business" links={BUSINESS_MODULES} />
+                <HubSection title="Setup" links={SETUP_MODULES} />
 
                 <div className="rounded-2xl border border-white/10 bg-white/3 p-6 flex items-start gap-4 mt-12">
                   <GraduationCap size={28} className="text-cyan-300 flex-shrink-0" />
@@ -199,38 +193,5 @@ export default function MerchantPage() {
       </div>
       <Footer />
     </>
-  );
-}
-
-function ModuleSection({ title, links }: { title: string; links: HubLink[] }) {
-  return (
-    <div>
-      <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">{title}</h2>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {links.map((l) => {
-          const Icon = l.icon;
-          return (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="group rounded-xl border border-white/10 bg-white/3 p-4 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <div className="rounded-lg bg-zinc-900 group-hover:bg-cyan-500/10 p-2 transition-colors">
-                  <Icon size={20} className="text-cyan-300" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white flex items-center gap-1.5">
-                    {l.label}
-                    <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all" />
-                  </div>
-                  <div className="text-xs text-zinc-500 mt-0.5">{l.description}</div>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
   );
 }

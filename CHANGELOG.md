@@ -1,5 +1,248 @@
 # Changelog
 
+## 2026-05-12 (Round 17) — "More" tab pattern: 4 primary + everything-else drawer
+
+User feedback after the /me hub landed was specific: the nav should
+have the most-used tabs at the top level plus a "More" tab containing
+everything else — the same idea as the floating PieMenu, but folded
+into the nav strip rather than a separate floating widget. That's a
+much better UX than what was shipping; it's the same convention iOS
+Mail, App Store, and most modern mobile apps use when there are more
+than 5 sections.
+
+### What was already in place
+
+Investigating before writing any code, the heavy lifting was already
+done from a prior session:
+
+- **`components/navigation/MoreSheet.tsx`** — 338 lines. A bottom-sheet
+  (mobile) / popover (desktop) that lists destinations grouped by
+  category, with live search across all of them. Reads from
+  `navigationItems.ts` so it can't drift from any other surface that
+  uses the same data.
+- **`components/navigation/navigationItems.ts`** — 257 lines. Single
+  source of truth for "what destinations exist" — groups (Vault,
+  Merchant, Social, Governance, Rewards, Insights, Tools, Account)
+  each with their children. Originally inline in PieMenu; extracted
+  so multiple surfaces can render the same data.
+- **`BottomTabBar`** already refactored to 4 primary tabs (Home, Shop,
+  Pay, Social) plus a "More" button that opens the MoreSheet.
+- **`TopNav`** already refactored to the same shape — 4 section links
+  plus a "More" button that opens MoreSheet with `variant='top-right'`
+  so it renders as a popover anchored to the top-right.
+
+### What this round added
+
+**Removed the floating PieMenu from `AppShell`.** With the More button
+present in both TopNav (desktop) and BottomTabBar (mobile), the
+floating PieMenu was a second surface doing the same job. Two visible
+entry points for "everything else" is exactly the inconsistency the
+user was asking me to clean up.
+
+PieMenu's file (945 lines) is preserved but no longer mounted. The
+`AppShell` comment documents the decision so a future round can
+choose to either bring it back as an optional power-user accelerator
+(behind a setting) or fully remove it. Removing the file outright now
+would be premature — the work that went into the radial UI, audio,
+haptics, and particles is real, and we may want it back.
+
+The `LiveProofScoreProvider` still wraps the tree in
+`PieMenuContextProvider`, which is now a no-op passthrough. Left
+intact for the same reason — if PieMenu comes back, the score
+context is already wired.
+
+**Updated the inline comment in `AppShell`** to reflect the new
+chrome composition (TopNav + ticker + content + BottomTabBar +
+MonumentCorner; no PieMenu) and to record why PieMenu was unmounted.
+
+### How the navigation works now, end-to-end
+
+**Mobile (any width below `md`):**
+
+- BottomTabBar fixed at the bottom: Home / Shop / Pay / Social / More
+- Tapping Home/Shop/Pay/Social navigates directly to that route
+- Tapping More opens a bottom sheet that slides up from the bottom,
+  with a search input auto-focused after the open animation, the
+  navigationItems list grouped by category, and an "Open full hub"
+  link in the footer that goes to /me for the full-page experience
+- Tapping outside, tapping More again, or pressing Escape closes the
+  sheet
+
+**Desktop (`md` and up):**
+
+- TopNav fixed at the top: Home / Shop / Pay / Social / More
+- Same 4 direct links, same More popover behavior but rendered as a
+  420px-wide popover anchored to the top-right
+- Both Search (⌘K placeholder), NotificationBell, and ConnectButton
+  to the right of the More button
+
+**Both viewports use the same MoreSheet component** with `variant`
+controlling whether it's a bottom-sheet or top-right popover.
+
+### Edge cases handled
+
+- **Active-tab highlighting on More routes.** When the user is on
+  `/governance` (which is reachable via More but isn't one of the 4
+  primary tabs), the More tab gets the active style. The active-tab
+  logic in both BottomTabBar and TopNav checks the main-tab match
+  arrays first, then falls back to checking the MORE_MATCH list.
+- **Closing the sheet when navigating.** Each main-tab Link has an
+  `onClick={() => setMoreOpen(false)}` so tapping a primary tab while
+  the sheet is open dismisses the sheet before navigation. Each
+  ItemRow in the sheet has an `onPick={onClose}` for the same reason.
+- **Search query reset.** When the sheet closes, the search query
+  resets after a 200ms delay so the close animation runs before the
+  list reflows. When the sheet opens, the search input gets focus
+  after a 160ms delay so the open animation finishes first.
+- **The /me hub still exists.** MoreSheet is the quick-access view;
+  /me is the full-page view. The MoreSheet footer has an "Open full
+  hub" link that goes to /me.
+
+### What this round did not do
+
+- **PieMenu still exists as a file** (`components/navigation/PieMenu.tsx`,
+  945 lines). Decision deferred on whether to remove it, bring it back
+  as an opt-in setting ("Use radial menu instead of More button"), or
+  retire it cleanly. For now it's dormant.
+- **`PieMenuContextProvider` is still in the tree** (mounted by
+  `LiveProofScoreProvider`), wrapping all children in a no-op
+  context. Harmless; will be cleaned up if PieMenu is fully removed.
+- **No new tabs added.** The user's request was specifically about
+  the 4-primary-plus-More pattern, which is what's now shipping.
+
+### TypeScript and dead-component scan
+
+`npx tsc --noEmit` clean. Strict dead-component scan: 0 truly dead
+components. All 14 merchant API tests still pass.
+
+---
+
+## 2026-05-12 (Round 16) — Navigation completion: /me hub + shared HubGrid
+
+Feedback from the previous round was that the navigation still felt
+incomplete. An honest re-audit of the nav surfaced three real gaps
+left over from when TopNav was first restored:
+
+### The diagnosis
+
+**1. The "Me" tab routed 18 destinations to a single page** — `/profile`,
+which only shows account settings. The `sectionMatch` map listed
+`/vault`, `/governance`, `/proofscore`, `/badges`, `/quests`,
+`/leaderboard`, `/sanctum`, `/rewards`, `/disputes`, `/elections`,
+`/council`, `/dao-hub`, `/guardians`, `/security-center`,
+`/notifications`, `/settings`, `/achievements` all under "Me" — but
+there was no `/me` page and no way for a user to discover those 17
+other destinations from the nav. A user clicking "Me" expecting
+their account got their settings; everything else was reachable only
+by typing the URL.
+
+**2. The "Social" tab pointed at `/feed`, which redirects to `/social-hub`.**
+Every click on the Social tab cost a redirect round-trip. The
+`sectionMatch` already listed both, but the canonical link was the
+deprecated one.
+
+**3. The merchant page had its own inline `ModuleSection` component**
+that duplicated the visual pattern any future hub page would need.
+Two visual sources for the same idea is one too many.
+
+### What landed
+
+**`components/navigation/HubGrid.tsx`** — extracted the section-grid
+pattern into a shared component with two exports:
+
+- `<HubGrid links={...} />` — just the grid
+- `<HubSection title="..." links={...} />` — labeled section heading + grid
+- `HubLink` type for the link arrays
+
+The card styling, hover state, arrow animation, optional "Coming soon"
+badge are all in one place. Used by both `/merchant` and the new
+`/me` page; any future hub (a `/treasury` overview, a `/shop` landing,
+etc.) gets the same exact look for free.
+
+Exported from `components/navigation/index.ts`.
+
+**`app/me/page.tsx`** — the missing user hub. Five sections grouped
+by what the user is doing, not alphabetically:
+
+- **Identity & trust**: profile, proofscore, badges, achievements, leaderboard
+- **Money**: vault, merchant earnings, rewards, sanctum
+- **Security**: guardians, security center, settings, notifications
+- **Governance**: governance, dao-hub, council, elections, disputes
+- **Engagement**: quests
+
+The page also shows a live snapshot at the top — current ProofScore,
+tier, and burn-fee % for the user's next payment, sourced from the
+existing `useProofScore` hook. So the hub is not just a directory; it
+also tells the user where they stand the moment they land.
+
+A small "Next step" card at the bottom maps the user's current
+ProofScore tier to a single concrete action they can take to advance
+(complete more payments → cross into Neutral; vote on the active
+proposal → use your Governance privilege; etc.). Keeps the page
+from feeling like a passive index.
+
+**`components/navigation/TopNav.tsx`** updates:
+
+- Social tab now points directly at `/social-hub` (was `/feed`, the
+  redirect). One round-trip eliminated on every click.
+- "Me" tab now points at `/me` (the new hub) instead of `/profile`.
+- `sectionMatch.me` adds `/me` so the tab highlights correctly when
+  the user is on the new hub.
+
+Inline comments in TopNav document the history so anyone touching it
+later knows why the route choices look the way they do.
+
+**`components/navigation/BottomTabBar.tsx`** — same two route changes
+for parity. The mobile tab bar and desktop top nav are tuned to
+match.
+
+**`app/merchant/page.tsx`** — refactored to use the shared
+`HubSection` instead of its local `ModuleSection`. Six call-sites
+updated; the local 30-line component removed. Net change: -32 lines
+in the merchant page, +1 line for the new import. Visual output is
+identical; the styling source is now shared.
+
+### Edge cases I deliberately handled
+
+- **Apostrophes in description strings.** The hub link descriptions
+  use plain ASCII apostrophes intentionally — typographic
+  apostrophes (`'`) inside single-quoted JS strings would break
+  parsing, and the alternative (double-quoted strings) clashes with
+  the surrounding code style. Rephrased a couple of descriptions
+  ("you've earned" → "badges earned on-chain") to read naturally
+  without contractions.
+- **Em-dashes in JSX text** were converted from `\u2014` escape
+  sequences to literal `—` characters, which is the correct form
+  for JSX text content.
+- **The `/me` page when wallet not connected** shows a Connect
+  prompt instead of a half-populated hub. The hub depends on
+  `useProofScore` reading the connected user's score, and rendering
+  it as `—` for unauthenticated users would be misleading.
+
+### What this round did not do
+
+- **No new entries in the nav's top-level groupings.** The five tabs
+  (Home / Shop / Pay / Social / Me) are the right top-level shape.
+  Adding a sixth was tempting but the gap was that the existing
+  tabs led nowhere, not that we needed more tabs.
+- **The /dashboard ("Home") and /pay landing pages didn't need
+  hubs.** Both already render real content for their tab.
+- **The Pay section has six matched subroutes** (`/remittance`,
+  `/lending`, `/crypto`, `/escrow`, `/flashloans`, `/buy`) but they
+  aren't surfaced anywhere either. Same pattern as the old "Me"
+  problem. Building a `/pay` hub is a natural follow-up but the
+  Pay tab's landing page is already a real one, so it's a different
+  shape of fix.
+
+### TypeScript and dead-component scan
+
+`npx tsc --noEmit` clean. Strict dead-component scan: 0 truly dead
+components (the local `ModuleSection` was removed but `HubGrid` /
+`HubSection` are imported by both `/me` and `/merchant`). The three
+rewritten merchant-API tests still pass (14 / 14).
+
+---
+
 ## 2026-05-12 (Round 15) — Frontend-wide memorability: ticker, Monument corner, numeric voice
 
 Round 14 made the homepage feel distinctive. The honest follow-up

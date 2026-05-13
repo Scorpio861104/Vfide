@@ -2,22 +2,27 @@
 
 import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import { PieMenu } from './PieMenu';
 import { ProtocolTicker } from './ProtocolTicker';
 import { MonumentCorner } from './MonumentCorner';
 import { TopNav } from './TopNav';
 import { BottomTabBar } from './BottomTabBar';
 
-// The shared chrome (top nav, bottom tab bar on mobile, pie menu,
-// ticker, monument corner) shows on every page except truly chrome-free
-// surfaces — embedded checkout widgets and short-link redirector pages.
+// The shared chrome (top nav, bottom tab bar on mobile, ticker, monument
+// corner) shows on every page except truly chrome-free surfaces —
+// embedded checkout widgets and short-link redirector pages.
 //
-// History: TopNav and BottomTabBar existed but weren't being mounted —
-// the shell was rendering only the ticker, pie menu, and monument
-// corner. Pages still carried `pt-20`/`pt-24` paying tribute to a top
-// nav that no longer painted, so the visible result was a band of empty
-// space at the top of every page. Restoring the mount here puts the
-// site nav back where every page expects it.
+// History:
+//   - TopNav and BottomTabBar existed but weren't being mounted; pages
+//     carried pt-20/pt-24 paying tribute to a top nav that didn't paint.
+//     Restored in an earlier round.
+//   - PieMenu was a 945-line floating radial menu acting as the desktop
+//     "everything else" surface. Replaced by the More tab pattern: 4
+//     primary tabs + a "More" button that opens MoreSheet. Same job,
+//     same data source (navigationItems.ts), conventional bottom-sheet/
+//     popover interaction instead of a custom radial widget. PieMenu's
+//     file is preserved for now in case we want to bring it back as an
+//     optional power-user accelerator, but it's no longer mounted —
+//     the More button is the single canonical entry point.
 const EXCLUDED_PATHS = [
   '/embed',
   '/s/',
@@ -54,7 +59,6 @@ export function AppShell({ children }: AppShellProps) {
       <ProtocolTicker />
       <div className="pt-7 pb-20 md:pb-0">{children}</div>
       <BottomTabBar />
-      <PieMenu />
       <MonumentCorner />
     </>
   );

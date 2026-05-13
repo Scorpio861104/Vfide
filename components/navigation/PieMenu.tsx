@@ -76,22 +76,15 @@ import {
 } from 'lucide-react';
 
 // ============================================================================
-// TYPES
+// TYPES + NAV DATA
 // ============================================================================
+// Both are now sourced from the shared navigationItems module so the
+// MoreSheet (bottom nav drawer) and PieMenu can't drift out of sync.
 
-interface NavItem {
-  id: string;
-  label: string;
-  href?: string;
-  icon: React.ComponentType<{ className?: string; size?: number; style?: React.CSSProperties }>;
-  color: string;
-  children?: NavItem[];
-  badge?: string;
-  dataOnboarding?: string;
-}
+import { navigationItems, type NavItem } from './navigationItems';
 
 // ============================================================================
-// NAVIGATION STRUCTURE
+// AUDIO SETTINGS
 // ============================================================================
 
 const AUDIO_ENVELOPE = {
@@ -102,153 +95,6 @@ const AUDIO_ENVELOPE = {
   finalRampTime: 0.01,
 };
 
-const navigationItems: NavItem[] = [
-  {
-    id: 'home',
-    label: 'Home',
-    href: '/',
-    icon: Home,
-    color: '#F8F8FC',
-  },
-  {
-    id: 'dashboard',
-    label: 'Dashboard',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-    color: '#00F0FF',
-  },
-  {
-    id: 'vault',
-    label: 'Vault',
-    icon: Shield,
-    color: '#8B5CF6',
-    children: [
-      { id: 'vault-main', label: 'My Vault', href: '/vault', icon: Shield, color: '#8B5CF6' },
-      { id: 'wallet', label: 'Wallet', href: '/crypto', icon: Wallet, color: '#8B5CF6' },
-      { id: 'guardians', label: 'Guardians', href: '/guardians', icon: ShieldCheck, color: '#8B5CF6' },
-      { id: 'vault-recover', label: 'Recovery', href: '/vault/recover', icon: KeyRound, color: '#8B5CF6' },
-      { id: 'vault-settings', label: 'Settings', href: '/vault/settings', icon: Settings, color: '#8B5CF6' },
-      { id: 'multisig', label: 'Multi-Sig', href: '/multisig', icon: Users, color: '#8B5CF6' },
-      { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6' },
-      { id: 'vesting', label: 'Vesting', href: '/vesting', icon: Gift, color: '#8B5CF6' },
-    ],
-  },
-  {
-    id: 'merchant',
-    label: 'Merchant',
-    icon: Store,
-    color: '#10B981',
-    dataOnboarding: 'nav-merchant',
-    children: [
-      { id: 'merchant-main', label: 'Merchant Hub', href: '/merchant', icon: Store, color: '#10B981', dataOnboarding: 'nav-merchant' },
-      { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
-      { id: 'buy', label: 'Buy Tokens', href: '/buy', icon: Globe, color: '#10B981' },
-      { id: 'flashloan', label: 'Flashloans P2P', href: '/flashloans', icon: Banknote, color: '#10B981', badge: 'P2P' },
-      { id: 'escrow', label: 'Escrow', href: '/escrow', icon: Lock, color: '#10B981' },
-      { id: 'payroll', label: 'Payroll', href: '/payroll', icon: Banknote, color: '#10B981' },
-      { id: 'streaming', label: 'Streaming', href: '/streaming', icon: Zap, color: '#10B981', badge: 'NEW' },
-      { id: 'cross-chain', label: 'Cross-Chain', href: '/cross-chain', icon: ArrowLeftRight, color: '#10B981' },
-      { id: 'stealth', label: 'Private Pay', href: '/stealth', icon: Eye, color: '#10B981' },
-      { id: 'pay', label: 'Quick Pay', href: '/pay', icon: Send, color: '#10B981' },
-      { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat, color: '#10B981' },
-    ],
-  },
-  {
-    id: 'social',
-    label: 'Social',
-    icon: MessageCircle,
-    color: '#F59E0B',
-    dataOnboarding: 'nav-social',
-    children: [
-      { id: 'social-hub', label: 'Social Hub', href: '/social-hub', icon: Rss, color: '#F59E0B', dataOnboarding: 'nav-social' },
-      { id: 'feed', label: 'Feed', href: '/feed', icon: Rss, color: '#F59E0B' },
-      { id: 'stories', label: 'Stories', href: '/stories', icon: Camera, color: '#F59E0B' },
-      { id: 'messages', label: 'Messages', href: '/social-messaging', icon: Mail, color: '#F59E0B' },
-      { id: 'social-pay', label: 'Social Pay', href: '/social-payments', icon: Banknote, color: '#F59E0B' },
-      { id: 'social-analytics', label: 'Analytics', href: '/social', icon: TrendingUp, color: '#F59E0B' },
-    ],
-  },
-  {
-    id: 'governance',
-    label: 'Governance',
-    icon: Vote,
-    color: '#6366F1',
-    dataOnboarding: 'nav-governance',
-    children: [
-      { id: 'dao-hub', label: 'DAO Hub', href: '/dao-hub', icon: Crown, color: '#6366F1', badge: 'DAO' },
-      { id: 'governance-main', label: 'Proposals', href: '/governance', icon: FileText, color: '#6366F1', dataOnboarding: 'nav-governance' },
-      { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1', dataOnboarding: 'nav-council' },
-      { id: 'appeals', label: 'Appeals', href: '/appeals', icon: AlertTriangle, color: '#6366F1' },
-      { id: 'treasury', label: 'Treasury', href: '/treasury', icon: Landmark, color: '#6366F1' },
-    ],
-  },
-  {
-    id: 'rewards',
-    label: 'Rewards',
-    icon: Trophy,
-    color: '#EC4899',
-    children: [
-      { id: 'quests', label: 'Quests', href: '/quests', icon: Target, color: '#EC4899' },
-      { id: 'achievements', label: 'Achievements', href: '/achievements', icon: Award, color: '#EC4899' },
-      { id: 'leaderboard', label: 'Leaderboard', href: '/leaderboard', icon: Crown, color: '#EC4899' },
-      { id: 'headhunter', label: 'Referrals', href: '/headhunter', icon: Search, color: '#EC4899' },
-      { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
-      { id: 'badges', label: 'Achievements', href: '/badges', icon: Star, color: '#EC4899' },
-      { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Tag, color: '#EC4899' },
-      { id: 'rewards', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
-      { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
-    ],
-  },
-  {
-    id: 'insights',
-    label: 'Insights',
-    icon: TrendingUp,
-    color: '#14B8A6',
-    children: [
-      { id: 'insights-main', label: 'Analytics', href: '/insights', icon: TrendingUp, color: '#14B8A6' },
-      { id: 'taxes', label: 'Tax Report', href: '/taxes', icon: FileText, color: '#14B8A6' },
-      { id: 'budgets', label: 'Budgets', href: '/budgets', icon: PiggyBank, color: '#14B8A6' },
-      { id: 'performance', label: 'Performance', href: '/performance', icon: BarChart3, color: '#14B8A6' },
-      { id: 'reporting', label: 'Reports', href: '/reporting', icon: ClipboardList, color: '#14B8A6' },
-      { id: 'price-alerts', label: 'Price Alerts', href: '/price-alerts', icon: Bell, color: '#14B8A6' },
-    ],
-  },
-  {
-    id: 'developer',
-    label: 'Tools',
-    icon: Code,
-    color: '#64748B',
-    children: [
-      { id: 'explorer', label: 'Explorer', href: '/explorer', icon: Compass, color: '#64748B' },
-      { id: 'paper-wallet', label: 'Paper Wallet', href: '/paper-wallet', icon: FileText, color: '#64748B' },
-      { id: 'hardware-wallet', label: 'Hardware Wallet', href: '/hardware-wallet', icon: HardDrive, color: '#64748B' },
-      { id: 'enterprise', label: 'Enterprise', href: '/enterprise', icon: Landmark, color: '#64748B' },
-      { id: 'token-launch', label: 'Token Launch', href: '/token-launch', icon: Rocket, color: '#64748B' },
-    ],
-  },
-  {
-    id: 'account',
-    label: 'Account',
-    icon: User,
-    color: '#94A3B8',
-    children: [
-      { id: 'profile', label: 'Profile', href: '/profile', icon: User, color: '#94A3B8' },
-      { id: 'notifications', label: 'Notifications', href: '/notifications', icon: Bell, color: '#94A3B8' },
-      { id: 'security', label: 'Security', href: '/security-center', icon: ShieldCheck, color: '#94A3B8' },
-      { id: 'settings', label: 'Settings', href: '/setup', icon: Settings, color: '#94A3B8' },
-      { id: 'help', label: 'Help & Docs', href: '/docs', icon: HelpCircle, color: '#94A3B8' },
-      { id: 'legal', label: 'Legal', href: '/legal', icon: Scale, color: '#94A3B8' },
-      { id: 'about', label: 'About', href: '/about', icon: Info, color: '#94A3B8' },
-      { id: 'support', label: 'Support', href: '/support', icon: LifeBuoy, color: '#94A3B8' },
-      { id: 'theme', label: 'Theme', href: '/theme', icon: Palette, color: '#94A3B8' },
-      { id: 'theme-manager', label: 'Theme Manager', href: '/theme-manager', icon: Sliders, color: '#94A3B8' },
-      { id: 'theme-showcase', label: 'Theme Showcase', href: '/theme-showcase', icon: Layers, color: '#94A3B8' },
-      { id: 'admin', label: 'Admin', href: '/admin', icon: ShieldAlert, color: '#94A3B8' },
-      { id: 'control-panel', label: 'Control Panel', href: '/control-panel', icon: Monitor, color: '#94A3B8' },
-      { id: 'sanctum', label: 'Sanctum', href: '/sanctum', icon: Cpu, color: '#94A3B8' },
-    ],
-  },
-];
 
 // ============================================================================
 // COMPACT TILE COMPONENT
