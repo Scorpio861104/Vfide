@@ -204,6 +204,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
     event FeeBypassProposed(bool active, uint256 duration, uint64 effectiveAt); // H-6 FIX
     event ExternalCallFailed(string indexed context, bytes reason);
+    /// @notice Emitted when SeerAutonomous returned Warned (1). The transfer proceeds.
+    ///         Off-chain monitors should index this to surface advisories to the user.
+    event SeerWarned(address indexed subject, uint8 action, uint256 amount, address counterparty);
     event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -1100,7 +1103,18 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
         if (address(seerAutonomous) == address(0)) return;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
-            if (r != 0) revert VF_SeerBlocked();
+            // NON-CUSTODIAL ALIGNMENT: match DAO._enforceSeerAction semantics.
+            // 0 = Allowed → proceed silently
+            // 1 = Warned  → proceed and emit signal (do not block)
+            // ≥2 (Delayed / Blocked / Penalized) → revert; these are explicit
+            //      "do not proceed" responses from Seer's policy layer, not
+            //      advisories. Per protocol non-custodial doctrine we never
+            //      block on advisory signals; only on explicit deny responses.
+            if (r == 1) {
+                emit SeerWarned(subject, action, amount, counterparty);
+            } else if (r >= 2) {
+                revert VF_SeerBlocked();
+            }
         } catch (bytes memory reason) {
             // SEER-04 FIX (#179): Unexpected SeerAutonomous failures should fail open.
             emit ExternalCallFailed("seerAutonomous.beforeAction", reason);

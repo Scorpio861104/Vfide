@@ -100,6 +100,10 @@ contract PayrollManager is ReentrancyGuard {
     ISeer_PM public seer;
     uint16 public constant PAYROLL_CREATE_REWARD = 5;     // +0.5 for creating stream
     uint16 public constant PAYROLL_WITHDRAW_REWARD = 1;   // +0.1 per withdrawal
+
+    /// @notice M-21 FIX: Payee may unilaterally resume a paused stream after this duration.
+    /// @dev Prevents indefinite-pause griefing by an unresponsive payer.
+    uint256 public constant MAX_PAUSE_DURATION = 30 days;
     uint256 public constant MAX_STREAM_DURATION = 365 days;
     
     // NEW: Track streams by payer and payee
@@ -312,12 +316,23 @@ contract PayrollManager is ReentrancyGuard {
      *      For simplicity, payer can resume their own stream
      * DEEP-C-3 FIX: Don't clear pausedAccrued on resume - it needs to be claimed first
      * The pausedAccrued will be cleared when payee withdraws
+     *
+     * M-21 FIX: After MAX_PAUSE_DURATION (default 30 days) the payee may resume
+     * the stream unilaterally. This closes the griefing vector where a payer
+     * pauses the stream and disappears, leaving the payee unable to claim
+     * future flow without DAO intervention.
      */
     function resumeStream(uint256 streamId) external {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (!s.paused) revert PM_StreamNotPaused();
-        if (msg.sender != s.payer && msg.sender != dao) revert PM_NotAuthorized();
+
+        bool isPayer = msg.sender == s.payer;
+        bool isDao   = msg.sender == dao;
+        bool isPayee = msg.sender == s.payee;
+        bool payeeResumeAllowed = isPayee && block.timestamp >= s.pausedAt + MAX_PAUSE_DURATION;
+
+        if (!(isPayer || isDao || payeeResumeAllowed)) revert PM_NotAuthorized();
         
         // Resume from current time
         s.lastWithdrawTime = block.timestamp;
@@ -353,6 +368,12 @@ contract PayrollManager is ReentrancyGuard {
             s.pausedAccrued = 0;
             emit Withdraw(streamId, s.payee, due);
             _safeTransferPay(s.token, s.payee, due);
+            // M-22 FIX: a settled withdrawal triggered by setRate now emits the same
+            // Seer reward signal as a direct withdraw(), so trust accumulation is
+            // consistent regardless of which code path settled the accrued amount.
+            if (address(seer) != address(0)) {
+                try seer.reward(s.payee, PAYROLL_WITHDRAW_REWARD, "payroll_received") {} catch {}
+            }
         }
         
         emit RateModified(streamId, oldRate, newRate);

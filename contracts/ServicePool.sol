@@ -389,7 +389,13 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         maxParticipants = _max;
     }
 
+    /// @dev M-24 FIX: Hard ceiling on the safety cap. Without this, a compromised
+    ///      ADMIN_ROLE could set maxPayoutPerPeriod to uint256.max and effectively
+    ///      remove the per-period payout limit.
+    uint256 public constant MAX_PAYOUT_CEILING = 1_000_000 ether;
+
     function setMaxPayoutPerPeriod(uint256 _max) external onlyRole(ADMIN_ROLE) {
+        require(_max <= MAX_PAYOUT_CEILING, "SP: exceeds payout ceiling");
         maxPayoutPerPeriod = _max;
     }
 

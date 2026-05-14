@@ -408,6 +408,21 @@ abstract contract Ownable {
         owner = msg.sender;
         pendingOwner = address(0);
         ownershipTransferDeadline = 0;
+
+        // M-12 FIX: A normal ownership transfer must invalidate any in-flight
+        // emergency-controller change and any pending emergency-owner transfer
+        // queued by the prior owner. Otherwise an attacker who briefly captured
+        // the old owner could pre-queue an emergency-controller swap that
+        // executes against the new owner after the timelock elapses.
+        if (pendingEmergencyControllerAt != 0) {
+            delete pendingEmergencyController;
+            delete pendingEmergencyControllerAt;
+            emit EmergencyControllerCancelled();
+        }
+        if (pendingEmergencyOwner != address(0)) {
+            delete pendingEmergencyOwner;
+            delete emergencyTransferValidFrom;
+        }
     }
 
     /// @notice Cancel pending ownership transfer

@@ -18,6 +18,9 @@ import {
   Users,
   ArrowRight,
   ChevronLeft,
+  Clock,
+  Lock,
+  Fingerprint,
 } from 'lucide-react'
 import { isCardBoundVaultMode } from '@/lib/contracts'
 
@@ -87,6 +90,41 @@ function buildTopics(isCardBound: boolean): HelpTopic[] {
       title: 'Vault Security',
       icon: <Shield size={16} />,
       content: vaultSecurityContent,
+    },
+    {
+      id: 'withdrawal-queue',
+      title: 'Withdrawal Queue (Your Safety Net)',
+      icon: <Clock size={16} />,
+      content: [
+        'Every CardBound vault has a 7-day withdrawal queue for amounts at or above your daily limit. This is your built-in protection against a lost phone or stolen wallet key.',
+        'When a large withdrawal is requested, the vault holds it for 7 days before sending the funds. During that window, you OR any guardian can cancel it from the Lock My Vault page or the Guardian dashboard.',
+        'How to use it well: set your daily limit aggressively (e.g. one day\'s realistic spend). Smaller = more transactions get queued = more protection. You can change the limit any time from Vault Settings.',
+        'Payments above 5× your daily limit also queue — same 7-day window, same guardian cancel.',
+        'Caveat: a thief CAN still drain amounts below the per-transfer cap instantly. Keep that cap low if device-grab is a real concern, and consider turning on App Lock (below).',
+      ],
+    },
+    {
+      id: 'lock-my-vault',
+      title: 'Lock My Vault (Emergency)',
+      icon: <Lock size={16} />,
+      content: [
+        'If you suspect your wallet is compromised, visit /vault/lock from the menu. This page is your single panic dashboard.',
+        'What you can do from there: cancel all pending queued transfers and payments (one click), propose a wallet rotation to a new safe address, and request guardian help.',
+        'A wallet rotation moves your vault\'s active signer to a new wallet you control. It uses a delay you choose at proposal time (default 24h, configurable), and guardians can approve to speed it up.',
+        'Important: Lock My Vault only works if you still have your current wallet. If you\'ve fully lost the key, guardians initiate recovery on your behalf from the Recovery tab — no action from you needed.',
+      ],
+    },
+    {
+      id: 'app-lock',
+      title: 'App Lock / PIN',
+      icon: <Fingerprint size={16} />,
+      content: [
+        'App Lock adds a biometric (Face ID / Touch ID / Windows Hello) or PIN prompt on this device before VFIDE will sign transactions above a threshold you choose.',
+        'What it protects: someone briefly grabbing your unlocked phone in a coffee shop. The threshold means you don\'t see the prompt on small everyday payments — only on amounts you decide are worth a second factor.',
+        'What it does NOT protect: a thief who has imported your wallet key into their own device. They bypass VFIDE entirely. That threat is what the 7-day queue is for.',
+        'Configure it from Settings → App Lock. Default is off. You pick: WebAuthn (biometric), PIN, or both. You set the threshold and the session timeout.',
+        'Three wrong PIN attempts soft-lock the app for 5 minutes. Lose your PIN? Just clear it from Settings on another logged-in device — there is no recovery flow because App Lock is purely a local device speed-bump.',
+      ],
     },
   ]
 }

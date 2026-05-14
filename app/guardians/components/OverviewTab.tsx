@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Shield, Clock } from 'lucide-react';
+import { GuardianConstellation } from '@/components/security/GuardianConstellation';
 
 export function OverviewTab() {
   const recoverySteps = [
@@ -18,6 +19,19 @@ export function OverviewTab() {
       exit={{ opacity: 0, y: -20 }}
       className="space-y-8 max-w-4xl mx-auto"
     >
+      {/* My Constellation — live visualization of the user's own guardians */}
+      <div className="rounded-2xl bg-gradient-to-br from-purple-500/10 to-cyan-500/5 backdrop-blur-xl border border-purple-500/30 p-8">
+        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 mb-4">
+          Your Guardian Constellation
+        </h2>
+        <p className="text-sm text-gray-400 mb-6">
+          Each star is a guardian. Lines brighten with recent on-chain activity (cancellations, approvals). Hover a star for details.
+        </p>
+        <div className="flex justify-center">
+          <GuardianConstellation size={340} />
+        </div>
+      </div>
+
       {/* What is a Guardian */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/30 p-8">
         <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-6 flex items-center gap-3">

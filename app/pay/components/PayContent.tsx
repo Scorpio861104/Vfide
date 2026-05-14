@@ -412,6 +412,7 @@ export function PayContent() {
 
             {/* Pay Button */}
             <motion.button 
+              data-trail-source="payment"
               onClick={handlePayment}
               disabled={effectiveProcessing || !merchant || !hasValidAmount || !qrReadyForPayment}
               whileHover={{ scale: effectiveProcessing ? 1 : 1.02 }}

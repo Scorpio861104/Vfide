@@ -660,6 +660,26 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * @notice Legacy merchant-initiated pull path kept for compatibility.
      * @dev Enforces scoped customer permit consumption before delegating to standard settlement.
+     *
+     *      H-31 NON-CUSTODIAL DESIGN INTENT — standing approval path:
+     *      The customer voluntarily grants this portal a bounded ERC-20 allowance from
+     *      their CardBoundVault and a per-merchant pull permit (token-scoped, amount-capped,
+     *      optionally time-limited via `merchantPullExpiry`). The protocol never moves
+     *      customer funds without these explicit approvals. The trade-off the customer
+     *      accepts is convenience (tap-to-pay) for one structural risk: if the portal is
+     *      ever compromised, every customer's *unused* pull budget is drainable. Customers
+     *      who do not want this trade-off should use `executePayMerchant(intent, signature)`
+     *      via their wallet's signed-intent flow, which requires a fresh EIP-712 signature
+     *      per payment and grants no standing allowance. Both paths coexist by design.
+     *
+     *      H-32 NON-CUSTODIAL DESIGN INTENT — merchant vault auto-creation:
+     *      Settlement may call `vaultHub.ensureVault(merchant)` if the merchant has no
+     *      vault yet. The vault is owned by the merchant from block zero — the protocol
+     *      does not control it. The merchant has `GUARDIAN_SETUP_GRACE` (30 days) to
+     *      complete guardian setup; if they don't and later lose their key, the
+     *      guardian-mediated recovery path declines. See `VaultHub.ensureVault` for the
+     *      full non-custodial reasoning. Frontends MUST surface the guardian-setup
+     *      countdown in the merchant dashboard so the merchant can act before expiry.
      */
     function processPayment(
         address customer,

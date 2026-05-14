@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { useGuardianWatchlist, useGuardianAttestations, mergeInboxEntries } from './hooks';
 import { GuardianPendingRecoveryCard } from './GuardianPendingRecoveryCard';
+import { GuardianPendingQueueWidget } from '@/components/security/GuardianPendingQueueWidget';
 
 export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
   const [vaultInput, setVaultInput] = useState('');
@@ -82,6 +83,10 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
             ))}
           </div>
         )}
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <GuardianPendingQueueWidget />
       </motion.div>
     </motion.div>
   );

@@ -8,6 +8,8 @@ import { OnboardingProvider } from '@/components/onboarding';
 import { ToastProvider } from '@/components/ui/toast';
 import { Web3Providers } from './Web3Providers';
 import { ClientLayout } from '@/components/layout/ClientLayout';
+import { AppLockProvider } from '@/components/security/AppLockProvider';
+import { TransactionTrailProvider } from '@/components/payments/TransactionTrailProvider';
 
 export function CoreProviders({ children }: { children: ReactNode }) {
   return (
@@ -16,7 +18,13 @@ export function CoreProviders({ children }: { children: ReactNode }) {
         <AdaptiveProvider>
           <OnboardingProvider>
             <ToastProvider>
-              <Web3Providers><ClientLayout>{children}</ClientLayout></Web3Providers>
+              <Web3Providers>
+                <AppLockProvider>
+                  <TransactionTrailProvider>
+                    <ClientLayout>{children}</ClientLayout>
+                  </TransactionTrailProvider>
+                </AppLockProvider>
+              </Web3Providers>
             </ToastProvider>
           </OnboardingProvider>
         </AdaptiveProvider>

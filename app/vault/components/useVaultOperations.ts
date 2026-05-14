@@ -9,6 +9,8 @@ import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultBalance } from '@/lib/vfide-hooks';
 import { safeParseFloat } from '@/lib/validation';
 import { CARD_BOUND_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
+import { useRequireAppLock } from '@/hooks/useRequireAppLock';
+import { useTransactionTrail } from '@/components/payments/TransactionTrailProvider';
 
 export interface QueuedWithdrawal {
   index: bigint;
@@ -54,6 +56,8 @@ export function useVaultOperations() {
   const [newGuardianAddress, setNewGuardianAddress] = useState('');
 
   const { writeContractAsync } = useWriteContract();
+  const requireAppLock = useRequireAppLock();
+  const trail = useTransactionTrail();
 
   const { data: transferNonce } = useReadContract({
     address: vaultAddress || undefined,
@@ -152,6 +156,15 @@ export function useVaultOperations() {
     }
 
     const amountWei = parseUnits(withdrawAmount, 18);
+
+    // App Lock check — prompts the user if the amount crosses their threshold.
+    // No-op if AppLock is disabled or below threshold.
+    const unlocked = await requireAppLock(amountWei, `Vault transfer of ${withdrawAmount} VFIDE`);
+    if (!unlocked) {
+      showToast('Transaction cancelled — App Lock not unlocked.', 'info');
+      return;
+    }
+
     setIsWithdrawing(true);
     try {
       if (transferNonce === undefined || walletEpoch === undefined) {
@@ -196,23 +209,31 @@ export function useVaultOperations() {
       });
 
       showToast('Signing and sending vault-to-vault transfer...', 'info');
-      await writeContractAsync({
-        address: vaultAddress,
-        abi: CARD_BOUND_VAULT_ABI,
-        functionName: 'executeVaultToVaultTransfer',
-        args: [
-          {
-            vault: vaultAddress,
-            toVault: withdrawRecipient as `0x${string}`,
-            amount: amountWei,
-            nonce: transferNonce as bigint,
-            walletEpoch: walletEpoch as bigint,
-            deadline,
-            chainId: transferChainId,
-          },
-          signature,
-        ],
-      });
+      const trailHandle = trail.start(`Vault transfer of ${withdrawAmount} VFIDE`);
+      try {
+        await writeContractAsync({
+          address: vaultAddress,
+          abi: CARD_BOUND_VAULT_ABI,
+          functionName: 'executeVaultToVaultTransfer',
+          args: [
+            {
+              vault: vaultAddress,
+              toVault: withdrawRecipient as `0x${string}`,
+              amount: amountWei,
+              nonce: transferNonce as bigint,
+              walletEpoch: walletEpoch as bigint,
+              deadline,
+              chainId: transferChainId,
+            },
+            signature,
+          ],
+        });
+        trailHandle.resolve(true);
+      } catch (writeErr) {
+        const msg = writeErr instanceof Error ? writeErr.message : 'Transfer failed';
+        trailHandle.resolve(false, msg);
+        throw writeErr;
+      }
 
       showToast('Vault transfer successful!', 'success');
       setWithdrawAmount('');

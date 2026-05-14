@@ -6,6 +6,10 @@ import { ProtocolTicker } from './ProtocolTicker';
 import { MonumentCorner } from './MonumentCorner';
 import { TopNav } from './TopNav';
 import { BottomTabBar } from './BottomTabBar';
+import { RecoveryBeacon } from '@/components/security/RecoveryBeacon';
+import { TierAurora } from '@/components/identity/TierAurora';
+import { TimeLattice } from '@/components/identity/TimeLattice';
+import { TransactionTrailLayer } from '@/components/payments/TransactionTrailLayer';
 
 // The shared chrome (top nav, bottom tab bar on mobile, ticker, monument
 // corner) shows on every page except truly chrome-free surfaces —
@@ -55,11 +59,15 @@ export function AppShell({ children }: AppShellProps) {
           page-level pt-20/pt-24 values land below both. The pb-20 (md:pb-0)
           gives mobile users clearance below the 64px BottomTabBar so
           footers and page-bottom content aren't hidden under it. */}
+      <TierAurora />
       <TopNav />
       <ProtocolTicker />
+      <TimeLattice />
       <div className="pt-7 pb-20 md:pb-0">{children}</div>
       <BottomTabBar />
       <MonumentCorner />
+      <RecoveryBeacon />
+      <TransactionTrailLayer />
     </>
   );
 }

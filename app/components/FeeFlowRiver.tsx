@@ -288,8 +288,12 @@ export function FeeFlowRiver() {
             />
           ))}
 
-          {/* Pool nodes (right side) */}
-          {POOLS.map((p) => (
+          {/* Pool nodes (right side).
+              Non-burn pools render as a simple two-circle node.
+              The burn pool gets its own forge/furnace visual to honor that
+              its 35% is *permanently destroyed*, not redistributed — a
+              meaningful visual difference from the other four pools. */}
+          {POOLS.filter((p) => p.id !== 'burn').map((p) => (
             <g key={`pool-${p.id}`}>
               <circle cx={POOL_X} cy={p.y * VIEW_H} r={10} fill={p.hex} opacity={0.85} />
               <circle cx={POOL_X} cy={p.y * VIEW_H} r={18} fill="none" stroke={p.hex} strokeOpacity="0.35" />
@@ -304,6 +308,22 @@ export function FeeFlowRiver() {
               </text>
             </g>
           ))}
+
+          {/* Burn pool — the forge. */}
+          {(() => {
+            const burnPool = POOLS.find((p) => p.id === 'burn')!;
+            return (
+              <BurnFurnace
+                key="pool-burn"
+                cx={POOL_X}
+                cy={burnPool.y * VIEW_H}
+                hex={burnPool.hex}
+                short={burnPool.short}
+                pct={burnPool.pct}
+                cumulativeBurn={totals.burn}
+              />
+            );
+          })()}
 
           {/* Particles */}
           {particlesRef.current.map((p) => {
@@ -399,6 +419,159 @@ function bezier(
     x: a * x0 + b * x1 + c * x2 + d * x3,
     y: a * y0 + b * y1 + c * y2 + d * y3,
   };
+}
+
+// ── Burn pool — forge/furnace visual ────────────────────────────────
+//
+// Visually distinguishes the 35% burn channel from the other four pools.
+// Burned VFIDE is permanently removed; the other pools redistribute. The
+// furnace metaphor makes that difference immediate.
+//
+// Heat dynamics:
+//   - Baseline glow grows with cumulativeBurn (asymptotic to 1).
+//   - Each new burn (cumulativeBurn delta > 0) bumps heat to 1 and decays
+//     back toward baseline over ~1.2s — visible as a flare when a
+//     particle "lands."
+//
+// Reduced motion: the flare is suppressed; heat sticks to baseline so
+// the glow stays consistent.
+
+interface BurnFurnaceProps {
+  cx: number;
+  cy: number;
+  hex: string;
+  short: string;
+  pct: number;
+  cumulativeBurn: number;
+}
+
+function BurnFurnace({ cx, cy, hex, short, pct, cumulativeBurn }: BurnFurnaceProps) {
+  const reduce = useReducedMotion();
+  const [heat, setHeat] = useState(0);
+  const lastBurnRef = useRef(0);
+  const lastFlareAtRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+
+  // Detect a new burn → record the moment.
+  useEffect(() => {
+    if (cumulativeBurn > lastBurnRef.current) {
+      lastFlareAtRef.current = performance.now();
+      lastBurnRef.current = cumulativeBurn;
+    }
+  }, [cumulativeBurn]);
+
+  // Heat animation loop. Combines cumulative baseline + post-flare decay.
+  useEffect(() => {
+    if (reduce) {
+      // Static heat based on cumulative burn only.
+      setHeat(Math.min(1, cumulativeBurn / 5000));
+      return;
+    }
+    const FLARE_DECAY_MS = 1200;
+    const tick = () => {
+      const baseline = Math.min(0.55, cumulativeBurn / 5000);
+      const sinceFlare = performance.now() - lastFlareAtRef.current;
+      const flareContribution =
+        sinceFlare < FLARE_DECAY_MS
+          ? (1 - sinceFlare / FLARE_DECAY_MS) * (1 - baseline)
+          : 0;
+      setHeat(Math.max(0, Math.min(1, baseline + flareContribution)));
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [reduce, cumulativeBurn]);
+
+  // Geometry — centered on (cx, cy), about 36px wide × 32px tall.
+  // Trapezoidal forge body: wider at the bottom, narrower at the top.
+  const halfW = 12;
+  const baseY = cy + 14;
+  const topY = cy - 8;
+  const innerHalfW = 6;
+  const innerTop = cy - 4;
+  const innerBottom = cy + 10;
+
+  // Heat-modulated colors. The mouth color shifts from deep ember to bright
+  // gold as heat rises; the outer glow opacity scales similarly.
+  const mouthColor = heat > 0.7 ? '#fde68a' : heat > 0.4 ? hex : '#7c2d12';
+  const outerGlowOpacity = 0.15 + heat * 0.5;
+  const flareRingOpacity = heat * 0.7;
+
+  // A radial gradient id local to this furnace, in case multiple instances
+  // ever render (defensive — usually only one burn pool).
+  const gradId = `burn-furnace-grad-${cx}-${cy}`;
+
+  return (
+    <g aria-label={`${short} (${pct}%) — permanently destroyed`}>
+      <defs>
+        <radialGradient id={gradId} cx="50%" cy="20%" r="80%">
+          <stop offset="0%" stopColor={mouthColor} stopOpacity={0.95} />
+          <stop offset="60%" stopColor={hex} stopOpacity={0.4} />
+          <stop offset="100%" stopColor={hex} stopOpacity={0} />
+        </radialGradient>
+      </defs>
+
+      {/* Outer glow — intensifies with heat */}
+      <circle
+        cx={cx}
+        cy={cy + 3}
+        r={26}
+        fill={hex}
+        opacity={outerGlowOpacity}
+        filter="blur(6px)"
+      />
+
+      {/* Forge body — trapezoid, slate-dark exterior */}
+      <polygon
+        points={`${cx - halfW},${baseY} ${cx + halfW},${baseY} ${cx + halfW - 4},${topY} ${cx - halfW + 4},${topY}`}
+        fill="#1f2937"
+        stroke="#374151"
+        strokeWidth={1}
+      />
+
+      {/* Inner heat opening — radial-gradient fill driven by heat */}
+      <polygon
+        points={`${cx - innerHalfW},${innerBottom} ${cx + innerHalfW},${innerBottom} ${cx + innerHalfW - 2},${innerTop} ${cx - innerHalfW + 2},${innerTop}`}
+        fill={`url(#${gradId})`}
+      />
+
+      {/* Top "mouth" line — the spot where particles land */}
+      <ellipse
+        cx={cx}
+        cy={topY + 1}
+        rx={innerHalfW - 1}
+        ry={1.5}
+        fill={mouthColor}
+        opacity={0.5 + heat * 0.5}
+      />
+
+      {/* Flare ring — appears briefly on a burn event */}
+      {!reduce && flareRingOpacity > 0.05 && (
+        <circle
+          cx={cx}
+          cy={topY}
+          r={8 + heat * 4}
+          fill="none"
+          stroke={mouthColor}
+          strokeWidth={1}
+          opacity={flareRingOpacity}
+        />
+      )}
+
+      {/* Label */}
+      <text
+        x={cx + 28}
+        y={cy + 4}
+        fill="white"
+        fontSize={11}
+        fontFamily="ui-sans-serif, system-ui"
+      >
+        {short} ({pct}%)
+      </text>
+    </g>
+  );
 }
 
 export default FeeFlowRiver;

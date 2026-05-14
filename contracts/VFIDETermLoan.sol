@@ -70,6 +70,10 @@ interface IVaultHubTL {
 
 interface ICardBoundVaultTL {
     function isGuardian(address g) external view returns (bool);
+    /// @dev H-26 FIX: maturity check rejects guardians added <7 days ago, blocking
+    ///      flash-endorsement attacks where an accomplice is briefly added as a
+    ///      guardian only long enough to co-sign as guarantor on a fraudulent loan.
+    function isGuardianMature(address g) external view returns (bool);
     function guardianCount() external view returns (uint8);
 }
 
@@ -417,6 +421,24 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @dev Guarantor must first approve this contract for their liability share.
     ///      This is explicit consent: "I vouch for this person AND I'm willing
     ///      to pay if they don't." Real co-signing with real consequences.
+    ///
+    ///      H-17 NON-CUSTODIAL DESIGN INTENT — standing approval is required:
+    ///      The guarantor pre-approves this contract for their full liability
+    ///      (`liabilityPerGuarantor`) before signing. This standing approval is
+    ///      load-bearing: a guarantor relationship that requires fresh per-extraction
+    ///      consent is no relationship at all — the borrower could simply pick a
+    ///      guarantor who refuses to sign each time, defeating the lender's recourse.
+    ///
+    ///      The protocol never moves guarantor funds without their explicit prior
+    ///      approval. Frontends MUST display the liability amount, the borrower
+    ///      identity, and the consequence ("if borrower defaults, this contract may
+    ///      pull up to LIABILITY tokens from your wallet or vault in periodic rounds")
+    ///      before the guarantor signs the approval transaction.
+    ///
+    ///      The risk a guarantor accepts: if this contract is ever compromised, the
+    ///      attacker can pull up to `liabilityPerGuarantor` minus what's already been
+    ///      extracted. The cap is bounded by `GUARANTOR_LIABILITY_PCT` and by the
+    ///      `EXTRACTION_RATE_PCT` per-round throttle (see `extractFromGuarantors`).
     function signAsGuarantor(uint256 id) external {
         Loan storage l = loans[id];
         if (l.state != LoanState.COSIGNING) revert TL_WrongState();
@@ -424,11 +446,16 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (unresolvedDefaults[msg.sender] > 0) revert TL_DebtOutstanding();
 
         // Verify caller is a guardian of borrower's vault
+        // H-26 FIX: Require GUARDIAN_MATURITY_PERIOD (7 days) since the guardian was added.
+        //          isGuardianMature returns false for non-guardians (addedAt == 0) AND for
+        //          guardians added within the maturity window — blocks the flash-endorsement
+        //          attack: add accomplice as guardian -> co-sign large loan -> remove guardian,
+        //          all in one or two blocks while a fraudulent loan is fully active.
         if (address(vaultHub) != address(0)) {
             address vault = vaultHub.vaultOf(l.borrower);
             if (vault != address(0)) {
                 ICardBoundVaultTL cbv = ICardBoundVaultTL(vault);
-                if (!cbv.isGuardian(msg.sender)) revert TL_NotGuarantor();
+                if (!cbv.isGuardianMature(msg.sender)) revert TL_NotGuarantor();
             }
         }
 

@@ -342,6 +342,28 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice Ensure a deterministic CardBoundVault exists for an owner.
     /// @param owner_ Wallet owner for whom the vault is created or fetched.
     /// @return vault Existing or newly created vault address.
+    /// @dev H-01 / H-32 NON-CUSTODIAL DESIGN INTENT:
+    ///      Auto-creation on inbound transfer is intentional and preserved.
+    ///      The protocol never locks, freezes, or controls user funds. The new
+    ///      vault is owned by `owner_` from block zero — the EOA can spend it
+    ///      immediately. What auto-creation does NOT do is set up guardians;
+    ///      `guardianSetupComplete[vault]` is `false` and the recipient has
+    ///      `GUARDIAN_SETUP_GRACE` (30 days) to call `completeGuardianSetup`.
+    ///
+    ///      If the user never sets up guardians and later loses their EOA key,
+    ///      the funds are unrecoverable via `executeRecoveryRotation`. This is
+    ///      the same risk profile as a plain externally-owned account in any
+    ///      Ethereum-family chain: no third party can restore your access.
+    ///
+    ///      Notification hooks for frontends and indexers:
+    ///        - `VaultCreated(owner_, vault)` emitted on creation
+    ///        - `guardianSetupTimeRemaining(vault)` view for countdowns
+    ///        - `emitGuardianSetupWarning(vault)` permissionless ping that
+    ///          emits `GuardianSetupExpiring` when within `GUARDIAN_SETUP_WARNING`
+    ///          of the deadline
+    ///      Frontends MUST surface these so the user can act before the window
+    ///      closes. Once expired, the guardian-mediated recovery path declines
+    ///      cleanly via `VH_GuardianSetupRequired`; nothing else changes.
     // slither-disable-next-line reentrancy-no-eth,reentrancy-benign
     function ensureVault(address owner_) public whenNotPaused nonReentrant returns (address vault) {
         if (owner_ == address(0)) revert VH_Zero();

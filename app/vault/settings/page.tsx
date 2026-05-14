@@ -18,8 +18,11 @@ export const dynamic = 'force-dynamic';
 import { Footer } from '@/components/layout/Footer'
 import { VaultSettingsPanel } from '@/components/vault/VaultSettingsPanel'
 import { GuardianManagementPanel } from '@/components/security/GuardianManagementPanel'
+import { SpendLimitsConfigurator } from '@/components/vault/SpendLimitsConfigurator'
+import { AppLockSettings } from '@/components/security/AppLockSettings'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
-import { Vault, Shield, Settings } from 'lucide-react'
+import { Vault, Shield, Settings, Sliders, Fingerprint, AlertTriangle } from 'lucide-react'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 
 export default function VaultSettingsPage() {
@@ -40,6 +43,27 @@ export default function VaultSettingsPage() {
             </p>
           </div>
 
+          {/* Emergency link — visible up top */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Link
+              href="/vault/lock"
+              className="flex items-center gap-3 p-4 rounded-xl border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 transition-colors"
+            >
+              <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-white">Suspect your wallet is compromised?</div>
+                <div className="text-xs text-gray-400">
+                  Open the Lock My Vault panic page — cancel queued items, propose rotation, alert guardians.
+                </div>
+              </div>
+              <span className="text-red-400 text-sm font-medium">Open →</span>
+            </Link>
+          </motion.div>
+
           {/* Content Grid */}
           <div className="grid grid-cols-1 gap-8 mb-12">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -55,6 +79,20 @@ export default function VaultSettingsPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Sliders className="w-6 h-6 text-cyan-400" />
+                <h2 className="text-2xl font-bold">Spend Limits</h2>
+              </div>
+              <ErrorBoundary>
+                <SpendLimitsConfigurator />
+              </ErrorBoundary>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
               <div className="flex items-center gap-2 mb-4">
@@ -63,6 +101,20 @@ export default function VaultSettingsPage() {
               </div>
               <ErrorBoundary>
                 <GuardianManagementPanel />
+              </ErrorBoundary>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Fingerprint className="w-6 h-6 text-pink-400" />
+                <h2 className="text-2xl font-bold">Device App Lock</h2>
+              </div>
+              <ErrorBoundary>
+                <AppLockSettings />
               </ErrorBoundary>
             </motion.div>
           </div>

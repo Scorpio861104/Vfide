@@ -331,6 +331,28 @@ async function main() {
     book.FeeDistributor,
   );
 
+  // A.2 FIX (MAINNET_DEPLOY_READINESS.md): deploy VFIDEPriceOracle directly here
+  // instead of via DeployPhase3Peripherals.deployPeripherals(). The helper also
+  // deploys BridgeSecurityModule (a deferred future contract under
+  // contracts/future/), which V1 mainnet must not pull in.
+  //
+  // Constructor: (_vfideToken, _quoteToken, _chainlinkFeed, _uniswapPool, _owner).
+  // The first arg comes from the deploy book; the remaining 4 are env-supplied
+  // via ARGS_VFIDEPRICEORACLE='[quote, chainlinkFeed, uniswapPool, owner]'.
+  // chainlinkFeed and uniswapPool may be address(0) on chains where they're
+  // unavailable at deploy time; the oracle accepts that and uses whichever
+  // source is configured.
+  {
+    const priceOracleEnvArgs = envArgs("VFIDEPriceOracle");
+    if (priceOracleEnvArgs.length !== 4) {
+      throw new Error(
+        "VFIDEPriceOracle requires ARGS_VFIDEPRICEORACLE='[quoteToken, chainlinkFeed, uniswapPool, owner]' (4 addresses). " +
+        "Set chainlinkFeed/uniswapPool to address(0) if not yet available — the oracle handles that.",
+      );
+    }
+    await deploy("VFIDEPriceOracle", book.VFIDEToken, ...priceOracleEnvArgs);
+  }
+
   // ══════════════════════════════════════════════════════════════════════════
   //  LAYER 7: Safety
   // ══════════════════════════════════════════════════════════════════════════

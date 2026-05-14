@@ -120,6 +120,7 @@ export function WithdrawModal({
             </div>
 
             <motion.button
+              data-trail-source="vault-transfer"
               whileHover={{ scale: isWithdrawing ? 1 : 1.02 }}
               whileTap={{ scale: isWithdrawing ? 1 : 0.98 }}
               onClick={onWithdraw}

@@ -6,6 +6,10 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 import { query } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { z } from 'zod4';
+// P2-M-12 FIX: route client-IP extraction through the unified `getRequestIp`
+// helper so audit logs follow the same trust model as the rest of the app
+// (`VFIDE_TRUST_PROXY_HEADERS` env-gated, fail-closed in production).
+import { getRequestIp } from '@/lib/security/requestContext';
 // v19.8 COMP-3 FIX: privacy/delete is a high-stakes privileged action
 // (irreversible, regulator-relevant); always audit-log it. Failure to
 // write the audit event must not block the request — the deletion
@@ -59,9 +63,8 @@ export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
     // catch).
     void writeAuditEvent({
       actorIdentity: walletAddress,
-      actorIp: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        ?? request.headers.get('x-real-ip')
-        ?? undefined,
+      // P2-M-12 FIX: use the single trusted-proxy-aware extractor.
+      actorIp: getRequestIp(request.headers).ip || undefined,
       actorUserAgent: request.headers.get('user-agent') ?? undefined,
       eventType: 'privacy.deletion.requested',
       targetIdentity: walletAddress, // self-service

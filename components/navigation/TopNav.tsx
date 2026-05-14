@@ -18,6 +18,7 @@
 
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useAccount } from 'wagmi';
 import Link from 'next/link';
 import {
   Home,
@@ -30,6 +31,7 @@ import {
 import { NotificationBell } from '@/lib/notifications';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { MoreSheet } from './MoreSheet';
+import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
 
 const MAIN_SECTIONS = [
   { id: 'home',   href: '/dashboard',  icon: Home,           label: 'Home'   },
@@ -60,6 +62,7 @@ const MORE_MATCH = [
 
 export function TopNav() {
   const pathname = usePathname();
+  const { isConnected } = useAccount();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const activeMainSection = Object.entries(SECTION_MATCH).find(([, paths]) =>
@@ -144,6 +147,16 @@ export function TopNav() {
           </button>
 
           <NotificationBell />
+
+          {isConnected && (
+            <Link
+              href="/proofscore"
+              className="flex items-center rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 hover:bg-white/10 transition-colors"
+              title="ProofScore"
+            >
+              <ProofScoreCrystal size={28} showScore />
+            </Link>
+          )}
 
           <ConnectButton accountStatus="avatar" chainStatus="icon" showBalance={false} />
         </div>

@@ -18,6 +18,10 @@ error SH_AuditorNotCouncil();
 // F-58 FIX: Named mismatch errors so operators can diagnose which admin failed to be pre-configured.
 error SH_DAOAdminMismatch(address expected, address actual);
 error SH_TimelockAdminMismatch(address expected, address actual);
+// H-03 FIX: disarm-count cap and arm-timestamp bounds prevent the dev multisig from
+// indefinitely deferring handover via repeated arm/disarm cycles or wildly out-of-range t0.
+error SH_DisarmExhausted();
+error SH_ArmTimestampOutOfRange();
 
 /// @dev Fallback event when ledger logging fails
 event LedgerLogFailed(address indexed source, string action);
@@ -52,6 +56,14 @@ contract SystemHandover {
     uint8  public extensionsUsed;
     uint64 public extensionSpan = 60 days;    // extra time if network trust too low
     bool public handoverExecuted;
+
+    // H-03 FIX: Bound the dev multisig's ability to defer handover.
+    // disarmCount caps the number of total disarms; once exhausted, the handover
+    // clock cannot be cancelled. ARM_TIMESTAMP_WINDOW caps how far in either
+    // direction arm()'s t0 may diverge from block.timestamp.
+    uint8 public disarmCount;
+    uint8 public constant MAX_DISARMS = 1;
+    uint64 public constant ARM_TIMESTAMP_WINDOW = 7 days;
     
     // F-22 FIX: Ownership audit flag — verification that all Ownable contracts have been transferred to DAO/timelock
     bool public ownershipAudited;
@@ -84,6 +96,13 @@ contract SystemHandover {
     function arm(uint64 t0) external onlyDev {
         if (start!=0) return; // idempotent
         require(t0!=0,"SH: zero timestamp");
+        // H-03 FIX: t0 must be within ±ARM_TIMESTAMP_WINDOW of the current block timestamp.
+        // This prevents far-future scheduling (silent indefinite deferral) and far-past
+        // scheduling (would make handover immediate, defeating the cooling-off intent).
+        uint64 nowTs = uint64(block.timestamp);
+        if (t0 + ARM_TIMESTAMP_WINDOW < nowTs || t0 > nowTs + ARM_TIMESTAMP_WINDOW) {
+            revert SH_ArmTimestampOutOfRange();
+        }
         start = t0;
         handoverAt = start + monthsDelay;
         emit Armed(start,handoverAt);
@@ -94,6 +113,10 @@ contract SystemHandover {
     function disarm() external onlyDev {
         if (handoverExecuted) revert SH_AlreadyExecuted();
         if (start == 0) revert SH_NotArmed();
+        // H-03 FIX: Cap total disarms. Once MAX_DISARMS is reached, the dev multisig
+        // can no longer cancel the handover clock — closing the indefinite-defer loop
+        // even when each individual disarm respects the 30-day proximity rule below.
+        if (disarmCount >= MAX_DISARMS) revert SH_DisarmExhausted();
         // H-03 FIX: Block disarm within 30 days of scheduled handover to prevent indefinite deferral.
         require(block.timestamp < handoverAt - 30 days, "SH: too close to handover");
         uint64 previousStart = start;
@@ -101,6 +124,7 @@ contract SystemHandover {
         start = 0;
         handoverAt = 0;
         ownershipAudited = false;  // Reset audit flag on disarm
+        unchecked { disarmCount++; }
         emit Disarmed(previousStart, previousHandoverAt);
         _log("handover_disarmed");
     }

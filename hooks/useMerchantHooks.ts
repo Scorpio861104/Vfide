@@ -9,6 +9,9 @@ import { CURRENT_CHAIN_ID } from '../lib/testnet'
 import { MerchantPortalABI, VaultHubABI, CardBoundVaultABI } from '../lib/abis'
 import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
+import { useRequireAppLock } from './useRequireAppLock';
+import { useTransactionTrail } from '@/components/payments/TransactionTrailProvider';
+import { startTransactionTrail, updateTransactionTrail } from '@/lib/animation/transactionTrail';
 
 // ============================================
 // MERCHANT HOOKS - No processor fees (burn + gas apply)
@@ -158,6 +161,8 @@ export function useProcessPayment() {
   const publicClient = usePublicClient()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
+  const requireAppLock = useRequireAppLock()
+  const trail = useTransactionTrail()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -190,17 +195,37 @@ export function useProcessPayment() {
       if (chainId !== CURRENT_CHAIN_ID) {
         throw new Error('Switch to the configured network before processing payments')
       }
-      const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MerchantPortal,
-        abi: MerchantPortalABI,
-        functionName: 'processPayment',
-        args: [customer, token, parseEther(amount), orderId.trim()],
-        chainId: CURRENT_CHAIN_ID,
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
+
+      // App Lock check
+      const amountWei = parseEther(amount)
+      const unlocked = await requireAppLock(amountWei, `Charge ${amount} VFIDE`)
+      if (!unlocked) {
+        const errorMsg = 'Payment cancelled — App Lock not unlocked.'
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
       }
-      return { success: true, hash }
+
+      // Transaction Trail — visualize the in-flight payment.
+      const trailHandle = trail.start(`Charge ${amount} VFIDE`)
+
+      try {
+        const hash = await writeContractAsync({
+          address: CONTRACT_ADDRESSES.MerchantPortal,
+          abi: MerchantPortalABI,
+          functionName: 'processPayment',
+          args: [customer, token, parseEther(amount), orderId.trim()],
+          chainId: CURRENT_CHAIN_ID,
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash })
+        }
+        trailHandle.resolve(true)
+        return { success: true, hash }
+      } catch (innerErr) {
+        const parsed = parseContractError(innerErr);
+        trailHandle.resolve(false, parsed.userMessage)
+        throw innerErr
+      }
     } catch (err: unknown) {
       logError('processPayment', err);
       const parsed = parseContractError(err);
@@ -295,6 +320,8 @@ export function usePayMerchant() {
   const { signTypedDataAsync } = useSignTypedData()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
+  const requireAppLock = useRequireAppLock()
+  const trail = useTransactionTrail()
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -385,6 +412,15 @@ export function usePayMerchant() {
       }) as bigint
 
       const amountWei = parseEther(amount)
+
+      // App Lock check
+      const unlockedPM = await requireAppLock(amountWei, `Pay ${amount} VFIDE to merchant`)
+      if (!unlockedPM) {
+        const errorMsg = 'Payment cancelled — App Lock not unlocked.'
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 600)
       const intent = {
         vault: customerVault,
@@ -424,17 +460,26 @@ export function usePayMerchant() {
         message: intent,
       })
 
-      const hash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.MerchantPortal,
-        abi: MerchantPortalIntentABI,
-        functionName: 'payWithIntent',
-        args: [intent, signature, orderId.trim()],
-        chainId: CURRENT_CHAIN_ID,
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
+      // Transaction Trail — fires after signing succeeds.
+      const trailHandlePM = trail.start(`Pay ${amount} VFIDE to merchant`)
+      try {
+        const hash = await writeContractAsync({
+          address: CONTRACT_ADDRESSES.MerchantPortal,
+          abi: MerchantPortalIntentABI,
+          functionName: 'payWithIntent',
+          args: [intent, signature, orderId.trim()],
+          chainId: CURRENT_CHAIN_ID,
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash })
+        }
+        trailHandlePM.resolve(true)
+        return { success: true, hash }
+      } catch (innerErr) {
+        const parsedInner = parseContractError(innerErr);
+        trailHandlePM.resolve(false, parsedInner.userMessage)
+        throw innerErr
       }
-      return { success: true, hash }
     } catch (err: unknown) {
       logError('payMerchant', err);
       const parsed = parseContractError(err);
@@ -470,6 +515,8 @@ export function useVaultPayMerchant() {
   const { signTypedDataAsync } = useSignTypedData()
   const { writeContractAsync, data, isPending } = useWriteContract()
   const [error, setError] = useState<string | null>(null)
+  const requireAppLock = useRequireAppLock()
+  const trail = useTransactionTrail()
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: data,
@@ -554,6 +601,15 @@ export function useVaultPayMerchant() {
       }) as bigint
 
       const amountWei = parseEther(amount)
+
+      // App Lock check
+      const unlockedVPM = await requireAppLock(amountWei, `Pay ${amount} VFIDE to merchant`)
+      if (!unlockedVPM) {
+        const errorMsg = 'Payment cancelled — App Lock not unlocked.'
+        setError(errorMsg)
+        return { success: false, error: errorMsg }
+      }
+
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 600)
       const intent = {
         vault: customerVault,
@@ -593,17 +649,26 @@ export function useVaultPayMerchant() {
         message: intent,
       })
 
-      const hash = await writeContractAsync({
-        address: customerVault,
-        abi: CardBoundVaultABI,
-        functionName: 'executePayMerchant',
-        args: [intent, signature],
-        chainId: CURRENT_CHAIN_ID,
-      })
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash })
+      // Transaction Trail — fires after signing succeeds.
+      const trailHandleVPM = trail.start(`Pay ${amount} VFIDE to merchant`)
+      try {
+        const hash = await writeContractAsync({
+          address: customerVault,
+          abi: CardBoundVaultABI,
+          functionName: 'executePayMerchant',
+          args: [intent, signature],
+          chainId: CURRENT_CHAIN_ID,
+        })
+        if (publicClient) {
+          await publicClient.waitForTransactionReceipt({ hash })
+        }
+        trailHandleVPM.resolve(true)
+        return { success: true, hash }
+      } catch (innerErr) {
+        const parsedInner = parseContractError(innerErr);
+        trailHandleVPM.resolve(false, parsedInner.userMessage)
+        throw innerErr
       }
-      return { success: true, hash }
     } catch (err: unknown) {
       logError('vaultPayMerchant', err);
       const parsed = parseContractError(err);

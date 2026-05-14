@@ -36,6 +36,8 @@ contract EmergencyControl is ReentrancyGuard {
     event CommitteeReset(uint8 threshold, address[] members);
     event MemberAdded(address member);
     event MemberRemoved(address member);
+    /// @notice Emitted when threshold is auto-clamped after a member removal (M-33 FIX).
+    event ThresholdChanged(uint8 oldThreshold, uint8 newThreshold);
     event FoundationRotated(address indexed oldFoundation, address indexed newFoundation);
     event FoundationRotationProposed(address indexed newFoundation, uint64 effectiveAt);
     event CommitteeVote(address indexed member, bool halt, uint8 approvals, string reason);
@@ -303,6 +305,18 @@ contract EmergencyControl is ReentrancyGuard {
             }
         }
 
+        // M-33 FIX: If the removal leaves threshold > memberCount, clamp threshold
+        // to memberCount. Otherwise the committee can become permanently unable to
+        // reach quorum (e.g. 3-of-5 with two removals → 3-of-3 needed → still
+        // workable; 4-of-5 with two removals → 4-of-3 → impossible). Clamp keeps
+        // the committee functional while still requiring the full remaining set
+        // to act, which is the most-cautious failure mode.
+        if (threshold > memberCount && memberCount > 0) {
+            uint8 old = threshold;
+            threshold = memberCount;
+            emit ThresholdChanged(old, threshold);
+        }
+
         emit MemberRemoved(m);
 
         // H-1 FIX: Reset votes when membership changes to prevent threshold manipulation
@@ -542,6 +556,11 @@ contract EmergencyControl is ReentrancyGuard {
 
     function approveRecovery(bytes32 id) external nonReentrant {
         require(isMember[msg.sender], "EC: not member");
+        // L-21 FIX: Require a real committee. With memberCount < 3, the
+        // "memberCount - 1" supermajority collapses to 1-of-1 or 1-of-2 and
+        // bypasses the multi-party intent of recovery. The committee should
+        // re-add members before recoveries can be approved.
+        require(memberCount >= 3, "EC: committee too small for recovery");
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0), "EC: no proposal");
         require(!p.executed, "EC: already executed");
@@ -554,7 +573,7 @@ contract EmergencyControl is ReentrancyGuard {
         p.approvals++;
 
         // Supermajority: all members minus 1
-        uint8 required = memberCount > 1 ? memberCount - 1 : 1;
+        uint8 required = memberCount - 1;
         if (p.approvals >= required && p.unlockTime == 0) {
             p.unlockTime = uint64(block.timestamp) + RECOVERY_TIMELOCK;
         }
