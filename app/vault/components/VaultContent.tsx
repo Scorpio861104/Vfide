@@ -12,6 +12,7 @@ import { VaultQuickActions } from './VaultQuickActions';
 import { MerchantApprovalPanel } from './MerchantApprovalPanel';
 import { VaultSecuritySection } from './VaultSecuritySection';
 import { VaultRecoveryPanel } from './VaultRecoveryPanel';
+import { VaultInheritancePanel } from './VaultInheritancePanel';
 import { VaultQueueSection } from './VaultQueueSection';
 import { WithdrawModal } from './WithdrawModal';
 
@@ -84,6 +85,11 @@ export function VaultContent() {
             <VaultRecoveryPanel
               guardianCount={ops.guardianCount}
               isUserGuardian={ops.isUserGuardian}
+            />
+
+            <VaultInheritancePanel
+              vaultAddress={ops.vaultAddress as `0x${string}` | undefined}
+              userAddress={ops.address as `0x${string}` | undefined}
             />
 
             {/* Transaction History */}

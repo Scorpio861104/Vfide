@@ -195,7 +195,45 @@ const config: VfideHardhatConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 0,
+          },
+          debug: {
+            revertStrings: "strip",
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
+      // Inheritance build adds substantial logic to CardBoundVault. Optimize primarily for deployability
+      // and code-size headroom under EIP-170 while preserving behavior.
+      "contracts/CardBoundVault.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 0,
+          },
+          debug: {
+            revertStrings: "strip",
+          },
+          metadata: {
+            bytecodeHash: "none",
+          },
+          viaIR: true,
+        },
+      },
+      // Deployer includes CardBoundVault creation code in predict/deploy paths.
+      "contracts/CardBoundVaultDeployer.sol": {
+        version: "0.8.30",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 0,
+          },
+          debug: {
+            revertStrings: "strip",
           },
           metadata: {
             bytecodeHash: "none",

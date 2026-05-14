@@ -6,7 +6,7 @@ import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { useAccount } from "wagmi";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, Key, FileText, Clock } from "lucide-react";
+import { Shield, Users, Key, FileText, Clock, Heart } from "lucide-react";
 
 import type { TabType } from './components/types';
 
@@ -16,6 +16,7 @@ const MyGuardiansTab = lazy(() => import('./components/MyGuardiansTab').then(m =
 const RecoveryTab = lazy(() => import('./components/RecoveryTab').then(m => ({ default: m.RecoveryTab })));
 const ResponsibilitiesTab = lazy(() => import('./components/ResponsibilitiesTab').then(m => ({ default: m.ResponsibilitiesTab })));
 const PendingActionsTab = lazy(() => import('./components/PendingActionsTab').then(m => ({ default: m.PendingActionsTab })));
+const InheritanceActionsTab = lazy(() => import('./components/InheritanceActionsTab').then(m => ({ default: m.InheritanceActionsTab })));
 
 // ── Config ──────────────────────────────────────────────────────────────────
 // "Next of Kin" was a legacy inheritance flow for the non-CardBound vault
@@ -29,6 +30,7 @@ const TAB_CONFIG = [
   { id: 'recovery' as const, label: 'Wallet Rotation', icon: Key },
   { id: 'responsibilities' as const, label: 'Responsibilities', icon: FileText },
   { id: 'pending' as const, label: 'Pending Actions', icon: Clock },
+  { id: 'inheritance' as const, label: 'Inheritance', icon: Heart },
 ] as const;
 
 const COLOR_MAP: Record<TabType, { gradient: string; shadow: string }> = {
@@ -37,6 +39,7 @@ const COLOR_MAP: Record<TabType, { gradient: string; shadow: string }> = {
   recovery: { gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/25' },
   responsibilities: { gradient: 'from-emerald-500 to-green-500', shadow: 'shadow-emerald-500/25' },
   pending: { gradient: 'from-red-500 to-orange-500', shadow: 'shadow-red-500/25' },
+  inheritance: { gradient: 'from-pink-500 to-purple-500', shadow: 'shadow-pink-500/25' },
 };
 
 // ── Loading fallback ────────────────────────────────────────────────────────
@@ -130,6 +133,9 @@ export default function GuardiansPage() {
               )}
               {activeTab === 'pending' && (
                 <div key="pending" role="tabpanel" id="tabpanel-pending"><PendingActionsTab isConnected={isConnected} /></div>
+              )}
+              {activeTab === 'inheritance' && (
+                <div key="inheritance" role="tabpanel" id="tabpanel-inheritance"><InheritanceActionsTab isConnected={isConnected} /></div>
               )}
             </AnimatePresence>
           </Suspense>

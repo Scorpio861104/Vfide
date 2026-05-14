@@ -101,9 +101,9 @@ export function RecoveryTimeline() {
           CardBound Guardrails
         </h3>
         <p className="text-gray-400 text-sm">
-          CardBound mode does not expose inheritance or Next of Kin recovery. Guardian setup must be
-          completed, guardians approve wallet rotations, and the vault remains in place while signer
-          authority changes.
+          CardBound mode uses guardian-backed wallet rotation for recovery. Guardians approve
+          signer changes, and the vault remains in place while authority rotates. For inheritance
+          configuration and heir management, see the Inheritance tab.
         </p>
       </motion.div>
     </>

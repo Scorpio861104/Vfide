@@ -72,6 +72,11 @@
   },
   {
     "inputs": [],
+    "name": "CBV_InheritanceActive",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_InvalidChain",
     "type": "error"
   },
@@ -87,6 +92,11 @@
   },
   {
     "inputs": [],
+    "name": "CBV_InvalidRecoveryRotation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_InvalidSignature",
     "type": "error"
   },
@@ -98,6 +108,11 @@
   {
     "inputs": [],
     "name": "CBV_InvalidThreshold",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_InvalidToken",
     "type": "error"
   },
   {
@@ -192,6 +207,11 @@
   },
   {
     "inputs": [],
+    "name": "CBV_PendingExists",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CBV_QueueAlreadyProcessed",
     "type": "error"
   },
@@ -248,6 +268,11 @@
   {
     "inputs": [],
     "name": "CBV_TransferLimit",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CBV_UseProposeApply",
     "type": "error"
   },
   {
@@ -382,12 +407,6 @@
         "internalType": "string",
         "name": "context",
         "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "reason",
-        "type": "bytes"
       }
     ],
     "name": "ExternalCallFailed",
@@ -501,12 +520,6 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "operation",
-        "type": "string"
       }
     ],
     "name": "GuardianSetupIncomplete_Payment",
@@ -618,25 +631,6 @@
       }
     ],
     "name": "LargeTransferThresholdSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "source",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "action",
-        "type": "string"
-      }
-    ],
-    "name": "LedgerLogFailed",
     "type": "event"
   },
   {
@@ -1287,32 +1281,6 @@
   },
   {
     "inputs": [],
-    "name": "MAX_QUEUED",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "MAX_QUEUED_PAYMENTS",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "MAX_ROTATION_DELAY",
     "outputs": [
       {
@@ -1352,19 +1320,6 @@
   },
   {
     "inputs": [],
-    "name": "NAME",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "SENSITIVE_ADMIN_DELAY",
     "outputs": [
       {
@@ -1378,48 +1333,9 @@
   },
   {
     "inputs": [],
-    "name": "VERSION",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "WITHDRAWAL_DELAY",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "acceptAdmin",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "activeQueuedPayments",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1451,6 +1367,19 @@
   {
     "inputs": [],
     "name": "admin",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "adminManager",
     "outputs": [
       {
         "internalType": "address",
@@ -1586,6 +1515,13 @@
   },
   {
     "inputs": [],
+    "name": "cancelInheritanceConfigChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "cancelLargeTransferThresholdChange",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1641,6 +1577,45 @@
   {
     "inputs": [],
     "name": "cancelTokenApproval",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "heirSecret",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "basisPoints",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimHeirShare",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cleanupMemorialVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "clearAllHeirs",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "confirmInheritanceConfig",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1850,6 +1825,13 @@
   },
   {
     "inputs": [],
+    "name": "finalizeInheritanceDistribution",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "finalizeWalletRotation",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1858,40 +1840,6 @@
   {
     "inputs": [],
     "name": "getPendingQueuedWithdrawals",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "indices",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      },
-      {
-        "internalType": "uint64[]",
-        "name": "executeAfters",
-        "type": "uint64[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "start",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "limit",
-        "type": "uint256"
-      }
-    ],
-    "name": "getPendingQueuedWithdrawalsPaged",
     "outputs": [
       {
         "internalType": "uint256[]",
@@ -1971,6 +1919,63 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "inheritanceConfigVersion",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "inheritanceManager",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "inheritanceState",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint64",
+        "name": "windowEnd",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "reasonHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "initiateInheritanceClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -2003,19 +2008,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "largePaymentThreshold",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -2084,6 +2076,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ownerOverrideClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2247,64 +2246,13 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "paymentQueue",
+    "inputs": [],
+    "name": "paymentQueueManager",
     "outputs": [
       {
         "internalType": "address",
-        "name": "token",
+        "name": "",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "requestTime",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bool",
-        "name": "executed",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "cancelled",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "intentNonce",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "recipientCodeHashAtQueue",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -2325,109 +2273,12 @@
   },
   {
     "inputs": [],
-    "name": "pendingERC20Rescue",
+    "name": "pendingRecoveryRotation",
     "outputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingGuardianChange",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "guardian",
-        "type": "address"
-      },
       {
         "internalType": "bool",
-        "name": "active",
+        "name": "",
         "type": "bool"
-      },
-      {
-        "internalType": "uint64",
-        "name": "effectiveAt",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingLargePaymentThresholdChange",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "threshold",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingLargeTransferThresholdChange",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "threshold",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingNativeRescue",
-    "outputs": [
-      {
-        "internalType": "address payable",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
       }
     ],
     "stateMutability": "view",
@@ -2462,57 +2313,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "pendingSpendLimitChange",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "maxPerTransfer",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "dailyTransferLimit",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pendingTokenApproval",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "spender",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -2533,6 +2333,24 @@
   {
     "inputs": [
       {
+        "internalType": "address[]",
+        "name": "heirGuardians",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bytes32[]",
+        "name": "heirCommitments",
+        "type": "bytes32[]"
+      }
+    ],
+    "name": "proposeInheritanceConfig",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "newWallet",
         "type": "address"
@@ -2546,42 +2364,6 @@
     "name": "proposeWalletRotation",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "queueLength",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "recoveryAdminSeparationStatus",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "unseparated",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint64",
-        "name": "since",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "daysSince",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2735,6 +2517,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "manager",
+        "type": "address"
+      }
+    ],
+    "name": "setInheritanceManager",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_threshold",
         "type": "uint256"
@@ -2754,6 +2549,19 @@
       }
     ],
     "name": "setLargeTransferThreshold",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "polWallet",
+        "type": "address"
+      }
+    ],
+    "name": "setProofOfLifeWallet",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2893,6 +2701,13 @@
   },
   {
     "inputs": [],
+    "name": "vetoInheritanceClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "vfideToken",
     "outputs": [
       {
@@ -2931,54 +2746,20 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "withdrawalQueue",
+    "inputs": [],
+    "name": "withdrawFinalHeirPayout",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawalQueueManager",
     "outputs": [
       {
         "internalType": "address",
-        "name": "toVault",
+        "name": "",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint64",
-        "name": "requestTime",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "executeAfter",
-        "type": "uint64"
-      },
-      {
-        "internalType": "bool",
-        "name": "executed",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "cancelled",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "intentNonce",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "toVaultCodeHashAtQueue",
-        "type": "bytes32"
       }
     ],
     "stateMutability": "view",

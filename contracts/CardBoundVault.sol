@@ -2,6 +2,10 @@
 pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
+import "./CardBoundVaultPaymentQueueManager.sol";
+import "./CardBoundVaultWithdrawalQueueManager.sol";
+import "./CardBoundVaultInheritanceManager.sol";
+import "./CardBoundVaultAdminManager.sol";
 
 interface IVaultHubGuardianSetup {
     function guardianSetupComplete(address vault) external view returns (bool);
@@ -17,6 +21,125 @@ interface ISeerAutonomousVault {
     function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
 }
 
+interface IAdminManager {
+    function proposeGuardianChange(address guardian, bool active) external;
+    function applyGuardianChange() external returns (address guardian, bool active);
+    function cancelGuardianChange() external returns (address guardian, bool active);
+    function proposeSpendLimits(uint256 maxPerTransfer, uint256 dailyTransferLimit) external;
+    function applySpendLimits() external returns (uint256 maxPerTransfer, uint256 dailyTransferLimit);
+    function cancelSpendLimits() external;
+    function proposeLargeTransferThreshold(uint256 threshold) external;
+    function applyLargeTransferThreshold() external returns (uint256 threshold);
+    function cancelLargeTransferThreshold() external;
+    function proposeNativeRescue(address payable to, uint256 amount) external;
+    function applyNativeRescue() external returns (address payable to, uint256 amount);
+    function cancelNativeRescue() external returns (address payable to, uint256 amount);
+    function proposeERC20Rescue(address token, address to, uint256 amount) external;
+    function applyERC20Rescue() external returns (address token, address to, uint256 amount);
+    function cancelERC20Rescue() external returns (address token, address to, uint256 amount);
+    function proposeTokenApproval(address token, address spender, uint256 amount) external;
+    function applyTokenApproval() external returns (address token, address spender, uint256 amount);
+    function cancelTokenApproval() external returns (address token, address spender, uint256 amount);
+    function clearOnRecovery() external;
+    function pendingGuardianChange() external view returns (address guardian, bool active, uint64 effectiveAt);
+    function pendingSpendLimitChange() external view returns (uint256 value1, uint256 value2, uint64 executeAfter);
+    function pendingLargeTransferThresholdChange() external view returns (uint256 value, uint64 executeAfter);
+    function pendingNativeRescue() external view returns (address addr, uint256 amount, uint64 executeAfter);
+    function pendingERC20Rescue() external view returns (address token, address to, uint256 amount, uint64 executeAfter);
+    function pendingTokenApproval() external view returns (address token, address spender, uint256 amount, uint64 executeAfter);
+}
+
+interface ICardBoundVaultInheritanceManager {
+    function inheritanceState() external view returns (uint8 state, uint64 windowEnd);
+    function proposeInheritanceConfig(address actor, address[] calldata heirGuardians, bytes32[] calldata heirCommitments) external;
+    function confirmInheritanceConfig(address actor) external;
+    function cancelInheritanceConfigChange(address actor) external;
+    function clearAllHeirs(address actor) external;
+    function setProofOfLifeWallet(address actor, address polWallet) external;
+    function initiateInheritanceClaim(address actor, bytes32 reasonHash) external;
+    function vetoInheritanceClaim(address actor) external;
+    function ownerOverrideClaim(address actor) external;
+    function claimHeirShare(address actor, bytes32 heirSecret, uint256 basisPoints) external;
+    function finalizeInheritanceDistribution() external;
+    function consumeHeirPayout(address actor) external returns (uint256 amount, uint256 finalBasisPoints, bool completed);
+    function cleanupMemorialVault() external;
+    function heirCount() external view returns (uint8);
+    function inheritanceConfigVersion() external view returns (uint64);
+    function hasVetoedClaim(address guardian) external view returns (bool);
+    function hasRevealedClaim(address claimant) external view returns (bool);
+    function isClaimedHash(bytes32 heirHash) external view returns (bool);
+}
+
+interface ICardBoundVaultPaymentQueueManager {
+    function largePaymentThreshold() external view returns (uint256);
+    function activeQueuedPayments() external view returns (uint8);
+    function pendingLargePaymentThresholdChange() external view returns (uint256 threshold, uint64 executeAfter);
+    function queueLength() external view returns (uint256);
+    function paymentQueue(uint256 index)
+        external
+        view
+        returns (
+            address token,
+            address merchant,
+            address recipient,
+            uint256 amount,
+            uint64 requestTime,
+            uint64 executeAfter,
+            bool executed,
+            bool cancelled,
+            uint256 intentNonce,
+            bytes32 recipientCodeHashAtQueue
+        );
+    function queuePayment(address token, address merchant, address recipient, uint256 amount, uint256 intentNonce)
+        external
+        returns (uint256 queueIndex, uint64 executeAfter);
+    function executeQueuedPayment(uint256 queueIndex, bool isAdmin)
+        external
+        returns (address token, address recipient, uint256 amount);
+    function cancelQueuedPayment(uint256 queueIndex, bool authorized)
+        external
+        returns (uint64 requestTime, uint256 amount);
+    function setLargePaymentThreshold(uint256 threshold, uint64 delay) external returns (uint64 executeAfter);
+    function applyLargePaymentThreshold() external returns (uint256 oldThreshold, uint256 newThreshold);
+    function clearOnRecovery() external;
+}
+
+interface ICardBoundVaultWithdrawalQueueManager {
+    function activeQueuedWithdrawals() external view returns (uint8);
+    function queueLength() external view returns (uint256);
+    function withdrawalQueue(uint256 index)
+        external
+        view
+        returns (
+            address toVault,
+            uint256 amount,
+            uint64 requestTime,
+            uint64 executeAfter,
+            bool executed,
+            bool cancelled,
+            uint256 intentNonce,
+            bytes32 toVaultCodeHashAtQueue
+        );
+    function getPendingQueuedWithdrawals()
+        external
+        view
+        returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters);
+    function getPendingQueuedWithdrawalsPaged(uint256 start, uint256 limit)
+        external
+        view
+        returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters);
+    function queueWithdrawal(address toVault, uint256 amount, uint256 intentNonce)
+        external
+        returns (uint256 queueIndex, uint64 executeAfter);
+    function executeQueuedWithdrawal(uint256 queueIndex, bool isAdmin)
+        external
+        returns (address toVault, uint256 amount);
+    function cancelQueuedWithdrawal(uint256 queueIndex, bool authorized)
+        external
+        returns (uint64 requestTime, uint256 amount);
+    function clearOnRecovery() external;
+}
+
 /**
  * @title CardBoundVault
  * @notice Active vault implementation — wallet is authorization-only (ATM-card model).
@@ -28,8 +151,8 @@ interface ISeerAutonomousVault {
 contract CardBoundVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    string public constant NAME = "CardBoundVault";
-    string public constant VERSION = "1";
+    string private constant NAME = "CardBoundVault";
+    string private constant VERSION = "1";
 
     bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(
         "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
@@ -53,6 +176,7 @@ contract CardBoundVault is ReentrancyGuard {
     address public immutable hub;
     address public immutable vfideToken;
     IProofLedger public immutable ledger;
+    bytes32 private immutable _domainSeparator;
     ISeerAutonomousVault public seerAutonomous;
 
     // H4 FIX: Track when recovery leaves admin == activeWallet so the user can
@@ -91,58 +215,10 @@ contract CardBoundVault is ReentrancyGuard {
     uint256 public spentToday;
     uint64 public dayStart;
 
-    // ── Withdrawal Queue (large transfer protection) ────────────
-    uint256 public constant WITHDRAWAL_DELAY = 7 days;
-    // POW-6 FIX: raised cap from 20 to 50. Power merchants paying multiple
-    // vendors weekly hit the 20-slot ceiling within 2 weeks of normal
-    // operations and were blocked from new large transfers until items
-    // cleared (7-day delay). 50 covers a typical small-business cadence
-    // (~7 vendors paid weekly) for ~7 weeks of in-flight items, well
-    // beyond the 7-day clear cycle. uint8 still fits 50.
-    uint8 public constant MAX_QUEUED = 50; // Max pending per vault
-
-    struct QueuedWithdrawal {
-        address toVault;
-        uint256 amount;
-        uint64 requestTime;
-        uint64 executeAfter;
-        bool executed;
-        bool cancelled;
-        uint256 intentNonce; // Links back to the signed intent
-           bytes32 toVaultCodeHashAtQueue; // VAULT-01 FIX: snapshot to detect vault replacement
-    }
-
-    QueuedWithdrawal[] public withdrawalQueue;
-    uint8 public activeQueuedWithdrawals;
     uint256 public largeTransferThreshold; // Transfers above this get queued
-
-        // ── Merchant-Payment Queue (C1 FIX: large payment threshold protection) ──
-        uint256 public largePaymentThreshold;
-        uint8 public activeQueuedPayments;
-        // POW-6 FIX: raised cap from 20 to 50. Same rationale as MAX_QUEUED
-        // above — busy merchants paying suppliers/employees frequently hit
-        // the 20 ceiling.
-        uint8 public constant MAX_QUEUED_PAYMENTS = 50;
-
-        struct QueuedPayment {
-            address token;
-            address merchant;
-            address recipient;
-            uint256 amount;
-            uint64 requestTime;
-            uint64 executeAfter;
-            bool executed;
-            bool cancelled;
-            uint256 intentNonce;
-            bytes32 recipientCodeHashAtQueue;
-        }
-        QueuedPayment[] public paymentQueue;
-
-        struct PendingLargePaymentThresholdChange {
-            uint256 threshold;
-            uint64 executeAfter;
-        }
-        PendingLargePaymentThresholdChange public pendingLargePaymentThresholdChange;
+    address public paymentQueueManager;
+    address public withdrawalQueueManager;
+    address public adminManager;
 
     struct WalletRotation {
         address newWallet;
@@ -155,50 +231,7 @@ contract CardBoundVault is ReentrancyGuard {
     uint256 public rotationNonce;
     mapping(address => mapping(uint256 => bool)) public rotationApprovalByGuardian;
 
-    // CBV-03: Timelock for guardian changes
-    struct PendingGuardianChange {
-        address guardian;
-        bool active;
-        uint64 effectiveAt;
-    }
-    PendingGuardianChange public pendingGuardianChange;
-
-    struct PendingSpendLimitChange {
-        uint256 maxPerTransfer;
-        uint256 dailyTransferLimit;
-        uint64 executeAfter;
-    }
-
-    struct PendingLargeTransferThresholdChange {
-        uint256 threshold;
-        uint64 executeAfter;
-    }
-
-    struct PendingERC20Rescue {
-        address token;
-        address to;
-        uint256 amount;
-        uint64 executeAfter;
-    }
-
-    struct PendingNativeRescue {
-        address payable to;
-        uint256 amount;
-        uint64 executeAfter;
-    }
-
-    struct PendingTokenApproval {
-        address token;
-        address spender;
-        uint256 amount;
-        uint64 executeAfter;
-    }
-
-    PendingSpendLimitChange public pendingSpendLimitChange;
-    PendingLargeTransferThresholdChange public pendingLargeTransferThresholdChange;
-    PendingERC20Rescue public pendingERC20Rescue;
-    PendingNativeRescue public pendingNativeRescue;
-    PendingTokenApproval public pendingTokenApproval;
+    address public inheritanceManager;
 
     struct TransferIntent {
         address vault;
@@ -264,7 +297,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     event PauseSet(bool paused, address indexed by);
     event SeerAutonomousSet(address indexed seerAutonomous);
-    event ExternalCallFailed(string indexed context, bytes reason);
+    event ExternalCallFailed(string indexed context);
     event SpendLimitsSet(uint256 maxPerTransfer, uint256 dailyTransferLimit);
     event VaultApprove(address indexed spender, uint256 amount);
     event NativeRescue(address indexed to, uint256 amount);
@@ -281,13 +314,14 @@ contract CardBoundVault is ReentrancyGuard {
     event LargePaymentThresholdSet(uint256 oldThreshold, uint256 newThreshold);
     event LargePaymentThresholdProposed(uint256 threshold, uint64 executeAfter);
 
+
     /// @notice GUARDIAN-WARN-1: emitted on every outgoing payment/transfer made before the
     /// vault has completed multi-guardian setup. The vault is operationally unprotected
     /// against key compromise during this window. Frontends MUST surface a persistent
     /// banner to the user until guardian setup is complete and indexers MUST track this
     /// event for monitoring/alerting. The MAX_VFIDE_WITHOUT_GUARDIAN cap on incoming
     /// transfers (50K VFIDE) limits peak loss exposure during this window.
-    event GuardianSetupIncomplete_Payment(address indexed merchant, address indexed token, uint256 amount, string operation);
+    event GuardianSetupIncomplete_Payment(address indexed merchant, address indexed token, uint256 amount);
     event GuardianSetupIncomplete_Transfer(address indexed toVault, uint256 amount);
 
     error CBV_NotAdmin();
@@ -329,11 +363,17 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_NotAuthorized();
     error CBV_NoPending();
     error CBV_DelayActive();
+    error CBV_PendingExists();
+    error CBV_UseProposeApply();
+    error CBV_InvalidToken();
+    error CBV_InvalidRecoveryRotation();
+    error CBV_InheritanceActive();
     /// @notice C-7 FIX: Destination vault cannot receive transfer (unguarded and cap would be exceeded).
     error CBV_ReceiverNeedsGuardian();
 
         /// @notice VAULT-01 FIX: Destination vault code has changed (replaced/self-destructed).
         error CBV_ReceiverChanged();
+
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert CBV_NotAdmin();
@@ -417,9 +457,27 @@ contract CardBoundVault is ReentrancyGuard {
         largeTransferThreshold = _dailyTransferLimit;
         emit LargeTransferThresholdSet(_dailyTransferLimit);
 
-            // C1 FIX: payment threshold = 5x transfer threshold so daily payments
-            // under that amount execute instantly while outliers are queued.
-            largePaymentThreshold = _dailyTransferLimit * 5;
+        // C1 FIX: payment threshold = 5x transfer threshold so daily payments
+        // under that amount execute instantly while outliers are queued.
+        uint256 initialPaymentThreshold = _dailyTransferLimit * 5;
+        paymentQueueManager = address(new CardBoundVaultPaymentQueueManager(address(this), initialPaymentThreshold));
+        emit LargePaymentThresholdSet(0, initialPaymentThreshold);
+
+        withdrawalQueueManager = address(new CardBoundVaultWithdrawalQueueManager(address(this)));
+
+        inheritanceManager = address(new CardBoundVaultInheritanceManager(address(this)));
+
+        adminManager = address(new CardBoundVaultAdminManager(address(this)));
+
+        _domainSeparator = keccak256(
+            abi.encode(
+                EIP712_DOMAIN_TYPEHASH,
+                keccak256(bytes(NAME)),
+                keccak256(bytes(VERSION)),
+                block.chainid,
+                address(this)
+            )
+        );
 
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
@@ -465,25 +523,20 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Propose a guardian change with 24-hour timelock (CBV-03)
     function proposeGuardianChange(address guardian, bool active) external onlyAdmin {
         if (guardian == address(0)) revert CBV_Zero();
-        // M-7 FIX: Prevent silently clobbering an existing pending change
-        require(pendingGuardianChange.effectiveAt == 0, "CBV: pending change exists");
-        pendingGuardianChange = PendingGuardianChange(guardian, active, uint64(block.timestamp) + 1 days);
+        IAdminManager(adminManager).proposeGuardianChange(guardian, active);
         emit GuardianChangeProposed(guardian, active, uint64(block.timestamp) + 1 days);
     }
 
     /// @notice Apply a previously proposed guardian change after timelock expires (CBV-03)
     function applyGuardianChange() external onlyAdmin {
-        PendingGuardianChange memory p = pendingGuardianChange;
-        if (p.effectiveAt == 0 || block.timestamp < p.effectiveAt) revert CBV_InvalidThreshold();
-        delete pendingGuardianChange;
-        _applyGuardianChange(p.guardian, p.active);
+        (address guardian, bool active) = IAdminManager(adminManager).applyGuardianChange();
+        _applyGuardianChange(guardian, active);
     }
 
     /// @notice Cancel a pending guardian change (CBV-03)
     function cancelGuardianChange() external onlyAdmin {
-        PendingGuardianChange memory p = pendingGuardianChange;
-        delete pendingGuardianChange;
-        emit GuardianChangeCancelled(p.guardian, p.active);
+        (address guardian, bool active) = IAdminManager(adminManager).cancelGuardianChange();
+        emit GuardianChangeCancelled(guardian, active);
     }
 
     function _applyGuardianChange(address guardian, bool active) internal {
@@ -535,10 +588,7 @@ contract CardBoundVault is ReentrancyGuard {
     ///      proposeGuardianChange + applyGuardianChange (24-hour timelock) instead.
     function setGuardian(address guardian, bool active) external onlyAdmin {
         // C-2 FIX: Block instant guardian changes after bootstrap
-        require(
-            !IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this)),
-            "CBV: use propose/apply after setup"
-        );
+        if (IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) revert CBV_UseProposeApply();
         if (guardian == address(0)) revert CBV_Zero();
         _applyGuardianChange(guardian, active);
     }
@@ -547,10 +597,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param threshold New guardian approval threshold.
     /// @dev C-2 FIX: Also gated to bootstrap-only to prevent instant threshold reduction.
     function setGuardianThreshold(uint8 threshold) external onlyAdmin {
-        require(
-            !IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this)),
-            "CBV: use propose/apply after setup"
-        );
+        if (IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) revert CBV_UseProposeApply();
         if (threshold == 0 || threshold > guardianCount) revert CBV_InvalidThreshold();
         guardianThreshold = threshold;
         emit GuardianThresholdSet(threshold);
@@ -565,13 +612,8 @@ contract CardBoundVault is ReentrancyGuard {
         }
 
         if (_guardianSetupComplete()) {
-            uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
-            pendingSpendLimitChange = PendingSpendLimitChange({
-                maxPerTransfer: _maxPerTransfer,
-                dailyTransferLimit: _dailyTransferLimit,
-                executeAfter: executeAfter
-            });
-            emit SpendLimitsChangeProposed(_maxPerTransfer, _dailyTransferLimit, executeAfter);
+            IAdminManager(adminManager).proposeSpendLimits(_maxPerTransfer, _dailyTransferLimit);
+            emit SpendLimitsChangeProposed(_maxPerTransfer, _dailyTransferLimit, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
             return;
         }
 
@@ -581,16 +623,14 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function applySpendLimits() external onlyAdmin {
-        PendingSpendLimitChange memory pending = pendingSpendLimitChange;
-        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
-        delete pendingSpendLimitChange;
-        maxPerTransfer = pending.maxPerTransfer;
-        dailyTransferLimit = pending.dailyTransferLimit;
-        emit SpendLimitsSet(pending.maxPerTransfer, pending.dailyTransferLimit);
+        (uint256 maxPT, uint256 dailyTL) = IAdminManager(adminManager).applySpendLimits();
+        maxPerTransfer = maxPT;
+        dailyTransferLimit = dailyTL;
+        emit SpendLimitsSet(maxPT, dailyTL);
     }
 
     function cancelSpendLimitsChange() external onlyAdmin {
-        delete pendingSpendLimitChange;
+        IAdminManager(adminManager).cancelSpendLimits();
         emit SpendLimitsChangeCancelled();
     }
 
@@ -612,16 +652,12 @@ contract CardBoundVault is ReentrancyGuard {
         return addedAt != 0 && block.timestamp >= addedAt + GUARDIAN_MATURITY_PERIOD;
     }
 
-    /// @notice Approve a spender to pull VFIDE from this vault (e.g., long-running integrations).
-    /// @dev This path is timelocked and NOT the real-time merchant payment flow.
-    ///      Merchant checkout uses signed PayIntent/EscrowIntent-style execution.
     // slither-disable-next-line reentrancy-events
     function approveVFIDE(address spender, uint256 amount) external onlyAdmin whenNotPaused {
-        require(spender != address(0), "CBV: zero spender");
+        if (spender == address(0)) revert CBV_Zero();
         _validateApprovalAmount(amount);
-
-        // Always queue approvals to avoid instant allowance grants during bootstrap.
-        _queueTokenApproval(vfideToken, spender, amount);
+        IAdminManager(adminManager).proposeTokenApproval(vfideToken, spender, amount);
+        emit TokenApprovalProposed(vfideToken, spender, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice F-6 FIX: Approve a spender to pull any ERC20 from this vault.
@@ -632,36 +668,32 @@ contract CardBoundVault is ReentrancyGuard {
 
     // slither-disable-next-line reentrancy-events
     function approveERC20(address token, address spender, uint256 amount) external onlyAdmin whenNotPaused {
-        require(token != vfideToken, "CBV: use approveVFIDE for VFIDE");
-        require(spender != address(0), "CBV: zero spender");
-        require(token != address(0), "CBV: zero token");
+        if (token == vfideToken) revert CBV_InvalidToken();
+        if (spender == address(0)) revert CBV_Zero();
+        if (token == address(0)) revert CBV_Zero();
         _validateApprovalAmount(amount);
-
-        // Always queue approvals to avoid instant allowance grants during bootstrap.
-        _queueTokenApproval(token, spender, amount);
+        IAdminManager(adminManager).proposeTokenApproval(token, spender, amount);
+        emit TokenApprovalProposed(token, spender, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     // slither-disable-next-line reentrancy-events
     function applyTokenApproval() external onlyAdmin whenNotPaused {
-        PendingTokenApproval memory pending = pendingTokenApproval;
-        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
+        (address token, address spender, uint256 amount) = IAdminManager(adminManager).applyTokenApproval();
 
-        _validateApprovalAmount(pending.amount);
+        _validateApprovalAmount(amount);
 
-        delete pendingTokenApproval;
-        IERC20(pending.token).forceApprove(pending.spender, pending.amount);
+        IERC20(token).forceApprove(spender, amount);
 
-        if (pending.token == vfideToken) {
-            emit VaultApprove(pending.spender, pending.amount);
+        if (token == vfideToken) {
+            emit VaultApprove(spender, amount);
         } else {
-            emit ERC20Approve(pending.token, pending.spender, pending.amount);
+            emit ERC20Approve(token, spender, amount);
         }
     }
 
     function cancelTokenApproval() external onlyAdmin {
-        PendingTokenApproval memory pending = pendingTokenApproval;
-        delete pendingTokenApproval;
-        emit TokenApprovalCancelled(pending.token, pending.spender, pending.amount);
+        (address token, address spender, uint256 amount) = IAdminManager(adminManager).cancelTokenApproval();
+        emit TokenApprovalCancelled(token, spender, amount);
     }
 
     /// @notice Pause vault operations (admin or guardian emergency control).
@@ -776,14 +808,11 @@ contract CardBoundVault is ReentrancyGuard {
         nonReentrant
         whenNotPaused
     {
+        _requireOperationalForOutboundTransfers();
         // GUARDIAN-WARN-1 FIX: warn-instead-of-revert. See executePayMerchant for full rationale.
         // Recovery operations remain gated; everyday transfers are not.
         if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
             emit GuardianSetupIncomplete_Transfer(intent.toVault, intent.amount);
-            address L = address(ledger);
-            if (L != address(0)) {
-                try IProofLedger(L).logEvent(admin, "guardian_warn_xfer", intent.amount, "no_guardians") {} catch {}
-            }
         }
         if (intent.vault != address(this)) revert CBV_InvalidSignature();
         if (intent.toVault == address(0) || intent.toVault == address(this) || intent.toVault == address(0x000000000000000000000000000000000000dEaD)) revert CBV_NotVault(); // CBV-02: block burn/dead addresses
@@ -844,6 +873,7 @@ contract CardBoundVault is ReentrancyGuard {
         nonReentrant
         whenNotPaused
     {
+        _requireOperationalForOutboundTransfers();
         // GUARDIAN-WARN-1 FIX: Previously reverted with CBV_GuardianSetupRequired. That blocked
         // every merchant payment from new users until they had configured 2+ guardians with at
         // least one independent — a paralyzing UX hurdle for the protocol's core "tap to pay
@@ -854,12 +884,7 @@ contract CardBoundVault is ReentrancyGuard {
         // approveWalletRotation, finalizeWalletRotation) remain gated because they fundamentally
         // require guardian quorum.
         if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
-            emit GuardianSetupIncomplete_Payment(intent.merchant, intent.token, intent.amount, "executePayMerchant");
-            // Also log to ProofLedger so off-chain indexers can show persistent UI warning.
-            address L = address(ledger);
-            if (L != address(0)) {
-                try IProofLedger(L).logEvent(admin, "guardian_warn_pay", intent.amount, "no_guardians") {} catch {}
-            }
+            emit GuardianSetupIncomplete_Payment(intent.merchant, intent.token, intent.amount);
         }
         if (msg.sender != intent.merchantPortal) revert CBV_NotMerchantPortal();
         if (intent.vault != address(this)) revert CBV_PayIntentInvalid();
@@ -885,9 +910,12 @@ contract CardBoundVault is ReentrancyGuard {
         _enforceSeerAction(admin, 0, amount, intent.recipient);
 
         nextNonce += 1;
-        if (largePaymentThreshold > 0 && amount >= largePaymentThreshold) {
+        uint256 paymentThreshold = ICardBoundVaultPaymentQueueManager(paymentQueueManager).largePaymentThreshold();
+        if (paymentThreshold > 0 && amount >= paymentThreshold) {
             spentToday += amount;
-            _queuePayment(intent.token, intent.merchant, intent.recipient, amount, intent.nonce);
+            (uint256 queueIndex, uint64 executeAfter) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
+                .queuePayment(intent.token, intent.merchant, intent.recipient, amount, intent.nonce);
+            emit PaymentQueued(queueIndex, intent.token, intent.merchant, intent.recipient, amount, executeAfter);
             _logPayment(intent.recipient, amount);
             return;
         }
@@ -903,46 +931,25 @@ contract CardBoundVault is ReentrancyGuard {
         nonReentrant
         whenNotPaused
     {
-        if (queueIndex >= paymentQueue.length) revert CBV_PaymentQueueInvalidIndex();
+        _requireOperationalForOutboundTransfers();
+        (address token, address recipient, uint256 amount) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
+            .executeQueuedPayment(queueIndex, msg.sender == admin);
 
-        QueuedPayment storage q = paymentQueue[queueIndex];
-        if (q.executed || q.cancelled) revert CBV_PaymentQueueAlreadyProcessed();
-        if (block.timestamp < q.executeAfter) revert CBV_PaymentQueueNotReady();
-        if (msg.sender != admin) revert CBV_NotAdmin();
+        _enforceSeerAction(admin, 0, amount, recipient);
 
-        address recipient = q.recipient;
-        bytes32 currentCodeHash;
-        assembly { currentCodeHash := extcodehash(recipient) }
-        if (currentCodeHash != q.recipientCodeHashAtQueue) revert CBV_ReceiverChanged();
-
-        _enforceSeerAction(admin, 0, q.amount, q.recipient);
-
-        q.executed = true;
-        if (activeQueuedPayments > 0) {
-            activeQueuedPayments -= 1;
-        }
-
-        IERC20(q.token).safeTransfer(q.recipient, q.amount);
-        emit PaymentQueueExecuted(queueIndex, q.recipient, q.amount);
-        _logPayment(q.recipient, q.amount);
+        IERC20(token).safeTransfer(recipient, amount);
+        emit PaymentQueueExecuted(queueIndex, recipient, amount);
+        _logPayment(recipient, amount);
     }
 
     /// @notice Cancel a queued payment (admin or guardian).
     function cancelQueuedPayment(uint256 queueIndex) external {
-        if (queueIndex >= paymentQueue.length) revert CBV_PaymentQueueInvalidIndex();
-
-        QueuedPayment storage q = paymentQueue[queueIndex];
-        if (q.executed || q.cancelled) revert CBV_PaymentQueueAlreadyProcessed();
-        if (msg.sender != admin && !isGuardian[msg.sender]) revert CBV_NotAuthorized();
-
-        q.cancelled = true;
-        if (activeQueuedPayments > 0) {
-            activeQueuedPayments -= 1;
-        }
+        (uint64 requestTime, uint256 amount) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
+            .cancelQueuedPayment(queueIndex, msg.sender == admin || isGuardian[msg.sender]);
 
         _refreshDailyWindow();
-        if (q.requestTime >= dayStart && spentToday >= q.amount) {
-            spentToday -= q.amount;
+        if (requestTime >= dayStart && spentToday >= amount) {
+            spentToday -= amount;
         }
 
         emit PaymentQueueCancelled(queueIndex, msg.sender);
@@ -950,24 +957,16 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Propose a new large-payment threshold (timelocked).
     function setLargePaymentThreshold(uint256 _threshold) external onlyAdmin {
-        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
-        pendingLargePaymentThresholdChange = PendingLargePaymentThresholdChange({
-            threshold: _threshold,
-            executeAfter: executeAfter
-        });
+        uint64 executeAfter = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
+            .setLargePaymentThreshold(_threshold, SENSITIVE_ADMIN_DELAY);
         emit LargePaymentThresholdProposed(_threshold, executeAfter);
     }
 
     /// @notice Apply a pending large-payment threshold change.
     function applyLargePaymentThreshold() external onlyAdmin {
-        PendingLargePaymentThresholdChange memory pending = pendingLargePaymentThresholdChange;
-        if (pending.executeAfter == 0) revert CBV_NoPending();
-        if (block.timestamp < pending.executeAfter) revert CBV_DelayActive();
-
-        uint256 oldThreshold = largePaymentThreshold;
-        largePaymentThreshold = pending.threshold;
-        delete pendingLargePaymentThresholdChange;
-        emit LargePaymentThresholdSet(oldThreshold, pending.threshold);
+        (uint256 oldThreshold, uint256 newThreshold) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
+            .applyLargePaymentThreshold();
+        emit LargePaymentThresholdSet(oldThreshold, newThreshold);
     }
     // ═══════════════════════════════════════════════════════════════
     //  WITHDRAWAL QUEUE — Large transfer protection
@@ -978,12 +977,8 @@ contract CardBoundVault is ReentrancyGuard {
     /// @dev Example: 1000e18 = transfers of 1000+ VFIDE require a 7-day wait.
     function setLargeTransferThreshold(uint256 _threshold) external onlyAdmin {
         if (_guardianSetupComplete()) {
-            uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
-            pendingLargeTransferThresholdChange = PendingLargeTransferThresholdChange({
-                threshold: _threshold,
-                executeAfter: executeAfter
-            });
-            emit LargeTransferThresholdChangeProposed(_threshold, executeAfter);
+            IAdminManager(adminManager).proposeLargeTransferThreshold(_threshold);
+            emit LargeTransferThresholdChangeProposed(_threshold, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
             return;
         }
 
@@ -992,15 +987,13 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function applyLargeTransferThresholdChange() external onlyAdmin {
-        PendingLargeTransferThresholdChange memory pending = pendingLargeTransferThresholdChange;
-        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
-        delete pendingLargeTransferThresholdChange;
-        largeTransferThreshold = pending.threshold;
-        emit LargeTransferThresholdSet(pending.threshold);
+        uint256 threshold = IAdminManager(adminManager).applyLargeTransferThreshold();
+        largeTransferThreshold = threshold;
+        emit LargeTransferThresholdSet(threshold);
     }
 
     function cancelLargeTransferThresholdChange() external onlyAdmin {
-        delete pendingLargeTransferThresholdChange;
+        IAdminManager(adminManager).cancelLargeTransferThreshold();
         emit LargeTransferThresholdChangeCancelled();
     }
 
@@ -1011,51 +1004,27 @@ contract CardBoundVault is ReentrancyGuard {
         nonReentrant
         whenNotPaused
     {
-        if (queueIndex >= withdrawalQueue.length) revert CBV_QueueInvalidIndex();
-
-        QueuedWithdrawal storage w = withdrawalQueue[queueIndex];
-        if (w.executed || w.cancelled) revert CBV_QueueAlreadyProcessed();
-        if (block.timestamp < w.executeAfter) revert CBV_QueueNotReady();
-
-        // Only admin (vault owner) can execute
+        _requireOperationalForOutboundTransfers();
         if (msg.sender != admin) revert CBV_NotAdmin();
 
+        (address toVault, uint256 amount) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager)
+            .executeQueuedWithdrawal(queueIndex, true);
+
         // Apply daily limit at execution time as an additional guard.
-        // H-5 FIX: spentToday was charged at queue time. Only re-charge if a new daily window
-        // started since the withdrawal was queued (indicated by dayStart having advanced past
-        // w.requestTime). If still in the same window, the amount is already committed to
-        // spentToday and must not be added again.
-        // F-48 FIX: Remove unreachable "same window" branch. WITHDRAWAL_DELAY = 7 days
-        // guarantees _refreshDailyWindow() always advances dayStart past w.requestTime
-        // well before executeAfter is reached. The "same window" path is dead code.
-        // Invariant: block.timestamp >= w.executeAfter >= w.requestTime + 7 days,
-        //            so dayStart > w.requestTime is always true here.
         _refreshDailyWindow();
-        if (spentToday + w.amount > dailyTransferLimit) revert CBV_DailyLimit();
+        if (spentToday + amount > dailyTransferLimit) revert CBV_DailyLimit();
 
-        // VAULT-01 FIX: Verify destination vault hasn't been replaced (e.g., self-destruct, CREATE2 reuse).
-        address destinationVault = w.toVault;
-        bytes32 currentCodeHash;
-        assembly {
-            currentCodeHash := extcodehash(destinationVault)
-        }
-        if (currentCodeHash != w.toVaultCodeHashAtQueue) revert CBV_ReceiverChanged();
+        _enforceSeerAction(admin, 0, amount, toVault);
 
-        _enforceSeerAction(admin, 0, w.amount, w.toVault);
-
-        w.executed = true;
-        if (activeQueuedWithdrawals > 0) {
-            activeQueuedWithdrawals -= 1;
-        }
-        spentToday += w.amount;
+        spentToday += amount;
 
         // C-7 FIX: Prevent queued withdrawal to an unguarded vault that would breach cap.
-        if (!ICardBoundVaultView(w.toVault).canReceiveTransfer(w.amount)) revert CBV_ReceiverNeedsGuardian();
+        if (!ICardBoundVaultView(toVault).canReceiveTransfer(amount)) revert CBV_ReceiverNeedsGuardian();
 
-        IERC20(vfideToken).safeTransfer(w.toVault, w.amount);
+        IERC20(vfideToken).safeTransfer(toVault, amount);
 
-        emit WithdrawalExecuted(queueIndex, w.toVault, w.amount);
-        _logTransfer(w.toVault, w.amount);
+        emit WithdrawalExecuted(queueIndex, toVault, amount);
+        _logTransfer(toVault, amount);
     }
 
     /// @notice Cancel a queued withdrawal. Callable by admin OR any guardian.
@@ -1065,173 +1034,30 @@ contract CardBoundVault is ReentrancyGuard {
     ///      the 7-day waiting period.
     function cancelQueuedWithdrawal(uint256 queueIndex) external {
         if (msg.sender != admin && !isGuardian[msg.sender]) revert CBV_NotGuardian();
-        if (queueIndex >= withdrawalQueue.length) revert CBV_QueueInvalidIndex();
-
-        QueuedWithdrawal storage w = withdrawalQueue[queueIndex];
-        if (w.executed || w.cancelled) revert CBV_QueueAlreadyProcessed();
-
-        w.cancelled = true;
-        if (activeQueuedWithdrawals > 0) {
-            activeQueuedWithdrawals -= 1;
-        }
+        (uint64 requestTime, uint256 amount) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager)
+            .cancelQueuedWithdrawal(queueIndex, true);
 
         // H-02 FIX: Refund spentToday if the cancellation is within the same daily window
         // as the queue time, so the owner is not rate-limited for a transfer that never occurred.
-        if (w.requestTime >= dayStart && spentToday >= w.amount) {
-            spentToday -= w.amount;
+        if (requestTime >= dayStart && spentToday >= amount) {
+            spentToday -= amount;
         }
 
         emit WithdrawalCancelled(queueIndex, msg.sender);
     }
 
     /// @notice View all pending (not executed, not cancelled) queued withdrawals.
-    /// @return indices Array of pending queue indices.
-    /// @return amounts Array of corresponding amounts.
-    /// @return executeAfters Array of corresponding execution timestamps.
     function getPendingQueuedWithdrawals()
         external view
         returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters)
     {
-        // Count pending
-        uint256 pendingCount = 0;
-        for (uint256 i = 0; i < withdrawalQueue.length; i++) {
-            if (!withdrawalQueue[i].executed && !withdrawalQueue[i].cancelled) pendingCount++;
-        }
-
-        indices = new uint256[](pendingCount);
-        amounts = new uint256[](pendingCount);
-        executeAfters = new uint64[](pendingCount);
-
-        uint256 idx = 0;
-        for (uint256 i = 0; i < withdrawalQueue.length; i++) {
-            if (!withdrawalQueue[i].executed && !withdrawalQueue[i].cancelled) {
-                indices[idx] = i;
-                amounts[idx] = withdrawalQueue[i].amount;
-                executeAfters[idx] = withdrawalQueue[i].executeAfter;
-                idx++;
-            }
-        }
-    }
-
-    /// @notice Paginated pending withdrawal view to bound read-gas on long-lived vaults.
-    /// @param start Inclusive queue index to start scanning from.
-    /// @param limit Maximum queue slots to scan (not pending count).
-    /// @return indices Pending queue indices found in the scan window.
-    /// @return amounts Pending amounts found in the scan window.
-    /// @return executeAfters Pending execution times found in the scan window.
-    function getPendingQueuedWithdrawalsPaged(uint256 start, uint256 limit)
-        external
-        view
-        returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters)
-    {
-        uint256 len = withdrawalQueue.length;
-        if (start >= len || limit == 0) {
-            return (new uint256[](0), new uint256[](0), new uint64[](0));
-        }
-
-        uint256 end = start + limit;
-        if (end > len) end = len;
-
-        uint256 pendingCount = 0;
-        for (uint256 i = start; i < end; i++) {
-            if (!withdrawalQueue[i].executed && !withdrawalQueue[i].cancelled) pendingCount++;
-        }
-
-        indices = new uint256[](pendingCount);
-        amounts = new uint256[](pendingCount);
-        executeAfters = new uint64[](pendingCount);
-
-        uint256 idx = 0;
-        for (uint256 i = start; i < end; i++) {
-            if (!withdrawalQueue[i].executed && !withdrawalQueue[i].cancelled) {
-                indices[idx] = i;
-                amounts[idx] = withdrawalQueue[i].amount;
-                executeAfters[idx] = withdrawalQueue[i].executeAfter;
-                idx++;
-            }
-        }
-    }
-
-    /// @notice Get total number of queued withdrawals (including processed).
-    function queueLength() external view returns (uint256) {
-        return withdrawalQueue.length;
+        return ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).getPendingQueuedWithdrawals();
     }
 
     function _queueWithdrawal(address toVault, uint256 amount, uint256 intentNonce) internal {
-        if (activeQueuedWithdrawals >= MAX_QUEUED) revert CBV_QueueFull();
-
-        uint64 executeAfter = uint64(block.timestamp) + uint64(WITHDRAWAL_DELAY);
-
-        // VAULT-01 FIX: snapshot the destination vault's code hash at queue time.
-        bytes32 codeHash;
-        assembly { codeHash := extcodehash(toVault) }
-
-        withdrawalQueue.push(QueuedWithdrawal({
-            toVault: toVault,
-            amount: amount,
-            requestTime: uint64(block.timestamp),
-            executeAfter: executeAfter,
-            executed: false,
-            cancelled: false,
-            intentNonce: intentNonce,
-            toVaultCodeHashAtQueue: codeHash
-        }));
-        activeQueuedWithdrawals += 1;
-
-        emit WithdrawalQueued(withdrawalQueue.length - 1, toVault, amount, executeAfter);
-    }
-
-    function _queuePayment(
-        address token,
-        address merchant,
-        address recipient,
-        uint256 amount,
-        uint256 intentNonce
-    ) internal {
-        if (activeQueuedPayments >= MAX_QUEUED_PAYMENTS) revert CBV_PaymentQueueFull();
-
-        uint64 executeAfter = uint64(block.timestamp) + uint64(WITHDRAWAL_DELAY);
-
-        bytes32 codeHash;
-        assembly { codeHash := extcodehash(recipient) }
-
-        paymentQueue.push(QueuedPayment({
-            token: token,
-            merchant: merchant,
-            recipient: recipient,
-            amount: amount,
-            requestTime: uint64(block.timestamp),
-            executeAfter: executeAfter,
-            executed: false,
-            cancelled: false,
-            intentNonce: intentNonce,
-            recipientCodeHashAtQueue: codeHash
-        }));
-        activeQueuedPayments += 1;
-
-        emit PaymentQueued(paymentQueue.length - 1, token, merchant, recipient, amount, executeAfter);
-    }
-
-    function _queueTokenApproval(address token, address spender, uint256 amount) internal {
-        // F-SC-041 FIX: Reject silently overwriting an existing pending
-        // approval. Without this guard a second approveVFIDE/approveERC20
-        // call would replace the previously-queued approval (which may have
-        // had a different spender or amount) without any event/error,
-        // making the queue state confusing for the admin and any UI that
-        // tracks pending approvals. If the admin needs to change a pending
-        // approval, they must call cancelTokenApproval() first to clear
-        // the slot deliberately.
-        require(pendingTokenApproval.executeAfter == 0, "CBV: pending approval exists");
-
-        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
-        pendingTokenApproval = PendingTokenApproval({
-            token: token,
-            spender: spender,
-            amount: amount,
-            executeAfter: executeAfter
-        });
-
-        emit TokenApprovalProposed(token, spender, amount, executeAfter);
+        (uint256 queueIndex, uint64 executeAfter) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager)
+            .queueWithdrawal(toVault, amount, intentNonce);
+        emit WithdrawalQueued(queueIndex, toVault, amount, executeAfter);
     }
 
     function _validateApprovalAmount(uint256 amount) internal view {
@@ -1240,15 +1066,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Return EIP-712 domain separator used for transfer intent signing.
     function domainSeparator() public view returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                EIP712_DOMAIN_TYPEHASH,
-                keccak256(bytes(NAME)),
-                keccak256(bytes(VERSION)),
-                block.chainid,
-                address(this)
-            )
-        );
+        return _domainSeparator;
     }
 
     /// @notice Compute typed-data transfer digest for a transfer intent.
@@ -1281,14 +1099,12 @@ contract CardBoundVault is ReentrancyGuard {
         }
     }
 
-    function _recoverTransferSigner(TransferIntent calldata intent, bytes calldata signature)
+    function _recoverSigner(bytes32 digest, bytes calldata signature)
         internal
-        view
+        pure
         returns (address)
     {
         if (signature.length != 65) revert CBV_InvalidSignature();
-
-        bytes32 digest = _transferDigest(intent);
 
         bytes32 r;
         bytes32 s;
@@ -1307,30 +1123,20 @@ contract CardBoundVault is ReentrancyGuard {
         return recovered;
     }
 
+    function _recoverTransferSigner(TransferIntent calldata intent, bytes calldata signature)
+        internal
+        view
+        returns (address)
+    {
+        return _recoverSigner(_transferDigest(intent), signature);
+    }
+
     function _recoverPaySigner(PayIntent calldata intent, bytes calldata signature)
         internal
         view
         returns (address)
     {
-        if (signature.length != 65) revert CBV_InvalidSignature();
-
-        bytes32 digest = _payDigest(intent);
-
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := calldataload(signature.offset)
-            s := calldataload(add(signature.offset, 32))
-            v := byte(0, calldataload(add(signature.offset, 64)))
-        }
-
-        if (v != 27 && v != 28) revert CBV_InvalidSignature();
-        if (uint256(s) > ECDSA_S_UPPER_BOUND) revert CBV_InvalidSignature();
-
-        address recovered = ecrecover(digest, v, r, s);
-        if (recovered == address(0)) revert CBV_InvalidSignature();
-        return recovered;
+        return _recoverSigner(_payDigest(intent), signature);
     }
 
     function _transferDigest(TransferIntent calldata intent) internal view returns (bytes32) {
@@ -1370,11 +1176,9 @@ contract CardBoundVault is ReentrancyGuard {
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator(), structHash));
     }
 
-    /// @dev H1 FIX: Log merchant payments to ProofLedger for audit trail and ProofScore.
     function _logPayment(address recipient, uint256 amount) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logTransfer(address(this), recipient, amount, "merchant_pay")
-            {} catch { emit LedgerLogFailed(address(this), "merchant_pay"); }
+            try ledger.logTransfer(address(this), recipient, amount, "merchant_pay") {} catch {}
         }
     }
 
@@ -1389,21 +1193,9 @@ contract CardBoundVault is ReentrancyGuard {
         }
     }
 
-    function recoveryAdminSeparationStatus()
-        external
-        view
-        returns (bool unseparated, uint64 since, uint64 daysSince)
-    {
-        unseparated = recoveryAdminUnseparated;
-        since = recoveryUnseparatedSince;
-        daysSince = unseparated && since > 0
-            ? (uint64(block.timestamp) - since) / 1 days
-            : 0;
-    }
-
     function _logTransfer(address toVault, uint256 amount) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logTransfer(address(this), toVault, amount, "vault_to_vault") {} catch { emit LedgerLogFailed(address(this), "vault_to_vault"); }
+            try ledger.logTransfer(address(this), toVault, amount, "vault_to_vault") {} catch {}
         }
     }
 
@@ -1411,73 +1203,48 @@ contract CardBoundVault is ReentrancyGuard {
         if (address(seerAutonomous) == address(0)) return;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
             if (r != 0) revert CBV_SeerBlocked();
-        } catch (bytes memory reason) {
+        } catch {
             // SEER-04 FIX (#179): Hook outages must not brick vault operations.
-            emit ExternalCallFailed("seerAutonomous.beforeAction", reason);
+            emit ExternalCallFailed("seerAutonomous.beforeAction");
             return;
         }
     }
 
     /// @notice Rescue accidentally sent native token; vault custody remains token-based.
-    function rescueNative(address payable to, uint256 amount) external onlyAdmin nonReentrant {
+    function rescueNative(address payable to, uint256 amount) external onlyAdmin {
         if (to == address(0)) revert CBV_Zero();
-
-        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
-        pendingNativeRescue = PendingNativeRescue({
-            to: to,
-            amount: amount,
-            executeAfter: executeAfter
-        });
-        emit NativeRescueProposed(to, amount, executeAfter);
+        IAdminManager(adminManager).proposeNativeRescue(to, amount);
+        emit NativeRescueProposed(to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     function applyRescueNative() external onlyAdmin nonReentrant {
-        PendingNativeRescue memory pending = pendingNativeRescue;
-        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
+        (address payable to, uint256 amount) = IAdminManager(adminManager).applyNativeRescue();
 
-        delete pendingNativeRescue;
-
-        // Do not hard-cap gas here: contract recipients and L2 execution environments
-        // can require more than 10k gas to accept native token transfers.
-        (bool ok, ) = pending.to.call{value: pending.amount}("");
+        (bool ok, ) = to.call{value: amount}("");
         if (!ok) revert CBV_TransferFailed();
-        emit NativeRescue(pending.to, pending.amount);
+        emit NativeRescue(to, amount);
     }
 
     function cancelRescueNative() external onlyAdmin {
-        PendingNativeRescue memory pending = pendingNativeRescue;
-        delete pendingNativeRescue;
-        emit NativeRescueCancelled(pending.to, pending.amount);
+        (address payable to, uint256 amount) = IAdminManager(adminManager).cancelNativeRescue();
+        emit NativeRescueCancelled(to, amount);
     }
 
-    /// @notice CBV-05 FIX: Rescue accidentally sent non-VFIDE ERC20 tokens.
-    /// @dev Prevents rescuing the primary VFIDE token to avoid misuse. All VFIDE
-    ///      custody must flow through the normal vault transfer mechanism.
-    function rescueERC20(address token, address to, uint256 amount) external onlyAdmin nonReentrant {
+    function rescueERC20(address token, address to, uint256 amount) external onlyAdmin {
         if (to == address(0)) revert CBV_Zero();
-        require(token != vfideToken, "CBV: cannot rescue VFIDE via rescueERC20");
-
-        uint64 executeAfter = uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY;
-        pendingERC20Rescue = PendingERC20Rescue({
-            token: token,
-            to: to,
-            amount: amount,
-            executeAfter: executeAfter
-        });
-        emit ERC20RescueProposed(token, to, amount, executeAfter);
+        if (token == vfideToken) revert CBV_InvalidToken();
+        IAdminManager(adminManager).proposeERC20Rescue(token, to, amount);
+        emit ERC20RescueProposed(token, to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     function applyRescueERC20() external onlyAdmin nonReentrant {
-        PendingERC20Rescue memory pending = pendingERC20Rescue;
-        if (pending.executeAfter == 0 || block.timestamp < pending.executeAfter) revert CBV_Locked();
-        delete pendingERC20Rescue;
-        IERC20(pending.token).safeTransfer(pending.to, pending.amount);
+        (address token, address to, uint256 amount) = IAdminManager(adminManager).applyERC20Rescue();
+        IERC20(token).safeTransfer(to, amount);
     }
 
     function cancelRescueERC20() external onlyAdmin {
-        PendingERC20Rescue memory pending = pendingERC20Rescue;
-        delete pendingERC20Rescue;
-        emit ERC20RescueCancelled(pending.token, pending.to, pending.amount);
+        (address token, address to, uint256 amount) = IAdminManager(adminManager).cancelERC20Rescue();
+        emit ERC20RescueCancelled(token, to, amount);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -1487,14 +1254,15 @@ contract CardBoundVault is ReentrancyGuard {
     event RecoveryRotationExecuted(address indexed oldWallet, address indexed newWallet, address indexed oldAdmin, address newAdmin);
 
     function executeRecoveryRotation(address newWallet) external {
-        require(msg.sender == hub, "CBV: only hub");
-        require(newWallet != address(0), "CBV: zero wallet");
+        if (msg.sender != hub) revert CBV_OnlyHub();
+        if (newWallet == address(0)) revert CBV_Zero();
+        _requireOperationalForOutboundTransfers();
 
         // VAULT-EXT-02: Hub-triggered recovery must be pre-approved by vault guardians.
         WalletRotation memory staged = pendingRotation;
-        require(staged.newWallet == newWallet, "CBV: recovery rotation not staged");
-        require(staged.approvals >= guardianThreshold, "CBV: guardian approvals required");
-        require(staged.activateAt != 0 && block.timestamp >= staged.activateAt, "CBV: recovery timelock");
+        if (staged.newWallet != newWallet) revert CBV_InvalidRecoveryRotation();
+        if (staged.approvals < guardianThreshold) revert CBV_RotationInsufficientApprovals();
+        if (staged.activateAt == 0 || block.timestamp < staged.activateAt) revert CBV_RotationNotReady();
 
         address oldWallet = activeWallet;
         address oldAdmin = admin;
@@ -1511,16 +1279,9 @@ contract CardBoundVault is ReentrancyGuard {
         // N-H6/N-H10 FIX: Recovery rotation must clear ALL sensitive queued state so the
         // new admin cannot accidentally apply stale operations approved under the old wallet.
         delete pendingRotation;
-        delete pendingGuardianChange;
-        delete pendingSpendLimitChange;
-        delete pendingLargeTransferThresholdChange;
-        delete pendingERC20Rescue;
-        delete pendingNativeRescue;
-        delete pendingTokenApproval;
-        delete withdrawalQueue;
-        activeQueuedWithdrawals = 0;
-        delete paymentQueue;
-        activeQueuedPayments = 0;
+        IAdminManager(adminManager).clearOnRecovery();
+        ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).clearOnRecovery();
+        ICardBoundVaultPaymentQueueManager(paymentQueueManager).clearOnRecovery();
         pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
 
         emit RecoveryRotationExecuted(oldWallet, newWallet, oldAdmin, newWallet);
@@ -1528,6 +1289,81 @@ contract CardBoundVault is ReentrancyGuard {
         emit AdminTransferred(oldAdmin, newWallet);
         emit RecoveryAdminUnseparated(newWallet, uint64(block.timestamp));
         emit PauseSet(true, msg.sender);
+    }
+
+    function setInheritanceManager(address manager) external onlyAdmin {
+        inheritanceManager = manager;
+    }
+
+    function pendingRecoveryRotation() external view returns (bool) {
+        return pendingRotation.newWallet != address(0);
+    }
+
+    function activeQueuedWithdrawals() external view returns (uint8) {
+        return ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).activeQueuedWithdrawals();
+    }
+
+    function proposeInheritanceConfig(address[] calldata heirGuardians, bytes32[] calldata heirCommitments) external onlyAdmin {
+        ICardBoundVaultInheritanceManager(inheritanceManager).proposeInheritanceConfig(msg.sender, heirGuardians, heirCommitments);
+    }
+
+    function confirmInheritanceConfig() external onlyAdmin {
+        ICardBoundVaultInheritanceManager(inheritanceManager).confirmInheritanceConfig(msg.sender);
+    }
+
+    function cancelInheritanceConfigChange() external onlyAdmin {
+        ICardBoundVaultInheritanceManager(inheritanceManager).cancelInheritanceConfigChange(msg.sender);
+    }
+
+    function clearAllHeirs() external onlyAdmin {
+        ICardBoundVaultInheritanceManager(inheritanceManager).clearAllHeirs(msg.sender);
+    }
+
+    function setProofOfLifeWallet(address polWallet) external onlyAdmin {
+        ICardBoundVaultInheritanceManager(inheritanceManager).setProofOfLifeWallet(msg.sender, polWallet);
+    }
+
+    function initiateInheritanceClaim(bytes32 reasonHash) external onlyGuardian {
+        ICardBoundVaultInheritanceManager(inheritanceManager).initiateInheritanceClaim(msg.sender, reasonHash);
+    }
+
+    function vetoInheritanceClaim() external onlyGuardian {
+        ICardBoundVaultInheritanceManager(inheritanceManager).vetoInheritanceClaim(msg.sender);
+    }
+
+    function ownerOverrideClaim() external {
+        ICardBoundVaultInheritanceManager(inheritanceManager).ownerOverrideClaim(msg.sender);
+    }
+
+    function claimHeirShare(bytes32 heirSecret, uint256 basisPoints) external nonReentrant {
+        ICardBoundVaultInheritanceManager(inheritanceManager).claimHeirShare(msg.sender, heirSecret, basisPoints);
+    }
+
+    function finalizeInheritanceDistribution() external {
+        ICardBoundVaultInheritanceManager(inheritanceManager).finalizeInheritanceDistribution();
+    }
+
+    function withdrawFinalHeirPayout() external nonReentrant {
+        (uint256 amount,,) = ICardBoundVaultInheritanceManager(inheritanceManager).consumeHeirPayout(msg.sender);
+        address heirVault = IVaultHub(hub).ensureVault(msg.sender);
+        IERC20(vfideToken).safeTransfer(heirVault, amount);
+    }
+
+    function cleanupMemorialVault() external {
+        ICardBoundVaultInheritanceManager(inheritanceManager).cleanupMemorialVault();
+    }
+
+    function inheritanceState() external view returns (uint8 state, uint64 windowEnd) {
+        return ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceState();
+    }
+
+    function inheritanceConfigVersion() external view returns (uint64) {
+        return ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceConfigVersion();
+    }
+
+    function _requireOperationalForOutboundTransfers() internal view {
+        (uint8 state,) = ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceState();
+        if (state != 0) revert CBV_InheritanceActive();
     }
 
     receive() external payable {

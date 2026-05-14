@@ -36,7 +36,7 @@ export function VaultRecoveryPanel({ guardianCount, isUserGuardian }: VaultRecov
               </h2>
               <p className="text-white/60 text-sm">
                 CardBound vaults use guardian-backed wallet rotation and queue
-                protections instead of legacy inheritance.
+                protections for recovery. Configure inheritance heirs in the panel below.
               </p>
             </div>
             <div className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-xl text-center">

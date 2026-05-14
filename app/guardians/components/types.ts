@@ -2,7 +2,7 @@ export { shortAddress } from "@/lib/format";
 export { ZERO_ADDRESS } from "@/lib/contracts";
 // ── Guardian types & constants ──────────────────────────────────────────────
 
-export type TabType = 'overview' | 'my-guardians' | 'recovery' | 'responsibilities' | 'pending';
+export type TabType = 'overview' | 'my-guardians' | 'recovery' | 'responsibilities' | 'pending' | 'inheritance';
 
 export type WatchedVault = {
   address: `0x${string}`;
