@@ -5,8 +5,8 @@
  *
  * Pre-cleanup, this file was a 493-line `LegacyGuardianManagementPanel`
  * for the old UserVault implementation (add/remove guardian by writing
- * directly to the vault, M-of-N threshold inputs, inheritance-cancellation
- * voting), wrapped by an early-return that delegated to `MyGuardiansTab`
+ * directly to the vault, M-of-N threshold inputs, guardian veto voting),
+ * wrapped by an early-return that delegated to `MyGuardiansTab`
  * whenever `cardBoundMode === true`. Since `isCardBoundVaultMode()` is
  * hard-coded to true, the legacy panel was unreachable.
  *

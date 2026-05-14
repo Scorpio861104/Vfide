@@ -23,11 +23,12 @@
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { formatEther } from 'viem'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ACTIVE_VAULT_IMPLEMENTATION, isConfiguredContractAddress } from '../lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
 import { ZERO_ADDRESS } from '../lib/constants'
-import { VaultHubABI, VFIDETokenABI } from '../lib/abis'
+import { VaultHubABI, VFIDETokenABI, CardBoundVaultABI } from '../lib/abis'
+import { isCardBoundVaultMode } from '../lib/contracts'
 import { useAppStore } from '@/lib/store/appStore';
 
 const HUB_ABI = VaultHubABI
@@ -106,6 +107,61 @@ export function useVaultBalance() {
     lockedBalanceRaw: 0n,
     isLoading,
     refetch,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// useGuardianCancelInheritance
+// Allows a guardian to veto (cancel) an active inheritance claim on a vault.
+// In the CardBound flow this maps to vetoInheritanceClaim().
+// ---------------------------------------------------------------------------
+export function useGuardianCancelInheritance(vaultAddress?: `0x${string}`) {
+  const { writeContractAsync } = useWriteContract()
+  const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined)
+
+  const { isSuccess, isLoading } = useWaitForTransactionReceipt({ hash: txHash })
+
+  async function cancelInheritance(): Promise<{ success: boolean; txHash?: `0x${string}`; error?: string }> {
+    try {
+      const hash = await writeContractAsync({
+        address: vaultAddress!,
+        abi: CardBoundVaultABI,
+        functionName: 'vetoInheritanceClaim',
+        args: [],
+      })
+      setTxHash(hash)
+      return { success: true, txHash: hash }
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Transaction failed' }
+    }
+  }
+
+  return { cancelInheritance, isLoading, isSuccess }
+}
+
+// ---------------------------------------------------------------------------
+// useInheritanceStatus
+// Reads next-of-kin style inheritance status from a vault. In CardBound mode
+// the vault uses the InheritanceManager multi-heir system, so legacy
+// next-of-kin fields are meaningless — hasNextOfKin always returns false.
+// ---------------------------------------------------------------------------
+export function useInheritanceStatus(vaultAddress?: `0x${string}`) {
+  const isCardBound = isCardBoundVaultMode()
+
+  const { data } = useReadContract({
+    address: vaultAddress,
+    abi: CardBoundVaultABI,
+    functionName: 'vaultAdmin',
+    query: { enabled: !!vaultAddress && !isCardBound },
+  })
+
+  const nextOfKin = isCardBound
+    ? ZERO_ADDRESS
+    : (data as string | undefined) ?? ZERO_ADDRESS
+
+  return {
+    nextOfKin,
+    hasNextOfKin: nextOfKin !== ZERO_ADDRESS && nextOfKin !== '0x0000000000000000000000000000000000000000',
   }
 }
 

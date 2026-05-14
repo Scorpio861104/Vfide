@@ -145,7 +145,7 @@ describe('HelpCenter', () => {
     fireEvent.click(helpButton)
     fireEvent.click(screen.getByText('Vault Security'))
 
-    expect(screen.getByText(/Wallet Rotation: Guardians can approve signer rotation and protect queued transfers without exposing legacy inheritance flows/i)).toBeInTheDocument()
+    expect(screen.getByText(/Wallet Rotation: Guardians can approve signer rotation and protect queued transfers\. Configure heirs and inheritance in the vault's Inheritance section\./i)).toBeInTheDocument()
     expect(screen.queryByText(/Next of Kin: Designate an heir to inherit your vault if something happens/i)).not.toBeInTheDocument()
   })
 })

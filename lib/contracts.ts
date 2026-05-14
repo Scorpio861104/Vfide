@@ -312,6 +312,13 @@ export type VaultImplementation = 'cardbound';
 
 export const ACTIVE_VAULT_IMPLEMENTATION: VaultImplementation = 'cardbound';
 
+// isCardBoundVaultMode — always returns true in production but kept as a
+// named function so tests can mock it when verifying CardBound-vs-legacy
+// branching logic.
+export function isCardBoundVaultMode(): boolean {
+  return ACTIVE_VAULT_IMPLEMENTATION === 'cardbound';
+}
+
 // CardBoundVault is the only active implementation
 export const ACTIVE_VAULT_ABI = CARD_BOUND_VAULT_ABI;
 
