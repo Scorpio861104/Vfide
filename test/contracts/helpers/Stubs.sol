@@ -162,6 +162,9 @@ contract VaultHubStub {
     mapping(address => address) public vaultOwners;
     mapping(address => bool) public isVault;
     mapping(address => bool) public guardianSetupComplete;
+    // R-4 test support — settable per-vault flag so tests can simulate
+    // MEMORIAL state without spinning up the inheritance manager itself.
+    mapping(address => bool) public inMemorialState;
 
     function setVault(address owner, address vault) external {
         address existingVault = vaults[owner];
@@ -208,6 +211,16 @@ contract VaultHubStub {
 
     function setGuardianSetupComplete(address vault, bool complete) external {
         guardianSetupComplete[vault] = complete;
+    }
+
+    /// @notice R-4 test helper — let tests directly mark a vault as in MEMORIAL state.
+    function setInMemorialState(address vault, bool inMemorial) external {
+        inMemorialState[vault] = inMemorial;
+    }
+
+    /// @notice R-4 — read view consumed by EscrowManager + VFIDETermLoan settlement paths.
+    function isInMemorialState(address vault) external view returns (bool) {
+        return inMemorialState[vault];
     }
 }
 

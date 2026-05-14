@@ -33,6 +33,17 @@ error ESC_HighValueRequiresDAO();
 error ESC_ActionBlocked(uint8 result);
 error ESC_Deprecated();
 
+// Minimal VaultHub interface for inheritance state probing. Both views are needed:
+// isInMemorialState ensures distribution has already happened on the deceased's vault;
+// vaultOf maps an address back to its vault for state lookup.
+interface IVaultHubESC {
+    function vaultOf(address owner) external view returns (address);
+    function isInMemorialState(address vault) external view returns (bool);
+}
+
+error ESC_NotInheritanceActive();
+error ESC_InheritanceAlreadySettled();
+
 contract EscrowManager is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -61,6 +72,10 @@ contract EscrowManager is ReentrancyGuard {
     event DAOChangeProposed(address indexed newDAO, uint256 effectiveAt);
     event DAOChanged(address indexed oldDAO, address indexed newDAO);
     event DAOChangeCancelled();
+    /// @notice R-4 — emitted when an escrow is unwound because one party's vault entered MEMORIAL.
+    event EscrowSettledByInheritance(uint256 indexed escrowId, address indexed deceasedParty, address indexed refundedTo, uint256 amount);
+    /// @notice R-4 — emitted when the VaultHub address used for inheritance probes is set or changed.
+    event VaultHubSet(address indexed previous, address indexed current);
 
     enum State { CREATED, RELEASED, REFUNDED, DISPUTED }
 
@@ -92,6 +107,12 @@ contract EscrowManager is ReentrancyGuard {
     uint256 public constant ARBITER_TIMELOCK = 7 days;
     uint256 public constant DISPUTE_TIMEOUT = 90 days;
 
+    /// @notice R-4 — VaultHub used to probe inheritance state on the buyer/merchant address.
+    /// @dev Zero address by default; the DAO sets it via `setVaultHub`. When zero, the
+    ///      inheritance settlement path is disabled and `settleByInheritance` reverts. This
+    ///      preserves the contract's behavior in deployments where the hub isn't wired yet.
+    IVaultHubESC public vaultHub;
+
     constructor(address _arbiter, address _seer) {
         require(_arbiter != address(0) && _seer != address(0), "zero address");
         arbiter = _arbiter;
@@ -99,6 +120,66 @@ contract EscrowManager is ReentrancyGuard {
         dao = msg.sender; // Keep DAO governance independent from arbiter role
         // C-2 FIX: Initialize arbiterChangeTime to max to prevent instant execution
         arbiterChangeTime = type(uint256).max;
+    }
+
+    /// @notice R-4 — DAO sets the VaultHub used for inheritance state lookups.
+    /// @dev No timelock — this is a pure read-side hookup. The DAO can change it
+    ///      to a new hub address if the protocol relocates, or zero it out to
+    ///      disable the inheritance settlement path entirely.
+    function setVaultHub(address newHub) external {
+        require(msg.sender == dao, "ESC: not DAO");
+        address previous = address(vaultHub);
+        vaultHub = IVaultHubESC(newHub);
+        emit VaultHubSet(previous, newHub);
+    }
+
+    /**
+     * @notice R-4 — Settle a stuck escrow when one party's vault has entered MEMORIAL state.
+     *
+     * Pull-based settlement: anyone (heirs, the surviving counterparty, a watchful third
+     * party) can call this with the escrow id once the buyer or merchant's vault has
+     * entered MEMORIAL (state 3) or CLOSED (state 4). The escrow is refunded to the
+     * buyer — this is the conservative choice:
+     *   - If the BUYER died: funds return to the deceased's address. Their vault is in
+     *     MEMORIAL, so the funds land there. Heirs that revealed during the claim window
+     *     have already received their share; the post-finalize balance reflects what's
+     *     available, and any new inbound is captured by the vault as residual. The
+     *     deceased's family doesn't lose the deposit they made before death.
+     *   - If the MERCHANT died: funds also return to the buyer. The merchant has not
+     *     delivered (the escrow is still CREATED), so this is the right unwind — the
+     *     buyer is made whole without needing to chase the merchant's estate.
+     *
+     * The function is gated on `state == CREATED` so a released or refunded escrow is
+     * not double-spent. It is permissionless — by design, the deceased's side of the
+     * transaction may have no live operator, so requiring caller authority would
+     * deadlock the escrow forever.
+     *
+     * @param id Escrow identifier.
+     */
+    function settleByInheritance(uint256 id) external nonReentrant {
+        if (address(vaultHub) == address(0)) revert ESC_NotInheritanceActive();
+        Escrow storage e = escrows[id];
+        if (e.state != State.CREATED) revert ESC_BadState();
+        if (e.amount == 0) revert ESC_BadState();
+
+        // Probe both parties' vaults. We accept settlement if EITHER vault is in
+        // MEMORIAL or CLOSED state — it doesn't matter which side died, the escrow
+        // is stuck either way and unwinding to the buyer is the safe default.
+        address buyerVault = vaultHub.vaultOf(e.buyer);
+        address merchantVault = vaultHub.vaultOf(e.merchant);
+        address deceasedParty;
+        if (buyerVault != address(0) && vaultHub.isInMemorialState(buyerVault)) {
+            deceasedParty = e.buyer;
+        } else if (merchantVault != address(0) && vaultHub.isInMemorialState(merchantVault)) {
+            deceasedParty = e.merchant;
+        } else {
+            revert ESC_NotInheritanceActive();
+        }
+
+        e.state = State.REFUNDED;
+        IERC20(e.token).safeTransfer(e.buyer, e.amount);
+        emit EscrowSettledByInheritance(id, deceasedParty, e.buyer, e.amount);
+        emit EscrowRefunded(id);
     }
 
     function setTokenWhitelist(address token, bool status) external {

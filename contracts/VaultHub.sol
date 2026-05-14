@@ -657,4 +657,36 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice HALT-01: Hub-level global unpause is deprecated in favor of breaker signals.
     function unpause() external onlyOwner { revert VH_DeprecatedGlobalPause(); }
+
+    /// @notice Returns true if the vault is in any inheritance state other than NORMAL or CLOSED.
+    /// @dev Thin delegation to the vault's own inheritanceState() — gives external callers
+    ///      (e.g. counterparties checking before initiating an escrow with this vault) a single
+    ///      bool answer without needing the full vault interface.
+    function isInheritanceActive(address vault) external view returns (bool) {
+        if (ownerOfVault[vault] == address(0)) return false;
+        if (vaultOf[ownerOfVault[vault]] != vault) return false;
+        (uint8 state, ) = ICardBoundVaultInheritanceProbe(vault).inheritanceState();
+        // state codes: 0 = NORMAL, 1 = VETO_PERIOD, 2 = CLAIM_WINDOW, 3 = MEMORIAL, 4 = CLOSED.
+        // "Active" means anything that affects normal vault operation — VETO_PERIOD, CLAIM_WINDOW,
+        // and MEMORIAL all signal "this vault should not be relied on for new business."
+        return state == 1 || state == 2 || state == 3;
+    }
+
+    /// @notice Returns true if the vault is in MEMORIAL or CLOSED state.
+    /// @dev Used by external obligation contracts (EscrowManager, VFIDETermLoan) as the gate
+    ///      for inheritance-driven settlement. MEMORIAL means distribution is complete and
+    ///      the vault's heir payouts have been finalized — it is safe (and desirable) to
+    ///      unwind obligations associated with this address. CLOSED is the terminal state
+    ///      after the memorial period; still safe.
+    function isInMemorialState(address vault) external view returns (bool) {
+        if (ownerOfVault[vault] == address(0)) return false;
+        if (vaultOf[ownerOfVault[vault]] != vault) return false;
+        (uint8 state, ) = ICardBoundVaultInheritanceProbe(vault).inheritanceState();
+        return state == 3 || state == 4;
+    }
+}
+
+/// @dev Minimal interface used only by VaultHub.isInheritanceActive.
+interface ICardBoundVaultInheritanceProbe {
+    function inheritanceState() external view returns (uint8 state, uint64 windowEnd);
 }

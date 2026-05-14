@@ -68,6 +68,10 @@ interface ICardBoundVaultInheritanceManager {
     function hasVetoedClaim(address guardian) external view returns (bool);
     function hasRevealedClaim(address claimant) external view returns (bool);
     function isClaimedHash(bytes32 heirHash) external view returns (bool);
+    // R-3 — DAO guardian initiation block
+    function setDAOGuardian(address actor, address dao) external;
+    // R-1 — Guardian-quorum cancel of pending config
+    function cancelInheritanceConfigChangeByGuardians(address actor) external;
 }
 
 interface ICardBoundVaultPaymentQueueManager {
@@ -1323,6 +1327,19 @@ contract CardBoundVault is ReentrancyGuard {
         ICardBoundVaultInheritanceManager(inheritanceManager).setProofOfLifeWallet(msg.sender, polWallet);
     }
 
+    /// @notice R-3 — Register the DAO guardian for this vault. Once set, that
+    ///         address cannot initiate inheritance claims (only veto).
+    function setDAOGuardian(address dao) external onlyAdmin {
+        ICardBoundVaultInheritanceManager(inheritanceManager).setDAOGuardian(msg.sender, dao);
+    }
+
+    /// @notice R-1 — Guardian votes to cancel the active pending heir-config
+    ///         proposal. Reaching the vault's current guardian threshold
+    ///         clears the proposal. Backstop for owner-key compromise.
+    function cancelInheritanceConfigChangeByGuardians() external onlyGuardian {
+        ICardBoundVaultInheritanceManager(inheritanceManager).cancelInheritanceConfigChangeByGuardians(msg.sender);
+    }
+
     function initiateInheritanceClaim(bytes32 reasonHash) external onlyGuardian {
         ICardBoundVaultInheritanceManager(inheritanceManager).initiateInheritanceClaim(msg.sender, reasonHash);
     }
@@ -1339,7 +1356,46 @@ contract CardBoundVault is ReentrancyGuard {
         ICardBoundVaultInheritanceManager(inheritanceManager).claimHeirShare(msg.sender, heirSecret, basisPoints);
     }
 
+    /// @notice Emitted when finalizeInheritanceDistribution settles the
+    ///         vault's local timelocked obligations. External obligations
+    ///         (escrows, term loans, subscriptions) remain in their respective
+    ///         contracts — see VFIDE_INHERITANCE_THREAT_MODEL.md R-4.
+    event LocalObligationsCancelled(
+        uint256 withdrawalsCancelled,
+        uint256 paymentsCancelled
+    );
+
+    /// @notice Finalize the inheritance distribution.
+    ///
+    /// Three-step sequence:
+    ///   1. Cancel all local timelocked obligations on the vault so the
+    ///      balance reflects what's actually available for distribution.
+    ///      We reuse `clearOnRecovery` on each sub-manager because
+    ///      inheritance has identical "abandon pending state" semantics as
+    ///      recovery — the admin is gone and no queued operation should
+    ///      auto-apply post-mortem.
+    ///   2. Emit a precise event with the cleared counts.
+    ///   3. Delegate to the inheritance manager for the distribution math.
+    ///
+    /// External obligations (escrows, term loans, subscriptions) are NOT
+    /// force-settled here. They remain in their respective contracts; the
+    /// vault's outbound-transfer guard ensures funds cannot leak from the
+    /// vault while inheritance is in flight, but it does not unwind
+    /// existing positions. v1.1 will add cross-contract settlement hooks.
+    /// Documented as residual risk R-4 in the threat model.
     function finalizeInheritanceDistribution() external {
+        // Read counts BEFORE clearing so the event reflects what was cancelled.
+        uint256 withdrawalsCount =
+            ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).activeQueuedWithdrawals();
+        uint256 paymentsCount =
+            ICardBoundVaultPaymentQueueManager(paymentQueueManager).activeQueuedPayments();
+
+        IAdminManager(adminManager).clearOnRecovery();
+        ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).clearOnRecovery();
+        ICardBoundVaultPaymentQueueManager(paymentQueueManager).clearOnRecovery();
+
+        emit LocalObligationsCancelled(withdrawalsCount, paymentsCount);
+
         ICardBoundVaultInheritanceManager(inheritanceManager).finalizeInheritanceDistribution();
     }
 

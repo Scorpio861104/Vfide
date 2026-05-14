@@ -637,6 +637,25 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "withdrawalsCancelled",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "paymentsCancelled",
+        "type": "uint256"
+      }
+    ],
+    "name": "LocalObligationsCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "sender",
@@ -1516,6 +1535,13 @@
   {
     "inputs": [],
     "name": "cancelInheritanceConfigChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelInheritanceConfigChangeByGuardians",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -2481,6 +2507,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "dao",
+        "type": "address"
+      }
+    ],
+    "name": "setDAOGuardian",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

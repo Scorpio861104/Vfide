@@ -66,6 +66,9 @@ interface ISeerTL {
 
 interface IVaultHubTL {
     function vaultOf(address owner) external view returns (address);
+    /// @dev R-4 — used by settleLoanByInheritance to gate on either party's vault
+    ///      being in MEMORIAL or CLOSED state.
+    function isInMemorialState(address vault) external view returns (bool);
 }
 
 interface ICardBoundVaultTL {
@@ -266,6 +269,11 @@ contract VFIDETermLoan is ReentrancyGuard {
     event GuarantorExtractionRound(uint256 indexed id, uint256 extracted, uint256 skipped, uint256 guarantorCount);
     event GuarantorRelieved(uint256 indexed id, address indexed guarantor, uint256 remainingLiability);
     event LoanCancelled(uint256 indexed id);
+    /// @notice R-4 — emitted when a loan is unwound because one party's vault entered MEMORIAL.
+    ///         For OPEN/COSIGNING loans, lender's principal is returned to the lender. For
+    ///         ACTIVE/GRACE loans, the loan is marked settled; the lender pursues default-claim
+    ///         through the normal flow against the borrower's heir vault.
+    event LoanSettledByInheritance(uint256 indexed id, address indexed deceasedParty, uint8 priorState);
     event RevenueAssignmentSet(uint256 indexed id, bool enabled);
     event TiersUpdated(uint256 t1, uint256 t2, uint256 t3, uint256 t4);
 
@@ -381,6 +389,81 @@ contract VFIDETermLoan is ReentrancyGuard {
         // createLoan deposited it (line 303).
         vfideToken.safeTransfer(_settlementRecipient(l.lender), l.principal);
         emit LoanCancelled(id);
+    }
+
+    /// @notice R-4 — Settle a loan when one party's vault has entered MEMORIAL state.
+    ///
+    /// Pull-based settlement: anyone can call this once the lender or borrower's vault
+    /// enters MEMORIAL (state 3) or CLOSED (state 4). Branches by loan state:
+    ///   - OPEN or COSIGNING: principal is still in this contract (lender deposited
+    ///     at createLoan, borrower hasn't received). Refund principal to lender's
+    ///     settlement recipient. If lender is the deceased, funds return to their
+    ///     vault for inheritance distribution. If borrower is the deceased, the
+    ///     lender simply gets their offer back.
+    ///   - ACTIVE / GRACE / RESTRUCTURED: principal already disbursed to borrower.
+    ///     Mark loan DEFAULTED so the lender's normal default-claim flow can pursue
+    ///     the heir's vault. Guarantor commitments stay live — the heir's vault
+    ///     inherits the debt, and guarantors remain on the hook per their commitment.
+    ///     This is intentionally aggressive on the borrower side: death does NOT
+    ///     forgive the debt.
+    ///   - REPAID / DEFAULTED / CANCELLED: no-op + revert (already terminal).
+    ///
+    /// VaultHub must be wired for this function to work. Without it, settlement is
+    /// disabled (reverts with TL_WrongState). This preserves the contract's behavior
+    /// in deployments where the hub isn't connected.
+    function settleLoanByInheritance(uint256 id) external nonReentrant {
+        if (address(vaultHub) == address(0)) revert TL_WrongState();
+        Loan storage l = loans[id];
+
+        LoanState prior = l.state;
+        // Skip already-terminal states.
+        if (prior == LoanState.REPAID || prior == LoanState.DEFAULTED || prior == LoanState.CANCELLED) {
+            revert TL_WrongState();
+        }
+
+        // Probe both parties.
+        address lenderVault = vaultHub.vaultOf(l.lender);
+        address borrowerVault = vaultHub.vaultOf(l.borrower);
+        address deceasedParty;
+        if (lenderVault != address(0) && vaultHub.isInMemorialState(lenderVault)) {
+            deceasedParty = l.lender;
+        } else if (borrowerVault != address(0) && vaultHub.isInMemorialState(borrowerVault)) {
+            deceasedParty = l.borrower;
+        } else {
+            revert TL_WrongState();
+        }
+
+        if (prior == LoanState.OPEN || prior == LoanState.COSIGNING) {
+            // Principal is in this contract; refund to lender's settlement recipient.
+            l.state = LoanState.CANCELLED;
+            if (activeLoanCount[l.lender] > 0) activeLoanCount[l.lender]--;
+            if (prior == LoanState.COSIGNING && activeLoanCount[l.borrower] > 0) {
+                activeLoanCount[l.borrower]--;
+            }
+            // Release guarantor commitments made during COSIGNING (if any).
+            if (prior == LoanState.COSIGNING) {
+                address[] storage signers = guarantors[id];
+                for (uint256 i = 0; i < signers.length; i++) {
+                    address g = signers[i];
+                    uint256 committed = guarantorCommittedLiability[id][g];
+                    if (committed > 0) {
+                        address source = guarantorVault[id][g];
+                        if (source == address(0)) source = g;
+                        _releaseGuarantorCommitment(id, g, source, committed);
+                    }
+                }
+            }
+            vfideToken.safeTransfer(_settlementRecipient(l.lender), l.principal);
+        } else {
+            // ACTIVE / GRACE / RESTRUCTURED — debt is already with borrower.
+            // Mark defaulted so the lender's normal claim flow picks it up.
+            // We do NOT decrement activeLoanCount here — defaulted loans are
+            // tracked by `unresolvedDefaults` per existing design.
+            l.state = LoanState.DEFAULTED;
+            unresolvedDefaults[l.borrower]++;
+        }
+
+        emit LoanSettledByInheritance(id, deceasedParty, uint8(prior));
     }
 
     // ═══════════════════════════════════════════════════════════════════════
