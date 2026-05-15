@@ -138,7 +138,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
             role="presentation"
             aria-hidden={!isOpen}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/50 md:hidden z-40"
+            className="fixed inset-0 bg-black/50 backdrop-blur-md md:hidden z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -152,7 +152,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
         {isOpen && (
           <motion.aside
             id="mobile-drawer-panel"
-            className="fixed left-0 top-0 h-full w-70 bg-zinc-900 border-r border-zinc-700 md:hidden z-50"
+            className="fixed left-0 top-0 h-full w-70 bg-zinc-900/80 backdrop-blur-2xl border-r border-white/10 shadow-2xl shadow-black/50 md:hidden z-50"
             aria-hidden={false}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}

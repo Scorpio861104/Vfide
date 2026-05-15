@@ -61,7 +61,7 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
 function clientIp(req: NextRequest): string {
   // Vercel sets x-forwarded-for; the first entry is the client
   const xff = req.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
+  if (xff) return (xff.split(',')[0] ?? '').trim();
   return req.headers.get('x-real-ip') || 'unknown';
 }
 

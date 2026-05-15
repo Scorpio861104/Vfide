@@ -77,7 +77,8 @@ export function BottomTabBar() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/5 bg-zinc-950/95 backdrop-blur-xl safe-area-bottom md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-zinc-950/70 backdrop-blur-xl safe-area-bottom md:hidden"
+        style={{ backgroundImage: 'linear-gradient(to top, rgba(8,145,178,0.04), transparent)' }}
         role="navigation"
         aria-label="Main navigation"
       >

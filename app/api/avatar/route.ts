@@ -61,7 +61,7 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
 
 function clientIp(req: NextRequest): string {
   const xff = req.headers.get('x-forwarded-for');
-  if (xff) return xff.split(',')[0].trim();
+  if (xff) return (xff.split(',')[0] ?? '').trim();
   return req.headers.get('x-real-ip') || 'unknown';
 }
 
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
 
   let publicUrl: string;
   try {
-    const blob = await put(pathname, uploadBytes, {
+    const blob = await put(pathname, uploadBytes as Parameters<typeof put>[1], {
       access: 'public',
       contentType: ct,
       addRandomSuffix: false, // we already added entropy above

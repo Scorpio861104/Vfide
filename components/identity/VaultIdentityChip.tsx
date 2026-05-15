@@ -34,6 +34,8 @@ export interface VaultIdentityChipProps {
   suffixOverride?: string;
   /** Hide the address suffix (e.g. when the chip is large and address shows elsewhere). NEVER pass this in payment confirmation flows. */
   hideAddress?: boolean;
+  /** Wrap the chip in a glassmorphic container — backdrop blur + translucent bg + border. Use on dark surfaces where the chip would otherwise look like floating bare text. */
+  glass?: boolean;
   /** Optional extra class on the wrapping container. */
   className?: string;
 }
@@ -70,20 +72,32 @@ export function VaultIdentityChip({
   onClick,
   suffixOverride,
   hideAddress = false,
+  glass = false,
   className,
 }: VaultIdentityChipProps) {
   const { identity, isLoading } = useVaultIdentity(address);
   const cfg = SIZE_CONFIG[size];
 
+  // Glass treatment: backdrop-blur + transparent surface + subtle border.
+  // Matches the GlassCard aesthetic for inline elements where a full card
+  // would be too heavy. Padding scales with size so the chip stays balanced.
+  const glassClass = glass
+    ? size === 'sm'
+      ? 'rounded-lg bg-white/5 backdrop-blur-md border border-white/10 px-2 py-1'
+      : size === 'md'
+      ? 'rounded-xl bg-white/5 backdrop-blur-md border border-white/10 px-3 py-1.5'
+      : 'rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 px-4 py-2'
+    : '';
+
   // Skeleton state — preserve layout while resolving
   if (!address) {
     return (
       <div
-        className={`inline-flex items-center ${cfg.gap} ${className ?? ''}`}
+        className={`inline-flex items-center ${cfg.gap} ${glassClass} ${className ?? ''}`}
         aria-busy="true"
       >
         <div
-          className="rounded-full bg-zinc-200 animate-pulse"
+          className="rounded-full bg-zinc-200/20 animate-pulse"
           style={{ width: cfg.identicon, height: cfg.identicon }}
         />
         <span className={`${cfg.nameClass} text-zinc-400`}>—</span>
@@ -102,7 +116,7 @@ export function VaultIdentityChip({
   return (
     <Wrapper
       onClick={onClick}
-      className={`inline-flex items-center ${cfg.gap} ${onClick ? 'hover:opacity-80 cursor-pointer' : ''} ${className ?? ''}`}
+      className={`inline-flex items-center ${cfg.gap} ${glassClass} ${onClick ? 'hover:opacity-80 hover:border-white/20 cursor-pointer transition-colors' : ''} ${className ?? ''}`}
       aria-label={`${displayName} (${truncateAddress(address)})`}
     >
       {/* Avatar or identicon. Avatar wins if profile has one and merchant isn't delisted. */}

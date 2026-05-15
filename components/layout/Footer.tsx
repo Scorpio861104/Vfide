@@ -49,7 +49,10 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="relative bg-zinc-950 border-t border-zinc-800 overflow-hidden">
+    <footer
+      className="relative bg-zinc-950/80 border-t border-white/10 backdrop-blur-xl overflow-hidden"
+      style={{ backgroundImage: 'linear-gradient(to bottom, rgba(8,145,178,0.03), transparent)' }}
+    >
       {/* Background gradient */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-400/3 rounded-full blur-[150px]" />

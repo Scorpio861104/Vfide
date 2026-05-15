@@ -66,7 +66,7 @@ export function Identicon({
     // Clear any previous render (handles size/address changes)
     container.innerHTML = '';
     try {
-      const icon: HTMLElement = jazzicon(size, seed);
+      const icon = jazzicon(size, seed) as unknown as HTMLElement;
       // Jazzicon sets style.display = 'inline-block' by default; the wrapping
       // div controls layout via className, so we let the inner element flow.
       container.appendChild(icon);

@@ -74,14 +74,14 @@ export function ConfirmModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-150 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-150 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
           onClick={onClose}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 max-w-md w-full"
+            className="bg-zinc-900/80 border border-white/10 rounded-2xl p-6 max-w-md w-full backdrop-blur-2xl shadow-2xl shadow-black/50"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}

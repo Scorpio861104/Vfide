@@ -11,6 +11,7 @@ import { Footer } from '@/components/layout/Footer';
 import { MerchantProfileWizard } from '@/components/merchant/MerchantProfileWizard';
 import { useVaultIdentity } from '@/hooks/useVaultIdentity';
 import { useMerchantProfile } from '@/hooks/useMerchantProfile';
+import { GlassCard } from '@/components/ui/GlassCard';
 
 interface FetchedProfile {
   name: string;
@@ -72,21 +73,21 @@ export default function MerchantProfileEditPage() {
           </Link>
 
           {!address ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-6 text-center text-gray-400">
+            <GlassCard hover={false} className="p-6 text-center text-gray-400">
               Connect your wallet to edit your merchant profile.
-            </div>
+            </GlassCard>
           ) : registrationStatus === 'unknown' || isLoadingProfile ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-gray-400">
+            <GlassCard hover={false} className="p-6 text-center text-gray-400">
               Loading your profile…
-            </div>
+            </GlassCard>
           ) : registrationStatus === 'none' ? (
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 text-center text-amber-200">
+            <GlassCard gradient="gold" hover={false} className="p-6 text-center text-amber-200">
               You&apos;re not registered as a merchant yet.{' '}
               <Link href="/merchant/profile/setup" className="underline hover:text-amber-100">
                 Set up your profile
               </Link>{' '}
               to get started.
-            </div>
+            </GlassCard>
           ) : (
             <MerchantProfileWizard
               introTitle="Edit your business profile"

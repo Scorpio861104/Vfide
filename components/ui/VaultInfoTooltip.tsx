@@ -70,7 +70,7 @@ export function VaultInfoTooltip({
             transition={{ duration: 0.15 }}
             className={`absolute ${positionClasses[position]} w-80 z-50`}
           >
-            <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 shadow-xl">
+            <div className="bg-zinc-900/85 backdrop-blur-xl border border-white/10 rounded-lg p-4 shadow-xl shadow-black/40">
               {/* Close button for click trigger */}
               {trigger === 'click' && (
                 <button
@@ -133,7 +133,7 @@ export function VaultInfoTooltip({
 
               {/* Tooltip arrow */}
               <div 
-                className={`absolute w-3 h-3 bg-zinc-900 border-zinc-700 transform rotate-45 ${
+                className={`absolute w-3 h-3 bg-zinc-900/85 border-white/10 backdrop-blur-xl transform rotate-45 ${
                   position === 'bottom' ? 'border-t border-l -top-1.5 left-1/2 -translate-x-1/2' :
                   position === 'top' ? 'border-b border-r -bottom-1.5 left-1/2 -translate-x-1/2' :
                   position === 'right' ? 'border-t border-l -left-1.5 top-1/2 -translate-y-1/2' :

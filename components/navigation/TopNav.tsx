@@ -80,7 +80,8 @@ export function TopNav() {
   return (
     <>
       <nav
-        className="fixed left-0 right-0 top-0 z-50 hidden h-14 items-center border-b border-white/5 bg-zinc-950/95 px-6 backdrop-blur-xl md:flex"
+        className="fixed left-0 right-0 top-0 z-50 hidden h-14 items-center border-b border-white/10 bg-zinc-950/70 px-6 backdrop-blur-xl md:flex"
+        style={{ backgroundImage: 'linear-gradient(to bottom, rgba(8,145,178,0.04), transparent)' }}
         role="navigation"
         aria-label="Main navigation"
       >
