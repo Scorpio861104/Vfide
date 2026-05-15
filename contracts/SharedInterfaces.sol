@@ -71,6 +71,9 @@ interface IVaultHub {
     function finalizeDAORecovery(address vault) external;
     function cancelDAORecovery(address vault) external;
     function totalVaultsCreated() external view returns (uint256);
+    /// @dev R-4 — true if `vault` is in MEMORIAL (state 3) or CLOSED (state 4).
+    ///      Used by external obligation managers to gate inheritance-driven settlement.
+    function isInMemorialState(address vault) external view returns (bool);
 }
 
 interface IProofLedger {

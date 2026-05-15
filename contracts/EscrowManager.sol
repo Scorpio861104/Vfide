@@ -167,7 +167,7 @@ contract EscrowManager is ReentrancyGuard {
         // is stuck either way and unwinding to the buyer is the safe default.
         address buyerVault = vaultHub.vaultOf(e.buyer);
         address merchantVault = vaultHub.vaultOf(e.merchant);
-        address deceasedParty;
+        address deceasedParty = address(0);
         if (buyerVault != address(0) && vaultHub.isInMemorialState(buyerVault)) {
             deceasedParty = e.buyer;
         } else if (merchantVault != address(0) && vaultHub.isInMemorialState(merchantVault)) {

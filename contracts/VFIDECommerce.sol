@@ -4,6 +4,9 @@ pragma solidity 0.8.30;
 import "./SharedInterfaces.sol";
 interface IVaultHub_COM {
     function vaultOf(address owner) external view returns (address);
+    /// @dev R-4 — used by settleByInheritance to gate on either party's vault
+    ///      being in MEMORIAL or CLOSED state.
+    function isInMemorialState(address vault) external view returns (bool);
 }
 interface ISeer_COM {
     function getScore(address) external view returns (uint16);
@@ -30,12 +33,16 @@ error COM_TooEarly();
 error COM_NotFunded();
 error COM_SecLocked();
 error COM_NotAllowed();
+/// @notice R-4 — neither party's vault is in MEMORIAL state.
+error COM_NotInheritanceActive();
 error COM_BadRating();
 
 contract MerchantRegistry {
     event ModulesSet(address dao, address token, address hub, address seer, address ledger);
     event PolicySet(uint16 minScore, uint8 autoSuspendRefunds, uint8 autoSuspendDisputes);
     event MerchantAdded(address indexed owner, address indexed vault, bytes32 metaHash);
+    /// @notice Emitted when a merchant updates their off-chain profile hash via setMetaHash.
+    event MerchantMetaHashUpdated(address indexed owner, bytes32 newHash);
     event MerchantStatus(address indexed owner, Status status, string reason);
     event AutoFlagged(address indexed owner, string reason);
 
@@ -99,6 +106,33 @@ contract MerchantRegistry {
 
         try ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender) {} catch {}
         emit MerchantAdded(msg.sender, v, metaHash);
+    }
+
+    /// @notice Update the off-chain profile hash for the calling merchant.
+    /// @dev Lets a merchant correct typos, swap avatars, or update their bio without
+    ///      re-registering. See VFIDE_MERCHANT_PROFILE_SPEC.md §8 for the off-chain
+    ///      JSON shape that this hash resolves to.
+    ///
+    ///      Status gates:
+    ///        - NONE     -> revert (not a registered merchant)
+    ///        - ACTIVE   -> allowed
+    ///        - SUSPENDED -> allowed (suspension is recoverable; merchant may want to
+    ///                                fix what got them suspended)
+    ///        - DELISTED -> revert (terminal state; the canonical frontend will not
+    ///                              render their profile per spec §7/§8 regardless,
+    ///                              but blocking the write makes the intent unambiguous)
+    ///
+    ///      Setting newHash to bytes32(0) is a valid "delete my profile" gesture —
+    ///      the resolver falls back to identicon + truncated address. Note that
+    ///      previously-published content may persist on IPFS; the chain merely
+    ///      stops pointing to it.
+    /// @param newHash The new CIDv1/sha2-256 digest pointing to the merchant's profile JSON.
+    function setMetaHash(bytes32 newHash) external {
+        Merchant storage m = merchants[msg.sender];
+        if (m.status == Status.NONE) revert COM_NotMerchant();
+        if (m.status == Status.DELISTED) revert COM_Delisted();
+        m.metaHash = newHash;
+        emit MerchantMetaHashUpdated(msg.sender, newHash);
     }
 
     address public authorizedEscrow;
@@ -168,6 +202,37 @@ contract MerchantRegistry {
         lastRefundAt[owner] = uint64(block.timestamp);
         lastDisputeAt[owner] = uint64(block.timestamp);
         emit MerchantStatus(owner, Status.ACTIVE, "dao_unsuspend");
+    }
+
+    /// @notice DAO action: permanently delist a merchant.
+    /// @dev DELISTED is a terminal state — no path back to ACTIVE. Use cases:
+    ///        - Confirmed fraud after investigation
+    ///        - Repeated dispute losses beyond rehabilitation
+    ///        - Regulator/sanctions demand
+    ///        - Severe ToS violation
+    ///
+    ///      Effects:
+    ///        - Merchant cannot open new escrows (createEscrow guards on DELISTED)
+    ///        - Merchant cannot update their profile via setMetaHash (this contract,
+    ///          new in v1 of MerchantProfile spec)
+    ///        - The canonical VFIDE frontend refuses to render their profile content
+    ///          (frontend policy per VFIDE_MERCHANT_PROFILE_SPEC.md §7/§8)
+    ///        - The merchant struct stays in storage (we keep the historical record)
+    ///        - The metaHash is NOT cleared (the merchant retains technical data
+    ///          sovereignty; the on-chain bytes don't change just because the
+    ///          frontend won't render them)
+    ///
+    ///      No corresponding "undelist" function exists. If a merchant is delisted
+    ///      in error, they can re-register with a fresh address. This is intentional
+    ///      friction — delisting should be slow, deliberate, and not casually reversed.
+    /// @param owner The merchant address to delist.
+    /// @param reason Human-readable reason for the delisting (logged in event).
+    function delistMerchant(address owner, string calldata reason) external onlyDAO {
+        Merchant storage m = merchants[owner];
+        if (m.status == Status.NONE) revert COM_NotMerchant();
+        if (m.status == Status.DELISTED) revert COM_NotAllowed();
+        m.status = Status.DELISTED;
+        emit MerchantStatus(owner, Status.DELISTED, reason);
     }
 
     // POW-1 decay tracking moved to top of contract (next to merchants mapping)
@@ -366,6 +431,45 @@ contract CommerceEscrow {
         address buyerVaultNow = vaultHub.vaultOf(e.buyerOwner);
         if (buyerVaultNow == address(0)) revert COM_NotBuyer();
         token.safeTransfer(buyerVaultNow, e.amount);
+    }
+
+    /// @notice R-4 — Settle a FUNDED or DISPUTED escrow when one party's vault has entered MEMORIAL.
+    ///
+    /// Pull-based settlement. Permissionless: anyone (heirs, the surviving counterparty,
+    /// a watchful third party) can call this once the buyer or merchant's vault is in
+    /// MEMORIAL (state 3) or CLOSED (state 4) on VaultHub.
+    ///
+    /// Refunds to the buyer regardless of which side died:
+    ///   - If the BUYER died, funds return to the deceased buyer's current vault for
+    ///     heir distribution. This is the safer side — the merchant has not yet
+    ///     fulfilled (escrow is still FUNDED/DISPUTED).
+    ///   - If the MERCHANT died, the buyer is made whole without needing to chase
+    ///     the merchant's estate.
+    ///
+    /// Does NOT increment merchants._noteRefund — this is not a merchant-initiated
+    /// refund and shouldn't count against their dispute decay. Inheritance is not
+    /// a service-quality signal.
+    ///
+    /// State must be FUNDED or DISPUTED (funds are in escrow). OPEN escrows have
+    /// no funds to settle and should use `cancelStaleOpen` after expiry instead.
+    ///
+    /// @param id Escrow identifier.
+    function settleByInheritance(uint256 id) external nonReentrant {
+        Escrow storage e = escrows[id];
+        if (e.state != State.FUNDED && e.state != State.DISPUTED) revert COM_BadState();
+
+        address buyerVaultLive = vaultHub.vaultOf(e.buyerOwner);
+        address merchantVaultLive = vaultHub.vaultOf(e.merchantOwner);
+        if (
+            !(buyerVaultLive != address(0) && vaultHub.isInMemorialState(buyerVaultLive)) &&
+            !(merchantVaultLive != address(0) && vaultHub.isInMemorialState(merchantVaultLive))
+        ) {
+            revert COM_NotInheritanceActive();
+        }
+
+        e.state = State.REFUNDED;
+        if (buyerVaultLive == address(0)) revert COM_NotBuyer();
+        token.safeTransfer(buyerVaultLive, e.amount);
     }
 
     /// @notice M-COMMERCE-1 FIX: Cancel an OPEN (unfunded) escrow after the expiry window.

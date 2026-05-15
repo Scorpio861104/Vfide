@@ -10,6 +10,7 @@ import SeerRaw from './Seer.json'
 import DAORaw from './DAO.json'
 import DAOTimelockRaw from './DAOTimelock.json'
 import MerchantPortalRaw from './MerchantPortal.json'
+import VFIDECommerceRaw from './VFIDECommerce.json'
 import ProofScoreBurnRouterRaw from './ProofScoreBurnRouter.json'
 import ProofLedgerRaw from './ProofLedger.json'
 // New consolidated ABIs
@@ -82,6 +83,11 @@ const SeerABI = normalizeImportedABI(SeerRaw);
 const DAOABI = normalizeImportedABI(DAORaw);
 const DAOTimelockABI = normalizeImportedABI(DAOTimelockRaw);
 const MerchantPortalABI = normalizeImportedABI(MerchantPortalRaw);
+// VFIDECommerce.json contains MerchantRegistry + VFIDECommerce + CommerceEscrow ABIs
+// merged into one array. Re-exported as MerchantRegistryABI so the merchant-identity
+// hook can target the registry surface (setMetaHash, merchants, delistMerchant, etc.)
+// without pulling in unrelated escrow / commerce surface separately.
+const MerchantRegistryABI = normalizeImportedABI(VFIDECommerceRaw);
 const ProofScoreBurnRouterABI = normalizeImportedABI(ProofScoreBurnRouterRaw);
 const ProofLedgerABI = normalizeImportedABI(ProofLedgerRaw);
 const DutyDistributorABI = normalizeImportedABI(DutyDistributorRaw);
@@ -155,6 +161,7 @@ validateABI(SeerABI, 'Seer');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
 validateABI(MerchantPortalABI, 'MerchantPortal');
+validateABI(MerchantRegistryABI, 'MerchantRegistry');
 validateABI(ProofScoreBurnRouterABI, 'ProofScoreBurnRouter');
 validateABI(ProofLedgerABI, 'ProofLedger');
 // Validate new ABIs
@@ -225,6 +232,7 @@ export {
   DAOABI,
   DAOTimelockABI,
   MerchantPortalABI,
+  MerchantRegistryABI,
   ProofScoreBurnRouterABI,
   ProofLedgerABI,
   // New consolidated exports

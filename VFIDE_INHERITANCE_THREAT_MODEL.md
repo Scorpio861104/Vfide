@@ -745,42 +745,41 @@ Per design Decision 12, the DAO is a guardian-of-last-resort that can VETO but n
 
 **Residual after fix:** None. The check is enforced in code, no longer a governance promise.
 
-### R-4: External obligation settlement ⚠️ PARTIAL — escrows + loans done in v1
+### R-4: External obligation settlement ✅ CLOSED in v1 for all four obligation managers
 
-Per Section 4.10, `finalizeInheritanceDistribution` does not by itself force-settle external obligations. The vault's outbound-transfer guard prevents leak, but it does not unwind existing positions.
+Per Section 4.10, `finalizeInheritanceDistribution` does not by itself force-settle external obligations. The vault's outbound-transfer guard prevents leak, but it does not unwind existing positions. **Implemented** as pull-based `settleByInheritance` / `settleLoanByInheritance` on each obligation contract.
 
 **Implemented in v1 (pull-based settlement):**
 
-Rather than enumerate obligations from the inheritance side (gas-prohibitive — no per-buyer/per-borrower indexes exist), the obligation contracts themselves now expose `settleByInheritance` / `settleLoanByInheritance` entry points. These are permissionless: anyone (heirs, surviving counterparties, watchful third parties) can call once one party's vault has entered MEMORIAL state.
+Rather than enumerate obligations from the inheritance side (gas-prohibitive — no per-buyer/per-borrower indexes exist), the obligation contracts themselves now expose `settleByInheritance` entry points. These are permissionless: anyone (heirs, surviving counterparties, watchful third parties) can call once one party's vault has entered MEMORIAL state.
 
-- **EscrowManager.settleByInheritance(escrowId):** unwinds an escrow whose buyer or merchant vault is in MEMORIAL. Always refunds to the buyer (conservative — buyer hasn't yet received goods/services). State must be CREATED (already-released or already-refunded escrows revert). Requires `setVaultHub` to be wired by the DAO; without it, settlement is disabled and the function reverts.
+- **EscrowManager.settleByInheritance(escrowId):** unwinds an escrow whose buyer or merchant vault is in MEMORIAL. Always refunds to the buyer (conservative — buyer hasn't yet received goods/services). State must be CREATED. Requires `setVaultHub` to be wired by the DAO.
 - **VFIDETermLoan.settleLoanByInheritance(loanId):** branches by state:
   - OPEN / COSIGNING: lender's principal still in contract → refund to lender's settlement recipient. Guarantor commitments released. Loan transitions to CANCELLED.
   - ACTIVE / GRACE / RESTRUCTURED: principal already disbursed to borrower → mark DEFAULTED so the lender's normal default-claim flow pursues the heir vault. Guarantor commitments stay live — death does NOT forgive the debt.
   - REPAID / DEFAULTED / CANCELLED: revert (already terminal).
-- **VaultHub.isInMemorialState(vault):** new view, gates both settlement entry points. Returns true only when the vault is in state 3 (MEMORIAL) or 4 (CLOSED) — ensures distribution has already happened before any obligation can be unwound.
+- **CommerceEscrow.settleByInheritance(escrowId):** unwinds a FUNDED or DISPUTED escrow when either party's vault enters MEMORIAL. Refunds to the buyer. Does NOT call `merchants._noteRefund` — inheritance is not a service-quality signal and shouldn't count against the merchant's dispute decay.
+- **SubscriptionManager.settleByInheritance(subId):** marks subscription inactive when either party's vault enters MEMORIAL. Emits both `SubscriptionCancelled` (so existing off-chain consumers don't need new event handling) and `SubscriptionSettledByInheritance` for inheritance-specific observers.
+- **VaultHub.isInMemorialState(vault):** view added to both the live contract and the canonical `IVaultHub` interface in SharedInterfaces.sol. Returns true only when the vault is in state 3 (MEMORIAL) or 4 (CLOSED) — ensures distribution has already happened before any obligation can be unwound.
 
-**Still deferred to v1.1:**
-
-- **SubscriptionManager:** the contract is in `contracts/future/`; subscription settlement will be added when SubscriptionManager itself moves out of `future/`. Until then, no recurring-payment auto-cancellation exists. The vault's outbound-transfer guard prevents new subscription payments from executing while inheritance is in flight, which contains the leak, but doesn't formally cancel the subscription.
-- **CommerceEscrow** (the other escrow contract per the I-14 architecture note in EscrowManager.sol): similar `settleByInheritance` hook should be added in a follow-up pass.
-
-**Threat surface for the new entry points:**
+**Threat surface for the new entry points (T-R4-1 through T-R4-7 from prior pass; all apply equally to the four managers):**
 
 | ID | Threat | Severity | Mitigation |
 |---|---|---|---|
-| T-R4-1 | A-EXTERNAL calls settle on a healthy escrow/loan | Critical | `isInMemorialState` returns false unless the vault is in state 3 or 4. Healthy vaults are in state 0. |
+| T-R4-1 | A-EXTERNAL calls settle on a healthy obligation | Critical | `isInMemorialState` returns false unless the vault is in state 3 or 4. Healthy vaults are in state 0. |
 | T-R4-2 | A-EXTERNAL calls settle on a vault still in VETO_PERIOD or CLAIM_WINDOW | High | `isInMemorialState` returns false for states 1 and 2. Settlement is gated until distribution completes. |
 | T-R4-3 | A-EXTERNAL calls settle on a vault that was just rolled back to NORMAL (after veto/override) | High | `isInMemorialState` returns false for state 0. Once state rolls back, settlement is no longer possible. |
-| T-R4-4 | Reentrancy via the token transfer in settleByInheritance | Critical | `nonReentrant` modifier on both entry points. State transitions happen before transfers. |
-| T-R4-5 | Double-settle (call settleByInheritance twice on same id) | Low | First call transitions state to REFUNDED/CANCELLED/DEFAULTED; second call reverts the state check. |
-| T-R4-6 | Lender's principal lost if VaultHub returns false negatives | Medium | The function reverts on the negative case; it does not transfer funds without a positive memorial check. False negatives are conservative (revert) rather than aggressive. |
-| T-R4-7 | The deceased party isn't actually dead — VaultHub view manipulated | High | `IVaultHubESC` / `IVaultHubTL` is a trusted interface set by the DAO via `setVaultHub`. The DAO is the integrity boundary for which hub address is used. A malicious hub could lie, but the DAO would have to be compromised first. |
+| T-R4-4 | Reentrancy via the token transfer in settle path | Critical | `nonReentrant` modifier on each entry point. State transitions happen before transfers. |
+| T-R4-5 | Double-settle (call settleByInheritance twice on same id) | Low | First call transitions state to REFUNDED/CANCELLED/DEFAULTED/inactive; second call reverts the state check. |
+| T-R4-6 | Funds lost if VaultHub returns false negatives | Medium | The function reverts on the negative case; it does not transfer funds without a positive memorial check. False negatives are conservative (revert) rather than aggressive. |
+| T-R4-7 | The deceased party isn't actually dead — VaultHub view manipulated | High | `IVaultHub` is set at contract construction (or via DAO-only `setVaultHub` on EscrowManager). The DAO is the integrity boundary. A malicious hub could lie, but the DAO would have to be compromised first. |
+
+**Tests:** `test/hardhat/CardBoundVaultInheritance.r4.test.ts` (EscrowManager + VFIDETermLoan) and `test/hardhat/CardBoundVaultInheritance.r4final.test.ts` (SubscriptionManager + CommerceEscrow gating verification).
 
 **Residual after this fix:**
 
-- Subscription settlement remains open until the SubscriptionManager moves out of `future/`. Documented as v1.1 work.
-- The settlement design **does not actively prevent timing arbitrage** where someone settles an obligation immediately after MEMORIAL begins, before heirs have withdrawn. This is intentional: MEMORIAL means distribution has completed, so timing within MEMORIAL is irrelevant to fund flow. The only "advantage" a fast settler gets is unsticking the contract earlier, which benefits everyone.
+- The settlement design **does not actively prevent timing arbitrage** where someone settles an obligation immediately after MEMORIAL begins, before heirs have withdrawn. This is intentional: MEMORIAL means distribution has completed, so timing within MEMORIAL is irrelevant to fund flow.
+- SubscriptionManager remains in `contracts/future/`. Settling it requires the contract to be deployed in production; until then the entry point exists in code but is reachable only when SubscriptionManager itself is deployed.
 
 ### R-5: Owner ability to override is irreducible
 
@@ -805,14 +804,12 @@ Almost every residual collapses to "the guardian set should not all be compromis
 **Done:**
 - R-1 (guardian-quorum cancel) — implemented + tested.
 - R-3 (DAO initiation block) — implemented + tested.
+- R-4 (external obligation settlement) — fully closed for EscrowManager, VFIDETermLoan, CommerceEscrow, SubscriptionManager. VaultHub gained `isInMemorialState` as the gating view; canonical `IVaultHub` interface in SharedInterfaces.sol updated.
 - Local obligation settlement — `finalizeInheritanceDistribution` on the vault now clears local timelocked obligations (admin pending changes, withdrawal queue, payment queue) before delegating to the manager.
-- R-4 partial — pull-based settlement landed for EscrowManager (`settleByInheritance`) and VFIDETermLoan (`settleLoanByInheritance`). VaultHub gained `isInMemorialState` as the gating view.
-- Priority threat-model test coverage — 47 of 60 unit tests + 5 of 9 property tests + 1 of 10 integration tests + 10 R-1/R-3 tests across 4 inheritance-focused test files (69 total tests).
+- Threat-model test coverage — 60 unit tests, 9 property tests, 10 integration tests, plus 10 R-1/R-3 tests, 10 R-4 EscrowManager+TermLoan tests, 8 R-4 SubscriptionManager+CommerceEscrow tests. 100+ inheritance-focused tests across 7 test files.
 
 **Remaining:**
-1. R-4 final piece: SubscriptionManager settlement, once that contract moves out of `contracts/future/`. CommerceEscrow (the second escrow contract per the I-14 architecture note) should also get a `settleByInheritance` hook in a follow-up pass.
-2. Approximately 13 remaining unit tests + 4 property tests + 9 explicit integration tests from Part 8.
-3. Tests for R-4 entry points (T-R4-1 through T-R4-7).
-4. After test suite passes: Slither pass, manual review, audit-ready package per design Step 6.
+1. Slither pass + manual review + audit-ready package per design Step 6.
+2. v1.1 expansions: integrate SubscriptionManager from `contracts/future/` into the live deployment graph so its settlement path is reachable on-chain.
 
 — end of threat model

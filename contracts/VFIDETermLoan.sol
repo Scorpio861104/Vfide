@@ -424,7 +424,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         // Probe both parties.
         address lenderVault = vaultHub.vaultOf(l.lender);
         address borrowerVault = vaultHub.vaultOf(l.borrower);
-        address deceasedParty;
+        address deceasedParty = address(0);
         if (lenderVault != address(0) && vaultHub.isInMemorialState(lenderVault)) {
             deceasedParty = l.lender;
         } else if (borrowerVault != address(0) && vaultHub.isInMemorialState(borrowerVault)) {

@@ -8,6 +8,7 @@ import { useAccount } from 'wagmi';
 import { ArrowLeft, RotateCcw, Check, X, Package, Clock, AlertCircle } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';
+import { VaultIdentityChip } from '@/components/identity/VaultIdentityChip';
 
 interface ReturnItem {
   product_id?: string;
@@ -67,7 +68,6 @@ export default function MerchantReturnsPage() {
     await loadReturns();
   }, [address, loadReturns]);
 
-  const shortAddress = (value: string) => value ? `${value.slice(0, 6)}...${value.slice(-4)}` : 'Unknown';
   const pendingCount = returns.filter((entry) => entry.status === 'requested').length;
 
   return (
@@ -123,8 +123,10 @@ export default function MerchantReturnsPage() {
                     <span className="inline-flex items-center gap-1 text-xs text-gray-500"><Clock size={12} /> {formatDate(entry.created_at, 'medium')}</span>
                   </div>
 
-                  <div className="mb-2 text-sm text-gray-400">
-                    Customer: {shortAddress(entry.customer_address)} · Type: <span className="capitalize text-white">{entry.type}</span>
+                  <div className="mb-2 flex flex-wrap items-center gap-2 text-sm text-gray-400">
+                    <span>Customer:</span>
+                    <VaultIdentityChip address={entry.customer_address} size="sm" />
+                    <span>· Type: <span className="capitalize text-white">{entry.type}</span></span>
                   </div>
 
                   <div className="space-y-1 text-xs text-gray-500">

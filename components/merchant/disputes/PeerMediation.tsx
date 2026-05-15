@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { AlertCircle, ArrowRight, Check, Clock, Handshake, Scale, ShieldCheck, Users, X } from 'lucide-react';
+import { VaultIdentityChip } from '@/components/identity/VaultIdentityChip';
 
 export interface PeerMediationDispute {
   id: string;
@@ -31,8 +32,6 @@ const mediationSteps = [
   'Offer merchant correction first: refund, exchange, or store credit.',
   'Escalate to formal appeals only if peer mediation does not resolve the case.',
 ];
-
-const shortAddress = (value: string) => value.length > 12 ? `${value.slice(0, 6)}...${value.slice(-4)}` : value;
 
 export default function PeerMediation({
   dispute,
@@ -112,11 +111,15 @@ export default function PeerMediation({
         </div>
         <div className="rounded-xl border border-white/10 bg-black/20 p-3">
           <div className="text-gray-400">Buyer</div>
-          <div className="mt-1 font-semibold text-white">{shortAddress(currentDispute.buyerAddress)}</div>
+          <div className="mt-1">
+            <VaultIdentityChip address={currentDispute.buyerAddress} size="sm" />
+          </div>
         </div>
         <div className="rounded-xl border border-white/10 bg-black/20 p-3">
           <div className="text-gray-400">Merchant</div>
-          <div className="mt-1 font-semibold text-white">{shortAddress(currentDispute.merchantAddress)}</div>
+          <div className="mt-1">
+            <VaultIdentityChip address={currentDispute.merchantAddress} size="sm" />
+          </div>
         </div>
         <div className="rounded-xl border border-white/10 bg-black/20 p-3">
           <div className="text-gray-400">Amount</div>

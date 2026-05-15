@@ -17,6 +17,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Shield, Check, TrendingUp, ShoppingCart, Users, Award, Flame, ArrowRight, MessageCircle, ThumbsUp } from 'lucide-react';
+import { VaultIdentityChip } from '@/components/identity/VaultIdentityChip';
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  MERCHANT REVIEW
@@ -61,7 +62,6 @@ const WEIGHT_STYLES = {
 export function MerchantReview({ review, onHelpful }: MerchantReviewProps) {
   const weight = scoreWeight(review.reviewer.proofScore);
   const styles = WEIGHT_STYLES[weight];
-  const reviewerName = review.reviewer.name || `${review.reviewer.address.slice(0, 6)}...${review.reviewer.address.slice(-4)}`;
 
   return (
     <motion.div
@@ -80,9 +80,11 @@ export function MerchantReview({ review, onHelpful }: MerchantReviewProps) {
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Reviewer info */}
+          {/* Reviewer info — VaultIdentityChip resolves merchant identity if applicable,
+              falls back to identicon + truncated address for individual reviewers per
+              VFIDE_MERCHANT_PROFILE_SPEC.md §7. */}
           <div className="flex items-center gap-1.5 mb-1">
-            <span className={`font-medium ${styles.size} text-white`}>{reviewerName}</span>
+            <VaultIdentityChip address={review.reviewer.address} size="sm" hideAddress />
             <span className={`flex items-center gap-0.5 text-[10px] ${styles.badge}`}>
               <Shield size={9} />{review.reviewer.proofScore.toLocaleString()}
             </span>

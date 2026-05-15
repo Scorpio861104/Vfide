@@ -68,6 +68,7 @@ const BUSINESS_MODULES: HubLink[] = [
 
 const SETUP_MODULES: HubLink[] = [
   { href: '/merchant/setup',          icon: Store,       label: 'Merchant setup', description: 'Configure your storefront and payouts.' },
+  { href: '/merchant/profile/setup',  icon: UserCog,     label: 'VFIDE Profile',  description: 'Set up your on-chain business identity — name, logo, category.' },
 ];
 
 const EARNINGS_MODULES: HubLink[] = [

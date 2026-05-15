@@ -29,6 +29,13 @@ interface IFraudRegistry_SM {
     function isServiceBanned(address user) external view returns (bool);
 }
 
+/// @dev R-4 — narrow interface used only by settleByInheritance. Kept separate
+///      from the broader IVaultHub in SharedInterfaces.sol so this contract's
+///      ABI changes are scoped to its own settlement path.
+interface IVaultHubInheritance_SM {
+    function isInMemorialState(address vault) external view returns (bool);
+}
+
 error SM_NotSubscriber();
 error SM_NotMerchant();
 error SM_NotAuthorized();
@@ -45,10 +52,14 @@ error SM_GracePeriodExpired();
 error SM_EmergencyNotActive();
 error SM_VaultChanged();
 error SM_FraudBlocked();
+/// @notice R-4 — neither party's vault is in MEMORIAL state.
+error SM_NotInheritanceActive();
 
 contract SubscriptionManager is ReentrancyGuard {
     event SubscriptionCreated(uint256 indexed subId, address indexed subscriber, address indexed merchant, uint256 amount, uint256 interval);
     event SubscriptionCancelled(uint256 indexed subId);
+    /// @notice R-4 — emitted when a subscription is cancelled because one party's vault entered MEMORIAL.
+    event SubscriptionSettledByInheritance(uint256 indexed subId, address indexed deceasedParty);
     event SubscriptionPaused(uint256 indexed subId, address indexed pausedBy);
     event SubscriptionResumed(uint256 indexed subId, address indexed resumedBy);
     event SubscriptionModified(uint256 indexed subId, uint256 oldAmount, uint256 newAmount, uint256 oldInterval, uint256 newInterval);
@@ -243,6 +254,54 @@ contract SubscriptionManager is ReentrancyGuard {
         if (subscriptions[subId].subscriber != msg.sender) revert SM_NotSubscriber();
         subscriptions[subId].active = false;
         emit SubscriptionCancelled(subId);
+    }
+
+    /// @notice R-4 — Settle a subscription when one party's vault has entered MEMORIAL state.
+    ///
+    /// Pull-based settlement. Permissionless: anyone (heirs, the surviving counterparty,
+    /// keeper bots) can call this once the subscriber or merchant's vault is in MEMORIAL
+    /// (state 3) or CLOSED (state 4). Effect: subscription is marked inactive — same
+    /// terminal state as `cancelSubscription` — and no further payments will process.
+    ///
+    /// Why this is safe + necessary:
+    ///   - If the SUBSCRIBER died, future processPayment calls would attempt to pull
+    ///     funds from a vault that's already in MEMORIAL. Those pulls would be blocked
+    ///     by the vault's outbound-transfer guard, but the failed-payment counter would
+    ///     creep up (and may credit a fraud signal). Cleanly cancelling avoids that
+    ///     and frees the merchant from monitoring.
+    ///   - If the MERCHANT died, future payments would land in a vault that's no
+    ///     longer being actively managed for inbound flow. Cancelling here ensures
+    ///     the subscriber doesn't keep paying a vault whose owner is gone.
+    ///
+    /// State transitions:
+    ///   - active=true,paused=false → active=false. SubscriptionCancelled + SubscriptionSettledByInheritance.
+    ///   - active=true,paused=true → active=false (unpause-and-cancel is idempotent).
+    ///   - already inactive → revert with SM_InactiveSubscription.
+    ///
+    /// @param subId Subscription identifier.
+    function settleByInheritance(uint256 subId) external nonReentrant {
+        Subscription storage sub = subscriptions[subId];
+        if (!sub.active) revert SM_InactiveSubscription();
+
+        // Probe both parties' vaults via the existing vaultHub. We cast through
+        // the narrow interface that exposes isInMemorialState (the broader
+        // IVaultHub in SharedInterfaces.sol doesn't expose it yet — adding it
+        // there would force every other consumer to recompile).
+        IVaultHubInheritance_SM probe = IVaultHubInheritance_SM(address(vaultHub));
+        address subscriberVaultLive = vaultHub.vaultOf(sub.subscriber);
+        address merchantVaultLive = vaultHub.vaultOf(sub.merchant);
+        address deceasedParty = address(0);
+        if (subscriberVaultLive != address(0) && probe.isInMemorialState(subscriberVaultLive)) {
+            deceasedParty = sub.subscriber;
+        } else if (merchantVaultLive != address(0) && probe.isInMemorialState(merchantVaultLive)) {
+            deceasedParty = sub.merchant;
+        } else {
+            revert SM_NotInheritanceActive();
+        }
+
+        sub.active = false;
+        emit SubscriptionCancelled(subId);
+        emit SubscriptionSettledByInheritance(subId, deceasedParty);
     }
     
     /**
