@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
-      setProposals(base.map((p, i) => ({ ...p, voted: votedFlags[i] ?? false })));
 import { type Address } from 'viem';
 import { AlertCircle, CheckCircle2, Loader2, Wallet, Info } from 'lucide-react';
 
@@ -112,7 +111,7 @@ export function ProposalsTab({
         })
       );
       if (cancelled) return;
-      setProposals(base.map((p, i) => ({ ...p, voted: votedFlags[i] })));
+      setProposals(base.map((p, i) => ({ ...p, voted: votedFlags[i] ?? false })));
     }
     void decorate();
     return () => {
