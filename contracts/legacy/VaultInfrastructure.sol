@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+// NOTE: Moved from contracts/VaultInfrastructure.sol to
+// contracts/legacy/VaultInfrastructure.sol on 2026-05-16 (Operations Phase
+// Turn 4). The file's M-21 Architecture Note already self-documented that
+// CardBoundVault + VaultHub had superseded UserVaultLegacy. Confirmed at move
+// time: VaultHub provides all three lookup functions VaultRegistry needs
+// (vaultOf, ownerOfVault, isVault) via auto-generated getters on its public
+// mappings, and is already in active use for those calls by FraudRegistry,
+// VFIDETermLoan, and VaultRecoveryClaim. The deprecated force-recovery
+// functions in IVaultInfrastructure are non-custodial-removed and aren't
+// called by V1 paths. File retained for reference / backward-compat with
+// any pre-existing UserVaultLegacy deployments.
+
 import "./SharedInterfaces.sol";
 
 /**

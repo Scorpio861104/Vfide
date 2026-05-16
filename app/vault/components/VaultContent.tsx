@@ -15,6 +15,8 @@ import { VaultRecoveryPanel } from './VaultRecoveryPanel';
 import { VaultInheritancePanel } from './VaultInheritancePanel';
 import { VaultQueueSection } from './VaultQueueSection';
 import { WithdrawModal } from './WithdrawModal';
+import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
+import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
 
 export function VaultContent() {
   const ops = useVaultOperations();
@@ -47,6 +49,8 @@ export function VaultContent() {
               isLoadingBalance={ops.isLoadingBalance}
               guardianCount={ops.guardianCount}
             />
+
+            <VaultPendingChangesBanner vaultAddress={ops.vaultAddress} />
 
             <VaultQuickActions
               onTransfer={() => { ops.setWithdrawRecipient(''); ops.setShowWithdrawModal(true); }}
@@ -91,6 +95,13 @@ export function VaultContent() {
               vaultAddress={ops.vaultAddress as `0x${string}` | undefined}
               userAddress={ops.address as `0x${string}` | undefined}
             />
+
+            {/* Incoming refunds — renders null when none pending */}
+            <section className="py-2 relative z-10">
+              <div className="container mx-auto px-4 max-w-6xl">
+                <IncomingRefunds />
+              </div>
+            </section>
 
             {/* Transaction History */}
             <section className="py-8 relative z-10">

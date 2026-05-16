@@ -1,60 +1,36 @@
 /**
- * useEscrow - legacy-name compatibility shim
+ * useEscrow — thin wrapper around useCommerceEscrow.
  *
- * The legacy CommerceEscrow contract was removed in v6. This hook keeps
- * the existing API surface for call sites while routing to current payment flows.
+ * This file used to be a misleading shim. Its docstring claimed CommerceEscrow
+ * was "removed in v6" and routed `createEscrow` calls to MerchantPortal.payWithIntent
+ * (a regular instant merchant payment, no escrow protection). The contract was
+ * never removed — it's deployed at Layer 11 (PRODUCTION_SET.md), has a formal
+ * ICommerceEscrow interface, and MerchantPortal.payOnline reverts with
+ * MERCH_EscrowRequired specifically to force online payments through CommerceEscrow.
+ *
+ * Phase 3d Turn 4 (2026-05-15) replaces the shim with a proper wrapper around
+ * useCommerceEscrow.openAndFundWithIntent (the one-click escrow path added in
+ * Turn 3). The public API surface — `createEscrow(merchant, amountStr, orderId)`,
+ * `loading`, `isSuccess`, `error` — is preserved so existing call sites like
+ * app/pay/components/PayContent.tsx continue to work without modification.
  */
 
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient, useChainId, useSignTypedData } from 'wagmi';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { parseUnits, formatUnits, isAddress } from 'viem';
-import { ZERO_ADDRESS, getContractAddresses, isConfiguredContractAddress } from '@/lib/contracts';
-import { MerchantPortalABI, VaultHubABI, CardBoundVaultABI } from '@/lib/abis';
+'use client';
 
-const MerchantPortalIntentABI = [
-  {
-    type: 'function',
-    name: 'payWithIntent',
-    stateMutability: 'nonpayable',
-    inputs: [
-      {
-        name: 'intent',
-        type: 'tuple',
-        components: [
-          { name: 'vault', type: 'address' },
-          { name: 'merchantPortal', type: 'address' },
-          { name: 'token', type: 'address' },
-          { name: 'merchant', type: 'address' },
-          { name: 'recipient', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'walletEpoch', type: 'uint64' },
-          { name: 'deadline', type: 'uint64' },
-          { name: 'chainId', type: 'uint256' },
-        ],
-      },
-      { name: 'signature', type: 'bytes' },
-      { name: 'orderId', type: 'string' },
-    ],
-    outputs: [{ name: 'netAmount', type: 'uint256' }],
-  },
-  {
-    type: 'function',
-    name: 'merchants',
-    stateMutability: 'view',
-    inputs: [{ name: '', type: 'address' }],
-    outputs: [
-      { name: 'registered', type: 'bool' },
-      { name: 'suspended', type: 'bool' },
-      { name: 'businessName', type: 'string' },
-      { name: 'category', type: 'string' },
-      { name: 'registeredAt', type: 'uint64' },
-      { name: 'totalVolume', type: 'uint256' },
-      { name: 'txCount', type: 'uint256' },
-      { name: 'payoutAddress', type: 'address' },
-    ],
-  },
-] as const;
+import { useState, useCallback } from 'react';
+import { parseUnits, keccak256, stringToBytes, type Address } from 'viem';
+import { useCommerceEscrow } from '@/hooks/useCommerceEscrow';
+
+const VFIDE_DECIMALS = 18;
+const EMPTY_METAHASH = '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`;
+
+/**
+ * Re-exported state alias for legacy consumers. The contract's underlying state
+ * machine (NONE/OPEN/FUNDED/RELEASED/REFUNDED/DISPUTED/RESOLVED) maps onto the
+ * coarser legacy labels here. New code should import EscrowState from
+ * `@/hooks/useCommerceEscrow` directly for the full state set.
+ */
+export type EscrowState = 'CREATED' | 'RELEASED' | 'REFUNDED' | 'DISPUTED';
 
 export interface Escrow {
   id: bigint;
@@ -68,371 +44,61 @@ export interface Escrow {
   orderId: string;
 }
 
-export type EscrowState = 'CREATED' | 'RELEASED' | 'REFUNDED' | 'DISPUTED';
-
-const STATE_MAP: Record<number, EscrowState> = {
-  1: 'CREATED',  // OPEN
-  2: 'CREATED',  // FUNDED
-  3: 'RELEASED',
-  4: 'REFUNDED',
-  5: 'DISPUTED',
-  6: 'RELEASED', // RESOLVED
-};
-
 export function useEscrow() {
-  const { address } = useAccount();
-  const chainId = useChainId();
-  const { signTypedDataAsync } = useSignTypedData();
-  const contractAddresses = getContractAddresses(chainId);
-  const publicClient = usePublicClient();
-  const [escrows, setEscrows] = useState<Escrow[]>([]);
+  const { openAndFundWithIntent, escrowConfigured, isWritePending } = useCommerceEscrow();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const portalAddress = contractAddresses.MerchantPortal;
-  const tokenAddress = contractAddresses.VFIDEToken;
-  const hasEscrowConfig =
-    isConfiguredContractAddress(portalAddress) &&
-    isConfiguredContractAddress(tokenAddress);
-  const assertEscrowWriteReady = () => {
-    if (!hasEscrowConfig) {
-      throw new Error('Merchant payment contracts are not configured');
-    }
-  };
+  /**
+   * Open and fund an escrow in one transaction.
+   * Legacy signature kept for call-site compatibility.
+   *
+   * @param merchant   Merchant owner address (the recipient if the escrow is released)
+   * @param amountStr  Human-readable amount (e.g., "12.5"); converted to wei at VFIDE decimals
+   * @param orderId    Off-chain order identifier; hashed into the escrow's metaHash for
+   *                   later correlation with the merchant's records
+   */
+  const createEscrow = useCallback(
+    async (merchant: Address, amountStr: string, orderId: string) => {
+      setError(null);
+      setIsSuccess(false);
+      setLoading(true);
+      try {
+        if (!escrowConfigured) throw new Error('CommerceEscrow is not configured for this environment');
 
-  // Contract write hooks
-  const { writeContractAsync, data: hash, isPending, error: writeError } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+        let amountWei: bigint;
+        try {
+          amountWei = parseUnits(amountStr, VFIDE_DECIMALS);
+        } catch {
+          throw new Error('Invalid amount');
+        }
+        if (amountWei === 0n) throw new Error('Amount must be greater than zero');
 
-  // ============ HELPER FUNCTIONS ============
+        const metaHash = orderId && orderId.length > 0 ? keccak256(stringToBytes(orderId)) : EMPTY_METAHASH;
 
-  // Format helpers
-  const formatEscrowAmount = useCallback((amount: bigint): string => {
-    return formatUnits(amount, 18);
-  }, []);
-
-  const getStateLabel = useCallback((state: number): EscrowState => {
-    return STATE_MAP[state] || 'CREATED';
-  }, []);
-
-  const getTimeRemaining = useCallback((releaseTime: bigint): string => {
-    if (releaseTime === 0n) return 'N/A';
-
-    const now = BigInt(Math.floor(Date.now() / 1000));
-    const diff = releaseTime - now;
-    
-    if (diff <= 0) return 'Ready to claim';
-    
-    const days = Number(diff) / 86400;
-    const hours = (Number(diff) % 86400) / 3600;
-    
-    if (days >= 1) return `${Math.floor(days)}d ${Math.floor(hours)}h`;
-    return `${Math.floor(hours)}h`;
-  }, []);
-
-  // Check timeout status
-  const checkTimeout = useCallback(async (id: bigint): Promise<{
-    isNearTimeout: boolean;
-    timeRemaining: bigint;
-  }> => {
-    // v6 compatibility: no timeout windows in MerchantPortal direct settlement.
-    void id;
-    const isNearTimeout = false;
-    const timeRemaining = 0n;
-
-    return {
-      isNearTimeout,
-      timeRemaining,
-    };
-  }, []);
-
-  // ============ MAIN FUNCTIONS (use helpers) ============
-
-  // Load all escrows for current user (compatibility no-op)
-  const loadEscrows = useCallback(async () => {
-    void hasEscrowConfig;
-    void address;
-    setEscrows([]);
-  }, [address, hasEscrowConfig]);
-
-  // Create escrow (v6: direct MerchantPortal pay compatibility path)
-  const createEscrow = useCallback(async (
-    merchant: `0x${string}`,
-    amount: string,
-    orderId: string
-  ) => {
-    if (!address) throw new Error('Wallet not connected');
-    assertEscrowWriteReady();
-    if (!isAddress(merchant) || merchant === ZERO_ADDRESS) {
-      throw new Error('Merchant must be a valid non-zero address');
-    }
-    if (!amount || Number(amount) <= 0) {
-      throw new Error('Escrow amount must be greater than zero');
-    }
-    
-    setLoading(true);
-    setError(null);
-
-    try {
-      if (!isConfiguredContractAddress(contractAddresses.VaultHub)) {
-        throw new Error('VaultHub is not configured');
+        const { id } = await openAndFundWithIntent({
+          merchantOwner: merchant,
+          amountWei,
+          metaHash,
+        });
+        setIsSuccess(true);
+        return id;
+      } catch (e: any) {
+        const msg = e?.shortMessage || e?.message || 'Escrow creation failed';
+        setError(msg);
+        throw e;
+      } finally {
+        setLoading(false);
       }
-
-      const customerVault = await publicClient.readContract({
-        address: contractAddresses.VaultHub,
-        abi: VaultHubABI,
-        functionName: 'vaultOf',
-        args: [address],
-      }) as `0x${string}`;
-
-      if (!isAddress(customerVault) || customerVault.toLowerCase() === ZERO_ADDRESS) {
-        throw new Error('No customer vault found. Please initialize your vault first.');
-      }
-
-      const merchantInfo = await publicClient.readContract({
-        address: portalAddress,
-        abi: MerchantPortalIntentABI,
-        functionName: 'merchants',
-        args: [merchant],
-      }) as readonly [boolean, boolean, string, string, bigint, bigint, bigint, `0x${string}`];
-
-      const payoutAddress = merchantInfo[7];
-      const merchantVault = await publicClient.readContract({
-        address: contractAddresses.VaultHub,
-        abi: VaultHubABI,
-        functionName: 'vaultOf',
-        args: [merchant],
-      }) as `0x${string}`;
-
-      const recipient = payoutAddress && payoutAddress.toLowerCase() !== ZERO_ADDRESS
-        ? payoutAddress
-        : merchantVault;
-
-      if (!isAddress(recipient) || recipient.toLowerCase() === ZERO_ADDRESS) {
-        throw new Error('Merchant recipient vault is not initialized yet.');
-      }
-
-      const nonce = await publicClient.readContract({
-        address: customerVault,
-        abi: CardBoundVaultABI,
-        functionName: 'nextNonce',
-      }) as bigint;
-
-      const walletEpoch = await publicClient.readContract({
-        address: customerVault,
-        abi: CardBoundVaultABI,
-        functionName: 'walletEpoch',
-      }) as bigint;
-
-      const amountWei = parseUnits(amount, 18);
-      const deadline = BigInt(Math.floor(Date.now() / 1000) + 600);
-      const intent = {
-        vault: customerVault,
-        merchantPortal: portalAddress,
-        token: tokenAddress,
-        merchant,
-        recipient,
-        amount: amountWei,
-        nonce,
-        walletEpoch,
-        deadline,
-        chainId: BigInt(chainId),
-      };
-
-      const signature = await signTypedDataAsync({
-        domain: {
-          name: 'CardBoundVault',
-          version: '1',
-          chainId,
-          verifyingContract: customerVault,
-        },
-        types: {
-          PayIntent: [
-            { name: 'vault', type: 'address' },
-            { name: 'merchantPortal', type: 'address' },
-            { name: 'token', type: 'address' },
-            { name: 'merchant', type: 'address' },
-            { name: 'recipient', type: 'address' },
-            { name: 'amount', type: 'uint256' },
-            { name: 'nonce', type: 'uint256' },
-            { name: 'walletEpoch', type: 'uint64' },
-            { name: 'deadline', type: 'uint64' },
-            { name: 'chainId', type: 'uint256' },
-          ],
-        },
-        primaryType: 'PayIntent',
-        message: intent,
-      });
-
-      const paymentHash = await writeContractAsync({
-        address: portalAddress,
-        abi: MerchantPortalIntentABI,
-        functionName: 'payWithIntent',
-        args: [intent, signature, orderId || `order-${Date.now()}`],
-        chainId,
-      });
-
-      if (!publicClient) {
-        throw new Error('Wallet client not available');
-      }
-      await publicClient.waitForTransactionReceipt({ hash: paymentHash });
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create escrow');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [address, hasEscrowConfig, portalAddress, publicClient, tokenAddress, writeContractAsync, chainId, signTypedDataAsync, contractAddresses.VaultHub]);
-
-  // Release funds to merchant
-  const releaseEscrow = useCallback(async (id: bigint) => {
-    void id;
-    throw new Error('Escrow release is not available in v6. Payments settle through MerchantPortal.');
-  }, []);
-
-  // Refund buyer (merchant initiated)
-  const refundEscrow = useCallback(async (id: bigint) => {
-    void id;
-    throw new Error('Escrow refunds are not available in v6. Use MerchantPortal refund flows.');
-  }, []);
-
-  // Claim timeout (merchant claims after release time)
-  const claimTimeout = useCallback(async (id: bigint) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      void id;
-      throw new Error('Timeout claim is not supported by the current escrow shim. Use release, refund, or dispute resolution.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to claim timeout');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Raise dispute
-  const raiseDispute = useCallback(async (id: bigint) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      void id;
-      throw new Error('Escrow disputes are not available in v6.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to raise dispute');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Resolve dispute (DAO arbiter)
-  const resolveDispute = useCallback(async (id: bigint, refundBuyer: boolean) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      void id;
-      void refundBuyer;
-      throw new Error('Escrow dispute resolution is not available in v6.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve dispute');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Resolve dispute with split payout (DAO arbiter)
-  const resolveDisputePartial = useCallback(async (id: bigint, buyerShareBps: bigint) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      void id;
-      void buyerShareBps;
-      throw new Error('Partial dispute resolution is not supported by the current escrow shim.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve dispute with split payout');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Notify near-timeout to trigger event-driven monitoring
-  const notifyTimeout = useCallback(async (id: bigint) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      void id;
-      throw new Error('Timeout notifications are not supported by the current escrow shim.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to notify timeout');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // ============ EFFECTS ============
-
-  // Auto-reload after successful transaction
-  useEffect(() => {
-    if (isSuccess) {
-      loadEscrows();
-    }
-  }, [isSuccess, loadEscrows]);
-
-  // Initial and dependency-driven load
-  useEffect(() => {
-    loadEscrows();
-  }, [loadEscrows]);
-
-  // Error handling
-  useEffect(() => {
-    if (writeError) {
-      setError(writeError.message);
-    }
-  }, [writeError]);
-
-  // ============ COMPUTED VALUES ============
-
-  const activeEscrows = useMemo(() => escrows.filter(e => e.state === 1 || e.state === 2), [escrows]);
-  const completedEscrows = useMemo(() => escrows.filter(e => e.state === 3 || e.state === 4 || e.state === 6), [escrows]);
-  const disputedEscrows = useMemo(() => escrows.filter(e => e.state === 5), [escrows]);
+    },
+    [openAndFundWithIntent, escrowConfigured]
+  );
 
   return {
-    // Data
-    escrows,
-    loading: loading || isPending || isConfirming,
-    error,
-    isSuccess,
-    
-    // Actions
     createEscrow,
-    releaseEscrow,
-    refundEscrow,
-    claimTimeout,
-    raiseDispute,
-    resolveDispute,
-    resolveDisputePartial,
-    notifyTimeout,
-    checkTimeout,
-    refresh: loadEscrows,
-    
-    // Helpers
-    formatEscrowAmount,
-    getStateLabel,
-    getTimeRemaining,
-    
-    // State filters
-    activeEscrows,
-    completedEscrows,
-    disputedEscrows,
+    loading: loading || isWritePending,
+    isSuccess,
+    error,
   };
 }

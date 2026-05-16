@@ -30,10 +30,10 @@ const settlementMessaging = (settlement: 'instant' | 'escrow') => {
   return {
     banner: 'Protected checkout mode',
     badge: 'ESCROW',
-    summary: 'Escrow contract is deprecated in v6; this route settles through MerchantPortal with guarded vault checks.',
-    method: 'Protected direct settlement',
+    summary: 'Funds are held in escrow until you release them, or you dispute if something goes wrong. The DAO arbitrates disputes.',
+    method: 'One-click escrow funding',
     noticeTitle: 'Protected settlement path',
-    noticeText: 'Use for checkout flows that require compatibility with legacy escrow links.',
+    noticeText: 'Funds move from your vault to the escrow contract on a single signature; release happens when you confirm fulfillment.',
   };
 };
 
@@ -221,7 +221,7 @@ export function PayContent() {
     setIsProcessing(true);
     try {
       if (settlement === 'escrow') {
-        showToast('Protected checkout initiated (v6 direct settlement) - confirm in your wallet', 'info');
+        showToast('Sign to open and fund the escrow — confirm in your wallet', 'info');
         await createEscrow(
           merchantAddress as `0x${string}`,
           requestedAmount,

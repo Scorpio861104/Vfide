@@ -52,6 +52,11 @@
   },
   {
     "inputs": [],
+    "name": "InitiatorCooldownActive",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InsufficientApprovals",
     "type": "error"
   },
@@ -103,6 +108,11 @@
   {
     "inputs": [],
     "name": "NotTrustedVerifier",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotTrustee",
     "type": "error"
   },
   {
@@ -722,6 +732,19 @@
   },
   {
     "inputs": [],
+    "name": "INITIATOR_COOLDOWN",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MIN_GUARDIAN_APPROVALS",
     "outputs": [
       {
@@ -981,6 +1004,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "initiator",
+        "type": "address"
+      },
+      {
         "internalType": "uint64",
         "name": "initiatedAt",
         "type": "uint64"
@@ -1014,6 +1042,11 @@
         "internalType": "uint8",
         "name": "guardianCountSnapshot",
         "type": "uint8"
+      },
+      {
+        "internalType": "uint64",
+        "name": "challengePeriodSnapshot",
+        "type": "uint64"
       },
       {
         "internalType": "bytes32",
@@ -1140,6 +1173,11 @@
             "type": "address"
           },
           {
+            "internalType": "address",
+            "name": "initiator",
+            "type": "address"
+          },
+          {
             "internalType": "uint64",
             "name": "initiatedAt",
             "type": "uint64"
@@ -1173,6 +1211,11 @@
             "internalType": "uint8",
             "name": "guardianCountSnapshot",
             "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "challengePeriodSnapshot",
+            "type": "uint64"
           },
           {
             "internalType": "bytes32",
@@ -1221,6 +1264,11 @@
             "type": "address"
           },
           {
+            "internalType": "address",
+            "name": "initiator",
+            "type": "address"
+          },
+          {
             "internalType": "uint64",
             "name": "initiatedAt",
             "type": "uint64"
@@ -1254,6 +1302,11 @@
             "internalType": "uint8",
             "name": "guardianCountSnapshot",
             "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "challengePeriodSnapshot",
+            "type": "uint64"
           },
           {
             "internalType": "bytes32",
@@ -1396,6 +1449,30 @@
       }
     ],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "initiatorCooldownUntil",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -284,15 +284,6 @@ interface IEmergencyBreaker {
     function toggle(bool on, string calldata reason) external;
 }
 
-interface IEscrowManager {
-    function createEscrow(address merchant, address token, uint256 amount, string calldata orderId) external returns (uint256);
-    function release(uint256 id) external;
-    function refund(uint256 id) external;
-    function claimTimeout(uint256 id) external;
-    function raiseDispute(uint256 id) external;
-    function resolveDispute(uint256 id, bool refundBuyer) external;
-}
-
 interface IDAOTimelock {
     function queueTx(address target, uint256 value, bytes calldata data) external returns (bytes32);
     function queueTxFromDAO(address target, uint256 value, bytes calldata data, uint256 daoProposalId) external returns (bytes32);

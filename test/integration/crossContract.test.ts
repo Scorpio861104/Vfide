@@ -219,20 +219,6 @@ describe("Integration: Merchant Payment Flow", function () {
     [owner, merchant] = await ethers.getSigners();
   });
 
-  it("should execute: payment → escrow → settlement → revenue split", async function () {
-    const escrowFactory = await ethers.getContractFactory("EscrowManager");
-    const splitterFactory = await ethers.getContractFactory("RevenueSplitter");
-    expect(escrowFactory.interface.getFunction("create")).to.not.equal(undefined);
-    expect(escrowFactory.interface.getFunction("release")).to.not.equal(undefined);
-    expect(splitterFactory.interface.getFunction("release")).to.not.equal(undefined);
-  });
-
-  it("should handle payment disputes through escrow", async function () {
-    const escrowSource = fs.readFileSync("contracts/EscrowManager.sol", "utf-8");
-    expect(escrowSource).to.include("raiseDispute");
-    expect(escrowSource).to.include("resolveDispute");
-  });
-
   it("[C-01] should use SafeERC20 in RevenueSplitter", async function () {
     const source = fs.readFileSync("contracts/RevenueSplitter.sol", "utf-8");
     expect(source).to.include("SafeERC20");
@@ -351,7 +337,6 @@ describe("Integration: Full User Lifecycle", function () {
       "contracts/LiquidityIncentives.sol",
       "contracts/VFIDEBridge.sol",
       "contracts/VaultInfrastructure.sol",
-      "contracts/EscrowManager.sol",
     ];
 
     for (const file of requiredContracts) {

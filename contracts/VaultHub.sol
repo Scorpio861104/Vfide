@@ -673,7 +673,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @notice Returns true if the vault is in MEMORIAL or CLOSED state.
-    /// @dev Used by external obligation contracts (EscrowManager, VFIDETermLoan) as the gate
+    /// @dev Used by external obligation contracts (CommerceEscrow, VFIDETermLoan) as the gate
     ///      for inheritance-driven settlement. MEMORIAL means distribution is complete and
     ///      the vault's heir payouts have been finalized — it is safe (and desirable) to
     ///      unwind obligations associated with this address. CLOSED is the terminal state

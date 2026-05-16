@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./VFIDEAccessControl.sol";
+// NOTE: Moved from contracts/CircuitBreaker.sol to contracts/legacy/CircuitBreaker.sol
+// on 2026-05-16 (Operations Phase Turn 4). V1's actual circuit breaker is the
+// token-level boolean flag VFIDEToken.setCircuitBreaker(bool, uint256) — that's
+// what the UI (AdminDashboardClient, EmergencyPanel) calls. This standalone
+// monitoring contract was never wired by any production caller in V1 (its
+// recordVolume / recordSuspiciousActivity were only ever invoked from test
+// files). Retained here for reference and potential reactivation if a
+// metric-driven auto-pause system is added later.
+
+import "../VFIDEAccessControl.sol";
 
 interface ITVLSource_CB {
     function getTotalValueLocked() external view returns (uint256);

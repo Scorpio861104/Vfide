@@ -13,6 +13,25 @@ interface ISeer_COM {
     function getCachedScore(address) external view returns (uint16);
     function minForMerchant() external view returns (uint16);
 }
+
+/// @notice Phase 3d Turn 3 — calling interface for atomic escrow funding on CardBoundVault.
+/// @dev Mirrors the ICardBoundVaultPay pattern in MerchantPortal: declare the calling interface
+///      locally so the coupling is visible at the call site, not buried in a shared header.
+interface ICardBoundVaultFundEscrow {
+    struct EscrowFundIntent {
+        address vault;
+        address escrowContract;
+        uint256 escrowId;
+        address token;
+        uint256 amount;
+        uint256 nonce;
+        uint64 walletEpoch;
+        uint64 deadline;
+        uint256 chainId;
+    }
+
+    function executeFundEscrow(EscrowFundIntent calldata intent, bytes calldata signature) external;
+}
 interface IProofLedger_COM {
     function logSystemEvent(address who, string calldata action, address by) external;
     function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
@@ -269,17 +288,17 @@ contract MerchantRegistry {
 
 /**
  * @title CommerceEscrow
- * @notice Standard e-commerce escrow for MerchantPortal payments.
- * @dev I-14 Architecture Note: Two escrow systems exist by design:
- *   - CommerceEscrow (this): For standard e-commerce payments through
- *     the MerchantPortal. Simpler state-machine (OPEN→FUNDED→RELEASED).
- *   - EscrowManager (EscrowManager.sol): For high-value/custom trades
- *     requiring arbiter dispute resolution and ProofScore-dynamic locks.
+ * @notice E-commerce escrow with one-click funding and DAO-arbitrated disputes.
+ * @dev State machine: OPEN → FUNDED → RELEASED / REFUNDED / DISPUTED → RESOLVED.
+ *      Buyers can use openAndFundWithIntent for spontaneous escrow checkout
+ *      (one signature, atomic open+fund); or the two-step open() + markFunded()
+ *      path for pre-approved allowance-based budgeting.
  *
- * Key differences from EscrowManager:
- *   - DAO-only dispute resolution (no arbiter)
- *   - Fixed timeouts (no ProofScore gating)
- *   - Integrated with MerchantRegistry for merchant verification
+ *      Disputes go to the DAO for resolution. Merchants can also refund
+ *      directly at any time, even during a dispute.
+ *
+ *      Integrated with MerchantRegistry for merchant verification and
+ *      with VaultHub for inheritance-driven settlement (settleByInheritance).
  */
 contract CommerceEscrow {
     using SafeERC20 for IERC20;
@@ -323,6 +342,34 @@ contract CommerceEscrow {
     // N-H14 FIX: Only disputes above this amount increment merchant dispute counters.
     // Prevents griefers from opening tiny-value escrows and forcing auto-suspension.
     uint256 public minDisputeAmountForPenalty = 100 * 1e18;
+
+    // ─── Lifecycle events ────────────────────────────────────────────────────────
+    // Added Phase 3d Turn 2 (2026-05-15). The contract previously emitted no events
+    // on state transitions, forcing frontends to enumerate escrows by iterating
+    // `escrows(id)` from 0 to `escrowCount - 1`. That is O(n) on the protocol's
+    // total escrow count, not just one user's escrows. With indexed buyer/merchant
+    // params, callers can now filter event logs to find their own escrows in O(1).
+    //
+    // All transfers in/out of the escrow contract have a corresponding event so
+    // a complete financial picture is reconstructable from logs alone:
+    //   EscrowFunded               — tokens IN (from buyer's vault)
+    //   EscrowReleased             — tokens OUT (to merchant's vault)
+    //   EscrowRefunded             — tokens OUT (to buyer's vault), or state-only for cancelStaleOpen
+    //   EscrowResolved + (Released|Refunded)  — DAO-decided dispute outcome
+    event EscrowOpened(
+        uint256 indexed id,
+        address indexed buyer,
+        address indexed merchant,
+        uint256 amount,
+        bytes32 metaHash
+    );
+    event EscrowFunded(uint256 indexed id, address indexed buyer, uint256 amount);
+    event EscrowReleased(uint256 indexed id, address indexed merchant, uint256 amount);
+    /// @dev Emitted for refund(), cancelStaleOpen(), settleByInheritance(), and resolve(buyerWins=true).
+    ///      For cancelStaleOpen, `amount` is 0 because the escrow was never funded — no transfer occurred.
+    event EscrowRefunded(uint256 indexed id, address indexed buyer, uint256 amount);
+    event EscrowDisputed(uint256 indexed id, address indexed initiator, string reason);
+    event EscrowResolved(uint256 indexed id, bool buyerWins);
 
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
@@ -368,6 +415,76 @@ contract CommerceEscrow {
             // M-COMMERCE-1 FIX: stamp creation time so unfunded escrows can be cancelled after expiry
             openedAt: uint64(block.timestamp)
         });
+        emit EscrowOpened(id, msg.sender, merchantOwner, amount, metaHash);
+    }
+
+    /// @notice Phase 3d Turn 3 — atomic open+fund via signed intent.
+    /// @dev Buyer signs an ICardBoundVaultFundEscrow.EscrowFundIntent off-chain (one signature).
+    ///      This function creates the escrow record AND calls the buyer's vault to pull funds
+    ///      in the same transaction. Escrow goes directly to FUNDED state — no intermediate OPEN.
+    ///
+    /// Security pinning: all intent fields the buyer signed are verified against the inputs
+    /// here. A signature minted for one escrow cannot be replayed against a different one
+    /// (different vault, different amount, different escrow id, different deadline, all
+    /// rejected). The vault layer additionally enforces nonce, walletEpoch, daily/per-tx
+    /// limits, and pause state — same security as executePayMerchant.
+    ///
+    /// @param intent       Signed escrow-fund intent. The buyer's vault address, the amount,
+    ///                     and this contract's address are all pinned here.
+    /// @param signature    EIP-712 signature from the buyer's activeWallet over `intent`.
+    /// @param merchantOwner Merchant the escrow is opened with.
+    /// @param metaHash     Off-chain content hash (order details, terms, etc.).
+    function openAndFundWithIntent(
+        ICardBoundVaultFundEscrow.EscrowFundIntent calldata intent,
+        bytes calldata signature,
+        address merchantOwner,
+        bytes32 metaHash
+    ) external nonReentrant returns (uint256 id) {
+        // Standard buyer/merchant validation (mirrors open()).
+        if (intent.amount == 0) revert COM_BadAmount();
+        MerchantRegistry.Merchant memory m = merchants.info(merchantOwner);
+        if (m.status == MerchantRegistry.Status.NONE) revert COM_NotMerchant();
+        if (m.status == MerchantRegistry.Status.SUSPENDED) revert COM_Suspended();
+        if (m.status == MerchantRegistry.Status.DELISTED) revert COM_Delisted();
+
+        address buyerV = vaultHub.vaultOf(msg.sender);
+        if (buyerV == address(0)) revert COM_NotBuyer();
+        address sellerV = vaultHub.vaultOf(merchantOwner);
+        if (sellerV == address(0)) revert COM_NotSeller();
+
+        // Intent pinning — refuse to act on an intent signed for a different escrow.
+        // The vault separately enforces intent.vault == address(this-vault), so once we
+        // confirm intent.vault matches the buyer's live vault, all parties agree on the source.
+        if (intent.vault != buyerV) revert COM_NotAllowed();
+        if (intent.escrowContract != address(this)) revert COM_NotAllowed();
+        if (intent.token != address(token)) revert COM_NotAllowed();
+
+        id = ++escrowCount;
+        // The escrowId in the intent must match the new id. Buyer pre-computes this by
+        // reading escrowCount before signing. If another escrow opens in between, this
+        // mismatches and reverts — buyer re-signs with the new id. Same race property as
+        // the simulate-then-write pattern used elsewhere in the codebase.
+        if (intent.escrowId != id) revert COM_NotAllowed();
+
+        escrows[id] = Escrow({
+            buyerOwner: msg.sender,
+            merchantOwner: merchantOwner,
+            buyerVault: buyerV,
+            sellerVault: sellerV,
+            amount: intent.amount,
+            state: State.FUNDED, // directly to FUNDED — atomic path skips OPEN
+            metaHash: metaHash,
+            openedAt: uint64(block.timestamp)
+        });
+        escrowDeposited[id] = intent.amount;
+
+        // Call the buyer's vault to pull funds. Vault enforces:
+        //   nonce, walletEpoch, deadline, chainId, daily limit, per-tx limit, pause state,
+        //   Seer enforcement, activeWallet signature verification. Same checks as executePayMerchant.
+        ICardBoundVaultFundEscrow(buyerV).executeFundEscrow(intent, signature);
+
+        emit EscrowOpened(id, msg.sender, merchantOwner, intent.amount, metaHash);
+        emit EscrowFunded(id, msg.sender, intent.amount);
     }
 
     function markFunded(uint256 id) external nonReentrant {
@@ -394,6 +511,7 @@ contract CommerceEscrow {
         e.state = State.FUNDED;
         escrowDeposited[id] = e.amount;
         token.safeTransferFrom(e.buyerVault, address(this), e.amount);
+        emit EscrowFunded(id, e.buyerOwner, e.amount);
     }
 
     function release(uint256 id) external nonReentrant {
@@ -418,6 +536,7 @@ contract CommerceEscrow {
         address sellerVaultNow = vaultHub.vaultOf(e.merchantOwner);
         if (sellerVaultNow == address(0)) revert COM_NotSeller();
         token.safeTransfer(sellerVaultNow, e.amount);
+        emit EscrowReleased(id, e.merchantOwner, e.amount);
     }
 
     function refund(uint256 id) external nonReentrant {
@@ -431,6 +550,7 @@ contract CommerceEscrow {
         address buyerVaultNow = vaultHub.vaultOf(e.buyerOwner);
         if (buyerVaultNow == address(0)) revert COM_NotBuyer();
         token.safeTransfer(buyerVaultNow, e.amount);
+        emit EscrowRefunded(id, e.buyerOwner, e.amount);
     }
 
     /// @notice R-4 — Settle a FUNDED or DISPUTED escrow when one party's vault has entered MEMORIAL.
@@ -470,6 +590,7 @@ contract CommerceEscrow {
         e.state = State.REFUNDED;
         if (buyerVaultLive == address(0)) revert COM_NotBuyer();
         token.safeTransfer(buyerVaultLive, e.amount);
+        emit EscrowRefunded(id, e.buyerOwner, e.amount);
     }
 
     /// @notice M-COMMERCE-1 FIX: Cancel an OPEN (unfunded) escrow after the expiry window.
@@ -484,9 +605,12 @@ contract CommerceEscrow {
             revert COM_BadState();
         }
         e.state = State.REFUNDED;
+        // No token transfer — this escrow was never funded.
+        // Emit with amount=0 to signal "state-only refund" vs a real fund return.
+        emit EscrowRefunded(id, e.buyerOwner, 0);
     }
 
-    function dispute(uint256 id, string calldata /*reason*/) external nonReentrant {
+    function dispute(uint256 id, string calldata reason) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
         if (msg.sender != e.buyerOwner && msg.sender != e.merchantOwner) revert COM_NotAllowed();
@@ -495,6 +619,7 @@ contract CommerceEscrow {
         if (e.amount >= minDisputeAmountForPenalty) {
             merchants._noteDispute(e.merchantOwner);
         }
+        emit EscrowDisputed(id, msg.sender, reason);
     }
 
     function resolve(uint256 id, bool buyerWins) external nonReentrant onlyDAO {
@@ -505,11 +630,14 @@ contract CommerceEscrow {
             address buyerVaultNow = vaultHub.vaultOf(e.buyerOwner);
             if (buyerVaultNow == address(0)) revert COM_NotBuyer();
             token.safeTransfer(buyerVaultNow, e.amount);
+            emit EscrowRefunded(id, e.buyerOwner, e.amount);
         } else {
             address sellerVaultNow = vaultHub.vaultOf(e.merchantOwner);
             if (sellerVaultNow == address(0)) revert COM_NotSeller();
             token.safeTransfer(sellerVaultNow, e.amount);
+            emit EscrowReleased(id, e.merchantOwner, e.amount);
         }
+        emit EscrowResolved(id, buyerWins);
     }
 }
 

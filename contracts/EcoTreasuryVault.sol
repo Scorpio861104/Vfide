@@ -2,7 +2,11 @@
 pragma solidity 0.8.30;
 
 /**
- * VFIDEFinance.sol - VFIDE-Only Treasury System
+ * EcoTreasuryVault.sol - VFIDE-Only Treasury System
+ * 
+ * (Originally named VFIDEFinance.sol; renamed 2026-05-16 to match the
+ *  EcoTreasuryVault contract declared inside, resolving MAINNET_DEPLOY_READINESS
+ *  Section A.1 file/contract naming dissonance.)
  * 
  * Simplified for VFIDE-only ecosystem:
  * - No stablecoin registry (VFIDE is the only currency)

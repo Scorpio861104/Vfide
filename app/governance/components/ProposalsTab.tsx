@@ -1,261 +1,253 @@
-'use client'
+'use client';
 
-import { useEffect, useMemo, useState } from "react"
-import { useReadContract, usePublicClient } from "wagmi"
-import { Sparkles } from "lucide-react"
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useAccount, usePublicClient } from 'wagmi';
+import { type Address } from 'viem';
+import { AlertCircle, CheckCircle2, Loader2, Wallet, Info } from 'lucide-react';
 
-import { exportCSV } from "@/components/export/csv-export"
-import { DAOABI } from "@/lib/abis"
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts"
-import { GOVERNANCE_QUORUM_VOTES } from "@/lib/constants"
-import { VirtualizedList } from "@/lib/ux/performanceUtils"
-import { Numeric } from "@/components/ui/Numeric"
+import { exportCSV } from '@/components/export/csv-export';
+import { DAOABI } from '@/lib/abis';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
+import { VirtualizedList } from '@/lib/ux/performanceUtils';
+import { Numeric } from '@/components/ui/Numeric';
 
-import { useCountdown } from "./useCountdown"
-import type { Proposal } from "./types"
+import { useCountdown } from './useCountdown';
+import type { Proposal } from './types';
+import { ProposalCard } from './ProposalCard';
+import {
+  useDAO,
+  proposalTypeLabel,
+  ProposalStatus,
+  type ProposalRecord,
+} from '@/hooks/useDAO';
+import { useProposals } from '@/hooks/useProposals';
 
-const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO
+const DAO_ADDRESS = CONTRACT_ADDRESSES.DAO;
+
+/**
+ * Map a ProposalRecord (contract-native types) into the display-oriented Proposal
+ * shape. Pre-computes the time-left countdown string + truncated proposer label.
+ */
+function recordToProposal(r: ProposalRecord): Proposal {
+  const endTimeMs = Number(r.endTime) * 1000;
+  const startTimeMs = Number(r.startTime) * 1000;
+  return {
+    id: Number(r.id),
+    type: proposalTypeLabel(r.ptype).toUpperCase(),
+    title: r.description.split('\n')[0] || `Proposal #${r.id}`,
+    author: `${r.proposer.slice(0, 6)}…${r.proposer.slice(-4)}`,
+    timeLeft: formatTimeLeft(endTimeMs),
+    endTime: endTimeMs,
+    startTime: startTimeMs,
+    forVotes: Number(r.forVotes),
+    againstVotes: Number(r.againstVotes),
+    voted: false, // updated after hasVoted batch read
+    description: r.description,
+    status: r.status,
+    ptype: r.ptype,
+    proposerAddress: r.proposer,
+  };
+}
+
+function formatTimeLeft(endTimeMs: number): string {
+  const diff = endTimeMs - Date.now();
+  if (diff <= 0) return 'Ended';
+
+  const totalHours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (totalHours > 0) return `${totalHours}h`;
+
+  const minutes = Math.floor(diff / (1000 * 60));
+  return `${Math.max(minutes, 1)}m`;
+}
 
 export function ProposalsTab({
   searchQuery = '',
-  activeProposalIds,
-  onVote,
-  onFinalize,
   onCreateProposal,
 }: {
-  searchQuery?: string
-  activeProposalIds?: readonly bigint[]
-  onVote?: (proposalId: bigint, support: boolean) => void
-  onFinalize?: (proposalId: bigint) => void
-  onCreateProposal?: () => void
+  searchQuery?: string;
+  onCreateProposal?: () => void;
 }) {
-  const publicClient = usePublicClient()
-  const isAvailable = isConfiguredContractAddress(DAO_ADDRESS)
-  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
-  const [filterType, setFilterType] = useState<string>("all")
-  const [showAllProposals, setShowAllProposals] = useState(false)
+  const publicClient = usePublicClient();
+  const { address } = useAccount();
+  const isAvailable = isConfiguredContractAddress(DAO_ADDRESS);
+  const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [filterType, setFilterType] = useState<string>('all');
+  const [showAllProposals, setShowAllProposals] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
-  const { data: liveActiveIds } = useReadContract({
-    address: DAO_ADDRESS,
-    abi: DAOABI,
-    functionName: 'getActiveProposals',
-    query: {
-      enabled: isAvailable,
-    },
-  })
+  const dao = useDAO();
+  const { proposals: records, isLoading: proposalsLoading, refetch: refetchList } = useProposals({ mode: 'active' });
 
-  const ids = (activeProposalIds ?? (liveActiveIds as readonly bigint[] | undefined) ?? [])
-
-  const [proposals, setProposals] = useState<Proposal[]>([])
+  // Decorate proposals with viewer-specific hasVoted by batched read
+  const [proposals, setProposals] = useState<Proposal[]>([]);
 
   useEffect(() => {
-    const load = async () => {
-      if (!publicClient || !isAvailable || ids.length === 0) {
-        setProposals([])
-        return
+    let cancelled = false;
+    async function decorate() {
+      // Map to display shape
+      const base = records.map(recordToProposal);
+      if (!address || !publicClient || !isAvailable || base.length === 0) {
+        if (!cancelled) setProposals(base);
+        return;
       }
-
-      const formatType = (ptype: number): string => {
-        if (ptype === 0) return 'PARAMETER'
-        if (ptype === 1) return 'TREASURY'
-        if (ptype === 2) return 'UPGRADE'
-        if (ptype === 3) return 'POLICY'
-        return 'OTHER'
-      }
-
-      const formatAddress = (value: `0x${string}`): string => `${value.slice(0, 6)}...${value.slice(-4)}`
-
-      const formatTimeLeft = (endTimeMs: number): string => {
-        const diff = endTimeMs - Date.now()
-        if (diff <= 0) return 'Ended'
-
-        const totalHours = Math.floor(diff / (1000 * 60 * 60))
-        const days = Math.floor(totalHours / 24)
-        const hours = totalHours % 24
-
-        if (days > 0) return `${days}d ${hours}h`
-        if (totalHours > 0) return `${totalHours}h`
-
-        const minutes = Math.floor(diff / (1000 * 60))
-        return `${Math.max(minutes, 1)}m`
-      }
-
-      const fetched = await Promise.all(
-        ids.map(async (proposalId) => {
-          const proposal = await publicClient.readContract({
-            address: DAO_ADDRESS,
-            abi: DAOABI,
-            functionName: 'getProposalDetails',
-            args: [proposalId],
-          }) as readonly [
-            `0x${string}`,
-            number,
-            `0x${string}`,
-            bigint,
-            string,
-            bigint,
-            bigint,
-            bigint,
-            bigint,
-            boolean,
-            boolean
-          ]
-
-          const [proposer, ptype, _target, _value, description, _startTime, endTime, forVotes, againstVotes] = proposal
-          const endTimeMs = Number(endTime) * 1000
-
-          return {
-            id: Number(proposalId),
-            type: formatType(ptype),
-            title: description || `Proposal #${proposalId.toString()}`,
-            author: formatAddress(proposer),
-            timeLeft: formatTimeLeft(endTimeMs),
-            endTime: endTimeMs,
-            forVotes: Number(forVotes),
-            againstVotes: Number(againstVotes),
-            voted: false,
-            description,
-          } satisfies Proposal
+      // Batched hasVoted read — one call per proposal, ran in parallel
+      const votedFlags = await Promise.all(
+        base.map(async (p) => {
+          try {
+            const r = await publicClient.readContract({
+              address: DAO_ADDRESS as Address,
+              abi: DAOABI,
+              functionName: 'hasVoted',
+              args: [BigInt(p.id), address],
+            });
+            return r as boolean;
+          } catch {
+            return false;
+          }
         })
-      )
-
-      setProposals(fetched)
+      );
+      if (cancelled) return;
+      setProposals(base.map((p, i) => ({ ...p, voted: votedFlags[i] ?? false })));
     }
+    void decorate();
+    return () => {
+      cancelled = true;
+    };
+  }, [records, address, publicClient, isAvailable]);
 
-    load().catch(() => setProposals([]))
-  }, [ids, publicClient, isAvailable])
-
+  // ── Filtering ─────────────────────────────────────────────────────────────
   const filteredProposals = useMemo(() => {
     return proposals.filter((p) => {
       const matchesSearch =
-        searchQuery === "" || p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.id.toString().includes(searchQuery)
-      const matchesType = filterType === "all" || p.type === filterType
-      return matchesSearch && matchesType
-    })
-  }, [searchQuery, filterType, proposals])
+        searchQuery === '' ||
+        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.id.toString().includes(searchQuery);
+      const matchesType = filterType === 'all' || p.type === filterType;
+      return matchesSearch && matchesType;
+    });
+  }, [searchQuery, filterType, proposals]);
 
-  const shouldVirtualize = filteredProposals.length > 8
-  const usePerformanceMode = shouldVirtualize && !showAllProposals
+  const shouldVirtualize = filteredProposals.length > 8;
+  const usePerformanceMode = shouldVirtualize && !showAllProposals;
 
   useEffect(() => {
     if (!shouldVirtualize) {
-      setShowAllProposals(false)
+      setShowAllProposals(false);
     }
-  }, [shouldVirtualize])
+  }, [shouldVirtualize]);
 
-  const renderProposalCard = (prop: Proposal, padded = false) => {
-    const total = prop.forVotes + prop.againstVotes
-    const forPercent = total > 0 ? Math.round((prop.forVotes / total) * 100) : 0
+  // ── Action handlers ───────────────────────────────────────────────────────
+  const runAction = useCallback(
+    async (fn: () => Promise<unknown>, successMessage: string) => {
+      setActionError(null);
+      setActionMessage(null);
+      try {
+        await fn();
+        setActionMessage(successMessage);
+        await refetchList();
+      } catch (e: any) {
+        setActionError(e?.shortMessage || e?.message || 'Action failed.');
+      }
+    },
+    [refetchList]
+  );
 
-    const content = (
-      <div
-        key={prop.id}
-        className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 hover:border-cyan-400 transition-colors"
-      >
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1 min-w-0">
-            <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-cyan-400 text-sm font-bold mb-2">
-              {prop.type}
-            </div>
-            <h3 className="text-xl font-bold text-zinc-100 mb-2">{prop.title}</h3>
-            <p className="text-zinc-400 text-sm">Proposed by {prop.author} • Ends in {prop.timeLeft}</p>
-          </div>
-          <div className="text-right text-zinc-100 text-2xl font-bold">
-            #<Numeric value={prop.id} format="integer" size="2xl" weight={700} className="text-zinc-100" />
-          </div>
-        </div>
+  const handleVote = (id: bigint, support: boolean) =>
+    runAction(() => dao.vote(id, support), `Vote cast on proposal #${id}.`);
+  const handleFinalize = (id: bigint) =>
+    runAction(() => dao.finalize(id), `Proposal #${id} finalized.`);
+  const handleExecute = (id: bigint) =>
+    runAction(() => dao.executeTimelockTx(id), `Proposal #${id} executed.`);
+  const handleExpire = (id: bigint) =>
+    runAction(() => dao.expireQueuedProposal(id), `Queued proposal #${id} expired.`);
+  const handleWithdraw = (id: bigint) =>
+    runAction(() => dao.withdrawProposal(id), `Proposal #${id} withdrawn.`);
 
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-emerald-500">
-              FOR: <Numeric value={prop.forVotes} format="integer" size="sm" weight={600} className="text-emerald-500" /> votes
-              {' '}(<Numeric value={forPercent} format="integer" size="sm" weight={500} className="text-emerald-500" />%)
-            </span>
-            <span className="text-red-600">
-              AGAINST: <Numeric value={prop.againstVotes} format="integer" size="sm" weight={600} className="text-red-600" /> votes
-              {' '}(<Numeric value={100 - forPercent} format="integer" size="sm" weight={500} className="text-red-600" />%)
-            </span>
-          </div>
-          <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500" style={{ width: `${forPercent}%` }} />
-          </div>
+  const viewer = useMemo(
+    () => ({
+      address: address as Address | undefined,
+      isEligible: dao.isEligible,
+      // hasVoted is per-proposal — passed through prop.voted on the card
+    }),
+    [address, dao.isEligible]
+  );
 
-          <div className="mt-3 space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-zinc-400">Quorum Progress</span>
-              <span className={total >= GOVERNANCE_QUORUM_VOTES ? "text-emerald-500" : "text-amber-400"}>
-                <Numeric value={total} format="integer" size="xs" weight={500} className={total >= GOVERNANCE_QUORUM_VOTES ? "text-emerald-500" : "text-amber-400"} />
-                {' / '}
-                <Numeric value={GOVERNANCE_QUORUM_VOTES} format="integer" size="xs" weight={500} className={total >= GOVERNANCE_QUORUM_VOTES ? "text-emerald-500" : "text-amber-400"} />
-                {' '}
-                {total >= GOVERNANCE_QUORUM_VOTES ? "✓" : <>(<Numeric value={Math.round((total / GOVERNANCE_QUORUM_VOTES) * 100)} format="integer" size="xs" weight={500} className="text-amber-400" />%)</>}
-              </span>
-            </div>
-            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all ${
-                  total >= GOVERNANCE_QUORUM_VOTES ? "bg-emerald-500" : "bg-gradient-to-r from-amber-400 to-orange-500"
-                }`}
-                style={{ width: `${Math.min(100, (total / GOVERNANCE_QUORUM_VOTES) * 100)}%` }}
-              />
-            </div>
-            {total >= GOVERNANCE_QUORUM_VOTES ? (
-              <div className="text-xs text-emerald-500 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Quorum reached!
-              </div>
-            ) : null}
+  if (!isAvailable) {
+    return (
+      <section className="py-8">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 text-center">
+            <AlertCircle className="mx-auto text-amber-400 mb-3" size={28} />
+            <p className="text-zinc-100 font-semibold">DAO is not configured for this environment.</p>
+            <p className="text-zinc-400 text-sm mt-1">Set NEXT_PUBLIC_DAO_ADDRESS to interact with governance.</p>
           </div>
         </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={() => onVote?.(BigInt(prop.id), true)}
-            className="flex-1 px-4 py-2 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-emerald-500/90"
-          >
-            Vote FOR
-          </button>
-          <button
-            onClick={() => onVote?.(BigInt(prop.id), false)}
-            className="flex-1 px-4 py-2 bg-red-600 text-zinc-100 rounded-lg font-bold hover:bg-red-600/90"
-          >
-            Vote AGAINST
-          </button>
-          {onFinalize && Date.now() > prop.endTime ? (
-            <button
-              onClick={() => onFinalize(BigInt(prop.id))}
-              className="px-4 py-2 bg-purple-500 text-white rounded-lg font-bold hover:bg-purple-600"
-            >
-              Finalize
-            </button>
-          ) : null}
-          <button
-            onClick={() => setSelectedProposal(prop)}
-            className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-zinc-400 rounded-lg hover:text-cyan-400 hover:border-cyan-400"
-          >
-            View Details
-          </button>
-        </div>
-      </div>
-    )
-
-    return padded ? <div className="h-full pb-4">{content}</div> : content
+      </section>
+    );
   }
 
   return (
     <section className="py-8">
-      <div className="container mx-auto px-3 sm:px-4">
+      <div className="container mx-auto px-3 sm:px-4 space-y-4">
+        {/* Eligibility banner — shows when wallet is connected */}
+        {address && (
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-4 flex items-center gap-3 flex-wrap">
+            <Wallet className="text-cyan-400 shrink-0" size={18} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-zinc-100">
+                <span className="text-zinc-400">Voting power:</span>{' '}
+                <Numeric value={Number(dao.votingPower)} format="integer" className="text-zinc-100" weight={600} />
+                {!dao.isEligible && (
+                  <span className="ml-3 text-amber-400 text-xs">
+                    <Info size={10} className="inline" /> Not currently eligible — ProofScore below minimum
+                  </span>
+                )}
+                {dao.cooldownActive && (
+                  <span className="ml-3 text-amber-400 text-xs">
+                    <Info size={10} className="inline" /> Proposal cooldown active
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Action feedback */}
+        {actionError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-start gap-2">
+            <AlertCircle size={14} className="text-red-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-red-300">{actionError}</p>
+          </div>
+        )}
+        {actionMessage && !actionError && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex items-start gap-2">
+            <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 shrink-0" />
+            <p className="text-sm text-emerald-300">{actionMessage}</p>
+          </div>
+        )}
+
         <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
           <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-zinc-100">Active Proposals ({filteredProposals.length})</h2>
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+              <h2 className="text-2xl font-bold text-zinc-100">
+                Active Proposals ({filteredProposals.length})
+                {proposalsLoading && (
+                  <Loader2 size={16} className="inline ml-2 text-cyan-400 animate-spin" />
+                )}
+              </h2>
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     exportCSV({
-                      filename: "proposals",
-                      headers: ["ID", "Type", "Title", "For Votes", "Against Votes"],
+                      filename: 'proposals',
+                      headers: ['ID', 'Type', 'Title', 'For Votes', 'Against Votes'],
                       rows: filteredProposals.map((p) => [p.id, p.type, p.title, p.forVotes, p.againstVotes]),
-                    })
+                    });
                   }}
                   className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-cyan-400 rounded-lg font-bold hover:border-cyan-400 transition-colors"
                 >
@@ -272,15 +264,15 @@ export function ProposalsTab({
             </div>
 
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {["all", "PARAMETER", "TREASURY", "UPGRADE", "POLICY", "OTHER"].map((type) => (
+              {['all', 'GENERIC', 'FINANCIAL', 'PROTOCOL CHANGE', 'SECURITY ACTION'].map((type) => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
                   className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                    filterType === type ? "bg-cyan-400 text-zinc-900" : "bg-zinc-900 text-zinc-400 hover:text-cyan-400"
+                    filterType === type ? 'bg-cyan-400 text-zinc-900' : 'bg-zinc-900 text-zinc-400 hover:text-cyan-400'
                   }`}
                 >
-                  {type === "all" ? "All" : type}
+                  {type === 'all' ? 'All' : type}
                 </button>
               ))}
             </div>
@@ -289,7 +281,7 @@ export function ProposalsTab({
           <div className="space-y-4">
             {filteredProposals.length === 0 ? (
               <div className="text-center py-12 text-zinc-400">
-                No active proposals found.
+                {proposalsLoading ? 'Loading proposals…' : 'No active proposals found.'}
               </div>
             ) : usePerformanceMode ? (
               <>
@@ -298,15 +290,42 @@ export function ProposalsTab({
                 </div>
                 <VirtualizedList
                   items={filteredProposals}
-                  itemHeight={320}
-                  containerHeight={Math.min(filteredProposals.length * 320, 760)}
+                  itemHeight={360}
+                  containerHeight={Math.min(filteredProposals.length * 360, 840)}
                   className="pr-2"
                   keyExtractor={(prop) => String(prop.id)}
-                  renderItem={(prop) => renderProposalCard(prop, true)}
+                  renderItem={(prop) => (
+                    <div className="h-full pb-4">
+                      <ProposalCard
+                        proposal={prop}
+                        viewer={{ ...viewer, hasVoted: prop.voted }}
+                        isPending={dao.isWritePending}
+                        onVote={handleVote}
+                        onFinalize={handleFinalize}
+                        onExecute={handleExecute}
+                        onExpire={handleExpire}
+                        onWithdraw={handleWithdraw}
+                        onViewDetails={(p) => setSelectedProposal(p)}
+                      />
+                    </div>
+                  )}
                 />
               </>
             ) : (
-              filteredProposals.map((prop) => renderProposalCard(prop))
+              filteredProposals.map((prop) => (
+                <ProposalCard
+                  key={prop.id}
+                  proposal={prop}
+                  viewer={{ ...viewer, hasVoted: prop.voted }}
+                  isPending={dao.isWritePending}
+                  onVote={handleVote}
+                  onFinalize={handleFinalize}
+                  onExecute={handleExecute}
+                  onExpire={handleExpire}
+                  onWithdraw={handleWithdraw}
+                  onViewDetails={(p) => setSelectedProposal(p)}
+                />
+              ))
             )}
           </div>
 
@@ -357,7 +376,7 @@ export function ProposalsTab({
 
               <div>
                 <div className="text-zinc-400 text-sm mb-2">Description</div>
-                <div className="text-zinc-100 bg-zinc-900 p-4 rounded-lg">{selectedProposal.description}</div>
+                <div className="text-zinc-100 bg-zinc-900 p-4 rounded-lg whitespace-pre-wrap">{selectedProposal.description}</div>
               </div>
 
               <div>
@@ -380,37 +399,42 @@ export function ProposalsTab({
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => {
-                    onVote?.(BigInt(selectedProposal.id), true);
-                    setSelectedProposal(null);
-                  }}
-                  disabled={!onVote}
-                  className="flex-1 px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-emerald-500/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Vote FOR
-                </button>
-                <button
-                  onClick={() => {
-                    onVote?.(BigInt(selectedProposal.id), false);
-                    setSelectedProposal(null);
-                  }}
-                  disabled={!onVote}
-                  className="flex-1 px-6 py-3 bg-red-600 text-zinc-100 rounded-lg font-bold hover:bg-red-600/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Vote AGAINST
-                </button>
-              </div>
+              {/* Modal vote buttons — only when proposal is Active and viewer can vote */}
+              {selectedProposal.status === ProposalStatus.Active && (
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      handleVote(BigInt(selectedProposal.id), true);
+                      setSelectedProposal(null);
+                    }}
+                    disabled={selectedProposal.voted || !dao.isEligible || dao.isWritePending}
+                    title={selectedProposal.voted ? 'You already voted' : !dao.isEligible ? 'Not eligible to vote' : undefined}
+                    className="flex-1 px-6 py-3 bg-emerald-500 text-zinc-900 rounded-lg font-bold hover:bg-emerald-500/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Vote FOR
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleVote(BigInt(selectedProposal.id), false);
+                      setSelectedProposal(null);
+                    }}
+                    disabled={selectedProposal.voted || !dao.isEligible || dao.isWritePending}
+                    title={selectedProposal.voted ? 'You already voted' : !dao.isEligible ? 'Not eligible to vote' : undefined}
+                    className="flex-1 px-6 py-3 bg-red-600 text-zinc-100 rounded-lg font-bold hover:bg-red-600/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Vote AGAINST
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       ) : null}
     </section>
-  )
+  );
 }
 
 function ProposalCountdown({ endTime }: { endTime: number }) {
-  const timeLeft = useCountdown(endTime)
-  return <div className="text-cyan-400 font-bold text-lg">{timeLeft}</div>
+  const timeLeft = useCountdown(endTime);
+  return <div className="text-cyan-400 font-bold text-lg">{timeLeft}</div>;
 }

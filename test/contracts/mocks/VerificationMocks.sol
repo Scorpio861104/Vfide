@@ -48,4 +48,8 @@ contract MockVaultHub is IVaultHub {
     function totalVaultsCreated() external view override returns (uint256) {
         return totalVaultsCreatedCount;
     }
+    
+    function isInMemorialState(address) external view override returns (bool) {
+        return false;
+    }
 }

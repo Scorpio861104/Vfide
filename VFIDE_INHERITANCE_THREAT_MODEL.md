@@ -797,6 +797,36 @@ T-VETO-4, Path C. The same M-of-N threshold that protects against single-guardia
 
 Almost every residual collapses to "the guardian set should not all be compromised." This is the design's irreducible trust assumption. The protocol cannot help a user who lets all their guardians be friends with their attacker.
 
+### R-8: Guardian-initiated recovery surface
+
+**Context.** The original recovery flow required the owner to call `initiateClaim` themselves. A user who lost their only device had no way to start recovery — a real gap in the lost-device UX. R-8 extends the recovery contract to allow trusted guardians ("trustees") to initiate recovery on the owner's behalf.
+
+**New attack surfaces this creates:**
+
+1. **Single rogue trustee.** A trustee initiates recovery to an attacker-controlled address while the owner is temporarily unreachable (travel, illness, religious observance, family emergency). If the owner fails to call `challengeClaim` within the challenge window, the recovery completes and the vault is drained.
+
+2. **Coerced cancellation.** Social engineer calls victim claiming to be "VFIDE support," asks for cancellation help on a recovery the attacker themselves initiated. Less severe than (1) — the cancellation requires a signed transaction from the original owner's wallet, not a low-entropy secret. But notification spam can be used to pressure cancellation.
+
+3. **Harassment via repeated initiation.** A rogue trustee whose first attempt was challenged could re-initiate immediately and indefinitely, forcing the owner to spend their life vetoing.
+
+4. **Compromised key promoting attacker to trustee.** If the owner's key is briefly compromised, the attacker could promote themselves to trustee then immediately initiate recovery.
+
+**Design responses (all implemented):**
+
+- **Trustee gating on initiation.** `initiateClaim` checks `isGuardianTrustee(msg.sender)` when the vault has any trustees configured. Vaults with zero trustees retain the pre-R8 fallback (anyone can initiate) so users in the not-yet-configured state are not locked out.
+- **Per-initiator cooldown.** `challengeClaim` sets a 30-day lockout keyed by (vault, initiator). The harassed owner gets a month of relief before the same bad actor can try again. Per-initiator (not per-vault) so other trustees can still help in a genuine emergency.
+- **Snapshot-protected challenge window.** The user's preference (3-30 days, user-configurable) is snapshotted into the RecoveryClaim at initiation. Later setter calls — including by a compromised owner key — cannot retroactively shrink an active window. The activity-based extension (14 days when recently active) stacks via `max()`, so the user's preference can only EXTEND the window, never shrink it below the protocol-determined minimum.
+- **Timelocked trustee promotion.** `proposeTrusteeChange` enters the same 24-hour timelock as guardian changes. A briefly-compromised owner key cannot instantly grant trustee status — other guardians (or the owner-from-another-device) have a day to call `cancelTrusteeChange`.
+- **Hard floors on configuration.** Challenge window minimum 3 days, maximum 30 days. The frontend layers warnings for any choice below 7 days but the contract refuses anything under 3.
+
+**Residual risks the user accepts:**
+
+- **Single rogue trustee + extended unreachability = vault loss.** A user who is genuinely unreachable for longer than their configured window AND whose trustee is malicious AND whose other guardians don't notice will lose the vault. This is irreducible: the whole reason guardian-initiated recovery exists is to handle "user cannot react," so by construction the user cannot always react. The user's tools against this are: choose trustees carefully, configure a long window, configure multiple trustees so other guardians notice.
+- **Zero-trustee fallback.** A vault with no trustees configured allows ANYONE to initiate. This preserves the recovery path for users who haven't set up trustees but creates spam vulnerability. Frontend strongly recommends configuring at least one trustee; protocol does not require it (user sovereignty).
+- **Notification reach.** The contract emits `ClaimInitiated` but cannot guarantee the owner sees it. Off-chain notification (email, push, SMS via guardian setup) is the frontend's responsibility. Users with stale/missing contact info are at higher risk during the window.
+
+**Test coverage:** `test/hardhat/CardBoundVaultRecovery.r8.test.ts` exercises trustee gating, cooldown enforcement (and the per-initiator exemption), preference bound enforcement, snapshot integrity, and the zero-trustee fallback behavior. 9 tests covering the new contract surface.
+
 ---
 
 ## Part 10 — What's next

@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import "../../../contracts/SharedInterfaces.sol";
+import "../../../contracts/interfaces/ICommerceEscrow.sol";
 
 contract ReenteringERC20 {
     string public name = "Reenter";
@@ -29,7 +30,7 @@ contract ReenteringERC20 {
         // attempt reentry into commerce escrow (unsafe if target is a contract)
         if (reenterTarget != address(0)) {
             // call release on reenter target - if it reverts, propagate
-            IEscrowManager(reenterTarget).release(reenterId);
+            ICommerceEscrow(reenterTarget).release(reenterId);
         }
         return true;
     }

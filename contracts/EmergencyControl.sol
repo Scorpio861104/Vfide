@@ -5,15 +5,20 @@ pragma solidity 0.8.30;
  * EmergencyControl.sol
  *
  * Purpose:
- *  - Provide two controlled paths to toggle the existing EmergencyBreaker:
+ *  - Provide two controlled paths to toggle an external IEmergencyBreaker:
  *      1) DAO direct toggle
  *      2) Emergency Committee (M-of-N) toggle
  *  - Enforce anti-flap cooldown between successive toggles
  *  - Log every action to ProofLedger (best-effort)
  *
  * Notes:
- *  - This module CALLS an already-deployed EmergencyBreaker (the one you have in VFIDESecurity.sol).
- *  - No vault-level locks here (that’s GuardianLock/PanicGuard). This is ONLY the global breaker toggle.
+ *  - This module CALLS an IEmergencyBreaker implementation that the operator
+ *    wires at deploy time via setModules(dao, breaker, ledger). The legacy
+ *    EmergencyBreaker that lived in contracts/legacy/VFIDESecurity.sol is NOT
+ *    deployed in V1; if a breaker is required at mainnet, deploy a fresh
+ *    contract conforming to IEmergencyBreaker and pass its address.
+ *  - No vault-level locks here (that's GuardianLock/PanicGuard). This is ONLY
+ *    the global breaker toggle.
  */
 
 import "./SharedInterfaces.sol";

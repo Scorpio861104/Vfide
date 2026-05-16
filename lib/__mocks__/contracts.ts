@@ -40,7 +40,6 @@ export const CONTRACT_ADDRESSES = {
   VaultRecoveryClaim: addr(35),
   OwnerControlPanel: addr(36),
   FeeDistributor: addr(37),
-  EscrowManager: addr(38),
 } as const
 
 export const VFIDE_TOKEN_ABI = [

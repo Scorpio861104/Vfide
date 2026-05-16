@@ -17,7 +17,7 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
 import {
-  Home, Store, Wallet, Shield, TrendingUp, Users, Award,
+  Home, Store, Wallet, Shield, ShieldCheck, TrendingUp, Users, Award,
   BarChart3, Settings, Vote, Compass, type LucideIcon,
 } from 'lucide-react';
 import { features } from '@/lib/features';
@@ -77,6 +77,7 @@ const NAV_ITEMS: NavItem[] = [
   // Unlocks at ProofScore 3000 / council
   { id: 'governance', label: 'Governance', href: '/governance', icon: Vote, unlocksAt: 'governor', group: 'governance' },
   { id: 'council', label: 'Council', href: '/council', icon: Vote, unlocksAt: 'governor', group: 'governance' },
+  { id: 'fraud', label: 'Fraud Reporting', href: '/fraud', icon: ShieldCheck, unlocksAt: 'trusted', group: 'governance' },
 
   // System — always visible when connected
   { id: 'settings', label: 'Settings', href: '/settings', icon: Settings, unlocksAt: 'connected', group: 'system' },

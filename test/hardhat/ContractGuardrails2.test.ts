@@ -680,50 +680,6 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EscrowManager deprecation guardrail
-// New escrow creation is intentionally disabled in v8.
-// ─────────────────────────────────────────────────────────────────────────────
-describe("EscrowManager (deprecated creation path)", () => {
-  async function escrowFixture() {
-    const { ethers } = (await getDefaultConnection()) as any;
-    const [arbiter, buyer, merchant] = await ethers.getSigners();
-
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
-    const seer = await SeerStub.deploy();
-    await seer.waitForDeployment();
-
-    const Escrow = await ethers.getContractFactory("EscrowManager");
-    const escrow = await Escrow.deploy(arbiter.address, await seer.getAddress());
-    await escrow.waitForDeployment();
-
-    const Token = await ethers.getContractFactory("TokenStub");
-    const token = await Token.deploy();
-    await token.waitForDeployment();
-
-    await escrow.connect(arbiter).setTokenWhitelist(await token.getAddress(), true);
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
-    await escrow.connect(arbiter).applyTokenWhitelist(await token.getAddress());
-
-    return { ethers, escrow, token, buyer, merchant };
-  }
-
-  async function deployEscrow() {
-    const { ethers, networkHelpers } = (await getDefaultConnection()) as any;
-    return networkHelpers.loadFixture(escrowFixture);
-  }
-
-  it("createEscrow reverts with ESC_Deprecated", async () => {
-    const { escrow, token, buyer, merchant } = await deployEscrow();
-
-    await expect(
-      escrow
-        .connect(buyer)
-        .createEscrow(merchant.address, await token.getAddress(), 1000n, "order-1")
-    ).to.be.revertedWithCustomError(escrow, "ESC_Deprecated");
-  });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VaultHub guardian bootstrap hardening

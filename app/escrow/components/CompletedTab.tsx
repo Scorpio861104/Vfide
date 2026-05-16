@@ -1,86 +1,86 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/**
+ * CompletedTab — escrows in terminal states (RELEASED, REFUNDED, RESOLVED).
+ *
+ * Combined buyer + merchant view sorted by id (newest first). Terminal escrows
+ * have no role-specific actions, so we don't split by role. The card itself
+ * shows the counterparty from the viewer's perspective.
+ */
+
+import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { Lock, Loader2, CheckCircle2 } from 'lucide-react';
+import { useEscrowList } from '@/hooks/useEscrowList';
+import { EscrowState, type CommerceEscrowRecord } from '@/hooks/useCommerceEscrow';
+import { EscrowCard } from './EscrowCard';
 
-interface Lane {
-  id: string | number;
-  borrower_address: string;
-  lender_address: string;
-  principal: number;
-  duration_days: number;
-  interest_bps: number;
-  stage: string;
-  created_at: string;
-}
-
-const COMPLETED_STAGES = new Set(['repaid', 'settled', 'completed', 'closed']);
+const TERMINAL_STATES = new Set<EscrowState>([
+  EscrowState.Released,
+  EscrowState.Refunded,
+  EscrowState.Resolved,
+]);
 
 export function CompletedTab() {
   const { address } = useAccount();
-  const [lanes, setLanes] = useState<Lane[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { escrows: buyerEscrows, isLoading: buyerLoading } = useEscrowList('buyer', address);
+  const { escrows: merchantEscrows, isLoading: merchantLoading } = useEscrowList('merchant', address);
 
-  useEffect(() => {
-    if (!address) return;
-    setLoading(true);
-    fetch('/api/flashloans/lanes?limit=100')
-      .then((r) => r.json())
-      .then((data) => setLanes((data.lanes ?? []).filter((l: Lane) => COMPLETED_STAGES.has(l.stage))))
-      .finally(() => setLoading(false));
-  }, [address]);
+  // Combine + dedupe (same escrow can't have me as both buyer and merchant, but
+  // defensive in case of self-deals). Sort by id descending — newest first.
+  const combined = useMemo(() => {
+    const seen = new Set<string>();
+    const rows: Array<{ escrow: CommerceEscrowRecord; viewerRole: 'buyer' | 'merchant' }> = [];
+    for (const e of buyerEscrows) {
+      if (!TERMINAL_STATES.has(e.state)) continue;
+      const key = e.id.toString();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rows.push({ escrow: e, viewerRole: 'buyer' });
+    }
+    for (const e of merchantEscrows) {
+      if (!TERMINAL_STATES.has(e.state)) continue;
+      const key = e.id.toString();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rows.push({ escrow: e, viewerRole: 'merchant' });
+    }
+    rows.sort((a, b) => Number(b.escrow.id - a.escrow.id));
+    return rows;
+  }, [buyerEscrows, merchantEscrows]);
 
   if (!address) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
-        <CheckCircle2 size={40} className="text-gray-600 mb-4" />
+        <Lock size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view completed escrows.</p>
       </div>
     );
   }
 
+  const loading = buyerLoading || merchantLoading;
+
   return (
-    <div className="space-y-5">
-      <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <CheckCircle2 size={16} className="text-green-400" />
-          <h3 className="text-white font-semibold text-sm">Completed Escrows</h3>
-          <span className="ml-auto text-xs text-gray-500">{lanes.length} total</span>
-        </div>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="text-cyan-400 animate-spin" />
-          </div>
-        ) : lanes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <CheckCircle2 size={32} className="text-gray-600 mb-3" />
-            <p className="text-gray-400 text-sm">No completed escrows yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {lanes.map((l) => {
-              const isBorrower = l.borrower_address.toLowerCase() === address?.toLowerCase();
-              return (
-                <div key={l.id} className="p-4 bg-white/3 rounded-xl">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="text-xs text-gray-500">{isBorrower ? 'You borrowed' : 'You lent'}</p>
-                      <p className="text-sm text-white font-semibold">{l.principal.toFixed(2)} VFIDE</p>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-xs border border-green-500/20 capitalize">{l.stage}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>{l.duration_days}d duration</span>
-                    <span>{(l.interest_bps / 100).toFixed(2)}% interest</span>
-                    <span>{new Date(l.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+    <div className="bg-white/3 border border-white/10 rounded-2xl p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <CheckCircle2 size={16} className="text-emerald-400" />
+        <h3 className="text-white font-semibold text-sm">Completed escrows</h3>
+        <span className="ml-auto text-xs text-gray-500">{combined.length}</span>
       </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 size={20} className="text-emerald-400 animate-spin" />
+        </div>
+      ) : combined.length === 0 ? (
+        <p className="text-gray-500 text-xs py-8 text-center">No completed escrows yet.</p>
+      ) : (
+        <div className="space-y-3">
+          {combined.map(({ escrow, viewerRole }) => (
+            <EscrowCard key={escrow.id.toString()} escrow={escrow} viewerRole={viewerRole} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

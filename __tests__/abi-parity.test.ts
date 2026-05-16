@@ -149,7 +149,7 @@ const KEY_CONTRACTS = [
   'VFIDEToken', 'VaultHub', 'CardBoundVault', 'Seer', 'SeerSocial', 'SeerView',
   'DAO', 'MerchantPortal', 'ProofScoreBurnRouter', 'PayrollManager',
   'VaultRegistry', 'VaultRecoveryClaim', 'VFIDEBadgeNFT', 'EcosystemVault',
-  'EcosystemVaultView', 'FraudRegistry', 'FeeDistributor', 'EscrowManager',
+  'EcosystemVaultView', 'FraudRegistry', 'FeeDistributor',
   'OwnerControlPanel', 'VFIDETestnetFaucet', 'CouncilElection', 'CouncilSalary',
 ];
 

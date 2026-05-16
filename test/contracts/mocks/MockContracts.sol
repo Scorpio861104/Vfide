@@ -142,7 +142,7 @@ contract MockReentrantAttacker {
 }
 
 /// @title MockReentrantToken - ERC20 with transfer hook for reentrancy testing
-/// Tests finding C-06: VFIDEFinance has no ReentrancyGuard
+/// Tests finding C-06: EcoTreasuryVault (formerly VFIDEFinance) has no ReentrancyGuard
 contract MockReentrantToken is ERC20 {
     address public targetContract;
     bool public attacking;

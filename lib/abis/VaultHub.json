@@ -32,6 +32,11 @@
   },
   {
     "inputs": [],
+    "name": "VH_DeprecatedGlobalPause",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "VH_GuardianSetupRequired",
     "type": "error"
   },
@@ -1248,6 +1253,44 @@
       }
     ],
     "name": "isGuardianSetupExpired",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      }
+    ],
+    "name": "isInMemorialState",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      }
+    ],
+    "name": "isInheritanceActive",
     "outputs": [
       {
         "internalType": "bool",

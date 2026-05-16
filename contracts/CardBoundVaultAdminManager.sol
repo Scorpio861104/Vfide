@@ -17,6 +17,16 @@ contract CardBoundVaultAdminManager {
         uint64  effectiveAt;
     }
 
+    // R-8: Trustee role changes use the same 24-hour timelock as guardian changes.
+    // Separate storage from PendingGuardianChange so a guardian add and a trustee
+    // promotion can be pending at the same time (typical: add Alice as guardian,
+    // wait for her to mature, then promote her to trustee).
+    struct PendingTrusteeChange {
+        address guardian;
+        bool    trustee;
+        uint64  effectiveAt;
+    }
+
     struct PendingUint256x2 {
         uint256 value1;
         uint256 value2;
@@ -51,6 +61,7 @@ contract CardBoundVaultAdminManager {
     address public immutable vault;
 
     PendingGuardianChange  public pendingGuardianChange;
+    PendingTrusteeChange   public pendingTrusteeChange;
     PendingUint256x2       public pendingSpendLimitChange;
     PendingUint256         public pendingLargeTransferThresholdChange;
     PendingRescue          public pendingNativeRescue;
@@ -91,6 +102,33 @@ contract CardBoundVaultAdminManager {
         if (p.effectiveAt == 0) revert AM_NoPending();
         delete pendingGuardianChange;
         return (p.guardian, p.active);
+    }
+
+    // ── Trustee change (R-8) ───────────────────────────────────────
+    // Same 24-hour timelock as guardian changes. The vault validates that the
+    // address is an existing guardian before calling propose; this contract
+    // only holds state. The timelock exists so a compromised owner key cannot
+    // instantly promote an attacker to trustee — other guardians (or the owner
+    // from another device) have a day to cancel.
+    function proposeTrusteeChange(address guardian, bool trustee) external onlyVault {
+        if (pendingTrusteeChange.effectiveAt != 0) revert AM_PendingExists();
+        pendingTrusteeChange = PendingTrusteeChange(
+            guardian, trustee, uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY
+        );
+    }
+
+    function applyTrusteeChange() external onlyVault returns (address guardian, bool trustee) {
+        PendingTrusteeChange memory p = pendingTrusteeChange;
+        if (p.effectiveAt == 0 || block.timestamp < p.effectiveAt) revert AM_Locked();
+        delete pendingTrusteeChange;
+        return (p.guardian, p.trustee);
+    }
+
+    function cancelTrusteeChange() external onlyVault returns (address guardian, bool trustee) {
+        PendingTrusteeChange memory p = pendingTrusteeChange;
+        if (p.effectiveAt == 0) revert AM_NoPending();
+        delete pendingTrusteeChange;
+        return (p.guardian, p.trustee);
     }
 
     // ── Spend limits ───────────────────────────────────────────────

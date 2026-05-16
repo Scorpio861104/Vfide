@@ -6,6 +6,8 @@ import StablecoinRegistryRaw from './StablecoinRegistry.json'
 import VaultInfrastructureRaw from './VaultInfrastructure.json'
 import VaultHubFullRaw from './VaultHub.json'
 import CardBoundVaultRaw from './CardBoundVault.json'
+import CardBoundVaultAdminManagerRaw from './CardBoundVaultAdminManager.json'
+import CardBoundVaultPaymentQueueManagerRaw from './CardBoundVaultPaymentQueueManager.json'
 import SeerRaw from './Seer.json'
 import DAORaw from './DAO.json'
 import DAOTimelockRaw from './DAOTimelock.json'
@@ -25,7 +27,6 @@ import ERC20Raw from './ERC20.json'
 import SeerSocialRaw from './SeerSocial.json'
 import SeerViewRaw from './SeerView.json'
 import OwnerControlPanelRaw from './OwnerControlPanel.json'
-import EscrowManagerRaw from './EscrowManager.json'
 import BadgeManagerRaw from './BadgeManager.json'
 import FeeDistributorRaw from './FeeDistributor.json'
 import SystemHandoverRaw from './SystemHandover.json'
@@ -79,6 +80,8 @@ const StablecoinRegistryABI = normalizeImportedABI(StablecoinRegistryRaw);
 const VaultInfrastructureABI = normalizeImportedABI(VaultInfrastructureRaw);
 const VaultHubFullABI = normalizeImportedABI(VaultHubFullRaw);
 const CardBoundVaultABI = normalizeImportedABI(CardBoundVaultRaw);
+const CardBoundVaultAdminManagerABI = normalizeImportedABI(CardBoundVaultAdminManagerRaw);
+const CardBoundVaultPaymentQueueManagerABI = normalizeImportedABI(CardBoundVaultPaymentQueueManagerRaw);
 const SeerABI = normalizeImportedABI(SeerRaw);
 const DAOABI = normalizeImportedABI(DAORaw);
 const DAOTimelockABI = normalizeImportedABI(DAOTimelockRaw);
@@ -101,7 +104,6 @@ const ERC20ABI = normalizeImportedABI(ERC20Raw);
 const SeerSocialABI = normalizeImportedABI(SeerSocialRaw);
 const SeerViewABI = normalizeImportedABI(SeerViewRaw);
 const OwnerControlPanelABI = normalizeImportedABI(OwnerControlPanelRaw);
-const EscrowManagerABI = normalizeImportedABI(EscrowManagerRaw);
 const BadgeManagerABI = normalizeImportedABI(BadgeManagerRaw);
 const FeeDistributorABI = normalizeImportedABI(FeeDistributorRaw);
 const SystemHandoverABI = normalizeImportedABI(SystemHandoverRaw);
@@ -157,6 +159,8 @@ validateABI(VaultInfrastructureABI, 'VaultInfrastructure');
 const UserVaultABI = CardBoundVaultABI;
 validateABI(UserVaultABI, 'UserVault');
 validateABI(CardBoundVaultABI, 'CardBoundVault');
+validateABI(CardBoundVaultAdminManagerABI, 'CardBoundVaultAdminManager');
+validateABI(CardBoundVaultPaymentQueueManagerABI, 'CardBoundVaultPaymentQueueManager');
 validateABI(SeerABI, 'Seer');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
@@ -176,7 +180,6 @@ validateABI(ERC20ABI, 'ERC20');
 validateABI(SeerSocialABI, 'SeerSocial');
 validateABI(SeerViewABI, 'SeerView');
 validateABI(OwnerControlPanelABI, 'OwnerControlPanel');
-validateABI(EscrowManagerABI, 'EscrowManager');
 validateABI(BadgeManagerABI, 'BadgeManager');
 validateABI(FeeDistributorABI, 'FeeDistributor');
 validateABI(SystemHandoverABI, 'SystemHandover');
@@ -228,6 +231,8 @@ export {
   VaultHubABI,
   UserVaultABI,
   CardBoundVaultABI,
+  CardBoundVaultAdminManagerABI,
+  CardBoundVaultPaymentQueueManagerABI,
   SeerABI,
   DAOABI,
   DAOTimelockABI,
@@ -247,7 +252,6 @@ export {
   SeerSocialABI,
   SeerViewABI,
   OwnerControlPanelABI,
-  EscrowManagerABI,
   BadgeManagerABI,
   FeeDistributorABI,
   SystemHandoverABI,

@@ -218,7 +218,7 @@ contract VaultHubStub {
         inMemorialState[vault] = inMemorial;
     }
 
-    /// @notice R-4 — read view consumed by EscrowManager + VFIDETermLoan settlement paths.
+    /// @notice R-4 — read view consumed by CommerceEscrow + VFIDETermLoan settlement paths.
     function isInMemorialState(address vault) external view returns (bool) {
         return inMemorialState[vault];
     }

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { useGuardianWatchlist, useGuardianAttestations, mergeInboxEntries } from './hooks';
 import { GuardianPendingRecoveryCard } from './GuardianPendingRecoveryCard';
+import { GuardianRecoveryClaimCard } from './GuardianRecoveryClaimCard';
 import { GuardianPendingQueueWidget } from '@/components/security/GuardianPendingQueueWidget';
 
 export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
@@ -79,7 +80,14 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
         ) : (
           <div className="space-y-3 mt-4">
             {inboxEntries.map((entry) => (
-              <GuardianPendingRecoveryCard key={entry.address} entry={entry} userAddress={address} onRemove={() => removeEntry(entry.address)} />
+              <div key={entry.address} className="space-y-3">
+                {/* Path A: wallet rotation recovery (from vault.proposeWalletRotation) */}
+                <GuardianPendingRecoveryCard entry={entry} userAddress={address} onRemove={() => removeEntry(entry.address)} />
+                {/* Path B: comprehensive recovery claim (VaultRecoveryClaim.initiateClaim).
+                    Renders null when no Path B claim is active, so this is invisible during
+                    normal operation. */}
+                <GuardianRecoveryClaimCard entry={entry} />
+              </div>
             ))}
           </div>
         )}

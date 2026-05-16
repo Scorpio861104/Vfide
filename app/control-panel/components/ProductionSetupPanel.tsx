@@ -239,7 +239,6 @@ export function ProductionSetupPanel() {
         <div className="bg-blue-500/20 border border-blue-500/50 rounded-xl p-6">
           <h3 className="text-white font-bold mb-3">📋 Safe Defaults Includes:</h3>
           <ul className="text-slate-300 text-sm space-y-2">
-            <li>• DutyDistributor: Compliance enforced on-chain</li>
             <li>• CouncilSalary: Compliance enforced on-chain</li>
             <li>• CouncilManager: Compliance enforced on-chain</li>
             <li>• LiquidityIncentives: Compliance enforced on-chain</li>

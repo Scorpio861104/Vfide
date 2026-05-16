@@ -82,6 +82,7 @@ const SUB_NAVS: Record<string, { title: string; items: SubNavItem[] }> = {
       { href: '/council', label: 'Council' },
       { href: '/dao-hub', label: 'DAO Hub' },
       { href: '/disputes', label: 'Disputes' },
+      { href: '/fraud', label: 'Fraud Reporting' },
       { href: '/sanctum', label: 'Sanctum' },
       { href: '/leaderboard', label: 'Leaderboard' },
     ],

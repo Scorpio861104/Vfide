@@ -119,16 +119,21 @@ export function HistoryTab({ searchQuery = '' }: { searchQuery?: string }) {
                 `0x${string}`, number, `0x${string}`, bigint, string,
                 bigint, bigint, bigint, bigint, boolean, boolean,
               ];
+              // getProposalDetails returns (in order):
+              //   [0] proposer, [1] ptype, [2] target, [3] value, [4] description,
+              //   [5] startTime, [6] endTime, [7] forVotes, [8] againstVotes,
+              //   [9] executed, [10] queued.
               title = details[4];
-              const votesFor = details[5];
-              const votesAgainst = details[6];
-              const endTime = details[8];
+              const endTime = details[6];
+              const votesFor = details[7];
+              const votesAgainst = details[8];
               const executed = details[9];
-              const cancelled = details[10];
+              // The contract has no 'cancelled' flag; defeated proposals are inferred from
+              // ended-without-execution-without-majority. Queued sits between vote-end and
+              // execution (still "passing", not yet "passed").
               votingPower = votesFor + votesAgainst;
 
-              if (cancelled) status = 'rejected';
-              else if (Number(endTime) * 1000 > Date.now()) status = 'pending';
+              if (Number(endTime) * 1000 > Date.now()) status = 'pending';
               else if (executed || votesFor > votesAgainst) status = 'passed';
               else status = 'rejected';
             } catch {

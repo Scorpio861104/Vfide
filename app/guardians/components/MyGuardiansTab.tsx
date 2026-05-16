@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount, usePublicClient, useReadContract, useSignMessage, useWriteContract } from 'wagmi';
+import { useAccount, usePublicClient, useReadContract, useReadContracts, useSignMessage, useWriteContract } from 'wagmi';
 import { motion } from 'framer-motion';
-import { Shield, Users, UserMinus, CheckCircle2, FileText, AlertTriangle } from 'lucide-react';
+import { Shield, Users, UserMinus, CheckCircle2, FileText, AlertTriangle, Crown, UserPlus } from 'lucide-react';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
 import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
+import { CardBoundVaultAdminManagerABI } from '@/lib/abis';
 import { buildGuardianAttestationMessage, type GuardianAttestationPayload } from '@/lib/recovery/guardianAttestation';
 
 import { AddGuardianForm } from './AddGuardianForm';
@@ -50,11 +51,72 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
     args: vaultAddress ? [vaultAddress] : undefined,
     query: { enabled: isVaultHubAvailable && !!vaultAddress },
   });
-  const { data: pendingGuardianChangeRaw } = useReadContract({
+  // H-CBV-01 FIX: pendingGuardianChange lives on the AdminManager contract, not the vault.
+  // The vault delegates timelocked admin state to a separate AdminManager via the
+  // IAdminManager interface. To read pending state we must:
+  //   1. Read vault.adminManager() → address of the manager contract
+  //   2. Call pendingGuardianChange() on the manager with its own ABI
+  // Previous code called pendingGuardianChange on the vault itself, which silently
+  // returned undefined (vault has no such function), so the pending-change UI never
+  // displayed even when a change was pending.
+  const { data: adminManagerAddrRaw } = useReadContract({
     address: vaultAddress,
     abi: ACTIVE_VAULT_ABI,
-    functionName: 'pendingGuardianChange',
+    functionName: 'adminManager',
     query: { enabled: !!vaultAddress },
+  });
+  const adminManagerAddr = adminManagerAddrRaw as `0x${string}` | undefined;
+
+  const { data: pendingGuardianChangeRaw } = useReadContract({
+    address: adminManagerAddr,
+    abi: CardBoundVaultAdminManagerABI,
+    functionName: 'pendingGuardianChange',
+    query: { enabled: !!adminManagerAddr && adminManagerAddr !== ZERO_ADDRESS },
+  });
+
+  // ─────────────────────────────────────────────────────────────────
+  // R-8 Trustee management
+  //
+  // Trustee state lives on AdminManager (same architectural pattern as
+  // pendingGuardianChange — see H-CBV-01 fix above). Trustees are
+  // guardians who have been promoted to also have the power to initiate
+  // a recovery claim on the owner's behalf. This is the "designated
+  // emergency contact" pattern: a friend or family member the owner
+  // trusts not just to vote on recoveries but to start one if the
+  // owner becomes incapacitated and can't initiate themselves.
+  //
+  // Three reads:
+  //   1. pendingTrusteeChange — same shape as pendingGuardianChange,
+  //      shows a queued promotion/demotion waiting for timelock
+  //   2. trusteeCountView — aggregate count across all guardians who
+  //      are trustees (display only, used in stats)
+  //   3. isGuardianTrustee(addr) per guardian — per-row badge data
+  // ─────────────────────────────────────────────────────────────────
+  const { data: pendingTrusteeChangeRaw } = useReadContract({
+    address: adminManagerAddr,
+    abi: CardBoundVaultAdminManagerABI,
+    functionName: 'pendingTrusteeChange',
+    query: { enabled: !!adminManagerAddr && adminManagerAddr !== ZERO_ADDRESS },
+  });
+
+  const { data: trusteeCountRaw } = useReadContract({
+    address: vaultAddress,
+    abi: ACTIVE_VAULT_ABI,
+    functionName: 'trusteeCountView',
+    query: { enabled: !!vaultAddress },
+  });
+
+  // Per-guardian trustee status. useReadContracts fans out one call per
+  // guardian address. Returns an array in the same order as guardians.
+  const guardiansArray = guardians || [];
+  const { data: trusteeStatusRaw } = useReadContracts({
+    contracts: guardiansArray.map((g) => ({
+      address: vaultAddress,
+      abi: ACTIVE_VAULT_ABI as any,
+      functionName: 'isGuardianTrustee',
+      args: [g],
+    })),
+    query: { enabled: !!vaultAddress && guardiansArray.length > 0 },
   });
 
   const guardianList = guardians || [];
@@ -70,6 +132,27 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const pendingGuardianActive = pendingGuardianChange?.[1] ?? false;
   const pendingGuardianEffectiveAt = Number(pendingGuardianChange?.[2] ?? 0n);
   const hasPendingGuardianChange = !!pendingGuardianAddress && pendingGuardianAddress !== CONTRACT_ADDRESSES.VFIDEToken && pendingGuardianAddress !== ZERO_ADDRESS && pendingGuardianEffectiveAt > 0;
+
+  // Trustee state decoding — same shape as pendingGuardianChange
+  const pendingTrusteeChange = pendingTrusteeChangeRaw as [string, boolean, bigint] | undefined;
+  const pendingTrusteeAddress = pendingTrusteeChange?.[0];
+  const pendingTrusteePromote = pendingTrusteeChange?.[1] ?? false;
+  const pendingTrusteeEffectiveAt = Number(pendingTrusteeChange?.[2] ?? 0n);
+  const hasPendingTrusteeChange =
+    !!pendingTrusteeAddress &&
+    pendingTrusteeAddress !== ZERO_ADDRESS &&
+    pendingTrusteeEffectiveAt > 0;
+
+  const trusteeCount = Number(trusteeCountRaw ?? 0);
+
+  // Build a lowercase address → trustee map for O(1) badge lookup in render
+  const trusteeByAddress: Record<string, boolean> = {};
+  if (trusteeStatusRaw && Array.isArray(trusteeStatusRaw)) {
+    guardiansArray.forEach((g, i) => {
+      const result = trusteeStatusRaw[i]?.result;
+      trusteeByAddress[(g as string).toLowerCase()] = !!result;
+    });
+  }
 
   const clearNotices = () => { setActionError(null); setActionSuccess(null); };
 
@@ -209,6 +292,86 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
     }
   };
 
+  // ─────────────────────────────────────────────────────────────────
+  // R-8 Trustee handlers
+  //
+  // Promote/demote a guardian to/from trustee. Trustees can initiate
+  // recovery claims on the vault owner's behalf — a powerful role,
+  // hence the timelock (same 24h as other admin changes).
+  //
+  // Note: setTrustee (the immediate-effect version) is also on the
+  // contract but is only callable during the pre-setup bootstrap window.
+  // Once guardian setup is complete, all changes go through the timelocked
+  // propose/apply/cancel pipeline.
+  // ─────────────────────────────────────────────────────────────────
+  const handleProposeTrusteeChange = async (guardianAddress: `0x${string}`, promote: boolean) => {
+    clearNotices();
+    if (!vaultAddress) {
+      setActionError('Create a vault before changing trustee status.');
+      return;
+    }
+    try {
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: ACTIVE_VAULT_ABI,
+        functionName: 'proposeTrusteeChange',
+        args: [guardianAddress, promote],
+      });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setActionSuccess(
+        promote
+          ? 'Trustee promotion proposed. Apply after the 24-hour timelock.'
+          : 'Trustee demotion proposed. Apply after the 24-hour timelock.'
+      );
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to propose trustee change');
+    }
+  };
+
+  const handleApplyTrusteeChange = async () => {
+    clearNotices();
+    if (!vaultAddress) {
+      setActionError('Create a vault before applying trustee changes.');
+      return;
+    }
+    try {
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: ACTIVE_VAULT_ABI,
+        functionName: 'applyTrusteeChange',
+      });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setActionSuccess('Pending trustee change applied.');
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to apply trustee change');
+    }
+  };
+
+  const handleCancelTrusteeChange = async () => {
+    clearNotices();
+    if (!vaultAddress) {
+      setActionError('Create a vault before cancelling trustee changes.');
+      return;
+    }
+    try {
+      const hash = await writeContractAsync({
+        address: vaultAddress,
+        abi: ACTIVE_VAULT_ABI,
+        functionName: 'cancelTrusteeChange',
+      });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setActionSuccess('Pending trustee change cancelled.');
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Failed to cancel trustee change');
+    }
+  };
+
   if (!isConnected) {
     return (
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
@@ -322,10 +485,57 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         </div>
       )}
 
+      {/* R-8 Pending Trustee Change */}
+      {guardianSetupComplete && hasPendingTrusteeChange && (
+        <div className="rounded-2xl p-6 border border-purple-500/30 bg-purple-500/10">
+          <div className="flex items-start gap-3 mb-3">
+            <Crown className="mt-1 text-purple-300" size={20} />
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-white">Pending Trustee Change</h3>
+              <p className="text-sm text-gray-200 mt-2">
+                {pendingTrusteePromote ? 'Promote' : 'Demote'} guardian {pendingTrusteeAddress} {pendingTrusteePromote ? 'to' : 'from'} trustee.
+                Trustees can initiate recovery on your behalf. Apply after the 24-hour timelock or cancel before then.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm mb-4">
+            <div className="bg-black/20 rounded-lg p-3">
+              <p className="text-gray-400">Guardian</p>
+              <p className="text-white font-mono text-xs break-all">{pendingTrusteeAddress}</p>
+            </div>
+            <div className="bg-black/20 rounded-lg p-3">
+              <p className="text-gray-400">Action</p>
+              <p className="text-white font-bold">{pendingTrusteePromote ? 'Promote to trustee' : 'Demote from trustee'}</p>
+            </div>
+            <div className="bg-black/20 rounded-lg p-3">
+              <p className="text-gray-400">Effective At</p>
+              <p className="text-white font-bold">{new Date(pendingTrusteeEffectiveAt * 1000).toLocaleString()}</p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => void handleApplyTrusteeChange()}
+              disabled={isGuardianSetupPending}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold px-4 py-3 disabled:opacity-50"
+            >
+              Apply Trustee Change
+            </button>
+            <button
+              onClick={() => void handleCancelTrusteeChange()}
+              disabled={isGuardianSetupPending}
+              className="border border-red-500/60 text-red-300 rounded-xl font-bold px-4 py-3 hover:bg-red-500/10 disabled:opacity-50"
+            >
+              Cancel Pending Change
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Guardian Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Guardians', value: guardianList.length, sub: 'Max recommended: 5', icon: Users, iconColor: 'text-cyan-400', textColor: 'text-cyan-400', gradient: 'from-cyan-500/20 to-blue-500/20' },
+          { label: 'Trustees', value: trusteeCount, sub: 'Can initiate recovery', icon: Crown, iconColor: 'text-purple-400', textColor: 'text-purple-400', gradient: 'from-purple-500/20 to-pink-500/20' },
           { label: 'Mature Guardians', value: 'On-chain', sub: 'Checked at vote-time', icon: CheckCircle2, iconColor: 'text-green-400', textColor: 'text-green-400', gradient: 'from-green-500/20 to-emerald-500/20' },
           { label: 'Recovery Threshold', value: `${recoveryThreshold}/${guardianList.length || 1}`, sub: 'Approvals needed', icon: Shield, iconColor: 'text-yellow-400', textColor: 'text-yellow-400', gradient: 'from-yellow-500/20 to-amber-500/20' },
         ].map((stat, i) => (
@@ -353,16 +563,30 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {guardianList.map((guardian, index) => (
+            {guardianList.map((guardian, index) => {
+              const isTrustee = trusteeByAddress[(guardian as string).toLowerCase()] ?? false;
+              return (
               <motion.div key={guardian} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.01 }}
                 className="p-4 bg-black/20 border border-white/10 rounded-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className="p-2 rounded-full bg-cyan-500/20"><Users className="text-cyan-400" size={20} /></div>
                     <div>
-                      <div className="text-white font-bold">Guardian {index + 1}</div>
-                      <div className="text-gray-400 text-sm font-mono">{guardian}</div>
-                      <div className="text-gray-500 text-xs">Maturity checked on-chain when approving recovery</div>
+                      <div className="text-white font-bold flex items-center gap-2">
+                        Guardian {index + 1}
+                        {isTrustee && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 text-xs font-semibold">
+                            <Crown size={12} />
+                            Trustee
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-gray-400 text-sm font-mono break-all">{guardian}</div>
+                      <div className="text-gray-500 text-xs">
+                        {isTrustee
+                          ? 'Can initiate recovery on your behalf. Demote to remove this power.'
+                          : 'Maturity checked on-chain when approving recovery'}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -370,6 +594,18 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                       onClick={() => void handleIssueAttestation(guardian as `0x${string}`)} disabled={!isOwner || !hasVault}
                       className="p-2 border border-cyan-500/50 text-cyan-300 rounded-lg hover:bg-cyan-500/10 transition-colors disabled:opacity-50"
                       title="Issue owner-signed guardian attestation"><FileText size={18} /></motion.button>
+                    {/* R-8 trustee promote/demote: toggle role with timelock */}
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                      onClick={() => void handleProposeTrusteeChange(guardian as `0x${string}`, !isTrustee)}
+                      disabled={isGuardianSetupPending || !isOwner || !hasVault || hasPendingTrusteeChange}
+                      className={`p-2 border rounded-lg transition-colors disabled:opacity-50 ${
+                        isTrustee
+                          ? 'border-purple-400/60 text-purple-300 hover:bg-purple-500/10'
+                          : 'border-purple-500/50 text-purple-400 hover:bg-purple-500/10'
+                      }`}
+                      title={isTrustee ? 'Propose demotion from trustee (24h timelock)' : 'Propose promotion to trustee (24h timelock)'}>
+                      {isTrustee ? <Crown size={18} /> : <UserPlus size={18} />}
+                    </motion.button>
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                       onClick={() => void handleRemoveGuardian(guardian as `0x${string}`)}
                       disabled={isWritePending || !hasVault}
@@ -377,7 +613,8 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                   </div>
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         )}
       </motion.div>

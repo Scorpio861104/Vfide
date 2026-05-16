@@ -169,6 +169,7 @@ export const navigationItems: NavItem[] = [
       { id: 'governance-main', label: 'Proposals', href: '/governance', icon: FileText, color: '#6366F1', dataOnboarding: 'nav-governance' },
       { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1', dataOnboarding: 'nav-council' },
       { id: 'appeals', label: 'Appeals', href: '/appeals', icon: AlertTriangle, color: '#6366F1' },
+      { id: 'fraud', label: 'Fraud Reporting', href: '/fraud', icon: ShieldCheck, color: '#6366F1' },
       { id: 'treasury', label: 'Treasury', href: '/treasury', icon: Landmark, color: '#6366F1' },
     ],
   },

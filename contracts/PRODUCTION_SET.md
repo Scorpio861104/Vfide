@@ -11,14 +11,11 @@ own Etherscan source verification on mainnet.
 
 - AdminMultiSig.sol
 - CardBoundVault.sol
-- CircuitBreaker.sol                  ← *see V1 Mainnet Deploy Status below*
 - DAO.sol
 - DAOTimelock.sol
 - DevReserveVestingVault.sol
-- DutyDistributor.sol                 ← *see V1 Mainnet Deploy Status below*
 - EcosystemVault.sol
 - EmergencyControl.sol
-- EscrowManager.sol                   ← *see V1 Mainnet Deploy Status below*
 - FeeDistributor.sol
 - FraudRegistry.sol
 - GovernanceHooks.sol
@@ -31,20 +28,18 @@ own Etherscan source verification on mainnet.
 - pools/HeadhunterCompetitionPool.sol
 - ProofLedger.sol
 - ProofScoreBurnRouter.sol
-- RevenueSplitter.sol                 ← *see V1 Mainnet Deploy Status below*
+- RevenueSplitter.sol                 ← user-deployable template (each merchant deploys their own instance); not a bootstrap singleton
 - SanctumVault.sol
 - Seer.sol
-- StablecoinRegistry.sol              ← *see V1 Mainnet Deploy Status below*
 - SystemHandover.sol
 - VFIDEAccessControl.sol              ← base contract; deployed implicitly as parent of others, not standalone
 - VFIDECommerce.sol                   ← aliased to MerchantRegistry in deploy-full.ts Layer 11
-- VFIDEFinance.sol                    ← **file contains `EcoTreasuryVault`, not a `VFIDEFinance` contract** (rename pending)
+- EcoTreasuryVault.sol                ← renamed from `VFIDEFinance.sol` 2026-05-16 to match contract name inside
 - VFIDEFlashLoan.sol
 - VFIDEPriceOracle.sol
 - VFIDETermLoan.sol
 - VFIDEToken.sol
 - VaultHub.sol
-- VaultInfrastructure.sol             ← *see V1 Mainnet Deploy Status below*
 - VaultRecoveryClaim.sol
 - VaultRegistry.sol
 
@@ -87,19 +82,18 @@ all of them. The gap, with the status of each as of this writing:
 | Contract | In deploy-full.ts? | Notes |
 |---|---|---|
 | `VFIDEPriceOracle` | **YES (added 2026-05-14)** | Layer 6, inline. `ARGS_VFIDEPRICEORACLE` env supplies remaining 4 ctor args. Replaces the BSM-tangled `DeployPhase3Peripherals.deployPeripherals()` helper. |
-| `StablecoinRegistry` | **NO** | Token allowlist for `MerchantPortal`/`CommerceEscrow`. Almost certainly needed at V1 — needs adding before mainnet. |
-| `CircuitBreaker` | **NO** | Concrete (extends `VFIDEAccessControl`). Decision needed: V1 mainnet or deferred. |
-| `DutyDistributor` | **NO** | Concrete `IGovernanceHooks` implementation. Decision needed. |
-| `EscrowManager` | **NO** | Concrete. Possibly superseded by `CommerceEscrow` (which IS deployed at Layer 11). Confirm before removing or adding. |
-| `RevenueSplitter` | **NO** | Concrete. Decision needed. |
-| `VaultInfrastructure` | **NO** | Concrete (`Ownable`). Decision needed. |
+| `CardBoundVaultDeployer` | **YES (implicit)** | Constructor-spawned by `VaultHub` (`VaultHub.sol:135`, `vaultDeployer = new CardBoundVaultDeployer()`). One instance per VaultHub deployment. Always deployed alongside VaultHub. Original flag as "missing" was a false positive in the 2026-05-14 audit. |
+| `EscrowManager` | **REMOVED 2026-05-15** | Superseded by `CommerceEscrow` (deployed at Layer 11). createEscrow was a revert stub (ESC_Deprecated); the contract was effectively unreachable since no function populated the `escrows` mapping. Deleted in Phase 3e turn 1. Restorable from git if a high-value/arbiter-based escrow product is needed later. |
+| `CircuitBreaker` | **MOVED TO `contracts/legacy/` 2026-05-16** | V1's actual circuit breaker is the token-level boolean flag `VFIDEToken.setCircuitBreaker(bool, uint256)` — that's what the UI (AdminDashboardClient, EmergencyPanel) calls. This standalone monitoring contract had no production callers in V1 (`recordVolume` / `recordSuspiciousActivity` were only invoked from test files). Retained in legacy for reference and potential reactivation if metric-driven auto-pause is added later. |
+| `DutyDistributor` | **DEFERRED TO FUTURE 2026-05-16** | Howey-compliant participation tracker, alternative `IGovernanceHooks` implementation. DAO can only wire one hooks contract; V1 keeps the already-deployed GovernanceHooks. Deploying DutyDistributor without wiring it as the DAO's hooks would be inert. Swapping out hooks is its own architectural change with design review, not a Tier-1-mainnet-prep decision. Frontend marketing copy in `HoweySafeModePanel` + `ProductionSetupPanel` trimmed to reflect V1 state. Re-enable in a future phase if/when Howey-safe participation tracking goes live. |
+| `RevenueSplitter` | **USER-DEPLOYABLE TEMPLATE (no bootstrap deploy needed)** | Not a singleton — each merchant deploys their own instance with their own payee config. `MerchantPortal.sol:875` references it as an example integration ("e.g. RevenueSplitter or Treasury"). Same pattern as `CardBoundVault` (deployed per-user by a factory). Stays in production_set as a shipped, compiled template; not added to `deploy-full.ts`. |
+| `StablecoinRegistry` | **DEFERRED TO FUTURE 2026-05-16** | V1 is VFIDE-only by architectural decision (see `EcoTreasuryVault.sol` header: "No stablecoin registry (VFIDE is the only currency)"). API routes in `app/api/merchant/payments/confirm/route.ts` and `withdraw/route.ts` already gracefully degrade when `CONTRACT_ADDRESSES.StablecoinRegistry` is unconfigured. Deploy as part of the future multi-stablecoin product launch, not as a quiet bootstrap deploy. Frontend ABI + env var key retained in `lib/contracts.ts` for forward compatibility. |
+| `VaultInfrastructure` | **MOVED TO `contracts/legacy/` 2026-05-16** | The file's M-21 Architecture Note already self-documented that CardBoundVault + VaultHub had superseded UserVaultLegacy. Confirmed at move time: VaultHub provides all three lookup functions `VaultRegistry` needs (`vaultOf`, `ownerOfVault`, `isVault`) via auto-generated getters on its public mappings, and is already in active use for those calls by `FraudRegistry`, `VFIDETermLoan`, and `VaultRecoveryClaim`. The deprecated force-recovery functions in `IVaultInfrastructure` are non-custodial-removed and aren't called by V1 paths. Retained in legacy for reference / backward-compat with any pre-existing UserVaultLegacy deployments. |
 | `VFIDEAccessControl` | n/a | Base contract; deployed implicitly as a parent of others. Not standalone. |
-| `VFIDEFinance` | n/a | File contains `EcoTreasuryVault`, not a contract named `VFIDEFinance`. File or entry should be renamed. |
+| `EcoTreasuryVault` (formerly `VFIDEFinance.sol`) | n/a — file/contract name dissonance resolved 2026-05-16 | File renamed from `VFIDEFinance.sol` to `EcoTreasuryVault.sol` so file and contract names match. Build scripts (`build-contracts.sh`, `run-mythril.sh`), test files, and source-read assertions updated to match. Tests already used `getContractFactory("EcoTreasuryVault")` so functional behavior is unchanged. |
 | `DeployPhase3Peripherals` | n/a for V1 | Helper that also pulls in `contracts/future/BridgeSecurityModule.sol`. Deferred — V1 uses the inline `VFIDEPriceOracle` deploy in Layer 6 instead. |
 
-**Action before mainnet:** Vanta confirms each "Decision needed" row as
-either *deploy at V1* (add to `deploy-full.ts`), *defer* (move under
-`contracts/future/`), or *legacy* (remove from this list).
+**Operations Phase Turn 4 closure (2026-05-16):** All 10 contracts from the original 2026-05-14 audit's "missing from deploy-full.ts" list now have explicit dispositions. The mainnet readiness Section A.1 is fully resolved.
 
 ## Interfaces
 

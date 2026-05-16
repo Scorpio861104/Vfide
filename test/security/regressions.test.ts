@@ -74,7 +74,7 @@ describe("CRITICAL Regressions", function () {
   });
 
   it("C-06: VFIDEFinance/EcoTreasuryVault has ReentrancyGuard", async function () {
-    const source = fs.readFileSync("contracts/VFIDEFinance.sol", "utf-8");
+    const source = fs.readFileSync("contracts/EcoTreasuryVault.sol", "utf-8");
     expect(source).to.include("ReentrancyGuard");
     expect(source).to.include("nonReentrant");
   });

@@ -1,132 +1,249 @@
-'use client'
+'use client';
 
-import { SampleDataBanner } from '@/components/ui/SampleDataBanner'
+/**
+ * StatsTab — live governance analytics, read directly from the DAO contract.
+ *
+ * Previous implementation had `hasLiveStats = false` hard-coded and showed a
+ * "Live analytics unavailable" placeholder — the entire panel below it was
+ * mock data. Phase 4 Turn 4 replaces that with real on-chain reads via useDAO.
+ *
+ * What's shown:
+ *   • Proposal totals (lifetime + active)
+ *   • Voter participation (total active voters, min participation requirement)
+ *   • Protocol timing parameters (voting period, voting delay, proposal cooldown)
+ *   • Quorum / vote threshold parameters
+ *   • Caller-specific row when wallet connected (voting power, eligibility)
+ *
+ * What's NOT shown (deferred — see backlog "indexer-based governance stats"):
+ *   • Pass/fail rate over time windows — requires enumerating all past
+ *     proposals + decoding each to count executed/defeated. O(N) RPC calls.
+ *   • Category breakdown — same enumeration cost.
+ *   • Top voters leaderboard — requires aggregating Voted events.
+ *
+ * These are best served by an off-chain indexer pulling events, then exposed
+ * via an API. Doing them client-side wouldn't scale beyond ~100 proposals.
+ */
+
+import { useAccount } from 'wagmi';
+import { Vote, AlertCircle, Activity, Users, Clock, ShieldCheck, Loader2 } from 'lucide-react';
+import { Numeric } from '@/components/ui/Numeric';
+import { useDAO } from '@/hooks/useDAO';
+
+function formatDuration(seconds: bigint): string {
+  const s = Number(seconds);
+  if (s === 0) return '—';
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.round(s / 60)}m`;
+  if (s < 86400) return `${(s / 3600).toFixed(1)}h`;
+  const days = Math.round(s / 86400);
+  return `${days}d`;
+}
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  hint?: string;
+}
+
+function StatCard({ icon, label, value, hint }: StatCardProps) {
+  return (
+    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-2 text-zinc-400">
+        {icon}
+        <p className="text-xs uppercase tracking-wide">{label}</p>
+      </div>
+      <p className="text-xl font-semibold text-zinc-100 tabular-nums">{value}</p>
+      {hint && <p className="text-xs text-zinc-500 mt-1">{hint}</p>}
+    </div>
+  );
+}
 
 export function StatsTab() {
-  const hasLiveStats = false
+  const { address } = useAccount();
+  const dao = useDAO();
+
+  if (!dao.daoConfigured) {
+    return (
+      <section className="py-8">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 text-center">
+            <AlertCircle className="mx-auto text-amber-400 mb-3" size={28} />
+            <p className="text-zinc-100 font-semibold">DAO is not configured for this environment.</p>
+            <p className="text-zinc-400 text-sm mt-1">
+              Set NEXT_PUBLIC_DAO_ADDRESS to view live governance analytics.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8">
-      <div className="container mx-auto px-3 sm:px-4">
-        <SampleDataBanner />
-        {!hasLiveStats ? (
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 text-center">
-            <h2 className="text-2xl font-bold text-zinc-100 mb-2">Governance Analytics</h2>
-            <p className="text-zinc-400">
-              Live governance analytics are unavailable in this environment until indexer sync is enabled.
-            </p>
-          </div>
-        ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-zinc-100 mb-6">DAO Statistics</h2>
-            <div className="space-y-4">
-              <StatRow label="Total Proposals" value="156" />
-              <StatRow label="Passed Proposals" value="128 (82%)" highlight="text-emerald-500" />
-              <StatRow label="Rejected Proposals" value="28 (18%)" highlight="text-red-600" />
-              <StatRow label="Active Members" value="247" />
-              <StatRow label="Average Participation" value="73%" />
-              <StatRow label="Total Votes Cast" value="4,234" />
-            </div>
-          </div>
+      <div className="container mx-auto px-3 sm:px-4 space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-100 mb-1">Governance Analytics</h2>
+          <p className="text-zinc-400 text-sm">Live data from the DAO contract.</p>
+        </div>
 
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Proposal Categories</h2>
-            <div className="space-y-4">
-              {[{
-                name: "Parameter Changes",
-                count: 42,
-                percent: 27,
-              },
-              { name: "Treasury Allocations", count: 38, percent: 24 },
-              { name: "Protocol Upgrades", count: 31, percent: 20 },
-              { name: "Council Elections", count: 24, percent: 15 },
-              { name: "Emergency Actions", count: 12, percent: 8 },
-              { name: "Other", count: 9, percent: 6 },
-              ].map((cat) => (
-                <div key={cat.name}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-zinc-100">{cat.name}</span>
-                    <span className="text-zinc-400">
-                      {cat.count} ({cat.percent}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-400" style={{ width: `${cat.percent}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Recent Pass/Fail Rate</h2>
-            <div className="space-y-3">
-              <PassFailBlock title="Last 30 Days" passed="18 Passed" failed="4 Failed" />
-              <PassFailBlock title="Last 90 Days" passed="52 Passed" failed="11 Failed" />
-              <PassFailBlock title="All Time" passed="128 Passed" failed="28 Failed" />
-            </div>
-          </div>
-
-          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
-            <h2 className="text-2xl font-bold text-zinc-100 mb-6">Top Voters (This Month)</h2>
-            <div className="space-y-3">
-              {[
-                { rank: 1, address: "0x742d...bEb", votes: 18, score: 945 },
-                { rank: 2, address: "0x1a2b...3c4d", votes: 17, score: 892 },
-                { rank: 3, address: "0x5e6f...7g8h", votes: 16, score: 845 },
-                { rank: 4, address: "0x9i0j...1k2l", votes: 15, score: 823 },
-                { rank: 5, address: "0x3m4n...5o6p", votes: 14, score: 801 },
-              ].map((voter) => (
-                <div key={voter.rank} className="flex items-center justify-between p-3 bg-zinc-900 rounded">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                        voter.rank === 1
-                          ? "bg-amber-400 text-zinc-900"
-                          : voter.rank === 2
-                            ? "bg-zinc-400 text-zinc-900"
-                            : voter.rank === 3
-                              ? "bg-amber-600 text-zinc-900"
-                              : "bg-zinc-700 text-zinc-400"
-                      }`}
-                    >
-                      {voter.rank}
-                    </div>
-                    <div>
-                      <div className="text-zinc-100 font-mono text-sm">{voter.address}</div>
-                      <div className="text-zinc-400 text-xs">Score: {voter.score}</div>
-                    </div>
-                  </div>
-                  <div className="text-cyan-400 font-bold">{voter.votes} votes</div>
-                </div>
-              ))}
-            </div>
+        {/* Activity panel */}
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+            <Activity size={16} className="text-cyan-400" />
+            Proposal activity
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard
+              icon={<Vote size={14} />}
+              label="Total proposals"
+              value={<Numeric value={Number(dao.proposalCount)} format="integer" className="text-zinc-100" size="xl" weight={600} />}
+              hint="Lifetime count since contract deployment."
+            />
+            <StatCard
+              icon={<Activity size={14} />}
+              label="Active now"
+              value={<Numeric value={Number(dao.activeProposalCount)} format="integer" className="text-zinc-100" size="xl" weight={600} />}
+              hint="Proposals currently open for voting or queued."
+            />
+            <StatCard
+              icon={<Users size={14} />}
+              label="Active voters"
+              value={<Numeric value={Number(dao.totalActiveVoters)} format="integer" className="text-zinc-100" size="xl" weight={600} />}
+              hint="Wallets that have cast at least one vote."
+            />
           </div>
         </div>
+
+        {/* Voting cycle */}
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+            <Clock size={16} className="text-cyan-400" />
+            Voting cycle
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard
+              icon={<Clock size={14} />}
+              label="Voting delay"
+              value={formatDuration(dao.votingDelay)}
+              hint="Time between proposal submission and voting open."
+            />
+            <StatCard
+              icon={<Clock size={14} />}
+              label="Voting period"
+              value={formatDuration(dao.votingPeriod)}
+              hint="How long voters have to cast their vote."
+            />
+            <StatCard
+              icon={<Clock size={14} />}
+              label="Proposer cooldown"
+              value={formatDuration(dao.proposalCooldown)}
+              hint="Minimum gap between proposals from the same wallet."
+            />
+          </div>
+        </div>
+
+        {/* Quorum / thresholds */}
+        <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+            <ShieldCheck size={16} className="text-cyan-400" />
+            Thresholds &amp; quorum
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard
+              icon={<Users size={14} />}
+              label="Min participation"
+              value={
+                <Numeric
+                  value={Number(dao.effectiveMinParticipation)}
+                  format="integer"
+                  className="text-zinc-100"
+                  size="xl"
+                  weight={600}
+                />
+              }
+              hint={
+                dao.effectiveMinParticipation !== dao.minParticipation
+                  ? `Auto-adjusted from configured ${dao.minParticipation.toString()} based on active voters.`
+                  : 'Minimum number of voters required for a proposal to pass.'
+              }
+            />
+            <StatCard
+              icon={<ShieldCheck size={14} />}
+              label="Min votes required"
+              value={<Numeric value={Number(dao.minVotesRequired)} format="integer" className="text-zinc-100" size="xl" weight={600} />}
+              hint="Minimum combined vote weight (FOR + AGAINST) for the result to count."
+            />
+            <StatCard
+              icon={<Users size={14} />}
+              label="Configured min participation"
+              value={<Numeric value={Number(dao.minParticipation)} format="integer" className="text-zinc-100" size="xl" weight={600} />}
+              hint="DAO-set base threshold; effective value above may scale with council size."
+            />
+          </div>
+        </div>
+
+        {/* Caller-specific (only when connected) */}
+        {address && (
+          <div className="bg-zinc-800 border border-zinc-700 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-zinc-100 mb-4 flex items-center gap-2">
+              <Vote size={16} className="text-cyan-400" />
+              Your governance status
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <StatCard
+                icon={<Vote size={14} />}
+                label="Voting power"
+                value={
+                  <Numeric value={Number(dao.votingPower)} format="integer" className="text-zinc-100" size="xl" weight={600} />
+                }
+                hint="ProofScore-derived vote weight."
+              />
+              <StatCard
+                icon={<ShieldCheck size={14} />}
+                label="Eligibility"
+                value={
+                  <span className={dao.isEligible ? 'text-emerald-300' : 'text-amber-300'}>
+                    {dao.isEligible ? 'Eligible' : 'Below threshold'}
+                  </span>
+                }
+                hint={dao.isEligible ? 'You can submit and vote on proposals.' : 'ProofScore is below the minimum required.'}
+              />
+              <StatCard
+                icon={<Clock size={14} />}
+                label="Proposal cooldown"
+                value={
+                  dao.cooldownActive ? (
+                    <span className="text-amber-300">
+                      until{' '}
+                      {new Date(Number(dao.cooldownEndsAt) * 1000).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  ) : (
+                    <span className="text-emerald-300">Available</span>
+                  )
+                }
+                hint={dao.cooldownActive ? 'You must wait before submitting another proposal.' : 'You can submit a new proposal now.'}
+              />
+            </div>
+          </div>
         )}
+
+        <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4 text-xs text-zinc-500">
+          <p className="flex items-start gap-2">
+            <Loader2 size={11} className="mt-0.5 shrink-0" />
+            <span>
+              Aggregate analytics (pass/fail rate, category breakdown, top voters) require enumerating
+              every past proposal and are best served by an off-chain indexer. Tracked in the backlog
+              for a future indexer integration pass.
+            </span>
+          </p>
+        </div>
       </div>
     </section>
-  )
-}
-
-function StatRow({ label, value, highlight }: { label: string; value: string; highlight?: string }) {
-  return (
-    <div className="flex justify-between items-center">
-      <span className="text-zinc-400">{label}</span>
-      <span className={`text-2xl font-bold ${highlight || "text-zinc-100"}`}>{value}</span>
-    </div>
-  )
-}
-
-function PassFailBlock({ title, passed, failed }: { title: string; passed: string; failed: string }) {
-  return (
-    <div>
-      <div className="text-zinc-400 text-sm mb-2">{title}</div>
-      <div className="flex gap-2">
-        <div className="flex-1 h-12 bg-emerald-500 rounded flex items-center justify-center text-zinc-900 font-bold">{passed}</div>
-        <div className="w-20 h-12 bg-red-600 rounded flex items-center justify-center text-zinc-100 font-bold">{failed}</div>
-      </div>
-    </div>
-  )
+  );
 }

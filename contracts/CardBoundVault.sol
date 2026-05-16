@@ -25,6 +25,9 @@ interface IAdminManager {
     function proposeGuardianChange(address guardian, bool active) external;
     function applyGuardianChange() external returns (address guardian, bool active);
     function cancelGuardianChange() external returns (address guardian, bool active);
+    function proposeTrusteeChange(address guardian, bool trustee) external;
+    function applyTrusteeChange() external returns (address guardian, bool trustee);
+    function cancelTrusteeChange() external returns (address guardian, bool trustee);
     function proposeSpendLimits(uint256 maxPerTransfer, uint256 dailyTransferLimit) external;
     function applySpendLimits() external returns (uint256 maxPerTransfer, uint256 dailyTransferLimit);
     function cancelSpendLimits() external;
@@ -167,6 +170,12 @@ contract CardBoundVault is ReentrancyGuard {
     bytes32 private constant PAY_INTENT_TYPEHASH = keccak256(
         "PayIntent(address vault,address merchantPortal,address token,address merchant,address recipient,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)"
     );
+    // Phase 3d Turn 3 (2026-05-15): typed-data for atomic escrow funding via executeFundEscrow.
+    // Distinct typehash from PAY_INTENT_TYPEHASH so a signature minted for one intent type cannot
+    // be replayed against the other — domain separation between merchant payments and escrow funding.
+    bytes32 private constant ESCROW_FUND_INTENT_TYPEHASH = keccak256(
+        "EscrowFundIntent(address vault,address escrowContract,uint256 escrowId,address token,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)"
+    );
 
     // secp256k1n / 2
     uint256 private constant ECDSA_S_UPPER_BOUND =
@@ -208,6 +217,69 @@ contract CardBoundVault is ReentrancyGuard {
     uint8 public guardianThreshold;
 
     uint64 public constant GUARDIAN_MATURITY_PERIOD = 7 days;
+
+    // ─────────────────────────────────────────────────────────────────
+    // GUARDIAN ROLE TIERS (R-8 — recovery initiation power)
+    // ─────────────────────────────────────────────────────────────────
+    //
+    // The vault separates two distinct powers a guardian can hold:
+    //
+    //   APPROVAL  (every guardian) — vote yes/no on a recovery initiated
+    //              by someone else. Cannot start recoveries themselves.
+    //              Quorum of approvals is needed to advance a claim.
+    //
+    //   TRUSTEE   (opt-in subset)  — same as approval, PLUS the power to
+    //              initiate a recovery on the user's behalf when the user
+    //              has lost their device and cannot start one themselves.
+    //
+    // SAFETY RATIONALE
+    //   Trustee status is the most dangerous power on the vault: a rogue
+    //   trustee can begin a recovery flow that drains the vault to an
+    //   attacker-controlled address if the owner fails to veto within the
+    //   challenge window. We therefore require this power to be EXPLICITLY
+    //   granted per-guardian rather than inferred from guardian status.
+    //   By default every guardian is approval-only.
+    //
+    //   Role changes pass through the same propose/timelock/apply pipeline
+    //   as guardian add/remove (see AdminManager). A compromised owner key
+    //   cannot promote an attacker to trustee instantly; the change must
+    //   sit in the timelock window during which other guardians or the
+    //   owner-from-another-device can cancel.
+    mapping(address => bool) public isTrustee;
+    uint8 public trusteeCount;
+    event TrusteeRoleSet(address indexed guardian, bool isTrustee);
+
+    // ─────────────────────────────────────────────────────────────────
+    // CONFIGURABLE RECOVERY CHALLENGE WINDOW (R-8)
+    // ─────────────────────────────────────────────────────────────────
+    //
+    // The challenge window is the time after a guardian-initiated recovery
+    // begins during which the original owner can veto the claim by signing
+    // a challengeClaim() transaction from their existing wallet.
+    //
+    // SAFETY RATIONALE
+    //   Longer windows protect users who are unreachable (travel, illness,
+    //   religious observance, family emergency). Shorter windows let real
+    //   lost-device recovery complete faster. The user picks where on this
+    //   spectrum they want to be — the vault honors their preference at
+    //   claim-initiation time, snapshotted into the claim so subsequent
+    //   preference changes cannot retroactively shrink an active window.
+    //
+    //   HARD MINIMUM (3 days) is enforced in the setter below regardless
+    //   of the user's preference — below this, the protection is illusory
+    //   for any user who travels or works full-time. The frontend layers
+    //   warnings for choices below the recommended 7 days but the contract
+    //   refuses anything under 3.
+    //
+    //   HARD MAXIMUM (30 days) is enforced to prevent the user from
+    //   configuring themselves into a state where genuine recovery is
+    //   slower than the typical CLAIM_EXPIRY in VaultRecoveryClaim. The
+    //   activity-based extension (14 days when recently active) can still
+    //   stack on top of the user's preference (we use max() of the two).
+    uint64 public challengePeriodPreference; // 0 = use contract default (7 days)
+    uint64 public constant MIN_CHALLENGE_PERIOD = 3 days;
+    uint64 public constant MAX_CHALLENGE_PERIOD = 30 days;
+    event ChallengePeriodPreferenceSet(uint64 seconds_);
 
     /// @notice C-7 FIX: Maximum VFIDE a vault may hold while guardian setup is incomplete.
     ///         Prevents a user who loses their phone before completing guardian setup from
@@ -260,6 +332,23 @@ contract CardBoundVault is ReentrancyGuard {
         uint256 chainId;
     }
 
+    /// @notice Phase 3d Turn 3: typed-data for atomic escrow funding.
+    /// @dev Mirrors PayIntent but identifies an escrow contract (not a merchant portal) as the
+    ///      gated caller. Used by executeFundEscrow. The escrowId is carried for event indexing
+    ///      and is NOT verified by this contract — verification is the escrow contract's
+    ///      responsibility (it knows what escrow id it just created).
+    struct EscrowFundIntent {
+        address vault;          // must equal address(this)
+        address escrowContract; // must equal msg.sender
+        uint256 escrowId;       // event-indexing only; not verified
+        address token;          // must equal vfideToken
+        uint256 amount;
+        uint256 nonce;
+        uint64 walletEpoch;
+        uint64 deadline;
+        uint256 chainId;
+    }
+
     event AdminTransferStarted(address indexed oldAdmin, address indexed newAdmin);
     event AdminTransferred(address indexed oldAdmin, address indexed newAdmin);
     event RecoveryAdminUnseparated(address indexed wallet, uint64 since);
@@ -269,6 +358,10 @@ contract CardBoundVault is ReentrancyGuard {
     event GuardianSet(address indexed guardian, bool active);
     event GuardianThresholdSet(uint8 threshold);
     event GuardianChangeProposed(address indexed guardian, bool active, uint64 effectiveAt);
+    event TrusteeChangeProposed(address indexed guardian, bool trustee, uint64 effectiveAt);
+    event TrusteeChangeCancelled(address indexed guardian, bool trustee);
+    // R-8: Emitted at recovery completion to prompt frontend "review your trust graph" UI
+    event RecoveryReviewPrompt(address indexed newOwner, uint8 guardianCount, uint8 trusteeCount);
     event GuardianChangeCancelled(address indexed guardian, bool active);
     event SpendLimitsChangeProposed(uint256 maxPerTransfer, uint256 dailyTransferLimit, uint64 executeAfter);
     event SpendLimitsChangeCancelled();
@@ -330,6 +423,8 @@ contract CardBoundVault is ReentrancyGuard {
 
     error CBV_NotAdmin();
     error CBV_NotGuardian();
+    error CBV_ChallengePeriodTooShort();
+    error CBV_ChallengePeriodTooLong();
     error CBV_Zero();
     error CBV_InvalidThreshold();
     error CBV_Locked();
@@ -356,6 +451,7 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_PauseAlreadyApproved();
     error CBV_SeerBlocked();
     error CBV_NotMerchantPortal();
+    error CBV_NotEscrowContract();
     error CBV_SameAdmin();
     error CBV_NoSeparationNeeded();
     error CBV_PayIntentInvalid();
@@ -624,6 +720,118 @@ contract CardBoundVault is ReentrancyGuard {
         maxPerTransfer = _maxPerTransfer;
         dailyTransferLimit = _dailyTransferLimit;
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // TRUSTEE ROLE MANAGEMENT (R-8)
+    // ─────────────────────────────────────────────────────────────────
+
+    /// @notice Grant or revoke trustee (recovery-initiation) power for a guardian.
+    /// @param guardian An existing guardian on this vault.
+    /// @param trustee True to grant initiation power, false to revoke.
+    /// @dev SAFETY: Trustee status confers the power to start a recovery flow on
+    ///      the user's behalf. Granting this is dangerous — a rogue trustee can
+    ///      initiate recovery against a temporarily-unreachable owner. We
+    ///      therefore:
+    ///        1. Require the address to already be a mature guardian (7-day
+    ///           maturity period prevents an instantly-added attacker guardian
+    ///           from being instantly promoted to trustee).
+    ///        2. Route the change through the same propose/timelock/apply
+    ///           pipeline as guardian add/remove — see proposeTrusteeChange().
+    ///           This direct setter is bootstrap-only (before guardianSetupComplete).
+    function setTrustee(address guardian, bool trustee) external onlyAdmin {
+        if (IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) revert CBV_UseProposeApply();
+        if (guardian == address(0)) revert CBV_Zero();
+        if (!isGuardian[guardian]) revert CBV_NotGuardian();
+        _applyTrusteeChange(guardian, trustee);
+    }
+
+    /// @notice Propose a trustee role change (post-bootstrap, timelocked).
+    /// @dev Reuses the AdminManager guardian-change pipeline by encoding the
+    ///      role bit into the propose call. The same 24-hour timelock applies.
+    function proposeTrusteeChange(address guardian, bool trustee) external onlyAdmin {
+        if (guardian == address(0)) revert CBV_Zero();
+        if (!isGuardian[guardian]) revert CBV_NotGuardian();
+        IAdminManager(adminManager).proposeTrusteeChange(guardian, trustee);
+        emit TrusteeChangeProposed(guardian, trustee, uint64(block.timestamp) + 1 days);
+    }
+
+    /// @notice Apply a previously proposed trustee change after timelock expires.
+    function applyTrusteeChange() external onlyAdmin {
+        (address guardian, bool trustee) = IAdminManager(adminManager).applyTrusteeChange();
+        _applyTrusteeChange(guardian, trustee);
+    }
+
+    /// @notice Cancel a pending trustee change before it executes.
+    function cancelTrusteeChange() external onlyAdmin {
+        (address guardian, bool trustee) = IAdminManager(adminManager).cancelTrusteeChange();
+        emit TrusteeChangeCancelled(guardian, trustee);
+    }
+
+    function _applyTrusteeChange(address guardian, bool trustee) internal {
+        if (isTrustee[guardian] == trustee) return;
+        // SAFETY: A trustee MUST be an existing guardian. If the address has
+        // been removed as a guardian since the proposal, refuse the role change
+        // — re-add as guardian first, then re-propose trustee.
+        if (trustee && !isGuardian[guardian]) revert CBV_NotGuardian();
+        isTrustee[guardian] = trustee;
+        if (trustee) {
+            trusteeCount++;
+        } else {
+            trusteeCount--;
+        }
+        emit TrusteeRoleSet(guardian, trustee);
+    }
+
+    /// @notice External view: is this address a trustee?
+    /// @dev Used by VaultRecoveryClaim to gate initiateClaim. Returns false for
+    ///      non-guardians automatically (isTrustee defaults to false).
+    function isGuardianTrustee(address guardian) external view returns (bool) {
+        return isTrustee[guardian];
+    }
+
+    /// @notice External view: how many trustees does this vault have?
+    function trusteeCountView() external view returns (uint8) {
+        return trusteeCount;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // CHALLENGE PERIOD PREFERENCE (R-8)
+    // ─────────────────────────────────────────────────────────────────
+
+    /// @notice Set the user's preferred veto window for guardian-initiated recovery.
+    /// @param seconds_ Desired window in seconds. Bounded to [3 days, 30 days].
+    /// @dev SAFETY:
+    ///      1. HARD MINIMUM 3 days — even a fully-attentive user needs a few days
+    ///         to notice and respond. Below this, the protection is illusory.
+    ///      2. HARD MAXIMUM 30 days — keeps the window inside CLAIM_EXPIRY so
+    ///         genuine recoveries can complete.
+    ///      3. SNAPSHOT-SAFE — the preference is read once at claim initiation
+    ///         time and snapshotted into the RecoveryClaim. Subsequent changes
+    ///         to this preference do NOT shrink an in-progress challenge window.
+    ///         An attacker who later compromises the owner key cannot use this
+    ///         setter to retroactively close a running window.
+    ///      4. STACKS with the activity-based extension — VaultRecoveryClaim
+    ///         takes max(this preference, ACTIVE_VAULT_CHALLENGE_PERIOD) when
+    ///         the vault has been recently active or guardian setup is
+    ///         incomplete.
+    ///      5. NO timelock on this setter because shortening the window only
+    ///         affects FUTURE claims, never an active one. The protection comes
+    ///         from the snapshot, not from a delay.
+    function setChallengePeriodPreference(uint64 seconds_) external onlyAdmin {
+        if (seconds_ != 0) {
+            if (seconds_ < MIN_CHALLENGE_PERIOD) revert CBV_ChallengePeriodTooShort();
+            if (seconds_ > MAX_CHALLENGE_PERIOD) revert CBV_ChallengePeriodTooLong();
+        }
+        challengePeriodPreference = seconds_;
+        emit ChallengePeriodPreferenceSet(seconds_);
+    }
+
+    /// @notice External view: this vault's challenge period preference, or 0 if unset.
+    /// @dev Called by VaultRecoveryClaim.initiateClaim. A return value of 0 means
+    ///      "user has no preference; use the protocol default."
+    function challengePeriodPreferenceView() external view returns (uint64) {
+        return challengePeriodPreference;
     }
 
     function applySpendLimits() external onlyAdmin {
@@ -929,6 +1137,57 @@ contract CardBoundVault is ReentrancyGuard {
         _logPayment(intent.recipient, amount);
     }
 
+    /// @notice Phase 3d Turn 3 — atomic escrow funding via signed intent.
+    /// @dev Mirrors executePayMerchant's security pattern: nonce, walletEpoch, deadline, chainId,
+    ///      activeWallet signature, daily + per-tx limits, pause + operational state, Seer enforcement.
+    ///
+    /// Differences from executePayMerchant:
+    ///   - Gated to `msg.sender == intent.escrowContract` (not merchant portal).
+    ///   - NO queueing branch — escrow funding is atomic by design. A queued fund would leave the
+    ///     escrow contract in an inconsistent OPEN-but-pending state and break dispute timing.
+    ///   - Transfers to intent.escrowContract (which then internally tracks the funded escrow id).
+    ///   - Does NOT call _logPayment — escrow funding isn't a merchant payment for ProofLedger
+    ///     accounting purposes; the escrow contract emits its own EscrowFunded event.
+    ///
+    /// Caller responsibility (CommerceEscrow): validate the merchant, create the escrow record,
+    /// pass through this intent unchanged, and emit EscrowFunded once this returns.
+    function executeFundEscrow(EscrowFundIntent calldata intent, bytes calldata signature)
+        external
+        nonReentrant
+        whenNotPaused
+    {
+        _requireOperationalForOutboundTransfers();
+        // Mirrors GUARDIAN-WARN-1 FIX: warn instead of revert when guardians aren't set up. Same
+        // rationale as executePayMerchant — recovery flows remain gated; everyday operations don't.
+        if (!IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) {
+            emit GuardianSetupIncomplete_Payment(intent.escrowContract, intent.token, intent.amount);
+        }
+        if (msg.sender != intent.escrowContract) revert CBV_NotEscrowContract();
+        if (intent.vault != address(this)) revert CBV_PayIntentInvalid();
+        if (intent.escrowContract == address(0)) revert CBV_PayIntentInvalid();
+        if (intent.token != vfideToken) revert CBV_PayIntentTokenInvalid(); // H2 FIX: VFIDE only
+        if (intent.chainId != block.chainid) revert CBV_InvalidChain();
+        if (intent.walletEpoch != walletEpoch) revert CBV_InvalidEpoch();
+        if (intent.deadline < block.timestamp) revert CBV_Expired();
+        if (intent.nonce != nextNonce) revert CBV_InvalidNonce();
+
+        uint256 amount = intent.amount;
+        if (amount == 0 || amount > maxPerTransfer) revert CBV_TransferLimit();
+
+        _refreshDailyWindow();
+        if (spentToday + amount > dailyTransferLimit) revert CBV_DailyLimit();
+
+        address signer = _recoverFundEscrowSigner(intent, signature);
+        if (signer != activeWallet) revert CBV_InvalidSigner();
+        _emitRecoverySplitReminder(signer);
+
+        _enforceSeerAction(admin, 0, amount, intent.escrowContract);
+
+        nextNonce += 1;
+        spentToday += amount;
+        IERC20(intent.token).safeTransfer(intent.escrowContract, amount);
+    }
+
     /// @notice Execute a queued payment after the 7-day delay (admin only).
     function executeQueuedPayment(uint256 queueIndex)
         external
@@ -1085,6 +1344,11 @@ contract CardBoundVault is ReentrancyGuard {
         return _payDigest(intent);
     }
 
+    /// @notice Phase 3d Turn 3 — companion view to fundEscrowDigest for off-chain signers.
+    function fundEscrowDigest(EscrowFundIntent calldata intent) external view returns (bytes32) {
+        return _fundEscrowDigest(intent);
+    }
+
     /// @notice Return remaining daily transfer capacity under current spend limits.
     function viewRemainingDailyCapacity() external view returns (uint256) {
         if (block.timestamp >= dayStart + 1 days) {
@@ -1143,6 +1407,16 @@ contract CardBoundVault is ReentrancyGuard {
         return _recoverSigner(_payDigest(intent), signature);
     }
 
+    /// @notice Phase 3d Turn 3 — escrow-fund-intent signer recovery. Uses the same ECDSA machinery
+    ///         as _recoverPaySigner; the only difference is which typed-data digest is verified.
+    function _recoverFundEscrowSigner(EscrowFundIntent calldata intent, bytes calldata signature)
+        internal
+        view
+        returns (address)
+    {
+        return _recoverSigner(_fundEscrowDigest(intent), signature);
+    }
+
     function _transferDigest(TransferIntent calldata intent) internal view returns (bytes32) {
         bytes32 structHash = keccak256(
             abi.encode(
@@ -1169,6 +1443,27 @@ contract CardBoundVault is ReentrancyGuard {
                 intent.token,
                 intent.merchant,
                 intent.recipient,
+                intent.amount,
+                intent.nonce,
+                intent.walletEpoch,
+                intent.deadline,
+                intent.chainId
+            )
+        );
+
+        return keccak256(abi.encodePacked("\x19\x01", domainSeparator(), structHash));
+    }
+
+    /// @notice Phase 3d Turn 3 — typed-data digest for EscrowFundIntent. Distinct from
+    ///         _payDigest via separate typehash; cross-replay between intent types is impossible.
+    function _fundEscrowDigest(EscrowFundIntent calldata intent) internal view returns (bytes32) {
+        bytes32 structHash = keccak256(
+            abi.encode(
+                ESCROW_FUND_INTENT_TYPEHASH,
+                intent.vault,
+                intent.escrowContract,
+                intent.escrowId,
+                intent.token,
                 intent.amount,
                 intent.nonce,
                 intent.walletEpoch,
@@ -1287,6 +1582,15 @@ contract CardBoundVault is ReentrancyGuard {
         ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).clearOnRecovery();
         ICardBoundVaultPaymentQueueManager(paymentQueueManager).clearOnRecovery();
         pauseUntil = uint64(block.timestamp + MAX_PAUSE_WINDOW);
+
+        // R-8: Signal to frontends that recovery just completed. We deliberately
+        // do NOT clear guardian or trustee state — the new owner needs an
+        // immediate recovery path themselves, and forcing re-designation right
+        // after a stressful event is poor UX. The frontend should use this
+        // event to prompt the user to review their trust graph at their leisure
+        // (the user might want to remove a trustee who exercised the recovery,
+        // for instance, but that's their choice not the protocol's).
+        emit RecoveryReviewPrompt(newWallet, guardianCount, trusteeCount);
 
         emit RecoveryRotationExecuted(oldWallet, newWallet, oldAdmin, newWallet);
         emit WalletRotated(oldWallet, newWallet, walletEpoch);

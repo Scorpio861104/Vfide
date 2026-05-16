@@ -21,73 +21,10 @@ function readContract(name: string): string {
   return readFileSync(join(CONTRACTS_DIR, `${name}.sol`), 'utf-8');
 }
 
-const escrowSrc = readContract('EscrowManager');
 const merchantSrc = readContract('MerchantPortal');
 const paymentsApiSrc = readFileSync(join(APP_DIR, 'api/merchant/payments/confirm/route.ts'), 'utf-8');
 const payContentSrc = readFileSync(join(APP_DIR, 'pay/components/PayContent.tsx'), 'utf-8');
 
-// ─────────────────────────────────────────────────────────────────────────────
-// R-056 – Escrow lock-time edge-case bypass
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('R-056 – Escrow lock-time edge-case bypass', () => {
-  it('defines minimum lock period constant (3 days)', () => {
-    expect(escrowSrc).toMatch(/MIN_LOCK_PERIOD\s*=\s*3\s+days/);
-  });
-
-  it('uses cached trust score (getCachedScore) for lock period decisions', () => {
-    expect(escrowSrc).toMatch(/seer\.getCachedScore\(merchant\)/);
-  });
-
-  it('maps trust score tiers to lock periods (3d / 7d / 14d default)', () => {
-    expect(escrowSrc).toMatch(/if \(score >= 8000\) lockPeriod = 3 days/);
-    expect(escrowSrc).toMatch(/else if \(score >= 6000\) lockPeriod = 7 days/);
-    expect(escrowSrc).toMatch(/uint256 lockPeriod = 14 days/);
-  });
-
-  it('enforces lockPeriod >= MIN_LOCK_PERIOD safety net', () => {
-    expect(escrowSrc).toMatch(/require\(lockPeriod >= MIN_LOCK_PERIOD, "ESC: lock period too short"\)/);
-  });
-
-  it('merchant timeout claim is gated by releaseTime', () => {
-    expect(escrowSrc).toMatch(/require\(block\.timestamp >= e\.releaseTime, "too early"\)/);
-  });
-
-  it('buyer timeout reclaim exists for unresponsive merchant after +30 days', () => {
-    expect(escrowSrc).toMatch(/function\s+buyerClaimTimeout\(uint256 id\)/);
-    expect(escrowSrc).toMatch(/require\(block\.timestamp >= e\.releaseTime \+ 30 days, "ESC: merchant grace period active"\)/);
-  });
-
-  describe('TypeScript model: lock schedule floors', () => {
-    const MIN_LOCK = 3 * 24 * 60 * 60;
-
-    function lockForScore(score: number): number {
-      let lock = 14 * 24 * 60 * 60;
-      if (score >= 8000) lock = 3 * 24 * 60 * 60;
-      else if (score >= 6000) lock = 7 * 24 * 60 * 60;
-      if (lock < MIN_LOCK) throw new Error('ESC: lock period too short');
-      return lock;
-    }
-
-    it('high trust locks for exactly 3 days', () => {
-      expect(lockForScore(9000)).toBe(3 * 24 * 60 * 60);
-    });
-
-    it('medium trust locks for exactly 7 days', () => {
-      expect(lockForScore(6500)).toBe(7 * 24 * 60 * 60);
-    });
-
-    it('low trust defaults to 14 days', () => {
-      expect(lockForScore(5500)).toBe(14 * 24 * 60 * 60);
-    });
-
-    it('all score paths respect MIN_LOCK_PERIOD floor', () => {
-      expect(lockForScore(9999)).toBeGreaterThanOrEqual(MIN_LOCK);
-      expect(lockForScore(7000)).toBeGreaterThanOrEqual(MIN_LOCK);
-      expect(lockForScore(1000)).toBeGreaterThanOrEqual(MIN_LOCK);
-    });
-  });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // R-057 – Permit replay or overdraw
@@ -157,68 +94,6 @@ describe('R-057 – Permit replay or overdraw', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// R-058 – Partial payment settlement inconsistency
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('R-058 – Partial payment settlement consistency', () => {
-  it('partial dispute resolution requires DISPUTED state and valid bps <= 10000', () => {
-    expect(escrowSrc).toMatch(/function\s+resolveDisputePartial\(uint256 id, uint256 buyerShareBps\)/);
-    expect(escrowSrc).toMatch(/require\(buyerShareBps <= 10000, "ES: invalid bps"\)/);
-    expect(escrowSrc).toMatch(/require\(e\.state == State\.DISPUTED, "not disputed"\)/);
-  });
-
-  it('partial resolution computes buyer + merchant split from single escrow amount', () => {
-    expect(escrowSrc).toMatch(/uint256 buyerAmount = \(e\.amount \* buyerShareBps\) \/ 10000/);
-    expect(escrowSrc).toMatch(/uint256 merchantAmount = e\.amount - buyerAmount/);
-  });
-
-  it('partial resolution sets terminal state and emits split event', () => {
-    expect(escrowSrc).toMatch(/e\.state = State\.RELEASED/);
-    expect(escrowSrc).toMatch(/emit DisputeResolvedPartial\(id, buyerAmount, merchantAmount\)/);
-  });
-
-  it('high-value disputes are DAO-only; normal disputes are arbiter-only', () => {
-    expect(escrowSrc).toMatch(/if \(e\.amount > HIGH_VALUE_THRESHOLD\) \{/);
-    expect(escrowSrc).toMatch(/require\(msg\.sender == dao && dao != address\(0\), "ES: high value requires DAO"\)/);
-    expect(escrowSrc).toMatch(/require\(msg\.sender == arbiter && arbiter != address\(0\), "ES: not arbiter"\)/);
-  });
-
-  it('deadlocked disputes have timeout fallback to buyer', () => {
-    expect(escrowSrc).toMatch(/function\s+timeoutResolve\(uint256 id\)/);
-    expect(escrowSrc).toMatch(/require\(block\.timestamp >= e\.createdAt \+ DISPUTE_TIMEOUT, "ESC: timeout not reached"\)/);
-    expect(escrowSrc).toMatch(/e\.state = State\.REFUNDED/);
-  });
-
-  describe('TypeScript model: split conservation invariant', () => {
-    function split(amount: bigint, buyerBps: bigint): { buyer: bigint; merchant: bigint } {
-      if (buyerBps > 10_000n) throw new Error('ES: invalid bps');
-      const buyer = (amount * buyerBps) / 10_000n;
-      const merchant = amount - buyer;
-      return { buyer, merchant };
-    }
-
-    it('buyer + merchant equals escrow amount at 0 bps', () => {
-      const amount = 1_000n;
-      const s = split(amount, 0n);
-      expect(s.buyer + s.merchant).toBe(amount);
-      expect(s.buyer).toBe(0n);
-    });
-
-    it('buyer + merchant equals escrow amount at 10000 bps', () => {
-      const amount = 1_000n;
-      const s = split(amount, 10_000n);
-      expect(s.buyer + s.merchant).toBe(amount);
-      expect(s.merchant).toBe(0n);
-    });
-
-    it('buyer + merchant equals escrow amount at mid split', () => {
-      const amount = 123_456_789n;
-      const s = split(amount, 4_321n);
-      expect(s.buyer + s.merchant).toBe(amount);
-    });
-  });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // R-059 – Auto-convert policy misconfiguration

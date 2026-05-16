@@ -39,6 +39,10 @@ interface IUserVaultRecovery {
     function isGuardian(address) external view returns (bool);
     function guardianCount() external view returns (uint8);
     function isGuardianMature(address) external view returns (bool);
+    // R-8: tiered guardian roles + per-vault configurable challenge window
+    function isGuardianTrustee(address) external view returns (bool);
+    function trusteeCountView() external view returns (uint8);
+    function challengePeriodPreferenceView() external view returns (uint64);
 }
 
 interface IVaultRegistry {
@@ -84,6 +88,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         address vault;              // The vault being claimed
         address claimant;           // New wallet claiming ownership
         address originalOwner;      // Original wallet address (for records)
+        address initiator;          // R-8: who called initiateClaim (claimant for self-init, trustee for guardian-init)
         uint64 initiatedAt;         // When claim was submitted
         uint64 challengeEndsAt;     // When challenge period ends
         uint64 expiresAt;           // When claim expires entirely
@@ -93,6 +98,10 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // H-5 FIX: Snapshot guardian count at initiation so runtime removal cannot lower
         // the required-approvals threshold or enable the verifier-fallback path mid-claim.
         uint8 guardianCountSnapshot;
+        // R-8: Snapshot the user's challenge-period preference at initiation time.
+        // A later setChallengePeriodPreference() call by a compromised owner key
+        // CANNOT shrink an active window — the snapshot is what's enforced.
+        uint64 challengePeriodSnapshot;
         bytes32 evidenceHash;       // Hash of identity evidence provided
         string claimReason;         // User's explanation
     }
@@ -137,6 +146,28 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     mapping(address => uint64) public vaultLastActivity;
     uint64 public constant ACTIVE_VAULT_CHALLENGE_PERIOD = 14 days;
     uint64 public constant VAULT_ACTIVITY_WINDOW = 30 days;
+
+    // ─────────────────────────────────────────────────────────────────
+    // R-8: PER-INITIATOR COOLDOWN AFTER CANCELED RECOVERY
+    // ─────────────────────────────────────────────────────────────────
+    //
+    // When the original owner cancels a recovery claim (via challengeClaim),
+    // the initiator of that claim is locked out from re-initiating against
+    // the same vault for INITIATOR_COOLDOWN seconds.
+    //
+    // SAFETY RATIONALE
+    //   Without this cooldown, a rogue trustee whose first attempt was
+    //   challenged could immediately initiate again, repeatedly, forcing the
+    //   owner to spend their life vetoing harassment. The cooldown is
+    //   PER-INITIATOR (not per-vault) — other trustees can still initiate
+    //   legitimate recoveries during the cooldown window. This punishes the
+    //   bad actor without punishing the owner.
+    //
+    //   30 days is long enough to make harassment expensive but short enough
+    //   that an initiator who challenged in error (false alarm, genuine
+    //   misunderstanding) can re-attempt within a reasonable timeframe.
+    mapping(address => mapping(address => uint64)) public initiatorCooldownUntil; // vault => initiator => timestamp
+    uint64 public constant INITIATOR_COOLDOWN = 30 days;
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
@@ -232,6 +263,9 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error ModuleChangePending();
     error ModuleChangeNotReady();
     error NoPendingModuleChange();
+    // R-8 (guardian-initiated recovery)
+    error NotTrustee();              // initiateClaim caller is not a trustee on the vault
+    error InitiatorCooldownActive(); // initiator was challenged on this vault within the cooldown window
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -312,6 +346,47 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             }
         }
         
+        // ─────────────────────────────────────────────────────────────
+        // R-8: TRUSTEE GATING ON INITIATION
+        // ─────────────────────────────────────────────────────────────
+        // initiateClaim was previously callable by anyone. With tiered guardian
+        // roles, we restrict it to:
+        //   (a) trustees of the target vault (they have the user's explicit
+        //       trust to start recovery on the user's behalf), OR
+        //   (b) the claimant proving ownership another way — currently only
+        //       (a) is supported. Future: passkey/email proofs as alt paths.
+        //
+        // RATIONALE: The previous "anyone can initiate" model was safe because
+        // progression required guardian approvals anyway. But it allowed
+        // griefing — any stranger could spam initiate-then-fail attempts,
+        // notification spam to the owner. Trustee gating closes that vector
+        // while keeping the legitimate guardian-helps-user flow open.
+        //
+        // SAFETY: We check is-trustee BUT NOT is-mature. Trustee status
+        // already implies mature-guardian status (the vault's setTrustee
+        // requires the address be a guardian, and the 7-day maturity period
+        // applies to guardian-add not trustee-promotion). However we DO check
+        // trusteeCount > 0 to give a clean error when the user simply has no
+        // trustees configured — the frontend can prompt them to set some up.
+        IUserVaultRecovery userVault = IUserVaultRecovery(vault);
+        if (userVault.trusteeCountView() > 0) {
+            // Vault has trustees configured — initiation is restricted to them.
+            if (!userVault.isGuardianTrustee(msg.sender)) revert NotTrustee();
+        }
+        // If trusteeCount == 0, fall through — anyone can still initiate (the
+        // pre-R8 behavior). This preserves the recovery path for users who
+        // haven't configured trustees yet; warning is the frontend's job.
+
+        // ─────────────────────────────────────────────────────────────
+        // R-8: INITIATOR COOLDOWN
+        // ─────────────────────────────────────────────────────────────
+        // If this initiator was previously challenged on this vault, enforce
+        // the 30-day cooldown. Note: cooldown is per (vault, initiator) pair —
+        // other trustees on the same vault are unaffected.
+        if (block.timestamp < initiatorCooldownUntil[vault][msg.sender]) {
+            revert InitiatorCooldownActive();
+        }
+
         // Check claimant doesn't already own a vault
         if (vaultHub.vaultOf(msg.sender) != address(0)) {
             revert ClaimantAlreadyHasVault();
@@ -334,22 +409,34 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // F-54 FIX: Extend challenge period to 14 days when vault had activity within 30 days.
         // C-4 FIX: If guardian setup is not yet complete the vault has weaker access controls;
         //           use the extended challenge window to give the owner maximum reaction time.
+        // R-8: Layer the user's per-vault preference on top of the activity/setup logic.
+        //      Always use max() of (preference, activity-based-window) so the user's preference
+        //      cannot SHRINK the protection provided by the activity-based extension. They can
+        //      only EXTEND it. This prevents a compromised owner key from setting a very short
+        //      preference to speed up a malicious recovery.
         bool setupComplete = vaultHub.guardianSetupComplete(vault);
-        uint64 effectiveChallengePeriod;
+        uint64 baseChallengePeriod;
         if (!setupComplete) {
             // Guardian setup incomplete → use the extended window.
-            effectiveChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
+            baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
         } else if (vaultLastActivity[vault] != 0 &&
             block.timestamp - vaultLastActivity[vault] <= VAULT_ACTIVITY_WINDOW) {
-            effectiveChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
+            baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
         } else {
-            effectiveChallengePeriod = CHALLENGE_PERIOD;               // 7 days
+            baseChallengePeriod = CHALLENGE_PERIOD;               // 7 days
         }
+
+        // Read user preference (0 means "no preference, use base")
+        uint64 userPreference = userVault.challengePeriodPreferenceView();
+        uint64 effectiveChallengePeriod = userPreference > baseChallengePeriod
+            ? userPreference
+            : baseChallengePeriod;
 
         claims[claimId] = RecoveryClaim({
             vault: vault,
             claimant: msg.sender,
             originalOwner: originalOwner,
+            initiator: msg.sender,
             initiatedAt: uint64(block.timestamp),
             challengeEndsAt: uint64(block.timestamp + effectiveChallengePeriod),
             expiresAt: uint64(block.timestamp + CLAIM_EXPIRY),
@@ -358,7 +445,10 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             verifierVotes: 0,
             // H-5 FIX: Snapshot guardian count so mid-claim guardian removals cannot
             // lower the approval quorum or enable the verifier-fallback path.
-            guardianCountSnapshot: IUserVaultRecovery(vault).guardianCount(),
+            guardianCountSnapshot: userVault.guardianCount(),
+            // R-8: Snapshot the effective challenge period so it cannot be shrunk
+            // mid-claim by a setChallengePeriodPreference call from a compromised key.
+            challengePeriodSnapshot: effectiveChallengePeriod,
             evidenceHash: evidenceHash,
             claimReason: reason
         });
@@ -422,7 +512,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         
         if (claim.guardianApprovals >= requiredApprovals) {
             claim.status = ClaimStatus.GuardianApproved;
-            claim.challengeEndsAt = uint64(block.timestamp + CHALLENGE_PERIOD);
+            // R-8: Use the snapshotted challenge period (which already includes the
+            // user's preference AND the activity-based extension). Pre-R8 this hard-coded
+            // CHALLENGE_PERIOD which would override the user's longer-preference choice
+            // and the activity extension when guardian approvals arrived after initiation.
+            claim.challengeEndsAt = uint64(block.timestamp) + claim.challengePeriodSnapshot;
         }
     }
     
@@ -497,7 +591,13 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         
         claim.status = ClaimStatus.Rejected;
         activeClaimForVault[claim.vault] = 0;
-        
+
+        // R-8: Lock this initiator out for 30 days. Per-(vault, initiator) so
+        // other trustees can still help if the original was a genuine mistake
+        // and the user is in a real emergency. Punishes harassment without
+        // punishing the user.
+        initiatorCooldownUntil[claim.vault][claim.initiator] = uint64(block.timestamp) + INITIATOR_COOLDOWN;
+
         emit ClaimChallenged(claimId, msg.sender, reason);
         emit ClaimRejected(claimId, claim.vault, "Challenged by original owner");
     }

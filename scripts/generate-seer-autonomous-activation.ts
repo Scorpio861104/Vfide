@@ -8,7 +8,6 @@ type AddressLabel = {
 const ADDRESS_INPUTS: AddressLabel[] = [
   { key: 'SEER_AUTONOMOUS_ADDRESS', required: true },
   { key: 'DAO_ADDRESS', required: true },
-  { key: 'ESCROW_MANAGER_ADDRESS', required: true },
   { key: 'SESSION_KEY_MANAGER_ADDRESS', required: true },
   { key: 'SEER_ADDRESS', required: false },
 ];
@@ -23,10 +22,6 @@ const DAO_MAX_PROFILE_FRAGMENT = [
 
 const DAO_READ_ABI = [
   'function timelock() view returns (address)'
-];
-
-const ESCROW_READ_ABI = [
-  'function dao() view returns (address)'
 ];
 
 const SESSION_READ_ABI = [
@@ -48,7 +43,6 @@ function usage(): string {
     'Required env vars:',
     '  SEER_AUTONOMOUS_ADDRESS=0x...',
     '  DAO_ADDRESS=0x...',
-    '  ESCROW_MANAGER_ADDRESS=0x...',
     '  SESSION_KEY_MANAGER_ADDRESS=0x...',
     '',
     'Optional env vars:',
@@ -105,17 +99,14 @@ async function printCallerExpectations(addresses: Record<string, string | undefi
   const provider = new JsonRpcProvider(rpcUrl);
 
   const dao = new Contract(addresses.DAO_ADDRESS!, DAO_READ_ABI, provider);
-  const escrow = new Contract(addresses.ESCROW_MANAGER_ADDRESS!, ESCROW_READ_ABI, provider);
   const session = new Contract(addresses.SESSION_KEY_MANAGER_ADDRESS!, SESSION_READ_ABI, provider);
 
   const timelock = getAddress(await (dao as any).timelock());
-  const escrowDao = getAddress(await (escrow as any).dao());
   const sessionDao = getAddress(await (session as any).dao());
 
   console.log('\nAuthorized Caller Checks (from chain)');
   console.log('-------------------------------------');
   console.log(`DAO.setSeerAutonomous caller must be DAO timelock: ${timelock}`);
-  console.log(`EscrowManager.setSeerAutonomous caller must equal escrow.dao: ${escrowDao}`);
   console.log(`SessionKeyManager.setSeerAutonomous caller must equal session.dao: ${sessionDao}`);
 
   if (addresses.SEER_ADDRESS) {
@@ -143,10 +134,6 @@ async function main() {
     {
       id: 'dao-set-seer-autonomous',
       ...encodeSetSeerAutonomous(addresses.DAO_ADDRESS!, seerAutonomous),
-    },
-    {
-      id: 'escrow-set-seer-autonomous',
-      ...encodeSetSeerAutonomous(addresses.ESCROW_MANAGER_ADDRESS!, seerAutonomous),
     },
     {
       id: 'session-key-manager-set-seer-autonomous',

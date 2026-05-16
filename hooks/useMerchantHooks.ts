@@ -780,7 +780,18 @@ export function useSetAutoConvert() {
 }
 
 /**
- * Set custom payout address for merchant
+ * Set custom payout address for merchant.
+ *
+ * @deprecated The underlying `setPayoutAddress(address)` contract function is
+ *   a deliberate revert stub (`revert("MP: use proposePayoutAddress +
+ *   applyPayoutAddress")`). This hook will always fail at the chain layer.
+ *   Use `usePayoutAddressChange` from `hooks/usePayoutAddressChange.ts`
+ *   instead — it implements the 3-step timelocked propose/apply/cancel
+ *   pipeline that the contract now requires.
+ *
+ *   This hook is retained for backward compatibility with the existing
+ *   test file (`hooks/__tests__/useMerchantHooksExtended.test.ts`). Once
+ *   that test is updated or removed, this hook can be deleted entirely.
  */
 export function useSetPayoutAddress() {
   const CONTRACT_ADDRESSES = useContractAddresses();

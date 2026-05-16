@@ -7,6 +7,7 @@ import { MonumentCorner } from './MonumentCorner';
 import { TopNav } from './TopNav';
 import { BottomTabBar } from './BottomTabBar';
 import { RecoveryBeacon } from '@/components/security/RecoveryBeacon';
+import { OwnerChallengeBanner } from '@/components/security/OwnerChallengeBanner';
 import { TierAurora } from '@/components/identity/TierAurora';
 import { TimeLattice } from '@/components/identity/TimeLattice';
 import { TransactionTrailLayer } from '@/components/payments/TransactionTrailLayer';
@@ -60,6 +61,7 @@ export function AppShell({ children }: AppShellProps) {
           gives mobile users clearance below the 64px BottomTabBar so
           footers and page-bottom content aren't hidden under it. */}
       <TierAurora />
+      <OwnerChallengeBanner />
       <TopNav />
       <ProtocolTicker />
       <TimeLattice />

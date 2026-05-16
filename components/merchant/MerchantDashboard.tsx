@@ -11,7 +11,6 @@ import {
   useRegisterMerchant,
   useSetAutoConvert,
   useGetAutoConvert,
-  useSetPayoutAddress,
   useProofScore,
 } from '@/lib/vfide-hooks'
 import { useAccount } from 'wagmi'
@@ -20,6 +19,10 @@ import { isAddress } from 'viem'
 import { useTransactionSounds } from '@/hooks/useTransactionSounds'
 import { useEffect } from 'react'
 import { PROOF_SCORE_PERMISSIONS } from '@/lib/constants'
+import { MerchantStatusCard } from './MerchantStatusCard'
+import { useMerchantRegistry } from '@/hooks/useMerchantRegistry'
+import { PayoutAddressManager } from './PayoutAddressManager'
+import { MerchantSelfAdminSection } from './MerchantSelfAdminSection'
 
 // Animated counter component
 function AnimatedCounter({ value, className }: { value: number; className?: string }) {
@@ -35,18 +38,23 @@ function AnimatedCounter({ value, className }: { value: number; className?: stri
 }
 
 export function MerchantDashboard() {
-  const merchantMinScore = PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT
   const { address } = useAccount()
+  // Phase 3a Turn 3: read minScore live from MerchantRegistry rather than from
+  // a frontend constant. The constant (PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT)
+  // was a snapshot of the deployment value, but Seer.minForMerchant is
+  // DAO-settable post-deployment. Reading live means the UI eligibility check
+  // matches what the contract actually enforces. Falls back to the constant
+  // while the chain read is in flight to avoid a "wrong" eligibility flash.
+  const { minScore: liveMinScore } = useMerchantRegistry()
+  const merchantMinScore = liveMinScore ?? PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT
   const merchantInfo = useIsMerchant(address)
   const { registerMerchant, isRegistering, isSuccess: registrationSuccess } = useRegisterMerchant()
   const { setAutoConvert, isSetting: isSettingConvert, isSuccess: convertSuccess } = useSetAutoConvert()
   const { autoConvertEnabled, refetch: refetchAutoConvert } = useGetAutoConvert(address)
-  const { setPayoutAddress, isSetting: isSettingPayout, isSuccess: payoutSuccess } = useSetPayoutAddress()
   const { score, canMerchant } = useProofScore(address)
   
   const [businessName, setBusinessName] = useState('')
   const [category, setCategory] = useState('retail')
-  const [customPayout, setCustomPayout] = useState('')
   const [showCelebration, setShowCelebration] = useState(false)
   const [isPendingConvertToggle, setIsPendingConvertToggle] = useState(false)
   const { playSuccess, playNotification, playError: _playError } = useTransactionSounds()
@@ -405,6 +413,11 @@ export function MerchantDashboard() {
         </div>
       </motion.div>
 
+      {/* Phase 3a Turn 2: registry-side identity + strike counters.
+          MerchantStatusCard renders null if not registered, so safe to place
+          here in the registered-merchant branch. */}
+      <MerchantStatusCard />
+
       {/* Settings Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* STABLE-PAY Settings */}
@@ -456,34 +469,16 @@ export function MerchantDashboard() {
 
           <p className="text-sm text-gray-400 mb-4">
             Set a custom address to receive payments (e.g., Treasury or RevenueSplitter).
-            Leave empty to use your vault.
+            Leave blank to use your merchant vault. Changes are timelocked for security —
+            you'll be able to apply or cancel them after a brief review window.
           </p>
 
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={customPayout}
-              onChange={(e) =>  setCustomPayout(e.target.value)}
-             
-              className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white  focus:border-blue-500 focus:outline-none text-sm"
-            />
-
-            <button
-              onClick={() => setPayoutAddress(customPayout as `0x${string}`)}
-              disabled={isSettingPayout || !isAddress(customPayout)}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white font-bold py-2 rounded-lg transition-colors text-sm"
-            >
-              {isSettingPayout ? 'Updating...' : 'Update Payout Address'}
-            </button>
-
-            {payoutSuccess && (
-              <div className="bg-green-900/20 border border-green-500 rounded-lg p-2 text-center text-green-400 text-xs">
-                ✅ Payout address updated
-              </div>
-            )}
-          </div>
+          <PayoutAddressManager />
         </div>
       </div>
+
+      {/* Phase 3c Turn 2: merchant self-admin (update info + deregister) */}
+      <MerchantSelfAdminSection />
 
       {/* Integration Guide */}
       <div className="bg-blue-900/10 border border-blue-500/20 rounded-xl p-6">

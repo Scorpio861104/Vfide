@@ -32,10 +32,10 @@ contracts=(
 
   # Seer + governance
   Seer DAO DAOTimelock GovernanceHooks AdminMultiSig SystemHandover
-  OwnerControlPanel EmergencyControl CircuitBreaker
+  OwnerControlPanel EmergencyControl
 
   # Lending + finance
-  VFIDEFlashLoan VFIDETermLoan PayrollManager VFIDEFinance VFIDEPriceOracle
+  VFIDEFlashLoan VFIDETermLoan PayrollManager EcoTreasuryVault VFIDEPriceOracle
 
   # Treasury + distribution
   FeeDistributor SanctumVault EcosystemVault EcosystemVaultView
@@ -44,7 +44,7 @@ contracts=(
   DevReserveVestingVault
 
   # Vault auxiliaries
-  VaultRegistry VaultRecoveryClaim VaultInfrastructure
+  VaultRegistry VaultRecoveryClaim
 
   # Testnet faucet
   VFIDETestnetFaucet
