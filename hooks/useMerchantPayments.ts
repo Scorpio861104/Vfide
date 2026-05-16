@@ -50,7 +50,7 @@
 
 import { useCallback } from 'react';
 import { useAccount, usePublicClient, useReadContract, useWriteContract } from 'wagmi';
-import { type Address, parseUnits } from 'viem';
+import { type Abi, type Address, parseUnits } from 'viem';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { MerchantPortalABI } from '@/lib/abis';
 
@@ -320,13 +320,13 @@ export function useMerchantPayments(options: UseMerchantPaymentsOptions = {}) {
       let refundId: `0x${string}` | undefined;
       if (publicClient) {
         try {
-          const sim = await publicClient.simulateContract({
+          const sim = await (publicClient.simulateContract({
             address: portalAddress!,
-            abi: MerchantPortalABI,
+            abi: MerchantPortalABI as Abi,
             functionName: 'initiateRefund',
             args: [params.customer, params.token, params.amountWei, params.orderId],
             account: connectedAddress,
-          });
+          }) as Promise<any>);
           refundId = sim.result as `0x${string}`;
         } catch {
           // Simulation failed (likely the real tx will also fail). We let the

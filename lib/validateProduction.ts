@@ -387,7 +387,7 @@ export function printValidationResults(result: ValidationResult): void {
 
   if (result.warnings.length > 0) {
     console.log('\n⚠️  WARNINGS (Recommended):');
-    result.warnings.forEach(warn => console.log(`  ${warn}`));
+    printGroupedWarnings(result.warnings);
   }
 
   if (result.info.length > 0 && process.env.VERBOSE) {
@@ -403,6 +403,87 @@ export function printValidationResults(result: ValidationResult): void {
     console.log('Missing required variables:');
     result.missing.forEach(name => console.log(`  - ${name}`));
     console.log('');
+  }
+}
+
+/**
+ * Group warnings into logical buckets so the output is scannable rather than
+ * a 38-line wall of individual var names. Pattern-matches on the suffix tags
+ * each warning string already carries (see the validator's push-sites).
+ */
+function printGroupedWarnings(warnings: string[]): void {
+  // Strip the leading "⚠️  " from each warning for easier matching.
+  const stripped = warnings.map(w => w.replace(/^⚠️\s+/, ''));
+
+  const prodRequired: string[] = [];      // "required in production; optional for X in local/dev"
+  const optionalByCategory: Record<string, string[]> = {}; // "optional for <cat>"
+  const frontendOnly: string[] = [];      // "frontend-only mode"
+  const degraded: string[] = [];          // "will be disabled" / "degraded mode"
+  const other: string[] = [];
+
+  for (const w of stripped) {
+    const prodMatch = w.match(/^(\S+) is not set \(required in production/);
+    if (prodMatch) {
+      prodRequired.push(prodMatch[1]);
+      continue;
+    }
+    const optMatch = w.match(/^(\S+) is not set \(optional for (\w+)\)/);
+    if (optMatch) {
+      const cat = optMatch[2]!;
+      (optionalByCategory[cat] ||= []).push(optMatch[1]!);
+      continue;
+    }
+    const feMatch = w.match(/^(\S+) is not set \(frontend-only mode\)/);
+    if (feMatch) {
+      frontendOnly.push(feMatch[1]);
+      continue;
+    }
+    if (/will be disabled|degraded mode|frontend-only mode for this environment/i.test(w)) {
+      degraded.push(w);
+      continue;
+    }
+    other.push(w);
+  }
+
+  // Production-required (highest priority — these become ERRORS in a true mainnet build)
+  if (prodRequired.length > 0) {
+    console.log(`\n  ── Production-required, currently unset (${prodRequired.length}) ──`);
+    console.log('     (These become build errors when NEXT_PUBLIC_IS_TESTNET=false + DATABASE_URL set.)');
+    prodRequired.forEach(n => console.log(`     • ${n}`));
+  }
+
+  // Optional contract/feature/api/monitoring addresses
+  const categoryOrder = ['blockchain', 'api', 'monitoring', 'feature', 'security'];
+  for (const cat of categoryOrder) {
+    const items = optionalByCategory[cat];
+    if (!items?.length) continue;
+    console.log(`\n  ── Optional (${cat}), unset (${items.length}) ──`);
+    items.forEach(n => console.log(`     • ${n}`));
+  }
+  // Any uncategorized optional groups (defensive)
+  for (const [cat, items] of Object.entries(optionalByCategory)) {
+    if (categoryOrder.includes(cat) || !items.length) continue;
+    console.log(`\n  ── Optional (${cat}), unset (${items.length}) ──`);
+    items.forEach(n => console.log(`     • ${n}`));
+  }
+
+  // Frontend-only mode auto-skipped vars
+  if (frontendOnly.length > 0) {
+    console.log(`\n  ── Skipped in frontend-only mode (${frontendOnly.length}) ──`);
+    console.log('     (Server-only vars correctly omitted; not an issue.)');
+    frontendOnly.forEach(n => console.log(`     • ${n}`));
+  }
+
+  // Degraded-feature notes (one per line; they're already human-readable)
+  if (degraded.length > 0) {
+    console.log(`\n  ── Mode/feature notes (${degraded.length}) ──`);
+    degraded.forEach(d => console.log(`     • ${d}`));
+  }
+
+  // Anything else — fall through to per-line display
+  if (other.length > 0) {
+    console.log(`\n  ── Other (${other.length}) ──`);
+    other.forEach(o => console.log(`     • ${o}`));
   }
 }
 

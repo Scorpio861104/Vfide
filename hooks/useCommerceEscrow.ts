@@ -72,7 +72,7 @@
 
 import { useCallback } from 'react';
 import { useAccount, usePublicClient, useReadContract, useSignTypedData, useWriteContract } from 'wagmi';
-import { type Address, type Hex } from 'viem';
+import { type Abi, type Address, type Hex } from 'viem';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 // The CommerceEscrow ABI lives inside VFIDECommerce.json, exported as
 // MerchantRegistryABI (merged with MerchantRegistry + interface fragments).
@@ -266,14 +266,14 @@ export function useCommerceEscrow() {
       let id: bigint | undefined;
       if (publicClient) {
         try {
-            const sim = await (publicClient.simulateContract({
+          const sim = await (publicClient.simulateContract({
             address: escrowAddress!,
-            abi: MerchantRegistryABI,
+            abi: MerchantRegistryABI as Abi,
             functionName: 'open',
             args: [params.merchantOwner, params.amountWei, params.metaHash],
             account: connectedAddress,
-            }) as Promise<any>);
-          id = BigInt(sim.result);
+          }) as Promise<any>);
+          id = BigInt(sim.result as any);
         } catch {
           // Simulation failure means the real tx will probably fail too —
           // let it surface naturally.
