@@ -320,13 +320,20 @@ export function useMerchantPayments(options: UseMerchantPaymentsOptions = {}) {
       let refundId: `0x${string}` | undefined;
       if (publicClient) {
         try {
-          const sim = await (publicClient.simulateContract({
+          const simulateContract = publicClient.simulateContract as (args: {
+            address: Address;
+            abi: Abi;
+            functionName: string;
+            args: readonly unknown[];
+            account: Address;
+          }) => Promise<{ result: unknown }>;
+          const sim = await simulateContract({
             address: portalAddress!,
             abi: MerchantPortalABI as Abi,
             functionName: 'initiateRefund',
             args: [params.customer, params.token, params.amountWei, params.orderId],
             account: connectedAddress,
-          }) as Promise<any>);
+          });
           refundId = sim.result as `0x${string}`;
         } catch {
           // Simulation failed (likely the real tx will also fail). We let the

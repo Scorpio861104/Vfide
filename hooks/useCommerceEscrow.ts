@@ -266,14 +266,21 @@ export function useCommerceEscrow() {
       let id: bigint | undefined;
       if (publicClient) {
         try {
-          const sim = await (publicClient.simulateContract({
+          const simulateContract = publicClient.simulateContract as (args: {
+            address: Address;
+            abi: Abi;
+            functionName: string;
+            args: readonly unknown[];
+            account: Address;
+          }) => Promise<{ result: unknown }>;
+          const sim = await simulateContract({
             address: escrowAddress!,
             abi: MerchantRegistryABI as Abi,
             functionName: 'open',
             args: [params.merchantOwner, params.amountWei, params.metaHash],
             account: connectedAddress,
-          }) as Promise<any>);
-          id = BigInt(sim.result as any);
+          });
+          id = BigInt(sim.result);
         } catch {
           // Simulation failure means the real tx will probably fail too —
           // let it surface naturally.
