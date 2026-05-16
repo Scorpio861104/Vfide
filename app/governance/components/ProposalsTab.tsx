@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { usePublicClient, useAccount } from 'wagmi';
 import { type Address } from 'viem';
 import { AlertCircle, CheckCircle2, Loader2, Wallet, Info } from 'lucide-react';
 
