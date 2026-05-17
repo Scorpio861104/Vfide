@@ -13,6 +13,8 @@ import {
   Shield,
   UserPlus,
 } from 'lucide-react';
+import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+import { toast } from '@/lib/toast';
 
 type SocialPost = {
   id?: string | number;
@@ -52,6 +54,30 @@ const formatTimeAgo = (value: string | number | Date | undefined) => {
 
 export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLike: () => void; onBookmark: () => void }) {
   const [showMenu, setShowMenu] = useState(false);
+
+  // Share: Web Share API where available, clipboard fallback elsewhere.
+  // Uses `copyToClipboardSafe` for the same iOS-in-app-browser handling
+  // already established in `lib/clipboardSafe.ts`.
+  const handleShare = async () => {
+    if (typeof window === 'undefined') return;
+    const url = post.id !== undefined
+      ? `${window.location.origin}/social-hub/post/${post.id}`
+      : window.location.href;
+    const title = `${post.author.name} on VFIDE`;
+    const text = post.content.length > 140 ? post.content.slice(0, 137) + '...' : post.content;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (e) {
+        // User cancelled — silent. Anything else, fall through to clipboard.
+        if ((e as Error)?.name === 'AbortError') return;
+      }
+    }
+    const ok = await copyToClipboardSafe(url);
+    toast(ok ? 'Link copied to clipboard' : 'Could not copy link — long-press to copy manually');
+  };
 
   return (
     <motion.article
@@ -183,9 +209,10 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
         </button>
         
         <button
-          disabled
-          title="External share requires Web Share API or copy-link integration, not wired up yet."
-          className="p-2 rounded-lg text-zinc-500 cursor-not-allowed"
+          onClick={handleShare}
+          aria-label="Share post"
+          title="Share post"
+          className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-700 transition-colors"
         >
           <Share2 className="w-5 h-5" />
         </button>

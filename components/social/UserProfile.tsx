@@ -13,6 +13,7 @@ import {
   Copy,
   CheckCircle2,
 } from 'lucide-react';
+import { safeWindowOpen } from '@/lib/security/urlValidation';
 
 // ==================== TYPES ====================
 
@@ -101,6 +102,19 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
     navigator.clipboard.writeText(`https://vfide.app/profile/${user.username}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Open Twitter intent with the profile URL. Uses the existing `safeWindowOpen`
+  // utility (same pattern as AchievementToast) which enforces an allowlist.
+  const handleShareTwitter = () => {
+    const profileUrl = `https://vfide.app/profile/${user.username}`;
+    const text = `Check out @${user.username} on VFIDE`;
+    const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(profileUrl)}`;
+    safeWindowOpen(intentUrl, {
+      features: 'width=550,height=420,noopener,noreferrer',
+      allowRelative: false,
+      allowedHosts: ['twitter.com', 'x.com'],
+    });
   };
 
   const tabs = [
@@ -234,9 +248,8 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                       )}
                     </button>
                     <button
-                      disabled
-                      title="Direct X (Twitter) share intent isn't wired up yet."
-                      className="w-full text-left px-4 py-3 text-zinc-500 cursor-not-allowed flex items-center gap-2 border-b border-zinc-700"
+                      onClick={handleShareTwitter}
+                      className="w-full text-left px-4 py-3 text-zinc-100 hover:bg-zinc-800 flex items-center gap-2 transition-colors border-b border-zinc-700"
                     >
                       <Share2 className="w-4 h-4" />
                       Share on X

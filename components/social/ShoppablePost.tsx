@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Heart, MessageCircle, Share2, Shield, ShoppingCart, Store, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { type ShoppablePostProps, formatTimeAgo } from './social-commerce-types';
+import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+import { toast } from '@/lib/toast';
 
 export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0, comments = 0, className = '' }: ShoppablePostProps) {
   const [isLiked, setIsLiked] = useState(false);
@@ -14,6 +16,26 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
   const handleLike = () => {
     setIsLiked(!isLiked);
     setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+  };
+
+  // Share: surface the product page (the same destination the post navigates to).
+  // Web Share API on supporting devices, clipboard fallback elsewhere.
+  const handleShare = async () => {
+    if (typeof window === 'undefined') return;
+    const url = `${window.location.origin}/store/${product.merchantSlug}`;
+    const title = product.name;
+    const text = caption || `${product.name} on VFIDE`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch (e) {
+        if ((e as Error)?.name === 'AbortError') return;
+      }
+    }
+    const ok = await copyToClipboardSafe(url);
+    toast(ok ? 'Product link copied' : 'Could not copy — long-press to copy manually');
   };
 
   const shortAddr = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
@@ -110,9 +132,10 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
           <span>{comments}</span>
         </button>
         <button
-          disabled
-          title="Sharing requires Web Share API or copy-link integration, not wired up yet."
-          className="flex items-center gap-1.5 text-sm text-gray-500/60 cursor-not-allowed"
+          onClick={handleShare}
+          aria-label="Share product"
+          title="Share product"
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-cyan-400 transition-colors"
         >
           <Share2 size={16} />
         </button>

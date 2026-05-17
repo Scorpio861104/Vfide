@@ -1,13 +1,15 @@
 # VFIDE Mainnet Deploy Readiness
 
 **Original as of:** 2026-05-14
-**Last updated:** 2026-05-16 (Operations Phase Turn 2)
+**Last updated:** 2026-05-17 (Tier 2 closure)
 **Target:** Base mainnet (chainId 8453)
 **Recommended dry-run target:** Base Sepolia (chainId 84532)
 
 This document is the deploy-readiness companion to `AUDIT_CLOSURE_REPORT.md`. The audit is closed; this is the punch-list of things that still need attention before signing the mainnet deploy transaction.
 
 > **2026-05-16 status update.** Operations Phase reconciled this document against the actual repo state and closed all Section A blockers. **A.1 ✓ RESOLVED, A.2 ✓ RESOLVED, A.3 ✓ RESOLVED.** Section B (pre-deploy checks) and Section D (sign-off checklist) remain for testnet/mainnet day-of work.
+
+> **2026-05-17 status update.** Tier 2 (frontend sample-data conversion) COMPLETE. All 11 in-scope tabs now read from real contracts; council pages have honest V1-deferral copy; 2 new detail routes (`/sanctum/charities/[id]`, `/governance/proposal/[id]`) shipped. CreateTab supports 10 DAO templates with URL-param deep-linking from any surface. See VFIDE_TIER2_PLAN.md for the per-phase record. Frontend is ready for the testnet dry-run.
 
 ---
 
@@ -233,4 +235,32 @@ If all six of the above succeed in the first 24h, the mainnet bootstrap is healt
 
 ---
 
-**Last reviewed:** 2026-05-14, end of audit-closure session.
+## F. Frontend readiness (added 2026-05-17)
+
+Tier 2 closed 2026-05-17 with all sample-data surfaces converted to real on-chain data. The frontend is ready for testnet integration testing.
+
+**What changed in Tier 2:**
+- 11 tabs across `/sanctum`, `/treasury`, `/enterprise`, `/council` converted to real reads
+- 2 new detail routes: `/sanctum/charities/[id]` and `/governance/proposal/[id]`
+- 2 new foundation hooks: `useSanctumVault` (296+88 LOC), `useEnterpriseTreasury` (~280 LOC)
+- EcoTreasuryVault address mapping wired through `lib/contracts.ts` + `lib/validateProduction.ts`
+- CreateTab gained 5 new DAO templates (3 SanctumVault + 2 EcoTreasuryVault) on top of the 5 from Tier 1
+- URL-param deep-linking protocol established for cross-surface DAO routing
+
+**What is intentionally NOT live on the frontend at V1:**
+- Council pages (`app/council/*`) display preview content with explicit "Coming in a future release" copy. The CouncilManager / CouncilSalary / CouncilElection contracts live in `contracts/future/` and require `NEXT_PUBLIC_FUTURE_FEATURES_ENABLED=true` to activate. Pages stay in nav as preview surfaces.
+- Cross-contract event timelines (e.g. "Recent Distributions" panel on `/treasury/overview`). Per-channel histories exist at `/sanctum/history` and `/treasury/revenue`; a unified protocol-wide timeline is a Tier 3 indexer concern.
+- Multi-token treasury display (USDC, ETH, etc balances). EcoTreasuryVault supports `getMultiTokenBalances(tokens[])`, but which tokens to display is an operator config decision logged as a Tier 3 followup.
+- /developer page no longer shows the SampleDataBanner — it's documentation/SDK reference, not data.
+
+**Pre-mainnet frontend checklist:**
+- [ ] All env vars set per `NEXT_PUBLIC_*` mappings in `lib/contracts.ts` (including the new `NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS`)
+- [ ] Verify each converted tab loads against the testnet deployment (visual smoke test)
+- [ ] Verify each DAO template's URL-param prefill works end-to-end (e.g. open `/governance?template=rejectDisbursement&prefill=...` from `/sanctum?tab=disbursements`)
+- [ ] Verify `/sanctum/charities/[id]` resolves for a real registered charity address
+- [ ] Verify `/governance/proposal/[id]` resolves for a real proposal ID
+- [ ] Verify Council pages render correctly when `NEXT_PUBLIC_FUTURE_FEATURES_ENABLED=false` (the default at V1)
+
+---
+
+**Last reviewed:** 2026-05-17, end of Tier 2 closure session.

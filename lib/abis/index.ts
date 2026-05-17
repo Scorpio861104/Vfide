@@ -22,6 +22,7 @@ import DevReserveVestingRaw from './DevReserveVesting.json'
 import PayrollManagerRaw from './PayrollManager.json'
 import EcosystemVaultRaw from './EcosystemVault.json'
 import EcosystemVaultViewRaw from './EcosystemVaultView.json'
+import EcoTreasuryVaultRaw from './EcoTreasuryVault.json'
 import VaultRegistryRaw from './VaultRegistry.json'
 import ERC20Raw from './ERC20.json'
 import SeerSocialRaw from './SeerSocial.json'
@@ -99,6 +100,7 @@ const DevReserveVestingABI = normalizeImportedABI(DevReserveVestingRaw);
 const PayrollManagerABI = normalizeImportedABI(PayrollManagerRaw);
 const EcosystemVaultABI = normalizeImportedABI(EcosystemVaultRaw);
 const EcosystemVaultViewABI = normalizeImportedABI(EcosystemVaultViewRaw);
+const EcoTreasuryVaultABI = normalizeImportedABI(EcoTreasuryVaultRaw);
 const VaultRegistryABI = normalizeImportedABI(VaultRegistryRaw);
 const ERC20ABI = normalizeImportedABI(ERC20Raw);
 const SeerSocialABI = normalizeImportedABI(SeerSocialRaw);
@@ -175,6 +177,7 @@ validateABI(DevReserveVestingABI, 'DevReserveVesting');
 validateABI(PayrollManagerABI, 'PayrollManager');
 validateABI(EcosystemVaultABI, 'EcosystemVault');
 validateABI(EcosystemVaultViewABI, 'EcosystemVaultView');
+validateABI(EcoTreasuryVaultABI, 'EcoTreasuryVault');
 validateABI(VaultRegistryABI, 'VaultRegistry');
 validateABI(ERC20ABI, 'ERC20');
 validateABI(SeerSocialABI, 'SeerSocial');
@@ -247,6 +250,7 @@ export {
   PayrollManagerABI,
   EcosystemVaultABI,
   EcosystemVaultViewABI,
+  EcoTreasuryVaultABI,
   VaultRegistryABI,
   ERC20ABI,
   SeerSocialABI,

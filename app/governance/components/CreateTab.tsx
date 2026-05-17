@@ -24,8 +24,9 @@
  *   Custom    — freeform target + data hex + ptype, for advanced users.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { useSearchParams } from 'next/navigation';
 import { encodeFunctionData, isAddress, parseUnits, type Address, type Hex } from 'viem';
 import {
   Loader2,
@@ -40,16 +41,31 @@ import {
   Flag,
   ShieldCheck,
   XCircle,
+  Heart,
+  PlusCircle,
+  MinusCircle,
+  Banknote,
+  LifeBuoy,
 } from 'lucide-react';
 import { useDAO, ProposalType, proposalTypeLabel } from '@/hooks/useDAO';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 // MerchantRegistryABI is the re-export name for the merged VFIDECommerce.json file,
 // which contains MerchantRegistry + VFIDECommerce + CommerceEscrow function ABIs.
 // We use it here for encoding CommerceEscrow.resolve and CommerceEscrow.setMinDisputeAmountForPenalty calls.
-import { MerchantRegistryABI as VFIDECommerceABI, FraudRegistryABI } from '@/lib/abis';
+import { MerchantRegistryABI as VFIDECommerceABI, FraudRegistryABI, SanctumVaultABI, EcoTreasuryVaultABI } from '@/lib/abis';
 
 type Mode = 'template' | 'custom';
-type TemplateKey = 'resolve' | 'setMinDispute' | 'clearFlag' | 'confirmFraud' | 'dismissComplaints';
+type TemplateKey =
+  | 'resolve'
+  | 'setMinDispute'
+  | 'clearFlag'
+  | 'confirmFraud'
+  | 'dismissComplaints'
+  | 'approveCharity'
+  | 'removeCharity'
+  | 'rejectDisbursement'
+  | 'sendVFIDE'
+  | 'rescueToken';
 
 interface TemplateDescriptor {
   key: TemplateKey;
@@ -58,7 +74,7 @@ interface TemplateDescriptor {
   ptype: ProposalType;
   Icon: typeof Scale;
   /** Group label for visual separation of templates by contract domain. */
-  group: 'commerce' | 'fraud';
+  group: 'commerce' | 'fraud' | 'sanctum' | 'treasury';
 }
 
 const TEMPLATES: TemplateDescriptor[] = [
@@ -109,6 +125,57 @@ const TEMPLATES: TemplateDescriptor[] = [
     Icon: ShieldCheck,
     group: 'fraud',
   },
+  // Sanctum charity-registry templates (Tier 2 Phase 3 — close the DAO-only surface
+  // of SanctumVault. Note: proposeDisbursement/approveDisbursement/executeDisbursement
+  // are onlyApprover, not DAO-routed, so they appear only in the DisbursementsTab UI.)
+  {
+    key: 'approveCharity',
+    label: 'Approve a new charity for Sanctum',
+    description:
+      'Add a charity to the SanctumVault registry. Once approved, the charity is eligible to receive disbursements proposed by approvers and paid from accumulated transfer fees.',
+    ptype: ProposalType.Financial,
+    Icon: PlusCircle,
+    group: 'sanctum',
+  },
+  {
+    key: 'removeCharity',
+    label: 'Remove a charity from Sanctum',
+    description:
+      'Remove a charity from the SanctumVault registry. The charity becomes ineligible to receive new disbursements. A reason string is recorded on-chain.',
+    ptype: ProposalType.Financial,
+    Icon: MinusCircle,
+    group: 'sanctum',
+  },
+  {
+    key: 'rejectDisbursement',
+    label: 'Reject a Sanctum disbursement proposal',
+    description:
+      'DAO veto of a disbursement proposed by approvers. Sanctum approvers can propose and approve disbursements directly, but the DAO retains rejection authority. A reason string is recorded on-chain.',
+    ptype: ProposalType.SecurityAction,
+    Icon: Heart,
+    group: 'sanctum',
+  },
+  // EcoTreasuryVault templates (Tier 2 Phase 4 Turn 1 — close the DAO-only
+  // surface of EcoTreasuryVault. sendVFIDE and rescueToken are the two
+  // disbursement paths from the protocol's main VFIDE treasury.)
+  {
+    key: 'sendVFIDE',
+    label: 'Send VFIDE from treasury',
+    description:
+      'Disburse VFIDE from the protocol treasury to a recipient address. A reason string is recorded on-chain alongside the transfer event.',
+    ptype: ProposalType.Financial,
+    Icon: Banknote,
+    group: 'treasury',
+  },
+  {
+    key: 'rescueToken',
+    label: 'Rescue tokens accidentally sent to treasury',
+    description:
+      'Recover an ERC-20 token mistakenly sent to the treasury contract. The DAO specifies token contract, recipient, and amount.',
+    ptype: ProposalType.Financial,
+    Icon: LifeBuoy,
+    group: 'treasury',
+  },
 ];
 
 export function CreateTab() {
@@ -118,6 +185,10 @@ export function CreateTab() {
   const commerceEscrowConfigured = isConfiguredContractAddress(commerceEscrowAddress);
   const fraudRegistryAddress = CONTRACT_ADDRESSES.FraudRegistry;
   const fraudRegistryConfigured = isConfiguredContractAddress(fraudRegistryAddress);
+  const sanctumVaultAddress = CONTRACT_ADDRESSES.SanctumVault;
+  const sanctumVaultConfigured = isConfiguredContractAddress(sanctumVaultAddress);
+  const ecoTreasuryAddress = CONTRACT_ADDRESSES.EcoTreasuryVault;
+  const ecoTreasuryConfigured = isConfiguredContractAddress(ecoTreasuryAddress);
 
   // ── State ─────────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<Mode>('template');
@@ -130,6 +201,19 @@ export function CreateTab() {
   const [minDisputeAmount, setMinDisputeAmount] = useState('');
   // Shared input for the 3 fraud templates (all take a single `address target` arg).
   const [fraudTarget, setFraudTarget] = useState('');
+  // Sanctum charity-registry template inputs
+  const [sanctumCharityAddress, setSanctumCharityAddress] = useState('');
+  const [sanctumCharityName, setSanctumCharityName] = useState('');
+  const [sanctumCharityCategory, setSanctumCharityCategory] = useState('');
+  const [sanctumRemoveReason, setSanctumRemoveReason] = useState('');
+  const [sanctumDisbursementId, setSanctumDisbursementId] = useState('');
+  const [sanctumRejectReason, setSanctumRejectReason] = useState('');
+  // EcoTreasuryVault DAO template inputs (Phase 4 Turn 1)
+  const [treasurySendTo, setTreasurySendTo] = useState('');
+  const [treasurySendAmount, setTreasurySendAmount] = useState('');
+  const [treasurySendReason, setTreasurySendReason] = useState('');
+  const [treasuryRescueToken, setTreasuryRescueToken] = useState('');
+  const [treasuryRescueAmount, setTreasuryRescueAmount] = useState('');
 
   // Custom inputs
   const [customPtype, setCustomPtype] = useState<ProposalType>(ProposalType.Generic);
@@ -139,6 +223,64 @@ export function CreateTab() {
   // Submission state
   const [error, setError] = useState<string | null>(null);
   const [submittedId, setSubmittedId] = useState<bigint | null>(null);
+
+  // ── URL params: ?template=<key>&prefill=<json> ───────────────────────────
+  // Q3-A pattern (Tier 2 plan): pages elsewhere in the app can deep-link into
+  // CreateTab with a specific template pre-selected and form fields populated.
+  // Used by DisbursementsTab "Reject" button, FinanceTab "Treasury Send" / "Rescue",
+  // and any future cross-surface routing.
+  //
+  // Backward compatible: when no query params are present, the component keeps
+  // its current defaults (template mode, 'resolve' template, empty inputs).
+  // Only the first mount reads the URL — later edits are user-driven.
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (!searchParams) return;
+    const rawTemplate = searchParams.get('template');
+    if (!rawTemplate) return;
+    // Validate it matches a known TemplateKey before adopting.
+    const valid = TEMPLATES.some((t) => t.key === rawTemplate);
+    if (!valid) return;
+    setMode('template');
+    setTemplateKey(rawTemplate as TemplateKey);
+
+    // Apply the prefill JSON if present. Schema is shallow: a flat object whose
+    // keys are the field state-setter names without the `set` prefix
+    // (e.g. {"sanctumDisbursementId":"42","sanctumRejectReason":"…"}).
+    const rawPrefill = searchParams.get('prefill');
+    if (!rawPrefill) return;
+    let prefill: Record<string, unknown>;
+    try {
+      prefill = JSON.parse(rawPrefill);
+    } catch {
+      return; // malformed → silently ignore, user can fill manually
+    }
+    if (!prefill || typeof prefill !== 'object') return;
+    const apply = (key: string, set: (v: string) => void) => {
+      const v = prefill[key];
+      if (typeof v === 'string') set(v);
+    };
+    apply('description', setDescription);
+    apply('resolveEscrowId', setResolveEscrowId);
+    apply('minDisputeAmount', setMinDisputeAmount);
+    apply('fraudTarget', setFraudTarget);
+    apply('sanctumCharityAddress', setSanctumCharityAddress);
+    apply('sanctumCharityName', setSanctumCharityName);
+    apply('sanctumCharityCategory', setSanctumCharityCategory);
+    apply('sanctumRemoveReason', setSanctumRemoveReason);
+    apply('sanctumDisbursementId', setSanctumDisbursementId);
+    apply('sanctumRejectReason', setSanctumRejectReason);
+    apply('treasurySendTo', setTreasurySendTo);
+    apply('treasurySendAmount', setTreasurySendAmount);
+    apply('treasurySendReason', setTreasurySendReason);
+    apply('treasuryRescueToken', setTreasuryRescueToken);
+    apply('treasuryRescueAmount', setTreasuryRescueAmount);
+    if (typeof prefill.resolveBuyerWins === 'boolean') {
+      setResolveBuyerWins(prefill.resolveBuyerWins);
+    }
+    // The effect intentionally runs only on initial mount + when query string changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const currentTemplate = TEMPLATES.find((t) => t.key === templateKey)!;
 
@@ -157,6 +299,14 @@ export function CreateTab() {
       }
       if (currentTemplate.group === 'fraud' && !fraudRegistryConfigured) {
         setError('FraudRegistry is not configured for this environment — fraud templates cannot be submitted.');
+        return null;
+      }
+      if (currentTemplate.group === 'sanctum' && !sanctumVaultConfigured) {
+        setError('SanctumVault is not configured for this environment — sanctum templates cannot be submitted.');
+        return null;
+      }
+      if (currentTemplate.group === 'treasury' && !ecoTreasuryConfigured) {
+        setError('EcoTreasuryVault is not configured for this environment — treasury templates cannot be submitted.');
         return null;
       }
 
@@ -229,6 +379,159 @@ export function CreateTab() {
         return {
           ptype: currentTemplate.ptype,
           target: fraudRegistryAddress as Address,
+          value: 0n,
+          data,
+        };
+      }
+      // ── Sanctum charity-registry templates (SanctumVault target) ──────────
+      if (templateKey === 'approveCharity') {
+        const tgt = sanctumCharityAddress.trim();
+        if (!isAddress(tgt)) {
+          setError('Enter a valid charity address.');
+          return null;
+        }
+        const name = sanctumCharityName.trim();
+        if (!name) {
+          setError('Enter the charity name.');
+          return null;
+        }
+        const category = sanctumCharityCategory.trim();
+        if (!category) {
+          setError('Enter the charity category (e.g. Healthcare, Education).');
+          return null;
+        }
+        const data = encodeFunctionData({
+          abi: SanctumVaultABI,
+          functionName: 'approveCharity',
+          args: [tgt as Address, name, category],
+        });
+        return {
+          ptype: currentTemplate.ptype,
+          target: sanctumVaultAddress as Address,
+          value: 0n,
+          data,
+        };
+      }
+      if (templateKey === 'removeCharity') {
+        const tgt = sanctumCharityAddress.trim();
+        if (!isAddress(tgt)) {
+          setError('Enter the charity address to remove.');
+          return null;
+        }
+        const reason = sanctumRemoveReason.trim();
+        if (!reason) {
+          setError('Enter a reason for the removal — it is recorded on-chain.');
+          return null;
+        }
+        const data = encodeFunctionData({
+          abi: SanctumVaultABI,
+          functionName: 'removeCharity',
+          args: [tgt as Address, reason],
+        });
+        return {
+          ptype: currentTemplate.ptype,
+          target: sanctumVaultAddress as Address,
+          value: 0n,
+          data,
+        };
+      }
+      if (templateKey === 'rejectDisbursement') {
+        const idStr = sanctumDisbursementId.trim();
+        if (!idStr) {
+          setError('Enter the disbursement proposal id.');
+          return null;
+        }
+        let proposalId: bigint;
+        try {
+          proposalId = BigInt(idStr);
+        } catch {
+          setError('Disbursement id must be a number.');
+          return null;
+        }
+        const reason = sanctumRejectReason.trim();
+        if (!reason) {
+          setError('Enter a rejection reason — it is recorded on-chain.');
+          return null;
+        }
+        const data = encodeFunctionData({
+          abi: SanctumVaultABI,
+          functionName: 'rejectDisbursement',
+          args: [proposalId, reason],
+        });
+        return {
+          ptype: currentTemplate.ptype,
+          target: sanctumVaultAddress as Address,
+          value: 0n,
+          data,
+        };
+      }
+      // ── EcoTreasuryVault templates ─────────────────────────────────────────
+      if (templateKey === 'sendVFIDE') {
+        const to = treasurySendTo.trim();
+        if (!isAddress(to)) {
+          setError('Enter a valid recipient address.');
+          return null;
+        }
+        const amtStr = treasurySendAmount.trim();
+        if (!amtStr) {
+          setError('Enter the VFIDE amount to send.');
+          return null;
+        }
+        let amountWei: bigint;
+        try {
+          amountWei = parseUnits(amtStr, 18);
+        } catch {
+          setError('Invalid amount.');
+          return null;
+        }
+        const reason = treasurySendReason.trim();
+        if (!reason) {
+          setError('Enter a reason — it is recorded on-chain alongside the transfer.');
+          return null;
+        }
+        const data = encodeFunctionData({
+          abi: EcoTreasuryVaultABI,
+          functionName: 'sendVFIDE',
+          args: [to as Address, amountWei, reason],
+        });
+        return {
+          ptype: currentTemplate.ptype,
+          target: ecoTreasuryAddress as Address,
+          value: 0n,
+          data,
+        };
+      }
+      if (templateKey === 'rescueToken') {
+        const token = treasuryRescueToken.trim();
+        if (!isAddress(token)) {
+          setError('Enter the ERC-20 token contract address.');
+          return null;
+        }
+        const to = treasurySendTo.trim(); // reuses the same "recipient" field
+        if (!isAddress(to)) {
+          setError('Enter a valid recipient address.');
+          return null;
+        }
+        const amtStr = treasuryRescueAmount.trim();
+        if (!amtStr) {
+          setError('Enter the token amount to rescue (in token units).');
+          return null;
+        }
+        let amount: bigint;
+        try {
+          amount = BigInt(amtStr);
+        } catch {
+          setError('Invalid amount — must be a positive integer in the token\'s base units.');
+          return null;
+        }
+        const data = encodeFunctionData({
+          abi: EcoTreasuryVaultABI,
+          functionName: 'rescueToken',
+          args: [token as Address, to as Address, amount],
+        });
+        return {
+          ptype: currentTemplate.ptype,
+          target: ecoTreasuryAddress as Address,
           value: 0n,
           data,
         };
@@ -514,6 +817,177 @@ export function CreateTab() {
                       'The address whose complaints the DAO is upholding. Will be flagged with 30-day transfer escrow.'}
                     {templateKey === 'dismissComplaints' &&
                       'The address whose complaints the DAO is dismissing. Reporters will be penalized.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Sanctum: approveCharity template inputs */}
+            {templateKey === 'approveCharity' && (
+              <div className="space-y-3 pl-1 border-l-2 border-pink-500/20 ml-1">
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Charity address</label>
+                  <input
+                    type="text"
+                    value={sanctumCharityAddress}
+                    onChange={(e) => setSanctumCharityAddress(e.target.value)}
+                    placeholder="0x…"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-pink-500 focus:outline-none text-sm font-mono"
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">
+                    The wallet address that will receive Sanctum disbursements.
+                  </p>
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Charity name</label>
+                  <input
+                    type="text"
+                    value={sanctumCharityName}
+                    onChange={(e) => setSanctumCharityName(e.target.value)}
+                    placeholder="e.g. Save the Children"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-pink-500 focus:outline-none text-sm"
+                  />
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Category</label>
+                  <input
+                    type="text"
+                    value={sanctumCharityCategory}
+                    onChange={(e) => setSanctumCharityCategory(e.target.value)}
+                    placeholder="e.g. Healthcare, Education, Environment"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-pink-500 focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Sanctum: removeCharity template inputs */}
+            {templateKey === 'removeCharity' && (
+              <div className="space-y-3 pl-1 border-l-2 border-pink-500/20 ml-1">
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Charity address</label>
+                  <input
+                    type="text"
+                    value={sanctumCharityAddress}
+                    onChange={(e) => setSanctumCharityAddress(e.target.value)}
+                    placeholder="0x…"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-pink-500 focus:outline-none text-sm font-mono"
+                  />
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Reason</label>
+                  <textarea
+                    value={sanctumRemoveReason}
+                    onChange={(e) => setSanctumRemoveReason(e.target.value)}
+                    placeholder="Why the charity is being removed. Recorded on-chain."
+                    rows={2}
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-pink-500 focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Sanctum: rejectDisbursement template inputs */}
+            {templateKey === 'rejectDisbursement' && (
+              <div className="space-y-3 pl-1 border-l-2 border-pink-500/20 ml-1">
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Disbursement id</label>
+                  <input
+                    type="text"
+                    value={sanctumDisbursementId}
+                    onChange={(e) => setSanctumDisbursementId(e.target.value)}
+                    placeholder="e.g. 7"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-pink-500 focus:outline-none text-sm tabular-nums"
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">
+                    The proposal id of an approver-proposed disbursement the DAO is vetoing.
+                  </p>
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Rejection reason</label>
+                  <textarea
+                    value={sanctumRejectReason}
+                    onChange={(e) => setSanctumRejectReason(e.target.value)}
+                    placeholder="Why the disbursement is being rejected. Recorded on-chain."
+                    rows={2}
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-pink-500 focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* EcoTreasuryVault: sendVFIDE template inputs */}
+            {templateKey === 'sendVFIDE' && (
+              <div className="space-y-3 pl-1 border-l-2 border-yellow-500/20 ml-1">
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Recipient address</label>
+                  <input
+                    type="text"
+                    value={treasurySendTo}
+                    onChange={(e) => setTreasurySendTo(e.target.value)}
+                    placeholder="0x…"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-yellow-500 focus:outline-none text-sm font-mono"
+                  />
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Amount (VFIDE)</label>
+                  <input
+                    type="number"
+                    value={treasurySendAmount}
+                    onChange={(e) => setTreasurySendAmount(e.target.value)}
+                    placeholder="e.g. 1000"
+                    step="0.01"
+                    min="0"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-yellow-500 focus:outline-none text-sm tabular-nums"
+                  />
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Reason</label>
+                  <textarea
+                    value={treasurySendReason}
+                    onChange={(e) => setTreasurySendReason(e.target.value)}
+                    placeholder="Why the treasury is making this disbursement. Recorded on-chain."
+                    rows={2}
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-yellow-500 focus:outline-none text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* EcoTreasuryVault: rescueToken template inputs */}
+            {templateKey === 'rescueToken' && (
+              <div className="space-y-3 pl-1 border-l-2 border-yellow-500/20 ml-1">
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Token contract address</label>
+                  <input
+                    type="text"
+                    value={treasuryRescueToken}
+                    onChange={(e) => setTreasuryRescueToken(e.target.value)}
+                    placeholder="0x… (the ERC-20 to recover)"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-yellow-500 focus:outline-none text-sm font-mono"
+                  />
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Recipient address</label>
+                  <input
+                    type="text"
+                    value={treasurySendTo}
+                    onChange={(e) => setTreasurySendTo(e.target.value)}
+                    placeholder="0x…"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-yellow-500 focus:outline-none text-sm font-mono"
+                  />
+                </div>
+                <div className="pl-3">
+                  <label className="block text-xs text-zinc-400 mb-1">Amount (token base units)</label>
+                  <input
+                    type="text"
+                    value={treasuryRescueAmount}
+                    onChange={(e) => setTreasuryRescueAmount(e.target.value)}
+                    placeholder="e.g. 1000000 for 1 USDC (6 decimals)"
+                    className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-yellow-500 focus:outline-none text-sm tabular-nums"
+                  />
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Amount in the token's smallest unit (wei-equivalent). USDC uses 6 decimals; most ERC-20s use 18.
                   </p>
                 </div>
               </div>

@@ -383,3 +383,29 @@ Effect: every vote history entry displayed wrong vote totals and wrong status in
 **Severity:** Medium (visible incorrect data, user-facing)
 **Suggested action:** Fixed in Turn 4 as a <2-hour mechanical correction. This entry is a record of the finding.
 **Status:** ✅ Resolved in Phase 4 Turn 4 (2026-05-16).
+
+### 2026-05-17 — Operations Phase post-cleanup — Backlog — Several display-only pages still use hardcoded sample data
+
+During the dead-button audit (Operations Phase, post-Tier-1), three major dashboard pages were found to be using hardcoded sample data rather than reading on-chain state. Their disabled buttons (correctly labeled as such with hover tooltips) are appropriate behavior given the page state — but the *underlying pages themselves* are mockups, not wired surfaces.
+
+Affected pages and findings:
+
+1. **`app/enterprise/components/FinanceTab.tsx`** — `treasuryAssets` is a hardcoded array (`$11.25M`, `$7M VFIDE`, etc). No `wagmi`, no `useReadContract`, no `CONTRACT_ADDRESSES` references. The "Send VFIDE" and "Rescue Tokens" buttons disabled correctly refuse to fire transactions against fake state, but the page presents itself as the protocol's treasury surface.
+
+2. **`app/sanctum/components/DisbursementsTab.tsx`** — `disbursements` array is hardcoded with IDs `1, 2, 3, 4`. Shows `SampleDataBanner` (good — transparent), but the "New Proposal" / "Approve" buttons can't be wired since the IDs are not real on-chain disbursement records.
+
+3. **`app/treasury/components/SanctumTab.tsx`** — `charities` and `pendingDisbursements` are hardcoded. No SampleDataBanner shown. "Approve" / "Reject" buttons would attempt to vote on fake proposal IDs.
+
+What makes this Tier-2-scope rather than a quick fix: each conversion requires:
+- A hook that reads the real contract state (charity allocations, pending disbursements, treasury balances)
+- Decisions about read pagination if the on-chain set is large
+- Loading/empty/error states
+- Then, on top of the real data, the DAO-routing buttons can be wired safely
+
+**Affected contracts to read from:** `SanctumVault` (charities, disbursements — has 27 writes including `approveCharity`, `approveDisbursement`, `executeDisbursement`), `EcosystemVault` (treasury composition), `EcoTreasuryVault` (VFIDE-only treasury).
+
+**Severity:** Medium (display of misleading information could undermine user trust if not addressed before mainnet — currently masked by `SampleDataBanner` on DisbursementsTab but not on the other two pages).
+
+**Suggested action:** Tier 2 dashboard rebuild pass. Build foundation hooks (`useSanctumVault`, `useEnterpriseTreasury`) following Tier-1 patterns, then convert each tab to real reads with appropriate loading/empty states. Once real data flows, the DAO-routing buttons (originally classified as C1 in the dead-button audit, 6 buttons total) become wirable.
+
+**Status:** Logged for Tier 2. Not addressed in Operations Phase scope.

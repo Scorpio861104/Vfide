@@ -65,7 +65,7 @@ export function MembersTab() {
 
   return (
     <div className="space-y-8">
-      <SampleDataBanner />
+      <SampleDataBanner label="Council members are listed here when CouncilElection ships in a future release. The entries below are illustrative placeholders — no council elections have occurred at V1." />
       {/* Members List */}
       <motion.div 
         initial={{ opacity: 0 }}

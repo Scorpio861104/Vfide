@@ -45,6 +45,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS', required: false, category: 'blockchain' },
 

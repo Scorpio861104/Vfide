@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 const SDK_CODE_SNIPPET = `// Example checkout widget
 
@@ -83,7 +82,6 @@ export default function DeveloperPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8 pt-20 pb-24 md:pb-10 space-y-6">
-      <SampleDataBanner />
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Integrations Center</h1>
