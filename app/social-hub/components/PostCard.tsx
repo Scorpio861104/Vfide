@@ -76,7 +76,11 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
       }
     }
     const ok = await copyToClipboardSafe(url);
-    toast(ok ? 'Link copied to clipboard' : 'Could not copy link — long-press to copy manually');
+    if (ok) {
+      toast.success('Link copied to clipboard');
+    } else {
+      toast.error('Could not copy link — long-press to copy manually');
+    }
   };
 
   return (

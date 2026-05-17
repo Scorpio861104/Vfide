@@ -35,7 +35,11 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
       }
     }
     const ok = await copyToClipboardSafe(url);
-    toast(ok ? 'Product link copied' : 'Could not copy — long-press to copy manually');
+    if (ok) {
+      toast.success('Product link copied');
+    } else {
+      toast.error('Could not copy — long-press to copy manually');
+    }
   };
 
   const shortAddr = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;

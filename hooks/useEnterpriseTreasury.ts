@@ -44,7 +44,7 @@ import {
   useReadContract,
   useReadContracts,
 } from 'wagmi';
-import { type Address } from 'viem';
+import { type Address, type Abi } from 'viem';
 import { EcoTreasuryVaultABI, EcosystemVaultABI, VFIDETokenABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
@@ -176,8 +176,9 @@ export function useEnterpriseTreasury(extraTokens: readonly Address[] = []) {
     const balances = multiTokenBalancesRaw as readonly bigint[];
     for (let i = 0; i < tokensList.length; i++) {
       const balance = balances[i];
-      if (balance !== undefined) {
-        extraTokenBalances.set(tokensList[i].toLowerCase(), balance);
+      const token = tokensList[i];
+      if (balance !== undefined && token) {
+        extraTokenBalances.set(token.toLowerCase(), balance);
       }
     }
   }
@@ -208,7 +209,12 @@ export function useEnterpriseTreasury(extraTokens: readonly Address[] = []) {
     : [];
 
   const { data: ecosystemReadResults, isLoading: ecosystemLoading } = useReadContracts({
-    contracts: ecosystemReadCalls,
+    contracts: ecosystemReadCalls as readonly {
+      address: Address;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }[],
     query: { enabled: ecosystemVaultConfigured },
   });
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useReadContracts } from 'wagmi';
-import { type Address, formatEther } from 'viem';
+import { type Address, type Abi, formatEther } from 'viem';
 import { AlertCircle, AlertTriangle, CheckCircle, Clock, Pause } from 'lucide-react';
 import { DevReserveVestingABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
@@ -27,16 +27,21 @@ export function VestingTab() {
 
   const reads = configured
     ? ([
-        { address: devVaultAddress as Address, abi: DevReserveVestingABI, functionName: 'getVestingStatus' as const },
-        { address: devVaultAddress as Address, abi: DevReserveVestingABI, functionName: 'ALLOCATION' as const },
-        { address: devVaultAddress as Address, abi: DevReserveVestingABI, functionName: 'UNLOCK_AMOUNT' as const },
-        { address: devVaultAddress as Address, abi: DevReserveVestingABI, functionName: 'UNLOCK_INTERVAL' as const },
-        { address: devVaultAddress as Address, abi: DevReserveVestingABI, functionName: 'TOTAL_UNLOCKS' as const },
+        { address: devVaultAddress as Address, abi: DevReserveVestingABI as Abi, functionName: 'getVestingStatus' as const },
+        { address: devVaultAddress as Address, abi: DevReserveVestingABI as Abi, functionName: 'ALLOCATION' as const },
+        { address: devVaultAddress as Address, abi: DevReserveVestingABI as Abi, functionName: 'UNLOCK_AMOUNT' as const },
+        { address: devVaultAddress as Address, abi: DevReserveVestingABI as Abi, functionName: 'UNLOCK_INTERVAL' as const },
+        { address: devVaultAddress as Address, abi: DevReserveVestingABI as Abi, functionName: 'TOTAL_UNLOCKS' as const },
       ] as const)
     : [];
 
   const { data, isLoading } = useReadContracts({
-    contracts: reads,
+    contracts: reads as readonly {
+      address: Address;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }[],
     query: { enabled: configured },
   });
 

@@ -2,7 +2,7 @@
 
 import { ArrowRight, TrendingUp, Clock, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useReadContracts, useChainId } from 'wagmi';
-import { type Address, formatEther } from 'viem';
+import { type Address, type Abi, formatEther } from 'viem';
 import { FeeDistributorABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
@@ -51,19 +51,24 @@ export function RevenueTab() {
   // Batch 8 reads — single Multicall.
   const reads = configured
     ? ([
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'feeSplit' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'burnAddress' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'sanctumFund' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'daoPayrollPool' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'merchantPool' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'headhunterPool' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'lastDistributionTime' as const },
-        { address: feeDistributorAddress as Address, abi: FeeDistributorABI, functionName: 'minDistributionAmount' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'feeSplit' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'burnAddress' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'sanctumFund' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'daoPayrollPool' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'merchantPool' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'headhunterPool' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'lastDistributionTime' as const },
+        { address: feeDistributorAddress as Address, abi: FeeDistributorABI as Abi, functionName: 'minDistributionAmount' as const },
       ] as const)
     : [];
 
   const { data, isLoading } = useReadContracts({
-    contracts: reads,
+    contracts: reads as readonly {
+      address: Address;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }[],
     query: { enabled: configured },
   });
 

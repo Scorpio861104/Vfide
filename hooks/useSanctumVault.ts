@@ -46,7 +46,7 @@ import {
   useReadContracts,
   useWriteContract,
 } from 'wagmi';
-import { type Address } from 'viem';
+import { type Address, type Abi } from 'viem';
 import { SanctumVaultABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 
@@ -184,13 +184,18 @@ export function useSanctumVault() {
   const charityCountNumber = charityCount ? Number(charityCount) : 0;
   const charityListCalls = Array.from({ length: charityCountNumber }, (_, i) => ({
     address: sanctumAddress!,
-    abi: SanctumVaultABI,
+    abi: SanctumVaultABI as Abi,
     functionName: 'charityList' as const,
     args: [BigInt(i)] as const,
   }));
 
   const { data: charityAddresses, isLoading: charityListLoading } = useReadContracts({
-    contracts: charityListCalls,
+    contracts: charityListCalls as readonly {
+      address: Address;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }[],
     query: { enabled: enabled && charityCountNumber > 0 },
   });
 
@@ -201,13 +206,18 @@ export function useSanctumVault() {
 
   const charityInfoCalls = validAddresses.map((addr) => ({
     address: sanctumAddress!,
-    abi: SanctumVaultABI,
+    abi: SanctumVaultABI as Abi,
     functionName: 'getCharityInfo' as const,
     args: [addr] as const,
   }));
 
   const { data: charityInfoResults, isLoading: charityInfoLoading } = useReadContracts({
-    contracts: charityInfoCalls,
+    contracts: charityInfoCalls as readonly {
+      address: Address;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }[],
     query: { enabled: enabled && validAddresses.length > 0 },
   });
 
@@ -217,10 +227,11 @@ export function useSanctumVault() {
    */
   const charities: CharityInfo[] = (charityInfoResults ?? [])
     .map((r, i) => {
-      if (!r?.result || r.status !== 'success') return null;
+      const charityAddress = validAddresses[i];
+      if (!r?.result || r.status !== 'success' || !charityAddress) return null;
       const tuple = r.result as readonly [boolean, string, string, bigint];
       return {
-        address: validAddresses[i],
+        address: charityAddress,
         active: tuple[0],
         name: tuple[1],
         category: tuple[2],
@@ -236,13 +247,18 @@ export function useSanctumVault() {
   const disbursementCountNumber = disbursementCount ? Number(disbursementCount) : 0;
   const disbursementCalls = Array.from({ length: disbursementCountNumber }, (_, i) => ({
     address: sanctumAddress!,
-    abi: SanctumVaultABI,
+    abi: SanctumVaultABI as Abi,
     functionName: 'getDisbursement' as const,
     args: [BigInt(i)] as const,
   }));
 
   const { data: disbursementResults, isLoading: disbursementsLoading } = useReadContracts({
-    contracts: disbursementCalls,
+    contracts: disbursementCalls as readonly {
+      address: Address;
+      abi: Abi;
+      functionName: string;
+      args?: readonly unknown[];
+    }[],
     query: { enabled: enabled && disbursementCountNumber > 0 },
   });
 
