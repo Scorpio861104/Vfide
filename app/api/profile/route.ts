@@ -15,7 +15,7 @@
  *     404 { error: "not found" }
  *     451 { error: "moderated" }       — flagged hash; not served
  *
- * Storage: Vercel KV
+ * Storage: Upstash Redis
  *   profile:{cid}   -> canonical JSON string
  *   flag:{cid}      -> { reason, reportedAt } (if moderated)
  *
@@ -25,7 +25,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 import { canonicalizeJSON, canonicalizeJSONString } from '@/lib/profile/canonicalize';
 import { validateProfile } from '@/lib/profile/validate';
 import { hashToCid, hashToBytes32, bytes32ToCid } from '@/lib/profile/cid';
@@ -39,13 +39,22 @@ const MAX_REQUEST_BYTES = 16 * 1024;
 // rate-limit substrate. Simple sliding-window: count requests per IP per minute.
 const RATE_LIMIT_MAX_PER_MINUTE = 30;
 
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
 async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
+  if (!redis) return { allowed: true, remaining: RATE_LIMIT_MAX_PER_MINUTE };
   const key = `rl:profile:${ip}:${Math.floor(Date.now() / 60_000)}`;
   try {
-    const count = (await kv.incr(key)) as number;
+    const count = (await redis.incr(key)) as number;
     if (count === 1) {
       // Set TTL on first hit in this window
-      await kv.expire(key, 70);
+      await redis.expire(key, 70);
     }
     return {
       allowed: count <= RATE_LIMIT_MAX_PER_MINUTE,
@@ -129,7 +138,7 @@ export async function POST(req: NextRequest) {
   // Check whether this hash is already flagged for moderation. Reuploading
   // moderated content shouldn't fly under the radar.
   try {
-    const flag = await kv.get(`flag:${cid}`);
+    const flag = redis ? await redis.get(`flag:${cid}`) : null;
     if (flag) {
       return NextResponse.json(
         { error: 'this content has been moderated and cannot be re-published' },
@@ -141,8 +150,14 @@ export async function POST(req: NextRequest) {
   }
 
   // Store (idempotent: re-storing the same content is fine)
+  if (!redis) {
+    return NextResponse.json(
+      { error: 'storage not configured' },
+      { status: 503 },
+    );
+  }
   try {
-    await kv.set(`profile:${cid}`, canonical);
+    await redis.set(`profile:${cid}`, canonical);
   } catch (e) {
     return NextResponse.json(
       { error: `storage failed: ${(e as Error).message}` },
@@ -195,7 +210,7 @@ export async function GET(req: NextRequest) {
 
   // Moderation check first — never serve moderated content
   try {
-    const flag = await kv.get(`flag:${cid}`);
+    const flag = redis ? await redis.get(`flag:${cid}`) : null;
     if (flag) {
       return NextResponse.json(
         { error: 'moderated', cid },
@@ -209,8 +224,14 @@ export async function GET(req: NextRequest) {
 
   // Fetch
   let canonical: string | null;
+  if (!redis) {
+    return NextResponse.json(
+      { error: 'storage not configured' },
+      { status: 503 },
+    );
+  }
   try {
-    canonical = await kv.get<string>(`profile:${cid}`);
+    canonical = await redis.get<string>(`profile:${cid}`);
   } catch (e) {
     return NextResponse.json(
       { error: `storage failed: ${(e as Error).message}` },

@@ -24,7 +24,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 import { put } from '@vercel/blob';
 import { sanitizeSvg } from '@/lib/profile/svg-sanitize';
 
@@ -43,12 +43,21 @@ const ALLOWED_CONTENT_TYPES = new Set([
 // real Blob operations), so we cap tighter.
 const RATE_LIMIT_MAX_PER_HOUR = 10;
 
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
 async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining: number }> {
+  if (!redis) return { allowed: true, remaining: RATE_LIMIT_MAX_PER_HOUR };
   const key = `rl:avatar:${ip}:${Math.floor(Date.now() / 3_600_000)}`;
   try {
-    const count = (await kv.incr(key)) as number;
+    const count = (await redis.incr(key)) as number;
     if (count === 1) {
-      await kv.expire(key, 3700);
+      await redis.expire(key, 3700);
     }
     return {
       allowed: count <= RATE_LIMIT_MAX_PER_HOUR,

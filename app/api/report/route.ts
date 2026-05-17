@@ -8,13 +8,13 @@
  *     400 { error }
  *     429 { error: "rate limited" }
  *
- * Storage: Vercel KV
+ * Storage: Upstash Redis
  *   flag:{cid} -> { reason, reportedAt, reportCount }
  *
  * Moderation workflow for v1 is manual:
  *   1. Reports land in KV under flag:* keys
- *   2. Operator periodically queries kv.keys('flag:*') from the Vercel
- *      dashboard or a CLI
+ *   2. Operator periodically queries keys matching flag:* from Redis
+ *      (dashboard or CLI)
  *   3. Operator reviews the reported profile content (fetch by cid)
  *   4. If action is warranted, the flag stays — profile/GET returns 451
  *   5. If false positive, operator manually deletes the flag key
@@ -27,17 +27,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 const MAX_REASON_LENGTH = 500;
 const RATE_LIMIT_MAX_PER_HOUR = 5;
 
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
 async function checkRateLimit(ip: string): Promise<{ allowed: boolean }> {
+  if (!redis) return { allowed: true };
   const key = `rl:report:${ip}:${Math.floor(Date.now() / 3_600_000)}`;
   try {
-    const count = (await kv.incr(key)) as number;
+    const count = (await redis.incr(key)) as number;
     if (count === 1) {
-      await kv.expire(key, 3700);
+      await redis.expire(key, 3700);
     }
     return { allowed: count <= RATE_LIMIT_MAX_PER_HOUR };
   } catch {
@@ -106,18 +115,24 @@ export async function POST(req: NextRequest) {
 
   // Increment report count or create new flag entry
   const flagKey = `flag:${cid}`;
+  if (!redis) {
+    return NextResponse.json(
+      { error: 'storage not configured' },
+      { status: 503 },
+    );
+  }
   try {
-    const existing = await kv.get<{ reason: string; reportedAt: number; reportCount: number }>(
+    const existing = await redis.get<{ reason: string; reportedAt: number; reportCount: number }>(
       flagKey,
     );
     if (existing) {
-      await kv.set(flagKey, {
+      await redis.set(flagKey, {
         reason: existing.reason, // keep original reason; new reports just bump the count
         reportedAt: existing.reportedAt,
         reportCount: (existing.reportCount || 1) + 1,
       });
     } else {
-      await kv.set(flagKey, {
+      await redis.set(flagKey, {
         reason: reason.slice(0, MAX_REASON_LENGTH),
         reportedAt: Date.now(),
         reportCount: 1,
