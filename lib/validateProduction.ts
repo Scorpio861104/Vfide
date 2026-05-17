@@ -424,18 +424,18 @@ function printGroupedWarnings(warnings: string[]): void {
   for (const w of stripped) {
     const prodMatch = w.match(/^(\S+) is not set \(required in production/);
     if (prodMatch) {
-      prodRequired.push(prodMatch[1]);
+      prodRequired.push(prodMatch[1] ?? w);
       continue;
     }
     const optMatch = w.match(/^(\S+) is not set \(optional for (\w+)\)/);
     if (optMatch) {
-      const cat = optMatch[2]!;
-      (optionalByCategory[cat] ||= []).push(optMatch[1]!);
+      const cat = optMatch[2] ?? 'other';
+      (optionalByCategory[cat] ||= []).push(optMatch[1] ?? w);
       continue;
     }
     const feMatch = w.match(/^(\S+) is not set \(frontend-only mode\)/);
     if (feMatch) {
-      frontendOnly.push(feMatch[1]);
+      frontendOnly.push(feMatch[1] ?? w);
       continue;
     }
     if (/will be disabled|degraded mode|frontend-only mode for this environment/i.test(w)) {
