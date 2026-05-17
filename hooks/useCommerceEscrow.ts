@@ -280,7 +280,14 @@ export function useCommerceEscrow() {
             args: [params.merchantOwner, params.amountWei, params.metaHash],
             account: connectedAddress,
           });
-          id = BigInt(sim.result);
+          const simulatedId = sim.result;
+          if (
+            typeof simulatedId === 'bigint' ||
+            typeof simulatedId === 'number' ||
+            typeof simulatedId === 'string'
+          ) {
+            id = BigInt(simulatedId);
+          }
         } catch {
           // Simulation failure means the real tx will probably fail too —
           // let it surface naturally.
