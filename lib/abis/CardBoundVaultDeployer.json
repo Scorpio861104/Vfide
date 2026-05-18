@@ -1,0 +1,123 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "CBD_OnlyHub",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "hub",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "vfideToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "guardianThreshold",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxPerTransfer",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "ledger",
+        "type": "address"
+      }
+    ],
+    "name": "deploy",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "hub",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "vfideToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "owner_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "guardianThreshold",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "maxPerTransfer",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dailyLimit",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "ledger",
+        "type": "address"
+      }
+    ],
+    "name": "predict",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "predicted",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vaultHub",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
