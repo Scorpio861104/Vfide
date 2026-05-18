@@ -42,6 +42,11 @@
   },
   {
     "inputs": [],
+    "name": "SH_ArmTimestampOutOfRange",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "SH_Armed",
     "type": "error"
   },
@@ -64,6 +69,11 @@
       }
     ],
     "name": "SH_DAOAdminMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SH_DisarmExhausted",
     "type": "error"
   },
   {
@@ -333,6 +343,32 @@
   },
   {
     "inputs": [],
+    "name": "ARM_TIMESTAMP_WINDOW",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_DISARMS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "OWNERSHIP_AUDITOR_DELAY",
     "outputs": [
       {
@@ -439,6 +475,19 @@
     "name": "disarm",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "disarmCount",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

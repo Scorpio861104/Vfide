@@ -6,6 +6,7 @@ import { TransactionHistory } from '@/components/vault/TransactionHistory';
 import { TrendingUp } from 'lucide-react';
 
 import { useVaultOperations } from './useVaultOperations';
+import { useVaultTransactions } from '@/hooks/useVaultTransactions';
 import { VaultHeader } from './VaultHeader';
 import { VaultOverviewStats } from './VaultOverviewStats';
 import { VaultQuickActions } from './VaultQuickActions';
@@ -20,6 +21,7 @@ import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
 
 export function VaultContent() {
   const ops = useVaultOperations();
+  const { transactions, isLoading: txLoading } = useVaultTransactions(ops.vaultAddress as `0x${string}` | undefined);
 
   return (
     <>
@@ -111,7 +113,7 @@ export function VaultContent() {
                     <TrendingUp className="text-cyan-400" size={24} />
                     Transaction History
                   </h2>
-                  <TransactionHistory />
+                  <TransactionHistory transactions={transactions} loading={txLoading} />
                 </GlassCard>
               </div>
             </section>

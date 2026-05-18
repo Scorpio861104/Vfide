@@ -400,6 +400,11 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         return vaultOf[owner_];
     }
 
+    /// @notice Returns the CardBoundVaultDeployer contract address used by this hub.
+    function cardBoundVaultDeployer() external view returns (address) {
+        return address(vaultDeployer);
+    }
+
     // ——— View helpers (token expects vaultOf(owner))
     /// @notice Check whether address is an active vault tracked by this hub.
     /// @param a Candidate vault address.

@@ -511,7 +511,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     //                              REFUND SYSTEM
     // ═══════════════════════════════════════════════════════════════════════
     
-    event RefundInitiated(address indexed customer, address indexed merchant, string orderId, uint256 amount);
+    // Backlog fix (R77): add refundId as first indexed parameter so frontend can
+    // reconstruct refund state from events without storing it separately.
+    event RefundInitiated(bytes32 indexed refundId, address indexed customer, address indexed merchant, string orderId, uint256 amount);
     event RefundCompleted(address indexed customer, address indexed merchant, string orderId, uint256 amount);
     event MerchantUpdated(address indexed merchant, string businessName, string category);
     event MerchantDeregistered(address indexed merchant);
@@ -566,7 +568,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (merchantRefunds[msg.sender].length >= 500) revert MERCH_CapExceeded();
         merchantRefunds[msg.sender].push(refundId);
         
-        emit RefundInitiated(customer, msg.sender, orderId, amount);
+        emit RefundInitiated(refundId, customer, msg.sender, orderId, amount);
         _logEv(customer, "rf_init", amount, orderId);
     }
     
@@ -1141,8 +1143,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     // Track refunds per customer and merchant
-    mapping(address => bytes32[]) private customerRefunds;
-    mapping(address => bytes32[]) private merchantRefunds;
+    mapping(address => bytes32[]) public customerRefunds;
+    mapping(address => bytes32[]) public merchantRefunds;
     
     /**
      * @notice Get refund status by ID
@@ -1175,12 +1177,24 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     function _hasPendingRefunds(address merchant) internal view returns (bool) {
         bytes32[] storage refundIds = merchantRefunds[merchant];
-        for (uint256 i = 0; i < refundIds.length; i++) {
+        uint256 len = refundIds.length;
+        for (uint256 i = 0; i < len; i++) {
             if (!refundRequests[refundIds[i]].completed) {
                 return true;
             }
         }
         return false;
+    }
+
+    /// @notice Returns all refund IDs initiated by the given customer.
+    /// R77: mappings made public to unblock frontend enumeration.
+    function getCustomerRefunds(address customer) external view returns (bytes32[] memory) {
+        return customerRefunds[customer];
+    }
+
+    /// @notice Returns all refund IDs initiated by the given merchant.
+    function getMerchantRefunds(address merchant) external view returns (bytes32[] memory) {
+        return merchantRefunds[merchant];
     }
 
     function _rewardPaymentParticipants(address customer, address merchant) internal {
