@@ -1476,7 +1476,7 @@
     "inputs": [],
     "name": "confirmCircuitBreaker",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1787,7 +1787,7 @@
         "type": "bool"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -2678,18 +2678,18 @@
     "inputs": [
       {
         "internalType": "bool",
-        "name": "_active",
+        "name": "",
         "type": "bool"
       },
       {
         "internalType": "uint256",
-        "name": "_duration",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setCircuitBreaker",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

@@ -1414,7 +1414,7 @@
     "inputs": [],
     "name": "pause",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2043,7 +2043,7 @@
     "inputs": [],
     "name": "unpause",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

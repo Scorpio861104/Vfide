@@ -922,8 +922,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// @notice Legacy entrypoint retained for ABI compatibility. Reverts because
     ///         instant single-step payout changes are no longer permitted.
-    function setPayoutAddress(address payout) external onlyMerchant {
-        payout;
+    function setPayoutAddress(address) external view onlyMerchant {
         revert("MP: use proposePayoutAddress + applyPayoutAddress");
     }
 

@@ -115,10 +115,7 @@ contract GovernanceHooks is ReentrancyGuard {
 
     /// @notice Legacy entrypoint retained for ABI compatibility.
     /// @dev Module changes are timelocked via proposeModules/applyModules.
-    function setModules(address _ledger, address _seer, address _guardian) external {
-        _ledger;
-        _seer;
-        _guardian;
+    function setModules(address, address, address) external pure {
         revert("GH: use proposeModules/applyModules");
     }
 

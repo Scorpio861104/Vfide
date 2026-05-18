@@ -82,10 +82,11 @@ export function BorrowInfoTab() {
         <div className="flex gap-2 mb-4">
           <input
             type="number"
+            inputMode="decimal"
             min="0"
             step="any"
             value={amountInput}
-            onChange={(e) = inputMode="decimal"> setAmountInput(e.target.value)}
+            onChange={(e) => setAmountInput(e.target.value)}
             placeholder="Amount in VFIDE"
             aria-label="Flash loan amount to quote"
             className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"

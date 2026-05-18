@@ -187,12 +187,13 @@ export function OfferTab() {
             id="loan-principal"
             required
             type="number"
+            inputMode="decimal"
             min="0"
             step="any"
             placeholder="100"
             className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
             value={form.principal}
-            onChange={(e) = inputMode="decimal"> setForm((f) => ({ ...f, principal: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, principal: e.target.value}))}
           />
         </div>
 
@@ -205,12 +206,13 @@ export function OfferTab() {
               id="loan-interest"
               required
               type="number"
+            inputMode="decimal"
               min="0"
               max="12"
               step="0.01"
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
               value={form.interestPct}
-              onChange={(e) = inputMode="decimal"> setForm((f) => ({ ...f, interestPct: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, interestPct: e.target.value}))}
             />
           </div>
           <div>
@@ -221,11 +223,12 @@ export function OfferTab() {
               id="loan-duration"
               required
               type="number"
+            inputMode="decimal"
               min="1"
               max="30"
               className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500/50"
               value={form.durationDays}
-              onChange={(e) = inputMode="decimal"> setForm((f) => ({ ...f, durationDays: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, durationDays: e.target.value}))}
             />
           </div>
         </div>

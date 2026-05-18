@@ -2607,13 +2607,13 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "payout",
+        "name": "",
         "type": "address"
       }
     ],
     "name": "setPayoutAddress",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

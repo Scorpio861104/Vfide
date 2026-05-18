@@ -658,10 +658,10 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     /// @notice HALT-01: Hub-level global pause is deprecated in favor of breaker signals.
-    function pause() external onlyOwner { revert VH_DeprecatedGlobalPause(); }
+    function pause() external view onlyOwner { revert VH_DeprecatedGlobalPause(); }
 
     /// @notice HALT-01: Hub-level global unpause is deprecated in favor of breaker signals.
-    function unpause() external onlyOwner { revert VH_DeprecatedGlobalPause(); }
+    function unpause() external view onlyOwner { revert VH_DeprecatedGlobalPause(); }
 
     /// @notice Returns true if the vault is in any inheritance state other than NORMAL or CLOSED.
     /// @dev Thin delegation to the vault's own inheritanceState() — gives external callers

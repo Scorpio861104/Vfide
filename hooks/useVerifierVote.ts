@@ -23,7 +23,7 @@
  */
 
 import { useCallback } from 'react';
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { type Address } from 'viem';
 import VaultRecoveryClaimABI from '@/lib/abis/VaultRecoveryClaim.json';
 import { CONTRACT_ADDRESSES } from '@/lib/contracts';
@@ -34,7 +34,7 @@ interface UseVerifierVoteArgs {
 
 export function useVerifierVote({ claimId }: UseVerifierVoteArgs) {
   const { address: verifierAddress } = useAccount();
-  const { writeContractAsync, isPending: isWritePending, error: writeError } = useWriteContract();
+  const { writeContractAsync, isPending: isWritePending, error: writeError, data: txHash } = useWriteContract();
   const recoveryAddress = CONTRACT_ADDRESSES.VaultRecoveryClaim as Address;
 
   const enabled = !!claimId && claimId > 0n && !!verifierAddress;
@@ -87,11 +87,18 @@ export function useVerifierVote({ claimId }: UseVerifierVoteArgs) {
     [claimId, recoveryAddress, writeContractAsync]
   );
 
+  // Track tx confirmation state
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash: txHash,
+  });
+
   return {
     isTrustedVerifier,
     hasVoted,
     vote,
     isWritePending,
+    isConfirming,
+    isConfirmed,
     writeError,
     refetchVoted,
   };

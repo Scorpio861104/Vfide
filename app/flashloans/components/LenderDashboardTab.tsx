@@ -174,10 +174,11 @@ export function LenderDashboardTab() {
           <div className="flex gap-2">
             <input
               type="number"
+            inputMode="decimal"
               min="0"
               step="any"
               value={depositInput}
-              onChange={(e) = inputMode="decimal"> setDepositInput(e.target.value)}
+              onChange={(e) => setDepositInput(e.target.value)}
               placeholder="Amount in VFIDE"
               aria-label="Initial deposit amount"
               className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
@@ -258,10 +259,11 @@ export function LenderDashboardTab() {
           <div className="flex gap-2">
             <input
               type="number"
+            inputMode="decimal"
               min="0"
               step="any"
               value={depositInput}
-              onChange={(e) = inputMode="decimal"> setDepositInput(e.target.value)}
+              onChange={(e) => setDepositInput(e.target.value)}
               placeholder="Amount"
               aria-label="Top-up amount in VFIDE"
               className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
@@ -284,10 +286,11 @@ export function LenderDashboardTab() {
           <div className="flex gap-2">
             <input
               type="number"
+            inputMode="decimal"
               min="0"
               step="any"
               value={withdrawInput}
-              onChange={(e) = inputMode="decimal"> setWithdrawInput(e.target.value)}
+              onChange={(e) => setWithdrawInput(e.target.value)}
               placeholder="Amount"
               aria-label="Withdraw amount in VFIDE"
               className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"

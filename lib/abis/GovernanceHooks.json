@@ -512,23 +512,23 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_ledger",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_seer",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_guardian",
+        "name": "",
         "type": "address"
       }
     ],
     "name": "setModules",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {

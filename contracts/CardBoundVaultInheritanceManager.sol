@@ -346,7 +346,6 @@ contract CardBoundVaultInheritanceManager {
         if (daoGuardian != address(0) && actor == daoGuardian) revert INH_DAOCannotInitiate();
 
         inheritanceClaimNonce += 1;
-        uint256 nonce = inheritanceClaimNonce;
 
         inheritanceStateValue = STATE_VETO_PERIOD;
         inheritanceStateWindowEnd = uint64(block.timestamp + INHERITANCE_VETO_PERIOD);

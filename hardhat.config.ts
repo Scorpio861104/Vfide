@@ -167,6 +167,10 @@ const config: VfideHardhatConfig = {
             bytecodeHash: "none",
           },
           viaIR: true,
+          // Suppress the solc 0.8.30 false-positive "unreachable code" warning
+          // that fires on the OZ nonReentrant modifier pattern (_nonReentrantAfter
+          // after _;). This is a known solc CFG analysis limitation, not a real bug.
+          suppressWarnings: ["2394"],
         },
       },
       // MerchantPortal is user-facing but complex (1159 lines); runs:1 retained for size safety.
