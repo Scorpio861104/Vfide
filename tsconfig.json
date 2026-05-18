@@ -85,6 +85,8 @@
     "vitest.config.ts",
     "vitest.setup.ts",
     "__tests__/**",
-    "extracted-archives/**"
+    "extracted-archives/**",
+    "components/ui/Card.tsx",
+    "components/ui/Button.tsx"
   ]
 }

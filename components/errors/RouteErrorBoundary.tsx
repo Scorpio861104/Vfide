@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logger } from '@/lib/logger';
-import { Button, buttonVariants } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/ButtonVfide';
 import { cn } from '@/lib/utils';
 
 interface RouteErrorBoundaryProps {
