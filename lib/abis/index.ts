@@ -8,6 +8,9 @@ import VaultHubFullRaw from './VaultHub.json'
 import CardBoundVaultRaw from './CardBoundVault.json'
 import CardBoundVaultAdminManagerRaw from './CardBoundVaultAdminManager.json'
 import CardBoundVaultPaymentQueueManagerRaw from './CardBoundVaultPaymentQueueManager.json'
+import CardBoundVaultInheritanceManagerRaw from './CardBoundVaultInheritanceManager.json'
+import CardBoundVaultWithdrawalQueueManagerRaw from './CardBoundVaultWithdrawalQueueManager.json'
+import CardBoundVaultDeployerRaw from './CardBoundVaultDeployer.json'
 import SeerRaw from './Seer.json'
 import DAORaw from './DAO.json'
 import DAOTimelockRaw from './DAOTimelock.json'
@@ -83,6 +86,9 @@ const VaultHubFullABI = normalizeImportedABI(VaultHubFullRaw);
 const CardBoundVaultABI = normalizeImportedABI(CardBoundVaultRaw);
 const CardBoundVaultAdminManagerABI = normalizeImportedABI(CardBoundVaultAdminManagerRaw);
 const CardBoundVaultPaymentQueueManagerABI = normalizeImportedABI(CardBoundVaultPaymentQueueManagerRaw);
+const CardBoundVaultInheritanceManagerABI = normalizeImportedABI(CardBoundVaultInheritanceManagerRaw);
+const CardBoundVaultWithdrawalQueueManagerABI = normalizeImportedABI(CardBoundVaultWithdrawalQueueManagerRaw);
+const CardBoundVaultDeployerABI = normalizeImportedABI(CardBoundVaultDeployerRaw);
 const SeerABI = normalizeImportedABI(SeerRaw);
 const DAOABI = normalizeImportedABI(DAORaw);
 const DAOTimelockABI = normalizeImportedABI(DAOTimelockRaw);
@@ -163,6 +169,9 @@ validateABI(UserVaultABI, 'UserVault');
 validateABI(CardBoundVaultABI, 'CardBoundVault');
 validateABI(CardBoundVaultAdminManagerABI, 'CardBoundVaultAdminManager');
 validateABI(CardBoundVaultPaymentQueueManagerABI, 'CardBoundVaultPaymentQueueManager');
+validateABI(CardBoundVaultInheritanceManagerABI, 'CardBoundVaultInheritanceManager');
+validateABI(CardBoundVaultWithdrawalQueueManagerABI, 'CardBoundVaultWithdrawalQueueManager');
+validateABI(CardBoundVaultDeployerABI, 'CardBoundVaultDeployer');
 validateABI(SeerABI, 'Seer');
 validateABI(DAOABI, 'DAO');
 validateABI(DAOTimelockABI, 'DAOTimelock');
@@ -236,6 +245,9 @@ export {
   CardBoundVaultABI,
   CardBoundVaultAdminManagerABI,
   CardBoundVaultPaymentQueueManagerABI,
+  CardBoundVaultInheritanceManagerABI,
+  CardBoundVaultWithdrawalQueueManagerABI,
+  CardBoundVaultDeployerABI,
   SeerABI,
   DAOABI,
   DAOTimelockABI,

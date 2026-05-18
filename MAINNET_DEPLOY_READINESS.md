@@ -264,3 +264,37 @@ Tier 2 closed 2026-05-17 with all sample-data surfaces converted to real on-chai
 ---
 
 **Last reviewed:** 2026-05-17, end of Tier 2 closure session.
+
+## G. R78 / R78-fix — Contract fixes + frontend wiring (2026-05-18)
+
+All remaining contract audit findings re-applied (after git checkout clobbered R77):
+
+**Contract fixes (all verified compiling with solc 0.8.30, zero errors):**
+- `VFIDETermLoan.sol`: TL-EDGE-01/02/03/04 — changed `>` → `>=` and `<=` → `<` for deadline/grace period boundary comparisons
+- `ProofScoreBurnRouter.sol`: Added `uint16 constant BPS_SCALE = 10_000`; replaced all 4 magic-number `10000` literals
+- `VaultHub.sol`: Added `cardBoundVaultDeployer() external view returns (address)` for deployer address introspection
+- `FraudRegistry.sol`: Cached `.length` in all 3 loops; added explicit braces to single-statement `if` bodies
+- `CardBoundVaultPaymentQueueManager.sol`: `cancelLargePaymentThreshold()` — completes apply+cancel symmetry
+- `CardBoundVault.sol`: Interface method + event + delegating wrapper for `cancelLargePaymentThreshold`
+- `MerchantPortal.sol`: `refundId` as first indexed param in `RefundInitiated`; public mappings; getters
+
+**ABI regen:** All 40 ABIs regenerated from fixed contracts via `regen_abis.py`.
+
+**ABI index:** Added `CardBoundVaultInheritanceManagerABI`, `CardBoundVaultWithdrawalQueueManagerABI`, `CardBoundVaultDeployerABI` to `lib/abis/index.ts`.
+
+**Frontend wiring:**
+- `VaultContent.tsx`: `useVaultTransactions` wired; real event-log data passed to `TransactionHistory`
+- `TransactionHistory.tsx`: `VaultTransaction` type imported from hook (eliminates parallel type definition)
+- `ClaimFlowModal.tsx`: `useChallengePeriodPreview` wired; challenge period label shown dynamically in UI
+
+**Deploy script:**
+- `scripts/deploy-full.ts`: Captures `CardBoundVaultDeployer` address via `hub.cardBoundVaultDeployer()` post-deploy
+- Added `NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS` to `.env` output block
+
+**TypeScript:**
+- Resolved TS1261/TS1149 file-casing conflicts (`Card.tsx`/`card.tsx`, `Button.tsx`/`button.tsx`)
+- `ButtonVfide.tsx` created (preserves custom VFIDE variants: `primary`, `leftIcon`, `fullWidth`)
+- Zero TS1xxx syntax errors remain; all remaining errors are pre-existing TS2xxx semantic errors
+
+**Commits:** R78 → `f57e1354`, casing fix → `55705ba1`, ABI index + ClaimFlowModal → in progress
+
