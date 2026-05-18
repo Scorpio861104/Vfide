@@ -1,0 +1,8 @@
+-- Enforce RLS even for table owners to avoid policy bypass by privileged roles.
+ALTER TABLE users FORCE ROW LEVEL SECURITY;
+ALTER TABLE user_portfolios FORCE ROW LEVEL SECURITY;
+ALTER TABLE messages FORCE ROW LEVEL SECURITY;
+ALTER TABLE user_rewards FORCE ROW LEVEL SECURITY;
+ALTER TABLE proposals FORCE ROW LEVEL SECURITY;
+ALTER TABLE endorsements FORCE ROW LEVEL SECURITY;
+ALTER TABLE friendships FORCE ROW LEVEL SECURITY;

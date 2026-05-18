@@ -1,0 +1,51 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <rect width="1200" height="630" fill="#0F0F12"/>
+  <rect width="1200" height="630" fill="url(#bg-gradient)" opacity="0.5"/>
+  
+  <!-- Decorative grid -->
+  <g opacity="0.1">
+    <line x1="0" y1="100" x2="1200" y2="100" stroke="#00F0FF" stroke-width="1"/>
+    <line x1="0" y1="200" x2="1200" y2="200" stroke="#00F0FF" stroke-width="1"/>
+    <line x1="0" y1="300" x2="1200" y2="300" stroke="#00F0FF" stroke-width="1"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#00F0FF" stroke-width="1"/>
+    <line x1="0" y1="500" x2="1200" y2="500" stroke="#00F0FF" stroke-width="1"/>
+  </g>
+  
+  <!-- Logo mark -->
+  <g transform="translate(100, 155)">
+    <path d="M72 56H114L192 320L176 320L72 56Z" fill="#1E2E3C"/>
+    <path d="M328 56H286L208 320H224L328 56Z" fill="#2A3F4F"/>
+    <path d="M72 56L200 370L328 56" stroke="#17E8F0" stroke-width="3" opacity="0.8"/>
+    <circle cx="200" cy="370" r="7" fill="#00E8F0"/>
+    <circle cx="200" cy="370" r="14" fill="#00E8F0" fill-opacity="0.14"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="480" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="bold" fill="#F5F3E8">VFIDE</text>
+  <text x="480" y="360" font-family="system-ui, -apple-system, sans-serif" font-size="36" fill="#00F0FF">Decentralized Payment Protocol</text>
+  
+  <!-- Features -->
+  <g transform="translate(480, 420)">
+    <text font-family="system-ui, sans-serif" font-size="24" fill="#A0A0A5">
+      <tspan>✓ 0% Payment Fees</tspan>
+      <tspan x="300">✓ Trust Scoring</tspan>
+      <tspan x="550">✓ DAO Governance</tspan>
+    </text>
+  </g>
+  
+  <!-- Bottom accent line -->
+  <rect x="0" y="610" width="1200" height="20" fill="url(#accent-gradient)"/>
+  
+  <defs>
+    <linearGradient id="bg-gradient" x1="0" y1="0" x2="1200" y2="630">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#0080FF" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="accent-gradient" x1="0" y1="0" x2="1200" y2="0">
+      <stop offset="0%" stop-color="#00F0FF"/>
+      <stop offset="50%" stop-color="#0080FF"/>
+      <stop offset="100%" stop-color="#00F0FF"/>
+    </linearGradient>
+  </defs>
+</svg>

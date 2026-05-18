@@ -1,0 +1,175 @@
+'use client';
+
+/**
+ * VaultSecuritySection — Emergency-pause / "panic button" panel.
+ *
+ * Pre-cleanup, this component branched on `supportsDuration` from
+ * `useSelfPanic` and rendered a duration dropdown (1h / 6h / 24h /
+ * 3d / 7d) for the case where it was true. The CardBoundVault `pause()`
+ * function takes no duration argument and stays paused until manually
+ * unpaused, so `supportsDuration` is hard-coded to false. The duration
+ * dropdown branch was never reachable — removed.
+ *
+ * Also dropped the unused `panicDuration` state and the unused
+ * `durationHours` parameter on `selfPanic`.
+ */
+
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertTriangle, Clock, Lock, Shield } from 'lucide-react';
+
+import { GlassCard } from '@/components/ui/GlassCard';
+import { useQuarantineStatus, useSelfPanic } from '@/lib/vfide-hooks';
+
+export function VaultSecuritySection({ vaultAddress }: { vaultAddress: `0x${string}` | null | undefined }) {
+  const quarantineData = useQuarantineStatus(vaultAddress || undefined);
+  const { selfPanic, isPanicking, isAvailable: isPanicAvailable } = useSelfPanic();
+
+  const [showPanicConfirm, setShowPanicConfirm] = useState(false);
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+
+  useEffect(() => {
+    // Update time every minute for countdown
+    const interval = setInterval(() => {
+      setNow(Math.floor(Date.now() / 1000));
+    }, 60000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  const quarantineRemaining = Math.max(0, quarantineData.quarantineUntil - now);
+  const hasTimer = quarantineData.supportsTimer && quarantineRemaining > 0;
+  const isQuarantined = quarantineData.isQuarantined || hasTimer;
+  const remainingHours = Math.floor(quarantineRemaining / 3600);
+  const remainingMinutes = Math.floor((quarantineRemaining % 3600) / 60);
+
+  const canPanic = isPanicAvailable && !isQuarantined;
+
+  const handlePanic = () => {
+    if (!canPanic || isPanicking) return;
+    selfPanic();
+    setShowPanicConfirm(false);
+  };
+
+  if (!vaultAddress) return null;
+
+  return (
+    <section className="py-8">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <GlassCard
+          className={`p-6 ${isQuarantined ? 'border-red-500/50' : 'border-white/10'}`}
+          hover={false}
+          gradient={isQuarantined ? "red" : undefined}
+        >
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <motion.div
+                animate={isQuarantined ? { scale: [1, 1.1, 1] } : {}}
+                transition={{ duration: 2, repeat: Infinity }}
+                className={`p-4 rounded-2xl flex-shrink-0 ${isQuarantined ? 'bg-red-500/20' : 'bg-cyan-500/20'}`}
+              >
+                {isQuarantined ? (
+                  <Lock className="w-8 h-8 text-red-400" />
+                ) : (
+                  <Shield className="w-8 h-8 text-cyan-400" />
+                )}
+              </motion.div>
+              <div className="min-w-0">
+                <h3 className="text-xl font-bold text-white">
+                  {isQuarantined ? 'Vault Quarantined' : 'Emergency Security'}
+                </h3>
+                <p className="text-white/60 text-sm">
+                  {isQuarantined
+                    ? hasTimer
+                      ? `Locked for ${remainingHours}h ${remainingMinutes}m`
+                      : 'Paused until you explicitly unpause the vault'
+                    : 'Suspect compromise? Lock immediately.'}
+                </p>
+                {!isQuarantined && (
+                  <p className="text-white/40 text-xs mt-2">
+                    Guardian recovery stays available while assets are locked.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {!showPanicConfirm ? (
+                <motion.button
+                  key="panic-btn"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  whileHover={{ scale: canPanic ? 1.05 : 1 }}
+                  whileTap={{ scale: canPanic ? 0.95 : 1 }}
+                  onClick={() => setShowPanicConfirm(true)}
+                  disabled={!canPanic || isQuarantined}
+                  className={`px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 flex-shrink-0 ${
+                    isQuarantined
+                      ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                      : canPanic
+                        ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25'
+                        : 'bg-white/10 text-white/40 cursor-not-allowed'
+                  }`}
+                >
+                  {isQuarantined ? <Lock size={18} /> : <AlertTriangle size={18} />}
+                  {isQuarantined ? 'Already Locked' : 'Panic Button'}
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="panic-confirm"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="flex flex-col sm:flex-row items-center gap-3"
+                >
+                  <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white/70 text-sm">
+                    This action pauses the vault until it is manually unpaused.
+                  </div>
+                  <button
+                    onClick={handlePanic}
+                    disabled={isPanicking}
+                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold disabled:opacity-50"
+                  >
+                    {isPanicking ? 'Locking...' : 'Confirm Lock'}
+                  </button>
+                  <button
+                    onClick={() => setShowPanicConfirm(false)}
+                    className="px-4 py-2 text-white/60 hover:text-white rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {isQuarantined && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-4 pt-4 border-t border-white/10"
+            >
+              {hasTimer ? (
+                <div className="flex items-center gap-2 text-red-400">
+                  <Clock size={16} />
+                  <span className="text-sm">
+                    Auto-unlock in <strong>{remainingHours}h {remainingMinutes}m</strong>
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-red-400">
+                  <Lock size={16} />
+                  <span className="text-sm">Manual unpause required to resume withdrawals and transfers.</span>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </GlassCard>
+      </div>
+    </section>
+  );
+}
+

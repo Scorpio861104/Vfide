@@ -1,0 +1,402 @@
+#!/usr/bin/env node
+
+/**
+ * Pre-Deployment Validation Gate
+ * 
+ * Runs all critical security, build, and integration checks before allowing deployment.
+ * Orchestrates verification scripts and prevents deployment if validation fails.
+ * 
+ * Usage:
+ *   npm run validate:deploy [--force-continue]
+ * 
+ * Exit codes:
+ *   0 = all checks passed
+ *   1 = one or more critical checks failed (deployment blocked)
+ *   2 = warning (passed but with warnings)
+ */
+
+import { execSync } from 'node:child_process';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import path from 'node:path';
+import { Contract, JsonRpcProvider } from 'ethers';
+
+const RESET = '\x1b[0m';
+const RED = '\x1b[31m';
+const GREEN = '\x1b[32m';
+const YELLOW = '\x1b[33m';
+const BLUE = '\x1b[36m';
+const BOLD = '\x1b[1m';
+
+const args = process.argv.slice(2);
+const FORCE_CONTINUE = args.includes('--force-continue');
+
+/**
+ * Validation check result
+ */
+class CheckResult {
+  name: string;
+  passed: boolean;
+  output: string;
+  warnings: string[];
+
+  constructor(name: string, passed: boolean, output = '', warnings: string[] = []) {
+    this.name = name;
+    this.passed = passed;
+    this.output = output;
+    this.warnings = warnings;
+  }
+
+  isSuccess(): boolean {
+    return this.passed && this.warnings.length === 0;
+  }
+
+  isCritical(): boolean {
+    return !this.passed;
+  }
+}
+
+type DeploymentBook = Record<string, string>;
+
+type DeploymentManifest = {
+  addresses?: DeploymentBook;
+};
+
+function isAddressLike(value: string | undefined | null): value is string {
+  return typeof value === 'string' && /^0x[a-fA-F0-9]{40}$/.test(value.trim());
+}
+
+function pickDeploymentManifestPath(network: string): string | null {
+  const explicit = process.env.DEPLOYMENT_FILE?.trim();
+  if (explicit) {
+    const resolved = path.resolve(process.cwd(), explicit);
+    return existsSync(resolved) ? resolved : null;
+  }
+
+  const networkBookPath = path.join(process.cwd(), '.deployments', `${network}.json`);
+  if (existsSync(networkBookPath)) {
+    return networkBookPath;
+  }
+
+  const rootCandidates = readdirSync(process.cwd())
+    .filter((name) => /^deployments(-solo)?-.*\.json$/i.test(name))
+    .map((name) => ({
+      manifestPath: path.join(process.cwd(), name),
+      mtimeMs: statSync(path.join(process.cwd(), name)).mtimeMs,
+    }))
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+
+  return rootCandidates[0]?.manifestPath ?? null;
+}
+
+function loadDeploymentBook(manifestPath: string): DeploymentBook {
+  const raw = JSON.parse(readFileSync(manifestPath, 'utf8')) as DeploymentBook | DeploymentManifest;
+  if ('addresses' in raw && raw.addresses && typeof raw.addresses === 'object') {
+    return raw.addresses;
+  }
+  return raw as DeploymentBook;
+}
+
+async function runOnChainOwnershipChecks(): Promise<CheckResult> {
+  const network = process.env.HARDHAT_NETWORK ?? 'hardhat';
+  const manifestPath = pickDeploymentManifestPath(network);
+
+  if (!manifestPath) {
+    return new CheckResult(
+      'on-chain ownership/DAO drift check',
+      true,
+      '',
+      ['deployment manifest missing (set DEPLOYMENT_FILE=<path> to enable check)']
+    );
+  }
+
+  const rpcUrl = process.env.RPC_URL?.trim();
+  const deployer = process.env.DEPLOYER_ADDRESS?.trim();
+  if (!rpcUrl || !isAddressLike(deployer)) {
+    return new CheckResult(
+      'on-chain ownership/DAO drift check',
+      true,
+      '',
+      ['RPC_URL and DEPLOYER_ADDRESS are required for on-chain ownership validation (skipped)']
+    );
+  }
+
+  const provider = new JsonRpcProvider(rpcUrl);
+  const deployerLc = deployer.toLowerCase();
+  const book = loadDeploymentBook(manifestPath);
+
+  const ownerAbi = ['function owner() view returns (address)'];
+  const daoAbi = ['function dao() view returns (address)'];
+  const adminAbi = ['function admin() view returns (address)'];
+
+  const leftovers: string[] = [];
+
+  const entries = Object.entries(book).filter(([, addr]) => isAddressLike(addr));
+  for (const [name, addr] of entries) {
+    const checks: Array<{ kind: 'owner' | 'dao' | 'admin'; abi: string[] }> = [
+      { kind: 'owner', abi: ownerAbi },
+      { kind: 'dao', abi: daoAbi },
+      { kind: 'admin', abi: adminAbi },
+    ];
+
+    for (const check of checks) {
+      try {
+        const c = new Contract(addr, check.abi, provider);
+        const viewFn = (c as Record<string, (() => Promise<unknown>) | undefined>)[check.kind];
+        if (typeof viewFn !== 'function') continue;
+        const value = String(await viewFn()).toLowerCase();
+        if (value === deployerLc) {
+          leftovers.push(`${name} (${addr}) -> ${check.kind} still deployer`);
+        }
+      } catch {
+        // Contract may not implement this view; ignore.
+      }
+    }
+  }
+
+  if (leftovers.length > 0) {
+    return new CheckResult(
+      'on-chain ownership/DAO drift check',
+      false,
+      [`manifest: ${manifestPath}`, ...leftovers].join('\n')
+    );
+  }
+
+  return new CheckResult('on-chain ownership/DAO drift check', true);
+}
+
+/**
+ * Run a shell command and capture output
+ */
+function runCommand(cmd: string, description: string, critical = true): CheckResult {
+  console.log(`\n${BLUE}Running:${RESET} ${description}`);
+  console.log(`${BLUE}$${RESET} ${cmd}`);
+
+  try {
+    const output = execSync(cmd, { encoding: 'utf8', stdio: 'pipe' });
+    console.log(`${GREEN}✓ Passed${RESET}`);
+    return new CheckResult(description, true, output);
+  } catch (error: any) {
+    const output = error.stdout || error.stderr || error.message;
+    if (critical) {
+      console.error(`${RED}✗ FAILED${RESET}`);
+      console.error(output);
+      return new CheckResult(description, false, output);
+    } else {
+      console.warn(`${YELLOW}⚠ Warning${RESET}`);
+      return new CheckResult(description, true, output, [String(output)]);
+    }
+  }
+}
+
+/**
+ * Main validation suite
+ */
+async function runValidationSuite(): Promise<void> {
+  console.log(`\n${BOLD}${BLUE}╔════════════════════════════════════════════════════════╗${RESET}`);
+  console.log(`${BOLD}${BLUE}║  VFIDE Pre-Deployment Validation Gate                  ║${RESET}`);
+  console.log(`${BOLD}${BLUE}╚════════════════════════════════════════════════════════╝${RESET}\n`);
+
+  const results: CheckResult[] = [];
+  let hasWarnings = false;
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TIER 1: Build & Compile Checks (Critical)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  console.log(`\n${BOLD}${BLUE}TIER 1: Build & Compile Checks${RESET}`);
+  console.log('─'.repeat(60));
+
+  results.push(runCommand(
+    'npm run -s typecheck',
+    'TypeScript type checking',
+    true
+  ));
+
+  results.push(runCommand(
+    'npm run contract:verify:frontend-abi-parity',
+    'Frontend ABI parity verification',
+    true
+  ));
+
+  results.push(runCommand(
+    'npm run -s contract:verify:all:critical:local',
+    'Critical contract verify suite (local)',
+    true
+  ));
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TIER 2: Security Checks (Critical)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  console.log(`\n${BOLD}${BLUE}TIER 2: Security & Infrastructure Checks${RESET}`);
+  console.log('─'.repeat(60));
+
+  // Check proxy security layer exists and remains the source of truth.
+  const proxyExists = existsSync('proxy.ts');
+  console.log(`\n${BLUE}Running:${RESET} Root proxy security check`);
+  if (proxyExists) {
+    const proxySource = readFileSync('proxy.ts', 'utf8');
+    const cspHandledInProxy = proxySource.includes('Content-Security-Policy');
+    if (cspHandledInProxy) {
+      console.log(`${GREEN}✓ Passed${RESET} (proxy.ts is the CSP/CSRF source of truth)`);
+      results.push(new CheckResult('proxy security layer aligned', true));
+    } else {
+      console.error(`${RED}✗ FAILED${RESET} (proxy.ts exists but does not handle CSP)`);
+      results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts does not contain Content-Security-Policy logic'));
+    }
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (proxy.ts not found)`);
+    results.push(new CheckResult('proxy security layer aligned', false, 'proxy.ts not found'));
+  }
+
+  // Check Next.js image config is restricted to explicit hosts
+  console.log(`\n${BLUE}Running:${RESET} Next image domain restriction check`);
+  const nextConfig = readFileSync('next.config.ts', 'utf8');
+  const hasRestrictedImageConfig = nextConfig.includes('remotePatterns') && !nextConfig.includes('images: { domains: ["*"]');
+  if (hasRestrictedImageConfig) {
+    console.log(`${GREEN}✓ Passed${RESET} (next/image remote hosts are explicitly allowlisted)`);
+    results.push(new CheckResult('next image domains restricted', true));
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (next/image remote host restrictions missing)`);
+    results.push(new CheckResult('next image domains restricted', false, 'next.config.ts is missing restricted remotePatterns'));
+  }
+
+  // Check DB RLS context wiring is active
+  console.log(`\n${BLUE}Running:${RESET} DB session context / RLS check`);
+  const dbSource = readFileSync('lib/db.ts', 'utf8');
+  const hasRlsSessionContext =
+    dbSource.includes("set_config('app.current_user_address'") &&
+    (dbSource.includes('runWithDbUserAddressContext') || dbSource.includes('AsyncLocalStorage'));
+  if (hasRlsSessionContext) {
+    console.log(`${GREEN}✓ Passed${RESET} (database user context is wired for RLS)`);
+    results.push(new CheckResult('db RLS session context wired', true));
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (database user context wiring missing)`);
+    results.push(new CheckResult('db RLS session context wired', false, 'lib/db.ts is missing transaction-scoped user context wiring'));
+  }
+
+  // Check dead getAuthHeaders usage is gone
+  console.log(`\n${BLUE}Running:${RESET} Dead getAuthHeaders usage check`);
+  const authHeaderReferences = [
+    'app',
+    'components',
+    'lib',
+  ]
+    .filter((dir) => existsSync(dir))
+    .flatMap((dir) => {
+      try {
+        const output = execSync(`grep -R \"getAuthHeaders\" ${dir} --include='*.ts' --include='*.tsx' || true`, { encoding: 'utf8' });
+        return output.split('\n').filter(Boolean);
+      } catch {
+        return [];
+      }
+    });
+
+  if (authHeaderReferences.length === 0) {
+    console.log(`${GREEN}✓ Passed${RESET} (no dead getAuthHeaders references remain)`);
+    results.push(new CheckResult('dead getAuthHeaders usage removed', true));
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (dead getAuthHeaders references found)`);
+    results.push(new CheckResult('dead getAuthHeaders usage removed', false, authHeaderReferences.join('\n')));
+  }
+
+  // Check .dockerignore exists
+  const dockerignoreExists = existsSync('.dockerignore');
+  console.log(`\n${BLUE}Running:${RESET} Docker build context hardening`);
+  if (dockerignoreExists) {
+    console.log(`${GREEN}✓ Passed${RESET} (.dockerignore exists)`);
+    results.push(new CheckResult('.dockerignore exists', true));
+  } else {
+    console.error(`${RED}✗ FAILED${RESET} (.dockerignore not found)`);
+    results.push(new CheckResult('.dockerignore exists', false, '.dockerignore not found'));
+  }
+
+  // On-chain ownership/DAO drift check (#521)
+  console.log(`\n${BLUE}Running:${RESET} On-chain ownership/DAO drift check`);
+  const onchainOwnershipCheck = await runOnChainOwnershipChecks();
+  results.push(onchainOwnershipCheck);
+  if (onchainOwnershipCheck.passed && onchainOwnershipCheck.warnings.length === 0) {
+    console.log(`${GREEN}✓ Passed${RESET} (no deployer-owned owner/dao/admin roles detected)`);
+  } else if (!onchainOwnershipCheck.passed) {
+    console.error(`${RED}✗ FAILED${RESET}`);
+    if (onchainOwnershipCheck.output) {
+      console.error(onchainOwnershipCheck.output);
+    }
+  } else {
+    hasWarnings = true;
+    console.warn(`${YELLOW}⚠ Warning${RESET} ${onchainOwnershipCheck.warnings.join('; ')}`);
+  }
+
+  // Check health endpoint is not leaking version
+  console.log(`\n${BLUE}Running:${RESET} Health endpoint security check`);
+  const healthRoute = readFileSync('app/api/health/route.ts', 'utf8');
+  const productionBranchMatch = healthRoute.match(/if \(process\.env\.NODE_ENV === 'production'\) \{([\s\S]*?)\n  \}/);
+  const productionBranch = productionBranchMatch?.[1] ?? '';
+  const productionPayloadHidesVersion = productionBranch.includes('ok: envHealthy') &&
+    productionBranch.includes('status') &&
+    !productionBranch.includes('version');
+  if (productionPayloadHidesVersion) {
+    console.log(`${GREEN}✓ Passed${RESET} (version not leaked in production)`);
+    results.push(new CheckResult('health endpoint secure', true));
+  } else {
+    console.warn(`${YELLOW}⚠ Warning${RESET} (health endpoint may leak version)`);
+    hasWarnings = true;
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // TIER 3: Test & Coverage (Recommended)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  console.log(`\n${BOLD}${BLUE}TIER 3: Test & Coverage (Recommended)${RESET}`);
+  console.log('─'.repeat(60));
+
+  results.push(runCommand(
+    'npm test -- --listTests 2>&1 | wc -l',
+    'Test suite inventory',
+    false // Non-critical
+  ));
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SUMMARY
+  // ──────────────────────────────────────────────────────────────────────────
+
+  console.log(`\n${BOLD}${BLUE}╔════════════════════════════════════════════════════════╗${RESET}`);
+  console.log(`${BOLD}${BLUE}║  Validation Summary                                    ║${RESET}`);
+  console.log(`${BOLD}${BLUE}╚════════════════════════════════════════════════════════╝${RESET}\n`);
+
+  const criticalFails = results.filter(r => r.isCritical());
+  const passed = results.filter(r => r.passed);
+  const withWarnings = results.filter(r => r.warnings.length > 0);
+
+  console.log(`Total Checks:    ${results.length}`);
+  console.log(`${GREEN}Passed:${RESET}          ${passed.length}`);
+  if (criticalFails.length > 0) {
+    console.log(`${RED}Failed:${RESET}          ${criticalFails.length}`);
+  }
+  if (withWarnings.length > 0) {
+    console.log(`${YELLOW}Warnings:${RESET}        ${withWarnings.length}`);
+  }
+
+  if (criticalFails.length > 0) {
+    console.log(`\n${RED}${BOLD}❌ DEPLOYMENT BLOCKED - Critical checks failed:${RESET}`);
+    criticalFails.forEach((r, i) => {
+      console.log(`   ${i + 1}. ${r.name}`);
+    });
+    process.exit(1);
+  }
+
+  if (hasWarnings && !FORCE_CONTINUE) {
+    console.log(`\n${YELLOW}${BOLD}⚠️  Deployment has warnings${RESET}`);
+    console.log('Review the warnings above, or use --force-continue to override.');
+    process.exit(2);
+  }
+
+  console.log(`\n${GREEN}${BOLD}✅ All critical checks passed. Deployment approved.${RESET}\n`);
+  process.exit(0);
+}
+
+// Run validation
+runValidationSuite().catch(err => {
+  console.error(`${RED}Unexpected error:${RESET}`, err);
+  process.exit(1);
+});

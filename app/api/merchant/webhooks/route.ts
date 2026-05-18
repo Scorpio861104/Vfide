@@ -1,0 +1,376 @@
+/**
+ * Merchant Webhook Endpoints API
+ * 
+ * GET    — List webhook endpoints for authenticated merchant
+ * POST   — Register a new webhook endpoint
+ * PATCH  — Update an existing webhook endpoint
+ * DELETE — Remove a webhook endpoint
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createCipheriv, createHash, randomBytes } from 'crypto';
+import { isIP } from 'node:net';
+import { query } from '@/lib/db';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod4';
+
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
+const VALID_EVENTS = [
+  'payment.completed',
+  'payment.failed',
+  'refund.initiated',
+  'refund.completed',
+  'escrow.created',
+  'escrow.funded',
+  'escrow.released',
+  'escrow.disputed',
+  'escrow.resolved',
+  'invoice.created',
+  'invoice.paid',
+  'invoice.overdue',
+  'subscription.created',
+  'subscription.renewed',
+  'subscription.cancelled',
+  'subscription.payment_failed',
+  'merchant.suspended',
+  'merchant.reinstated',
+] as const;
+
+const webhookCreateSchema = z.object({
+  url: z.string().trim(),
+  events: z.array(z.enum(VALID_EVENTS)).min(1),
+  description: z.string().max(200).optional(),
+});
+
+const webhookPatchSchema = z.object({
+  id: z.number().int().positive(),
+  url: z.string().trim().optional(),
+  events: z.array(z.enum(VALID_EVENTS)).min(1).optional(),
+  description: z.string().max(200).optional(),
+  status: z.enum(['active', 'paused']).optional(),
+});
+
+function deriveWebhookCryptoKey(): Buffer | null {
+  const keyMaterial = process.env.WEBHOOK_SECRET_ENCRYPTION_KEY;
+  if (!keyMaterial || keyMaterial.trim().length < 32) {
+    return null;
+  }
+
+  return createHash('sha256').update(keyMaterial).digest();
+}
+
+function encryptWebhookSecret(secret: string): { encrypted: string; iv: string } | null {
+  const key = deriveWebhookCryptoKey();
+  if (!key) return null;
+
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  const payload = Buffer.concat([encrypted, authTag]).toString('base64');
+
+  return {
+    encrypted: payload,
+    iv: iv.toString('base64'),
+  };
+}
+
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return false;
+
+    const hostname = parsed.hostname.toLowerCase();
+    if (!hostname) return false;
+
+    // F-BE-007 FIX: also block 0.0.0.0 (Linux: routes to localhost and any
+    // bound interface), explicit `0.x.x.x` (this-network), and reject any
+    // hostname that contains non-DNS-safe characters which can hide
+    // alternate-form numeric encodings (octal 0177.0.0.1, hex 0x7f000001,
+    // dotless decimal 2130706433). When isIP() returns 0 (not a numeric IP)
+    // and the hostname doesn't match a strict DNS label pattern, refuse it.
+    if (hostname === 'localhost' || hostname.endsWith('.local')) return false;
+
+    // Block private/link-local/loopback literal IPs.
+    const ipVersion = isIP(hostname);
+    if (ipVersion === 4) {
+      const octets = hostname.split('.').map((v) => Number(v));
+      if (octets.length !== 4 || octets.some((o) => !Number.isInteger(o) || o < 0 || o > 255)) {
+        return false;
+      }
+      const a = octets[0]!;
+      const b = octets[1]!;
+      // F-BE-007 FIX: 0.0.0.0/8 is "this network" (RFC 1122) and on Linux
+      // routes to localhost. Adding 100.64.0.0/10 (CGNAT, RFC 6598) which
+      // can also expose internal infrastructure.
+      if (a === 0) return false;
+      if (a === 10 || a === 127) return false;
+      if (a === 192 && b === 168) return false;
+      if (a === 169 && b === 254) return false;
+      if (a === 172 && b >= 16 && b <= 31) return false;
+      if (a === 100 && b >= 64 && b <= 127) return false;
+    }
+
+    if (ipVersion === 6) {
+      const normalized = hostname.replace(/\[|\]/g, '').toLowerCase();
+      if (normalized === '::1' || normalized === '::') return false;
+      if (normalized.startsWith('fe80:') || normalized.startsWith('fc') || normalized.startsWith('fd')) return false;
+      // F-BE-007 FIX: IPv4-mapped IPv6 (::ffff:a.b.c.d) tunnels through to
+      // the underlying IPv4 stack; previous logic only caught ::ffff:127.x
+      // and ::ffff:10.x. Cover the full mapped private/loopback space and
+      // also block ::ffff:0.0.0.0 -> ::ffff:0.x.x.x and IPv4-compatible
+      // (deprecated) ::a.b.c.d form.
+      const v4MappedMatch = normalized.match(/^::ffff:(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+      const v4CompatMatch = normalized.match(/^::(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+      const v4Match = v4MappedMatch || v4CompatMatch;
+      if (v4Match) {
+        const a = Number(v4Match[1]);
+        const b = Number(v4Match[2]);
+        if (a === 0 || a === 10 || a === 127) return false;
+        if (a === 192 && b === 168) return false;
+        if (a === 169 && b === 254) return false;
+        if (a === 172 && b >= 16 && b <= 31) return false;
+        if (a === 100 && b >= 64 && b <= 127) return false;
+      }
+    }
+
+    // F-BE-007 FIX: when not a numeric IP, require strict DNS-label format
+    // to refuse alternate numeric encodings (hex 0x7f000001, octal 0177...,
+    // dotless decimal 2130706433) that some URL parsers would later treat as
+    // an IP address during DNS resolution.
+    if (ipVersion === 0) {
+      const dnsLabel = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/;
+      if (!dnsLabel.test(hostname)) return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.debug('[Webhooks] Invalid URL parsing failed', error);
+    return false;
+  }
+}
+
+function getAuthAddress(user: JWTPayload): string | null {
+  const address = typeof user.address === 'string'
+    ? user.address.trim().toLowerCase()
+    : '';
+  if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
+    return null;
+  }
+  return address;
+}
+
+// ─────────────────────────── GET: List endpoints
+async function getHandler(request: NextRequest, user: JWTPayload) {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const result = await query(
+      `SELECT e.id, e.url, e.events, e.status, e.description, e.failure_count,
+              e.last_success_at, e.last_failure_at, e.created_at,
+              COALESCE(
+                (SELECT json_agg(sub ORDER BY sub.created_at DESC)
+                 FROM (
+                   SELECT d.id, d.event_type, d.response_status, d.delivered, d.attempt, d.created_at
+                   FROM merchant_webhook_deliveries d
+                   WHERE d.endpoint_id = e.id
+                   ORDER BY d.created_at DESC
+                   LIMIT 10
+                 ) sub),
+                '[]'::json
+              ) AS recent_deliveries
+       FROM merchant_webhook_endpoints e
+       WHERE e.merchant_address = $1
+       ORDER BY e.created_at DESC`,
+      [authAddress]
+    );
+
+    return NextResponse.json({ endpoints: result.rows });
+  } catch (error) {
+    logger.error('[Webhooks GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch webhooks' }, { status: 500 });
+  }
+}
+
+// ─────────────────────────── POST: Create endpoint
+async function postHandler(request: NextRequest, user: JWTPayload) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const parsedBody = webhookCreateSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
+    const { url, events, description } = body;
+
+    // Validate URL (HTTPS only)
+    if (typeof url !== 'string' || !isValidUrl(url)) {
+      return NextResponse.json({ error: 'URL must be a valid HTTPS URL' }, { status: 400 });
+    }
+
+    // Validate events
+    // Limit endpoints per merchant
+    const countResult = await query(
+      'SELECT COUNT(*) as count FROM merchant_webhook_endpoints WHERE merchant_address = $1',
+      [authAddress]
+    );
+    if (Number(countResult.rows[0]?.count) >= 10) {
+      return NextResponse.json({ error: 'Maximum 10 webhook endpoints per merchant' }, { status: 400 });
+    }
+
+    // Generate signing secret
+    const secret = randomBytes(32).toString('hex');
+    const encryptedSecret = encryptWebhookSecret(secret);
+    if (!encryptedSecret) {
+      logger.error('[Webhooks POST] Missing WEBHOOK_SECRET_ENCRYPTION_KEY for secure secret storage');
+      return NextResponse.json({ error: 'Webhook subsystem is not configured securely' }, { status: 503 });
+    }
+
+    const result = await query(
+      `INSERT INTO merchant_webhook_endpoints
+       (merchant_address, url, secret, secret_encrypted, secret_iv, events, description)
+       VALUES ($1, $2, NULL, $3, $4, $5, $6)
+       RETURNING id, url, events, status, description, created_at`,
+      [authAddress, url, encryptedSecret.encrypted, encryptedSecret.iv, events, description ?? null]
+    );
+
+    return NextResponse.json({
+      endpoint: result.rows[0],
+      secret, // Show once — merchant must store it
+    }, { status: 201 });
+  } catch (error) {
+    logger.error('[Webhooks POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to create webhook' }, { status: 500 });
+  }
+}
+
+// ─────────────────────────── PATCH: Update endpoint
+async function patchHandler(request: NextRequest, user: JWTPayload) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const parsedBody = webhookPatchSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
+    const { id, url, events, description, status } = body;
+
+    // Verify ownership
+    const existing = await query(
+      'SELECT id FROM merchant_webhook_endpoints WHERE id = $1 AND merchant_address = $2',
+      [id, authAddress]
+    );
+    if (existing.rows.length === 0) {
+      return NextResponse.json({ error: 'Webhook endpoint not found' }, { status: 404 });
+    }
+
+    // Build dynamic update
+    const updates: string[] = ['updated_at = NOW()'];
+    const params: (string | number | boolean | string[] | null)[] = [];
+    let paramIndex = 1;
+
+    if (typeof url === 'string') {
+      if (!isValidUrl(url)) {
+        return NextResponse.json({ error: 'URL must be a valid HTTPS URL' }, { status: 400 });
+      }
+      updates.push(`url = $${paramIndex++}`);
+      params.push(url);
+    }
+    if (events) {
+      updates.push(`events = $${paramIndex++}`);
+      params.push(events);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      params.push(description);
+    }
+    if (status) {
+      updates.push(`status = $${paramIndex++}`);
+      params.push(status);
+      // Reset failure count when reactivating
+      if (status === 'active') {
+        updates.push('failure_count = 0');
+      }
+    }
+
+    params.push(id);
+    const result = await query(
+      `UPDATE merchant_webhook_endpoints SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      params
+    );
+
+    return NextResponse.json({ endpoint: result.rows[0] });
+  } catch (error) {
+    logger.error('[Webhooks PATCH] Error:', error);
+    return NextResponse.json({ error: 'Failed to update webhook' }, { status: 500 });
+  }
+}
+
+// ─────────────────────────── DELETE: Remove endpoint
+async function deleteHandler(request: NextRequest, user: JWTPayload) {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = getAuthAddress(user);
+  if (!authAddress) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const { searchParams } = new URL(request.url);
+    let id = searchParams.get('id');
+
+    if (!id) {
+      const requestBody = await request.text();
+      if (requestBody.trim().length > 0) {
+        try {
+          const parsed = JSON.parse(requestBody) as { id?: unknown };
+          if (typeof parsed.id === 'number' || typeof parsed.id === 'string') {
+            id = String(parsed.id);
+          }
+        } catch {
+          return NextResponse.json({ error: 'Valid endpoint ID required' }, { status: 400 });
+        }
+      }
+    }
+
+    if (!id || !/^\d+$/.test(id)) {
+      return NextResponse.json({ error: 'Valid endpoint ID required' }, { status: 400 });
+    }
+
+    const result = await query(
+      'DELETE FROM merchant_webhook_endpoints WHERE id = $1 AND merchant_address = $2 RETURNING id',
+      [Number(id), authAddress]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Webhook endpoint not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ deleted: true });
+  } catch (error) {
+    logger.error('[Webhooks DELETE] Error:', error);
+    return NextResponse.json({ error: 'Failed to delete webhook' }, { status: 500 });
+  }
+}
+
+export const GET = withAuth(getHandler);
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);
+export const DELETE = withAuth(deleteHandler);

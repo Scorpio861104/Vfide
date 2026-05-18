@@ -1,0 +1,167 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
+import { query } from '@/lib/db';
+import type { JWTPayload } from '@/lib/auth/jwt';
+
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod4';
+
+const USER_ID_REGEX = /^\d+$/;
+const ENTITY_REGEX = /^[a-zA-Z0-9:_-]{1,64}$/;
+const ADDRESS_PATTERN = /^0x[a-fA-F0-9]{40}$/;
+
+const updateSyncStateSchema = z.object({
+  userId: z.union([z.number().int().positive(), z.string().regex(USER_ID_REGEX)]),
+  entity: z.string().trim().regex(ENTITY_REGEX),
+  lastSyncTimestamp: z.union([z.string(), z.number()]).optional(),
+});
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return ADDRESS_PATTERN.test(value);
+}
+
+export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'api');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
+    : '';
+  if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json({ error: 'userId required' }, { status: 400 });
+    }
+
+    if (!USER_ID_REGEX.test(userId)) {
+      return NextResponse.json({ error: 'Invalid userId format' }, { status: 400 });
+    }
+
+    const ownerResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authenticatedAddress]
+    );
+
+    const authenticatedUserId = ownerResult.rows[0]?.id;
+    if (!authenticatedUserId || authenticatedUserId.toString() !== userId.toString()) {
+      return NextResponse.json(
+        { error: 'You can only access your own sync state' },
+        { status: 403 }
+      );
+    }
+
+    const result = await query(
+      `SELECT * FROM sync_state WHERE user_id = $1`,
+      [userId]
+    );
+
+    return NextResponse.json({ syncState: result.rows[0] || null });
+  } catch (error) {
+    logger.error('[Sync GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch sync state' }, { status: 500 });
+  }
+});
+
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  // Rate limiting
+  const rateLimit = await withRateLimit(request, 'write');
+  if (rateLimit) return rateLimit;
+
+  // Authentication
+  const authenticatedAddress = typeof user?.address === 'string'
+    ? normalizeAddress(user.address)
+    : '';
+  if (!authenticatedAddress || !isAddressLike(authenticatedAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let body: z.infer<typeof updateSyncStateSchema>;
+  try {
+    const rawBody = await request.json();
+    const parsed = updateSyncStateSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    body = parsed.data;
+  } catch (error) {
+    logger.debug('[Sync POST] Invalid JSON body', error);
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  try {
+    const { userId, entity, lastSyncTimestamp } = body;
+
+    const normalizedUserId =
+      typeof userId === 'string' || typeof userId === 'number'
+        ? userId.toString()
+        : null;
+
+    if (!normalizedUserId || typeof entity !== 'string' || entity.trim().length === 0) {
+      return NextResponse.json({ error: 'userId and entity required' }, { status: 400 });
+    }
+
+    const normalizedEntity = entity.trim();
+
+    if (!USER_ID_REGEX.test(normalizedUserId)) {
+      return NextResponse.json({ error: 'Invalid userId format' }, { status: 400 });
+    }
+
+    if (!ENTITY_REGEX.test(normalizedEntity)) {
+      return NextResponse.json({ error: 'Invalid entity format' }, { status: 400 });
+    }
+
+    let syncTimestamp: Date = new Date();
+    if (lastSyncTimestamp !== undefined) {
+      if (typeof lastSyncTimestamp !== 'string' && typeof lastSyncTimestamp !== 'number') {
+        return NextResponse.json({ error: 'Invalid lastSyncTimestamp' }, { status: 400 });
+      }
+
+      const parsedTimestamp = new Date(lastSyncTimestamp);
+      if (Number.isNaN(parsedTimestamp.getTime())) {
+        return NextResponse.json({ error: 'Invalid lastSyncTimestamp' }, { status: 400 });
+      }
+
+      syncTimestamp = parsedTimestamp;
+    }
+
+    const ownerResult = await query(
+      'SELECT id FROM users WHERE wallet_address = $1',
+      [authenticatedAddress]
+    );
+
+    const authenticatedUserId = ownerResult.rows[0]?.id;
+    if (!authenticatedUserId || authenticatedUserId.toString() !== normalizedUserId) {
+      return NextResponse.json(
+        { error: 'You can only update your own sync state' },
+        { status: 403 }
+      );
+    }
+
+    const result = await query(
+      `INSERT INTO sync_state (user_id, entity, last_sync_timestamp)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, entity) DO UPDATE
+       SET last_sync_timestamp = $3
+       RETURNING *`,
+      [normalizedUserId, normalizedEntity, syncTimestamp]
+    );
+
+    return NextResponse.json({ success: true, syncState: result.rows[0] });
+  } catch (error) {
+    logger.error('[Sync POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to update sync state' }, { status: 500 });
+  }
+});

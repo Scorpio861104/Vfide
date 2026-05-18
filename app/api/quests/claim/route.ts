@@ -1,0 +1,195 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getClient } from '@/lib/db';
+import { withAuth, checkOwnership } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod4';
+
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
+const claimQuestRequestSchema = z.object({
+  questId: z.union([z.number().int().positive(), z.string().regex(/^\d+$/)]),
+  userAddress: z.string().trim().regex(ADDRESS_LIKE_REGEX),
+});
+
+function parsePositiveInteger(value: unknown): number | null {
+  const parsed = typeof value === 'number'
+    ? value
+    : (typeof value === 'string' ? Number.parseInt(value, 10) : NaN);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
+/**
+ * POST /api/quests/claim
+ * Claim a completed daily quest reward
+ * 
+ * Security:
+ * - Requires authentication
+ * - Rate limited (5 claims per hour)
+ * - User can only claim their own rewards
+ */
+const postHandler = async (request: NextRequest, user: JWTPayload) => {
+  // Rate limit - strict for claiming rewards
+  const rateLimitResponse = await withRateLimit(request, 'claim');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const requesterAddress = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
+    : '';
+  if (!requesterAddress || !ADDRESS_LIKE_REGEX.test(requesterAddress)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    let body: z.infer<typeof claimQuestRequestSchema>;
+    try {
+      const rawBody = await request.json();
+      const parsed = claimQuestRequestSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Invalid request body' },
+          { status: 400 }
+        );
+      }
+      body = parsed.data;
+    } catch (error) {
+      logger.debug('[Quests Claim] Invalid JSON body', error);
+      return NextResponse.json(
+        { error: 'Invalid JSON body' },
+        { status: 400 }
+      );
+    }
+
+    const { questId, userAddress } = body;
+    const normalizedUserAddress = userAddress.trim().toLowerCase();
+
+    const parsedQuestId = parsePositiveInteger(questId);
+    if (!parsedQuestId) {
+      return NextResponse.json(
+        { error: 'Quest ID must be a positive integer' },
+        { status: 400 }
+      );
+    }
+
+    // Verify user is claiming their own rewards
+    if (!checkOwnership(user, normalizedUserAddress)) {
+      return NextResponse.json(
+        { error: 'You can only claim your own rewards' },
+        { status: 403 }
+      );
+    }
+
+    const client = await getClient();
+
+    try {
+      await client.query('BEGIN');
+
+      // Get user ID
+      const userResult = await client.query(
+        'SELECT id FROM users WHERE wallet_address = $1',
+        [normalizedUserAddress]
+      );
+
+      if (userResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      const userId = userResult.rows[0].id;
+
+      // v19.9 RACE-2 FIX: lock the quest progress row with FOR UPDATE.
+      // Without this, two concurrent /api/quests/claim calls for the
+      // same (user, quest, date) both see claimed=false, both run the
+      // UPDATE (idempotent on the boolean), and both run the XP grant
+      // + reward insert + notification. Result: double-XP + duplicate
+      // reward record + duplicate notification.
+      //
+      // FOR UPDATE makes the second concurrent transaction wait until
+      // the first commits, at which point the second sees claimed=true
+      // and exits with the "already claimed" branch.
+      //
+      // The lock is released automatically at COMMIT/ROLLBACK below.
+      const progressResult = await client.query(`
+        SELECT uqp.*, dq.reward_xp, dq.reward_vfide, dq.title
+        FROM user_quest_progress uqp
+        JOIN daily_quests dq ON uqp.quest_id = dq.id
+        WHERE uqp.user_id = $1 
+          AND uqp.quest_id = $2
+          AND uqp.quest_date = CURRENT_DATE
+          AND uqp.completed = true
+          AND uqp.claimed = false
+        FOR UPDATE OF uqp
+      `, [userId, parsedQuestId]);
+
+      if (progressResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return NextResponse.json(
+          { error: 'Quest not completed or already claimed' },
+          { status: 400 }
+        );
+      }
+
+      const quest = progressResult.rows[0];
+
+      // Mark as claimed
+      await client.query(`
+        UPDATE user_quest_progress
+        SET claimed = true, claimed_at = NOW()
+        WHERE user_id = $1 AND quest_id = $2 AND quest_date = CURRENT_DATE
+      `, [userId, parsedQuestId]);
+
+      // Add XP to user
+      await client.query(`
+        UPDATE user_gamification
+        SET xp = xp + $1,
+            total_xp = total_xp + $1,
+            level = (xp + $1) / 100,
+            updated_at = NOW()
+        WHERE user_id = $2
+      `, [quest.reward_xp, userId]);
+
+      // Create reward record (vfide_earned is 0 — XP-only rewards; token distributions are not offered)
+      await client.query(`
+        INSERT INTO daily_rewards (user_id, reward_date, reward_type, xp_earned, vfide_earned, description, claimed, claimed_at)
+        VALUES ($1, CURRENT_DATE, 'quest_completion', $2, 0, $3, true, NOW())
+      `, [userId, quest.reward_xp, `Completed quest: ${quest.title}`]);
+
+      // Create achievement notification
+      await client.query(`
+        INSERT INTO achievement_notifications (user_id, notification_type, title, message, icon, reward_xp, reward_vfide)
+        VALUES ($1, 'quest_complete', $2, $3, '✅', $4, 0)
+      `, [
+        userId,
+        'Quest Complete!',
+        `You've completed ${quest.title}`,
+        quest.reward_xp,
+      ]);
+
+      await client.query('COMMIT');
+
+      return NextResponse.json({
+        success: true,
+        reward: {
+          xp: quest.reward_xp,
+        },
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    logger.error('Error claiming quest reward:', error);
+    return NextResponse.json(
+      { error: 'Failed to claim reward' },
+      { status: 500 }
+    );
+  }
+}
+
+export const POST = withAuth(postHandler);

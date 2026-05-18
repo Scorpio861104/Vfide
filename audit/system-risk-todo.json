@@ -1,0 +1,1108 @@
+{
+  "meta": {
+    "name": "VFIDE Strict System Risk Backlog",
+    "generatedAt": "2026-03-29",
+    "mode": "micro-chunk strict audit",
+    "statusLegend": [
+      "not-started",
+      "in-review",
+      "validated",
+      "resolved",
+      "accepted-risk",
+      "blocked"
+    ],
+    "severityLegend": [
+      "critical",
+      "high",
+      "medium",
+      "low"
+    ],
+    "policy": "Track every identified failure mode as an actionable todo item."
+  },
+  "chunks": [
+    {
+      "id": "C01",
+      "name": "Build and Validation Orchestration",
+      "objective": "Ensure gates are deterministic and representative of production readiness.",
+      "risks": [
+        {
+          "id": "R-001",
+          "title": "validate:production includes incompatible Jest lane",
+          "problem": "A broad Jest lane can execute ESM Hardhat suites and fail with transformer/runtime mismatch.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Run npm run validate:production",
+            "Confirm no Jest ESM transform errors"
+          ],
+          "evidence": "package.json validate:production now uses test:security:all + test:integration"
+        },
+        {
+          "id": "R-002",
+          "title": "Onchain suite non-determinism in aggregated run",
+          "problem": "Bulk execution via xargs can hide intermittent state leakage and fail unpredictably.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Run npm run test:onchain repeatedly",
+            "Verify consistent pass/fail behavior"
+          ],
+          "evidence": "package.json test:onchain runs one file per invocation with xargs -n 1"
+        },
+        {
+          "id": "R-003",
+          "title": "Production-only env requirements block local validation",
+          "problem": "Contract addresses required for production were treated as hard-required in local runs.",
+          "severity": "medium",
+          "status": "resolved",
+          "checks": [
+            "Run npm run validate:env locally",
+            "Confirm warnings not hard failures for prod-only keys"
+          ],
+          "evidence": "lib/validateProduction.ts marks core contract addresses required=false, production=true"
+        },
+        {
+          "id": "R-004",
+          "title": "Gate duration drift reduces developer compliance",
+          "problem": "Overlong full gates can reduce frequency of local execution before merges.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Measure total runtime for validate:production",
+            "Define fast pre-push subset"
+          ],
+          "evidence": "Measured validate:production runtime at 118 seconds on 2026-03-29."
+        },
+        {
+          "id": "R-005",
+          "title": "No explicit flaky-test quarantine policy",
+          "problem": "Intermittent suites can silently degrade confidence in gate outcomes.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Define retry policy and quarantine tag",
+            "Track historical flake rate"
+          ],
+          "evidence": "Flaky/quarantine policy is now documented in TEST_EXECUTION_GUIDE.md under Flaky Test Policy."
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "name": "Environment and Configuration Safety",
+      "objective": "Prevent misconfiguration in local, CI, and production contexts.",
+      "risks": [
+        {
+          "id": "R-006",
+          "title": "Contract env map and deploy outputs diverge",
+          "problem": "Deployed addresses may not be propagated to all runtime env keys.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Cross-check deploy artifacts with CONTRACT_ENV_VAR_MAP",
+            "Validate every required runtime key is present"
+          ],
+          "evidence": "Automating deploy-output to runtime env propagation requires a canonical deployment manifest source and CI integration not present in this repository state; currently tracked as operational control gap."
+        },
+        {
+          "id": "R-007",
+          "title": "Fallback RPC values mask missing configuration",
+          "problem": "Defaults can hide environment mistakes until runtime incidents.",
+          "severity": "medium",
+          "status": "resolved",
+          "checks": [
+            "Audit fallback behavior in validators and runtime",
+            "Require explicit overrides for production"
+          ],
+          "evidence": "lib/env.ts now fails fast in production when env schema validation fails, eliminating silent fallback masking in production runtime."
+        },
+        {
+          "id": "R-008",
+          "title": "Misleading warning severities",
+          "problem": "Operators may ignore warnings that are operationally critical before launch.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Classify warnings by launch criticality",
+            "Escalate pre-launch blockers"
+          ],
+          "evidence": "Warning semantics are clarified in validate:env, production env parsing now fails fast, and env regression tests cover production invalid-config behavior."
+        },
+        {
+          "id": "R-009",
+          "title": "Env templates drift from runtime map",
+          "problem": "Example env files may miss keys consumed by runtime code.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Generate key diff between .env.local.example and CONTRACT_ENV_VAR_MAP",
+            "Add CI check"
+          ],
+          "evidence": "Strict diff on 2026-03-29: 31/31 CONTRACT_ENV_VAR_MAP keys are present in .env.local.example; no missing runtime keys."
+        },
+        {
+          "id": "R-010",
+          "title": "Secret leakage through NEXT_PUBLIC vars",
+          "problem": "Sensitive values mistakenly prefixed as public are exposed client-side.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Audit all NEXT_PUBLIC values for sensitivity",
+            "Add policy lint rule"
+          ],
+          "evidence": "NEXT_PUBLIC keys reviewed; only public contract/address identifiers found in template, no obvious secret material names."
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "name": "Frontend Route and Rendering Integrity",
+      "objective": "Guarantee routes render correctly across SSR/CSR and auth states.",
+      "risks": [
+        {
+          "id": "R-011",
+          "title": "Runtime route regressions in dynamic pages",
+          "problem": "Dynamic routes can compile but fail under missing params or malformed inputs.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Enumerate dynamic routes and fuzz params",
+            "Verify graceful 404 and error boundaries"
+          ],
+          "evidence": "Missing-param guards added for app/invite/[code], app/checkout/[id], app/product/[id], and app/store/[slug]; focused Jest regressions verify each route now renders a stable invalid/not-found state instead of remaining in loading state."
+        },
+        {
+          "id": "R-012",
+          "title": "Hydration mismatch under wallet state changes",
+          "problem": "SSR output can diverge from client wallet-dependent UI.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Run hydration warning scan in dev/prod",
+            "Test with disconnected and connected states"
+          ],
+          "evidence": "Wallet-dependent mount guards exist across connection components, and route-level coverage now verifies the vault page keeps its connect action disabled until RainbowKit reports mounted. Existing hydration/performance tests remain supplemental; a full route-wide warning sweep is still not captured as a separate artifact."
+        },
+        {
+          "id": "R-013",
+          "title": "Error boundary coverage gaps",
+          "problem": "Unhandled component exceptions can break route trees.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Map route-level boundaries",
+            "Inject synthetic throw paths"
+          ],
+          "evidence": "Boundary component suites and app/error coverage already existed, and route-level fault injection now verifies the notifications page contains a thrown NotificationList render failure behind the real page boundary instead of crashing the route tree. Full route-by-route fault injection is still not exhaustive."
+        },
+        {
+          "id": "R-014",
+          "title": "Bundle bloat on critical routes",
+          "problem": "Large route bundles can degrade mobile load and interaction latency.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Run bundle analyzer on top routes",
+            "Set per-route budget thresholds"
+          ],
+          "evidence": "LHCI enforcement is now wired to explicit critical routes (`/`, `/dashboard`, `/governance`, `/vault`) and `assert.budgetsFile` now points at lighthouse-budget.json. The blocking performance script now builds the app before running `@lhci/cli autorun`. A fresh Lighthouse artifact was not collected in this pass, so runtime budget results still need execution evidence."
+        },
+        {
+          "id": "R-015",
+          "title": "Feature-flag dead paths",
+          "problem": "Disabled paths may silently rot and break when toggled on.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Matrix test for feature flags",
+            "Add flag-on smoke suite"
+          ],
+          "evidence": "Shared env/schema coverage now includes CHAT/GOVERNANCE/SANCTUM/BETA plus SW and persistent-session-key flags, with focused env regressions passing. Current repo usage shows minimal route-level consumers of these flags, so the main verified risk was env/config drift rather than untested hidden route branches."
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "name": "Wallet and Provider Interaction Layer",
+      "objective": "Guarantee safe and typed RPC flows for user wallets.",
+      "risks": [
+        {
+          "id": "R-016",
+          "title": "Provider unknown-type regression",
+          "problem": "wallet.request returns unknown and can reintroduce type unsafety.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Enforce coercion helper use via lint rule",
+            "Audit direct request() calls"
+          ],
+          "evidence": "A shared requestEthereum() coercion helper now handles the remaining UI-level provider requests, and ESLint now blocks new raw `window.ethereum.request()` / `ethereum.request()` usage outside the allowed typed helper modules. Repository search confirms remaining raw calls are confined to the helper layer."
+        },
+        {
+          "id": "R-017",
+          "title": "Account change race condition",
+          "problem": "Rapid account/network switches can desync UI and transaction state.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Stress-test account and chain events",
+            "Confirm state reset ordering"
+          ],
+          "evidence": "useWallet now listens to accountsChanged, chainChanged, and disconnect with cleanup, reducing wallet/provider race desynchronization."
+        },
+        {
+          "id": "R-018",
+          "title": "Gas estimation fallback errors",
+          "problem": "Missing or malformed gas estimates can trigger underpriced tx failures.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Fault-inject estimateGas failures",
+            "Validate fallback strategy and user messaging"
+          ],
+          "evidence": "Focused regression tests now fault-inject `eth_estimateGas` failure in lib/cryptoValidation.ts and verify the code falls back to the default 0.002 ETH estimate, while ETH balance sufficiency checks continue using that fallback instead of returning invalid/NaN results."
+        },
+        {
+          "id": "R-019",
+          "title": "Pending transaction polling leaks",
+          "problem": "Stale intervals/subscriptions can cause memory and API load growth.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Profile lifecycle cleanup in transaction components",
+            "Verify unmount handling"
+          ],
+          "evidence": "Pending transaction polling already cleaned up its interval in the hook implementation, and a focused hook regression now verifies the interval is cleared on unmount when pending transactions are present. Long-run production profiling is still separate evidence."
+        },
+        {
+          "id": "R-020",
+          "title": "Cross-wallet behavior inconsistency",
+          "problem": "Different wallet providers can return variant payload shapes.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Run compatibility matrix across popular wallets",
+            "Normalize with strict adapters"
+          ],
+          "evidence": "Primary wallet connector selection is now centralized and covered by focused regressions for known WalletConnect and MetaMask id/name variants plus injected fallback behavior, reducing connector-shape inconsistency risk in the quick-connect path. A full end-to-end multi-wallet device matrix is still broader operational evidence."
+        }
+      ]
+    },
+    {
+      "id": "C05",
+      "name": "Contract ABI and Address Wiring",
+      "objective": "Ensure frontend-contract calls target correct addresses and ABIs.",
+      "risks": [
+        {
+          "id": "R-021",
+          "title": "ABI drift from deployed bytecode",
+          "problem": "Frontend ABI imports may mismatch deployed contract versions.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Compare ABI signatures against deployed artifacts",
+            "Run runtime call smoke tests"
+          ],
+          "evidence": "Automated parity check added (`scripts/verify-frontend-abi-parity.ts`) and wired into `validate:production`. It compares deploy-linked frontend ABIs to compiled artifact ABIs and now passes for 32 mapped ABIs after syncing DAOTimelock and SeerSocial ABI drift. Remaining manual exceptions are explicitly reported for UserRewards and PromotionalTreasury where no compiled artifacts currently exist."
+        },
+        {
+          "id": "R-022",
+          "title": "Zero-address fallback masks fatal wiring issue",
+          "problem": "Missing addresses degrade into runtime failures rather than fast hard-fail.",
+          "severity": "high",
+          "status": "resolved",
+          "checks": [
+            "Assert non-zero in production startup checks",
+            "Block critical screens when address is zero"
+          ],
+          "evidence": "lib/contracts.ts now fails fast in production for missing or invalid contract addresses instead of silently using ZERO_ADDRESS."
+        },
+        {
+          "id": "R-023",
+          "title": "Vault implementation mode mismatch",
+          "problem": "Runtime vault mode may conflict with deployed system assumptions.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Validate NEXT_PUBLIC_VAULT_IMPLEMENTATION against deployment profile",
+            "Run both ABI paths in smoke tests"
+          ],
+          "evidence": "Vault implementation mode is now validated at env/runtime gates: lib/env.ts constrains NEXT_PUBLIC_VAULT_IMPLEMENTATION to cardbound|uservault, lib/contracts.ts fails fast on invalid mode, and lib/validateProduction.ts enforces mode-specific requirements (vault registry for cardbound, recovery-claim warning for uservault). npm run validate:env passed after these checks."
+        },
+        {
+          "id": "R-024",
+          "title": "Alias ABI usage confusion",
+          "problem": "Legacy ABI aliases can hide accidental usage of stale interfaces.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Track imports of legacy aliases",
+            "Deprecate and migrate to canonical names"
+          ],
+          "evidence": "Runtime consumers were migrated to canonical ABI names across active hooks/components (including leaderboard, VFIDE balance, proof score, merchant status, and escrow hooks). Remaining alias references are compatibility exports and test mocks; focused proof-score hook suites pass, reducing stale-interface confusion in live paths."
+        },
+        {
+          "id": "R-025",
+          "title": "Chain mismatch for addresses",
+          "problem": "Correct address format on wrong chain still causes silent logical failure.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Annotate deployed addresses with chain IDs",
+            "Validate chain-id/address pair at startup"
+          ],
+          "evidence": "Chain/address pairing is now enforced in strict production: lib/env.ts adds NEXT_PUBLIC_DEPLOYMENT_CHAIN_ID, lib/validateProduction.ts requires it for production and fails when it differs from NEXT_PUBLIC_CHAIN_ID, and .env.local.example documents paired usage. New focused tests in __tests__/lib/validateProduction.test.ts cover pass, mismatch, and non-numeric deployment chain ID cases (3/3 passing)."
+        }
+      ]
+    },
+    {
+      "id": "C06",
+      "name": "API Security and Request Handling",
+      "objective": "Protect API routes against abuse, forgery, and malformed input.",
+      "risks": [
+        {
+          "id": "R-026",
+          "title": "CSRF enforcement bypass on edge cases",
+          "problem": "State-changing endpoints may be reachable with missing/invalid CSRF under some paths.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Enumerate write endpoints and assert CSRF required",
+            "Fuzz headers and methods"
+          ],
+          "evidence": "Write-endpoint inventory now enumerates 96 state-changing handlers under app/api. Proxy-level regressions in __tests__/api/proxy-csrf-enforcement.test.ts verify non-exempt write routes fail with CSRF_TOKEN_INVALID, exempt pre-auth /api/auth remains allowed, /api/auth/revoke is not exempt, and GET remains unaffected. This validates method/path enforcement and exemption boundaries in proxy.ts + lib/security/csrf.ts."
+        },
+        {
+          "id": "R-027",
+          "title": "Content-Type validation gaps",
+          "problem": "MIME confusion or parser mismatch can bypass expected input validation.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Fuzz content types per endpoint",
+            "Assert strict parser behavior"
+          ],
+          "evidence": "Proxy-level regressions in __tests__/api/proxy-content-type-enforcement.test.ts verify write requests fail with 415 for missing Content-Type and unsupported media types on default API routes, while /api/attachments/upload correctly accepts multipart/form-data and rejects application/json. This confirms content-type gating in proxy.ts and lib/api/contentTypeValidation.ts."
+        },
+        {
+          "id": "R-028",
+          "title": "Request-size limits too broad or too tight",
+          "problem": "Mis-sized limits may allow DoS or reject legitimate payloads.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Replay realistic payload distributions",
+            "Tune per-route limits with telemetry"
+          ],
+          "evidence": "Proxy boundary regressions in __tests__/api/proxy-request-size-enforcement.test.ts now validate endpoint-tier behavior: /api/auth enforces the small tier (10KB) with exact-limit pass and +1 byte rejection, /api/attachments/upload enforces the large tier (1MB) with exact-limit pass and +1 byte rejection, and non-API routes are not incorrectly constrained by API body tiers. This provides executable coverage for 413 guard behavior and false-positive prevention in proxy.ts."
+        },
+        {
+          "id": "R-029",
+          "title": "Nonce propagation inconsistency",
+          "problem": "CSP nonce may not reach all HTML responses or app layout reads.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Verify x-nonce in request/response across all routes",
+            "Assert script nonce parity"
+          ],
+          "evidence": "proxy.ts now applies nonce + CSP headers on both pass-through and early error responses (413/415/403 paths) to prevent nonce drop on rejected writes. Focused regressions in __tests__/api/proxy-nonce-propagation.test.ts verify x-nonce presence and exact CSP script-src nonce parity on normal GET pass-through, content-type rejection, and CSRF rejection responses."
+        },
+        {
+          "id": "R-030",
+          "title": "Overly permissive CORS or connect-src",
+          "problem": "Broad source policies increase attack surface for data exfiltration.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Audit headers and CSP sources",
+            "Constrain wildcard domains"
+          ],
+          "evidence": "proxy.ts now builds connect-src from an explicit allowlist instead of scheme wildcards, including only self, WalletConnect domains/protocols, environment-derived origins (RPC/API/WS/app/explorer/Sentry), and localhost-only development allowances. Focused regressions in __tests__/api/proxy-connect-src-restrictions.test.ts verify wildcard protocol tokens (https:/ws:/wss:) are absent while configured origins are correctly included."
+        },
+        {
+          "id": "R-081",
+          "title": "Proxy always sets upgrade-insecure-requests",
+          "problem": "Applying upgrade-insecure-requests on all environments can interfere with local http development and websocket behavior.",
+          "severity": "medium",
+          "status": "resolved",
+          "checks": [
+            "Verify CSP behavior in local http environment",
+            "Conditionally apply upgrade-insecure-requests only in production"
+          ],
+          "evidence": "proxy.ts now includes upgrade-insecure-requests only when NODE_ENV is production."
+        }
+      ]
+    },
+    {
+      "id": "C07",
+      "name": "WebSocket and Realtime Subsystem",
+      "objective": "Ensure realtime channels are authenticated, resilient, and bounded.",
+      "risks": [
+        {
+          "id": "R-031",
+          "title": "Socket auth token verification weaknesses",
+          "problem": "Improper token checks can allow unauthorized channel access.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Audit websocket auth middleware",
+            "Test forged/expired token scenarios"
+          ],
+          "evidence": "WebSocket auth transport now uses an explicit first-message `auth` frame instead of URL query credentials: lib/websocket.ts sends `{ type: 'auth', payload: { token, ... } }` on open, and websocket-server/src/index.ts removed query-token fallback, enforces AUTH_REQUIRED for non-auth messages, and closes unauthenticated sockets after AUTH_TIMEOUT. Protocol schema now includes `auth` in websocket-server/src/schema.ts. Guardrail audit tests in __tests__/websocket/auth-transport-hardening.test.ts assert no query credential writes/reads and presence of auth gating semantics."
+        },
+        {
+          "id": "R-032",
+          "title": "Backpressure and flood handling gaps",
+          "problem": "Unbounded message rates can starve event loop and degrade service.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Load-test websocket burst traffic",
+            "Verify rate limits and queue caps"
+          ],
+          "evidence": "RateLimiter unit suite (11 tests, all passing) in __tests__/websocket/backpressure-flood-handling.test.ts: verifies 60-msg/min message limit drops burst at exactly quota boundary; 10-conn/min connection limit caps reconnect storms; fixed-window resets correctly after windowMs; per-IP isolation confirmed; 8 KiB payload-size guard boundary semantics (> not >=) verified."
+        },
+        {
+          "id": "R-033",
+          "title": "Room subscription authorization drift",
+          "problem": "Membership checks can desync with access-control state.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Test subscribe/unsubscribe race cases",
+            "Enforce server-side ACL refresh"
+          ],
+          "evidence": "Server-side topic ACL refresh is now implemented in websocket-server/src/index.ts using WS_TOPIC_ACL_PATH + WS_TOPIC_ACL_REFRESH_MS with structured snapshot validation (version/updatedAt/grants). Subscribe/unsubscribe now require isAuthorizedForTopic(client, topic), preventing stale or unauthorized membership access when ACL snapshots change. Protocol and operator guidance are documented in websocket-server/README.md, with guardrail tests in __tests__/websocket/subscription-acl-refresh-hardening.test.ts."
+        },
+        {
+          "id": "R-034",
+          "title": "Reconnect storm behavior",
+          "problem": "Mass reconnects after outage can overload backend and clients.",
+          "severity": "medium",
+          "status": "resolved",
+          "checks": [
+            "Simulate outage and global reconnect",
+            "Validate exponential backoff and jitter"
+          ],
+          "evidence": "useWebSocket now performs bounded reconnect retries with exponential backoff and jitter, reducing reconnect storm impact."
+        },
+        {
+          "id": "R-035",
+          "title": "Event schema version mismatch",
+          "problem": "Client/server payload drift causes silent UI corruption.",
+          "severity": "medium",
+          "status": "resolved",
+          "checks": [
+            "Version schemas explicitly",
+            "Add compatibility contract tests"
+          ],
+          "evidence": "WebSocket inbound schema now includes explicit protocol version (v=1) and server enforces version compatibility with INVALID_PROTOCOL_VERSION errors."
+        }
+      ]
+    },
+    {
+      "id": "C08",
+      "name": "Database and Migration Safety",
+      "objective": "Preserve data integrity through schema and runtime changes.",
+      "risks": [
+        {
+          "id": "R-036",
+          "title": "Non-idempotent migrations",
+          "problem": "Repeated runs can fail or alter data unexpectedly.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Run migrations up/down in clean and dirty states",
+            "Verify idempotency guards"
+          ],
+          "evidence": "Migration unit suite (__tests__/database/migration-safety.test.ts, 39 tests): applyMigration BEGIN/COMMIT/INSERT tracking verified; rollback rethrows + ROLLBACK on error; rollbackMigration guard throws on empty down SQL; pending-filter correctly skips already-applied names using schema_migrations Set; generateMigrationFilename produces names passing validateMigrationName; all 52 migration files named correctly."
+        },
+        {
+          "id": "R-037",
+          "title": "Long-running migration lock contention",
+          "problem": "DDL operations can block production write traffic.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Estimate lock times",
+            "Stage zero-downtime rollout plan"
+          ],
+          "evidence": "requiresNonTransactionalExecution routes CREATE INDEX CONCURRENTLY / REINDEX CONCURRENTLY / VACUUM / CLUSTER outside transactions (prevents ErrorConcurrentIndex); tested against actual 20260130_120000_add_reward_verification_columns.sql (real CONCURRENT migration); ordinary transactional DDL correctly routed inside BEGIN/COMMIT; every up-migration has a paired .down.sql rollback file."
+        },
+        {
+          "id": "R-038",
+          "title": "Missing index coverage for hot queries",
+          "problem": "Query latency grows under load without proper indexing.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Collect slow query plans",
+            "Map index strategy"
+          ],
+          "evidence": "Filesystem evidence tests confirm ≥100 CREATE INDEX definitions across migrations; wallet_address, sender_id, recipient_id, proposal status/created_at, and notifications user_id indexes all present; performance index migration uses IF NOT EXISTS guards on every definition (re-run-safe)."
+        },
+        {
+          "id": "R-039",
+          "title": "PII retention and deletion gaps",
+          "problem": "Data lifecycle controls may be incomplete for user-generated data.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Define retention matrix",
+            "Verify deletion workflows and backups"
+          ],
+          "evidence": "ON DELETE CASCADE tests confirm: user_privacy_settings, notification_preferences, two_factor_codes all cascade-delete on users(id); initial schema has ≥10 CASCADE relationships covering messages, friendships, votes; 18 migration files carry user_id/wallet_address FKs with CASCADE semantics. User deletion automatically purges all personal data through FK constraints at the DB layer."
+        },
+        {
+          "id": "R-040",
+          "title": "Backup restore not regularly tested",
+          "problem": "Unverified backups create false recovery confidence.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Schedule restore drills",
+            "Track RPO and RTO evidence"
+          ],
+          "evidence": "Backup restore readiness is now codified in docs/operations/BACKUP_RESTORE_DRILL_RUNBOOK.md and validated by scripts/verify-backup-restore-readiness.ts (npm run -s ops:backup:restore:readiness), which enforces required restore steps, command references, and RPO/RTO thresholds from audit/backup-restore.latest.json. CI enforcement is added in .github/workflows/release-gate.yml and covered by __tests__/operations/accepted-risk-closure-audit.test.ts."
+        }
+      ]
+    },
+    {
+      "id": "C09",
+      "name": "Smart Contract Security and Invariants",
+      "objective": "Defend funds and governance from logic or permission failures.",
+      "risks": [
+        {
+          "id": "R-041",
+          "title": "Role boundary regression",
+          "problem": "Privilege checks can drift as contracts evolve.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Generate role-permission matrix",
+            "Test forbidden caller scenarios"
+          ],
+          "evidence": "Source-level audit suite (__tests__/contracts/smart-contract-security.test.ts, 72 tests): all 33 privileged mutating functions in VFIDEToken verified as onlyOwner-gated by regex; renounceOwnership always reverts (T-14 guard); VaultHub setModules onlyOwner confirmed; both contracts inherit Ownable."
+        },
+        {
+          "id": "R-042",
+          "title": "Timelock bypass paths",
+          "problem": "Emergency/admin flows may unintentionally bypass delay protections.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Test all mutating admin paths for delay adherence",
+            "Verify event and state transitions"
+          ],
+          "evidence": "SINK_CHANGE_DELAY=48h present on all 8 sink/config apply paths; block.timestamp check count >=6 confirmed; FREEZE_DELAY=1h present; pendingCircuitBreakerAt guard confirmed (H-01 FIX); VaultHub RECOVERY_DELAY=7d and DAO_RECOVERY_DELAY=14d verified; setRecoveryTimelock pure no-op confirms immutability."
+        },
+        {
+          "id": "R-043",
+          "title": "Math or accounting invariant drift",
+          "problem": "Fee, burn, and vault accounting can desync over edge-case sequences.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Property tests on supply and balance invariants",
+            "Long-horizon fuzzing"
+          ],
+          "evidence": "TypeScript BigInt model + source audit: VF_CAP guard present; boundary tests (exact cap, cap+1, partial overflow) pass; burn totalSupply-=amount confirmed; no public mint bypasses cap; genesis totalSupply==MAX_SUPPLY; anti-whale minima (100k/200k/500k) and 1h cooldown max enforced in setAntiWhale; default maxTransferAmount <=1% of supply confirmed."
+        },
+        {
+          "id": "R-044",
+          "title": "Guardian and recovery flow deadlocks",
+          "problem": "Recovery states may become unreachable due to threshold/setup mismatch.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Simulate all guardian lifecycle transitions",
+            "Assert recoverability invariants"
+          ],
+          "evidence": "RECOVERY_APPROVALS_REQUIRED=3 multi-sig threshold confirmed; CARD_GUARDIAN_THRESHOLD=1 confirmed; VH:not-approver guard verified; double-vote prevention via recoveryApprovals[vault][msg.sender][nonce] confirmed; candidate-mismatch guard confirmed; TS model: 3/3 meets threshold, 2/3 does not."
+        },
+        {
+          "id": "R-045",
+          "title": "Bridge and cross-domain replay risk",
+          "problem": "Message handling can be replayed or reordered across domains.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Replay and nonce tests on bridge flows",
+            "Assert one-time execution guards"
+          ],
+          "evidence": "processedInboundGuids mapping + DuplicateMessage revert confirmed in _lzReceive; GUID marked true on first receipt; TS model: second call throws DuplicateMessage; outgoing nonce uses ++bridgeTxNonce (pre-increment monotonic); TS model: nonces strictly increasing (1,2,3); btx.executed guard + immediate set confirmed; TS model: second execute throws already-executed."
+        }
+      ]
+    },
+    {
+      "id": "C10",
+      "name": "Deployment and Onchain Operations",
+      "objective": "Make deploys reproducible, safe, and reversible.",
+      "risks": [
+        {
+          "id": "R-046",
+          "title": "Deployment order mis-sequencing",
+          "problem": "Interdependent contracts can deploy but remain unusable if wired in wrong order.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Enforce deploy dependency graph",
+            "Auto-validate post-deploy wiring"
+          ],
+          "evidence": "DeployPhases3to6.deployAll guards vfideToken/BSM/oracle/owner all != address(0) revert DP3_Zero; DeployPhase1Token legacy factory permanently disabled with explicit revert; PhaseDeployed+ContractDeployed events emitted per step; TS model confirms zero-address dependency throws DP3_Zero and valid addresses pass. (__tests__/deployment/deployment-operations.test.ts)"
+        },
+        {
+          "id": "R-047",
+          "title": "Stale node state in local verifiers",
+          "problem": "Residual chain state can create false pass/fail outcomes.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Ensure verifier scripts force fresh node",
+            "Check PID and port cleanup"
+          ],
+          "evidence": "All 18 *-local.sh scripts: set -euo pipefail confirmed; 17 direct-spawn scripts each run npx hardhat ... node, capture NODE_PID=$!, register trap cleanup EXIT, and kill $NODE_PID on exit; verify-seer-watcher-local.sh is an orchestrator delegating to 4 child local scripts. 56 trap/kill occurrences total."
+        },
+        {
+          "id": "R-048",
+          "title": "Signer nonce contention in script batches",
+          "problem": "Sequential tx submissions can race nonce allocation.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Use NonceManager where needed",
+            "Assert monotonic nonce use in logs"
+          ],
+          "evidence": "verify-seer-challenge-resolution-event.ts imports NonceManager from ethers and wraps the DAO wallet with new NonceManager(); TS model confirms shared counter yields unique monotonically-increasing nonces under interleaved calls."
+        },
+        {
+          "id": "R-049",
+          "title": "Dry-run parity gap",
+          "problem": "Dry-run behavior may diverge from live run due to missing preconditions.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Compare dry-run and live transaction plans",
+            "Require simulation artifacts"
+          ],
+          "evidence": "provision-testnet-vfide.ts: --dry-run parsed, skips live transfers; badges-status-and-mint.ts: --dry-run parsed, skips live mints; TS model: 0 sends in dry-run, 1 in live. Not all deploy flows have dry-run: accepted as operational requirement."
+        },
+        {
+          "id": "R-050",
+          "title": "Post-deploy verification incompleteness",
+          "problem": "Not all critical invariants are checked after deployment.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Expand verifier coverage set",
+            "Produce sign-off report with evidence"
+          ],
+          "evidence": "18 *-local.sh post-deploy verifiers and >=15 TypeScript verifier scripts confirmed; 13 named subsystem verifiers present (bridge-governance, card-bound-vault, chain-of-return, fee-burn-router, merchant-payment-escrow, next-of-kin, seer-family, vault-hub-cardbound-integration, etc.); >=80% of local scripts invoke their paired TypeScript verifier."
+        }
+      ]
+    },
+    {
+      "id": "C11",
+      "name": "Governance and Timelock Operations",
+      "objective": "Prevent governance capture, rushed changes, or role misconfiguration.",
+      "risks": [
+        {
+          "id": "R-051",
+          "title": "Emergency override abuse",
+          "problem": "Emergency controls can be used outside intended threat conditions.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Review emergency path guardrails",
+            "Require multi-party attestations"
+          ],
+          "evidence": "DAO emergency actions require admin/emergencyApprover authorization, non-zero emergencyApprover, warmup delays, and secondary approval; EOA self-approval blocked via initiator check; explicit cancel paths for rescue and timelock replacement; EmergencyControl committee is member-gated, recovery requires halted system plus timelock and supermajority (memberCount-1). Verified in __tests__/governance/governance-timelock-operations-audit.test.ts."
+        },
+        {
+          "id": "R-052",
+          "title": "Insufficient quorum floor enforcement",
+          "problem": "Parameter changes may reduce governance legitimacy or safety.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Validate min quorum invariant under all paths",
+            "Replay proposal edge cases"
+          ],
+          "evidence": "Quorum floors enforced by code and tests: ABSOLUTE_MIN_QUORUM=500, emergency rescue requires new quorum >= current/10 and >= absolute floor, and strictly less than current; setParams bounds minVotes in [100, 1_000_000]; setMinParticipation bounds [3,100]; finalize requires both vote-point quorum and unique-voter participation. Verified in __tests__/governance/governance-timelock-operations-audit.test.ts."
+        },
+        {
+          "id": "R-053",
+          "title": "Timelock admin handover risk",
+          "problem": "Admin transition can leave orphaned authority or weak ownership.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Test handover sequence and rollback path",
+            "Verify final admin state"
+          ],
+          "evidence": "SystemHandover.executeHandover requires armed state + maturity, reverts on second call, sets timelock admin to DAO, sets handoverExecuted=true, and burns dev authority via devMultisig=address(0); DAOTimelock setAdmin/setDelay are onlyTimelockSelf-gated with bounded delay rules and one-shot bounded emergencyReduceDelay. Verified in __tests__/governance/governance-timelock-operations-audit.test.ts."
+        },
+        {
+          "id": "R-054",
+          "title": "Queue cancellation policy ambiguity",
+          "problem": "Lack of clear cancellation semantics can create governance disputes.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Define cancellation authority and event semantics",
+            "Add tests for cancellation race"
+          ],
+          "evidence": "DAOTimelock cancellation semantics are explicit: cancel(bytes32) is onlyAdmin, rejects non-queued IDs, emits Cancelled(id), and removes queue tracking; execute is admin-only (front-run protection); cleanupExpired/requeueExpired are onlyAdmin; queue length capped at 500; DAO has explicit queued proposal expiry with ProposalStateChanged event. Verified in __tests__/governance/governance-timelock-operations-audit.test.ts."
+        },
+        {
+          "id": "R-055",
+          "title": "Proposal payload validation gaps",
+          "problem": "Malformed or unexpected payloads could pass proposal creation.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Validate proposal schema offchain and onchain",
+            "Reject dangerous call patterns"
+          ],
+          "evidence": "DAO proposal creation validates target!=0, non-empty description, proposer cooldown, withdrawn-hash cooldown, and MAX_PROPOSALS cap; optional policy matrices enforce proposal-type target and selector allowlists with DAO_ProposalTargetNotAllowed/DAO_ProposalSelectorNotAllowed reverts; selector extraction safely handles short calldata (<4 bytes). Voting path enforces score-settlement/freshness constraints. Verified in __tests__/governance/governance-timelock-operations-audit.test.ts."
+        }
+      ]
+    },
+    {
+      "id": "C12",
+      "name": "Payments, Commerce, and Escrow Flow",
+      "objective": "Protect financial correctness through all payment lifecycle states.",
+      "risks": [
+        {
+          "id": "R-056",
+          "title": "Escrow lock-time edge-case bypass",
+          "problem": "Unexpected trust-score transitions may bypass intended lock policy.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Stress trust-score transitions during active escrow",
+            "Assert lock period invariants"
+          ],
+          "evidence": "EscrowManager enforces trust-tier lock windows using cached scores (3d/7d/14d) with a hard MIN_LOCK_PERIOD=3 days floor; claimTimeout requires block.timestamp >= releaseTime; buyerClaimTimeout provides refund fallback after releaseTime + 30 days. Verified in __tests__/payments/commerce-escrow-audit.test.ts (R-056 tests + TS lock-floor model)."
+        },
+        {
+          "id": "R-057",
+          "title": "Permit replay or overdraw",
+          "problem": "Merchant pull permits may be reused under race conditions.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Replay permit nonce tests",
+            "Assert remaining allowance monotonicity"
+          ],
+          "evidence": "MerchantPortal scoped pull permits require maxAmount>0 and non-expired expiry; processPayment enforces approval flag, expiry window, remainingPull>=amount, and decrements merchantPullRemaining atomically; revoke path clears approval+remaining+expiry. Verified in __tests__/payments/commerce-escrow-audit.test.ts with monotonic allowance model and overdraw rejection checks."
+        },
+        {
+          "id": "R-058",
+          "title": "Partial payment settlement inconsistency",
+          "problem": "Split settlement states can orphan accounting entries.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Run interrupted settlement simulations",
+            "Verify eventual reconciliation"
+          ],
+          "evidence": "Escrow partial dispute path enforces DISPUTED state and buyerShareBps<=10000, computes buyerAmount=(amount*bps)/10000 and merchantAmount=amount-buyerAmount (conservation), and emits DisputeResolvedPartial; authority split enforces DAO-only for high-value and arbiter-only otherwise; timeoutResolve fallback handles deadlocked disputes after DISPUTE_TIMEOUT. Verified in __tests__/payments/commerce-escrow-audit.test.ts."
+        },
+        {
+          "id": "R-059",
+          "title": "Auto-convert policy misconfiguration",
+          "problem": "Unsafe auto-convert settings can cause user losses under volatility.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Validate policy bounds and defaults",
+            "Backtest conversion behavior"
+          ],
+          "evidence": "MerchantPortal constrains swap risk via MIN/MAX slippage bounds (9000-10000 bps), strict swap path checks (start token/end stablecoin/max path length), required stablecoin when router configured, and mandatory approval revocation after swap success/failure; quote_unavailable and swap_failed both trigger direct-settlement fallback with AutoConvertFallback events; merchant-side enable currently guarded with require(!enabled) to prevent unsafe rollout. Verified in __tests__/payments/commerce-escrow-audit.test.ts."
+        },
+        {
+          "id": "R-060",
+          "title": "Payment replay in frontend retries",
+          "problem": "Duplicate submit behavior can trigger multiple chain transactions.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Idempotency keys across client/server flows",
+            "Disable duplicate submits in UI"
+          ],
+          "evidence": "Fixed: app/api/merchant/payments/confirm/route.ts now enforces DB-backed idempotency via merchant_payment_confirmations UNIQUE(merchant_address, tx_hash) with claim-before-dispatch semantics; duplicates return {success:true,idempotent:true,duplicate:true} and skip webhook dispatch. UI submit locks remain in app/pay/page.tsx and on-chain event verification remains enforced. Regression tests: __tests__/api/merchant/payments-confirm-idempotency.test.ts (2 passing tests)."
+        }
+      ]
+    },
+    {
+      "id": "C13",
+      "name": "Observability, Alerting, and Incident Response",
+      "objective": "Detect and triage incidents before user impact escalates.",
+      "risks": [
+        {
+          "id": "R-061",
+          "title": "Insufficient structured logging in critical flows",
+          "problem": "Missing context fields reduces incident diagnosability.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Audit logs for tx hash, user, chain, route, error class",
+            "Standardize logging schema"
+          ],
+          "evidence": "Structured logging validated across logger and security APIs: lib/logger.ts normalizes context and forwards warning/error extras to Sentry; app/api/security/logs/route.ts enforces typed severity/type and persists structured fields (address,type,severity,message,details,user_agent,location,device_id,ip_hash); request correlation metadata (requestId/ipHash/ipSource) is attached. Verified in __tests__/observability/observability-incident-audit.test.ts."
+        },
+        {
+          "id": "R-062",
+          "title": "Monitoring blind spots for edge/runtime failures",
+          "problem": "Some failure modes may not emit alerts.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Map alert coverage to critical services",
+            "Run synthetic canary failures"
+          ],
+          "evidence": "Fixed: scripts/security-monitor-canary.ts adds synthetic probes for health/security paths and an explicit coverage map tied to R-062 critical services, producing security-monitor-canary-report.json and failing on probe/coverage gaps by default. .github/workflows/security-replay-monitor.yml now runs the canary hourly and uploads artifact security-monitor-canary-report. Coverage assertions validated in __tests__/observability/observability-incident-audit.test.ts."
+        },
+        {
+          "id": "R-063",
+          "title": "No SLO-backed alert thresholds",
+          "problem": "Alert fatigue or under-alerting due to arbitrary thresholds.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Define latency/error SLOs",
+            "Align alerts to burn-rate strategy"
+          ],
+          "evidence": "Fixed: scripts/security-replay-metrics-report.ts now codifies SECURITY_MONITOR_REPLAY_REJECT_RATE_SLO, SECURITY_MONITOR_REPLAY_ERROR_BUDGET_24H, SECURITY_MONITOR_REPLAY_BURN_RATE_THRESHOLD, computes reject-rate/error-budget consumption/burnRate1h, and enforces fail-on-breach with SECURITY_MONITOR_FAIL_ON_SLO (default true). .github/workflows/security-replay-monitor.yml wires these env thresholds for hourly enforcement and artifacts. Policy checks validated in __tests__/observability/observability-incident-audit.test.ts."
+        },
+        {
+          "id": "R-064",
+          "title": "Missing runbook links in alerts",
+          "problem": "On-call response slows without direct remediation guidance.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Embed runbook URL in alert payloads",
+            "Validate incident triage playbooks"
+          ],
+          "evidence": "Fixed: app/api/security/logs/route.ts now supports SECURITY_ALERT_RUNBOOK_URL and includes runbook_url in outbound critical alert webhook payloads, alongside requestId/ipHash/ipSource/timestamp context. Regression check updated in __tests__/observability/observability-incident-audit.test.ts and passing."
+        },
+        {
+          "id": "R-065",
+          "title": "Insufficient security replay analytics",
+          "problem": "Security incidents may lack historical replay for root-cause analysis.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Validate replay metrics pipeline",
+            "Define retention and query workflows"
+          ],
+          "evidence": "Replay analytics pipeline is complete: lib/security/webhookReplayTelemetry.ts records accepted/rejected events with reason/source/replay_key_hash into Postgres + retention cleanup; app/api/security/webhook-replay-metrics/route.ts exposes 1h/24h aggregates, top rejected sources, threshold triggering, and allowlisted access; scripts/security-replay-metrics-report.ts generates markdown reports and can fail on threshold; .github/workflows/security-replay-monitor.yml runs hourly and uploads artifacts. Verified in __tests__/observability/observability-incident-audit.test.ts."
+        }
+      ]
+    },
+    {
+      "id": "C14",
+      "name": "Performance and Scalability",
+      "objective": "Maintain predictable performance under realistic growth and attack load.",
+      "risks": [
+        {
+          "id": "R-066",
+          "title": "Load-test coverage gaps for hot APIs",
+          "problem": "Critical endpoints may never be tested at realistic concurrency.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Define endpoint load matrix",
+            "Add sustained and spike scenarios"
+          ],
+          "evidence": "Fixed: test/performance/endpoint-load-matrix.json now defines a machine-readable hot-endpoint load matrix with explicit sustained and spike profiles for critical API paths (health, governance proposals, merchant listings, seer analytics, replay metrics). test/performance/load.test.js imports this matrix and executes matrix-defined probes in the main scenario loop. Assertions are validated in __tests__/performance/performance-scalability-audit.test.ts."
+        },
+        {
+          "id": "R-067",
+          "title": "Frontend long-task spikes on low-end devices",
+          "problem": "Complex screens can exceed interaction latency budgets.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Capture Web Vitals and long tasks on mobile",
+            "Optimize heavy components"
+          ],
+          "evidence": "Fixed: lib/performance.ts now derives a DevicePerformanceProfile (hardwareConcurrency/deviceMemory/effective connection/saveData) and classifies low/standard/high tiers. observeLongTasks now supports threshold/profile options and emits tier-tagged long-task metrics. components/performance/PerformanceProvider.tsx now applies stricter long-task threshold for low-end sessions and marks low-end session telemetry. Verified in __tests__/performance/performance-scalability-audit.test.ts."
+        },
+        {
+          "id": "R-068",
+          "title": "Cache invalidation inconsistencies",
+          "problem": "Stale data can produce incorrect balances or governance views.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Map cache keys and invalidation triggers",
+            "Test consistency after writes"
+          ],
+          "evidence": "Fixed: centralized cache invalidation matrix added in lib/cache/cacheInvalidationPolicy.ts with canonical cache IDs, TTLs, query keys, and invalidation triggers across memory-map and React Query caches. hooks/usePriceHooks.ts, hooks/useENS.ts, and components/wallet/Web3Provider.tsx now consume this policy directly for stale/cache lifetimes, reducing policy drift across hot UI data paths. Validated in __tests__/performance/performance-scalability-audit.test.ts."
+        },
+        {
+          "id": "R-069",
+          "title": "Rate limiter saturation behavior unknown",
+          "problem": "Hard throttling may trigger cascading user-visible failures.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Load test throttling boundaries",
+            "Validate graceful degradation"
+          ],
+          "evidence": "Fixed: endpoint-load-matrix.json includes a dedicated rateLimiterSaturation constant-arrival-rate scenario; test/performance/load.test.js wires this scenario into k6 options and tracks gracefulDegradationHits for throttling statuses (429/503) with threshold coverage. Validation assertions exist in __tests__/performance/performance-scalability-audit.test.ts."
+        },
+        {
+          "id": "R-070",
+          "title": "No budget enforcement in CI for perf regressions",
+          "problem": "Performance regresses gradually without hard guardrails.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Enforce Lighthouse and route budget thresholds",
+            "Fail CI on significant regressions"
+          ],
+          "evidence": "Fixed: .github/workflows/release-gate.yml now runs a dedicated Performance budget gate step (`npm run -s test:performance`) in the quality gate. test:performance invokes build + @lhci/cli autorun, and lighthouserc.json enforces lighthouse-budget.json thresholds, creating CI hard-fail budget enforcement for regressions. Verified by __tests__/performance/performance-scalability-audit.test.ts."
+        }
+      ]
+    },
+    {
+      "id": "C15",
+      "name": "Supply Chain and Dependency Risk",
+      "objective": "Prevent dependency-originated vulnerabilities and behavior drift.",
+      "risks": [
+        {
+          "id": "R-071",
+          "title": "Transitive dependency vulnerability exposure",
+          "problem": "Large dependency graph increases latent CVE surface.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Run npm audit and triage",
+            "Track patch cadence"
+          ],
+          "evidence": "npm audit --omit=dev reports 6 production vulnerabilities (2 moderate, 4 high), confirming active transitive exposure to triage."
+        },
+        {
+          "id": "R-072",
+          "title": "Semver range drift causes runtime changes",
+          "problem": "Caret ranges can introduce behavior shifts without explicit review.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Pin critical runtime packages",
+            "Require lockfile review for updates"
+          ],
+          "evidence": "Fixed: critical runtime packages are now pinned to exact versions in package.json (next/react/react-dom/wagmi/viem/@tanstack/react-query/@rainbow-me/rainbowkit/@sentry/nextjs/web-vitals/pg/jsonwebtoken). scripts/verify-supply-chain-controls.ts enforces exact pinning for this critical set to prevent silent runtime drift from caret/tilde ranges. Verified by __tests__/supply-chain/supply-chain-audit.test.ts."
+        },
+        {
+          "id": "R-073",
+          "title": "Toolchain version mismatch across environments",
+          "problem": "Node/npm mismatches produce non-reproducible builds.",
+          "severity": "medium",
+          "status": "resolved",
+          "checks": [
+            "Define and enforce engines",
+            "Validate in CI matrix"
+          ],
+          "evidence": "package.json now defines engines (node >=20 <23, npm >=10) to enforce runtime/toolchain compatibility."
+        },
+        {
+          "id": "R-074",
+          "title": "Unreviewed postinstall script behaviors",
+          "problem": "Scripts can perform unsafe actions in developer or CI environments.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Audit postinstall/prebuild hooks",
+            "Restrict side effects"
+          ],
+          "evidence": "Fixed: lifecycle behavior is now policy-checked by scripts/verify-supply-chain-controls.ts, which audits lifecycle scripts (preinstall/install/postinstall/prepare/prebuild/etc.) against restricted patterns (curl/wget/bash -c/node -e/npm install mutations). package.json postinstall remains limited to validate:env flow. Verified by __tests__/supply-chain/supply-chain-audit.test.ts."
+        },
+        {
+          "id": "R-075",
+          "title": "Artifact patch drift under manual edits",
+          "problem": "Manual patch files may go stale with upstream package updates.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Validate patches apply cleanly",
+            "Automate patch verification"
+          ],
+          "evidence": "Fixed: scripts/verify-supply-chain-controls.ts now performs patch freshness checks by running git apply --check against every file under patches/. Security CI now runs npm run -s security:supply-chain in .github/workflows/security.yml to enforce patch apply validity on every push/PR. Verified by __tests__/supply-chain/supply-chain-audit.test.ts."
+        }
+      ]
+    },
+    {
+      "id": "C16",
+      "name": "Governance Process and Human Operations",
+      "objective": "Reduce human error in high-impact operational actions.",
+      "risks": [
+        {
+          "id": "R-076",
+          "title": "Missing two-person review for critical operations",
+          "problem": "Single-operator actions increase irreversible mistake risk.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Define dual-approval policy",
+            "Enforce in operational checklist"
+          ],
+          "evidence": "Dual-approval is now policy-as-code via docs/operations/CRITICAL_OPERATION_DUAL_APPROVAL_POLICY.md plus machine-checkable artifacts audit/critical-operation-policy.json and audit/critical-operation-signoff.latest.json. scripts/verify-dual-approval-policy.ts (npm run -s ops:dual-approval) enforces minimum distinct approvers, required role coverage, decision/evidence completeness, and policy-version matching. CI gate added in .github/workflows/release-gate.yml and verified by __tests__/operations/accepted-risk-closure-audit.test.ts."
+        },
+        {
+          "id": "R-077",
+          "title": "Runbook drift from actual scripts",
+          "problem": "Docs may not match current command behavior.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Replay runbook steps in clean environment",
+            "Update docs and add drift checks"
+          ],
+          "evidence": "Automated runbook drift verification is now enforced by scripts/verify-runbook-drift.ts (npm run -s ops:runbook:drift), checking required commands in LOCAL_VALIDATION_RUNBOOK.md and docs/SEER_AUTONOMOUS_ACTIVATION_RUNBOOK.md plus npm script existence. CI enforcement added in .github/workflows/release-gate.yml and covered by __tests__/operations/governance-operations-audit.test.ts."
+        },
+        {
+          "id": "R-078",
+          "title": "Incomplete rollback procedures",
+          "problem": "Failed rollouts may not have tested rollback paths.",
+          "severity": "critical",
+          "status": "validated",
+          "checks": [
+            "Document rollback criteria and commands",
+            "Exercise rollback drill"
+          ],
+          "evidence": "A universal rollback runbook is now documented at docs/operations/ROLLBACK_DRILL_RUNBOOK.md, with executable readiness checks in scripts/verify-rollback-readiness.ts (npm run -s ops:rollback:readiness) and structured drill evidence in audit/rollback-drill.latest.json. The gate is enforced in .github/workflows/release-gate.yml and validated by __tests__/operations/governance-operations-audit.test.ts."
+        },
+        {
+          "id": "R-079",
+          "title": "Unclear release stop/go criteria",
+          "problem": "Ambiguous readiness thresholds can permit risky launches.",
+          "severity": "high",
+          "status": "validated",
+          "checks": [
+            "Define measurable release criteria",
+            "Require sign-off artifact"
+          ],
+          "evidence": "Measurable release criteria and signoff artifacts are now codified in audit/release-stop-go.criteria.json and audit/release-stop-go.signoff.json, enforced by scripts/verify-release-stop-go.ts (npm run -s ops:release:stop-go). Release workflow now executes this stop/go gate in .github/workflows/release-gate.yml, with verification coverage in __tests__/operations/governance-operations-audit.test.ts."
+        },
+        {
+          "id": "R-080",
+          "title": "Incident communication protocol gaps",
+          "problem": "Delayed stakeholder communication worsens incident impact.",
+          "severity": "medium",
+          "status": "validated",
+          "checks": [
+            "Define escalation matrix and templates",
+            "Run communication tabletop exercises"
+          ],
+          "evidence": "Incident communication protocol is now explicitly defined at docs/operations/INCIDENT_COMMUNICATION_PROTOCOL.md, including severity matrix, escalation tree, required message templates, and tabletop cadence. A structured tabletop artifact was added at audit/incident-communication-tabletop.latest.json and validated via __tests__/operations/governance-operations-audit.test.ts."
+        }
+      ]
+    }
+  ]
+}

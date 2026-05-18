@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vfide-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: vfide_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: vfide_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    secrets:
+      - postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vfide_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 1G
+        reservations:
+          cpus: "0.20"
+          memory: 256M
+
+  migrator:
+    image: node:25-alpine
+    container_name: vfide-migrator
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /app
+    volumes:
+      - ./:/app
+    secrets:
+      - postgres_password
+    command: ["sh", "-c", "export DATABASE_URL=postgresql://vfide_user:$(cat /run/secrets/postgres_password)@postgres:5432/vfide_db && npm ci && npm run migrate:up"]
+
+  websocket:
+    build:
+      context: ./websocket-server
+      dockerfile: Dockerfile
+    container_name: vfide-websocket
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+    secrets:
+      - jwt_secret
+      - vfide_app_password
+    # T-DOCKER-RLS-MISCONFIG FIX: connect as vfide_app (NOBYPASSRLS) instead of vfide_user.
+    # The migrator legitimately needs vfide_user (SUPERUSER) to create roles and grants;
+    # the websocket only needs application-level access subject to RLS policies. Connecting
+    # as vfide_user would trigger the production RLS startup check and refuse to start.
+    # vfide_app is created by migration 20260422_010000_create_vfide_app_role.sql
+    # with password from a separate secret file.
+    command: ["sh", "-c", "export JWT_SECRET=$(cat /run/secrets/jwt_secret) && export DATABASE_URL=postgresql://vfide_app:$(cat /run/secrets/vfide_app_password)@postgres:5432/vfide_db && node dist/index.js"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+        reservations:
+          cpus: "0.10"
+          memory: 128M
+
+volumes:
+  postgres_data:
+    driver: local
+
+secrets:
+  postgres_password:
+    file: ./.secrets/postgres_password
+  jwt_secret:
+    file: ./.secrets/jwt_secret
+  # T-DOCKER-RLS-MISCONFIG FIX: separate password for the application role (NOBYPASSRLS).
+  # Operator must:
+  #   1. After migrator runs, ALTER ROLE vfide_app WITH PASSWORD '<value of this secret>';
+  #   2. Place that value in ./.secrets/vfide_app_password
+  vfide_app_password:
+    file: ./.secrets/vfide_app_password
+
+networks:
+  default:
+    name: vfide-network

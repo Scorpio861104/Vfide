@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "description": "Patch lifecycle policy for supply-chain verification",
+  "patches": {
+    "duplicate-mock-contract-fix.diff": {
+      "mode": "archived",
+      "reason": "Historical one-off remediation captured for audit provenance; no longer intended for active apply"
+    },
+    "work-reward-guardrail-minimal.diff": {
+      "mode": "archived",
+      "reason": "Historical one-off remediation captured for audit provenance; no longer intended for active apply"
+    }
+  }
+}

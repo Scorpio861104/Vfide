@@ -1,0 +1,295 @@
+/**
+ * v19.8 COMP-3 FIX: privileged-action audit log.
+ *
+ * Compliance regimes (GDPR, HIPAA-like, SOC2, financial regulators in
+ * the merchant payment space) require an audit trail for privileged
+ * actions. Specifically:
+ *   - Who took the action (user id, wallet address, IP)
+ *   - What action was taken (event type)
+ *   - On whose data (target user / merchant / record)
+ *   - When (UTC timestamp with sub-second precision)
+ *   - Outcome (success / failure with reason)
+ *
+ * VFIDE didn't have any audit log infrastructure before this patch.
+ * Privileged actions just happened, with logger.info() at best — and
+ * logs aren't audit-grade because they rotate, can be deleted by ops,
+ * and aren't structured for compliance discovery.
+ *
+ * What this module does:
+ *   - writeAuditEvent(): append-only INSERT into audit_events table
+ *   - queryAuditEvents(): paginated read for compliance review
+ *   - Standard event-type taxonomy (see AuditEventType enum below)
+ *
+ * What this module does NOT do:
+ *   - It does not delete audit events. Ever. Append-only is the whole
+ *     point. If you need GDPR erasure of an event tied to a user,
+ *     pseudonymize the user reference (replace wallet_address with a
+ *     hash) — don't delete the row.
+ *   - It does not authenticate the caller. Callers MUST pass the
+ *     authenticated user context themselves; this module trusts that.
+ *   - It does not perform cryptographic chaining (hash-linking events
+ *     into a tamper-evident chain). That's a separate hardening
+ *     scheduled for when an external audit demands it.
+ *
+ * Wire pattern: every privileged route (admin actions, GDPR requests,
+ * fund movements above threshold, role grants/revokes, key burns,
+ * critical config changes) should call writeAuditEvent() at the same
+ * moment the action commits. Failure to write the audit event should
+ * NOT roll back the action — log a warning and continue. Audit infra
+ * being unavailable shouldn't block legitimate ops; missing events
+ * are recoverable via reconstruction from API logs / blockchain data.
+ *
+ * Storage: writes to the audit_events table created by the migration
+ * 20260509_create_audit_events.up.sql. The schema includes the
+ * required columns plus indexes for compliance-review queries.
+ */
+
+import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
+
+/**
+ * Event-type taxonomy. Add new types as new privileged actions are
+ * introduced. Use kebab-case strings; group by domain prefix for easy
+ * filtering. Reviewers can search by prefix to scope a compliance
+ * inquiry to a single subsystem.
+ */
+export type AuditEventType =
+  // Authentication & session lifecycle
+  | 'auth.challenge.issued'
+  | 'auth.session.granted'
+  | 'auth.session.revoked'
+  | 'auth.session.expired'
+  // GDPR / privacy actions
+  | 'privacy.deletion.requested'
+  | 'privacy.deletion.processed'
+  | 'privacy.deletion.refused'
+  | 'privacy.export.requested'
+  | 'privacy.export.delivered'
+  // Role / privilege changes
+  | 'role.granted'
+  | 'role.revoked'
+  | 'role.transferred'
+  // Critical config changes
+  | 'config.fee.changed'
+  | 'config.threshold.changed'
+  | 'config.feature_flag.toggled'
+  // Fund movements (only the privileged emergency paths; ordinary user
+  // payments are NOT audit events here — they're already on-chain)
+  | 'funds.emergency_withdraw.proposed'
+  | 'funds.emergency_withdraw.executed'
+  | 'funds.emergency_withdraw.cancelled'
+  // Merchant-account actions performed by support / admin (not the
+  // merchant themselves)
+  | 'merchant.suspended'
+  | 'merchant.unsuspended'
+  // Compliance / fraud
+  | 'fraud.report.submitted'
+  | 'fraud.report.confirmed'
+  | 'fraud.report.dismissed'
+  // System operations (deployment, key handover, breaker trips)
+  | 'system.handover.queued'
+  | 'system.handover.applied'
+  | 'system.breaker.tripped'
+  | 'system.breaker.reset';
+
+export type AuditEventOutcome = 'success' | 'failure' | 'denied';
+
+export interface AuditEvent {
+  // Who: actor identity. May be wallet address (for end users) or a
+  // service identifier (for system actors). Always lowercased.
+  actorIdentity: string;
+  // Their network address (best-effort; used for forensics, not auth)
+  actorIp?: string;
+  // Their user agent (browser / API client)
+  actorUserAgent?: string;
+  // What
+  eventType: AuditEventType;
+  // On whom (optional): the target wallet, merchant id, etc. — same
+  // shape as actorIdentity. Often equal to actorIdentity for self-
+  // service actions; differs for support/admin actions on user data.
+  targetIdentity?: string;
+  // Free-form structured details. Keep this small — large blobs
+  // make compliance review harder. Examples:
+  //   { reason: 'user-initiated', email_provided: true }
+  //   { previous_role: 'merchant', new_role: 'merchant_premium' }
+  //   { fee_bps_old: 0, fee_bps_new: 30 }
+  details?: Record<string, unknown>;
+  // Outcome
+  outcome: AuditEventOutcome;
+  // If outcome != success, a short human-readable reason
+  reason?: string;
+}
+
+/**
+ * Append a single audit event. Returns the inserted event's id, or
+ * null on failure (the caller should NOT block the underlying action
+ * on this return value — log and continue).
+ */
+export async function writeAuditEvent(event: AuditEvent): Promise<string | null> {
+  try {
+    const result = await query<{ id: string }>(
+      `INSERT INTO audit_events (
+         actor_identity, actor_ip, actor_user_agent,
+         event_type, target_identity, details, outcome, reason
+       )
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)
+       RETURNING id`,
+      [
+        event.actorIdentity.toLowerCase(),
+        event.actorIp ?? null,
+        event.actorUserAgent ?? null,
+        event.eventType,
+        event.targetIdentity?.toLowerCase() ?? null,
+        JSON.stringify(event.details ?? {}),
+        event.outcome,
+        event.reason ?? null,
+      ],
+    );
+    return result.rows[0]?.id ?? null;
+  } catch (e) {
+    // Audit infra being unavailable shouldn't block legitimate ops.
+    // Log loudly so on-call notices, but return null and let the
+    // caller proceed. The trade-off: a transient DB blip means we
+    // miss some audit events (recoverable from API access logs),
+    // versus blocking real-time user actions (much worse).
+    logger.error(`[audit] writeAuditEvent failed for ${event.eventType}:`, e);
+    return null;
+  }
+}
+
+/**
+ * Query audit events for compliance review.
+ *
+ * Filters are AND-combined when both supplied. Pagination uses
+ * cursor-based offset on (created_at, id) so large result sets remain
+ * efficient.
+ *
+ * `limit` is capped at 1000. Larger queries should use the database
+ * directly; this API is for in-app review tools.
+ */
+export interface AuditQueryOptions {
+  actorIdentity?: string;
+  targetIdentity?: string;
+  eventType?: AuditEventType;
+  eventTypePrefix?: string; // e.g. 'privacy.' to scope to a domain
+  outcome?: AuditEventOutcome;
+  startTime?: Date;
+  endTime?: Date;
+  limit?: number;
+  cursor?: { createdAt: string; id: string }; // from previous page's last row
+}
+
+export interface AuditQueryResult {
+  events: Array<AuditEvent & { id: string; createdAt: string }>;
+  nextCursor: { createdAt: string; id: string } | null;
+}
+
+export async function queryAuditEvents(opts: AuditQueryOptions): Promise<AuditQueryResult> {
+  const limit = Math.min(opts.limit ?? 100, 1000);
+  const conds: string[] = [];
+  const params: unknown[] = [];
+
+  if (opts.actorIdentity) {
+    params.push(opts.actorIdentity.toLowerCase());
+    conds.push(`actor_identity = $${params.length}`);
+  }
+  if (opts.targetIdentity) {
+    params.push(opts.targetIdentity.toLowerCase());
+    conds.push(`target_identity = $${params.length}`);
+  }
+  if (opts.eventType) {
+    params.push(opts.eventType);
+    conds.push(`event_type = $${params.length}`);
+  } else if (opts.eventTypePrefix) {
+    params.push(`${opts.eventTypePrefix}%`);
+    conds.push(`event_type LIKE $${params.length}`);
+  }
+  if (opts.outcome) {
+    params.push(opts.outcome);
+    conds.push(`outcome = $${params.length}`);
+  }
+  if (opts.startTime) {
+    params.push(opts.startTime.toISOString());
+    conds.push(`created_at >= $${params.length}`);
+  }
+  if (opts.endTime) {
+    params.push(opts.endTime.toISOString());
+    conds.push(`created_at < $${params.length}`);
+  }
+  if (opts.cursor) {
+    params.push(opts.cursor.createdAt, opts.cursor.id);
+    conds.push(`(created_at, id) < ($${params.length - 1}, $${params.length})`);
+  }
+  params.push(limit);
+
+  const whereClause = conds.length > 0 ? `WHERE ${conds.join(' AND ')}` : '';
+  const sql = `
+    SELECT id, actor_identity, actor_ip, actor_user_agent,
+           event_type, target_identity, details, outcome, reason,
+           created_at
+    FROM audit_events
+    ${whereClause}
+    ORDER BY created_at DESC, id DESC
+    LIMIT $${params.length}
+  `;
+
+  const result = await query(sql, params as (string | number | boolean | null | Date | undefined | unknown[])[]);
+  const events = result.rows.map((r: Record<string, unknown>) => ({
+    id: String(r.id),
+    actorIdentity: String(r.actor_identity),
+    actorIp: r.actor_ip ? String(r.actor_ip) : undefined,
+    actorUserAgent: r.actor_user_agent ? String(r.actor_user_agent) : undefined,
+    eventType: r.event_type as AuditEventType,
+    targetIdentity: r.target_identity ? String(r.target_identity) : undefined,
+    details: r.details as Record<string, unknown>,
+    outcome: r.outcome as AuditEventOutcome,
+    reason: r.reason ? String(r.reason) : undefined,
+    createdAt: new Date(r.created_at as string).toISOString(),
+  }));
+
+  const last = events[events.length - 1];
+  const nextCursor = events.length === limit && last
+    ? { createdAt: last.createdAt, id: last.id }
+    : null;
+
+  return { events, nextCursor };
+}
+
+/**
+ * Pseudonymize all audit events for a wallet address. Used by GDPR
+ * erasure: rather than deleting events (which would destroy the audit
+ * trail), we replace the wallet address with a stable hash so the
+ * record remains for compliance review but the user is no longer
+ * identifiable.
+ *
+ * Returns count of events pseudonymized.
+ */
+export async function pseudonymizeAuditEventsFor(walletAddress: string): Promise<number> {
+  const normalized = walletAddress.toLowerCase();
+  // The pseudonym uses a stable hash so multiple erasure requests for
+  // the same user collapse to the same pseudonym. SHA-256 of the
+  // address with a deploy-specific salt is sufficient — we don't need
+  // collision resistance against a determined attacker, just an
+  // anti-correlation property between erased users.
+  const { createHash } = await import('node:crypto');
+  const salt = process.env.AUDIT_PSEUDONYM_SALT ?? '';
+  if (!salt) {
+    logger.error('[audit] AUDIT_PSEUDONYM_SALT not configured; refusing to pseudonymize.');
+    throw new Error('AUDIT_PSEUDONYM_SALT must be configured for pseudonymization');
+  }
+  const pseudonym = `pseudo:${createHash('sha256').update(salt + normalized).digest('hex').slice(0, 32)}`;
+
+  const result = await query(
+    `UPDATE audit_events
+     SET actor_identity = $1
+     WHERE actor_identity = $2`,
+    [pseudonym, normalized],
+  );
+  const result2 = await query(
+    `UPDATE audit_events
+     SET target_identity = $1
+     WHERE target_identity = $2`,
+    [pseudonym, normalized],
+  );
+  return (result.rowCount ?? 0) + (result2.rowCount ?? 0);
+}

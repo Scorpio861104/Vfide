@@ -1,0 +1,226 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getActiveEndorsements",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "endorsers",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint16[]",
+        "name": "weights",
+        "type": "uint16[]"
+      },
+      {
+        "internalType": "uint64[]",
+        "name": "expiries",
+        "type": "uint64[]"
+      },
+      {
+        "internalType": "uint64[]",
+        "name": "timestamps",
+        "type": "uint64[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getMentorInfo",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "isMentorUser",
+        "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "mentor",
+        "type": "address"
+      },
+      {
+        "internalType": "uint16",
+        "name": "menteeCount",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bool",
+        "name": "hasMentor",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "canBecome",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint16",
+        "name": "minScore",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "currentScore",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seerAutonomous",
+        "type": "address"
+      }
+    ],
+    "name": "getMonitorStatus",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "tasksReady",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint8",
+        "name": "tasksBitmask",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalActions",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "violationRate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "sensitivity",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "subjects",
+        "type": "address[]"
+      }
+    ],
+    "name": "getScores",
+    "outputs": [
+      {
+        "internalType": "uint16[]",
+        "name": "scores",
+        "type": "uint16[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address[]",
+        "name": "subjects",
+        "type": "address[]"
+      }
+    ],
+    "name": "getScoresBatch",
+    "outputs": [
+      {
+        "internalType": "uint16[]",
+        "name": "scores",
+        "type": "uint16[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "seer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      }
+    ],
+    "name": "getTrustLevel",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "level",
+        "type": "uint8"
+      },
+      {
+        "internalType": "string",
+        "name": "levelName",
+        "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "canVote",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "canBeMerchant",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

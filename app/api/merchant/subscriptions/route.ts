@@ -1,0 +1,346 @@
+/**
+ * Merchant Subscription Plans API
+ * 
+ * GET    — List plans for a merchant (public) or own plans (authenticated)
+ * POST   — Create a new subscription plan
+ * PATCH  — Update plan details or status
+ * DELETE — Archive a subscription plan
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+import { withAuth } from '@/lib/auth/middleware';
+import type { JWTPayload } from '@/lib/auth/jwt';
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { dispatchWebhook } from '@/lib/webhooks/merchantWebhookDispatcher';
+import { logger } from '@/lib/logger';
+import { z } from 'zod4';
+
+const ADDRESS_LIKE_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const VALID_INTERVALS = ['weekly', 'monthly', 'quarterly', 'yearly'] as const;
+
+const createSubscriptionPlanSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  description: z.string().max(2000).optional(),
+  token: z.string().regex(ADDRESS_LIKE_REGEX),
+  amount: z.coerce.number().positive(),
+  interval: z.enum(VALID_INTERVALS),
+  trial_days: z.coerce.number().int().min(0).max(90).optional(),
+  max_subscribers: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+});
+
+const updateSubscriptionPlanSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().trim().min(1).max(100).optional(),
+  description: z.string().max(2000).optional(),
+  amount: z.coerce.number().positive().optional(),
+  status: z.enum(['active', 'paused', 'archived']).optional(),
+  trial_days: z.coerce.number().int().min(0).max(90).optional(),
+  max_subscribers: z.union([z.coerce.number().int().positive(), z.null()]).optional(),
+});
+
+function getAuthAddress(user: JWTPayload): string | NextResponse {
+  const address = typeof user?.address === 'string'
+    ? user.address.trim().toLowerCase()
+    : '';
+  if (!address || !ADDRESS_LIKE_REGEX.test(address)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return address;
+}
+
+// ─────────────────────────── GET: List plans
+const getHandler = async (request: NextRequest, user: JWTPayload) => {
+  const rateLimitResponse = await withRateLimit(request, 'read');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const { searchParams } = new URL(request.url);
+  const merchantAddress = searchParams.get('merchant');
+
+  // Public access: list active plans for a specific merchant
+  if (merchantAddress && ADDRESS_LIKE_REGEX.test(merchantAddress)) {
+    try {
+      const result = await query(
+        `SELECT id, merchant_address, name, description, token, amount, interval,
+                trial_days, max_subscribers, active_subscribers, created_at
+         FROM merchant_subscription_plans
+         WHERE merchant_address = $1 AND status = 'active'
+         ORDER BY amount ASC`,
+        [merchantAddress.toLowerCase()]
+      );
+      return NextResponse.json({ plans: result.rows });
+    } catch (error) {
+      logger.error('[Subscriptions GET] Error:', error);
+      return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
+    }
+  }
+
+  // Authenticated: list own plans (all statuses)
+  const authAddress = getAuthAddress(user);
+  if (authAddress instanceof NextResponse) return authAddress;
+
+  try {
+    const result = await query(
+      `SELECT p.*,
+              (SELECT COUNT(*) FROM subscriptions s WHERE s.plan_id = p.id AND s.status = 'active') as current_subscribers,
+              COALESCE(
+                (SELECT json_agg(sub ORDER BY sub.created_at DESC)
+                 FROM (
+                   SELECT s.id, s.user_id, s.status, s.next_payment, s.trial_ends_at,
+                          s.last_payment_at, s.failure_count, s.created_at
+                   FROM subscriptions s
+                   WHERE s.plan_id = p.id
+                   ORDER BY s.created_at DESC
+                   LIMIT 50
+                 ) sub),
+                '[]'::json
+              ) AS subscribers
+       FROM merchant_subscription_plans p
+       WHERE p.merchant_address = $1
+       ORDER BY p.created_at DESC`,
+      [authAddress]
+    );
+
+    return NextResponse.json({ plans: result.rows });
+  } catch (error) {
+    logger.error('[Subscriptions GET] Error:', error);
+    return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
+  }
+}
+
+// ─────────────────────────── POST: Create plan
+const postHandler = async (request: NextRequest, user: JWTPayload) => {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = getAuthAddress(user);
+  if (authAddress instanceof NextResponse) return authAddress;
+
+  try {
+    const parsedBody = createSubscriptionPlanSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
+    const { name, description, token, amount, interval, trial_days, max_subscribers } = body;
+
+    // Limit plans per merchant
+    const countResult = await query(
+      'SELECT COUNT(*) as count FROM merchant_subscription_plans WHERE merchant_address = $1',
+      [authAddress]
+    );
+    if (Number(countResult.rows[0]?.count) >= 20) {
+      return NextResponse.json({ error: 'Maximum 20 subscription plans per merchant' }, { status: 400 });
+    }
+
+    const trialDays = trial_days ?? 0;
+    const maxSubs = max_subscribers ?? null;
+
+    const result = await query(
+      `INSERT INTO merchant_subscription_plans
+       (merchant_address, name, description, token, amount, interval, trial_days, max_subscribers)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        authAddress,
+        name,
+        description ?? null,
+        token,
+        amount,
+        interval,
+        trialDays,
+        maxSubs,
+      ]
+    );
+
+    return NextResponse.json({ plan: result.rows[0] }, { status: 201 });
+  } catch (error) {
+    logger.error('[Subscriptions POST] Error:', error);
+    return NextResponse.json({ error: 'Failed to create plan' }, { status: 500 });
+  }
+}
+
+// ─────────────────────────── PATCH: Update plan
+const patchHandler = async (request: NextRequest, user: JWTPayload) => {
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+
+  const authAddress = getAuthAddress(user);
+  if (authAddress instanceof NextResponse) return authAddress;
+
+  try {
+    const parsedBody = updateSubscriptionPlanSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    const body = parsedBody.data;
+    const { id, name, description, amount, status, trial_days, max_subscribers } = body;
+
+    // Verify ownership
+    const existing = await query(
+      'SELECT * FROM merchant_subscription_plans WHERE id = $1 AND merchant_address = $2',
+      [id, authAddress]
+    );
+    if (existing.rows.length === 0) {
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+    }
+
+    const updates: string[] = ['updated_at = NOW()'];
+    const params: unknown[] = [];
+    let paramIndex = 1;
+
+    if (typeof name === 'string') {
+      updates.push(`name = $${paramIndex++}`);
+      params.push(name);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramIndex++}`);
+      params.push(description);
+    }
+    if (typeof amount === 'number') {
+      updates.push(`amount = $${paramIndex++}`);
+      params.push(amount);
+    }
+    if (status) {
+      updates.push(`status = $${paramIndex++}`);
+      params.push(status);
+    }
+    if (typeof trial_days === 'number') {
+      updates.push(`trial_days = $${paramIndex++}`);
+      params.push(trial_days);
+    }
+    if (max_subscribers !== undefined) {
+      updates.push(`max_subscribers = $${paramIndex++}`);
+      params.push(max_subscribers);
+    }
+
+    params.push(id);
+    const result = await query(
+      `UPDATE merchant_subscription_plans SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      params as (string | number | boolean | Date | null | undefined)[]
+    );
+
+    return NextResponse.json({ plan: result.rows[0] });
+  } catch (error) {
+    logger.error('[Subscriptions PATCH] Error:', error);
+    return NextResponse.json({ error: 'Failed to update plan' }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const merchantAddress = searchParams.get('merchant');
+  if (merchantAddress && ADDRESS_LIKE_REGEX.test(merchantAddress)) {
+    return getHandler(request, { address: '' } as JWTPayload);
+  }
+  return withAuth(getHandler)(request);
+}
+
+export const POST = withAuth(postHandler);
+export const PATCH = withAuth(patchHandler);
+
+// ─────────────────────────── Subscriber Management (for customers)
+
+/**
+ * Subscribe a customer to a plan.
+ * Called internally when a customer subscribes via the checkout page.
+ */
+async function subscribeCustomer(
+  userId: number,
+  planId: number,
+  merchantAddress: string,
+): Promise<{ success: boolean; subscription?: Record<string, unknown>; error?: string }> {
+  try {
+    // Fetch plan
+    const planResult = await query(
+      'SELECT * FROM merchant_subscription_plans WHERE id = $1 AND status = $2',
+      [planId, 'active']
+    );
+    if (planResult.rows.length === 0) {
+      return { success: false, error: 'Plan not found or inactive' };
+    }
+
+    const plan = planResult.rows[0];
+    if (!plan) {
+      return { success: false, error: 'Plan not found or inactive' };
+    }
+
+    // Check subscriber cap
+    if (plan.max_subscribers !== null) {
+      const countResult = await query(
+        "SELECT COUNT(*) as count FROM subscriptions WHERE plan_id = $1 AND status = 'active'",
+        [planId]
+      );
+      if (Number(countResult.rows[0]?.count) >= Number(plan.max_subscribers)) {
+        return { success: false, error: 'Plan is full' };
+      }
+    }
+
+    // Check duplicate
+    const existingResult = await query(
+      "SELECT id FROM subscriptions WHERE user_id = $1 AND plan_id = $2 AND status = 'active'",
+      [userId, planId]
+    );
+    if (existingResult.rows.length > 0) {
+      return { success: false, error: 'Already subscribed to this plan' };
+    }
+
+    // Calculate trial end and next payment
+    const now = new Date();
+    const trialDays = Number(plan.trial_days) || 0;
+    const trialEndsAt = trialDays > 0 ? new Date(now.getTime() + trialDays * 86400000) : null;
+    const nextPayment = trialEndsAt ?? getNextPaymentDate(now, plan.interval as string);
+
+    const result = await query(
+      `INSERT INTO subscriptions
+       (user_id, merchant_address, merchant_name, amount, frequency, next_payment,
+        status, plan_id, trial_ends_at, token)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING *`,
+      [
+        userId,
+        merchantAddress,
+        plan.name,
+        plan.amount,
+        plan.interval,
+        nextPayment,
+        'active',
+        planId,
+        trialEndsAt,
+        plan.token,
+      ]
+    );
+
+    // Update subscriber count
+    await query(
+      'UPDATE merchant_subscription_plans SET active_subscribers = active_subscribers + 1 WHERE id = $1',
+      [planId]
+    );
+
+    // Dispatch webhook
+    dispatchWebhook(merchantAddress, 'subscription.created', {
+      plan_id: planId,
+      plan_name: plan.name,
+      user_id: userId,
+      amount: plan.amount,
+      interval: plan.interval,
+      trial_days: trialDays,
+    });
+
+    return { success: true, subscription: result.rows[0] };
+  } catch (error) {
+    logger.error('[Subscribe] Error:', error);
+    return { success: false, error: 'Failed to create subscription' };
+  }
+}
+
+function getNextPaymentDate(from: Date, interval: string): Date {
+  const next = new Date(from);
+  switch (interval) {
+    case 'weekly': next.setDate(next.getDate() + 7); break;
+    case 'monthly': next.setMonth(next.getMonth() + 1); break;
+    case 'quarterly': next.setMonth(next.getMonth() + 3); break;
+    case 'yearly': next.setFullYear(next.getFullYear() + 1); break;
+  }
+  return next;
+}

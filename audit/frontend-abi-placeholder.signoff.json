@@ -1,0 +1,32 @@
+{
+  "signoffVersion": 1,
+  "scope": "frontend-abi-registry-placeholders",
+  "evaluatedAt": "2026-04-30T00:00:00.000Z",
+  "decision": "accepted-no-runtime-placeholders",
+  "repository": "Scorpio861104/Vfide",
+  "branch": "main",
+  "evidence": {
+    "registryFile": "lib/abis/index.ts",
+    "placeholderCommit": "main",
+    "gapCheck": "legacy runtime placeholder ABIs removed from lib/abis"
+  },
+  "summary": {
+    "compiledAbiCount": 60,
+    "placeholderAbiCount": 0,
+    "notes": "Frontend runtime ABI placeholders were removed from lib/abis. Remaining special-case ABIs are managed through parity overrides/exemptions and are not empty placeholder registry files."
+  },
+  "placeholders": [],
+  "risks": [
+    "ABI parity can still fail when frontend ABI fragments drift from compiled artifacts.",
+    "Synthetic/helper ABI exceptions must remain intentional and documented."
+  ],
+  "controls": [
+    "No runtime placeholder ABI files remain in lib/abis.",
+    "ABI parity checks enforce artifact alignment during validation.",
+    "Any future placeholder introduction requires explicit signoff update."
+  ],
+  "approvers": [
+    "engineering-lead",
+    "security-lead"
+  ]
+}

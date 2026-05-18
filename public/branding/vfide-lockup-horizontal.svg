@@ -1,0 +1,28 @@
+<svg width="480" height="120" viewBox="0 0 480 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vLeft" x1="26" y1="22" x2="56" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1E2E3C"/>
+      <stop offset="1" stop-color="#0B151D"/>
+    </linearGradient>
+    <linearGradient id="vRight" x1="94" y1="22" x2="64" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2A3F4F"/>
+      <stop offset="1" stop-color="#101C25"/>
+    </linearGradient>
+    <linearGradient id="vEdge" x1="60" y1="22" x2="60" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17E8F0" stop-opacity="0.8"/>
+      <stop offset="0.5" stop-color="#17E8F0" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#17E8F0" stop-opacity="0.7"/>
+    </linearGradient>
+    <linearGradient id="word" x1="150" y1="28" x2="150" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EEF2F8"/>
+      <stop offset="1" stop-color="#A3AFBD"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M20 22H32L56 86H50L20 22Z" fill="url(#vLeft)"/>
+  <path d="M100 22H88L64 86H70L100 22Z" fill="url(#vRight)"/>
+  <path d="M20 22L60 98L100 22" stroke="url(#vEdge)" stroke-width="1.2"/>
+  <circle cx="60" cy="98" r="2.5" fill="#00E8F0"/>
+
+  <text x="140" y="78" fill="url(#word)" font-family="Inter, Segoe UI, Arial, sans-serif" font-weight="700" font-size="48" letter-spacing="7">V.FIVE</text>
+</svg>

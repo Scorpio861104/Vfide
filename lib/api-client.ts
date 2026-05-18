@@ -1,0 +1,374 @@
+'use client';
+
+/**
+ * API Client for VFIDE backend
+ * Handles authentication, error handling, and type-safe requests
+ */
+
+interface Message {
+  id: string;
+  conversationId: string;
+  from: string;
+  to: string;
+  encryptedContent: string;
+  timestamp: number;
+  read: boolean;
+  signature?: string;
+  reactions?: Record<string, unknown>;
+}
+
+interface User {
+  address: string;
+  username?: string;
+  avatar?: string;
+  bio?: string;
+  createdAt: number;
+}
+
+interface GamificationProgress {
+  address: string;
+  xp: number;
+  level: number;
+  achievements: string[];
+  badges: string[];
+}
+
+export class APIError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public response?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'APIError';
+  }
+}
+
+export class APIClient {
+  private baseURL: string;
+  private token: string | null = null;
+
+  constructor(baseURL: string = '') {
+    this.baseURL = baseURL || (typeof window !== 'undefined' ? window.location.origin : '');
+  }
+
+  /**
+   * Set authentication token
+   */
+  setToken(token: string) {
+    this.token = token;
+  }
+
+  /**
+   * Get the auth token, if any.
+   *
+   * In production the JWT is held in an httpOnly cookie set by the auth
+   * route (see lib/auth/cookieAuth.ts). The cookie is sent automatically
+   * with `credentials: 'include'`, so this method can legitimately return
+   * null and the request will still authenticate via the cookie.
+   *
+   * The in-memory `this.token` exists as a backup path for clients that
+   * received a token in the JSON body (legacy auth response shape), and
+   * for environments where cookies are unavailable (e.g. cross-origin
+   * dev where SameSite=Strict would block the cookie).
+   */
+  getToken(): string | null {
+    return this.token;
+  }
+
+  /**
+   * Clear authentication token
+   */
+  clearToken() {
+    this.token = null;
+  }
+
+  /**
+   * Make API request
+   */
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}/api${endpoint}`;
+    const token = this.getToken();
+
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: options.credentials ?? 'include',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new APIError(
+          data.error || 'Request failed',
+          response.status,
+          data
+        );
+      }
+
+      return data as T;
+    } catch (error) {
+      if (error instanceof APIError) throw error;
+      
+      throw new APIError(
+        error instanceof Error ? error.message : 'Network error',
+        0
+      );
+    }
+  }
+
+  // ============ Authentication ============
+
+  async getAuthChallenge(address: string, chainId: number) {
+    return this.request<{
+      address: string;
+      chainId: number;
+      domain: string;
+      message: string;
+      nonce: string;
+      issuedAt: number;
+      expiresAt: number;
+    }>('/auth/challenge', {
+      method: 'POST',
+      body: JSON.stringify({ address, chainId }),
+    });
+  }
+
+  async authenticate(address: string, message: string, signature: string) {
+    const response = await this.request<{
+      success: boolean;
+      token?: string;
+      address: string;
+      expiresIn: number;
+    }>('/auth', {
+      method: 'POST',
+      body: JSON.stringify({ address, message, signature }),
+    });
+
+    // Backward compatible with older auth responses that returned a token.
+    if (typeof response.token === 'string' && response.token.length > 0) {
+      this.setToken(response.token);
+    }
+    return response;
+  }
+
+  async verifyToken() {
+    return this.request<{ valid: boolean; address: string }>('/auth');
+  }
+
+  async logout() {
+    return this.request<{ success: boolean; message: string }>('/auth/logout', {
+      method: 'POST',
+    });
+  }
+
+  // ============ Messages ============
+
+  async getMessages(conversationId: string, limit = 50, offset = 0) {
+    return this.request<{
+      messages: Message[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>(`/messages?conversationId=${conversationId}&limit=${limit}&offset=${offset}`);
+  }
+
+  async sendMessage(data: {
+    conversationId: string;
+    from: string;
+    to: string;
+    encryptedContent: string;
+    signature?: string;
+  }) {
+    return this.request<{ success: boolean; message: Message }>('/messages', {
+      method: 'POST',
+      body: JSON.stringify({
+        from: data.from,
+        to: data.to,
+        content: data.encryptedContent,
+        conversationId: data.conversationId,
+        signature: data.signature,
+      }),
+    });
+  }
+
+  async markMessageRead(messageId: string, conversationId: string) {
+    return this.request<{ success: boolean; message: Message }>('/messages', {
+      method: 'PATCH',
+      body: JSON.stringify({ messageId, conversationId, read: true }),
+    });
+  }
+
+  async editMessage(messageId: string, conversationId: string, newEncryptedContent: string) {
+    return this.request<{ success: boolean; message: Message }>('/messages/edit', {
+      method: 'PATCH',
+      body: JSON.stringify({ messageId, conversationId, encryptedContent: newEncryptedContent }),
+    });
+  }
+
+  async deleteMessage(messageId: string, conversationId: string) {
+    return this.request<{ success: boolean; message: Message }>('/messages/delete', {
+      method: 'DELETE',
+      body: JSON.stringify({ messageId, conversationId }),
+    });
+  }
+
+  async addReaction(
+    messageId: string, 
+    conversationId: string, 
+    reaction: { type?: 'emoji' | 'custom_image'; emoji?: string; imageUrl?: string; imageName?: string }, 
+    userAddress: string
+  ) {
+    return this.request<{ success: boolean; message: Message }>('/messages/reaction', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        messageId, 
+        conversationId, 
+        reactionType: reaction.type || 'emoji',
+        emoji: reaction.emoji,
+        imageUrl: reaction.imageUrl,
+        imageName: reaction.imageName,
+        userAddress 
+      }),
+    });
+  }
+
+  // ============ Users ============
+
+  async getUser(address: string) {
+    return this.request<{ user: User }>(`/users/${address}`);
+  }
+
+  async updateUser(address: string, data: Partial<User>) {
+    return this.request<{ success: boolean; user: User }>(`/users/${address}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async uploadAvatar(address: string, file: File) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const token = this.getToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.baseURL}/api/users/${address}/avatar`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new APIError(data.error || 'Upload failed', response.status, data);
+    }
+
+    return data as { success: boolean; avatarUrl: string };
+  }
+
+  // ============ Friends ============
+
+  async getFriends(address: string) {
+    return this.request<{ friends: string[]; count: number }>(
+      `/friends?address=${address}`
+    );
+  }
+
+  async sendFriendRequest(from: string, to: string) {
+    return this.request<{ success: boolean; request: { id: string; from: string; to: string; status: string } }>('/friends', {
+      method: 'POST',
+      body: JSON.stringify({ from, to }),
+    });
+  }
+
+  async respondToFriendRequest(
+    requestId: string,
+    status: 'accepted' | 'rejected',
+    userAddress: string
+  ) {
+    return this.request<{ success: boolean; message: string }>('/friends', {
+      method: 'PATCH',
+      body: JSON.stringify({ requestId, status, userAddress }),
+    });
+  }
+
+  async removeFriend(user1: string, user2: string) {
+    return this.request<{ success: boolean; message: string }>(
+      `/friends?user1=${user1}&user2=${user2}`,
+      { method: 'DELETE' }
+    );
+  }
+
+  // ============ Gamification ============
+
+  async getGamificationProgress(address: string) {
+    return this.request<GamificationProgress>(`/gamification?address=${address}`);
+  }
+
+  async awardXP(address: string, amount: number, reason: string) {
+    return this.request<{
+      success: boolean;
+      levelUp: boolean;
+      progress: GamificationProgress;
+      reason: string;
+    }>('/gamification/xp', {
+      method: 'POST',
+      body: JSON.stringify({ address, amount, reason }),
+    });
+  }
+
+  async getLeaderboard(category = 'xp', limit = 50) {
+    return this.request<{
+      leaderboard: Array<{ address: string; score: number; rank: number }>;
+      total: number;
+      cached: boolean;
+    }>(`/gamification/leaderboard?category=${category}&limit=${limit}`);
+  }
+}
+
+/**
+ * Global API client instance for making authenticated HTTP requests
+ * 
+ * Handles all backend communication including:
+ * - Authentication (JWT tokens)
+ * - Messages (send, edit, delete, reactions)
+ * - User management (profiles, avatars)
+ * - Friends system (requests, accept/reject)
+ * - Gamification (XP, achievements, leaderboard)
+ * 
+ * Singleton pattern ensures consistent auth state and token management.
+ */
+export const apiClient = new APIClient();
+
+/**
+ * React hook for accessing the API client
+ * 
+ * Provides convenient access to all API methods with automatic
+ * authentication and error handling.
+ * 
+ * @returns APIClient singleton instance
+ * @example
+ * const api = useAPIClient();
+ * const messages = await api.getMessages(conversationId);
+ * await api.sendMessage({ from, to, encryptedContent });
+ */
+export function useAPIClient() {
+  return apiClient;
+}

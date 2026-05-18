@@ -1,0 +1,378 @@
+/**
+ * Rate Limiting Module
+ * Provides distributed rate limiting using Upstash Redis
+ */
+
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
+import { logger } from '@/lib/logger';
+import { getRequestIp } from '@/lib/security/requestContext';
+
+// Rate limit configurations for different endpoint types
+export const RATE_LIMITS = {
+  // Strict limits for auth endpoints to prevent brute force
+  auth: { requests: 10, window: '1m' as const },
+  
+  // Standard API endpoints
+  api: { requests: 100, window: '1m' as const },
+  
+  // Write operations (POST, PUT, DELETE)
+  write: { requests: 30, window: '1m' as const },
+  
+  // Reward claiming - very strict
+  claim: { requests: 5, window: '1h' as const },
+  
+  // File uploads
+  upload: { requests: 10, window: '1m' as const },
+  
+  // Search/read-heavy operations
+  read: { requests: 200, window: '1m' as const },
+} as const;
+
+type RateLimitType = keyof typeof RATE_LIMITS;
+
+// Create rate limiter instances (one per limit type)
+let upstashLimiters: Map<RateLimitType, Ratelimit> | null = null;
+let missingRedisWarningLogged = false;
+const memoryRateBuckets = new Map<string, { count: number; resetAt: number }>();
+const PRUNE_INTERVAL_MS = 5 * 60 * 1000;
+let lastPruneTime = Date.now();
+
+function pruneExpiredBuckets(): void {
+  const now = Date.now();
+  if (now - lastPruneTime < PRUNE_INTERVAL_MS) return;
+  lastPruneTime = now;
+
+  for (const [key, bucket] of memoryRateBuckets) {
+    if (now >= bucket.resetAt) {
+      memoryRateBuckets.delete(key);
+    }
+  }
+}
+
+function parseWindowMs(window: typeof RATE_LIMITS[RateLimitType]['window']): number {
+  const match = /^(\d+)([smhd])$/.exec(window);
+  if (!match) return 60_000;
+  const [, valuePart, unitPart] = match;
+  const value = Number.parseInt(valuePart ?? '1', 10);
+  const unit = unitPart ?? 'm';
+  if (unit === 's') return value * 1000;
+  if (unit === 'm') return value * 60_000;
+  if (unit === 'h') return value * 3_600_000;
+  return value * 86_400_000;
+}
+
+function memoryRateLimit(identifier: string, type: RateLimitType): {
+  success: boolean;
+  remaining: number;
+  reset: number;
+} {
+  pruneExpiredBuckets();
+  const config = RATE_LIMITS[type];
+  const windowMs = parseWindowMs(config.window);
+  const now = Date.now();
+  const key = `${identifier}:${type}`;
+  const existing = memoryRateBuckets.get(key);
+
+  if (!existing || now >= existing.resetAt) {
+    const resetAt = now + windowMs;
+    memoryRateBuckets.set(key, { count: 1, resetAt });
+    return { success: true, remaining: Math.max(config.requests - 1, 0), reset: resetAt };
+  }
+
+  const nextCount = existing.count + 1;
+  const success = nextCount <= config.requests;
+  if (success) {
+    memoryRateBuckets.set(key, { count: nextCount, resetAt: existing.resetAt });
+  }
+
+  return {
+    success,
+    remaining: Math.max(config.requests - Math.min(nextCount, config.requests), 0),
+    reset: existing.resetAt,
+  };
+}
+
+function hasRedisConfiguration(): boolean {
+  return Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+}
+
+function getUpstashLimiters(): Map<RateLimitType, Ratelimit> | null {
+  if (upstashLimiters !== null) return upstashLimiters;
+
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    try {
+      const redis = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      });
+
+      // Create a separate Ratelimit instance per type so per-endpoint limits are enforced
+      upstashLimiters = new Map(
+        (Object.keys(RATE_LIMITS) as RateLimitType[]).map((type) => {
+          const cfg = RATE_LIMITS[type];
+          return [
+            type,
+            new Ratelimit({
+              redis,
+              limiter: Ratelimit.slidingWindow(cfg.requests, cfg.window),
+              analytics: true,
+              prefix: `vfide:ratelimit:${type}`,
+            }),
+          ];
+        })
+      );
+
+      logger.info('[RateLimit] Using Upstash Redis');
+      return upstashLimiters;
+    } catch (_error) {
+      logger.error('[RateLimit] Failed to initialize Upstash Redis');
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get client identifier for rate limiting.
+ *
+ * F-BE-002 FIX: User-Agent is no longer mixed into the bucket key. Including UA
+ * lets any attacker bypass strict per-IP limits (e.g. auth: 10/min) by simply
+ * rotating the User-Agent header — each unique UA gets its own bucket. The IP
+ * alone is the correct shared resource for rate limiting.
+ *
+ * F-BE-029 FIX: simpleHash() was a 32-bit Java-style string hash truncated to
+ * 8 hex chars; collision-prone and provided no real entropy. With UA dropped,
+ * we no longer need a hash at all.
+ *
+ * IPv6 note: getRequestIp returns the full address from x-forwarded-for /
+ * x-real-ip / connection. For shared-prefix abuse (mobile carriers behind
+ * the same /64), operators can layer additional auth-flow gates rather than
+ * widening the rate-limit key.
+ */
+export function getClientIdentifier(request: NextRequest): string {
+  const { ip } = getRequestIp(request.headers);
+
+  // POW-3 FIX: For authenticated requests, key the bucket as `${ip}|${addr}`
+  // so multiple users behind a single NAT gateway (a busy merchant office,
+  // a shared coffee shop wifi) don't collide on each other's rate-limit
+  // budget. Without this, the typical merchant office with 4 staff hitting
+  // the API from one egress IP shared a single 30/min write quota and ran
+  // out during normal lunch-rush operations.
+  //
+  // Verification rules:
+  //   1. We only peek the JWT signature with the current/previous HS256
+  //      secret — no revocation check, no DB lookup. This keeps the
+  //      rate-limit path zero-I/O and identical in cost to the IP-only
+  //      path. Forged or expired JWTs do not affect the bucket key
+  //      because signature verification fails — those requests fall back
+  //      to IP-only keying. (That is the conservative, correct behavior:
+  //      an attacker who cannot forge a valid signature gets no benefit
+  //      from supplying random JWTs.)
+  //   2. If the token is valid but its `sub`/`address` claim is missing
+  //      or malformed, we fall back to IP-only keying.
+  //   3. We accept the token from either the Authorization: Bearer header
+  //      or the `accessToken` cookie, matching the rest of the auth stack.
+  //
+  // Note: this verification is intentionally signature-only. Revocation
+  // is enforced later by withAuth on protected routes; an attacker
+  // presenting a revoked-but-valid-signature token will eventually be
+  // rejected by withAuth, and meanwhile their rate-limit bucket is at
+  // most their own — no benefit to them.
+  const addr = _peekAddressFromRequest(request);
+  if (addr) {
+    return `${ip}|${addr}`;
+  }
+  return ip;
+}
+
+const ADDRESS_KEY_REGEX = /^0x[a-f0-9]{40}$/;
+
+function _peekAddressFromRequest(request: NextRequest): string | null {
+  try {
+    const authHeader = request.headers.get('authorization') || '';
+    let token: string | null = null;
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (match) {
+      token = (match[1] || '').trim() || null;
+    }
+    if (!token) {
+      const cookieToken = request.cookies?.get?.('accessToken')?.value;
+      if (typeof cookieToken === 'string' && cookieToken.length > 0) {
+        token = cookieToken;
+      }
+    }
+    if (!token) return null;
+
+    // Try current secret first, then prev for rotation window.
+    const currentSecret = process.env.JWT_SECRET || '';
+    const prevSecret = process.env.PREV_JWT_SECRET || '';
+    if (!currentSecret) return null;
+
+    let decoded: jwt.JwtPayload | string | null = null;
+    const verifyOpts: jwt.VerifyOptions = { algorithms: ['HS256'] };
+    try {
+      decoded = jwt.verify(token, currentSecret, verifyOpts);
+    } catch {
+      if (prevSecret) {
+        try {
+          decoded = jwt.verify(token, prevSecret, verifyOpts);
+        } catch {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    }
+
+    if (!decoded || typeof decoded === 'string') return null;
+    const candidate =
+      (decoded as { address?: unknown; sub?: unknown }).address ??
+      (decoded as { sub?: unknown }).sub;
+    if (typeof candidate !== 'string') return null;
+    const lower = candidate.toLowerCase().trim();
+    if (!ADDRESS_KEY_REGEX.test(lower)) return null;
+    return lower;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Apply rate limiting to a request
+ */
+export async function rateLimit(
+  request: NextRequest,
+  type: RateLimitType = 'api'
+): Promise<{ success: boolean; response?: NextResponse }> {
+  const identifier = getClientIdentifier(request);
+  const config = RATE_LIMITS[type];
+
+  if (!hasRedisConfiguration() && process.env.NODE_ENV === 'production') {
+    logger.error('[RateLimit] Redis is required in production but not configured.');
+    return {
+      success: false,
+      response: NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      ),
+    };
+  }
+
+  if (!hasRedisConfiguration()) {
+    if (!missingRedisWarningLogged) {
+      missingRedisWarningLogged = true;
+      logger.warn('[RateLimit] Redis not configured; using in-memory fallback limiter.');
+    }
+    const result = memoryRateLimit(identifier, type);
+    if (!result.success) {
+      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+      return {
+        success: false,
+        response: NextResponse.json(
+          {
+            error: 'Too many requests',
+            retryAfter,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': retryAfter.toString(),
+              'X-RateLimit-Limit': config.requests.toString(),
+              'X-RateLimit-Remaining': result.remaining.toString(),
+              'X-RateLimit-Reset': result.reset.toString(),
+            },
+          }
+        ),
+      };
+    }
+    return { success: true };
+  }
+
+  try {
+    const upstash = getUpstashLimiters();
+    if (!upstash) {
+      throw new Error('Rate limiter unavailable: Redis client initialization failed');
+    }
+    // Use the per-type Upstash limiter so endpoint-specific limits are enforced
+    const result = await upstash.get(type)!.limit(`${identifier}:${type}`);
+    
+    if (!result.success) {
+      const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
+      
+      return {
+        success: false,
+        response: NextResponse.json(
+          { 
+            error: 'Too many requests',
+            retryAfter,
+          },
+          { 
+            status: 429,
+            headers: {
+              'Retry-After': retryAfter.toString(),
+              'X-RateLimit-Limit': config.requests.toString(),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': result.reset.toString(),
+            },
+          }
+        ),
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    logger.error('[RateLimit] Redis error in production:', error as Error);
+    
+    // In production, fail-closed when Redis is configured but unavailable.
+    // Per-process memory fallback is insufficient in serverless (each process has independent counters).
+    if (process.env.NODE_ENV === 'production' && hasRedisConfiguration()) {
+      logger.error('[RateLimit] Redis was configured but failed; rejecting request to prevent bypass');
+      return {
+        success: false,
+        response: NextResponse.json(
+          { error: 'Service temporarily unavailable' },
+          { status: 503 }
+        ),
+      };
+    }
+    
+    // In non-production or when Redis was never configured, use per-process memory fallback
+    const fallback = memoryRateLimit(identifier, type);
+    if (!fallback.success) {
+      const retryAfter = Math.ceil((fallback.reset - Date.now()) / 1000);
+      return {
+        success: false,
+        response: NextResponse.json(
+          {
+            error: 'Too many requests',
+            retryAfter,
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': retryAfter.toString(),
+              'X-RateLimit-Limit': config.requests.toString(),
+              'X-RateLimit-Remaining': fallback.remaining.toString(),
+              'X-RateLimit-Reset': fallback.reset.toString(),
+            },
+          }
+        ),
+      };
+    }
+    return { success: true };
+  }
+}
+
+/**
+ * Rate limit middleware helper
+ */
+export async function withRateLimit(
+  request: NextRequest,
+  type: RateLimitType = 'api'
+): Promise<NextResponse | null> {
+  const result = await rateLimit(request, type);
+  return result.success ? null : result.response || null;
+}

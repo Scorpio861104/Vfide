@@ -1,0 +1,104 @@
+{
+  "generated": [
+    "BadgeRegistry",
+    "BridgeSecurityModule",
+    "DAOTimelock",
+    "DutyDistributor",
+    "EmergencyControl",
+    "EscrowManager",
+    "GovernanceHooks",
+    "LiquidityIncentives",
+    "PayrollManager",
+    "SanctumVault",
+    "SeerSocial",
+    "SeerView",
+    "StablecoinRegistry",
+    "SubscriptionManager",
+    "VFIDEBenefits",
+    "VaultRecoveryClaim",
+    "VaultRegistry"
+  ],
+  "skippedNoArtifact": [
+    "MainstreamPayments",
+    "PromotionalTreasury",
+    "SharedInterfaces",
+    "UncoveredContractsSmoke",
+    "UserVault",
+    "VFIDECommerce",
+    "VFIDEFinance"
+  ],
+  "skippedCovered": [
+    "DevReserveVestingVault",
+    "VFIDESecurity",
+    "VFIDEToken",
+    "VaultHub",
+    "VaultInfrastructure"
+  ],
+  "skippedExists": [],
+  "skippedUnsupported": [
+    {
+      "contract": "BadgeManager",
+      "reason": "library-links-required"
+    },
+    {
+      "contract": "CardBoundVault",
+      "reason": "dynamic-array-constructor"
+    },
+    {
+      "contract": "CouncilElection",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "CouncilManager",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "CouncilSalary",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "DAO",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "EcosystemVault",
+      "reason": "bytecode-too-large"
+    },
+    {
+      "contract": "MerchantPortal",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "OwnerControlPanel",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "ProofScoreBurnRouter",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "RevenueSplitter",
+      "reason": "dynamic-array-constructor"
+    },
+    {
+      "contract": "SeerAutonomous",
+      "reason": "bytecode-too-large"
+    },
+    {
+      "contract": "SeerGuardian",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "SystemHandover",
+      "reason": "multi-dependency-constructor"
+    },
+    {
+      "contract": "VFIDEBadgeNFT",
+      "reason": "library-links-required"
+    },
+    {
+      "contract": "VFIDEEnterpriseGateway",
+      "reason": "multi-dependency-constructor"
+    }
+  ]
+}

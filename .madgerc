@@ -1,0 +1,22 @@
+{
+  "fileExtensions": ["ts", "tsx", "js", "jsx"],
+  "excludeRegExp": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build",
+    "__tests__",
+    ".storybook"
+  ],
+  "detectiveOptions": {
+    "ts": {
+      "skipTypeImports": true
+    },
+    "tsx": {
+      "skipTypeImports": true
+    }
+  },
+  "circular": true,
+  "orphans": false,
+  "warning": true
+}

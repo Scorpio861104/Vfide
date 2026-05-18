@@ -1,0 +1,52 @@
+name: Governance Safety
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'contracts/**'
+      - 'app/control-panel/**'
+      - 'scripts/verify-*.ts'
+      - 'scripts/verify-*.sh'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  governance-safety:
+    name: Governance safety verifiers
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Compile contracts
+        run: npm run -s contract:compile
+
+      - name: Run governance safety checks
+        # NOTE: contract:verify:governance-safety:local includes chain-of-return and
+        # next-of-kin verifiers. These features are UNSUPPORTED in CardBound vault mode
+        # (the project default). Failures from those two sub-scripts against a CardBound
+        # deployment are expected and acceptable; only ocp-guardrails and feature9:governance
+        # are enforced unconditionally.
+        run: npm run -s contract:verify:governance-safety:local
+
+      - name: Run CardBound vault security checks
+        run: npm run -s contract:verify:card-bound-vault:local
+
+      - name: Run VaultHub CardBound integration checks
+        run: npm run -s contract:verify:vault-hub-cardbound:local
+
+  seer-watcher:
+    name: Seer watcher verifiers
+    uses: ./.github/workflows/seer-watcher.yml

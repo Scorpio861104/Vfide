@@ -1,0 +1,20 @@
+{
+  "policyVersion": 1,
+  "operationId": "op-2026-03-29-mainnet-deploy",
+  "operationType": "mainnet-deploy",
+  "decision": "proceed",
+  "approvals": [
+    {
+      "approver": "operations-owner",
+      "role": "operator",
+      "approvedAt": "2026-03-29T00:05:00.000Z",
+      "evidence": "ops/signoff/op-2026-03-29-mainnet-deploy/operator-approval"
+    },
+    {
+      "approver": "security-lead",
+      "role": "reviewer",
+      "approvedAt": "2026-03-29T00:08:00.000Z",
+      "evidence": "ops/signoff/op-2026-03-29-mainnet-deploy/reviewer-approval"
+    }
+  ]
+}

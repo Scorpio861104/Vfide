@@ -1,0 +1,115 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Version control
+.git/
+.gitignore
+
+# IDE & editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test & development
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+jest.config.*
+jest.setup.*
+playwright.config.*
+cypress/
+
+# Documentation (not needed in container)
+*.md
+!README.md
+docs/
+
+# Hardhat artifacts (not needed in Next.js container)
+artifacts/
+cache/
+typechain-types/
+
+# Smart contracts (compiled artifacts only needed, source not used at runtime)
+contracts/
+typechain-types/
+tsconfig.contracts.json
+
+# WebSocket server source (uses compiled dist/)
+websocket-server/src/
+
+# Deployment & tooling
+scripts/
+migrations/
+verify-*.sh
+verify-*.ts
+deploy.sh
+
+# Audit & analysis outputs
+audit/
+slither*.txt
+*.audit.json
+lighthouserc.json
+lighthouse-budget.json
+VFIDE*.md
+LOCAL_VALIDATION_RUNBOOK.md
+TEST_EXECUTION_GUIDE.md
+
+# CI/CD config (not needed at runtime)
+.github/
+.gitlab-ci.yml
+.circleci/
+.travis.yml
+
+# Additional package manager files not used by this image build
+# Keep `package-lock.json` in the build context for deterministic `npm ci`.
+yarn.lock
+pnpm-lock.yaml
+
+# Development configuration & linting rules
+.prettierrc
+.eslintrc*
+eslint.config.mjs
+postcss.config.mjs
+tailwind.config.cjs
+commitlint.config.js
+.editorconfig
+
+# Misc files
+*.zip
+*.log
+files.zip
+VFIDE_Brand_Assets.zip
+*.3ds
+*.blend
+VFIDEDashboard.jsx
+extracted-archives/
+playwright-report/
+test-results/
+vfide-complete/
+
+# Docker files
+docker-compose*.yml
+Dockerfile
+Dockerfile.*
+.dockerignore

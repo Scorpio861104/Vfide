@@ -1,0 +1,596 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth/middleware';
+import { query } from '@/lib/db';
+import type { JWTPayload } from '@/lib/auth/jwt';
+
+import { withRateLimit } from '@/lib/auth/rateLimit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod4';
+
+const MAX_EXPORT_DATE_RANGE_DAYS = 366;
+const MAX_EXPORT_DATE_RANGE_MS = MAX_EXPORT_DATE_RANGE_DAYS * 24 * 60 * 60 * 1000;
+const MAX_EXPORT_FILTER_VALUES = 100;
+
+const exportRequestSchema = z.object({
+  address: z.string().trim().min(1),
+  options: z.object({
+    format: z.enum(['csv', 'json', 'pdf']),
+    dateRange: z.object({
+      start: z.string(),
+      end: z.string(),
+    }),
+    filters: z.object({
+      types: z.array(z.string()).max(MAX_EXPORT_FILTER_VALUES),
+      tokens: z.array(z.string()).max(MAX_EXPORT_FILTER_VALUES),
+      minAmount: z.number().finite().optional(),
+      maxAmount: z.number().finite().optional(),
+    }),
+    includeMetadata: z.boolean(),
+    includeFees: z.boolean(),
+    includeUsdValue: z.boolean(),
+    taxFormat: z.enum(['basic', 'turbotax', 'cointracker', 'koinly']).optional(),
+  }),
+});
+
+function normalizeAddress(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isAddressLike(value: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(value);
+}
+
+function isIsoDateString(value: string): boolean {
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime());
+}
+
+// ==================== TYPES ====================
+
+interface ExportOptions {
+  format: 'csv' | 'json' | 'pdf';
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  filters: {
+    types: string[];
+    tokens: string[];
+    minAmount?: number;
+    maxAmount?: number;
+  };
+  includeMetadata: boolean;
+  includeFees: boolean;
+  includeUsdValue: boolean;
+  taxFormat?: 'basic' | 'turbotax' | 'cointracker' | 'koinly';
+}
+
+interface Transaction {
+  id: string;
+  hash: string;
+  type: string;
+  from_address: string;
+  to_address: string;
+  token_symbol: string;
+  amount: string;
+  usd_value: string | null;
+  fee: string | null;
+  status: string;
+  timestamp: string;
+  metadata: Record<string, unknown> | null;
+}
+
+// ==================== FORMATTERS ====================
+
+/**
+ * T-CSV-INJECT-1 FIX: CSV Formula Injection Defense.
+ *
+ * Excel, Google Sheets, LibreOffice Calc, and Numbers interpret cells beginning with
+ * any of the characters `= + - @ \t \r` as formulas. A malicious memo or address that
+ * starts with these characters can exfiltrate data, execute remote calls (DDE), or
+ * crash the spreadsheet when a user opens the export.
+ *
+ * Mitigation per OWASP Formula Injection guidance: prefix dangerous leading characters
+ * with a single quote (which Excel suppresses on display but stops formula evaluation).
+ * Also strips embedded \r and \n that can break out of quoted cells in some readers.
+ */
+function escapeCsvCell(value: unknown): string {
+  let s = String(value ?? '');
+  // Strip control characters that can break CSV parsing or be used for injection.
+  // Keep printable characters; remove embedded newlines that Excel sometimes splits on.
+  s = s.replace(/[\u0000-\u001F\u007F]/g, ' ');
+  // If the value starts with a formula trigger character, prefix with a single quote.
+  if (s.length > 0 && /^[=+\-@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
+  // Standard CSV escaping: double inner quotes, wrap whole cell in quotes.
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
+function formatAsCSV(
+  transactions: Transaction[],
+  options: ExportOptions
+): string {
+  // Build header based on options
+  const headers = ['Date', 'Type', 'From', 'To', 'Token', 'Amount'];
+  if (options.includeUsdValue) headers.push('USD Value');
+  if (options.includeFees) headers.push('Fee (ETH)', 'Fee (USD)');
+  headers.push('Status', 'Transaction Hash');
+  if (options.includeMetadata) headers.push('Memo');
+
+  // Tax software specific formats
+  if (options.taxFormat === 'turbotax') {
+    return formatTurboTaxCSV(transactions, options);
+  } else if (options.taxFormat === 'cointracker') {
+    return formatCoinTrackerCSV(transactions, options);
+  } else if (options.taxFormat === 'koinly') {
+    return formatKoinlyCSV(transactions, options);
+  }
+
+  const rows = transactions.map((tx) => {
+    const row = [
+      new Date(tx.timestamp).toISOString(),
+      tx.type,
+      tx.from_address,
+      tx.to_address,
+      tx.token_symbol || 'ETH',
+      tx.amount,
+    ];
+    if (options.includeUsdValue) row.push(tx.usd_value || '');
+    if (options.includeFees) {
+      row.push(tx.fee || '0');
+      row.push(''); // Fee in USD - would need price lookup
+    }
+    row.push(tx.status);
+    row.push(tx.hash);
+    if (options.includeMetadata) {
+      const memo = tx.metadata && typeof tx.metadata === 'object' 
+        ? (tx.metadata as Record<string, unknown>).memo || ''
+        : '';
+      row.push(String(memo));
+    }
+    // T-CSV-INJECT-1 FIX: route every cell through escapeCsvCell.
+    return row.map(escapeCsvCell).join(',');
+  });
+
+  return [headers.join(','), ...rows].join('\n');
+}
+
+function formatTurboTaxCSV(transactions: Transaction[], _options: ExportOptions): string {
+  const headers = [
+    'Currency Name',
+    'Purchase Date',
+    'Cost Basis',
+    'Date Sold',
+    'Proceeds',
+  ];
+
+  const rows = transactions.map((tx) => {
+    const date = new Date(tx.timestamp).toLocaleDateString('en-US');
+    return [
+      tx.token_symbol || 'ETH',
+      tx.type === 'receive' ? date : '',
+      tx.type === 'receive' ? tx.usd_value || '0' : '',
+      tx.type === 'send' ? date : '',
+      tx.type === 'send' ? tx.usd_value || '0' : '',
+    ]
+      .map(escapeCsvCell)
+      .join(',');
+  });
+
+  return [headers.join(','), ...rows].join('\n');
+}
+
+function formatCoinTrackerCSV(transactions: Transaction[], _options: ExportOptions): string {
+  const headers = [
+    'Date',
+    'Received Quantity',
+    'Received Currency',
+    'Sent Quantity',
+    'Sent Currency',
+    'Fee Amount',
+    'Fee Currency',
+    'Tag',
+  ];
+
+  const rows = transactions.map((tx) => {
+    const date = new Date(tx.timestamp).toISOString();
+    return [
+      date,
+      tx.type === 'receive' ? tx.amount : '',
+      tx.type === 'receive' ? tx.token_symbol || 'ETH' : '',
+      tx.type === 'send' ? tx.amount : '',
+      tx.type === 'send' ? tx.token_symbol || 'ETH' : '',
+      tx.fee || '',
+      tx.fee ? 'ETH' : '',
+      tx.type,
+    ]
+      .map(escapeCsvCell)
+      .join(',');
+  });
+
+  return [headers.join(','), ...rows].join('\n');
+}
+
+function formatKoinlyCSV(transactions: Transaction[], _options: ExportOptions): string {
+  const headers = [
+    'Date',
+    'Sent Amount',
+    'Sent Currency',
+    'Received Amount',
+    'Received Currency',
+    'Fee Amount',
+    'Fee Currency',
+    'Net Worth Amount',
+    'Net Worth Currency',
+    'Label',
+    'Description',
+    'TxHash',
+  ];
+
+  const rows = transactions.map((tx) => {
+    const date = new Date(tx.timestamp).toISOString();
+    const memo = tx.metadata && typeof tx.metadata === 'object'
+      ? (tx.metadata as Record<string, unknown>).memo || ''
+      : '';
+    return [
+      date,
+      tx.type === 'send' ? tx.amount : '',
+      tx.type === 'send' ? tx.token_symbol || 'ETH' : '',
+      tx.type === 'receive' ? tx.amount : '',
+      tx.type === 'receive' ? tx.token_symbol || 'ETH' : '',
+      tx.fee || '',
+      tx.fee ? 'ETH' : '',
+      tx.usd_value || '',
+      'USD',
+      tx.type,
+      String(memo),
+      tx.hash,
+    ]
+      .map(escapeCsvCell)
+      .join(',');
+  });
+
+  return [headers.join(','), ...rows].join('\n');
+}
+
+function formatAsJSON(
+  transactions: Transaction[],
+  options: ExportOptions
+): string {
+  const formatted = transactions.map((tx) => {
+    const base: Record<string, unknown> = {
+      date: tx.timestamp,
+      type: tx.type,
+      from: tx.from_address,
+      to: tx.to_address,
+      token: tx.token_symbol || 'ETH',
+      amount: tx.amount,
+      status: tx.status,
+      hash: tx.hash,
+    };
+
+    if (options.includeUsdValue && tx.usd_value) {
+      base.usdValue = tx.usd_value;
+    }
+
+    if (options.includeFees && tx.fee) {
+      base.fee = tx.fee;
+    }
+
+    if (options.includeMetadata && tx.metadata) {
+      base.metadata = tx.metadata;
+    }
+
+    return base;
+  });
+
+  return JSON.stringify(
+    {
+      exportedAt: new Date().toISOString(),
+      totalTransactions: transactions.length,
+      dateRange: options.dateRange,
+      transactions: formatted,
+    },
+    null,
+    2
+  );
+}
+
+async function formatAsPDF(
+  transactions: Transaction[],
+  options: ExportOptions,
+  address: string
+): Promise<string> {
+  // For PDF, we generate an HTML string that will be rendered as PDF
+  // In production, use a library like puppeteer or jspdf
+  const esc = (s: unknown) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const rows = transactions
+    .slice(0, 1000) // Limit for PDF
+    .map(
+      (tx) => `
+    <tr>
+      <td>${esc(new Date(tx.timestamp).toLocaleDateString())}</td>
+      <td>${esc(tx.type)}</td>
+      <td>${esc(tx.token_symbol || 'ETH')}</td>
+      <td>${esc(tx.amount)}</td>
+      ${options.includeUsdValue ? `<td>$${esc(tx.usd_value || '0')}</td>` : ''}
+      <td>${esc(tx.status)}</td>
+    </tr>
+  `
+    )
+    .join('');
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Transaction History Export</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    .header { margin-bottom: 20px; }
+    .meta { color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Transaction History</h1>
+    <p class="meta">
+      Address: ${esc(address)}<br>
+      Date Range: ${esc(options.dateRange.start)} to ${esc(options.dateRange.end)}<br>
+      Exported: ${new Date().toISOString()}<br>
+      Total Transactions: ${transactions.length}
+    </p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Token</th>
+        <th>Amount</th>
+        ${options.includeUsdValue ? '<th>USD Value</th>' : ''}
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+  </table>
+</body>
+</html>
+  `;
+}
+
+function getContentType(format: string): string {
+  switch (format) {
+    case 'csv':
+      return 'text/csv';
+    case 'json':
+      return 'application/json';
+    case 'pdf':
+      return 'application/pdf';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
+// ==================== ROUTE HANDLER ====================
+
+export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+  // Rate limiting: 10 exports per hour
+  const rateLimitResponse = await withRateLimit(request, 'write');
+  if (rateLimitResponse) return rateLimitResponse;
+  let body: z.infer<typeof exportRequestSchema>;
+  try {
+    const rawBody = await request.json();
+    const parsed = exportRequestSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    body = parsed.data;
+  } catch (error) {
+    logger.debug('[Transactions Export POST] Invalid JSON body', error);
+    return NextResponse.json(
+      { error: 'Invalid JSON body' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const rawAddress = body.address;
+    const options = body.options;
+
+    if (typeof rawAddress !== 'string' || rawAddress.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid address' },
+        { status: 400 }
+      );
+    }
+
+    const address = normalizeAddress(rawAddress);
+    if (!isAddressLike(address)) {
+      return NextResponse.json(
+        { error: 'Invalid address' },
+        { status: 400 }
+      );
+    }
+
+    if (!user?.address || !isAddressLike(user.address)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const dateRange = options.dateRange;
+    const filters = options.filters;
+
+    if (!isIsoDateString(dateRange.start) || !isIsoDateString(dateRange.end)) {
+      return NextResponse.json(
+        { error: 'Invalid date range' },
+        { status: 400 }
+      );
+    }
+
+    const normalizedTypes = filters.types.map((value) => value.trim().toLowerCase());
+    const normalizedTokens = filters.tokens.map((value) => value.trim().toUpperCase());
+
+    if (
+      normalizedTypes.some((value) => value.length === 0 || value.length > 64) ||
+      normalizedTokens.some((value) => value.length === 0 || value.length > 32)
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid filters' },
+        { status: 400 }
+      );
+    }
+
+    if (
+      typeof filters.minAmount === 'number' &&
+      typeof filters.maxAmount === 'number' &&
+      filters.minAmount > filters.maxAmount
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid amount range: minAmount must be less than or equal to maxAmount' },
+        { status: 400 }
+      );
+    }
+
+    const validatedOptions: ExportOptions = {
+      format: options.format,
+      dateRange: {
+        start: dateRange.start,
+        end: dateRange.end,
+      },
+      filters: {
+        types: normalizedTypes,
+        tokens: normalizedTokens,
+        minAmount: filters.minAmount,
+        maxAmount: filters.maxAmount,
+      },
+      includeMetadata: options.includeMetadata,
+      includeFees: options.includeFees,
+      includeUsdValue: options.includeUsdValue,
+      taxFormat: options.taxFormat,
+    };
+
+    // Validate address matches authenticated user
+    if (address !== normalizeAddress(user.address)) {
+      return NextResponse.json(
+        { error: 'You can only export your own transactions' },
+        { status: 403 }
+      );
+    }
+
+    // Parse and validate date range
+    const startDate = new Date(validatedOptions.dateRange.start);
+    const endDate = new Date(validatedOptions.dateRange.end);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      return NextResponse.json(
+        { error: 'Invalid date range' },
+        { status: 400 }
+      );
+    }
+
+    if (endDate < startDate) {
+      return NextResponse.json(
+        { error: 'Invalid date range: end date must be on or after start date' },
+        { status: 400 }
+      );
+    }
+
+    if (endDate.getTime() - startDate.getTime() > MAX_EXPORT_DATE_RANGE_MS) {
+      return NextResponse.json(
+        { error: `Date range too large. Maximum ${MAX_EXPORT_DATE_RANGE_DAYS} days allowed.` },
+        { status: 400 }
+      );
+    }
+
+    const typeFilter =
+      validatedOptions.filters.types.length > 0 && !validatedOptions.filters.types.includes('all')
+        ? validatedOptions.filters.types
+        : null;
+    const tokenFilter =
+      validatedOptions.filters.tokens.length > 0 && !validatedOptions.filters.tokens.includes('all')
+        ? validatedOptions.filters.tokens
+        : null;
+
+    const result = await query(
+      `SELECT
+         t.id,
+         t.hash,
+         t.type,
+         t.from_address,
+         t.to_address,
+         t.token_symbol,
+         t.amount::text,
+         t.usd_value::text,
+         t.fee::text,
+         t.status,
+         t.timestamp,
+         t.metadata
+       FROM transactions t
+       JOIN users u ON t.user_id = u.id
+       WHERE u.wallet_address = $1
+         AND t.timestamp >= $2
+         AND t.timestamp <= $3
+         AND ($4::text[] IS NULL OR t.type = ANY($4))
+         AND ($5::text[] IS NULL OR t.token_symbol = ANY($5))
+         AND ($6::numeric IS NULL OR t.amount >= $6)
+         AND ($7::numeric IS NULL OR t.amount <= $7)
+       ORDER BY t.timestamp DESC
+       LIMIT 50000`,
+      [
+        address.toLowerCase(),
+        startDate,
+        endDate,
+        typeFilter,
+        tokenFilter,
+        validatedOptions.filters.minAmount ?? null,
+        validatedOptions.filters.maxAmount ?? null,
+      ]
+    );
+    const transactions = result.rows as Transaction[];
+
+    // Format based on export type
+    let formattedData: string;
+    switch (validatedOptions.format) {
+      case 'csv':
+        formattedData = formatAsCSV(transactions, validatedOptions);
+        break;
+      case 'json':
+        formattedData = formatAsJSON(transactions, validatedOptions);
+        break;
+      case 'pdf':
+        formattedData = await formatAsPDF(transactions, validatedOptions, address);
+        break;
+      default:
+        return NextResponse.json(
+          { error: 'Unsupported format' },
+          { status: 400 }
+        );
+    }
+
+    const filename = `transactions-${new Date().toISOString().split('T')[0]}.${validatedOptions.format}`;
+
+    return new Response(formattedData, {
+      headers: {
+        'Content-Type': getContentType(validatedOptions.format),
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-cache',
+      },
+    });
+  } catch (error) {
+    logger.error('[Export API] Error:', error);
+    return NextResponse.json({ error: 'Failed to export transactions' }, { status: 500 });
+  }
+});

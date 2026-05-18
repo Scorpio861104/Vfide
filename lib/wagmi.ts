@@ -1,0 +1,255 @@
+import { connectorsForWallets } from '@rainbow-me/rainbowkit'
+import {
+  walletConnectWallet,
+  metaMaskWallet,
+  coinbaseWallet,
+  injectedWallet,
+} from '@rainbow-me/rainbowkit/wallets'
+import { createConfig, http, fallback, createStorage } from 'wagmi'
+import { 
+  base, 
+  baseSepolia, 
+  polygon, 
+  polygonAmoy,
+  zkSync,
+  zkSyncSepoliaTestnet,
+} from 'wagmi/chains'
+import { IS_TESTNET } from './chains'
+import { isMobileDevice } from './mobileDetection'
+
+// Create noopStorage for SSR to avoid hydration mismatches
+// SSR-safe storage implementation - parameters required by Storage interface
+const _noopStorage = {
+  getItem: (_key: string) => null,
+  setItem: (_key: string, _value: string) => {},
+  removeItem: (_key: string) => {},
+}
+
+// Enhanced storage with error handling for wallet persistence
+const safeStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      // localStorage might be blocked (incognito, security settings)
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      // Silently fail if storage is full or blocked
+    }
+  },
+  removeItem: (key: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // Silently fail
+    }
+  },
+};
+
+// WalletConnect Project ID (optional for local/dev/test runs).
+// When missing, we fully disable the WalletConnect connector to keep env-less
+// builds/tests deterministic and avoid remote registry/config fetches.
+// Support both naming conventions for backwards compatibility
+const rawProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || process.env.NEXT_PUBLIC_WAGMI_PROJECT_ID
+const invalidProjectIds = new Set([
+  '',
+  'local_walletconnect_project_id',
+  'your_walletconnect_project_id_here',
+  'your_walletconnect_project_id',
+])
+const projectId = typeof rawProjectId === 'string' ? rawProjectId.trim() : ''
+const hasWalletConnect = projectId.length > 0 && !invalidProjectIds.has(projectId)
+
+// App metadata for wallet connections
+const appName = 'VFIDE'
+
+// Custom zkSync Sepolia with explicit RPC
+const zkSyncSepoliaWithMetadata = {
+  ...zkSyncSepoliaTestnet,
+  rpcUrls: {
+    default: {
+      http: ['https://sepolia.era.zksync.dev'],
+      webSocket: ['wss://sepolia.era.zksync.dev/ws'],
+    },
+    public: {
+      http: ['https://sepolia.era.zksync.dev'],
+      webSocket: ['wss://sepolia.era.zksync.dev/ws'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'zkSync Sepolia Explorer',
+      url: 'https://sepolia.explorer.zksync.io',
+    },
+  },
+} as const
+
+// ========================================
+// CHAIN CONFIGURATION
+// ========================================
+
+// Testnet chains
+const testnetChains = [
+  baseSepolia,
+  polygonAmoy,
+  zkSyncSepoliaWithMetadata,
+] as const
+
+// Mainnet chains
+const mainnetChains = [
+  base,
+  polygon,
+  zkSync,
+] as const
+
+// Create storage that works with SSR and handles errors gracefully
+// CRITICAL: We use safeStorage directly because it already handles SSR internally
+// by checking typeof window !== 'undefined' in each method call
+const wagmiStorage = createStorage({
+  storage: safeStorage,
+  key: 'vfide-wallet', // Custom key prefix for our app
+})
+
+// ========================================
+// WALLET CONNECTORS (MOBILE-FIRST)
+// ========================================
+// Wallet configuration tuned for build stability and broad compatibility:
+// - Keep essential connectors (MetaMask, Coinbase, Injected, optional WalletConnect)
+// - Avoid extra wallet adapters that significantly increase bundle/build pressure
+
+// Detect if running on mobile device (lazy evaluation, memoized)
+const isMobile = isMobileDevice();
+
+// Build wallet groups dynamically based on device type
+// Mobile users get mobile wallets first, desktop users get extensions first
+const walletGroups = isMobile ? [
+  ...(hasWalletConnect ? [{
+    groupName: 'Recommended for Mobile',
+    wallets: [
+      walletConnectWallet,
+      coinbaseWallet,
+      metaMaskWallet,
+    ],
+  }] : [{
+    groupName: 'Browser Wallets',
+    wallets: [
+      metaMaskWallet,
+      coinbaseWallet,
+      injectedWallet,
+    ],
+  }]),
+  {
+    groupName: 'Browser Extensions',
+    wallets: [
+      metaMaskWallet,
+      injectedWallet,
+    ],
+  },
+] : [
+  {
+    groupName: 'Browser Extensions',
+    wallets: [
+      metaMaskWallet,
+      coinbaseWallet,
+      injectedWallet,
+    ],
+  },
+  ...(hasWalletConnect ? [{
+    groupName: 'Mobile & QR Code',
+    wallets: [
+      walletConnectWallet,
+    ],
+  }] : []),
+]
+
+const connectors = connectorsForWallets(
+  walletGroups,
+  {
+    appName,
+    // RainbowKit expects a string here; it is only used when the WalletConnect
+    // wallet is present.
+    projectId: hasWalletConnect ? projectId : '00000000000000000000000000000000',
+  }
+)
+
+// ========================================
+// WAGMI CONFIG WITH RPC FALLBACKS
+// ========================================
+// Multiple RPC endpoints for reliability - automatically fails over if primary is down
+
+const testnetConfig = createConfig({
+  connectors,
+  chains: testnetChains,
+  transports: {
+    // Base Sepolia with fallback RPCs
+    [baseSepolia.id]: fallback([
+      http('https://sepolia.base.org'),
+      http('https://base-sepolia.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // Polygon Amoy with fallback RPCs
+    [polygonAmoy.id]: fallback([
+      http('https://rpc-amoy.polygon.technology'),
+      http('https://polygon-amoy.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // zkSync Sepolia with fallback RPCs
+    [zkSyncSepoliaTestnet.id]: fallback([
+      http('https://sepolia.era.zksync.dev'),
+      http('https://zksync-sepolia.blockpi.network/v1/rpc/public'),
+    ]),
+  },
+  ssr: true,
+  storage: wagmiStorage,
+  // Enable EIP-6963 wallet discovery - required for MetaMask and other modern wallets
+  multiInjectedProviderDiscovery: true,
+})
+
+const mainnetConfig = createConfig({
+  connectors,
+  chains: mainnetChains,
+  transports: {
+    // Base with fallback RPCs
+    [base.id]: fallback([
+      http('https://mainnet.base.org'),
+      http('https://base.blockpi.network/v1/rpc/public'),
+      http('https://base.llamarpc.com'),
+      http(),
+    ]),
+    // Polygon with fallback RPCs
+    [polygon.id]: fallback([
+      http('https://polygon-rpc.com'),
+      http('https://polygon.llamarpc.com'),
+      http('https://polygon.blockpi.network/v1/rpc/public'),
+      http(),
+    ]),
+    // zkSync with fallback RPCs
+    [zkSync.id]: fallback([
+      http('https://mainnet.era.zksync.io'),
+      http('https://zksync.blockpi.network/v1/rpc/public'),
+      http('https://zksync.meowrpc.com'),
+    ]),
+  },
+  ssr: true,
+  storage: wagmiStorage,
+  // Enable EIP-6963 wallet discovery - required for MetaMask and other modern wallets
+  multiInjectedProviderDiscovery: true,
+})
+
+// Export the appropriate config based on environment
+export const config = IS_TESTNET ? testnetConfig : mainnetConfig
+export const wagmiConfig = config
+
+declare module 'wagmi' {
+  interface Register {
+    config: typeof testnetConfig | typeof mainnetConfig
+  }
+}

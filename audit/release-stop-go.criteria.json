@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "minimumApprovers": 2,
+  "requiredChecks": [
+    {
+      "id": "typecheck",
+      "name": "TypeScript compile safety",
+      "command": "npm run -s typecheck",
+      "required": true,
+      "maxDurationMinutes": 15
+    },
+    {
+      "id": "securityLane",
+      "name": "Security blocking lane",
+      "command": "npm run -s test:security:all",
+      "required": true,
+      "maxDurationMinutes": 45
+    },
+    {
+      "id": "performanceBudget",
+      "name": "Performance budget gate",
+      "command": "npm run -s test:performance",
+      "required": true,
+      "maxDurationMinutes": 35
+    },
+    {
+      "id": "opsRunbookDrift",
+      "name": "Runbook drift automation",
+      "command": "npm run -s ops:runbook:drift",
+      "required": true,
+      "maxDurationMinutes": 10
+    },
+    {
+      "id": "opsRollbackReadiness",
+      "name": "Rollback readiness automation",
+      "command": "npm run -s ops:rollback:readiness",
+      "required": true,
+      "maxDurationMinutes": 10
+    }
+  ],
+  "requiredEvidenceFiles": [
+    "docs/SLICE_BY_SLICE_SYSTEM_VALIDATION.md",
+    "audit/rollback-drill.latest.json",
+    "audit/release-stop-go.signoff.json"
+  ]
+}

@@ -1,0 +1,33 @@
+<svg width="400" height="440" viewBox="0 0 400 440" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="vLeft" x1="84" y1="56" x2="188" y2="334" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1E2E3C"/>
+      <stop offset="1" stop-color="#0B151D"/>
+    </linearGradient>
+    <linearGradient id="vRight" x1="316" y1="56" x2="212" y2="334" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2A3F4F"/>
+      <stop offset="1" stop-color="#101C25"/>
+    </linearGradient>
+    <linearGradient id="vEdge" x1="200" y1="56" x2="200" y2="370" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17E8F0" stop-opacity="0.8"/>
+      <stop offset="0.5" stop-color="#17E8F0" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#17E8F0" stop-opacity="0.7"/>
+    </linearGradient>
+    <radialGradient id="vGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(200 364) rotate(90) scale(24 72)">
+      <stop offset="0" stop-color="#00E8F0" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#00E8F0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="200" cy="386" rx="88" ry="18" fill="url(#vGlow)"/>
+
+  <path d="M72 56H114L192 320L176 320L72 56Z" fill="url(#vLeft)"/>
+  <path d="M328 56H286L208 320H224L328 56Z" fill="url(#vRight)"/>
+
+  <path d="M72 56L200 370L328 56" stroke="url(#vEdge)" stroke-width="2"/>
+
+  <circle cx="200" cy="370" r="6" fill="#00E8F0"/>
+  <circle cx="200" cy="370" r="13" fill="#00E8F0" fill-opacity="0.14"/>
+
+  <text x="200" y="416" text-anchor="middle" fill="#3F4658" font-family="Georgia, 'Times New Roman', serif" font-size="12" letter-spacing="8">V.FIVE</text>
+</svg>

@@ -1,0 +1,254 @@
+# Feature & Function Audit Tracker
+
+Purpose: drive a strict feature-by-feature and function-by-function hardening pass across the full VFIDE system.
+
+Status legend:
+- `pending`: not started
+- `in-progress`: actively auditing
+- `complete`: audited + verified with checks/tests
+
+## Scope Inventory
+
+- API features (`app/api/**/route.ts`): 55 routes
+- Frontend features (`app/**/page.tsx`): 68 pages
+- Smart contract features (`contracts/*.sol`): 60 contracts
+
+## Execution Order
+
+1. Rewards, competitions, and payout mechanics (Howey-safe behavior)
+2. Governance controls and admin surfaces
+3. Vault/security/recovery and key-management flows
+4. Commerce/merchant/escrow/payment flows
+5. Social/referral/trust and messaging features
+6. API surface route-by-route validation
+7. Frontend page-by-page behavior and contract wiring checks
+8. Deployment/runtime configuration and production readiness checks
+
+## Detailed Progress
+
+### 1. Rewards, competitions, and payout mechanics
+- Status: complete
+- Contracts in scope:
+  - `contracts/EcosystemVault.sol`
+  - `contracts/ProofScoreBurnRouter.sol`
+  - `contracts/OwnerControlPanel.sol`
+  - `contracts/DutyDistributor.sol`
+  - `contracts/LiquidityIncentives.sol`
+- API/pages in scope:
+  - `app/api/leaderboard/claim-prize/route.ts`
+  - `app/api/leaderboard/monthly/route.ts`
+  - `app/headhunter/page.tsx`
+  - `app/rewards/page.tsx`
+- Checks required:
+  - compile/type/lint
+  - reward invariants
+  - fee burn router invariants
+  - proofscore/trust consistency
+- Verification evidence:
+  - `npm run -s contract:verify:ecosystem-work-rewards:local` ✅
+  - `npm run -s contract:verify:fee-burn-router:local` ✅
+  - `npm run -s contract:verify:proofscore-trust:local` ✅
+  - `npm test -- --runInBand __tests__/api/leaderboard/claim-prize.test.ts __tests__/api/leaderboard/monthly.test.ts __tests__/api/leaderboard/headhunter.test.ts __tests__/contracts/EcosystemVault.test.ts` ✅ (32 tests)
+
+### 2. Governance controls and admin surfaces
+- Status: complete
+- Verification evidence:
+  - `npm test -- --runInBand __tests__/contracts/OwnerControlPanel.test.ts __tests__/contracts/DAO.test.ts __tests__/contracts/DAOTimelock.test.ts __tests__/contracts/CouncilManager.test.ts __tests__/contracts/CouncilElection.test.ts` ✅ (269 tests)
+  - `npm test -- --runInBand __tests__/api/proposals.test.ts __tests__/api/auth.test.ts` ✅ (21 tests)
+  - `npm run -s contract:verify:ocp-guardrails:local` ✅
+  - `npm run -s contract:verify:feature9:governance:local` ✅
+
+### 3. Vault/security/recovery and key-management flows
+- Status: complete
+- Verification evidence:
+  - `npm test -- --runInBand __tests__/contracts/UserVault.test.ts __tests__/contracts/VaultHub.test.ts __tests__/contracts/VaultRegistry.test.ts __tests__/contracts/SanctumVault.test.ts __tests__/contracts/security/security-contracts.test.ts` ✅ (308 tests)
+  - `npm run -s contract:verify:chain-of-return:local` ✅
+  - `npm run -s contract:verify:next-of-kin:local` ✅
+
+### 4. Commerce/merchant/escrow/payment flows
+- Status: complete
+- Verification evidence:
+  - `npm run -s contract:verify:merchant-payment-escrow:local` ✅
+  - `npm run -s contract:verify:bridge-governance:local` ✅
+  - `npm test -- --runInBand __tests__/contracts/EscrowManager.test.ts __tests__/contracts/MerchantPortal.test.ts __tests__/contracts/VFIDECommerce.test.ts __tests__/contracts/MainstreamPayments.test.ts __tests__/contracts/PayrollManager.test.ts __tests__/contracts/SubscriptionManager.test.ts __tests__/api/crypto/payment-requests.test.ts __tests__/api/crypto/transactions.test.ts __tests__/api/crypto-api-routes.test.ts` ✅ (273 tests)
+
+### 5. Social/referral/trust and messaging features
+- Status: complete
+- Verification evidence:
+  - `npm test -- --runInBand __tests__/api/endorsements.test.ts __tests__/api/friends.test.ts __tests__/api/messages.test.ts __tests__/api/messages/delete.test.ts __tests__/api/messages/edit.test.ts __tests__/api/messages/reaction.test.ts __tests__/api/notifications.test.ts __tests__/api/notifications/preferences.test.ts __tests__/contracts/VFIDETrust.test.ts` ✅ (83 tests)
+  - `npm test -- --runInBand __tests__/contracts/BadgeManager.test.ts __tests__/contracts/SeerSocial.test.ts` ✅ (73 tests)
+  - `npm run -s contract:verify:proofscore-trust:local` ✅
+
+### 6. API surface route-by-route validation
+- Status: complete
+- Verification evidence:
+  - `npm test -- --runInBand __tests__/api` ✅ (58 suites, 475 tests)
+- Function hardening deltas:
+  - `app/api/crypto/rewards/[userId]/claim/route.ts` claim handler now enforces strict JSON-object parsing, authenticated address presence, and sanitized/deduplicated reward IDs before DB casts/writes
+  - `app/api/users/[address]/route.ts` PUT handler now enforces strict JSON-object + field format/length validation (`username`, `email`, `bio`, `avatar_url`)
+  - `app/api/activities/route.ts` POST handler now enforces address format and normalized `activityType`/`title` writes
+  - `app/api/crypto/payment-requests/route.ts` POST handler now enforces numeric user IDs, no self-requesting, normalized token casing, strict decimal amount format, and memo type checks
+  - `app/api/crypto/payment-requests/[id]/route.ts` GET/PUT/PATCH handlers now enforce numeric request-id parsing, normalized status handling, stricter auth address checks, and tx-hash format validation
+  - `app/api/crypto/rewards/[userId]/route.ts` GET handler now uses resilient amount parsing to prevent `NaN` propagation in totals
+  - `app/api/security/violations/route.ts` POST handler now enforces strict object payload, required fields, severity whitelist, and bounded field lengths
+  - `app/api/messages/reaction/route.ts` POST/DELETE handlers now enforce stricter typed normalization for IDs/emoji/image inputs, URL protocol checks, and bounded field lengths
+  - `app/api/messages/edit/route.ts` PATCH handler now uses strict object parsing + normalized required strings with bounded IDs/content
+  - `app/api/messages/delete/route.ts` DELETE handler now enforces strict object parsing, normalized required strings, bounded IDs, and explicit boolean handling for `hardDelete`
+  - `app/api/messages/route.ts` PATCH handler now enforces normalized address strings and validates `conversationWith`/`userAddress` formats before conversation-level read updates
+  - `app/api/proposals/route.ts` GET handler now applies read rate limiting and validates `proposerId` address format
+  - `app/api/friends/route.ts` GET/PATCH/DELETE handlers now enforce address validation, numeric `friendshipId` validation, and safer PATCH pre-transaction parsing (no rollback before begin)
+  - `app/api/sync/route.ts` GET/POST handlers now enforce numeric `userId` format and bounded safe `entity` identifier format
+  - `app/api/groups/members/route.ts` GET/POST/PATCH/DELETE handlers now enforce numeric `groupId` format and strict address validation on member lookups/mutations
+  - `app/api/groups/invites/route.ts` GET/POST/PATCH/DELETE handlers now enforce strict numeric `groupId` parsing, normalized invite code validation, and safer optional field normalization
+  - `app/api/groups/join/route.ts` POST handler now normalizes invite codes and correctly applies the persisted `require_approval` invite flag for pending join flows
+  - `app/api/quests/streak/route.ts` GET/POST handlers now enforce normalized input handling and streak-type format validation
+  - `app/api/quests/notifications/route.ts` PATCH handler now validates `notificationIds` array shape/content before UUID casts; GET uses safer VFIDE bigint divisor conversion
+  - `app/api/quests/onboarding/route.ts` GET/PATCH/POST handlers now normalize required string inputs and use consistent normalized address lookups for user resolution
+  - `app/api/quests/achievements/route.ts` GET/POST handlers now normalize required strings, validate milestone key format, and enforce bounded numeric progress values
+  - `app/api/endorsements/route.ts` GET/POST/DELETE handlers now enforce read rate limiting, normalized address handling, numeric ID parsing, proposalId validation, and self-endorsement prevention
+  - `app/api/transactions/export/route.ts` POST handler now normalizes/validates export addresses and filter values, validates auth address presence/format, and enforces safer normalized filter query inputs
+  - `app/api/performance/metrics/route.ts` GET/POST handlers now trim metric names consistently and enforce UTF-8 metadata byte-size limits
+  - `app/api/errors/route.ts` GET/POST handlers now normalize severity filters/values, enforce strict numeric `limit` query parsing, enforce auth address presence/format, trim required messages, and enforce UTF-8 metadata byte-size limits
+  - `app/api/analytics/route.ts` GET/POST handlers now normalize event/user identifiers, validate user-id address format, normalize batch event types, and enforce UTF-8 event-data byte-size limits
+  - `app/api/attachments/upload/route.ts` POST handler now enforces strict object payloads, filename/path traversal guards, URL protocol validation, and normalized MIME/extension checks with bounded sizes
+  - `app/api/notifications/preferences/route.ts` GET/PUT handlers now enforce normalized address validation and safer strict JSON object parsing for updates
+  - `app/api/leaderboard/monthly/route.ts` GET/POST handlers now validate month/user-address format and enforce strict JSON/object + non-negative activity counter validation
+  - `app/api/auth/revoke/route.ts` POST handler now enforces authenticated-address presence and rejects invalid token shapes before revocation writes
+  - `app/api/badges/route.ts` GET/DELETE handlers now validate address-like query inputs, enforce requester address presence on gated reads, and validate positive integer `badgeId` before delete writes
+  - `app/api/quests/achievements/claim/route.ts` POST handler now enforces authenticated-address presence, validates address-like `userAddress`, and validates positive integer `milestoneId` before claim writes
+  - `app/api/quests/weekly/claim/route.ts` POST handler now enforces authenticated-address presence, validates address-like `userAddress`, and validates positive integer `challengeId` before claim writes
+  - `app/api/proposals/route.ts` GET handler now enforces strict numeric parsing for `limit`/`offset`, normalizes `proposerId` input before address validation, and `GET_BY_ID` now validates positive proposal IDs before DB reads
+  - `app/api/quests/claim/route.ts` POST handler now enforces authenticated-address presence, validates address-like `userAddress`, and validates positive integer `questId` before transactional claim writes
+  - `app/api/crypto/transactions/[userId]/route.ts` GET handler now enforces authenticated address shape checks, validates positive numeric `userId` params, and enforces strict numeric `limit`/`offset` parsing before pagination queries
+  - `app/api/attachments/[id]/route.ts` GET/DELETE handlers now enforce authenticated address presence/shape checks and strict positive numeric `id` parsing (rejecting mixed-format IDs) before ownership queries
+  - `app/api/auth/logout/route.ts` POST handler now trims and validates token shape before revocation hashing, gracefully ignoring malformed token payloads while still clearing auth cookies
+  - `app/api/crypto/payment-requests/route.ts` GET/POST handlers now enforce authenticated address presence/shape checks and strict positive numeric `userId` query parsing before ownership checks
+  - `app/api/crypto/balance/[address]/route.ts` GET handler now normalizes route address input, enforces authenticated address presence/shape checks, and validates ownership against normalized addresses before balance reads
+  - `app/api/crypto/price/route.ts` GET handler now enforces strict `refresh` query validation (`true|false`), validates external ETH price values as finite positive numbers, and rejects invalid computed Uniswap prices before fallback
+  - `app/api/crypto/fees/route.ts` GET handler now treats non-positive RPC gas-price responses as invalid and falls back to deterministic safe baseline fee values
+  - `app/api/notifications/route.ts` GET/POST/PATCH/DELETE handlers now enforce authenticated address presence/shape checks, strict `limit`/`offset`/`unreadOnly` query parsing, normalized userAddress validation, boolean flag type checks, and positive-integer normalization for bulk `notificationIds`
+  - `app/api/messages/route.ts` GET/POST/PATCH handlers now enforce authenticated address presence checks, strict `limit`/`offset` query parsing, normalized userAddress validation on reads, and stronger read-receipt address validation ordering before ownership checks
+  - `app/api/activities/route.ts` GET/POST handlers now enforce strict numeric query parsing for `limit`/`offset`, normalized `userAddress` validation for reads, and authenticated-address presence checks before ownership/creation paths
+  - `app/api/users/route.ts` GET/POST handlers now enforce authenticated address shape checks and normalized wallet-address validation before profile create/update writes
+  - `app/api/leaderboard/headhunter/route.ts` GET handler now enforces strict integer parsing and bounded validation for `year`/`quarter` query params before subgraph/fallback flow
+  - `app/api/analytics/route.ts` GET handler now enforces strict numeric `limit` query parsing and explicit authenticated-address validation for user-scoped analytics reads
+  - `app/api/security/csp-report/route.ts` GET handler now enforces strict numeric `limit` query parsing in development-mode report inspection
+  - `app/api/leaderboard/monthly/route.ts` GET handler now enforces strict numeric `limit` query parsing (rejecting mixed-format values) before cap/default behavior
+  - `app/api/security/2fa/initiate/route.ts` POST handler now enforces authenticated-address shape checks, bounded destination length validation, strict email destination format checks, and normalized destination persistence/delivery inputs
+  - `app/api/endorsements/route.ts` GET/POST handlers now enforce strict non-negative numeric `limit`/`offset` query parsing (rejecting mixed-format values) and authenticated-address shape validation before endorsement writes
+  - `app/api/security/violations/route.ts` GET/POST handlers now enforce strict positive numeric `limit` parsing (rejecting mixed-format values) and authenticated-address shape validation before violations reads/writes
+  - `app/api/auth/route.ts` POST handler now enforces strict full-line timestamp parsing (`Timestamp: <digits>`), rejects mixed-format timestamp values, and enforces safe-integer timestamp bounds before signature verification
+  - `app/api/security/anomaly/route.ts` GET handler now enforces authenticated-address presence/shape checks and normalized address usage for anomaly stats/activity logging
+  - `app/api/notifications/push/route.ts` POST/DELETE handlers now enforce authenticated-address shape checks, normalized address comparison, and explicit `userAddress` format validation before subscription writes/deletes
+  - `app/api/gamification/route.ts` GET handler now enforces authenticated-address shape checks, strict `userAddress` query format validation, and normalized address comparison before profile reads
+  - `app/api/quests/daily/route.ts` GET handler now enforces authenticated-address shape checks, strict `userAddress` query format validation, normalized address comparison for access control, and normalized address DB lookups
+  - `app/api/quests/weekly/route.ts` GET handler now enforces authenticated-address shape checks, strict `userAddress` query format validation, normalized address comparison for access control, and normalized address DB lookups
+  - `app/api/quests/streak/route.ts` GET/POST handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before streak reads/writes
+  - `app/api/quests/onboarding/route.ts` GET/PATCH/POST handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before onboarding reads/updates/claims
+  - `app/api/quests/achievements/route.ts` GET/POST handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before achievement reads/updates
+  - `app/api/quests/notifications/route.ts` GET/PATCH handlers now enforce authenticated-address shape checks, strict `userAddress` format validation, and normalized address comparison for access control before notification reads/updates
+  - `app/api/groups/members/route.ts` POST/PATCH/DELETE handlers now enforce authenticated-address presence/shape checks before actor validation and role-gated member mutations
+  - `app/api/groups/join/route.ts` POST handler now enforces authenticated-address presence/shape checks before user resolution and invite join flow execution
+  - `app/api/groups/invites/route.ts` GET(group-scoped)/POST/PATCH/DELETE handlers now enforce authenticated-address presence/shape checks before membership/ownership authorization queries
+  - `app/api/sync/route.ts` GET/POST handlers now enforce authenticated-address presence/shape checks before user ownership verification and sync state reads/writes
+  - `app/api/users/[address]/route.ts` PUT/POST handlers now enforce authenticated-address presence/shape checks before ownership checks and profile/avatar mutation writes
+  - `app/api/messages/edit/route.ts` PATCH handler now enforces authenticated-address presence/shape checks and normalized address comparisons before message edit authorization
+  - `app/api/messages/delete/route.ts` DELETE handler now enforces authenticated-address presence/shape checks and normalized address comparisons before message delete authorization
+  - `app/api/messages/reaction/route.ts` POST/DELETE handlers now enforce authenticated-address presence/shape checks and normalized address comparisons before reaction ownership/conversation authorization
+  - `app/api/crypto/rewards/[userId]/route.ts` GET handler now enforces authenticated-address presence/shape checks before owner-address authorization checks on reward reads
+  - `app/api/friends/route.ts` GET/POST/PATCH/DELETE handlers now enforce authenticated-address presence/shape checks, strict numeric `limit`/`offset` parsing, and normalized address comparisons for friendship authorization flows
+  - `app/api/proposals/route.ts` POST handler now enforces authenticated-address presence/shape checks before ownership validation and proposal creation flows
+  - `app/api/endorsements/route.ts` DELETE handler now enforces authenticated-address presence/shape checks before endorsement ownership verification
+  - Focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts __tests__/api/crypto/rewards/claim.test.ts` ✅ (29 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (6 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (4 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages.test.ts __tests__/api/messages/edit.test.ts __tests__/api/messages/delete.test.ts __tests__/api/messages/reaction.test.ts` ✅ (28 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/proposals.test.ts __tests__/api/friends.test.ts` ✅ (16 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/sync.test.ts __tests__/api/groups/members.test.ts` ✅ (14 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/invites.test.ts __tests__/api/groups/join.test.ts __tests__/api/groups/members.test.ts` ✅ (22 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/streak.test.ts __tests__/api/quests/notifications.test.ts` ✅ (13 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/onboarding.test.ts __tests__/api/quests/achievements.test.ts` ✅ (15 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/endorsements.test.ts __tests__/api/transactions/export.test.ts __tests__/api/performance/metrics.test.ts` ✅ (24 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/analytics.test.ts __tests__/api/attachments/upload.test.ts` ✅ (25 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications/preferences.test.ts __tests__/api/leaderboard/monthly.test.ts` ✅ (16 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/payment-requests/id.test.ts __tests__/api/crypto/payment-requests.test.ts` ✅ (20 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/rewards/claim.test.ts` ✅ (6 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/auth/revoke.test.ts` ✅ (7 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/badges.test.ts` ✅ (8 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/achievements/claim.test.ts __tests__/api/quests/weekly/claim.test.ts` ✅ (12 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/proposals.test.ts` ✅ (9 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/claim.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/transactions.test.ts` ✅ (7 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/attachments/id.test.ts` ✅ (6 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/auth/logout.test.ts` ✅ (4 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/payment-requests.test.ts` ✅ (7 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/balance.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/price.test.ts` ✅ (11 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/crypto/fees.test.ts __tests__/api/crypto/price.test.ts` ✅ (17 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications.test.ts` ✅ (23 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages.test.ts` ✅ (18 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/activities.test.ts __tests__/api/users.test.ts` ✅ (26 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/leaderboard/headhunter.test.ts __tests__/api/activities.test.ts __tests__/api/users.test.ts` ✅ (30 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/analytics.test.ts __tests__/api/security/csp-report.test.ts` ✅ (16 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/leaderboard/monthly.test.ts __tests__/api/analytics.test.ts __tests__/api/security/csp-report.test.ts` ✅ (29 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/errors.test.ts __tests__/api/notifications/preferences.test.ts` ✅ (15 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/2fa-initiate.test.ts` ✅ (4 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/endorsements.test.ts` ✅ (9 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/violations.test.ts` ✅ (8 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/auth.test.ts` ✅ (16 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/security/anomaly.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/notifications/push.test.ts` ✅ (4 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/gamification.test.ts` ✅ (15 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/daily.test.ts` ✅ (11 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/weekly.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/streak.test.ts` ✅ (10 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/onboarding.test.ts` ✅ (15 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/achievements.test.ts` ✅ (10 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/quests/notifications.test.ts` ✅ (11 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/members.test.ts` ✅ (11 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/join.test.ts` ✅ (8 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/groups/invites.test.ts` ✅ (9 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/sync.test.ts` ✅ (8 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/users/address.test.ts` ✅ (8 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/edit.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/delete.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/messages/reaction.test.ts` ✅ (5 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/friends.test.ts __tests__/api/crypto/rewards.test.ts` ✅ (18 tests)
+  - Additional focused test confirmation: `npm test -- --runInBand __tests__/api/friends.test.ts __tests__/api/crypto/rewards.test.ts __tests__/api/proposals.test.ts __tests__/api/endorsements.test.ts` ✅ (38 tests)
+  - Additional typecheck confirmation: `npm run -s typecheck` ✅
+
+### 7. Frontend page-by-page behavior and contract wiring checks
+- Status: in-progress
+- Verification evidence:
+  - `npm run -s build` ✅ (all routes compiled and generated)
+  - Full CI quality pass included frontend integration coverage (`npm run -s test:ci`) ✅
+  - Full local regression pass (`npm test -- --runInBand`) ✅ (377 suites, 8120 tests)
+  - Lint + type safety gates (`npm run lint` and `npm run typecheck`) ✅
+- Recent hardening completed:
+  - `app/vault/recover/page.tsx` now uses on-chain `VaultRegistry` lookup for `recoveryId`, `email`, `username`, and `guardian`
+  - `components/governance/GovernanceUI.tsx` delegation now explicitly marked read-only for DAO v1, with action path disabled
+  - `__tests__/components/GovernanceUI.test.tsx` delegation CTA assertions now match DAO v1 read-only UX (`Delegation Unavailable`) and full suite is green
+  - `app/escrow/page.tsx` order-id input placeholder normalized to a concrete format example
+  - `app/escrow/page.tsx` merchant-address validation now uses toast error feedback instead of blocking browser alert
+  - `app/control-panel/components/AutoSwapPanel.tsx` quick-setup validation now uses inline form error state instead of browser alert
+  - `components/governance/TimelockQueue.tsx` cancel actions now use an in-app confirmation modal instead of browser `confirm(...)`
+  - `components/social/GroupsManager.tsx` browser `alert/confirm` flows replaced with toast notifications and an in-app leave-group confirmation modal
+  - `app/admin/page.tsx` high-risk actions (`lockPolicy`, `transferOwnership`, `batch execute`, `batch clear`, `emergency pause`) now use in-app confirmation modal instead of browser `confirm(...)`
+  - `app/admin/page.tsx` burn-policy validation now surfaces inline dismissible error banner instead of browser `alert(...)`
+
+### 8. Deployment/runtime configuration and production readiness checks
+- Status: in-progress
+- Verification evidence:
+  - `npm run -s typecheck:contracts` ✅ after adding `tsconfig.contracts.json` scoped to Hardhat + contract script TypeScript surfaces
+  - `set -a && source ./.env.local && set +a && npm run -s validate:env` ✅ (passes locally with warnings-only)
+  - `set -a && source ./.env.local && set +a && npm run -s validate:production` ✅ (typecheck/contracts/lint/tests/env all pass with warnings-only)
+  - `npm run -s test:ci` ✅ (376 suites, 8012 tests)
+  - `npm test -- --runInBand` ✅ (377 suites, 8120 tests)
+  - `npm run lint` ✅ (0 errors, 0 warnings)
+  - `npm run typecheck` ✅
+  - `npm run -s contract:test` ✅ (exit code 0)
+  - `set -a && source ./.env.local && set +a && npm run -s contract:verify:governance-safety:local` ✅
+  - `set -a && source ./.env.local && set +a && npm run -s contract:verify:merchant-payment-escrow:local` ✅
+  - `set -a && source ./.env.local && set +a && npm run -s contract:verify:ecosystem-work-rewards:local` ✅
+  - `npm run -s build` ✅ with expected local-env warnings for missing deploy secrets (`DATABASE_URL`, `JWT_SECRET`)
+  - Added local baseline template values for validation parity in `.env.local.example` (`NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`, `NEXT_PUBLIC_EXPLORER_URL`, `NEXT_PUBLIC_APP_URL`, `DATABASE_URL`, `JWT_SECRET`)

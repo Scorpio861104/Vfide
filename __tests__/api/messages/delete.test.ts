@@ -1,0 +1,125 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { DELETE } from '@/app/api/messages/delete/route';
+
+jest.mock('@/lib/db', () => ({
+  query: jest.fn(),
+}));
+
+jest.mock('@/lib/auth/rateLimit', () => ({
+  withRateLimit: jest.fn(),
+}));
+
+jest.mock('@/lib/auth/middleware', () => ({
+  requireAuth: jest.fn(),
+}));
+
+describe('/api/messages/delete', () => {
+  const { query } = require('@/lib/db');
+  const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { requireAuth } = require('@/lib/auth/middleware');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('DELETE', () => {
+    it('should return 400 for malformed JSON', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/delete', {
+        method: 'DELETE',
+        body: '{"messageId": "1"',
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid JSON');
+    });
+
+    it('should return 400 for non-object body', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/delete', {
+        method: 'DELETE',
+        body: JSON.stringify(['invalid']),
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(data.error).toContain('Invalid request body');
+    });
+
+    it('should delete message successfully', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
+
+      query.mockResolvedValueOnce({ 
+        rows: [{ 
+          id: 1, 
+          sender: '0x1111111111111111111111111111111111111123',
+          conversation_id: 1,
+          is_deleted: false 
+        }] 
+      });
+      query.mockResolvedValueOnce({ rows: [{ id: 1, success: true }] });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/delete', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          messageId: '1',
+          conversationId: '1',
+          userAddress: '0x1111111111111111111111111111111111111123',
+        }),
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.success).toBe(true);
+    });
+
+    it('should return 401 for unauthorized users', async () => {
+      withRateLimit.mockResolvedValue(null);
+      const unauthorizedResponse = NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+      requireAuth.mockReturnValue(unauthorizedResponse);
+
+      const request = new NextRequest('http://localhost:3000/api/messages/delete', {
+        method: 'DELETE',
+        body: JSON.stringify({}),
+      });
+
+      const response = await DELETE(request);
+      expect(response.status).toBe(401);
+    });
+
+    it('should return 401 for malformed authenticated address', async () => {
+      withRateLimit.mockResolvedValue(null);
+      requireAuth.mockReturnValue({ user: { address: 'bad-address' } });
+
+      const request = new NextRequest('http://localhost:3000/api/messages/delete', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          messageId: '1',
+          conversationId: '1',
+          userAddress: '0x1111111111111111111111111111111111111123',
+        }),
+      });
+
+      const response = await DELETE(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(401);
+      expect(data.error).toBe('Unauthorized');
+    });
+  });
+});

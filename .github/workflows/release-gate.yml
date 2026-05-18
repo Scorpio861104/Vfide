@@ -1,0 +1,141 @@
+name: Release Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-and-contracts:
+    name: Quality and Contracts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: local_walletconnect_project_id
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_CHAIN_ID: "8453"
+      NEXT_PUBLIC_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
+      DATABASE_URL: "postgresql://vfide_user:postgres@127.0.0.1:5432/vfide_db"
+      JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Typecheck
+        run: npm run -s typecheck
+
+      - name: Typecheck contracts
+        run: npm run -s typecheck:contracts
+
+      - name: Lint
+        run: npm run -s lint
+
+      - name: Route alignment
+        run: npm run -s check:routes
+
+      - name: Jest CI suite
+        run: npm run -s test:ci
+
+      - name: Validate environment
+        run: npm run -s validate:env
+
+      - name: Runbook drift gate
+        run: npm run -s ops:runbook:drift
+
+      - name: Rollback readiness gate
+        run: npm run -s ops:rollback:readiness
+
+      - name: Backup restore readiness gate
+        run: npm run -s ops:backup:restore:readiness
+
+      - name: Dual-approval policy gate
+        run: npm run -s ops:dual-approval
+
+      - name: Release stop/go criteria gate
+        run: npm run -s ops:release:stop-go
+
+      - name: Performance budget gate
+        run: npm run -s test:performance
+
+      - name: Compile contracts
+        run: npm run -s contract:compile
+
+      - name: Governance safety invariants
+        run: npm run -s contract:verify:governance-safety:local
+
+      - name: Merchant payment escrow invariants
+        run: npm run -s contract:verify:merchant-payment-escrow:local
+
+      - name: Ecosystem work rewards invariants
+        run: npm run -s contract:verify:ecosystem-work-rewards:local
+
+      - name: CardBound vault security invariants
+        run: npm run -s contract:verify:card-bound-vault:local
+
+      - name: VaultHub CardBound integration invariants
+        run: npm run -s contract:verify:vault-hub-cardbound:local
+
+  seer-watcher:
+    name: Seer watcher verifiers
+    uses: ./.github/workflows/seer-watcher.yml
+
+  e2e-runtime-matrix:
+    name: Runtime E2E Matrix
+    runs-on: ubuntu-latest
+    needs: [quality-and-contracts, seer-watcher]
+    permissions:
+      contents: read
+    env:
+      NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: local_walletconnect_project_id
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_CHAIN_ID: "8453"
+      NEXT_PUBLIC_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
+      DATABASE_URL: "postgresql://vfide_user:postgres@127.0.0.1:5432/vfide_db"
+      JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Build app
+        run: npm run -s build
+
+      - name: Install Playwright browsers and OS deps
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run full runtime Playwright matrix
+        run: |
+          npx playwright test -c playwright.config.runtime.ts \
+            --project=chromium \
+            --project=firefox \
+            --project=webkit \
+            --project=mobile-chrome \
+            --project=mobile-safari \
+            --project=tablet
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7

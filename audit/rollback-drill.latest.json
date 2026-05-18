@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "executedAt": "2026-03-29T00:00:00.000Z",
+  "targetMaxRollbackMinutes": 30,
+  "scenarios": [
+    {
+      "name": "Governance safety invariant regression",
+      "rollbackCommand": "npm run -s contract:verify:governance-safety:local",
+      "result": "pass",
+      "durationMinutes": 12,
+      "evidence": "local-verification-log/governance-safety-rollback-2026-03-29"
+    },
+    {
+      "name": "Seer watcher mismatch after config change",
+      "rollbackCommand": "npm run -s contract:verify:seer:watcher:local",
+      "result": "pass",
+      "durationMinutes": 17,
+      "evidence": "local-verification-log/seer-watcher-rollback-2026-03-29"
+    },
+    {
+      "name": "Security lane rollback validation",
+      "rollbackCommand": "npm run -s test:security:all",
+      "result": "pass",
+      "durationMinutes": 24,
+      "evidence": "local-verification-log/security-rollback-2026-03-29"
+    }
+  ]
+}

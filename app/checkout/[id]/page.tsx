@@ -1,0 +1,510 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * Hosted Checkout Page
+ * 
+ * Public payment page for invoices and payment links.
+ * Merchants share /checkout/[id] URLs with customers.
+ * No customer authentication required to view — wallet connection to pay.
+ */
+
+
+
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
+import { useAccount } from 'wagmi';
+import { usePayMerchant } from '@/hooks/useMerchantHooks';
+import { useOptionalPreferences } from '@/lib/preferences/userPreferences';
+import { logger } from '@/lib/logger';
+import { Shield, Clock, CheckCircle, AlertTriangle, FileText, ExternalLink, Copy } from 'lucide-react';
+// v19.10 BCOMPAT-1 FIX: cross-browser clipboard helper.
+import { copyToClipboardSafe } from '@/lib/clipboardSafe';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+
+interface InvoiceItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  amount: number;
+}
+
+interface InvoiceData {
+  id: number;
+  invoice_number: string;
+  merchant_address: string;
+  customer_address: string | null;
+  customer_name: string | null;
+  status: string;
+  token: string;
+  subtotal: string;
+  tax_rate: string;
+  tax_amount: string;
+  total: string;
+  currency_display: string;
+  memo: string | null;
+  due_date: string | null;
+  paid_at: string | null;
+  tx_hash: string | null;
+  created_at: string;
+  items: InvoiceItem[];
+  merchant_name?: string;
+}
+
+type CheckoutStatus = 'loading' | 'ready' | 'paying' | 'confirming' | 'paid' | 'error' | 'not_found' | 'already_paid';
+
+const CHECKOUT_KNOWN_MERCHANTS_KEY = 'vfide_known_checkout_merchants';
+const HIGH_VALUE_CONFIRM_THRESHOLD = 100;
+
+const LOCAL_CURRENCY_LOCALES: Record<string, string> = {
+  USD: 'en-US',
+  EUR: 'de-DE',
+  GBP: 'en-GB',
+  GHS: 'en-GH',
+  NGN: 'en-NG',
+  KES: 'en-KE',
+  INR: 'en-IN',
+  ZAR: 'en-ZA',
+  BRL: 'pt-BR',
+};
+
+const ESTIMATED_USD_TO_LOCAL: Record<string, number> = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.79,
+  GHS: 15.4,
+  NGN: 1540,
+  KES: 129,
+  INR: 83,
+  ZAR: 18.5,
+  BRL: 5.7,
+};
+
+const EXPLORER_BASE_BY_CHAIN: Record<number, string> = {
+  1: 'https://etherscan.io',
+  10: 'https://optimistic.etherscan.io',
+  56: 'https://bscscan.com',
+  137: 'https://polygonscan.com',
+  324: 'https://explorer.zksync.io',
+  8453: 'https://basescan.org',
+  42161: 'https://arbiscan.io',
+  11155111: 'https://sepolia.etherscan.io',
+  84532: 'https://sepolia.basescan.org',
+};
+
+function getExplorerBase(chainId?: number): string {
+  if (!chainId || !EXPLORER_BASE_BY_CHAIN[chainId]) return 'https://basescan.org';
+  return EXPLORER_BASE_BY_CHAIN[chainId];
+}
+
+function isUsdAnchoredDisplay(code: string): boolean {
+  return ['USD', 'USDC', 'USDT', 'DAI', 'USDS'].includes(code.toUpperCase());
+}
+
+function formatEstimatedLocalCurrency(amount: number, currency: string): string | null {
+  const normalizedCurrency = currency.toUpperCase();
+  const rate = ESTIMATED_USD_TO_LOCAL[normalizedCurrency];
+  if (!rate) return null;
+
+  return new Intl.NumberFormat(LOCAL_CURRENCY_LOCALES[normalizedCurrency] ?? 'en-US', {
+    style: 'currency',
+    currency: normalizedCurrency,
+    maximumFractionDigits: 2,
+  }).format(amount * rate);
+}
+
+export default function CheckoutPage() {
+  const params = useParams();
+  const paymentLinkId = params?.id as string;
+  const { address, isConnected, chainId } = useAccount();
+  const { payMerchant, isPaying } = usePayMerchant();
+  const { preferences } = useOptionalPreferences();
+
+  const [invoice, setInvoice] = useState<InvoiceData | null>(null);
+  const [status, setStatus] = useState<CheckoutStatus>('loading');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [txHash, setTxHash] = useState('');
+  const [isFirstTimeMerchant, setIsFirstTimeMerchant] = useState(false);
+
+  // Fetch invoice data
+  useEffect(() => {
+    if (!paymentLinkId) {
+      setStatus('not_found');
+      return;
+    }
+
+    const fetchInvoice = async () => {
+      try {
+        const res = await fetch(`/api/merchant/checkout/${paymentLinkId}`);
+        if (res.status === 404) {
+          setStatus('not_found');
+          return;
+        }
+        if (!res.ok) {
+          setStatus('error');
+          setErrorMessage('Failed to load invoice');
+          return;
+        }
+        const data = await res.json();
+        const inv = data.invoice as InvoiceData;
+        setInvoice(inv);
+
+        if (typeof window !== 'undefined' && inv.merchant_address) {
+          const normalized = inv.merchant_address.toLowerCase();
+          const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
+          const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+          setIsFirstTimeMerchant(!knownMerchants.includes(normalized));
+        }
+
+        if (inv.status === 'paid') {
+          setStatus('already_paid');
+          setTxHash(inv.tx_hash ?? '');
+        } else if (inv.status === 'cancelled') {
+          setStatus('error');
+          setErrorMessage('This invoice has been cancelled');
+        } else {
+          setStatus('ready');
+
+          // Mark as viewed if currently sent
+          if (inv.status === 'sent') {
+            fetch(`/api/merchant/checkout/${paymentLinkId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'view' }),
+            }).catch((err: unknown) => {
+              logger.warn('[checkout] view tracking failed:', err);
+            });
+          }
+        }
+      } catch {
+        setStatus('error');
+        setErrorMessage('Failed to load checkout');
+      }
+    };
+
+    fetchInvoice();
+  }, [paymentLinkId]);
+
+  // Handle payment
+  const handlePay = useCallback(async () => {
+    if (!invoice || !address || !isConnected) return;
+
+    const total = Number(invoice.total);
+    if (Number.isFinite(total) && total >= HIGH_VALUE_CONFIRM_THRESHOLD) {
+      const confirmed = window.confirm(
+        `You are about to pay ${total.toFixed(4)} ${invoice.currency_display} to ${invoice.merchant_name || 'merchant'} at ${invoice.merchant_address}. This payment cannot be reversed.`
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    setStatus('paying');
+
+    try {
+      const result = await payMerchant(
+        invoice.merchant_address as `0x${string}`,
+        invoice.token as `0x${string}`,
+        String(invoice.total),
+        `INV-${invoice.invoice_number}`,
+      );
+
+      if (!result || typeof result !== 'object' || !('success' in result) || !result.success || !('hash' in result) || typeof result.hash !== 'string' || result.hash.length === 0) {
+        throw new Error('Payment did not return a transaction hash');
+      }
+
+      setStatus('confirming');
+
+      // Mark invoice as paid
+      const hash = result.hash;
+      setTxHash(hash);
+
+      await fetch(`/api/merchant/checkout/${paymentLinkId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pay', tx_hash: hash }),
+      });
+
+      if (typeof window !== 'undefined' && invoice.merchant_address) {
+        const normalized = invoice.merchant_address.toLowerCase();
+        const raw = window.localStorage.getItem(CHECKOUT_KNOWN_MERCHANTS_KEY);
+        const knownMerchants: string[] = raw ? JSON.parse(raw) as string[] : [];
+        if (!knownMerchants.includes(normalized)) {
+          knownMerchants.push(normalized);
+          window.localStorage.setItem(CHECKOUT_KNOWN_MERCHANTS_KEY, JSON.stringify(knownMerchants));
+        }
+      }
+
+      setStatus('paid');
+    } catch (err) {
+      setStatus('ready');
+      setErrorMessage(err instanceof Error ? err.message : 'Payment failed');
+    }
+  }, [invoice, address, isConnected, payMerchant, paymentLinkId]);
+
+  const preferredCurrency = (preferences.preferredCurrency || 'USD').toUpperCase();
+  const estimatedLocalTotal = invoice && isUsdAnchoredDisplay(invoice.currency_display)
+    ? formatEstimatedLocalCurrency(Number(invoice.total), preferredCurrency)
+    : null;
+  const explorerBase = getExplorerBase(chainId);
+
+  const copyToClipboard = async (value: string, label: string) => {
+    // v19.10 BCOMPAT-1 FIX: helper handles iOS in-app browser fallback path.
+    const ok = await copyToClipboardSafe(value);
+    if (!ok) {
+      logger.warn(`[checkout] both clipboard paths failed for ${label}`);
+    }
+  };
+
+  // ─────────────────────────── Render
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (status === 'not_found') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Invoice Not Found</h1>
+          <p className="text-gray-500 mt-2">This payment link may have expired or been removed.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+      <div className="max-w-lg mx-auto">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 mb-2">
+            <Shield className="w-4 h-4" />
+            <span>Payment via VFIDE merchant portal</span>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            {status === 'paid' || status === 'already_paid' ? 'Payment Complete' : 'Checkout'}
+          </h1>
+        </div>
+
+        {/* Invoice Card */}
+        {invoice && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+            {/* Merchant & Invoice Header */}
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Invoice</p>
+                  <p className="font-mono font-medium text-gray-800 dark:text-gray-200">
+                    {invoice.invoice_number}
+                  </p>
+                </div>
+                <StatusBadge status={status === 'paid' || status === 'already_paid' ? 'paid' : invoice.status} />
+              </div>
+
+              {invoice.due_date && status === 'ready' && (
+                <div className="flex items-center gap-1.5 mt-3 text-sm text-gray-500">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Due {new Date(invoice.due_date).toLocaleDateString()}</span>
+                </div>
+              )}
+
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/80 p-3 dark:border-amber-900/40 dark:bg-amber-900/10">
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Merchant identity</p>
+                <p className="mt-1 text-sm text-amber-900/90 dark:text-amber-100/90">
+                  {invoice.merchant_name || 'Unverified merchant name'}
+                </p>
+                <p className="mt-1 break-all font-mono text-xs text-amber-800/90 dark:text-amber-200/90">
+                  {invoice.merchant_address}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-3 text-xs">
+                  <button
+                    onClick={() => void copyToClipboard(invoice.merchant_address, 'merchant address')}
+                    className="inline-flex items-center gap-1 text-amber-800 hover:underline dark:text-amber-200"
+                  >
+                    <Copy className="h-3 w-3" /> Copy address
+                  </button>
+                  <a
+                    href={`${explorerBase}/address/${invoice.merchant_address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-amber-800 hover:underline dark:text-amber-200"
+                  >
+                    Verify on explorer <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                {isFirstTimeMerchant && status === 'ready' && (
+                  <p className="mt-2 text-xs text-amber-900/90 dark:text-amber-200/90">
+                    First-time merchant warning: confirm this address with the merchant using an out-of-band channel before paying.
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/80 p-3 dark:border-gray-700 dark:bg-gray-700/20">
+                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Token details</p>
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-300">Symbol: {invoice.currency_display}</p>
+                <p className="mt-1 break-all font-mono text-xs text-gray-600 dark:text-gray-300">Contract: {invoice.token}</p>
+              </div>
+            </div>
+
+            {/* Line Items */}
+            <div className="p-6 space-y-3">
+              {invoice.items.map((item, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <div>
+                    <p className="text-gray-800 dark:text-gray-200">{item.description}</p>
+                    {item.quantity !== 1 && (
+                      <p className="text-xs text-gray-500">
+                        {item.quantity} x {Number(item.unit_price).toFixed(4)} {invoice.currency_display}
+                      </p>
+                    )}
+                  </div>
+                  <p className="font-medium text-gray-800 dark:text-gray-200">
+                    {Number(item.amount).toFixed(4)} {invoice.currency_display}
+                  </p>
+                </div>
+              ))}
+
+              {/* Totals */}
+              <div className="border-t border-gray-100 dark:border-gray-700 pt-3 mt-3 space-y-1.5">
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Subtotal</span>
+                  <span>{Number(invoice.subtotal).toFixed(4)} {invoice.currency_display}</span>
+                </div>
+                {Number(invoice.tax_rate) > 0 && (
+                  <div className="flex justify-between text-sm text-gray-500">
+                    <span>Tax ({Number(invoice.tax_rate)}%)</span>
+                    <span>{Number(invoice.tax_amount).toFixed(4)} {invoice.currency_display}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold text-gray-800 dark:text-gray-200 pt-1">
+                  <span>Total</span>
+                  <span>{Number(invoice.total).toFixed(4)} {invoice.currency_display}</span>
+                </div>
+              </div>
+
+              {/* Memo */}
+              {invoice.memo && (
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mt-3">
+                  <p className="text-xs text-gray-500 mb-1">Note</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{invoice.memo}</p>
+                </div>
+              )}
+
+              <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50/80 p-3 dark:border-blue-900/40 dark:bg-blue-900/10">
+                <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Buyer fee transparency</p>
+                <div className="mt-2 space-y-1.5 text-sm text-blue-900/90 dark:text-blue-100/90">
+                  <div className="flex justify-between gap-3">
+                    <span>You pay</span>
+                    <span className="font-medium">{Number(invoice.total).toFixed(4)} {invoice.currency_display}</span>
+                  </div>
+                  {estimatedLocalTotal && (
+                    <div className="flex justify-between gap-3 text-xs text-blue-800/80 dark:text-blue-200/80">
+                      <span>Estimated local value ({preferredCurrency})</span>
+                      <span>{estimatedLocalTotal}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-3 text-xs text-blue-800/80 dark:text-blue-200/80">
+                    <span>Merchant receives</span>
+                    <span>the full invoice amount</span>
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-blue-800/80 dark:text-blue-200/80">
+                  Any trust-based network fee and chain gas appear separately in your wallet confirmation and are paid by the buyer — they are not deducted from the merchant&apos;s invoice total.
+                </p>
+              </div>
+            </div>
+
+            {/* Payment Action */}
+            <div className="p-6 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-700">
+              {(status === 'paid' || status === 'already_paid') && (
+                <div className="text-center">
+                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                  <p className="text-green-600 dark:text-green-400 font-semibold mb-2">Payment Successful</p>
+                  {txHash && (
+                    <a
+                      href={`${explorerBase}/tx/${txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                    >
+                      View Transaction <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {status === 'ready' && (
+                <>
+                  {!isConnected ? (
+                    <div className="text-center">
+                      <p className="text-sm text-gray-500 mb-3">Connect your wallet to pay</p>
+                      <ConnectButton />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => void handlePay()}
+                      disabled={isPaying}
+                      className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400
+                                 text-white font-semibold rounded-xl transition-colors"
+                    >
+                      {isPaying ? 'Processing...' : `Pay ${Number(invoice.total).toFixed(4)} ${invoice.currency_display}`}
+                    </button>
+                  )}
+                </>
+              )}
+
+              {status === 'paying' && (
+                <div className="text-center py-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Confirm in your wallet...</p>
+                </div>
+              )}
+
+              {status === 'confirming' && (
+                <div className="text-center py-2">
+                  <div className="animate-pulse text-blue-600 font-medium">Confirming on-chain...</div>
+                </div>
+              )}
+
+              {errorMessage && status !== 'paid' && status !== 'already_paid' && (
+                <div className="flex items-start gap-2 mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                  <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          Payments are processed on-chain via VFIDE MerchantPortal. No card details required.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    draft: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
+    sent: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    viewed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+    paid: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    overdue: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    cancelled: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
+  };
+
+  return (
+    <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${styles[status] ?? styles.draft}`}>
+      {status}
+    </span>
+  );
+}

@@ -1,0 +1,72 @@
+diff --git a/contracts/OwnerControlPanel.sol b/contracts/OwnerControlPanel.sol
+--- a/contracts/OwnerControlPanel.sol
++++ b/contracts/OwnerControlPanel.sol
+@@ -1041,11 +1041,11 @@ contract OwnerControlPanel {
+         uint256 userReferralReward
+     ) external onlyOwner {
+         if (
+-            merchantTxReward < minAutoWorkPayoutWei ||
++            !_isAutoWorkRewardWithinBounds(merchantTxReward) ||
+             merchantTxReward > maxAutoWorkPayoutWei ||
+-            merchantReferralReward < minAutoWorkPayoutWei ||
++            !_isAutoWorkRewardWithinBounds(merchantReferralReward) ||
+             merchantReferralReward > maxAutoWorkPayoutWei ||
+-            userReferralReward < minAutoWorkPayoutWei ||
++            !_isAutoWorkRewardWithinBounds(userReferralReward) ||
+             userReferralReward > maxAutoWorkPayoutWei
+         ) {
+             revert OCP_InvalidRange();
+@@ -1066,6 +1066,12 @@ contract OwnerControlPanel {
+         );
+     }
+ 
++    function _isAutoWorkRewardWithinBounds(uint256 rewardWei) internal view returns (bool) {
++        // Zero explicitly disables that payout category.
++        if (rewardWei == 0) return true;
++        return rewardWei >= minAutoWorkPayoutWei;
++    }
++
+     /**
+      * @notice Get current automatic fixed work payout configuration
+      */
+
+diff --git a/scripts/verify-owner-controlpanel-guardrails.ts b/scripts/verify-owner-controlpanel-guardrails.ts
+--- a/scripts/verify-owner-controlpanel-guardrails.ts
++++ b/scripts/verify-owner-controlpanel-guardrails.ts
+@@ -98,8 +98,8 @@ async function main() {
+   const oneEth = 1_000_000_000_000_000_000n;
+   const halfEth = 500_000_000_000_000_000n;
+   const quarterEth = 250_000_000_000_000_000n;
+ 
+-  await (await ocp.governance_setAutoWorkPayoutBounds(1, 10n * oneEth)).wait();
+-  await expectRevert(() => ocp.ecosystem_configureAutoWorkPayout(true, 0, 0, 0, { gasLimit: 5_000_000 }));
++  await (await ocp.governance_setAutoWorkPayoutBounds(2, 10n * oneEth)).wait();
++  await expectRevert(() => ocp.ecosystem_configureAutoWorkPayout(true, 1, 1, 1, { gasLimit: 5_000_000 }));
+ 
+   const workActionId = await ocp.actionId_ecosystem_configureAutoWorkPayout(
+     true,
+
+diff --git a/app/control-panel/components/GovernancePanel.tsx b/app/control-panel/components/GovernancePanel.tsx
+--- a/app/control-panel/components/GovernancePanel.tsx
++++ b/app/control-panel/components/GovernancePanel.tsx
+@@ -254,7 +254,7 @@ export function GovernancePanel() {
+           {selectedAction === 'autoWorkPayoutConfigure' && (
+             <>
+               <div className="text-slate-300 text-sm bg-black/30 rounded-lg p-3">
+-                Allowed range: {String(minAutoWorkPayoutWei || 0)} to {String(maxAutoWorkPayoutWei || 0)} wei
++                Allowed values: 0 (disable category) or {String(minAutoWorkPayoutWei || 0)} to {String(maxAutoWorkPayoutWei || 0)} wei
+               </div>
+               <div className="flex items-center gap-3 p-4 bg-white/5 rounded-lg">
+                 <input
+
+diff --git a/docs/SYSTEM_FEATURE_REVIEW_TRACKER.md b/docs/SYSTEM_FEATURE_REVIEW_TRACKER.md
+--- a/docs/SYSTEM_FEATURE_REVIEW_TRACKER.md
++++ b/docs/SYSTEM_FEATURE_REVIEW_TRACKER.md
+@@ -131,6 +131,7 @@ Notes:
+ - Added accounting consistency updates: `totalExpensesPaid` and `totalBurned` now increment at spend/burn time; council distributions now increment `totalCouncilPaid`.
+ - Updated vault health aggregate to include `operationsPool` and tracked legacy outflows in `totalIn`, keeping health totals internally coherent.
+ - Added and validated local invariant verifier: `npm run contract:verify:ecosystem-work-rewards:local`.
++- Guardrail alignment fix in `OwnerControlPanel`: `ecosystem_configureAutoWorkPayout` now allows `0` as an explicit disable value per category while still enforcing min/max bounds for non-zero rewards.
+ - Remaining discussion: emergency owner timelock-withdraw policy boundaries relative to reserved pool guarantees.
+ - Fourth-pass setter-bound hardening: `contracts/LiquidityIncentives.sol` now enforces non-zero unstake cooldown floor (`MIN_UNSTAKE_COOLDOWN`) alongside existing max cooldown bound, preventing accidental/no-cooldown anti-flash-loan bypass configuration.
+ - Seventh-pass setter hardening in `contracts/VFIDEBenefits.sol`:

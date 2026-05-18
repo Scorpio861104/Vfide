@@ -1,0 +1,153 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+/**
+ * RevenueSplitter — Treasury Management for Vfide
+ * -----------------------------------------------
+ * Allows merchants/DAOs to automatically split incoming revenue.
+ * Example: 40% to Suppliers, 30% to Tax, 30% to Profit.
+ * - Zero legal risk (just a routing tool).
+ * - Safe against failed transfers (uses try/catch).
+ */
+
+import { IERC20, SafeERC20, ReentrancyGuard } from "./SharedInterfaces.sol";
+
+contract RevenueSplitter is ReentrancyGuard {
+    using SafeERC20 for IERC20;
+    address public owner;
+    
+    struct Payee {
+        address account;
+        uint256 shareBps; // Basis points (100 = 1%)
+    }
+    
+    Payee[] public payees;
+    uint256 public totalShares;
+
+    event Distributed(address indexed token, uint256 totalAmount, uint256 payeesSucceeded, uint256 payeesFailed);
+    event PayeeDistribution(address indexed payee, address indexed token, uint256 amount, bool success);
+
+    constructor(address[] memory _accounts, uint256[] memory _shares) {
+        require(_accounts.length == _shares.length, "length mismatch");
+        require(_accounts.length > 0, "RS: no payees");
+        require(msg.sender != address(0), "RS: zero owner");
+        owner = msg.sender;
+        
+        uint256 length = _accounts.length;
+        for (uint i = 0; i < length; ++i) {
+            require(_accounts[i] != address(0), "zero address");
+            require(_shares[i] > 0, "zero share");
+            payees.push(Payee({account: _accounts[i], shareBps: _shares[i]}));
+            totalShares += _shares[i];
+        }
+        require(totalShares == 10000, "must equal 100%");
+    }
+
+    // Anyone can trigger distribution of held tokens
+    function distribute(address token) external nonReentrant {
+        require(token != address(0), "RS: zero token");
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance > 0, "no funds");
+        // Removed hardcoded 1e18 minimum - was breaking 6-decimal tokens like USDC
+
+        uint256 distributed = 0;
+        uint256 payeesSucceeded = 0;
+        uint256 payeesFailed = 0;
+
+        uint256 length = payees.length;
+        for (uint i = 0; i < length; ++i) {
+            uint256 amount;
+            if (i == length - 1) {
+                amount = balance - distributed; // Give remainder to last
+            } else {
+                amount = (balance * payees[i].shareBps) / 10000;
+            }
+            
+            if (amount > 0) {
+                // H-29 FIX: Compute amount for last payee BEFORE updating distributed.
+                // Only increment distributed after a successful transfer.
+                // M-2 FIX: Low-level call for non-standard ERC20s (USDT)
+                (bool callOk, bytes memory returnData) = token.call(
+                    abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount)
+                );
+                bool success = callOk && (returnData.length == 0 || abi.decode(returnData, (bool)));
+                if (success) {
+                    distributed += amount;
+                    payeesSucceeded++;
+                    emit PayeeDistribution(payees[i].account, token, amount, true);
+                } else {
+                    payeesFailed++;
+                    emit PayeeDistribution(payees[i].account, token, amount, false);
+                }
+            }
+        }
+        
+        emit Distributed(token, balance, payeesSucceeded, payeesFailed);
+    }
+    
+    function getPayees() external view returns (Payee[] memory) {
+        return payees;
+    }
+
+    // H-30 FIX: Two-step payee update with 48h timelock to prevent instant redirect on owner compromise.
+    struct PendingPayeesUpdate {
+        address[] accounts;
+        uint256[] shares;
+        uint256 validFrom;
+    }
+    PendingPayeesUpdate private _pendingPayeesUpdate;
+    bool public hasPendingPayeesUpdate;
+    uint256 public constant PAYEES_UPDATE_DELAY = 48 hours;
+
+    event PayeesUpdateProposed(uint256 validFrom);
+    event PayeesUpdateApplied();
+    event PayeesUpdateCancelled();
+
+    /// @notice Propose a new payee configuration; takes effect 48h later.
+    function updatePayees(address[] calldata _accounts, uint256[] calldata _shares) external {
+        require(msg.sender == owner, "RS: not owner");
+        require(_accounts.length == _shares.length, "length mismatch");
+        require(_accounts.length > 0, "RS: no payees");
+        uint256 totalBps = 0;
+        for (uint256 i = 0; i < _accounts.length; i++) {
+            require(_accounts[i] != address(0), "zero address");
+            require(_shares[i] > 0, "zero share");
+            totalBps += _shares[i];
+        }
+        require(totalBps == 10000, "must equal 100%");
+
+        _pendingPayeesUpdate = PendingPayeesUpdate({
+            accounts: _accounts,
+            shares: _shares,
+            validFrom: block.timestamp + PAYEES_UPDATE_DELAY
+        });
+        hasPendingPayeesUpdate = true;
+        emit PayeesUpdateProposed(block.timestamp + PAYEES_UPDATE_DELAY);
+    }
+
+    /// @notice Apply the pending payee update after the 48h delay.
+    function applyPayeesUpdate() external {
+        require(msg.sender == owner, "RS: not owner");
+        require(hasPendingPayeesUpdate, "RS: nothing pending");
+        require(block.timestamp >= _pendingPayeesUpdate.validFrom, "RS: timelock pending");
+
+        delete payees;
+        totalShares = 0;
+        for (uint256 i = 0; i < _pendingPayeesUpdate.accounts.length; i++) {
+            payees.push(Payee({account: _pendingPayeesUpdate.accounts[i], shareBps: _pendingPayeesUpdate.shares[i]}));
+            totalShares += _pendingPayeesUpdate.shares[i];
+        }
+        hasPendingPayeesUpdate = false;
+        delete _pendingPayeesUpdate;
+        emit PayeesUpdateApplied();
+    }
+
+    /// @notice Cancel a pending payees update.
+    function cancelPayeesUpdate() external {
+        require(msg.sender == owner, "RS: not owner");
+        hasPendingPayeesUpdate = false;
+        delete _pendingPayeesUpdate;
+        emit PayeesUpdateCancelled();
+    }
+
+}

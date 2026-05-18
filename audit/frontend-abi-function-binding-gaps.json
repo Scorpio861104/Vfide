@@ -1,0 +1,119 @@
+{
+  "generatedAt": "2026-03-29T15:56:52.676Z",
+  "totalAbiFunctions": 1170,
+  "totalFunctionBindingsScanned": 307,
+  "classificationCounts": {
+    "global-abi": 272,
+    "local-inline-abi": 12,
+    "external-interface": 0,
+    "unresolved": 23
+  },
+  "totalUnresolvedBindings": 23,
+  "filesWithUnresolvedBindings": 6,
+  "unresolvedBindingsByFile": {
+    "app/control-panel/components/AutoSwapPanel.tsx": [
+      {
+        "line": 28,
+        "fn": "autoSwap_getConfig"
+      },
+      {
+        "line": 44,
+        "fn": "autoSwap_configure"
+      },
+      {
+        "line": 70,
+        "fn": "autoSwap_quickSetupUSDC"
+      },
+      {
+        "line": 88,
+        "fn": "autoSwap_setEnabled"
+      }
+    ],
+    "app/control-panel/components/EcosystemPanel.tsx": [
+      {
+        "line": 25,
+        "fn": "ecosystem_getAutoWorkPayoutConfig"
+      },
+      {
+        "line": 39,
+        "fn": "ecosystem_configureAutoWorkPayout"
+      }
+    ],
+    "app/control-panel/components/EmergencyPanel.tsx": [
+      {
+        "line": 32,
+        "fn": "emergency_pauseAll"
+      },
+      {
+        "line": 49,
+        "fn": "emergency_resumeAll"
+      },
+      {
+        "line": 66,
+        "fn": "token_setCircuitBreaker"
+      }
+    ],
+    "app/control-panel/components/GovernancePanel.tsx": [
+      {
+        "line": 33,
+        "fn": "governanceDelay"
+      },
+      {
+        "line": 39,
+        "fn": "maxAutoSwapSlippageBps"
+      },
+      {
+        "line": 45,
+        "fn": "minAutoWorkPayoutWei"
+      },
+      {
+        "line": 51,
+        "fn": "maxAutoWorkPayoutWei"
+      },
+      {
+        "line": 101,
+        "fn": "queuedActionEta"
+      },
+      {
+        "line": 134,
+        "fn": "governance_queueAction"
+      },
+      {
+        "line": 150,
+        "fn": "governance_cancelAction"
+      },
+      {
+        "line": 167,
+        "fn": "token_lockPolicy"
+      },
+      {
+        "line": 174,
+        "fn": "autoSwap_configure"
+      },
+      {
+        "line": 186,
+        "fn": "ecosystem_configureAutoWorkPayout"
+      }
+    ],
+    "app/control-panel/components/ProductionSetupPanel.tsx": [
+      {
+        "line": 26,
+        "fn": "system_getStatus"
+      },
+      {
+        "line": 37,
+        "fn": "production_setupSafeDefaults"
+      },
+      {
+        "line": 54,
+        "fn": "production_setupWithAutoSwap"
+      }
+    ],
+    "app/control-panel/components/SystemStatusPanel.tsx": [
+      {
+        "line": 10,
+        "fn": "system_getStatus"
+      }
+    ]
+  }
+}

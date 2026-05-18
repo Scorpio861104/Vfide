@@ -1,0 +1,1 @@
+export { TipSelector } from './TipSystem';

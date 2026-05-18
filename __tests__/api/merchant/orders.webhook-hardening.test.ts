@@ -1,0 +1,170 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { POST } from '../../../app/api/merchant/orders/route';
+
+jest.mock('@/lib/db', () => ({
+  query: jest.fn(),
+  getClient: jest.fn(),
+}));
+
+jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: (handler: (request: NextRequest, user: { address: string }) => Promise<NextResponse>) => {
+    return async (request: NextRequest) => {
+      const { requireAuth } = require('@/lib/auth/middleware');
+      const authResult = await requireAuth(request);
+      if (authResult instanceof NextResponse) {
+        return authResult;
+      }
+      return handler(request, authResult.user);
+    };
+  },
+  requireAuth: jest.fn(),
+}));
+
+jest.mock('@/lib/auth/rateLimit', () => ({
+  withRateLimit: jest.fn(),
+}));
+
+jest.mock('@/lib/webhooks/merchantWebhookDispatcher', () => ({
+  dispatchWebhook: jest.fn(),
+}));
+
+describe('/api/merchant/orders webhook hardening', () => {
+  const { requireAuth } = require('@/lib/auth/middleware');
+  const { withRateLimit } = require('@/lib/auth/rateLimit');
+  const { query, getClient } = require('@/lib/db');
+  const { dispatchWebhook } = require('@/lib/webhooks/merchantWebhookDispatcher');
+
+  const mockMerchant = '0x1111111111111111111111111111111111111111';
+  const mockCustomer = '0x2222222222222222222222222222222222222222';
+
+  function makeClient(options?: { inventoryCount?: number | null; inventoryTracking?: boolean }) {
+    const inventoryCount = options?.inventoryCount ?? 5;
+    const inventoryTracking = options?.inventoryTracking ?? true;
+
+    return {
+      query: jest.fn(async (sql: string) => {
+        if (sql === 'BEGIN' || sql === 'COMMIT' || sql === 'ROLLBACK') {
+          return {};
+        }
+        if (sql.includes('inventory_tracking') && sql.includes('inventory_count') && sql.includes('FOR UPDATE')) {
+          return { rows: [{ inventory_tracking: inventoryTracking, inventory_count: inventoryCount }] };
+        }
+        if (sql.includes('INSERT INTO merchant_orders')) {
+          return {
+            rows: [{ id: 123, order_number: 'ORD-20260422-ABC123', status: 'pending', payment_status: 'unpaid' }],
+          };
+        }
+        return {};
+      }),
+      release: jest.fn(),
+    };
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    withRateLimit.mockResolvedValue(null);
+    requireAuth.mockResolvedValue({ user: { address: mockCustomer } });
+    query.mockReset();
+    query.mockResolvedValueOnce({
+      rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
+    });
+
+    getClient.mockResolvedValue(makeClient());
+  });
+
+  it('does not emit payment.completed when creating unpaid order', async () => {
+    const request = new NextRequest('http://localhost:3000/api/merchant/orders', {
+      method: 'POST',
+      body: JSON.stringify({
+        merchant_address: mockMerchant,
+        items: [
+          {
+            product_id: 11,
+            name: 'Test Product',
+            quantity: 1,
+            unit_price: 25,
+          },
+        ],
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(data.order).toBeDefined();
+    expect(dispatchWebhook).not.toHaveBeenCalled();
+  });
+
+  it('does not emit payment.completed even when tx_hash is present at order creation', async () => {
+    getClient.mockResolvedValue(makeClient());
+    query.mockResolvedValueOnce({
+      rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
+    });
+
+    const request = new NextRequest('http://localhost:3000/api/merchant/orders', {
+      method: 'POST',
+      body: JSON.stringify({
+        merchant_address: mockMerchant,
+        tx_hash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+        items: [
+          {
+            product_id: 11,
+            name: 'Test Product',
+            quantity: 1,
+            unit_price: 25,
+          },
+        ],
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(201);
+    expect(dispatchWebhook).not.toHaveBeenCalled();
+  });
+
+  it('rejects order creation when tracked inventory is insufficient', async () => {
+    getClient.mockResolvedValue(makeClient({ inventoryCount: 0 }));
+    query.mockResolvedValueOnce({
+      rows: [{ id: 11, name: 'Test Product', sku: 'SKU-11', price: '25.00' }],
+    });
+
+    const request = new NextRequest('http://localhost:3000/api/merchant/orders', {
+      method: 'POST',
+      body: JSON.stringify({
+        merchant_address: mockMerchant,
+        items: [
+          {
+            product_id: 11,
+            name: 'Test Product',
+            quantity: 1,
+            unit_price: 25,
+          },
+        ],
+      }),
+    });
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(data.error).toMatch(/Insufficient inventory/i);
+    expect(dispatchWebhook).not.toHaveBeenCalled();
+  });
+
+  it('returns rate-limit response when limiter blocks request', async () => {
+    withRateLimit.mockResolvedValue(NextResponse.json({ error: 'rate limit' }, { status: 429 }));
+
+    const request = new NextRequest('http://localhost:3000/api/merchant/orders', {
+      method: 'POST',
+      body: JSON.stringify({
+        merchant_address: mockMerchant,
+        items: [{ name: 'Test Product', quantity: 1, unit_price: 25 }],
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(429);
+    expect(dispatchWebhook).not.toHaveBeenCalled();
+  });
+});

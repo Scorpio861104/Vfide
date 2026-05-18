@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-03-27T03:02:52.346Z",
+  "total": 28,
+  "badges": [
+    {
+      "name": "PIONEER",
+      "path": "/badges/art/pioneer.svg",
+      "rarity": "Legendary",
+      "category": "Pioneer & Foundation"
+    },
+    {
+      "name": "FOUNDING_MEMBER",
+      "path": "/badges/art/founding_member.svg",
+      "rarity": "Mythic",
+      "category": "Pioneer & Foundation"
+    },
+    {
+      "name": "EARLY_TESTER",
+      "path": "/badges/art/early_tester.svg",
+      "rarity": "Rare",
+      "category": "Pioneer & Foundation"
+    },
+    {
+      "name": "ACTIVE_TRADER",
+      "path": "/badges/art/active_trader.svg",
+      "rarity": "Uncommon",
+      "category": "Activity & Participation"
+    },
+    {
+      "name": "GOVERNANCE_VOTER",
+      "path": "/badges/art/governance_voter.svg",
+      "rarity": "Uncommon",
+      "category": "Activity & Participation"
+    },
+    {
+      "name": "POWER_USER",
+      "path": "/badges/art/power_user.svg",
+      "rarity": "Rare",
+      "category": "Activity & Participation"
+    },
+    {
+      "name": "DAILY_CHAMPION",
+      "path": "/badges/art/daily_champion.svg",
+      "rarity": "Common",
+      "category": "Activity & Participation"
+    },
+    {
+      "name": "TRUSTED_ENDORSER",
+      "path": "/badges/art/trusted_endorser.svg",
+      "rarity": "Rare",
+      "category": "Trust & Community"
+    },
+    {
+      "name": "COMMUNITY_BUILDER",
+      "path": "/badges/art/community_builder.svg",
+      "rarity": "Epic",
+      "category": "Trust & Community"
+    },
+    {
+      "name": "MENTOR",
+      "path": "/badges/art/mentor.svg",
+      "rarity": "Rare",
+      "category": "Trust & Community"
+    },
+    {
+      "name": "PEACEMAKER",
+      "path": "/badges/art/peacemaker.svg",
+      "rarity": "Rare",
+      "category": "Trust & Community"
+    },
+    {
+      "name": "VERIFIED_MERCHANT",
+      "path": "/badges/art/verified_merchant.svg",
+      "rarity": "Rare",
+      "category": "Commerce & Merchants"
+    },
+    {
+      "name": "ELITE_MERCHANT",
+      "path": "/badges/art/elite_merchant.svg",
+      "rarity": "Epic",
+      "category": "Commerce & Merchants"
+    },
+    {
+      "name": "INSTANT_SETTLEMENT",
+      "path": "/badges/art/instant_settlement.svg",
+      "rarity": "Rare",
+      "category": "Commerce & Merchants"
+    },
+    {
+      "name": "ZERO_DISPUTE",
+      "path": "/badges/art/zero_dispute.svg",
+      "rarity": "Rare",
+      "category": "Commerce & Merchants"
+    },
+    {
+      "name": "FRAUD_HUNTER",
+      "path": "/badges/art/fraud_hunter.svg",
+      "rarity": "Epic",
+      "category": "Security & Integrity"
+    },
+    {
+      "name": "CLEAN_RECORD",
+      "path": "/badges/art/clean_record.svg",
+      "rarity": "Common",
+      "category": "Security & Integrity"
+    },
+    {
+      "name": "REDEMPTION",
+      "path": "/badges/art/redemption.svg",
+      "rarity": "Rare",
+      "category": "Security & Integrity"
+    },
+    {
+      "name": "GUARDIAN",
+      "path": "/badges/art/guardian.svg",
+      "rarity": "Epic",
+      "category": "Security & Integrity"
+    },
+    {
+      "name": "ELITE_ACHIEVER",
+      "path": "/badges/art/elite_achiever.svg",
+      "rarity": "Epic",
+      "category": "Achievements & Milestones"
+    },
+    {
+      "name": "CENTURY_ENDORSER",
+      "path": "/badges/art/century_endorser.svg",
+      "rarity": "Epic",
+      "category": "Achievements & Milestones"
+    },
+    {
+      "name": "WHALE_SLAYER",
+      "path": "/badges/art/whale_slayer.svg",
+      "rarity": "Epic",
+      "category": "Achievements & Milestones"
+    },
+    {
+      "name": "DIVERSIFICATION_MASTER",
+      "path": "/badges/art/diversification_master.svg",
+      "rarity": "Rare",
+      "category": "Achievements & Milestones"
+    },
+    {
+      "name": "EDUCATOR",
+      "path": "/badges/art/educator.svg",
+      "rarity": "Rare",
+      "category": "Education & Contribution"
+    },
+    {
+      "name": "CONTRIBUTOR",
+      "path": "/badges/art/contributor.svg",
+      "rarity": "Epic",
+      "category": "Education & Contribution"
+    },
+    {
+      "name": "BUG_BOUNTY",
+      "path": "/badges/art/bug_bounty.svg",
+      "rarity": "Epic",
+      "category": "Education & Contribution"
+    },
+    {
+      "name": "TRANSLATOR",
+      "path": "/badges/art/translator.svg",
+      "rarity": "Rare",
+      "category": "Education & Contribution"
+    },
+    {
+      "name": "HEADHUNTER",
+      "path": "/badges/art/headhunter.svg",
+      "rarity": "Epic",
+      "category": "Headhunter Competition"
+    }
+  ]
+}

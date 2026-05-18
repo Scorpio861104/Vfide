@@ -1,0 +1,43 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
+import React from 'react';
+import { Footer } from '@/components/layout/Footer';
+import { ProfileSettings } from '@/components/profile/ProfileSettings';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+
+export default function ProfilePage() {
+  const { isConnected } = useAccount();
+
+  if (!isConnected) {
+    return (
+      <>
+        <main className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+          <div className="flex flex-col items-center justify-center py-20 px-4">
+            <div className="text-center max-w-md">
+              <h1 className="text-3xl font-bold text-zinc-100 mb-4">
+                Connect Your Wallet
+              </h1>
+              <p className="text-zinc-400 mb-8">
+                Please connect your wallet to view and edit your profile
+              </p>
+              <ConnectButton />
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <main className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-20">
+        <ProfileSettings />
+      </main>
+      <Footer />
+    </>
+  );
+}

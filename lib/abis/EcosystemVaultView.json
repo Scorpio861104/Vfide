@@ -1,0 +1,624 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_vault",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_seer",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "HEADHUNTER_RANKS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_RANK_ITERATIONS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MERCHANT_RANKS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "QUARTER",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER1_MULTIPLIER",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER1_THRESHOLD",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER2_MULTIPLIER",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER2_THRESHOLD",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER3_MULTIPLIER",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER3_THRESHOLD",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER4_MULTIPLIER",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TIER4_THRESHOLD",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      }
+    ],
+    "name": "getHeadhunterStats",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "currentYearPoints",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint8",
+        "name": "estimatedRank",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentYearNumber",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "currentQuarterNumber",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "quarterEndsAt",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      }
+    ],
+    "name": "getMerchantStats",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "txCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bonusesPaid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "currentTier",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint8",
+        "name": "currentPeriodRank",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getMerchantTierMultipliers",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "tier1Threshold",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tier1Multiplier",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tier2Threshold",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tier2Multiplier",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tier3Threshold",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tier3Multiplier",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tier4Threshold",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint16",
+        "name": "tier4Multiplier",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getOperationsStatus",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "wallet",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pool",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "lastWithdrawal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "cooldown",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "canWithdraw",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "referred",
+        "type": "address"
+      }
+    ],
+    "name": "getPendingReferral",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "merchantReferrer",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "userReferrer",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "credited",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getPoolBalances",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "council",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "merchant",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "headhunter",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "total",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "year",
+        "type": "uint256"
+      }
+    ],
+    "name": "getReferralLevelStatus",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "points",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint8",
+        "name": "unlockedLevel",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "highestPaidLevel",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint8",
+        "name": "nextLevel",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint16",
+        "name": "nextLevelRequiredPoints",
+        "type": "uint16"
+      },
+      {
+        "internalType": "uint256",
+        "name": "nextLevelReward",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSpendingSummary",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "councilTotal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "merchantTotal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "headhunterTotal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "burnedTotal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expensesTotal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "grandTotal",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getVaultHealth",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "currentBalance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "councilPoolBalance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "merchantPoolBalance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "headhunterPoolBalance",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "year",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "quarter",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "referrer",
+        "type": "address"
+      }
+    ],
+    "name": "previewHeadhunterReward",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "referrerPoints",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "quarterEndedFlag",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "poolSnapshot",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "period",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "merchant",
+        "type": "address"
+      }
+    ],
+    "name": "previewMerchantReward",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "txCount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint16",
+        "name": "bestTier",
+        "type": "uint16"
+      },
+      {
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "periodEnded",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "poolSnapshot",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "seer",
+    "outputs": [
+      {
+        "internalType": "contract ISeerView",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vault",
+    "outputs": [
+      {
+        "internalType": "contract IEcosystemVaultView",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
