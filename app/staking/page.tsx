@@ -137,7 +137,7 @@ export default function StakingPage() {
   if (!isConfiguredContractAddress(LiquidityIncentives)) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-20">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
           <div className="container mx-auto px-4 max-w-3xl py-8">
             <PageHeader title="Staking" subtitle="Earn liquidity incentives" />
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 text-center">
@@ -156,7 +156,7 @@ export default function StakingPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-20">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
           <div className="container mx-auto px-4 max-w-3xl py-8">
             <PageHeader title="Staking" subtitle="Earn liquidity incentives" />
             <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 text-center">
@@ -209,7 +209,7 @@ export default function StakingPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8 space-y-6">
           <PageHeader title="Staking" subtitle="Earn liquidity incentives" />
 

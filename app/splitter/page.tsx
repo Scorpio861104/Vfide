@@ -198,7 +198,7 @@ export default function SplitterPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8 space-y-6">
           <PageHeader
             title="Revenue Splitter"

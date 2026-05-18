@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Search, TrendingUp, Users, Activity, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { Footer } from '@/components/layout/Footer'
 
 const ETHEREUM_ADDRESS_LENGTH = 42
 
@@ -36,18 +37,33 @@ export default function ExplorerPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-black text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-zinc-950 pt-[4.5rem] relative overflow-hidden text-white"
+      >
+        {/* Ambient background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-24 left-1/4 w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.07), transparent 65%)', filter: 'blur(60px)' }} />
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.06), transparent 65%)', filter: 'blur(70px)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
+
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-4">
+          <div className="badge-live mb-4 mx-auto w-fit"><Search size={11} /> Block Explorer</div>
+          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
             VFIDE Explorer
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
             Explore transactions, addresses, and activity on the VFIDE network
           </p>
         </motion.div>
@@ -61,13 +77,13 @@ export default function ExplorerPage() {
           className="max-w-3xl mx-auto mb-12"
         >
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 w-5 h-5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) =>  setSearchQuery(e.target.value)}
-             
-              className="w-full bg-zinc-900/50 border border-zinc-700 rounded-xl pl-12 pr-4 py-4 text-white  focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
+              placeholder="Search by wallet address (0x...)"
+              className="w-full bg-zinc-900/60 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-colors"
             />
           </div>
         </motion.form>
@@ -236,6 +252,8 @@ export default function ExplorerPage() {
           </div>
         </motion.div>
       </div>
-    </div>
+      </motion.div>
+      <Footer />
+    </>
   )
 }

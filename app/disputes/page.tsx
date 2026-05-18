@@ -103,7 +103,7 @@ export default function DisputesPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 text-white">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
         <section className="py-16">
           <div className="container mx-auto max-w-5xl px-4">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-sm text-amber-300">

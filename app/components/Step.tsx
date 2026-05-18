@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Zap } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface StepProps {
   number: number;
@@ -14,32 +14,43 @@ interface StepProps {
 export function Step({ number, title, description, time, index }: StepProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -30 }}
+      initial={{ opacity: 0, x: -24 }}
       whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: index * 0.15 }}
-      className="group relative flex gap-6"
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.55, delay: index * 0.12 }}
+      className="group relative flex gap-5 items-start"
     >
+      {/* Vertical connector (except last step) */}
       {index < 2 && (
-        <div className="absolute top-16 bottom-0 left-7 w-px bg-gradient-to-b from-cyan-400/30 to-transparent" />
+        <div
+          className="step-connector"
+          aria-hidden="true"
+        />
       )}
 
+      {/* Step number badge */}
       <motion.div
-        whileHover={{ scale: 1.1, rotate: 5 }}
-        className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 text-xl font-bold text-zinc-950 shadow-[0_0_30px_rgba(0,240,255,0.3)]"
+        whileHover={{ scale: 1.08, rotate: 4 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        className="step-number-badge shrink-0"
       >
         {number}
       </motion.div>
 
-      <div className="flex-1 pb-8">
-        <h2 className="mb-2 text-xl font-semibold text-zinc-50 transition-colors group-hover:text-cyan-400">
-          {title}
-        </h2>
-        <p className="mb-3 leading-relaxed text-zinc-400">{description}</p>
-        <div className="inline-flex items-center gap-2 text-sm font-medium text-cyan-400">
-          <Zap className="h-4 w-4" />
-          {time}
+      {/* Content */}
+      <div className="flex-1 pb-10 pt-1">
+        <div className="flex items-start justify-between gap-4 mb-2">
+          <h3 className="text-xl font-bold text-zinc-50 transition-colors group-hover:text-cyan-400 leading-snug">
+            {title}
+          </h3>
+          <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-500 bg-white/4 border border-white/8 rounded-full px-3 py-1">
+            <Clock size={11} />
+            {time}
+          </span>
         </div>
+        <p className="leading-relaxed text-zinc-400 text-sm max-w-lg">
+          {description}
+        </p>
       </div>
     </motion.div>
   );

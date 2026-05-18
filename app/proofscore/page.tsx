@@ -35,7 +35,7 @@ export default function ProofScorePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <div className="container mx-auto max-w-5xl px-4 py-8 space-y-8">
           {/* Header */}
           <div>

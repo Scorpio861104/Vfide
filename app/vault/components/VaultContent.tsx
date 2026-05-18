@@ -25,13 +25,17 @@ export function VaultContent() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 relative">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] relative overflow-hidden">
         {/* Ambient Background */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-1/4 w-150 h-150 bg-emerald-500/5 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 left-0 w-125 h-125 bg-cyan-500/5 rounded-full blur-[100px]" />
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-[0.02]" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-24 right-1/4 w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.07), transparent 65%)', filter: 'blur(80px)' }} />
+          <div className="absolute bottom-1/4 -left-24 w-[400px] h-[400px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.06), transparent 65%)', filter: 'blur(80px)' }} />
+          <div className="absolute top-1/2 right-0 w-[350px] h-[350px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.05), transparent 65%)', filter: 'blur(80px)' }} />
         </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
         <VaultHeader
           address={ops.address}

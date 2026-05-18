@@ -31,7 +31,7 @@ export default function RemittancePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 text-white">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
         <section className="py-16">
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">

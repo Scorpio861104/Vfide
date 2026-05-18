@@ -77,7 +77,7 @@ export default function PerformancePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <div className="container mx-auto max-w-6xl px-4 py-8">
           <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>

@@ -27,7 +27,7 @@ export default function BenefitsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <div className="container mx-auto px-4 max-w-6xl py-8">
           <h1 className="text-4xl font-bold text-white mb-2">Member Benefits</h1>
           <p className="text-white/60 mb-8">Tier rewards and ProofScore benefits</p>

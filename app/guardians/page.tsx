@@ -33,16 +33,7 @@ const TAB_CONFIG = [
   { id: 'inheritance' as const, label: 'Inheritance', icon: Heart },
 ] as const;
 
-const COLOR_MAP: Record<TabType, { gradient: string; shadow: string }> = {
-  overview: { gradient: 'from-cyan-500 to-blue-500', shadow: 'shadow-cyan-500/25' },
-  'my-guardians': { gradient: 'from-purple-500 to-violet-500', shadow: 'shadow-purple-500/25' },
-  recovery: { gradient: 'from-amber-500 to-orange-500', shadow: 'shadow-amber-500/25' },
-  responsibilities: { gradient: 'from-emerald-500 to-green-500', shadow: 'shadow-emerald-500/25' },
-  pending: { gradient: 'from-red-500 to-orange-500', shadow: 'shadow-red-500/25' },
-  inheritance: { gradient: 'from-pink-500 to-purple-500', shadow: 'shadow-pink-500/25' },
-};
-
-// ── Loading fallback ────────────────────────────────────────────────────────
+// ── Loading fallback ─────────────────────────────────────────────────────────
 function TabSkeleton() {
   return (
     <div className="animate-pulse space-y-4 max-w-4xl mx-auto">
@@ -61,54 +52,49 @@ export default function GuardiansPage() {
 
   return (
     <>
-      <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-zinc-950 pt-20 relative overflow-hidden">
-        {/* Premium Background Effects */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-blue-500/5 rounded-full blur-[150px]" />
+      <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-zinc-950 pt-[4.5rem] relative overflow-hidden">
+        {/* Ambient background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-24 -left-24 w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.07), transparent 65%)', filter: 'blur(60px)' }} />
+          <div className="absolute bottom-0 -right-24 w-[400px] h-[400px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(167,139,250,0.06), transparent 65%)', filter: 'blur(70px)' }} />
         </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
         {/* Header */}
-        <section className="py-12 relative z-10">
-          <div className="container mx-auto px-3 sm:px-4">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-4 mb-4">
-              <div className="p-4 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-2xl shadow-lg shadow-cyan-500/25">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-                  Guardian <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Dashboard</span>
-                </h1>
-                <p className="text-xl text-gray-400">
-                  Manage recoveries only for vaults where the owner explicitly selected you as guardian
-                </p>
-              </div>
+        <section className="py-10 relative z-10">
+          <div className="container mx-auto px-4">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
+              <div className="badge-live mb-3 w-fit"><Shield size={11} /> Security System</div>
+              <h1 className="text-4xl font-black text-white tracking-tight mb-2">
+                Guardian Dashboard
+              </h1>
+              <p className="text-zinc-400 max-w-2xl">
+                Manage recoveries only for vaults where the owner explicitly selected you as guardian.
+              </p>
             </motion.div>
           </div>
         </section>
 
         {/* Tab Navigation */}
-        <section className="bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 sticky top-20 z-40">
-          <div className="container mx-auto px-3 sm:px-4">
+        <section className="border-b border-white/8 sticky top-14 z-40"
+          style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(24px)' }}>
+          <div className="container mx-auto px-4">
             <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Guardian management sections">
               {visibleTabs.map(tab => {
                 const isActive = activeTab === tab.id;
-                const colors = COLOR_MAP[tab.id];
                 return (
-                  <motion.button
+                  <button
                     key={tab.id} role="tab" aria-selected={isActive} aria-controls={`tabpanel-${tab.id}`}
                     onClick={() => setActiveTab(tab.id)}
-                    whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all whitespace-nowrap ${
-                      isActive
-                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg ${colors.shadow}`
-                        : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
+                      isActive ? 'tab-pill-active' : 'tab-pill-inactive'
                     }`}
                   >
-                    <tab.icon size={18} />
+                    <tab.icon size={15} />
                     <span className="hidden sm:inline">{tab.label}</span>
-                  </motion.button>
+                  </button>
                 );
               })}
             </div>
@@ -120,22 +106,34 @@ export default function GuardiansPage() {
           <Suspense fallback={<TabSkeleton />}>
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && (
-                <div key="overview" role="tabpanel" id="tabpanel-overview"><OverviewTab /></div>
+                <motion.div key="overview" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-overview">
+                  <OverviewTab />
+                </motion.div>
               )}
               {activeTab === 'my-guardians' && (
-                <div key="my-guardians" role="tabpanel" id="tabpanel-my-guardians"><MyGuardiansTab isConnected={isConnected} /></div>
+                <motion.div key="my-guardians" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-my-guardians">
+                  <MyGuardiansTab isConnected={isConnected} />
+                </motion.div>
               )}
               {activeTab === 'recovery' && (
-                <div key="recovery" role="tabpanel" id="tabpanel-recovery"><RecoveryTab isConnected={isConnected} /></div>
+                <motion.div key="recovery" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-recovery">
+                  <RecoveryTab isConnected={isConnected} />
+                </motion.div>
               )}
               {activeTab === 'responsibilities' && (
-                <div key="responsibilities" role="tabpanel" id="tabpanel-responsibilities"><ResponsibilitiesTab isConnected={isConnected} /></div>
+                <motion.div key="responsibilities" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-responsibilities">
+                  <ResponsibilitiesTab isConnected={isConnected} />
+                </motion.div>
               )}
               {activeTab === 'pending' && (
-                <div key="pending" role="tabpanel" id="tabpanel-pending"><PendingActionsTab isConnected={isConnected} /></div>
+                <motion.div key="pending" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-pending">
+                  <PendingActionsTab isConnected={isConnected} />
+                </motion.div>
               )}
               {activeTab === 'inheritance' && (
-                <div key="inheritance" role="tabpanel" id="tabpanel-inheritance"><InheritanceActionsTab isConnected={isConnected} /></div>
+                <motion.div key="inheritance" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-inheritance">
+                  <InheritanceActionsTab isConnected={isConnected} />
+                </motion.div>
               )}
             </AnimatePresence>
           </Suspense>

@@ -54,7 +54,7 @@ export default function SocialMessagingPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-20">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
           <div className="container mx-auto max-w-4xl px-4 py-12">
             <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
               <h1 className="mb-3 text-4xl font-bold text-white">Connect Your Wallet</h1>
@@ -70,7 +70,7 @@ export default function SocialMessagingPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <div className="container mx-auto max-w-6xl px-4 py-8">
           <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>

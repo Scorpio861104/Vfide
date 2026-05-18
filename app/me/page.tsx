@@ -103,7 +103,7 @@ export default function MeHubPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
           <div className="container mx-auto max-w-3xl px-4 py-12 text-center">
             <User size={48} className="mx-auto mb-4 text-cyan-300" />
             <h1 className="mb-2 text-3xl font-bold">Your VFIDE</h1>
@@ -122,7 +122,7 @@ export default function MeHubPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
         <div className="container mx-auto max-w-5xl px-4 pb-16">
 
           {/* Header: tier badge + name + ProofScore snapshot */}

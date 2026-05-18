@@ -11,7 +11,7 @@ export default function MerchantAnalyticsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <div className="container mx-auto max-w-6xl px-4 py-8 space-y-6">
           <div>
             <h1 className="text-4xl font-bold text-white mb-2">Merchant Analytics</h1>

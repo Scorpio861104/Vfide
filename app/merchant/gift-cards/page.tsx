@@ -116,7 +116,7 @@ export default function MerchantGiftCardsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 text-white">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
         <section className="py-16">
           <div className="container mx-auto max-w-5xl px-4">
             <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">

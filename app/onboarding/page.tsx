@@ -18,7 +18,6 @@ import { Sparkles, ArrowRight, Power } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 
-import { PageWrapper } from '@/components/ui/PageLayout';
 import { Footer } from '@/components/layout/Footer';
 import { useWizardState } from '@/components/wizard';
 import { CHAPTERS } from '@/components/wizard';
@@ -55,20 +54,34 @@ export default function OnboardingPage() {
 
   return (
     <>
-      <PageWrapper variant="cosmic" showOrbs showGrid>
-        <div className="container mx-auto max-w-3xl px-4 pt-24 pb-16">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-zinc-950 pt-[4.5rem] relative overflow-hidden"
+      >
+        {/* Ambient background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-24 left-1/3 w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.08), transparent 65%)', filter: 'blur(60px)' }} />
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.07), transparent 65%)', filter: 'blur(70px)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
+
+        <div className="container mx-auto max-w-3xl px-4 pt-16 pb-16 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border border-white/10 bg-zinc-900/80 p-8 backdrop-blur"
+            className="glass-card-premium p-8"
           >
             <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 p-3">
+              <div className="rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/20 p-3">
                 <Sparkles className="text-cyan-300" size={24} aria-hidden />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Setup wizard</h1>
-                <p className="text-sm text-white/60">
+                <div className="badge-live mb-1 w-fit"><Sparkles size={10} /> Setup Wizard</div>
+                <h1 className="text-2xl font-black text-white tracking-tight">Setup Wizard</h1>
+                <p className="text-sm text-zinc-400">
                   A chapter-by-chapter walk through everything your vault needs.
                 </p>
               </div>
@@ -76,7 +89,7 @@ export default function OnboardingPage() {
 
             {!isConnected ? (
               <div className="space-y-4">
-                <p className="text-sm text-white/70">
+                <p className="text-sm text-zinc-400">
                   Connect your wallet to start setup. The first chapter creates your CardBound
                   vault — everything after is skippable.
                 </p>
@@ -87,7 +100,7 @@ export default function OnboardingPage() {
                 {hasProgress && (
                   <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-cyan-100">
                     <p className="font-semibold text-white">Resuming where you left off</p>
-                    <p className="mt-1 text-white/70">
+                    <p className="mt-1 text-zinc-400">
                       {completedCount} of {totalChapters} chapters completed
                       {wizard.state.skippedChapters.length > 0
                         ? `, ${wizard.state.skippedChapters.length} skipped`
@@ -96,28 +109,28 @@ export default function OnboardingPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <button
                     type="button"
                     onClick={handleLaunch}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 hover:scale-[1.01]"
+                    className="btn-premium-primary flex items-center justify-center gap-2"
                   >
-                    {hasProgress ? 'Resume wizard' : 'Open wizard'}
+                    {hasProgress ? 'Resume Wizard' : 'Open Wizard'}
                     <ArrowRight size={16} aria-hidden />
                   </button>
                   {hasProgress && (
                     <button
                       type="button"
                       onClick={handleReset}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.02] px-5 py-3 text-sm font-semibold text-white/70 hover:bg-white/10"
+                      className="btn-premium-ghost flex items-center justify-center gap-2"
                     >
-                      <Power size={14} aria-hidden /> Start over
+                      <Power size={14} aria-hidden /> Start Over
                     </button>
                   )}
                 </div>
 
                 {!wizard.state.enabled && (
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-zinc-500">
                     The wizard is currently turned off. Launching here will re-enable it.
                   </p>
                 )}
@@ -125,7 +138,7 @@ export default function OnboardingPage() {
             )}
           </motion.div>
         </div>
-      </PageWrapper>
+      </motion.div>
       <Footer />
     </>
   );

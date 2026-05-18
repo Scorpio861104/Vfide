@@ -14,7 +14,7 @@ export default function ProfilePage() {
   if (!isConnected) {
     return (
       <>
-        <main className="min-h-screen bg-zinc-900 pt-20">
+        <main className="min-h-screen bg-zinc-950 pt-[4.5rem]">
           <div className="flex flex-col items-center justify-center py-20 px-4">
             <div className="text-center max-w-md">
               <h1 className="text-3xl font-bold text-zinc-100 mb-4">
@@ -34,7 +34,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <main className="min-h-screen bg-zinc-900 pt-20 pb-20">
+      <main className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-20">
         <ProfileSettings />
       </main>
       <Footer />

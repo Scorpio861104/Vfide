@@ -77,8 +77,14 @@ export function BottomTabBar() {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-zinc-950/70 backdrop-blur-xl safe-area-bottom md:hidden"
-        style={{ backgroundImage: 'linear-gradient(to top, rgba(8,145,178,0.04), transparent)' }}
+        className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom md:hidden"
+        style={{
+          background: 'linear-gradient(to top, rgba(6,6,10,0.97), rgba(8,8,14,0.92))',
+          backdropFilter: 'blur(40px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 -1px 0 rgba(255,255,255,0.03), 0 -8px 30px rgba(0,0,0,0.3)',
+        }}
         role="navigation"
         aria-label="Main navigation"
       >
@@ -90,18 +96,33 @@ export function BottomTabBar() {
               <Link
                 key={tab.id}
                 href={tab.href}
-                className={`relative flex w-16 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 transition-all ${
-                  isActive ? 'text-cyan-400' : 'text-gray-500 active:text-gray-300'
+                className={`relative flex w-16 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 transition-all duration-200 ${
+                  isActive ? 'text-cyan-400' : 'text-zinc-500 active:text-zinc-300'
                 }`}
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => setMoreOpen(false)}
               >
-                <Icon size={22} strokeWidth={isActive ? 2.2 : 1.5} />
-                <span className={`text-[10px] font-medium ${isActive ? 'text-cyan-400' : 'text-gray-500'}`}>
+                {/* Active highlight pill */}
+                {isActive && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-xl"
+                    style={{ background: 'rgba(0,240,255,0.08)' }}
+                  />
+                )}
+                <Icon size={21} strokeWidth={isActive ? 2.2 : 1.5} />
+                <span className={`text-[10px] font-semibold relative z-10 ${isActive ? 'text-cyan-400' : 'text-zinc-500'}`}>
                   {tab.label}
                 </span>
                 {isActive && (
-                  <div className="absolute bottom-1 h-0.5 w-5 rounded-full bg-cyan-400" />
+                  <div
+                    aria-hidden="true"
+                    className="absolute bottom-1 h-0.5 w-4 rounded-full"
+                    style={{
+                      background: 'linear-gradient(90deg, #00F0FF, #3B82F6)',
+                      boxShadow: '0 0 6px rgba(0,240,255,0.5)',
+                    }}
+                  />
                 )}
               </Link>
             );
@@ -114,28 +135,45 @@ export function BottomTabBar() {
             aria-haspopup="dialog"
             aria-expanded={moreOpen}
             aria-label="More destinations"
-            className={`relative flex w-16 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 transition-all ${
-              activeTab === 'more' ? 'text-cyan-400' : 'text-gray-500 active:text-gray-300'
+            className={`relative flex w-16 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 transition-all duration-200 ${
+              activeTab === 'more' ? 'text-cyan-400' : 'text-zinc-500 active:text-zinc-300'
             }`}
           >
+            {activeTab === 'more' && (
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 rounded-xl"
+                style={{ background: 'rgba(0,240,255,0.08)' }}
+              />
+            )}
             <div className="relative">
-              <MoreHorizontal size={22} strokeWidth={activeTab === 'more' ? 2.2 : 1.5} />
-              {/* Connection indicator dot — sat on the old "Me" icon to
-                  hint "you're signed in"; keep it on More so the cue
-                  doesn't disappear when we swapped tabs. */}
+              <MoreHorizontal size={21} strokeWidth={activeTab === 'more' ? 2.2 : 1.5} />
               {isConnected && (
-                <div className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-green-400 shadow-[0_0_0_2px_rgba(9,9,11,0.95)]" />
+                <div
+                  className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full"
+                  style={{
+                    background: 'rgb(52,211,153)',
+                    boxShadow: '0 0 0 2px rgba(6,6,10,0.97), 0 0 5px rgba(52,211,153,0.5)',
+                  }}
+                />
               )}
             </div>
             <span
-              className={`text-[10px] font-medium ${
-                activeTab === 'more' ? 'text-cyan-400' : 'text-gray-500'
+              className={`relative z-10 text-[10px] font-semibold ${
+                activeTab === 'more' ? 'text-cyan-400' : 'text-zinc-500'
               }`}
             >
               More
             </span>
             {activeTab === 'more' && (
-              <div className="absolute bottom-1 h-0.5 w-5 rounded-full bg-cyan-400" />
+              <div
+                aria-hidden="true"
+                className="absolute bottom-1 h-0.5 w-4 rounded-full"
+                style={{
+                  background: 'linear-gradient(90deg, #00F0FF, #3B82F6)',
+                  boxShadow: '0 0 6px rgba(0,240,255,0.5)',
+                }}
+              />
             )}
           </button>
         </div>

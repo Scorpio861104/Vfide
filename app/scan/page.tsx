@@ -31,7 +31,7 @@ import { ScanContent } from './components/ScanContent';
 export default function ScanPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
       </div>
     }>

@@ -87,61 +87,65 @@ export default function MerchantPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
-        <section className="py-16">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+        {/* Premium hero header */}
+        <section className="relative py-16 overflow-hidden">
+          <div className="hero-mesh-bg opacity-60" aria-hidden="true">
+            <div className="mesh-orb-cyan" style={{ width: '50%', height: '50%', top: '-10%', right: '-5%' }} />
+          </div>
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 mb-4">
-                <Store size={14} /> Merchant Portal
+              <div className="badge-live mb-5 mx-auto w-fit">
+                <Store size={12} className="mr-1" /> Merchant Portal
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">
                 {isConnected ? 'Welcome back' : 'Run your whole business from here'}
               </h1>
-              <p className="mx-auto max-w-2xl text-lg text-gray-400">
+              <p className="mx-auto max-w-2xl text-lg text-zinc-400 leading-relaxed">
                 {isConnected
-                  ? <>Connected as <span className="font-mono text-cyan-300">{address?.slice(0, 6)}…{address?.slice(-4)}</span>. Pick a module below.</>
+                  ? <>Connected as <span className="font-mono text-cyan-400">{address?.slice(0, 6)}…{address?.slice(-4)}</span>. Pick a module below.</>
                   : 'Inventory, invoicing, bookings, loyalty, taxes — every operations tool a small business needs, with zero payment-processor fees.'}
               </p>
               {!isConnected && (
                 <Link
                   href="/merchant/setup"
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-bold text-white transition-transform hover:scale-[1.02]"
+                  className="btn-premium btn-premium-primary mt-8 inline-flex"
                 >
-                  <Store size={18} /> Get started <ArrowRight size={16} />
+                  <Store size={16} /> Get started <ArrowRight size={15} />
                 </Link>
               )}
             </motion.div>
 
             {/* Always show these sections */}
-            <h2 className="text-3xl font-bold text-white mb-8">Merchant Portal</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-4">Merchant Dashboard</h3>
+            <h2 className="text-2xl font-bold text-white mb-6">Merchant Portal</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+              <div className="analytics-card p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Merchant Dashboard</h3>
                 <MerchantDashboard />
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-4">Make Payment</h3>
+              <div className="analytics-card p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Make Payment</h3>
                 <PaymentInterface />
               </div>
             </div>
 
-            <div className="my-12">
-              <h2 className="text-2xl font-bold text-white mb-6">Generate Payment QR Code</h2>
+            <div className="analytics-card p-6 mb-10">
+              <h2 className="text-xl font-bold text-white mb-5">Generate Payment QR Code</h2>
               <PaymentQR />
             </div>
 
             {/* Comparison Table */}
-            <div className="mt-12 max-w-2xl mx-auto mb-12">
-              <h2 className="mb-6 text-center text-2xl font-bold text-white">vs Traditional Processors</h2>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 p-4">
-                  <div className="font-semibold text-white">Processor</div>
-                  <div className="font-semibold text-white">Processing Fee</div>
+            <div className="mt-10 max-w-2xl mx-auto mb-12">
+              <h2 className="mb-6 text-center text-xl font-bold text-white">vs Traditional Processors</h2>
+              <div className="glass-card-premium p-1 overflow-hidden">
+                <div className="flex items-center justify-between rounded-t-xl border-b border-white/8 bg-white/4 px-5 py-3">
+                  <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Processor</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Processing Fee</div>
                 </div>
                 {processors.map((p) => (
-                  <div key={p.name} className={`flex items-center justify-between rounded-xl border p-4 ${p.name === 'VFIDE' ? 'border-cyan-500/40 bg-cyan-500/5' : 'border-white/10 bg-white/5'}`}>
-                    <div className="font-semibold text-white">{p.name}</div>
-                    <div className="font-numeric text-cyan-300">{p.fee}</div>
+                  <div key={p.name} className={`flex items-center justify-between px-5 py-3.5 border-b border-white/5 last:border-0 transition-colors ${p.name === 'VFIDE' ? 'bg-cyan-500/8' : 'hover:bg-white/3'}`}>
+                    <div className={`font-semibold text-sm ${p.name === 'VFIDE' ? 'text-cyan-400' : 'text-white'}`}>{p.name}</div>
+                    <div className={`font-mono font-bold text-sm ${p.name === 'VFIDE' ? 'text-glow-cyan' : 'text-zinc-300'}`}>{p.fee}</div>
                   </div>
                 ))}
               </div>
@@ -151,18 +155,24 @@ export default function MerchantPage() {
             </div>
 
             {/* Getting Started Section */}
-            <div className="mt-12 max-w-2xl mx-auto mb-12">
-              <h2 className="mb-6 text-center text-2xl font-bold text-white">Getting Started</h2>
-              <div className="space-y-3">
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <div className="font-semibold text-white mb-1">Register Your Business</div>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <div className="font-semibold text-white mb-1">Configure Settings</div>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <div className="font-semibold text-white mb-1">Start Accepting Payments</div>
-                </div>
+            <div className="mt-10 max-w-2xl mx-auto mb-12">
+              <h2 className="mb-5 text-center text-xl font-bold text-white">Getting Started</h2>
+              <div className="glass-card-premium overflow-hidden divide-y divide-white/5">
+                {[
+                  { title: 'Register Your Business', desc: 'Connect your wallet and create your merchant profile in seconds.' },
+                  { title: 'Configure Settings',     desc: 'Set payout preferences, tax settings, and notification options.' },
+                  { title: 'Start Accepting Payments', desc: 'Share your payment link — receive any stablecoin, zero merchant fees.' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-4 p-5 hover:bg-white/3 transition-colors">
+                    <div className="step-number-badge shrink-0" style={{ width: '2.25rem', height: '2.25rem', fontSize: '0.875rem' }}>
+                      {i + 1}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white mb-0.5">{item.title}</div>
+                      <div className="text-sm text-zinc-400">{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -176,14 +186,14 @@ export default function MerchantPage() {
                 <HubSection title="Business" links={BUSINESS_MODULES} />
                 <HubSection title="Setup" links={SETUP_MODULES} />
 
-                <div className="rounded-2xl border border-white/10 bg-white/3 p-6 flex items-start gap-4 mt-12">
-                  <GraduationCap size={28} className="text-cyan-300 flex-shrink-0" />
+                <div className="analytics-card p-6 flex items-start gap-4 mt-10">
+                  <GraduationCap size={26} className="text-cyan-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-semibold text-white mb-1">First time? Start with these three.</h3>
-                    <p className="text-sm text-gray-400">
-                      1. <Link href="/merchant/setup" className="text-cyan-300 hover:text-cyan-200">Set up your storefront</Link>.
-                      2. <Link href="/merchant/inventory" className="text-cyan-300 hover:text-cyan-200">Add your first product</Link>.
-                      3. <Link href="/merchant/payment-links" className="text-cyan-300 hover:text-cyan-200">Generate a payment link</Link> to share with a customer.
+                    <h3 className="font-bold text-white mb-1.5">First time? Start with these three.</h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      1.{' '}<Link href="/merchant/setup" className="text-cyan-400 hover:text-cyan-300 transition-colors">Set up your storefront</Link>.{' '}
+                      2.{' '}<Link href="/merchant/inventory" className="text-cyan-400 hover:text-cyan-300 transition-colors">Add your first product</Link>.{' '}
+                      3.{' '}<Link href="/merchant/payment-links" className="text-cyan-400 hover:text-cyan-300 transition-colors">Generate a payment link</Link> to share with a customer.
                     </p>
                   </div>
                 </div>

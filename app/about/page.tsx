@@ -8,7 +8,7 @@ export default function AboutPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-zinc-900 pt-20">
+      <main className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         {/* Hero */}
         <section className="py-20 bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-700">
           <div className="container mx-auto px-3 sm:px-4">

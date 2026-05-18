@@ -2,6 +2,7 @@
 @import "@fontsource/inter/latin.css";
 @import "@fontsource/space-grotesk/latin.css";
 @import "../styles/enhanced-animations.css";
+@import "../styles/premium-components.css";
 
 @layer base {
   :root {

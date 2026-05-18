@@ -102,7 +102,7 @@ export default function SocialHubPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-20">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
           <PageWrapper>
             <div className="mx-auto max-w-3xl px-4 py-16 text-center text-white">
               <h1 className="mb-4 text-4xl font-bold">Connect to Join the Conversation</h1>
@@ -120,7 +120,7 @@ export default function SocialHubPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
         <PageWrapper>
           <div className="container mx-auto max-w-6xl px-4 py-8 text-white">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
