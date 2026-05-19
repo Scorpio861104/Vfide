@@ -27,6 +27,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
 import { put } from '@vercel/blob';
 import { sanitizeSvg } from '@/lib/profile/svg-sanitize';
+import { getRequestIp } from '@/lib/security/requestContext';
+
 
 // Per spec §3 — file size cap. Avatars over 2 MB are almost certainly
 // not optimized; reject and let the user shrink them.
@@ -69,9 +71,7 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
 }
 
 function clientIp(req: NextRequest): string {
-  const xff = req.headers.get('x-forwarded-for');
-  if (xff) return (xff.split(',')[0] ?? '').trim();
-  return req.headers.get('x-real-ip') || 'unknown';
+  return getRequestIp(req.headers).ip;
 }
 
 export async function POST(req: NextRequest) {

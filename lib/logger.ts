@@ -74,7 +74,7 @@ function _loadSentryClient(): typeof import('@sentry/nextjs') | null {
     return null;
   }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
     _sentryClientCache = require('@sentry/nextjs');
   } catch {
     _sentryClientCache = null;

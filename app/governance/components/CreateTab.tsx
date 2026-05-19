@@ -790,7 +790,7 @@ export function CreateTab() {
                     className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm tabular-nums"
                   />
                   <p className="text-xs text-zinc-500 mt-1">
-                    Escrows below this amount won't trigger the merchant penalty on dispute resolution.
+                    Escrows below this amount won&apos;t trigger the merchant penalty on dispute resolution.
                   </p>
                 </div>
               </div>
@@ -987,7 +987,7 @@ export function CreateTab() {
                     className="w-full bg-black/40 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder:text-zinc-600 focus:border-yellow-500 focus:outline-none text-sm tabular-nums"
                   />
                   <p className="text-xs text-zinc-500 mt-1">
-                    Amount in the token's smallest unit (wei-equivalent). USDC uses 6 decimals; most ERC-20s use 18.
+                    Amount in the token&apos;s smallest unit (wei-equivalent). USDC uses 6 decimals; most ERC-20s use 18.
                   </p>
                 </div>
               </div>
@@ -1107,7 +1107,7 @@ export function CreateTab() {
             <Info size={10} className="mt-0.5 shrink-0" />
             <span>
               Proposals must point to a configured contract and use a configured function selector. If the
-              DAO hasn't enabled this proposal type, submission will revert with a clear policy error.
+              DAO hasn&apos;t enabled this proposal type, submission will revert with a clear policy error.
             </span>
           </p>
         </div>

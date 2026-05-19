@@ -40,10 +40,10 @@ export default function VaultSafetyPage() {
               How your vault is protected
             </h1>
             <p className="text-gray-400 leading-relaxed">
-              VFIDE doesn't hold your money. Your vault belongs to you alone. This
+              VFIDE doesn&apos;t hold your money. Your vault belongs to you alone. This
               page explains exactly what that means, what could go wrong, and what
               VFIDE does to help you recover from the things that go wrong.
-              Read what's relevant to you — every section is self-contained.
+              Read what&apos;s relevant to you — every section is self-contained.
             </p>
           </div>
 
@@ -57,18 +57,18 @@ export default function VaultSafetyPage() {
               out of it is you. There is no admin key. There is no &quot;reset
               password&quot; button. Nobody at VFIDE, nobody at Anthropic, nobody
               at any company can freeze your account, reverse your transactions,
-              or take what's yours.
+              or take what&apos;s yours.
             </p>
             <p>
-              This is the entire point of crypto, and it's why VFIDE can promise
-              zero merchant fees — because there's no middleman taking a cut, and
-              no central party deciding what you can and can't do.
+              This is the entire point of crypto, and it&apos;s why VFIDE can promise
+              zero merchant fees — because there&apos;s no middleman taking a cut, and
+              no central party deciding what you can and can&apos;t do.
             </p>
             <Tradeoff>
               If you lose your phone and have no recovery set up, your vault is
               permanently inaccessible. There is no &quot;forgot password&quot;
               flow. This is the cost of nobody being able to take your money:
-              nobody can give it back either, unless you've configured a way for
+              nobody can give it back either, unless you&apos;ve configured a way for
               them to. The next sections explain how.
             </Tradeoff>
           </Section>
@@ -85,8 +85,8 @@ export default function VaultSafetyPage() {
               guardians per vault.
             </p>
             <p>
-              <strong className="text-white">Guardians can't touch your money.</strong>{' '}
-              They can't see your balance, your transactions, your customers, or
+              <strong className="text-white">Guardians can&apos;t touch your money.</strong>{' '}
+              They can&apos;t see your balance, your transactions, your customers, or
               your earnings. The only thing they can do is vote &quot;yes, this
               is really &#123;your name&#125; trying to recover their vault.&quot;
             </p>
@@ -104,10 +104,10 @@ export default function VaultSafetyPage() {
               compromise 2 of your trusted people to take your vault.
             </SubItem>
             <SubItem title="The 7-day maturity period">
-              When you add a new guardian, they can't vote in recovery for the
+              When you add a new guardian, they can&apos;t vote in recovery for the
               first 7 days. This prevents an attacker who briefly compromises
               your account from adding a fake guardian and immediately using
-              them — you have a week to notice and remove anyone you didn't add.
+              them — you have a week to notice and remove anyone you didn&apos;t add.
             </SubItem>
           </Section>
 
@@ -117,12 +117,12 @@ export default function VaultSafetyPage() {
             title="Trustees — who can START a recovery"
           >
             <p>
-              There's a difference between approving a recovery and starting one.
+              There&apos;s a difference between approving a recovery and starting one.
               Every guardian can approve. Only <strong>trustees</strong> can
               start a recovery on your behalf.
             </p>
             <p>
-              This matters because if you lose your phone, you can't easily start
+              This matters because if you lose your phone, you can&apos;t easily start
               a recovery yourself — you might not have access to the app at all.
               A trustee can kick off the process for you. You then have a
               waiting period (your veto window) during which you can cancel if
@@ -137,14 +137,14 @@ export default function VaultSafetyPage() {
             <SubItem title="Why trustee status has a 24-hour timelock">
               When you promote a guardian to trustee, the change waits 24 hours
               before taking effect. This means even if your account is briefly
-              compromised, the attacker can't instantly grant themselves
+              compromised, the attacker can&apos;t instantly grant themselves
               trustee power — you (or another guardian) have a day to cancel.
             </SubItem>
             <SubItem title="Why we recommend at least one trustee">
               If you have no trustees, you can still recover from a new
               device — but you need to be able to reach VFIDE to start the
-              process. If your phone is destroyed and you're locked out of
-              your accounts entirely, you'll need a trustee to start things
+              process. If your phone is destroyed and you&apos;re locked out of
+              your accounts entirely, you&apos;ll need a trustee to start things
               moving on your behalf.
             </SubItem>
           </Section>
@@ -156,7 +156,7 @@ export default function VaultSafetyPage() {
           >
             <p>
               When a recovery starts on your vault — by you from a new device or
-              by a trustee — there's a waiting period before it completes. By
+              by a trustee — there&apos;s a waiting period before it completes. By
               default this is 7 days. During this window, you can cancel the
               recovery by signing a single transaction from your existing
               wallet.
@@ -164,7 +164,7 @@ export default function VaultSafetyPage() {
             <p>
               This is your last line of defense against a rogue trustee or
               against being tricked into recovery. If a recovery starts and you
-              didn't request it, you have a full week to notice the
+              didn&apos;t request it, you have a full week to notice the
               notification and cancel.
             </p>
             <SubItem title="You can configure your own veto window (3 to 30 days)">
@@ -172,12 +172,12 @@ export default function VaultSafetyPage() {
               on long trips. Want to be able to recover quickly when you
               actually lose your phone? Pick 5 days. The default of 7 is a
               reasonable middle ground. Anything below 3 days is rejected by
-              the protocol because it's not enough time for most people to
+              the protocol because it&apos;s not enough time for most people to
               respond.
             </SubItem>
             <SubItem title="The activity-based extension">
               If your vault has been active recently (any transaction in the
-              last 30 days) OR if you haven't completed guardian setup yet,
+              last 30 days) OR if you haven&apos;t completed guardian setup yet,
               the window is automatically extended to 14 days. The system
               assumes an active user is more likely to notice problems and
               gives them more time.
@@ -200,7 +200,7 @@ export default function VaultSafetyPage() {
               guardians decide together to take your vault. The whole point of
               guardians is that they collectively have the power to recover
               your vault, which means they collectively have the power to take
-              it. Choose them like that's true — because it is.
+              it. Choose them like that&apos;s true — because it is.
             </p>
             <p>
               What VFIDE does protect against:
@@ -218,7 +218,7 @@ export default function VaultSafetyPage() {
                 Other guardians can still help in a real emergency.
               </li>
               <li>
-                A briefly-compromised account can't be used to instantly grant
+                A briefly-compromised account can&apos;t be used to instantly grant
                 attacker-friendly permissions. Trustee promotion, guardian
                 changes, and threshold changes all wait 24 hours before
                 taking effect.
@@ -238,7 +238,7 @@ export default function VaultSafetyPage() {
           >
             <p>
               VFIDE has a separate system from recovery for the case where
-              you're permanently unavailable, not just temporarily
+              you&apos;re permanently unavailable, not just temporarily
               unreachable. Inheritance lets you designate heirs who can claim
               your vault after a period of inactivity, but only with the
               involvement of your guardians.
@@ -251,8 +251,8 @@ export default function VaultSafetyPage() {
               your heirs based on your configured shares.
             </p>
             <SubItem title="Why this is separate from recovery">
-              Recovery assumes you're alive and trying to get your vault back.
-              Inheritance assumes you're not coming back. The two have
+              Recovery assumes you&apos;re alive and trying to get your vault back.
+              Inheritance assumes you&apos;re not coming back. The two have
               different time scales, different participants, and different
               outcomes. Recovery returns the vault to you. Inheritance
               distributes the vault to others.
@@ -271,14 +271,14 @@ export default function VaultSafetyPage() {
             title="Business continuity — what happens during recovery"
           >
             <p>
-              If you're a merchant, this matters: recovery doesn't shut down
+              If you&apos;re a merchant, this matters: recovery doesn&apos;t shut down
               your business.
             </p>
             <p>
               While a recovery claim is in its veto window, your vault stays
               fully operational. Inbound payments still arrive. You can still
               send outbound transactions from your existing wallet. Customers
-              don't see anything different. Only the actual ownership transfer
+              don&apos;t see anything different. Only the actual ownership transfer
               is delayed until the window expires.
             </p>
             <p>
@@ -302,7 +302,7 @@ export default function VaultSafetyPage() {
             </p>
             <ul className="space-y-2 list-disc list-inside text-sm text-gray-300 ml-2">
               <li>
-                <strong>Public:</strong> your vault's address, its transaction
+                <strong>Public:</strong> your vault&apos;s address, its transaction
                 history, balance changes, the addresses of your guardians.
               </li>
               <li>
@@ -313,12 +313,12 @@ export default function VaultSafetyPage() {
               </li>
               <li>
                 <strong>Not public:</strong> your real-world identity,
-                contact info, anything you haven't explicitly chosen to
+                contact info, anything you haven&apos;t explicitly chosen to
                 publish.
               </li>
             </ul>
             <p>
-              For a complete breakdown of what's visible to whom and how to
+              For a complete breakdown of what&apos;s visible to whom and how to
               think about privacy on VFIDE, see the{' '}
               <Link href="/about/privacy" className="text-cyan-300 hover:text-cyan-200">
                 full privacy explanation
@@ -330,9 +330,9 @@ export default function VaultSafetyPage() {
           <GlassCard hover={false} className="mt-8 p-5">
             <h3 className="text-white font-semibold mb-2">Questions? Confused?</h3>
             <p className="text-sm text-gray-400 mb-3">
-              The hardest part of self-custody is understanding what you're
-              actually getting. If anything on this page doesn't make sense,
-              that's a problem with us — not with you. Reach out and tell us
+              The hardest part of self-custody is understanding what you&apos;re
+              actually getting. If anything on this page doesn&apos;t make sense,
+              that&apos;s a problem with us — not with you. Reach out and tell us
               what was unclear.
             </p>
             <Link

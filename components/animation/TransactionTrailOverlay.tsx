@@ -64,7 +64,7 @@ export function TransactionTrailOverlay() {
   const particlesRef = useRef<Particle[]>([]);
   const lastTickRef = useRef<number>(0);
   const lastEmitRef = useRef<Map<string, number>>(new Map());
-  const [, forceTick] = useState(0);
+  const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
     if (reducedMotion) return;
@@ -139,7 +139,7 @@ export function TransactionTrailOverlay() {
       particlesRef.current = alive;
 
       // Trigger a render so React picks up the latest particle positions.
-      forceTick((t) => (t + 1) & 0xff);
+      setParticles([...alive]);
 
       rafId = requestAnimationFrame(loop);
     };
@@ -212,7 +212,7 @@ export function TransactionTrailOverlay() {
         width="100%"
         height="100%"
       >
-        {particlesRef.current.map((p, i) => {
+        {particles.map((p, i) => {
           const trail = trails.find((t) => t.id === p.trailId);
           if (!trail || !trail.sourceEl || !trail.destEl) return null;
           const geo = trailGeo.get(p.trailId);

@@ -314,7 +314,7 @@ function CreateInvoiceModal({
   const [taxRate, setTaxRate] = useState(0);
   const [memo, setMemo] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [token, setToken] = useState<string>(
+  const [token, _setToken] = useState<string>(
     process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS ?? VFIDE_TOKEN_PLACEHOLDER,
   );
   const [sendImmediately, setSendImmediately] = useState(true);

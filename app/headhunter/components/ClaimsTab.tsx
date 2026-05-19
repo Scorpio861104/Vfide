@@ -174,7 +174,7 @@ export function ClaimsTab() {
       <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 space-y-2">
         <h2 className="text-2xl font-bold text-white">Quarterly Claims</h2>
         <p className="text-zinc-400">
-          Each ended quarter pays a pro-rata share of that quarter's pool to every referrer who
+          Each ended quarter pays a pro-rata share of that quarter&apos;s pool to every referrer who
           earned points that year. Claims are one-shot per quarter.
         </p>
       </div>
@@ -261,7 +261,7 @@ export function ClaimsTab() {
       <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 flex gap-3 text-sm">
         <AlertCircle className="text-amber-400 shrink-0 mt-0.5" size={16} aria-hidden="true" />
         <p className="text-zinc-300">
-          Your actual share depends on the year's total points across all referrers, which is
+          Your actual share depends on the year&apos;s total points across all referrers, which is
           computed at claim time. Eligibility here means the quarter ended and you earned points;
           the exact payout shows on the transaction receipt.
         </p>

@@ -171,8 +171,8 @@ export function IncomingRefunds() {
         )}
 
         <p className="text-xs text-gray-500 mt-4 leading-relaxed">
-          Merchants have 30 days to complete a refund they initiate. If you see an "Expired"
-          status, the merchant didn't complete the transfer in time — contact them or reach
+          Merchants have 30 days to complete a refund they initiate. If you see an &quot;Expired&quot;
+          status, the merchant didn&apos;t complete the transfer in time — contact them or reach
           out to the DAO.
         </p>
       </GlassCard>

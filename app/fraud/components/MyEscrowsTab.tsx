@@ -144,7 +144,7 @@ export function MyEscrowsTab() {
       <div className="text-xs text-zinc-500 bg-zinc-900/50 border border-zinc-800 rounded-lg p-3 flex items-start gap-1.5">
         <Info size={11} className="mt-0.5 shrink-0" />
         <span>
-          Release is permissionless — once an escrow's window has elapsed, anyone (including the recipient) can
+          Release is permissionless — once an escrow&apos;s window has elapsed, anyone (including the recipient) can
           trigger the release. The funds always go to the original recipient.
         </span>
       </div>

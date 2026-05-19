@@ -363,7 +363,7 @@ export default function MerchantPayoutsPage() {
                     <Banknote size={36} className="mx-auto mb-3 text-gray-500" />
                     <p className="text-gray-300">No payouts requested yet.</p>
                     <p className="text-gray-500 text-sm mt-1">
-                      Once you've received customer payments, request a cash-out above to settle into mobile money,
+                      Once you&apos;ve received customer payments, request a cash-out above to settle into mobile money,
                       bank, or airtime.
                     </p>
                   </div>
@@ -412,8 +412,8 @@ export default function MerchantPayoutsPage() {
 
                 <p className="mt-4 text-xs text-gray-500 leading-relaxed">
                   <strong className="text-gray-300">How status works:</strong> a payout stays at{' '}
-                  <em>Awaiting provider</em> until the provider's webhook lets us know they've moved
-                  to processing or completed. If you completed the provider flow and it's still
+                  <em>Awaiting provider</em> until the provider&apos;s webhook lets us know they&apos;ve moved
+                  to processing or completed. If you completed the provider flow and it&apos;s still
                   shown as awaiting after a few minutes,{' '}
                   <Link href="/support" className="text-cyan-300 hover:underline inline-flex items-center gap-1">
                     contact support <ExternalLink size={11} />

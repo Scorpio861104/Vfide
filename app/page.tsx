@@ -296,7 +296,7 @@ export default function Home() {
               <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">Core primitives</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
                 Everything you need.{' '}
-                <span className="gradient-text-purple-cyan">Nothing you don't.</span>
+                <span className="gradient-text-purple-cyan">Nothing you don&apos;t.</span>
               </h2>
               <p className="text-zinc-400 max-w-2xl mx-auto leading-relaxed">
                 Three primitives that compose into a complete financial layer: a vault you control,

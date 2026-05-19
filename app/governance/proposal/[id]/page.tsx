@@ -277,7 +277,7 @@ export default function ProposalDetailPage() {
           <Link href="/governance" className="underline hover:text-blue-200">
             /governance
           </Link>
-          's main page, where each proposal renders with its full ProposalCard. This detail page is
+          &apos;s main page, where each proposal renders with its full ProposalCard. This detail page is
           read-only for shareable URLs.
         </p>
       </div>

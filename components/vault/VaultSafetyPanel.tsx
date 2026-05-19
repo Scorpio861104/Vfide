@@ -91,7 +91,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
     return (
       <GlassCard hover={false} className="p-4">
         <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Shield size={16} className="animate-pulse" /> Loading your vault's safety state…
+          <Shield size={16} className="animate-pulse" /> Loading your vault&apos;s safety state…
         </div>
       </GlassCard>
     );
@@ -224,7 +224,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
     <GlassCard hover={false} className="p-5">
       <div className="mb-4 flex items-center gap-2">
         <Shield className="text-cyan-400" size={20} />
-        <h2 className="text-lg font-bold text-white">Your vault's safety</h2>
+        <h2 className="text-lg font-bold text-white">Your vault&apos;s safety</h2>
       </div>
 
       <div className="space-y-2">

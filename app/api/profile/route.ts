@@ -29,6 +29,8 @@ import { Redis } from '@upstash/redis';
 import { canonicalizeJSON, canonicalizeJSONString } from '@/lib/profile/canonicalize';
 import { validateProfile } from '@/lib/profile/validate';
 import { hashToCid, hashToBytes32, bytes32ToCid } from '@/lib/profile/cid';
+import { getRequestIp } from '@/lib/security/requestContext';
+
 
 // Conservative request body cap. Spec §4 says canonical ≤ 4 KB; we allow
 // a bit more to account for whitespace before canonicalization, but well
@@ -68,10 +70,7 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean; remaining
 }
 
 function clientIp(req: NextRequest): string {
-  // Vercel sets x-forwarded-for; the first entry is the client
-  const xff = req.headers.get('x-forwarded-for');
-  if (xff) return (xff.split(',')[0] ?? '').trim();
-  return req.headers.get('x-real-ip') || 'unknown';
+  return getRequestIp(req.headers).ip;
 }
 
 // ──────────────────────────────────────────────────────────────────────

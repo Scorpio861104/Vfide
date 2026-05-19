@@ -245,7 +245,7 @@ export function LookupTab() {
                   {Math.floor(Number(fr.escrowDuration) / 86400)} days. Pending escrows: {status.pendingEscrowCount.toString()}.
                 </p>
                 <p className="text-xs text-red-300/60 mt-1">
-                  Non-custodial: funds remain the user's, just delayed. The user keeps full vault custody.
+                  Non-custodial: funds remain the user&apos;s, just delayed. The user keeps full vault custody.
                 </p>
               </div>
             </div>

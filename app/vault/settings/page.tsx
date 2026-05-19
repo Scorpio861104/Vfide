@@ -170,7 +170,7 @@ export default function VaultSettingsPage() {
                 </div>
                 <div className="font-bold text-yellow-400 mb-2">Guardian Governance</div>
                 <div className="text-xs text-gray-400">
-                  Guardians approve wallet-rotation and vault-protection actions; configure heirs in the vault's Inheritance section
+                  Guardians approve wallet-rotation and vault-protection actions; configure heirs in the vault&apos;s Inheritance section
                 </div>
               </div>
 

@@ -235,7 +235,7 @@ export function MerchantSelfAdminSection() {
           <p className="text-xs text-gray-500 leading-relaxed">
             Voluntarily stop being a merchant. You can re-register later — your transaction
             volume and history are preserved. Cannot deregister while suspended or while you
-            have refunds you haven't yet completed.
+            have refunds you haven&apos;t yet completed.
           </p>
         </div>
 
@@ -245,7 +245,7 @@ export function MerchantSelfAdminSection() {
           <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
             <AlertTriangle size={12} className="shrink-0 mt-0.5" />
             <span>
-              You're suspended. Deregistration is unavailable until the DAO reinstates the
+              You&apos;re suspended. Deregistration is unavailable until the DAO reinstates the
               account. Reach out via governance channels if you believe the suspension was in
               error.
             </span>

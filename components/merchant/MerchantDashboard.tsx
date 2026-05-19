@@ -470,7 +470,7 @@ export function MerchantDashboard() {
           <p className="text-sm text-gray-400 mb-4">
             Set a custom address to receive payments (e.g., Treasury or RevenueSplitter).
             Leave blank to use your merchant vault. Changes are timelocked for security —
-            you'll be able to apply or cancel them after a brief review window.
+            you&apos;ll be able to apply or cancel them after a brief review window.
           </p>
 
           <PayoutAddressManager />

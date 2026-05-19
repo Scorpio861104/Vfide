@@ -81,7 +81,7 @@ export default async function LinkInBioPage({ params }: PageProps) {
         {merchant.logo_url ? (
           <Image src={merchant.logo_url} alt={merchant.display_name}
             className="w-24 h-24 rounded-2xl object-cover mx-auto mb-4 border-2 border-white/10 shadow-lg"
-            style={{ boxShadow: `0 8px 32px ${themeColor}30` }}  width={48} height={48} />
+            style={{ boxShadow: `0 8px 32px ${themeColor}30` }} width={96} height={96} />
         ) : (
           <div className="w-24 h-24 rounded-2xl mx-auto mb-4 flex items-center justify-center text-4xl font-bold text-white border-2 border-white/10"
             style={{ backgroundColor: themeColor, boxShadow: `0 8px 32px ${themeColor}30` }}>

@@ -224,7 +224,7 @@ export default function MerchantRefundsPage() {
                 Refunds
               </h1>
               <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
-                On-chain refunds you've initiated to customers. Initiated refunds must be
+                On-chain refunds you&apos;ve initiated to customers. Initiated refunds must be
                 completed within 30 days, after which they expire and can no longer be
                 completed. The customer sees both stages in their transaction history.
               </p>
@@ -375,8 +375,8 @@ export default function MerchantRefundsPage() {
               <RotateCcw className="w-10 h-10 mx-auto mb-4 text-gray-500" />
               <h3 className="text-lg font-bold text-white mb-2">No refunds yet</h3>
               <p className="text-sm text-gray-400 max-w-md mx-auto">
-                Refunds you initiate will appear here. You'll see when they've been completed
-                or when they're approaching the 30-day expiry window.
+                Refunds you initiate will appear here. You&apos;ll see when they&apos;ve been completed
+                or when they&apos;re approaching the 30-day expiry window.
               </p>
             </GlassCard>
           )}
@@ -453,8 +453,8 @@ export default function MerchantRefundsPage() {
                 <div className="text-xs text-amber-200">
                   <p className="font-semibold mb-1">Some refunds need their refundId to complete</p>
                   <p className="leading-relaxed">
-                    The MerchantPortal contract doesn't emit refundIds in events, so refunds
-                    initiated from a different browser or before this device was set up don't
+                    The MerchantPortal contract doesn&apos;t emit refundIds in events, so refunds
+                    initiated from a different browser or before this device was set up don&apos;t
                     have their IDs locally. To complete them, find the original initiateRefund
                     transaction on a block explorer — the refundId is the return value. Then
                     call <code className="font-mono">completeRefund(refundId)</code> directly.

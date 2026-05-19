@@ -488,7 +488,7 @@ export function EscrowDetailContent({ id }: Props) {
                     : buyerMemorial
                       ? "The buyer's vault has entered memorial state."
                       : "The merchant's vault has entered memorial state."}{' '}
-                  Anyone can settle this escrow now — funds return to the buyer's current vault for
+                  Anyone can settle this escrow now — funds return to the buyer&apos;s current vault for
                   inheritance distribution.
                 </p>
               </div>

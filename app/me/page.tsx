@@ -272,7 +272,7 @@ function NextStep({ score }: { score: number }) {
   if (score < 7000) {
     return (
       <p className="text-gray-300">
-        You're a Trusted user. Consider{' '}
+        You&apos;re a Trusted user. Consider{' '}
         <Link href="/merchant/setup" className="text-cyan-300 hover:text-cyan-200">
           opening a store <ArrowRight size={12} className="inline" />
         </Link>{' '}
@@ -287,7 +287,7 @@ function NextStep({ score }: { score: number }) {
   if (score < 8000) {
     return (
       <p className="text-gray-300">
-        Council-eligible. If you're active in the community, watch{' '}
+        Council-eligible. If you&apos;re active in the community, watch{' '}
         <Link href="/elections" className="text-cyan-300 hover:text-cyan-200">
           upcoming elections <ArrowRight size={12} className="inline" />
         </Link>{' '}
@@ -301,7 +301,7 @@ function NextStep({ score }: { score: number }) {
       <Link href="/profile" className="text-cyan-300 hover:text-cyan-200">
         endorse other users <ArrowRight size={12} className="inline" />
       </Link>{' '}
-      to help them build trust, and you're paying the minimum 0.25% fee on every payment.
+      to help them build trust, and you&apos;re paying the minimum 0.25% fee on every payment.
     </p>
   );
 }
