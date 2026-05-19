@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { Users, Loader2, Zap, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
@@ -44,6 +45,9 @@ export function DashboardTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Users size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view your payroll dashboard.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 /**
  * ActiveTab — escrows currently in non-terminal states (OPEN, FUNDED, DISPUTED).
  *
@@ -87,6 +88,9 @@ export function ActiveTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Lock size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view active escrows.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

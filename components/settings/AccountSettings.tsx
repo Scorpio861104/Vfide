@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -111,6 +112,9 @@ export function AccountSettings() {
       <div className="text-center py-12 text-zinc-500">
         <User className="w-16 h-16 mx-auto mb-4 opacity-50" />
         <p>Connect your wallet to manage your account</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Clock, Coins, TrendingUp, Users } from 'lucide-react';
 
 export function StatsTab({ isConnected = false, address }: { isConnected?: boolean; address?: string }) {
@@ -9,6 +10,9 @@ export function StatsTab({ isConnected = false, address }: { isConnected?: boole
         <TrendingUp className="w-16 h-16 text-zinc-500 mx-auto mb-4" />
         <h3 className="text-xl font-bold text-zinc-100 mb-2">Connect Wallet to View Stats</h3>
         <p className="text-zinc-400">Connect your wallet to see your membership statistics</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

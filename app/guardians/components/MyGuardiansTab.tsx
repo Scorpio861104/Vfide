@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { useAccount, usePublicClient, useReadContract, useReadContracts, useSignMessage, useWriteContract } from 'wagmi';
 import { motion } from 'framer-motion';
@@ -380,6 +381,9 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to manage your guardians</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </motion.div>
     );
   }

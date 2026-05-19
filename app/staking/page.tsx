@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState, useMemo } from 'react';
@@ -173,6 +174,9 @@ export default function StakingPage() {
             <div className="glass-card-premium p-8 text-center">
               <Wallet className="mx-auto text-zinc-600 mb-3" size={40} aria-hidden="true" />
               <p className="text-white/40">Connect your wallet to stake LP tokens.</p>
+              <div className="mt-6 flex justify-center">
+                <ConnectButton />
+              </div>
             </div>
           </div>
         </div>

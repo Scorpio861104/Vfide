@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Footer } from '@/components/layout/Footer';
 import { ProofScoreBurnRouterABI, VFIDETokenABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, ZERO_ADDRESS } from '@/lib/contracts';
@@ -1319,6 +1320,9 @@ export default function AdminPanel() {
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-md">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">Admin Panel</h1>
           <p className="text-gray-300">Please connect your wallet to access admin functions.</p>
+          <div className="mt-6 flex justify-center">
+            <ConnectButton />
+          </div>
         </div>
       </div>
     );

@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { Plus, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
@@ -63,6 +64,9 @@ export function CreateTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Plus size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to create a payroll stream.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

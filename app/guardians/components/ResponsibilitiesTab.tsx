@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Users } from 'lucide-react';
@@ -38,6 +39,7 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         </motion.div>
         <h2 className="mb-4 text-2xl font-bold text-white">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see vaults you&apos;re guarding</p>
+        <div className="mt-6 flex justify-center"><ConnectButton /></div>
       </motion.div>
     );
   }

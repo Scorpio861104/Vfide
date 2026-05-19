@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { Send, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
@@ -49,6 +50,9 @@ export function SubmitTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Send size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to submit an appeal.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

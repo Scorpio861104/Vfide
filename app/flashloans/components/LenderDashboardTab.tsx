@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 /**
  * Flash Loans: lender's own dashboard.
  *
@@ -95,6 +96,9 @@ export function LenderDashboardTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Zap size={40} className="text-zinc-600 mb-4" aria-hidden="true" />
         <p className="text-zinc-400">Connect your wallet to manage your lender position.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

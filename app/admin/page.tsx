@@ -1,3 +1,4 @@
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import AdminDashboardClient from './AdminDashboardClient';
 import { Suspense } from 'react';
 
@@ -33,6 +34,9 @@ function UnauthorizedUI() {
         <h1 className="text-4xl font-bold text-red-500 mb-4">🚫 Access Denied</h1>
         <p className="text-gray-300 mb-6">Only the protocol owner can access this page.</p>
         <p className="text-gray-400 text-sm mb-6">Please connect your wallet and verify ownership.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
         <a href="/" className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
           Return Home
         </a>

@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState, useMemo } from 'react';
 import { useAccount, useReadContracts } from 'wagmi';
 import { Loader2, CheckCircle, AlertCircle, Trophy, ChevronRight } from 'lucide-react';
@@ -152,6 +153,9 @@ export function ClaimsTab() {
         <p className="text-zinc-400">
           Connect your wallet to view and claim your share of past headhunter quarters.
         </p>
+          <div className="mt-6 flex justify-center">
+            <ConnectButton />
+          </div>
       </div>
     );
   }

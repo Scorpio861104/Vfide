@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { Clock, Loader2, CheckCircle2, XCircle } from 'lucide-react';
@@ -38,6 +39,9 @@ export function HistoryTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Clock size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view your payment history.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

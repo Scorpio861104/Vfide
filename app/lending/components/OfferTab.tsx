@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 /**
  * Lending: lender creates a new loan offer.
  *
@@ -83,6 +84,9 @@ export function OfferTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Plus size={40} className="text-zinc-600 mb-4" aria-hidden="true" />
         <p className="text-zinc-400">Connect your wallet to create a loan offer.</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

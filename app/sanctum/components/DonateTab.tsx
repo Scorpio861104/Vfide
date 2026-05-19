@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState } from 'react';
 import { AlertTriangle, Heart } from 'lucide-react';
 
@@ -15,6 +16,9 @@ export function DonateTab({ isConnected }: { isConnected: boolean }) {
         <Heart className="w-16 h-16 mx-auto mb-4 text-pink-400/50" />
         <h2 className="text-2xl font-bold text-zinc-100 mb-2">Connect to Donate</h2>
         <p className="text-zinc-400">Connect your wallet to make a direct donation to The Sanctum</p>
+        <div className="mt-6 flex justify-center">
+          <ConnectButton />
+        </div>
       </div>
     );
   }

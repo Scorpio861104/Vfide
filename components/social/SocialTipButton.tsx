@@ -7,6 +7,7 @@
 
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { useTipping } from '@/lib/socialPayments';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -246,9 +247,14 @@ export function SocialTipButton({
                 </button>
 
                 {!isConnected && (
-                  <p className="text-xs text-yellow-400 mt-3 text-center">
-                    Please connect your wallet to send tips
-                  </p>
+                  <>
+                    <p className="text-xs text-yellow-400 mt-3 text-center">
+                      Please connect your wallet to send tips
+                    </p>
+                    <div className="mt-6 flex justify-center">
+                      <ConnectButton />
+                    </div>
+                  </>
                 )}
               </div>
             </motion.div>

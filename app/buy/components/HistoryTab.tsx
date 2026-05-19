@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { History, Loader2, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
@@ -47,6 +48,9 @@ export function HistoryTab() {
         <div className="bg-white/3 border border-white/10 rounded-2xl p-8 text-center">
           <History size={28} className="text-gray-600 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Connect your wallet to view history.</p>
+          <div className="mt-6 flex justify-center">
+            <ConnectButton />
+          </div>
         </div>
       ) : loading ? (
         <div className="flex items-center justify-center py-10">

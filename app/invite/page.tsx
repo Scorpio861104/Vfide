@@ -1,5 +1,6 @@
 'use client'
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react'
@@ -268,6 +269,9 @@ export default function InviteFriendsPage() {
             Connect your wallet to get a personalized invite link and start earning
             rewards
           </p>
+            <div className="mt-6 flex justify-center">
+              <ConnectButton />
+            </div>
         </motion.div>
       </div>
     </div>

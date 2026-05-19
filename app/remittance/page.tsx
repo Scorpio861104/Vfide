@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
@@ -133,7 +134,12 @@ export default function RemittancePage() {
                 </div>
 
                 {!isConnected && (
-                  <p className="mt-3 text-sm text-amber-300">Connect your wallet to finalize remittance sends.</p>
+                  <>
+                    <p className="mt-3 text-sm text-amber-300">Connect your wallet to finalize remittance sends.</p>
+                    <div className="mt-6 flex justify-center">
+                      <ConnectButton />
+                    </div>
+                  </>
                 )}
               </div>
 

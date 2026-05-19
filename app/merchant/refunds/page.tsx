@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -348,6 +349,9 @@ export default function MerchantRefundsPage() {
           {!address && (
             <GlassCard hover={false} className="p-6 text-center">
               <p className="text-gray-400 text-sm">Connect your wallet to view your refund history.</p>
+              <div className="mt-6 flex justify-center">
+                <ConnectButton />
+              </div>
             </GlassCard>
           )}
 

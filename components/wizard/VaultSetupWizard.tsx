@@ -24,7 +24,9 @@
  */
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronRight, X, Pause, Play } from 'lucide-react';
+import { ChevronRight, X, Pause, Play, Wallet } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 import {
   CHAPTERS,
@@ -53,6 +55,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
   const wizard = useWizardState();
   const onboarding = useOnboarding();
   const { state, isComplete, currentIndex, totalChapters } = wizard;
+  const { isConnected } = useAccount();
 
   // Whether to render at all. forceOpen overrides the suppress conditions
   // so a "Reopen wizard" button can pull the wizard back up after it was
@@ -198,6 +201,20 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
               <X size={18} aria-hidden />
             </button>
           </header>
+
+          {/* Wallet connect banner — shown when no wallet is connected so
+              user can connect without exiting the wizard */}
+          {!isConnected && (
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-cyan-500/8 px-5 py-2.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <Wallet size={14} className="text-cyan-300 flex-shrink-0" aria-hidden />
+                <span className="text-xs text-cyan-100/80 truncate">
+                  Connect your wallet to continue
+                </span>
+              </div>
+              <ConnectButton accountStatus="avatar" chainStatus="none" showBalance={false} />
+            </div>
+          )}
 
           {/* Progress bar */}
           <div className="h-1 w-full bg-white/5">

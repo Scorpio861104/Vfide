@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Lock, Loader2, CheckCircle, AlertCircle, TrendingUp, Briefcase, Zap } from 'lucide-react';
 
 interface UserState {
@@ -43,9 +44,10 @@ export function VaultTab() {
 
   if (!address) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Lock size={40} className="text-gray-600 mb-4" />
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
+        <Lock size={40} className="text-gray-600" />
         <p className="text-gray-400">Connect your wallet to view vault status.</p>
+        <ConnectButton />
       </div>
     );
   }
