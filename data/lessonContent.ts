@@ -444,7 +444,7 @@ export const lessonContentData: Record<string, LessonContent> = {
         heading: "Understanding Score Decay",
         content: "ProofScore slowly decays with inactivity to ensure scores reflect current behavior:",
         points: [
-          "Score decays 1% per month of inactivity",
+          "Score decays 100 points per month after 90 days of inactivity",
           "Decay stops at 50% of peak score",
           "Any transaction resets the decay timer",
           "Governance voting also prevents decay",

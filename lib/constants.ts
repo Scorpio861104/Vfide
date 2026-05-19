@@ -170,13 +170,19 @@ export const GUARDIAN_MATURITY_DAYS = 7;
 export const PROOF_SCORE_PERMISSIONS = {
   // Governance eligibility
   MIN_FOR_GOVERNANCE: 5400,  // 54% - Required to vote on proposals
-  
+
   // Merchant eligibility
   MIN_FOR_MERCHANT: 5600,    // 56% - Required to register as merchant
-  
+
   // Council eligibility (from CouncilElection.sol)
   MIN_FOR_COUNCIL: 7000,     // 70% - Required to be elected to council
-  
+
+  // Endorse eligibility (from SeerSocial.sol:117 — minScoreToEndorse = 7_000)
+  MIN_FOR_ENDORSE: 7000,     // 70% - Required to endorse other users
+
+  // Mentor eligibility (from SeerSocial.sol:127 — minScoreToMentor = 7_200)
+  MIN_FOR_MENTOR: 7200,      // 72% - Required to mentor other users
+
   // Maximum score (elite)
   MAX_SCORE: 10000,
 } as const;

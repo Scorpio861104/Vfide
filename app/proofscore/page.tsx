@@ -13,13 +13,13 @@ import { ProofScoreRing } from '@/components/ui/ProofScoreRing';
 import { useProofScore } from '@/hooks/useProofScore';
 
 const TIERS = [
-  { range: '0–3,499',      label: 'Risky',      note: 'Start building trust through activity and secure behaviour.',    color: 'border-red-500/30    bg-red-500/5',    dot: 'bg-red-400'    },
-  { range: '3,500–4,999',  label: 'Low Trust',  note: 'Consistent usage helps you cross into the Neutral band.',        color: 'border-orange-500/30 bg-orange-500/5',  dot: 'bg-orange-400' },
-  { range: '5,000–5,399',  label: 'Neutral',    note: 'New-user default. Governance access opens just above.',           color: 'border-yellow-500/30 bg-yellow-500/5',  dot: 'bg-yellow-400' },
-  { range: '5,400–5,599',  label: 'Governance', note: 'Unlocks on-chain voting for proposals.',                          color: 'border-blue-500/30   bg-blue-500/5',    dot: 'bg-blue-400'   },
-  { range: '5,600–6,999',  label: 'Trusted',    note: 'Merchant registration and lower transfer fees available.',        color: 'border-emerald-500/30 bg-emerald-500/5', dot: 'bg-emerald-400' },
-  { range: '7,000–7,999',  label: 'Council',    note: 'Eligible for council election and leadership roles.',             color: 'border-purple-500/30 bg-purple-500/5',  dot: 'bg-purple-400' },
-  { range: '8,000–10,000', label: 'Elite',      note: 'Minimum fee (0.25%) and ability to endorse other users.',         color: 'border-amber-500/30  bg-amber-500/5',   dot: 'bg-amber-400'  },
+  { range: '0–3,499',      label: 'Risky',      note: 'Start building trust through activity and secure behaviour.',                               color: 'border-red-500/30    bg-red-500/5',     dot: 'bg-red-400'    },
+  { range: '3,500–4,999',  label: 'Low Trust',  note: 'Consistent usage helps you cross into the Neutral band.',                                  color: 'border-orange-500/30 bg-orange-500/5',  dot: 'bg-orange-400' },
+  { range: '5,000–5,399',  label: 'Neutral',    note: 'New-user default. Governance access opens just above.',                                    color: 'border-yellow-500/30 bg-yellow-500/5',  dot: 'bg-yellow-400' },
+  { range: '5,400–5,599',  label: 'Governance', note: 'Unlocks on-chain voting for proposals.',                                                   color: 'border-blue-500/30   bg-blue-500/5',    dot: 'bg-blue-400'   },
+  { range: '5,600–6,999',  label: 'Trusted',    note: 'Merchant registration and lower transfer fees available.',                                 color: 'border-emerald-500/30 bg-emerald-500/5', dot: 'bg-emerald-400' },
+  { range: '7,000–7,999',  label: 'Council',    note: 'Eligible for council election. Unlocks ability to endorse others (≥7,000) and mentor (≥7,200).', color: 'border-purple-500/30 bg-purple-500/5',  dot: 'bg-purple-400' },
+  { range: '8,000–10,000', label: 'Elite',      note: 'Minimum fee (0.25%). Highest reputation tier in the protocol.',                           color: 'border-amber-500/30  bg-amber-500/5',   dot: 'bg-amber-400'  },
 ];
 
 function getTierLabel(score: number): string {

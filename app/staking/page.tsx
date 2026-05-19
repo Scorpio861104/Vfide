@@ -243,7 +243,7 @@ export default function StakingPage() {
                 <Coins size={32} className="text-cyan-400" />Staking
               </span>
             </h1>
-            <p className="text-white/50">Earn liquidity incentives by participating in protocol pools.</p>
+            <p className="text-white/50">Coordinate liquidity across protocol pools. This is a liquidity coordination pool — no yield or token rewards are distributed (Howey-compliant design).</p>
           </div>
 
           {poolsLoading && (
