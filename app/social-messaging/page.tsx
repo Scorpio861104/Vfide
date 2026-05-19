@@ -2,18 +2,20 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { motion } from 'framer-motion';
-import { Shield, UserCog, Users } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Compass, Lock, MessageCircle, Shield, UserCog, Users, UserX } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
+
 import { Footer } from '@/components/layout/Footer';
 import { UserStatsWidget } from '@/components/gamification/GamificationWidgets';
 import { FirstTimeUserBanner } from '@/components/ui/FirstTimeUserBanner';
 import { useHasVault } from '@/hooks/useHasVault';
+import { useGamification } from '@/lib/gamification';
 import { ZERO_ADDRESS } from '@/lib/contracts';
 import { analytics } from '@/lib/socialAnalytics';
-import { useGamification } from '@/lib/gamification';
+
 import { AccountTab } from './components/AccountTab';
 import { CirclesTab } from './components/CirclesTab';
 import { DiscoverTab } from './components/DiscoverTab';
@@ -24,17 +26,15 @@ import { RequestsTab } from './components/RequestsTab';
 
 type TabId = 'messages' | 'requests' | 'circles' | 'groups' | 'discover' | 'account' | 'privacy';
 
-const TAB_LABELS: Record<TabId, string> = {
-  messages: 'Messages',
-  requests: 'Requests',
-  circles: 'Circles',
-  groups: 'Groups',
-  discover: 'Discover',
-  account: 'Account',
-  privacy: 'Privacy',
-};
-
-const TAB_IDS: TabId[] = ['messages', 'requests', 'circles', 'groups', 'discover', 'account', 'privacy'];
+const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+  { id: 'messages',  label: 'Messages',  icon: MessageCircle },
+  { id: 'requests',  label: 'Requests',  icon: UserX },
+  { id: 'circles',   label: 'Circles',   icon: Users },
+  { id: 'groups',    label: 'Groups',    icon: Users },
+  { id: 'discover',  label: 'Discover',  icon: Compass },
+  { id: 'account',   label: 'Account',   icon: UserCog },
+  { id: 'privacy',   label: 'Privacy',   icon: Shield },
+];
 
 export default function SocialMessagingPage() {
   const [activeTab, setActiveTab] = useState<TabId>('messages');
@@ -43,84 +43,104 @@ export default function SocialMessagingPage() {
   const { recordActivity } = useGamification(address);
 
   useEffect(() => {
-    if (!isConnected) {
-      return;
-    }
-
+    if (!isConnected) return;
     analytics.track('vault_info_viewed', { userAddress: address, hasVault });
     recordActivity?.();
   }, [address, hasVault, isConnected, recordActivity]);
 
-  if (!isConnected) {
-    return (
-      <>
-        <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
-          <div className="container mx-auto max-w-4xl px-4 py-12">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
-              <h1 className="mb-3 text-4xl font-bold text-white">Connect Your Wallet</h1>
-              <p className="mb-6 text-gray-300">Access encrypted messaging, circles, and community coordination by connecting your wallet.</p>
+  return (
+    <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 left-1/3 w-[400px] h-[400px] rounded-full opacity-[0.04]"
+          style={{ background: 'radial-gradient(circle, #ec4899 0%, transparent 70%)' }} />
+        <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+      </div>
+
+      {!isConnected ? (
+        <div className="relative container mx-auto max-w-lg px-4 py-20">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="glass-card-premium text-center py-14 px-8">
+            <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-6">
+              <Lock className="text-violet-400" size={28} />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-3">Connect Your Wallet</h1>
+            <p className="text-white/50 mb-8">Access encrypted messaging, circles, and community coordination.</p>
+            <div className="flex justify-center">
               <ConnectButton />
             </div>
-          </div>
+          </motion.div>
         </div>
-        <Footer />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
-        <div className="container mx-auto max-w-6xl px-4 py-8">
-          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h1 className="mb-2 text-4xl font-bold text-white">
-                Social Hub
-              </h1>
-              <p className="text-white/60">Connect with the VFIDE community through encrypted messaging, circles, and trusted endorsements.</p>
+      ) : (
+        <div className="relative container mx-auto max-w-6xl px-4 py-8">
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="badge-live"><span className="badge-live-dot" />Social Network</span>
             </div>
-            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
-              {isLoading ? 'Checking vault status…' : hasVault ? 'Vault Active' : 'Vault Recommended'}
-              {typeof vaultAddress === 'string' ? <span className="ml-2 text-cyan-300">{vaultAddress.slice(0, 8)}...</span> : null}
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">
+                  <span className="bg-gradient-to-r from-violet-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+                    Social Messaging
+                  </span>
+                </h1>
+                <p className="text-white/50 text-lg">Encrypted messaging, circles, and trusted community coordination.</p>
+              </div>
+              <div className="analytics-card px-4 py-3 text-sm">
+                <div className="text-xs text-white/40 mb-1">Vault Status</div>
+                <div className={`font-bold ${hasVault ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {isLoading ? 'Checking…' : hasVault ? '✓ Vault Active' : '⚠ Vault Recommended'}
+                </div>
+                {typeof vaultAddress === 'string' && (
+                  <div className="text-xs text-white/30 mt-0.5">{vaultAddress.slice(0, 10)}…</div>
+                )}
+              </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          {/* Banners row */}
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_0.7fr]">
             <FirstTimeUserBanner message="Secure your profile and start building trusted circles." />
-            <div className="rounded-2xl border border-white/10 bg-white/3 p-4">
+            <div className="glass-card-premium p-4">
               <UserStatsWidget userAddress={address ?? ZERO_ADDRESS} />
             </div>
           </div>
 
-          <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-            {TAB_IDS.map((id) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
-                  activeTab === id
-                    ? 'border-cyan-500/30 bg-cyan-500/20 text-cyan-400'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
-                }`}
-              >
-                {(id === 'messages' || id === 'groups' || id === 'circles') && <Users size={14} />}
-                {id === 'account' && <UserCog size={14} />}
-                {id === 'privacy' && <Shield size={14} />}
-                {TAB_LABELS[id]}
-              </button>
-            ))}
+          {/* Sticky Tab Bar */}
+          <div className="sticky top-[4.5rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
+            style={{ background: 'rgba(9,9,11,0.85)' }}>
+            <div className="flex gap-2 overflow-x-auto scrollbar-none">
+              {TABS.map(({ id, label, icon: Icon }) => (
+                <button key={id} onClick={() => setActiveTab(id)}
+                  className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
+                  <Icon size={14} />{label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {activeTab === 'messages' && <MessagesTab hasVault={hasVault} />}
-          {activeTab === 'requests' && <RequestsTab />}
-          {activeTab === 'circles' && <CirclesTab />}
-          {activeTab === 'groups' && <GroupsTab />}
-          {activeTab === 'discover' && <DiscoverTab />}
-          {activeTab === 'account' && <AccountTab address={address} />}
-          {activeTab === 'privacy' && <PrivacyTab />}
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTab}
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}>
+              {activeTab === 'messages'  && <MessagesTab hasVault={hasVault} />}
+              {activeTab === 'requests'  && <RequestsTab />}
+              {activeTab === 'circles'   && <CirclesTab />}
+              {activeTab === 'groups'    && <GroupsTab />}
+              {activeTab === 'discover'  && <DiscoverTab />}
+              {activeTab === 'account'   && <AccountTab address={address} />}
+              {activeTab === 'privacy'   && <PrivacyTab />}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </div>
+      )}
       <Footer />
-    </>
+    </div>
   );
 }

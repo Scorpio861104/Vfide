@@ -107,7 +107,15 @@ export default function MerchantSubscriptionsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
             <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
@@ -116,10 +124,10 @@ export default function MerchantSubscriptionsPage() {
 
             <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
+                <div className="badge-live mb-3">
                   <Repeat size={14} /> Recurring billing
                 </div>
-                <h1 className="text-4xl font-bold">Subscription plans</h1>
+                <h1 className="text-4xl font-black tracking-tight">Subscription plans</h1>
                 <p className="mt-3 max-w-3xl text-gray-400">
                   Charge customers on a schedule. Memberships, classes, monthly support plans — whatever your model is.
                 </p>

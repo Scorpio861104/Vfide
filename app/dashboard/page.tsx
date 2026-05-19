@@ -59,9 +59,17 @@ export default function DashboardPage() {
     <>
       <OnboardingProgressBar />
 
-      <div className="min-h-screen bg-zinc-950 pt-16">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         {/* ── Dashboard hero header ── */}
-        <div className="dashboard-hero-bg border-b border-white/5">
+        <div className="relative dashboard-hero-bg border-b border-white/5">
           <div className="container mx-auto px-4 max-w-6xl py-10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
@@ -70,9 +78,9 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">
-                    Dashboard
-                  </p>
+                  <div className="badge-live mb-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Dashboard
+                  </div>
                   <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
                     Welcome back
                   </h1>

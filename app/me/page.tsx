@@ -103,11 +103,24 @@ export default function MeHubPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
-          <div className="container mx-auto max-w-3xl px-4 py-12 text-center">
-            <User size={48} className="mx-auto mb-4 text-cyan-300" />
-            <h1 className="mb-2 text-3xl font-bold">Your VFIDE</h1>
-            <p className="mb-6 max-w-md mx-auto text-gray-400">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+              style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+            <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+              style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+          </div>
+          <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+          <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              Account Hub
+            </div>
+            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
+              <User size={28} className="text-cyan-300" />
+            </div>
+            <h1 className="mb-3 text-4xl font-black text-white tracking-tight">Your VFIDE</h1>
+            <p className="mb-8 max-w-md mx-auto text-gray-400 text-lg">
               Connect your wallet to see your ProofScore, your vault, your governance position, and the rest of your VFIDE account.
             </p>
             <div className="inline-block">
@@ -122,21 +135,34 @@ export default function MeHubPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
-        <div className="container mx-auto max-w-5xl px-4 pb-16">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 left-1/3 w-[400px] h-[400px] rounded-full opacity-[0.04]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+
+        <div className="relative container mx-auto max-w-5xl px-4 pb-16">
 
           {/* Header: tier badge + name + ProofScore snapshot */}
           <motion.header
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mb-10 flex flex-wrap items-end justify-between gap-6"
+            className="mb-10 flex flex-wrap items-end justify-between gap-6 pt-8"
           >
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
-                <User size={12} /> Your account
+              <div className="badge-live mb-3">
+                <User size={12} /> Account Hub
               </div>
-              <h1 className="text-4xl font-bold sm:text-5xl">Your VFIDE</h1>
+              <h1 className="text-4xl font-black sm:text-5xl tracking-tight">
+                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Your VFIDE</span>
+              </h1>
               {address && (
                 <div className="mt-2 font-mono text-sm text-gray-500">
                   {address.slice(0, 6)}...{address.slice(-4)}
@@ -145,7 +171,7 @@ export default function MeHubPage() {
             </div>
 
             {/* Live ProofScore snapshot */}
-            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3">
+            <div className="flex items-center gap-4 glass-card-premium px-4 py-3">
               {isLoading ? (
                 <div className="h-14 w-14 animate-pulse rounded-full bg-white/5" />
               ) : (
@@ -193,7 +219,7 @@ export default function MeHubPage() {
 
           {/* Quick "what to do next" suggestion based on score tier */}
           {!isLoading && (
-            <div className="mt-12 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+            <div className="mt-12 glass-card-premium border-cyan-500/20 bg-cyan-500/5 p-5">
               <div className="mb-2 text-xs uppercase tracking-widest text-cyan-300">Next step</div>
               <NextStep score={score} />
             </div>

@@ -124,20 +124,32 @@ export default function MerchantInvoicesPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white">
-        <section className="py-12">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+          <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+        </div>
+        <section className="py-12 relative">
           <div className="container mx-auto max-w-6xl px-4">
-            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
               <ArrowLeft size={16} /> Back to Merchant Hub
             </Link>
 
             <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
-                  <FileText size={14} /> Invoicing
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="badge-live"><span className="badge-live-dot" />Invoicing</span>
                 </div>
-                <h1 className="text-4xl font-bold">Send invoices, get paid in VFIDE</h1>
-                <p className="mt-3 max-w-3xl text-gray-400">
+                <h1 className="text-4xl font-bold mb-2">
+                  <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
+                    <FileText size={32} className="text-cyan-400" />Send invoices, get paid in VFIDE
+                  </span>
+                </h1>
+                <p className="mt-2 max-w-3xl text-white/50">
                   Create itemized invoices, share a payment link with the customer, and track from draft → sent → paid.
                 </p>
               </div>

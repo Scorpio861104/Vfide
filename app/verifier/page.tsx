@@ -351,15 +351,26 @@ export default function VerifierConsolePage() {
   }, [claimIdInput]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto max-w-2xl px-4 py-12 space-y-8">
+    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+      </div>
+      <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+      <div className="relative mx-auto max-w-2xl px-4 py-8 space-y-8">
         {/* Header */}
         <div>
+          <div className="badge-live mb-3">
+            🔍 Verifier Console
+          </div>
           <div className="flex items-center gap-3 mb-2">
             <div className="h-10 w-10 rounded-full bg-sky-500/20 flex items-center justify-center text-sky-400 text-xl">
               🔍
             </div>
-            <h1 className="text-2xl font-bold text-white">Verifier Console</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">Verifier Console</h1>
           </div>
           <p className="text-zinc-400 text-sm leading-relaxed">
             Trusted verifiers can review and vote on vault recovery claims as a

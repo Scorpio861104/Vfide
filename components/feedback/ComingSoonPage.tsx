@@ -4,45 +4,25 @@
  * ComingSoonPage
  *
  * Honest placeholder for features that are designed and named in the
- * navigation but are not yet implemented in this release. Replaces
- * deceptive fake UIs that pretended to work (success toasts on no-op
- * handlers, hardcoded data masquerading as live state, buttons with
- * no onClick handlers).
- *
- * Design principles:
- *   - State clearly what's NOT working
- *   - Explain what's required for the feature to ship (contract, API,
- *     external integration, etc) so the user understands it's not
- *     "we forgot" but "we won't ship a fake one"
- *   - Offer the closest available alternative
- *   - Never accept input that would be silently discarded
- *
- * Use this instead of building forms that toast "Success!" but do
- * nothing — that's worse than no feature at all.
+ * navigation but are not yet implemented in this release.
  */
 
 import Link from 'next/link';
-import { ArrowLeft, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { motion } from 'framer-motion';
 
 export interface ComingSoonPageProps {
-  /** The feature title. e.g. "Money Streaming" */
   title: string;
-  /** Short tagline shown under the title */
   tagline?: string;
-  /** Detailed explanation of what the feature would do once shipped */
   description: string;
-  /** What's required for the feature to ship (contract, API, etc) */
   requirements?: string[];
-  /** Closest existing alternative the user can use today */
   alternative?: {
     href: string;
     label: string;
     description?: string;
   };
-  /** Back link target. Defaults to the home page. */
   backHref?: string;
-  /** Back link label */
   backLabel?: string;
 }
 
@@ -57,16 +37,30 @@ export function ComingSoonPage({
 }: ComingSoonPageProps) {
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 text-white">
-        <section className="py-12">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+
+        <section className="relative py-12">
           <div className="container mx-auto max-w-3xl px-4">
-            <Link href={backHref} className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
+            <Link href={backHref} className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 transition-colors">
               <ArrowLeft size={16} /> {backLabel}
             </Link>
 
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 mb-6">
+            {/* Coming soon notice */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 mb-6"
+            >
               <div className="flex items-start gap-3">
-                <AlertCircle size={24} className="text-amber-300 flex-shrink-0 mt-0.5" />
+                <AlertCircle size={22} className="text-amber-300 flex-shrink-0 mt-0.5" />
                 <div>
                   <div className="text-amber-200 text-sm font-semibold mb-1">Not available in this release</div>
                   <div className="text-amber-100/80 text-sm">
@@ -75,18 +69,43 @@ export function ComingSoonPage({
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <h1 className="text-4xl font-bold mb-2">{title}</h1>
-            {tagline && <p className="text-lg text-gray-400 mb-6">{tagline}</p>}
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="mb-6"
+            >
+              <div className="badge-live mb-4">
+                <Clock size={12} /> Coming Soon
+              </div>
+              <h1 className="text-4xl font-black mb-2 tracking-tight">
+                <span className="bg-gradient-to-r from-white to-amber-300 bg-clip-text text-transparent">{title}</span>
+              </h1>
+              {tagline && <p className="text-lg text-gray-400">{tagline}</p>}
+            </motion.div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 mb-6">
+            {/* Description */}
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="glass-card-premium p-6 mb-5"
+            >
               <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">What this will do</h2>
-              <p className="text-gray-300 whitespace-pre-wrap">{description}</p>
-            </div>
+              <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{description}</p>
+            </motion.div>
 
+            {/* Requirements */}
             {requirements.length > 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="glass-card-premium p-6 mb-5"
+              >
                 <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">What&apos;s required to ship it</h2>
                 <ul className="space-y-2">
                   {requirements.map((req, i) => (
@@ -96,11 +115,17 @@ export function ComingSoonPage({
                     </li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             )}
 
+            {/* Alternative */}
             {alternative && (
-              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5"
+              >
                 <h2 className="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <CheckCircle2 size={14} /> Use this instead today
                 </h2>
@@ -116,7 +141,7 @@ export function ComingSoonPage({
                   </div>
                   <ArrowRight size={18} className="text-emerald-400 group-hover:translate-x-1 transition-transform" />
                 </Link>
-              </div>
+              </motion.div>
             )}
           </div>
         </section>

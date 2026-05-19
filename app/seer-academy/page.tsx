@@ -72,10 +72,18 @@ export default function SeerAcademyPage() {
 
   return (
     <>
-      <main className="min-h-screen bg-zinc-950 text-zinc-100 pt-24 pb-16">
+      <main className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 text-zinc-100 relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-8">
           <section className="rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-zinc-900 to-emerald-500/10 p-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 text-xs mb-4">
+            <div className="badge-live mb-4">
               <Compass className="w-4 h-4" /> Seer Academy
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-3">New to Crypto and Trading?</h1>

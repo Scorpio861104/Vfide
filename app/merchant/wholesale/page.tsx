@@ -326,7 +326,15 @@ export default function MerchantWholesalePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
             <ArrowLeft size={16} /> Back to Merchant Hub
@@ -334,7 +342,10 @@ export default function MerchantWholesalePage() {
 
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="flex items-center gap-3 text-3xl font-bold"><Package className="text-cyan-400" /> Wholesale & group buying</h1>
+              <div className="badge-live mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> B2B Wholesale
+            </div>
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Package className="text-cyan-400" /> Wholesale & group buying</h1>
               <p className="mt-2 text-gray-400">Use the live wholesale catalog to pool merchant orders and unlock better tier pricing.</p>
             </div>
             <button

@@ -71,9 +71,18 @@ export default function TestnetPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-900 text-white pt-20">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="max-w-2xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold mb-2">Testnet Setup</h1>
+          <div className="badge-live mb-3"><span>🔬</span> Testnet Mode</div>
+          <h1 className="text-3xl font-black mb-2 tracking-tight">Testnet Setup</h1>
           <p className="text-zinc-400 mb-8">
             Get test ETH and VFIDE to start testing on Base Sepolia.
           </p>

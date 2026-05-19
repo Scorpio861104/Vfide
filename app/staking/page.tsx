@@ -7,7 +7,6 @@ import { useAccount, useReadContract } from 'wagmi';
 import { type Address, parseUnits, formatUnits, erc20Abi } from 'viem';
 import { Loader2, AlertCircle, Coins, Lock, ChevronDown, Wallet, RefreshCw } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { PageHeader } from '@/components/ui/PageHeader';
 import { isConfiguredContractAddress } from '@/lib/contracts';
 import { useContractAddresses } from '@/hooks/useContractAddresses';
 import {
@@ -137,14 +136,19 @@ export default function StakingPage() {
   if (!isConfiguredContractAddress(LiquidityIncentives)) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
-          <div className="container mx-auto px-4 max-w-3xl py-8">
-            <PageHeader title="Staking" subtitle="Earn liquidity incentives" />
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 text-center">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem] relative">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+              style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          </div>
+          <div className="relative container mx-auto px-4 max-w-3xl py-8">
+            <div className="mb-6">
+              <span className="badge-live mb-3 inline-flex"><span className="badge-live-dot" />Liquidity Pools</span>
+              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
+            </div>
+            <div className="glass-card-premium p-8 text-center">
               <Coins className="mx-auto text-zinc-600 mb-3" size={40} aria-hidden="true" />
-              <p className="text-zinc-400">
-                The staking contract is not deployed on this network yet.
-              </p>
+              <p className="text-white/40">The staking contract is not deployed on this network yet.</p>
             </div>
           </div>
         </div>
@@ -156,12 +160,19 @@ export default function StakingPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
-          <div className="container mx-auto px-4 max-w-3xl py-8">
-            <PageHeader title="Staking" subtitle="Earn liquidity incentives" />
-            <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-8 text-center">
+        <div className="min-h-screen bg-zinc-950 pt-[4.5rem] relative">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+              style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          </div>
+          <div className="relative container mx-auto px-4 max-w-3xl py-8">
+            <div className="mb-6">
+              <span className="badge-live mb-3 inline-flex"><span className="badge-live-dot" />Liquidity Pools</span>
+              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
+            </div>
+            <div className="glass-card-premium p-8 text-center">
               <Wallet className="mx-auto text-zinc-600 mb-3" size={40} aria-hidden="true" />
-              <p className="text-zinc-400">Connect your wallet to stake LP tokens.</p>
+              <p className="text-white/40">Connect your wallet to stake LP tokens.</p>
             </div>
           </div>
         </div>
@@ -209,9 +220,27 @@ export default function StakingPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
-        <div className="container mx-auto px-4 max-w-3xl py-8 space-y-6">
-          <PageHeader title="Staking" subtitle="Earn liquidity incentives" />
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+          <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+        </div>
+        <div className="relative container mx-auto px-4 max-w-3xl py-8 space-y-6">
+          <div className="mb-2">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="badge-live"><span className="badge-live-dot" />Liquidity Pools</span>
+            </div>
+            <h1 className="text-4xl font-bold mb-2">
+              <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
+                <Coins size={32} className="text-cyan-400" />Staking
+              </span>
+            </h1>
+            <p className="text-white/50">Earn liquidity incentives by participating in protocol pools.</p>
+          </div>
 
           {poolsLoading && (
             <div className="flex items-center justify-center py-12">

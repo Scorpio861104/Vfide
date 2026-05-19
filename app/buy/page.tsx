@@ -3,50 +3,74 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { BuyTab } from './components/BuyTab';
 import { HistoryTab } from './components/HistoryTab';
 import { SwapTab } from './components/SwapTab';
+import { ShoppingCart, ArrowLeftRight, Clock } from 'lucide-react';
 
 type TabId = 'buy' | 'swap' | 'history';
 
-const TAB_LABELS: Record<TabId, string> = { buy: 'Buy', swap: 'Swap', history: 'History' };
-const TAB_IDS: TabId[] = ['buy', 'swap', 'history'];
+const TABS = [
+  { id: 'buy' as const, label: 'Buy Crypto', icon: <ShoppingCart size={14} /> },
+  { id: 'swap' as const, label: 'Swap', icon: <ArrowLeftRight size={14} /> },
+  { id: 'history' as const, label: 'History', icon: <Clock size={14} /> },
+];
 
 export default function BuyPage() {
   const [activeTab, setActiveTab] = useState<TabId>('buy');
 
   return (
-    <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
-        <div className="container mx-auto max-w-6xl px-4 py-8">
-          <h1 className="mb-2 text-4xl font-bold text-white">
-            Buy Crypto
-          </h1>
-          <p className="mb-8 text-white/60">Purchase VFIDE through trusted on-ramp partners or swap from an existing wallet.</p>
+    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+      </div>
 
-          <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-            {TAB_IDS.map((id) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`rounded-xl border px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
-                  activeTab === id
-                    ? 'border-cyan-500/30 bg-cyan-500/20 text-cyan-400'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
-                }`}
-              >
-                {TAB_LABELS[id]}
+      <div className="relative container mx-auto max-w-5xl px-4">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="badge-live"><span className="badge-live-dot" />On-Ramp</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">
+              Buy Crypto
+            </span>
+          </h1>
+          <p className="text-white/50">Purchase VFIDE through trusted on-ramp partners or swap from an existing wallet.</p>
+        </motion.div>
+
+        {/* Sticky tab bar */}
+        <div className="sticky top-[4.5rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setActiveTab(t.id)}
+                className={activeTab === t.id ? 'tab-pill-active' : 'tab-pill-inactive'}>
+                {t.icon}{t.label}
               </button>
             ))}
           </div>
-
-          {activeTab === 'buy' && <BuyTab />}
-          {activeTab === 'swap' && <SwapTab />}
-          {activeTab === 'history' && <HistoryTab />}
         </div>
+
+        {/* Tab content */}
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}>
+            {activeTab === 'buy' && <BuyTab />}
+            {activeTab === 'swap' && <SwapTab />}
+            {activeTab === 'history' && <HistoryTab />}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
       <Footer />
-    </>
+    </div>
   );
 }

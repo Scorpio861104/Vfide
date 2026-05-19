@@ -66,14 +66,25 @@ export default function MerchantInstallmentsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
-          <div className="mb-6">
-            <h1 className="flex items-center gap-3 text-3xl font-bold">
+          <div className="badge-live mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> BNPL
+            </div>
+            <div className="mb-6">
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
               <CreditCard className="text-cyan-400" /> Installments & payment plans
             </h1>
             <p className="mt-2 text-gray-400">Track pay-over-time orders, overdue accounts, and the next collection date for each customer.</p>

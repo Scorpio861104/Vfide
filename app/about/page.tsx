@@ -8,16 +8,27 @@ export default function AboutPage() {
   return (
     <>
       
-      <main className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+      <main className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         {/* Hero */}
-        <section className="py-20 bg-gradient-to-b from-zinc-800 to-zinc-900 border-b border-zinc-700">
+        <section className="relative py-20 bg-gradient-to-b from-zinc-900/50 to-transparent border-b border-white/5">
           <div className="container mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 1, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center max-w-4xl mx-auto"
             >
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-6">
+              <div className="badge-live mb-6 justify-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Protocol Story
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-100 mb-6 tracking-tight">
                 About VFIDE
               </h1>
               <p className="text-xl md:text-2xl text-zinc-400 leading-relaxed">

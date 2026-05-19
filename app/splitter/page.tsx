@@ -14,8 +14,8 @@ import {
   Search,
   RefreshCw,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
-import { PageHeader } from '@/components/ui/PageHeader';
 import RevenueSplitterABI from '@/lib/abis/RevenueSplitter.json';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { toast } from '@/lib/toast';
@@ -197,13 +197,27 @@ export default function SplitterPage() {
   }, [isConfirmed, refetchSplitter, refetchToken]);
 
   return (
-    <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
-        <div className="container mx-auto px-4 max-w-3xl py-8 space-y-6">
-          <PageHeader
-            title="Revenue Splitter"
-            subtitle="Trigger payouts from a deployed splitter contract"
-          />
+    <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[550px] h-[550px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute top-1/2 -right-40 w-[450px] h-[450px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+        <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+      </div>
+      <div className="relative container mx-auto px-4 max-w-3xl py-8 space-y-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="badge-live"><span className="badge-live-dot" />Revenue Distribution</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">
+              Revenue Splitter
+            </span>
+          </h1>
+          <p className="text-white/50">Trigger payouts from a deployed splitter contract.</p>
+        </motion.div>
 
           {/* Inputs */}
           <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-4">
@@ -377,8 +391,7 @@ export default function SplitterPage() {
             </div>
           )}
         </div>
-      </div>
       <Footer />
-    </>
+    </div>
   );
 }
