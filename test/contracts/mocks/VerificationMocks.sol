@@ -42,9 +42,9 @@ contract MockVaultHub is IVaultHub {
     function setProofLedger(address) external override {}
     function setDAORecoveryMultisig(address) external override {}
     function setRecoveryTimelock(uint256) external override {}
-    function requestDAORecovery(address, address) external override {}
-    function finalizeDAORecovery(address) external override {}
-    function cancelDAORecovery(address) external override {}
+    // requestDAORecovery / finalizeDAORecovery / cancelDAORecovery overrides
+    // removed 2026-05-19; the interface no longer declares them. Selector
+    // absence is asserted by scripts/verify-vault-hub-cardbound-integration.ts.
     function totalVaultsCreated() external view override returns (uint256) {
         return totalVaultsCreatedCount;
     }

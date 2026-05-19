@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import "../SharedInterfaces.sol";
 
 interface ICardBoundVaultInheritanceAccess {
     function admin() external view returns (address);
@@ -109,18 +109,14 @@ contract CardBoundVaultInheritanceManager {
     error INH_NotProofOfLifeWallet();
     error INH_WrongState(uint8 currentState, uint8 expectedState);
     error INH_CooldownActive(uint64 remaining);
-    error INH_BasisPointsMustSumTo10000(uint256 actualSum);
     error INH_TooManyHeirs(uint256 provided, uint256 max);
     error INH_NoHeirsConfigured();
     error INH_HashAlreadyClaimed();
     error INH_InvalidSecret();
-    error INH_InsufficientGuardianApprovals(uint256 current, uint256 needed);
     error INH_OwnerOverrideExpired();
     error INH_RecoveryInProgress();
     error INH_VaultPaused();
-    error INH_PendingObligations();
     error INH_MemorialNotEnded(uint64 remaining);
-    error INH_GuardianSnapshotOnly();
     error INH_DistributionNotFinalized();
     error INH_AlreadyRevealed();
     error INH_InvalidCommitment();

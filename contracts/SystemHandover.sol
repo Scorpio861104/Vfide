@@ -13,7 +13,6 @@ error SH_Zero();
 error SH_NotArmed();
 error SH_Armed();
 error SH_AlreadyExecuted();
-error SH_GovernanceNotReady();
 error SH_AuditorNotCouncil();
 // F-58 FIX: Named mismatch errors so operators can diagnose which admin failed to be pre-configured.
 error SH_DAOAdminMismatch(address expected, address actual);

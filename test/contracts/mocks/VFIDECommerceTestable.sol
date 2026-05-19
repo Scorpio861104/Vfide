@@ -3,7 +3,10 @@ pragma solidity 0.8.30;
 
 import "../../../contracts/SharedInterfaces.sol";
 
-// Copied from /contracts/VFIDECommerce.sol and modified for testing
+// Copied from the pre-split contracts/VFIDECommerce.sol and modified for testing.
+// The original file was split into contracts/MerchantRegistry.sol and
+// contracts/CommerceEscrow.sol during the v19 cleanup; this test stub is
+// retained as a single-file mock so the suite stays self-contained.
 
 error COM_NotDAO();
 error COM_Zero();

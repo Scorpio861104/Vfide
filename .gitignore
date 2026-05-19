@@ -96,3 +96,10 @@ deployments-solo-*.json
 /Vfide-full-repo-audit-complete.zip
 /newaudit.zip
 /.audit_unpack/
+
+# ABI checkpoint snapshots from debugging/regeneration sessions
+# (the actual ABIs come from `npx tsx scripts/sync-abis.ts`)
+lib/abis/*.bak
+lib/abis/*.bak2
+*.json.bak
+*.json.bak2

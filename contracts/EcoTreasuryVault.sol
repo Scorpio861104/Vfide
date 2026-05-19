@@ -18,7 +18,6 @@ import "./SharedInterfaces.sol";
 
 error FI_NotDAO();
 error FI_Zero();
-error FI_NotAllowed();
 error FI_Insufficient();
 
 /**

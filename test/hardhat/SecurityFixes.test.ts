@@ -56,13 +56,35 @@ describe("VaultHub (M-11: non-custodial recovery guard)", { concurrency: 1 }, ()
     return vaultHubRecoveryFixture();
   }
 
-  it("keeps DAO/council force recovery paths disabled", async () => {
-    const { councilMember, newOwner, hub, vaultAddr } = await deployVaultHubRecoveryHarness();
+  it("keeps DAO/council force recovery paths absent (non-custody guarantee)", async () => {
+    const { hub, vaultAddr } = await deployVaultHubRecoveryHarness();
 
-    await assert.rejects(
-      () => hub.connect(councilMember).approveForceRecovery(vaultAddr, newOwner.address),
-      /revert/
-    );
+    // v19.13 cleanup: the force-recovery selectors were removed entirely
+    // (previously they were revert stubs). The non-custody guarantee is
+    // now structural — auditors see absence-of-code, not presence-with-
+    // revert. Verify both the selector absence and the residual state
+    // (recoveryApprovalCount mapping still exists for the legitimate
+    // guardian-rotation path, but has never been incremented for this
+    // vault since the only writers via the removed force-recovery
+    // selectors are gone).
+    const forbiddenSelectors = [
+      "approveForceRecovery",
+      "initiateForceRecovery",
+      "finalizeForceRecovery",
+      "requestDAORecovery",
+      "finalizeDAORecovery",
+      "cancelDAORecovery",
+    ];
+    for (const name of forbiddenSelectors) {
+      const fragment = hub.interface.fragments.find(
+        (f: any) => f.type === "function" && f.name === name,
+      );
+      assert.equal(
+        fragment,
+        undefined,
+        `Non-custody violation: VaultHub ABI exposes ${name}; it must remain absent`,
+      );
+    }
     assert.equal(await hub.recoveryApprovalCount(vaultAddr), 0n);
   });
 

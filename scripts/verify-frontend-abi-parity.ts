@@ -7,7 +7,8 @@ const artifactsRoot = path.join(root, 'artifacts/contracts');
 const placeholderSignoffPath = path.join(root, 'audit/frontend-abi-placeholder.signoff.json');
 
 const ARTIFACT_OVERRIDES: Record<string, string> = {
-  'DevReserveVesting.json': 'artifacts/contracts/DevReserveVestingVault.sol/DevReserveVestingVault.json',
+  // DevReserveVesting.json removed 2026-05-19 v19.13 cleanup — frontend now
+  // points DevReserveVestingABI at DevReserveVestingVault.json directly.
   'ERC20.json': 'artifacts/contracts/SharedInterfaces.sol/IERC20.json',
 };
 

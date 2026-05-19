@@ -6,22 +6,27 @@ import { useContractAddresses } from './useContractAddresses'
 import { logger } from '@/lib/logger';
 
 // ============================================
-// SECURITY SYSTEM HOOKS - VFIDESecurity.sol
-// SecurityHub removed — non-custodial, no third-party locks
+// VAULT PAUSE HOOKS
 // ============================================
-
-/**
- * Check if a vault is locked by any security layer
- * SecurityHub removed — always returns false (non-custodial)
- */
-export function useIsVaultLocked(_vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  return {
-    isLocked: false,
-    isLoading: false,
-    refetch: () => Promise.resolve({ data: false }),
-  }
-}
+// History: this file was originally the SecurityHub bridge. SecurityHub
+// was removed in the non-custodial refactor (no third-party locks). The
+// remaining hooks here all relate to the vault's own pause()/paused()
+// surface — they are the user-controlled equivalent of what SecurityHub
+// previously did via DAO-level locks.
+//
+// Removed in v19.13 cleanup (2026-05-19):
+//   useIsVaultLocked        — pure stub returning false; was kept as a
+//                             transitional shim during the SecurityHub
+//                             removal, no consumer remains
+//   useIsGuardian           — zero consumers; CardBoundVault has the
+//                             selector exposed directly via wagmi if a
+//                             component needs it
+//   useGuardianLockStatus   — zero consumers, was a stub
+//   useCastGuardianLock     — zero consumers, called vault.pause() but
+//                             nothing wired it up
+//   useEmergencyStatus      — zero consumers, hardcoded stub
+//   useVaultGuardians       — only consumer was an orphan test for a
+//                             deleted SecurityGuardianPanel component
 
 /**
  * Get quarantine status and expiry time for a vault
@@ -36,7 +41,7 @@ export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
       enabled: !!vaultAddress,
     }
   })
-  
+
   return {
     quarantineUntil: 0,
     isQuarantined: !!paused,
@@ -51,7 +56,7 @@ export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
 export function useCanSelfPanic() {
   const CONTRACT_ADDRESSES = useContractAddresses();
   const { address } = useAccount()
-  
+
   const { data: vaultAddress } = useReadContract({
     address: CONTRACT_ADDRESSES.VaultHub,
     abi: VAULT_HUB_ABI,
@@ -67,7 +72,7 @@ export function useCanSelfPanic() {
     functionName: 'paused',
     query: { enabled: !!resolvedVaultAddress },
   })
-  
+
   return {
     vaultAddress: resolvedVaultAddress,
     lastPanicTime: 0,
@@ -139,113 +144,5 @@ export function useSelfPanic() {
     txHash: data,
     isAvailable,
     supportsDuration: false as const,
-  }
-}
-
-/**
- * Get vault guardians list and threshold
- */
-export function useVaultGuardians(vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const { data: guardianCount } = useReadContract({
-    address: vaultAddress,
-    abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'guardianCount',
-    query: {
-      enabled: !!vaultAddress,
-    }
-  })
-  
-  const { data: threshold } = useReadContract({
-    address: vaultAddress,
-    abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'guardianThreshold',
-    query: {
-      enabled: !!vaultAddress,
-    }
-  })
-  
-  return {
-    guardianCount: guardianCount ? Number(guardianCount) : 0,
-    threshold: threshold ? Number(threshold) : 0,
-  }
-}
-
-/**
- * Check if address is guardian for vault
- */
-export function useIsGuardian(vaultAddress?: `0x${string}`, guardianAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const { data: isGuardian } = useReadContract({
-    address: vaultAddress,
-    abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'isGuardian',
-    args: guardianAddress ? [guardianAddress] : undefined,
-    query: {
-      enabled: !!vaultAddress && !!guardianAddress,
-    }
-  })
-  
-  return isGuardian || false
-}
-
-/**
- * Get guardian lock status and approval count
- */
-export function useGuardianLockStatus(vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const { data: paused } = useReadContract({
-    address: vaultAddress,
-    abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'paused',
-    query: {
-      enabled: !!vaultAddress,
-    }
-  })
-  
-  return {
-    isLocked: !!paused,
-    approvals: 0,
-  }
-}
-
-/**
- * Cast guardian lock vote
- */
-export function useCastGuardianLock(vaultAddress: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  const { writeContract, data, isPending } = useWriteContract()
-  
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
-    hash: data,
-  })
-  
-  const castLock = (reason: string = 'Security concern') => {
-    void reason
-    writeContract({
-      address: vaultAddress,
-      abi: ACTIVE_VAULT_ABI,
-      functionName: 'pause',
-    })
-  }
-  
-  return {
-    castLock,
-    isCasting: isPending || isConfirming,
-    isSuccess,
-    txHash: data,
-  }
-}
-
-/**
- * Check global emergency breaker status
- */
-export function useEmergencyStatus() {
-  const CONTRACT_ADDRESSES = useContractAddresses();
-  return {
-    isHalted: false,
-    isGlobalRisk: false,
-    isEmergency: false,
-    refetch: () => Promise.resolve(),
   }
 }

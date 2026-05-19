@@ -1,9 +1,11 @@
 import fs from 'fs';
 import { describe, it, expect } from '@jest/globals';
 
-describe('deploy-all bytecode guardrails', () => {
+// Test renamed semantically from "deploy-all" (deleted) to "deploy-full" (the
+// canonical mainnet path). Same sentinels, same guarantees, different file.
+describe('deploy-full bytecode guardrails', () => {
   it('enforces EIP-170 runtime size preflight before deployment', () => {
-    const source = fs.readFileSync('scripts/deploy-all.ts', 'utf-8');
+    const source = fs.readFileSync('scripts/deploy-full.ts', 'utf-8');
 
     expect(source).toContain('const EIP170_RUNTIME_LIMIT = 24_576;');
     expect(source).toContain('assertDeploymentBytecodeLimits');

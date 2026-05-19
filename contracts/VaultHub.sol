@@ -2,8 +2,8 @@
 pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
-import "./CardBoundVault.sol";
-import "./CardBoundVaultDeployer.sol";
+import "./vault/CardBoundVault.sol";
+import "./vault/CardBoundVaultDeployer.sol";
 
 /**
  * @title VaultHub
@@ -106,23 +106,19 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     /// Errors
     error VH_Zero();
-    error VH_NotDAO();
     error VH_UseIndividualSetters();
     error VH_Timelock();
     error VH_ImmutableTimelock();
-    error VH_Create2Failed();
     error VH_UnknownVault();
     error VH_NotVaultOwner();
     error VH_NeedGuardians();
     error VH_ThresholdTooLow();
     error VH_NeedIndependentGuardian();
     error VH_NotRecoveryContract();
-    error VH_RecoveryDisabled();
     error VH_GuardianSetupRequired(); // M-3 FIX: grace period expired, setup must be completed first
     error VH_InvalidLimits();
     error VH_PendingExists();
     error VH_RecoveryCandidateMismatch();
-    error VH_InsufficientRecoveryApprovals();
     error VH_AlreadyOwnsVault();
     error VH_NotVault();
     error VH_DeprecatedGlobalPause();
@@ -414,40 +410,15 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     // ── Force Recovery REMOVED — non-custodial ──────────────
     // Recovery is ONLY through the user's own guardians via
-    // VaultRecoveryClaim or wallet rotation.
+    // VaultRecoveryClaim or wallet rotation. The following selectors
+    // are deliberately absent from the ABI (previously held revert-stubs):
+    //   approveForceRecovery, initiateForceRecovery, finalizeForceRecovery,
+    //   requestDAORecovery, finalizeDAORecovery, cancelDAORecovery
+    // Per the non-custody guarantee, audit readers see absence-of-code,
+    // not presence-with-revert. The verifier in
+    //   scripts/verify-vault-hub-cardbound-integration.ts
+    // asserts these selectors do not appear in VaultHub's compiled ABI.
     // ──────────────────────────────────────────────────────────
-
-    function approveForceRecovery(address vault, address newOwner) external pure {
-        vault;
-        newOwner;
-        revert VH_RecoveryDisabled();
-    }
-
-    function initiateForceRecovery(address vault, address newOwner) public pure {
-        vault;
-        newOwner;
-        revert VH_RecoveryDisabled();
-    }
-
-    function finalizeForceRecovery(address vault) public pure {
-        vault;
-        revert VH_RecoveryDisabled();
-    }
-
-    // IVaultHub compatibility stubs
-    function requestDAORecovery(address vault, address newOwner) external pure {
-        vault;
-        newOwner;
-        revert VH_RecoveryDisabled();
-    }
-    function finalizeDAORecovery(address vault) external pure {
-        vault;
-        revert VH_RecoveryDisabled();
-    }
-    function cancelDAORecovery(address vault) external pure {
-        vault;
-        revert VH_RecoveryDisabled();
-    }
 
     // IVaultHub compatibility wrapper
     /// @notice Total number of vaults created by this hub.

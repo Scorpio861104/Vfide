@@ -40,9 +40,9 @@ const merchantPaymentConfirmSchema = z.object({
 const PAYMENT_PROCESSED_EVENT = parseAbiItem(
   'event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
 );
-const PAYMENT_WITH_CHANNEL_EVENT = parseAbiItem(
-  'event PaymentWithChannel(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, uint8 channel)'
-);
+// PaymentWithChannel event removed 2026-05-19 v19.13 cleanup: the contract
+// no longer declares it (only PaymentProcessed is emitted). The dead
+// fallback branch in the decoder below was also removed.
 
 async function claimPaymentConfirmationIdempotency(params: {
   merchant: string;
@@ -256,12 +256,12 @@ async function verifyPaymentEventOnChain(params: {
 
     try {
       const decoded = decodeEventLog({
-        abi: [PAYMENT_PROCESSED_EVENT, PAYMENT_WITH_CHANNEL_EVENT],
+        abi: [PAYMENT_PROCESSED_EVENT],
         data: log.data,
         topics: log.topics,
       });
 
-      if (!decoded || (decoded.eventName !== 'PaymentProcessed' && decoded.eventName !== 'PaymentWithChannel')) {
+      if (!decoded || decoded.eventName !== 'PaymentProcessed') {
         continue;
       }
 

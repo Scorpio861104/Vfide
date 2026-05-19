@@ -20,8 +20,12 @@
  *   npx tsx scripts/sync-abis.ts --check    # CI mode: dry-run; non-zero exit on drift
  *
  * Special handling:
- *   - VFIDECommerce.sol contains TWO contracts (MerchantRegistry, CommerceEscrow);
- *     artifact paths are at contracts/VFIDECommerce.sol/<Name>.json.
+ *   - VFIDECommerce.json is a hand-merged ABI of the MerchantRegistry and
+ *     CommerceEscrow contracts (now in separate files since the v19 cleanup:
+ *     contracts/MerchantRegistry.sol and contracts/CommerceEscrow.sol).
+ *     The frontend continues to import a single VFIDECommerce.json so its
+ *     wagmi hooks don't churn; sync-abis discovers both artifacts by name
+ *     under artifacts/contracts/ and merges them per MERGE_MAP below.
  *   - Contracts under contracts/future/, contracts/pools/, contracts/testnet/
  *     are discovered automatically by glob.
  */
@@ -47,7 +51,11 @@ const SKIP_LIST = new Set<string>([
  * symbol stayed the same to avoid churn.
  */
 const RENAME_MAP: Record<string, string> = {
-  DevReserveVesting:  "DevReserveVestingVault",
+  // DevReserveVesting entry removed 2026-05-19 v19.13 cleanup: the file
+  // lib/abis/DevReserveVesting.json was deleted (byte-identical duplicate
+  // of DevReserveVestingVault.json). The frontend's DevReserveVestingABI
+  // symbol is now exported in lib/abis/index.ts as an alias pointing to
+  // the same source as DevReserveVestingVaultABI.
   MainstreamPayments: "MainstreamPriceOracle",
 };
 

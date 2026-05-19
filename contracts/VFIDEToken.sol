@@ -199,7 +199,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     event VaultOnlySet(bool enabled);
     event VaultOnlyDisableProposed(uint64 effectiveAt);
     event VaultOnlyDisableCancelled();
-    event ExemptSet(address indexed target, bool exempt);
     event PolicyLocked();
     event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
     event FeeBypassProposed(bool active, uint256 duration, uint64 effectiveAt); // H-6 FIX
@@ -214,7 +213,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Errors
     error VF_ZERO();
     error VF_CAP();
-    error VF_LOCKED();
     error VF_POLICY_LOCKED();
     error Token_NotVault();
     error VF_MaxTransferExceeded();

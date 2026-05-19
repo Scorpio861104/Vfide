@@ -1,12 +1,9 @@
 'use client'
 
 import { useAccount } from 'wagmi'
-import TrustChallenges from '@/app/proofscore/components/TrustChallenges'
-import ScoreStoryFeed from '@/app/proofscore/components/ScoreStoryFeed'
-import ProofScoreRing from '@/components/trust/ProofScoreRing'
-import RealtimeTrustScore from '@/components/trust/RealtimeTrustScore'
-import { LayeredTrust } from '@/components/trust/LayeredTrust'
-import { PulseScoreHistory } from '@/components/trust/PulseScoreHistory'
+import { TrustChallenges } from '@/app/proofscore/components/TrustChallenges'
+import { ScoreStoryFeed } from '@/app/proofscore/components/ScoreStoryFeed'
+import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 
 const TIERS = [
   { tier: 'Risky',      min: 0,   max: 299, color: 'bg-red-500',    desc: 'No verified identity. High risk.' },
@@ -25,8 +22,7 @@ export default function ProofScorePage() {
     <div className="min-h-screen bg-[#070813] text-white">
       {/* ── Hero ── */}
       <section className="flex flex-col items-center pt-10 pb-6">
-        <ProofScoreRing address={address} />
-        <RealtimeTrustScore address={address} />
+        <ProofScoreVisualizer address={address} />
       </section>
 
       {/* ── 7-Tier Table ── */}
@@ -62,20 +58,16 @@ export default function ProofScorePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h2 className="text-lg font-semibold mb-3">Trust Challenges</h2>
-            <TrustChallenges address={address as `0x${string}`} />
+            <TrustChallenges />
           </div>
           <div>
             <h2 className="text-lg font-semibold mb-3">Score Story</h2>
-            <ScoreStoryFeed address={address as `0x${string}`} />
+            <ScoreStoryFeed />
           </div>
         </div>
       </section>
 
       {/* ── Deep-dive sections ── */}
-      <section className="mx-auto max-w-3xl px-4 pb-8">
-        <LayeredTrust address={address} />
-        <PulseScoreHistory address={address} />
-      </section>
     </div>
   )
 }

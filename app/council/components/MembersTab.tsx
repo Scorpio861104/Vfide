@@ -142,7 +142,7 @@ export function MembersTab() {
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">Daily Score Verification</h3>
-            <p className="text-gray-400 text-sm">CouncilManager checks member ProofScores daily</p>
+            <p className="text-gray-400 text-sm">CouncilSalary checks member ProofScores daily</p>
           </div>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">

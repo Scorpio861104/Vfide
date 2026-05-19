@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useAccount, usePublicClient } from "wagmi";
 import { isAddress, keccak256, stringToHex, zeroAddress } from "viem";
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from "@/lib/contracts";
-import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
+
 import { SeerABI, VaultRegistryABI } from "@/lib/abis";
 import { VFIDEBadgeNFTABI } from "@/lib/abis/future";
 
@@ -37,8 +37,7 @@ export default function VaultRecoveryPage() {
   const publicClient = usePublicClient();
   const isVaultRegistryAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultRegistry)
   const isSeerAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.Seer)
-  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
-  const badgeNftAddress = futureContracts?.BadgeNFT
+  const badgeNftAddress: string | null = null
   const isBadgeNftAvailable = isConfiguredContractAddress(badgeNftAddress)
   const [searchMethod, setSearchMethod] = useState<"recoveryId" | "email" | "username" | "guardian">("recoveryId");
   const [searchQuery, setSearchQuery] = useState("");

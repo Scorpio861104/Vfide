@@ -12,19 +12,6 @@ function loadArtifact(relativePath: string) {
   };
 }
 
-async function expectRevert(fn: () => Promise<unknown>, message: string) {
-  let reverted = false;
-  try {
-    await fn();
-  } catch {
-    reverted = true;
-  }
-
-  if (!reverted) {
-    throw new Error(message);
-  }
-}
-
 async function chainDeadline(provider: JsonRpcProvider, offsetSeconds = 3600): Promise<bigint> {
   const latest = await provider.getBlock('latest');
   if (!latest) {
@@ -42,14 +29,13 @@ async function main() {
   const ownerB = await provider.getSigner(2);
   const approver1 = await provider.getSigner(3);
   const approver2 = await provider.getSigner(4);
-  const recoveryTarget = await provider.getSigner(6);
   const dao = await provider.getSigner(9);
 
   const tokenArtifact = loadArtifact(
     'artifacts/contracts/mocks/CardBoundVaultVerifierMocks.sol/MockVFIDEForCardBound.json'
   );
   const hubArtifact = loadArtifact('artifacts/contracts/VaultHub.sol/VaultHub.json');
-  const vaultArtifact = loadArtifact('artifacts/contracts/CardBoundVault.sol/CardBoundVault.json');
+  const vaultArtifact = loadArtifact('artifacts/contracts/vault/CardBoundVault.sol/CardBoundVault.json');
 
   const tokenFactory = new ContractFactory(tokenArtifact.abi as any, tokenArtifact.bytecode, deployer);
   const hubFactory = new ContractFactory(hubArtifact.abi as any, hubArtifact.bytecode, deployer);
@@ -160,24 +146,32 @@ async function main() {
   }
 
   currentStep = 'recovery-disabled-guards';
-  await expectRevert(
-    async () => {
-      await hub.connect(approver1).approveForceRecovery(vaultAAddr, await recoveryTarget.getAddress());
-    },
-    'approveForceRecovery unexpectedly succeeded'
-  );
-  await expectRevert(
-    async () => {
-      await hub.connect(dao).finalizeForceRecovery(vaultAAddr);
-    },
-    'finalizeForceRecovery unexpectedly succeeded'
-  );
-  await expectRevert(
-    async () => {
-      await hub.connect(ownerA).requestDAORecovery(vaultAAddr, await recoveryTarget.getAddress());
-    },
-    'requestDAORecovery unexpectedly succeeded'
-  );
+  // Stronger than the previous runtime "expect-revert" approach: assert the
+  // selectors are absent from the compiled ABI entirely. After the v19.13
+  // non-custody cleanup these functions were removed (not just stubbed to
+  // revert), so this check guarantees no future regression silently re-adds
+  // a freeze/recovery surface.
+  const forbiddenSelectors = [
+    'approveForceRecovery',
+    'initiateForceRecovery',
+    'finalizeForceRecovery',
+    'requestDAORecovery',
+    'finalizeDAORecovery',
+    'cancelDAORecovery',
+  ];
+  for (const name of forbiddenSelectors) {
+    const present = hubArtifact.abi.some(
+      (entry: any) => entry?.type === 'function' && entry?.name === name,
+    );
+    if (present) {
+      throw new Error(
+        `Non-custody violation: VaultHub ABI exposes ${name}. ` +
+        'These selectors must remain absent — recovery is exclusively through ' +
+        'VaultRecoveryClaim (guardian flow). See PRODUCTION_SET.md and ' +
+        'AUDIT_CLOSURE_REPORT.md.',
+      );
+    }
+  }
 
   console.log('VaultHub CardBound integration verification passed');
 }

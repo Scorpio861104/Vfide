@@ -96,7 +96,7 @@ async function main() {
   const tokenArtifact = loadArtifact(
     'artifacts/contracts/mocks/CardBoundVaultVerifierMocks.sol/MockVFIDEForCardBound.json'
   );
-  const vaultArtifact = loadArtifact('artifacts/contracts/CardBoundVault.sol/CardBoundVault.json');
+  const vaultArtifact = loadArtifact('artifacts/contracts/vault/CardBoundVault.sol/CardBoundVault.json');
 
   const registryFactory = new ContractFactory(registryArtifact.abi as any, registryArtifact.bytecode, admin);
   const tokenFactory = new ContractFactory(tokenArtifact.abi as any, tokenArtifact.bytecode, admin);

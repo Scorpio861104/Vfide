@@ -3,8 +3,8 @@
 import { useAccount, useReadContract } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { Shield, Zap, Users, CheckCircle, Lock } from 'lucide-react';
-import { CARD_BOUND_VAULT_ABI } from '@/lib/abis';
-import { getFutureContractAddress } from '@/lib/contracts/future-contracts';
+import { CardBoundVaultABI as CARD_BOUND_VAULT_ABI } from '@/lib/abis';
+import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 
 interface Challenge {
   id: string;
@@ -104,14 +104,30 @@ const DIFFICULTY_COLORS = {
 export function TrustChallenges({ userScore = 0 }: { userScore?: number }) {
   const { address } = useAccount();
   const router = useRouter();
-  const vaultAddress = getFutureContractAddress('TrustScorePassport') as `0x${string}` | undefined;
+
+  // Look up the user's own vault via VaultHub. Previously this used
+  // getFutureContractAddress('TrustScorePassport') as a stand-in, which
+  // (a) targeted a contract that no longer exists, and (b) used the
+  // resulting address with CARD_BOUND_VAULT_ABI to read guardianCount,
+  // which made no sense even when TrustScorePassport did exist. Fixed
+  // in v19.13 cleanup.
+  const isVaultHubAvailable = isConfiguredContractAddress(CONTRACT_ADDRESSES.VaultHub);
+  const { data: vaultAddressRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.VaultHub,
+    abi: VAULT_HUB_ABI,
+    functionName: 'vaultOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address && isVaultHubAvailable },
+  });
+  const vaultAddress = (vaultAddressRaw && vaultAddressRaw !== ZERO_ADDRESS)
+    ? (vaultAddressRaw as `0x${string}`)
+    : undefined;
 
   const { data: guardianCount } = useReadContract({
     address: vaultAddress,
     abi: CARD_BOUND_VAULT_ABI,
     functionName: 'guardianCount',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address && !!vaultAddress },
+    query: { enabled: !!vaultAddress },
   });
 
   const context = { guardianCount: Number(guardianCount ?? 0n), hasVault: !!vaultAddress };

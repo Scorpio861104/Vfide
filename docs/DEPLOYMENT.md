@@ -22,21 +22,21 @@ Before running any deploy script, ensure:
 ## Step 1 — Deploy All Contracts
 
 ```bash
-npx hardhat run scripts/deploy-all.ts --network baseSepolia
+npx hardhat run scripts/deploy-full.ts --network baseSepolia
 ```
 
-Deploys all contracts in dependency order and wires them together.
-After this script completes, **save every deployed address** — you will need them as env vars before running any subsequent script.
+Deploys all contracts in dependency order across every layer and wires them together.
+After this script completes, **save every deployed address** — addresses are persisted to `.deployments/<network>.json` automatically (resume-from-crash supported), and you will need them as env vars before running any subsequent script.
 
-> **⚠️ 48-hour timelock:** All module setter calls made by `deploy-all.ts` are timelocked.
-> You **must wait 48 hours** before running `apply-all.ts`.
+> **⚠️ 48-hour timelock:** All module setter calls made by `deploy-full.ts` are timelocked.
+> You **must wait 48 hours** before running `apply-full.ts`. Re-run `apply-full.ts` every 48 h until it reports `All wiring complete`.
 
 ---
 
 ## Step 2 — Apply Module Confirmations (after 48 h)
 
 ```bash
-npx hardhat run scripts/apply-all.ts --network baseSepolia
+npx hardhat run scripts/apply-full.ts --network baseSepolia
 ```
 
 Executes all pending timelocked setter calls queued in Step 1.
@@ -204,9 +204,9 @@ export PRIVATE_KEY=...
 export RPC_URL=https://<chain-rpc-url>
 
 # 1. Run the standard deploy script
-npx hardhat run scripts/deploy-all.ts --network <chain-name>
+npx hardhat run scripts/deploy-full.ts --network <chain-name>
 
-# 2. Capture the deployed addresses (deploy-all.ts checkpoints to .deployments/<chain>.json per OP-2)
+# 2. Capture the deployed addresses (deploy-full.ts checkpoints to .deployments/<chain>.json per OP-2)
 cat .deployments/<chain-name>.json
 
 # 3. Verify contracts on the chain's block explorer

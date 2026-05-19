@@ -5,7 +5,7 @@
  *
  * Tier 2 Phase 5 (2026-05-17). Previously displayed "12 Council Seats /
  * 365 Days Term Length / 120d Pay Interval" as hard facts and marked
- * CouncilManager / CouncilSalary / CouncilElection contracts as "Active" with
+ * CouncilSalary / CouncilElection contracts as "Active" with
  * green badges — none of which is true at V1. Those contracts live in
  * `contracts/future/` (gated by `NEXT_PUBLIC_FUTURE_FEATURES_ENABLED`) and
  * are NOT in the V1 deploy script.
@@ -200,8 +200,7 @@ export function OverviewTab() {
         </p>
         <div className="space-y-3">
           {[
-            { name: 'CouncilManager', desc: 'Daily score checks and payment distribution' },
-            { name: 'CouncilSalary', desc: 'Salary distribution and removal voting' },
+            { name: 'CouncilSalary', desc: 'Daily score checks, salary distribution, removal voting' },
             { name: 'CouncilElection', desc: 'Election cycles and candidate registration' },
           ].map((c) => (
             <div

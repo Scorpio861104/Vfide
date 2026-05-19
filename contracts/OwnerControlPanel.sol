@@ -70,7 +70,7 @@ contract OwnerControlPanel {
     
     // New contract references for enhanced configuration
     IEcosystemVaultAdmin public ecosystemVault;
-    IPanicGuard public panicGuard; // OCP-05: route vault freeze through PanicGuard
+    IPanicGuard public panicGuard; // OCP-05: route vault risk reports through PanicGuard (NOT custody freeze; see vault_reportRisk)
 
     uint256 public governanceDelay = 1 days;
     uint256 public constant MIN_GOVERNANCE_DELAY = 24 hours;
@@ -118,9 +118,6 @@ contract OwnerControlPanel {
         error OCP_ReduceTooLarge();
         error OCP_PanicGuardNotSet();
         error OCP_ETHTransferFailed();
-            error OCP_UnfreezeViaDAO();
-            error OCP_RecoveryDisabled();
-            error OCP_DeprecatedVaultFreeze();
             error OCP_DeprecatedView();
     
     modifier onlyOwner() {
@@ -393,18 +390,6 @@ contract OwnerControlPanel {
         return keccak256(abi.encode("seer_setThresholds", lowTrust, highTrust, minGovernance, minMerchant));
     }
 
-    function actionId_vault_requestDAORecovery(address vault, address newOwner) private pure returns (bytes32) {
-        return keccak256(abi.encode("vault_requestDAORecovery", vault, newOwner));
-    }
-
-    function actionId_vault_finalizeDAORecovery(address vault) private pure returns (bytes32) {
-        return keccak256(abi.encode("vault_finalizeDAORecovery", vault));
-    }
-
-    function actionId_vault_cancelDAORecovery(address vault) private pure returns (bytes32) {
-        return keccak256(abi.encode("vault_cancelDAORecovery", vault));
-    }
-
     function actionId_governance_setDelay(uint256 newDelay) private pure returns (bytes32) {
         return keccak256(abi.encode("governance_setDelay", newDelay));
     }
@@ -427,10 +412,6 @@ contract OwnerControlPanel {
 
     function actionId_setPanicGuard(address panicGuardAddr) private pure returns (bytes32) {
         return keccak256(abi.encode("setPanicGuard", panicGuardAddr));
-    }
-
-    function actionId_vault_freezeVault(address vault, bool frozen) private pure returns (bytes32) {
-        return keccak256(abi.encode("vault_freezeVault", vault, frozen));
     }
 
     function actionId_production_setupSafeDefaults() private pure returns (bytes32) {
@@ -879,48 +860,29 @@ contract OwnerControlPanel {
         vaultHub.setRecoveryTimelock(timelock);
         emit EmergencyAction("vrt", address(vaultHub));
     }
-    
+
+    // NOTE — Removed in v19.13 cleanup (2026-05-19):
+    //   vault_requestDAORecovery / vault_finalizeDAORecovery /
+    //   vault_cancelDAORecovery / vault_freezeVault.
+    // These were `revert OCP_RecoveryDisabled / OCP_DeprecatedVaultFreeze`
+    // stubs retained for ABI compatibility. Per the non-custody guarantee
+    // ("the functions to do it are not in the code"), the ABI itself must
+    // not advertise freeze/seize/DAO-recovery selectors. Removed outright
+    // so external audit readers see absence-of-code, not presence-with-revert.
+    // No external caller existed at removal time; git history retains the
+    // prior implementation if a future arbiter-based recovery product needs
+    // a reference.
+
     /**
-     * @notice Deprecated: DAO emergency recovery path is disabled in VaultHub.
-     */
-    function vault_requestDAORecovery(address vault, address newOwner) external onlyOwner nonReentrant {
-        vault;
-        newOwner;
-        revert OCP_RecoveryDisabled();
-    }
-    
-    /**
-     * @notice Deprecated: DAO emergency recovery path is disabled in VaultHub.
-     */
-    function vault_finalizeDAORecovery(address vault) external onlyOwner nonReentrant {
-        vault;
-        revert OCP_RecoveryDisabled();
-    }
-    
-    /**
-     * @notice Deprecated: DAO emergency recovery path is disabled in VaultHub.
-     */
-    function vault_cancelDAORecovery(address vault) external onlyOwner nonReentrant {
-        vault;
-        revert OCP_RecoveryDisabled();
-    }
-    
-    /**
-     * @notice Emergency freeze a specific vault (via vault owner)
-     * @dev Requires vault owner cooperation or DAO recovery process
+     * @notice Set the PanicGuard contract used as the destination for vault_reportRisk calls.
+     * @dev PanicGuard receives risk signals only; it has no custody freeze authority.
+     *      Per the non-custody guarantee, no contract on the V1 path can seize or freeze user tokens.
      */
     function setPanicGuard(address _panicGuard) external onlyOwner {
         if (_panicGuard == address(0)) revert OCP_Zero();
         _consumeQueuedAction(actionId_setPanicGuard(_panicGuard));
         panicGuard = IPanicGuard(_panicGuard);
         emit PanicGuardUpdated(_panicGuard);
-    }
-
-    /// @notice Deprecated: this does not freeze a single vault; kept for compatibility only.
-    function vault_freezeVault(address vault, bool frozen) external onlyOwner nonReentrant {
-        vault;
-        frozen;
-        revert OCP_DeprecatedVaultFreeze();
     }
 
     /// @notice N-H19 FIX: Explicit risk-reporting primitive replacing misleading "freeze" semantics.

@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { parseUnits, maxUint256 } from 'viem';
 import { CONTRACT_ADDRESSES, VFIDETokenABI, isConfiguredContractAddress } from '@/lib/contracts';
-import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
+
 import { SubscriptionManagerABI } from '@/lib/abis/future';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
@@ -85,8 +85,7 @@ export function SubscriptionManager({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
-  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null;
-  const subscriptionManagerAddress = futureContracts?.SubscriptionManager;
+  const subscriptionManagerAddress: string | null = null;
   const isSubscriptionManagerConfigured = isConfiguredContractAddress(subscriptionManagerAddress);
   const isVfideTokenConfigured = isConfiguredContractAddress(CONTRACT_ADDRESSES.VFIDEToken);
 

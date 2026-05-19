@@ -119,11 +119,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     error NotVaultOwner();
     error InvalidVault();
-    error RecoveryIdAlreadyTaken();
-    error EmailAlreadyTaken();
     error UsernameAlreadyTaken();
-    error PhoneAlreadyTaken();
-    error VaultNotFound();
     error ZeroAddress();
     error ModuleChangeNotReady();
     error ModuleChangePending();

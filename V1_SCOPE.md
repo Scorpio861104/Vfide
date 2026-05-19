@@ -1,51 +1,43 @@
 # VFIDE V1 Scope
 
-## In-Scope Contracts (V1)
+**Superseded.** This file is retained as a pointer; do not edit.
 
-| Contract | Status |
-|---|---|
-| CardBoundVault.sol | ✅ Deployed |
-| VaultRecoveryClaim.sol | ✅ Deployed |
-| ProofScoreBurnRouter.sol | ✅ Deployed |
-| Seer.sol | ✅ Deployed |
+The authoritative V1 specification now lives in three documents:
 
-## Deferred (V2+)
+1. **`contracts/PRODUCTION_SET.md`** — the canonical inventory of every
+   deployable contract, with explicit deploy-script disposition and dated
+   rename/move/defer records.
+2. **`AUDIT_CLOSURE_REPORT.md`** — what changed between the audit
+   campaign (2026-05-14) and the current snapshot, with the full
+   accepted-design list.
+3. **`MAINNET_DEPLOY_READINESS.md`** — the deploy-day punch list and
+   sign-off checklist.
 
-| Contract | Status |
-|---|---|
-| TrustScorePassport.sol | 🔜 Planned |
-| GovernanceCouncil.sol | 🔜 Planned |
-| SanctumVault.sol | 🔜 Planned |
+## Why this file was superseded
 
-## 7-Tier ProofScore System
+The previous contents of this file (an early, simplified statement of
+intent) drifted out of sync with the implemented system:
 
-| Tier | Label | Min Score | Max Score | Fee Modifier |
-|---|---|---|---|---|
-| 1 | Risky | 0 | 999 | +2.5% |
-| 2 | Low Trust | 1000 | 2999 | +1.5% |
-| 3 | Neutral | 3000 | 4999 | base |
-| 4 | Governance | 5000 | 5999 | -0.25% |
-| 5 | Trusted | 6000 | 6999 | -0.5% |
-| 6 | Council | 7000 | 7999 | -0.75% |
-| 7 | Elite | 8000 | 10000 | -1.0% |
+- It listed 4 in-scope V1 contracts; the actual mainnet deploy set
+  is ~28 contracts (see `PRODUCTION_SET.md`).
+- It described a 7-tier discrete fee model; the implemented fee curve
+  in `ProofScoreBurnRouter._calculateLinearFee` is a continuous linear
+  interpolation between `LOW_SCORE_THRESHOLD=4000` (max fee 5%) and
+  `HIGH_SCORE_THRESHOLD=8000` (min fee 0.25%).
+- It listed `SanctumVault.sol` as deferred; it is deployable and listed
+  in `PRODUCTION_SET.md`.
+- It listed `GovernanceCouncil.sol` and `TrustScorePassport.sol` as
+  planned; the council contracts live in `contracts/future/`
+  (CouncilElection, CouncilManager, CouncilSalary), and `TrustScorePassport`
+  is also in `contracts/future/`.
 
-## Primary Fee Split (ProofScoreBurnRouter)
+The **primary fee split (40% burn / 10% Sanctum / 50% Ecosystem)** does
+still hold and is implemented in `ProofScoreBurnRouter.getEffectiveBurnRate`
+at the line emitting `burnBps = totalBps * 40 / 100`. The 50% ecosystem
+share is then further redistributed by `FeeDistributor` across 5
+channels (35/20/15/20/10) — see `FeeDistributor.feeSplit` in the constructor.
 
-- 40% → Burned forever
-- 10% → Sanctum Fund
-- 50% → Ecosystem rewards
+## V1 complete definition (current)
 
-## Audit Requirements
-
-- [ ] Certik or Halborn audit of all V1 contracts
-- [ ] Bug bounty program established
-- [ ] Admin key transfer to multisig
-
-## V1 Complete Definition
-
-V1 is complete when:
-1. All in-scope contracts audited and deployed to mainnet
-2. Frontend fully wired to on-chain data (no mock data)
-3. Guardian recovery flow tested end-to-end
-4. ProofScore 7-tier system live on all UI surfaces
-5. Fee flow verified on-chain (40/10/50 split)
+V1 mainnet launch is complete when every item in
+`MAINNET_DEPLOY_READINESS.md § D — Sign-off checklist` is checked.

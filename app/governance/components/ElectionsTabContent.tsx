@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
 import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import { CouncilElectionABI } from '@/lib/abis/future';
-import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts';
+
 
 interface Candidate {
   address: string;
@@ -47,9 +47,7 @@ const DEFAULT_ELECTION: ElectionInfo = {
   electionActive: true, totalVotes: 0, totalVotePower: 0,
 };
 
-const COUNCIL_ELECTION_ADDRESS = isFutureFeaturesEnabled()
-  ? getFutureContractAddresses().CouncilElection
-  : ZERO_ADDRESS;
+const COUNCIL_ELECTION_ADDRESS = ZERO_ADDRESS;
 
 export function ElectionsTabContent() {
   const { isConnected } = useAccount();

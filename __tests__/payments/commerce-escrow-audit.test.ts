@@ -118,17 +118,19 @@ describe('R-059 – Auto-convert policy misconfiguration', () => {
     expect(merchantSrc).toMatch(/if \(path\[path\.length - 1\] != stablecoin\) revert MERCH_InvalidConfig\(\)/);
   });
 
-  it('approval is revoked after both successful and failed swap attempts', () => {
-    // success path
-    expect(merchantSrc).toMatch(/if \(!IERC20\(token\)\.approve\(address\(swapRouter\), 0\)\) revert MERCH_RevokeFailed\(\)/);
-    // failure path fallback
-    expect(merchantSrc).toMatch(/emit AutoConvertFallback\(merchant, token, netAmount, "swap_failed"\)/);
-  });
-
-  it('quote-unavailable path falls back to direct settlement and emits fallback reason', () => {
-    expect(merchantSrc).toMatch(/emit AutoConvertFallback\(merchant, token, netAmount, "quote_unavailable"\)/);
-    expect(merchantSrc).toMatch(/IERC20\(token\)\.safeTransfer\(recipient, netAmount\)/);
-  });
+  // v19.13 cleanup (2026-05-19): the "approval is revoked after both successful
+  // and failed swap attempts" test block was removed. The auto-convert swap
+  // logic itself was previously stubbed to immediately revert with
+  // MERCH_NotConfigured (see _transferWithAutoConvert in MerchantPortal.sol),
+  // so there is no swap call to audit for approval revocation. The
+  // "quote-unavailable path" test (which checked for `quote_unavailable` and
+  // `swap_failed` emit reasons) is removed for the same reason — the current
+  // code only emits the `auto_conv_off` reason before reverting. The swap
+  // *config* validation tests above (MIN/MAX_SWAP_OUTPUT_BPS, path shape,
+  // setAutoConvert) remain valid; they audit the still-live config surface
+  // that gates whether swap can be enabled at all. If swap execution is ever
+  // re-enabled, restore both the approval-revocation invariant and the
+  // fallback-reason emits, and add tests then.
 
   it('merchant-side auto-convert enabling requires swap router and stablecoin configuration', () => {
     expect(merchantSrc).toMatch(/function\s+setAutoConvert\(bool enabled\) external onlyMerchant/);

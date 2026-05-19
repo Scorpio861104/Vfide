@@ -2,8 +2,7 @@
 
 export function HoweySafeModePanel() {
   const contracts = [
-    { name: 'CouncilSalary', icon: '👥', description: 'Council employment compensation in stablecoins — not investment returns' },
-    { name: 'CouncilManager', icon: '🏛️', description: 'Council oversight — operational costs only, not profit-sharing' },
+    { name: 'CouncilSalary', icon: '👥', description: 'Council employment compensation in stablecoins — not investment returns. Includes daily ProofScore checks and removal voting.' },
     { name: 'LiquidityIncentives', icon: '💧', description: 'LP participation tracking only — no yield, no profit from providing liquidity' },
     { name: 'EcosystemVault — Headhunter', icon: '🎯', description: 'Fixed stablecoin service fees for verified referral work — rank/percentage claims permanently disabled' },
     { name: 'EcosystemVault — Top Merchant', icon: '🏪', description: 'Fixed stablecoin service fees for verified merchant transaction activity — rank/percentage claims permanently disabled' },

@@ -3,7 +3,7 @@
 /**
  * CouncilTab — placeholder for a feature deferred to a future VFIDE release.
  *
- * The Council contracts (CouncilManager, CouncilSalary, CouncilElection) live in
+ * The Council contracts (CouncilSalary, CouncilElection) live in
  * contracts/future/ — they are NOT deployed at V1 mainnet. The previous version
  * of this tab displayed fake council members behind a SampleDataBanner, which
  * was misleading: users could mistake mock entries for real on-chain governance
@@ -82,7 +82,7 @@ export function CouncilTab() {
             <p className="pt-2 text-zinc-500 text-xs flex items-start gap-1">
               <Info size={11} className="shrink-0 mt-0.5" />
               <span>
-                The council contracts (CouncilManager, CouncilElection, CouncilSalary) are deferred to
+                The council contracts (CouncilElection, CouncilSalary) are deferred to
                 a future release and live in <code className="bg-black/30 px-1 rounded">contracts/future/</code>.
               </span>
             </p>

@@ -100,7 +100,6 @@ error TL_Paused();
 error TL_SelfLoan();
 error TL_LoanCap();
 error TL_AlreadySigned();
-error TL_NeedGuarantors();
 error TL_PlanNotAccepted();
 error TL_PlanExists();
 error TL_NothingDue();

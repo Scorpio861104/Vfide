@@ -16,7 +16,6 @@ import "./lib/ScoringConstants.sol";
  */
 
 error BURN_Zero();
-error BURN_NotDAO();
 
 contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     event ModulesSet(address seer, address sanctumSink, address burnSink, address ecosystemSink);
@@ -26,7 +25,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     // ecosystemBpsAtLow = effective ecosystem bps for a LOW_SCORE_THRESHOLD user.
     // ecosystemBpsAtHigh = effective ecosystem bps for a HIGH_SCORE_THRESHOLD user.
     event EcosystemAllocationImpact(uint256 ecosystemBpsAtLow, uint256 ecosystemBpsAtNeutral, uint256 ecosystemBpsAtHigh);
-    event FeesComputed(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint16 score);
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
     event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
     event MicroTxUsdCapSet(address indexed priceOracle, uint256 maxUsd6);
@@ -35,7 +33,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         event MicroTxFeeCeilingProposed(uint16 maxBps, uint256 maxAmount, uint64 effectiveAt);
         event MicroTxUsdCapProposed(address indexed priceOracle, uint256 maxUsd6, uint64 effectiveAt);
         event MicroTxFeeCancelled();
-    event BurnCapReached(uint256 dailyBurned, uint256 dailyCap, uint256 redirectedToEcosystem);
     // L-03: Emitted when seer returns score 0 for a user, which silently applies max fees.
     // Monitoring systems should alert on this — it may indicate a misconfigured seer address.
     event SeerScoreZeroWarning(address indexed user, address indexed seerAddr);

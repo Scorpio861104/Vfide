@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import "../SharedInterfaces.sol";
 import "./CardBoundVaultPaymentQueueManager.sol";
 import "./CardBoundVaultWithdrawalQueueManager.sol";
 import "./CardBoundVaultInheritanceManager.sol";
@@ -187,6 +187,10 @@ contract CardBoundVault is ReentrancyGuard {
     uint64 public constant MAX_ROTATION_DELAY = 7 days;
     uint64 public constant SENSITIVE_ADMIN_DELAY = 7 days;
     uint8 public constant MAX_GUARDIANS = 20;
+    /// @notice Withdrawal-queue delay surfaced for the user-facing API.
+    /// @dev Mirrors CardBoundVaultWithdrawalQueueManager.WITHDRAWAL_DELAY and
+    /// CardBoundVaultPaymentQueueManager.WITHDRAWAL_DELAY. Kept in sync with both.
+    uint64 public constant WITHDRAWAL_DELAY = 7 days;
 
     address public immutable hub;
     address public immutable vfideToken;
@@ -431,7 +435,6 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_ChallengePeriodTooLong();
     error CBV_Zero();
     error CBV_InvalidThreshold();
-    error CBV_Locked();
     error CBV_Paused();
     error CBV_NotVault();
     error CBV_Expired();
@@ -448,10 +451,6 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_OnlyHub();
     error CBV_TransferFailed();
     error CBV_GuardianSetupRequired();
-    error CBV_QueueFull();
-    error CBV_QueueInvalidIndex();
-    error CBV_QueueNotReady();
-    error CBV_QueueAlreadyProcessed();
     error CBV_PauseAlreadyApproved();
     error CBV_SeerBlocked();
     error CBV_NotMerchantPortal();
@@ -460,24 +459,12 @@ contract CardBoundVault is ReentrancyGuard {
     error CBV_NoSeparationNeeded();
     error CBV_PayIntentInvalid();
     error CBV_PayIntentTokenInvalid(); // H2: intent.token must be vfideToken
-    error CBV_PaymentQueueFull();
-    error CBV_PaymentQueueInvalidIndex();
-    error CBV_PaymentQueueAlreadyProcessed();
-    error CBV_PaymentQueueNotReady();
-    error CBV_NotAuthorized();
-    error CBV_NoPending();
-    error CBV_DelayActive();
-    error CBV_PendingExists();
     error CBV_UseProposeApply();
     error CBV_InvalidToken();
     error CBV_InvalidRecoveryRotation();
     error CBV_InheritanceActive();
     /// @notice C-7 FIX: Destination vault cannot receive transfer (unguarded and cap would be exceeded).
     error CBV_ReceiverNeedsGuardian();
-
-        /// @notice VAULT-01 FIX: Destination vault code has changed (replaced/self-destructed).
-        error CBV_ReceiverChanged();
-
 
     modifier onlyAdmin() {
         if (msg.sender != admin) revert CBV_NotAdmin();

@@ -15,8 +15,7 @@ export type FutureContractName =
   | 'SovereignMemberConsentEscrow'
   | 'FeeDistributor'
   | 'ProofScoreBurnRouter'
-  | 'Seer'
-  | 'TrustScorePassport';
+  | 'Seer';
 
 type EnvVar = `NEXT_PUBLIC_${string}`;
 
@@ -35,7 +34,6 @@ const CONTRACT_ENV_MAP: Record<FutureContractName, EnvVar> = {
   FeeDistributor:                  'NEXT_PUBLIC_FEE_DISTRIBUTOR',
   ProofScoreBurnRouter:            'NEXT_PUBLIC_PROOF_SCORE_BURN_ROUTER',
   Seer:                            'NEXT_PUBLIC_SEER',
-  TrustScorePassport:              'NEXT_PUBLIC_TRUST_SCORE_PASSPORT_ADDRESS',
 };
 
 export function getFutureContractAddress(name: FutureContractName): string | null {

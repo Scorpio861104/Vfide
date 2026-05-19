@@ -191,12 +191,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         uint8 totalApprovals
     );
     
-    event VerifierVoteCast(
-        uint256 indexed claimId,
-        address indexed verifier,
-        bool approved,
-        uint8 totalVotes
-    );
     
     event ClaimChallenged(
         uint256 indexed claimId,
@@ -245,9 +239,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error InvalidVault();
     error ClaimAlreadyExists();
     error NoActiveClaim();
-    error NotClaimant();
     error NotGuardian();
-    error NotTrustedVerifier();
     error AlreadyVoted();
     error ClaimNotPending();
     error NoPendingVerifierChange();
@@ -257,7 +249,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error ClaimHasExpired();
     error NotOriginalOwner();
     error InsufficientApprovals();
-    error VaultHasNoClaim();
     error ClaimantAlreadyHasVault();
     error ZeroAddress();
     error ModuleChangePending();

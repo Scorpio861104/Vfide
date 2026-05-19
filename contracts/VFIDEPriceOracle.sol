@@ -151,7 +151,6 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     error PriceStale();
     error InvalidPrice();
     error CircuitBreakerActive();
-    error PriceManipulation();
     error UpdateTooFrequent();
 
     // Custom Ownable has no renounceOwnership — no override needed

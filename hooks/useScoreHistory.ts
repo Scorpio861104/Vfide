@@ -46,7 +46,7 @@ function buildFallbackEvents(currentScore: number): ScoreEvent[] {
     { kind: 'payment', delta: 100, newScore: 3100, blockNumber: 0n, txHash: '', timestamp: now - 86400 * 20 },
     { kind: 'endorsement', delta: 250, newScore: 3350, blockNumber: 0n, txHash: '', timestamp: now - 86400 * 10 },
     { kind: 'payment', delta: currentScore - 3350, newScore: currentScore, blockNumber: 0n, txHash: '', timestamp: now - 86400 },
-  ].filter(e => !isNaN(e.delta));
+  ].filter(e => !isNaN(e.delta)) as ScoreEvent[];
 }
 
 export function useScoreHistory(address?: Address) {

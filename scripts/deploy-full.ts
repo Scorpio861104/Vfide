@@ -99,6 +99,86 @@ function parseBooleanEnv(value: string | undefined): boolean {
   return (value ?? "").trim().toLowerCase() === "true";
 }
 
+// ─── EIP-170 runtime-bytecode preflight (ported from deleted deploy-all.ts) ──
+// Fails the deploy *before* any tx is sent if any deployable contract has a
+// runtime bytecode > 24,576 bytes. Catches "code too large" deploy failures
+// at preflight time instead of mid-deploy after gas burn. Sentinel strings
+// here are load-bearing for __tests__/security/deploy-bytecode-guard.test.ts.
+const EIP170_RUNTIME_LIMIT = 24_576;
+
+/**
+ * Contracts deployed by deploy-full.ts that must satisfy EIP-170. Kept in
+ * sync with the `await deploy("…")` calls below across Layers 1-11.
+ * VFIDETestnetFaucet is added at runtime only when DEPLOY_TESTNET_FAUCET=true.
+ */
+const DEPLOYMENT_CONTRACTS = [
+  // Layer 1 — Foundation
+  "AdminMultiSig",
+  "ProofLedger",
+  "DevReserveVestingVault",
+  "VFIDEToken",
+  // Layer 2 — Trust Engine
+  "Seer",
+  "ProofScoreBurnRouter",
+  // Layer 3 — Vault System
+  "VaultHub",
+  // Layer 4 — Commerce Core
+  "DAOPayrollPool",
+  "MerchantCompetitionPool",
+  "HeadhunterCompetitionPool",
+  "FeeDistributor",
+  "MerchantPortal",
+  // Layer 5 — Governance
+  "DAOTimelock",
+  "GovernanceHooks",
+  "DAO",
+  // Layer 6 — Finance
+  "VFIDEFlashLoan",
+  "VFIDETermLoan",
+  "VFIDEPriceOracle",
+  // Layer 7 — Safety
+  "FraudRegistry",
+  // Layer 8 — Governance Helpers
+  "OwnerControlPanel",
+  "VaultRecoveryClaim",
+  "SystemHandover",
+  "EmergencyControl",
+  // Layer 9 — Ecosystem / Badges
+  "SanctumVault",
+  "EcosystemVault",
+  "EcosystemVaultView",
+  "VaultRegistry",
+  "PayrollManager",
+  "LiquidityIncentives",
+  // Layer 11 — Commerce Suite
+  "MerchantRegistry",
+  "CommerceEscrow",
+] as const;
+
+function byteLength(hexData: string | undefined): number {
+  if (!hexData || hexData === "0x") return 0;
+  return Math.max(0, (hexData.length - 2) / 2);
+}
+
+async function assertDeploymentBytecodeLimits(contractNames: readonly string[]): Promise<void> {
+  const oversized: Array<{ name: string; runtimeBytes: number }> = [];
+  for (const name of contractNames) {
+    const artifact = await hre.artifacts.readArtifact(name);
+    const runtimeBytes = byteLength(artifact.deployedBytecode);
+    if (runtimeBytes > EIP170_RUNTIME_LIMIT) {
+      oversized.push({ name, runtimeBytes });
+    }
+  }
+  if (oversized.length === 0) return;
+  const details = oversized
+    .map((item) => `${item.name}: ${item.runtimeBytes} bytes`)
+    .join(", ");
+  throw new Error(
+    `Deployment blocked: EIP-170 runtime limit (${EIP170_RUNTIME_LIMIT} bytes) exceeded by ${details}. ` +
+    "Run contract-size verification and shrink oversized contracts before deployment.",
+  );
+}
+
 async function main() {
   const ethers = await resolveEthers();
   const [deployer] = await ethers.getSigners();
@@ -153,6 +233,14 @@ async function main() {
   console.log(
     `  Balance  : ${ethers.formatEther(await ethers.provider.getBalance(deployer.address))} ETH`,
   );
+
+  // EIP-170 preflight — catches oversized contracts before any tx is sent.
+  // VFIDETestnetFaucet is included only when actually deploying it.
+  const preflightSet = (deployTestnetFaucet && isTestnetChain)
+    ? [...DEPLOYMENT_CONTRACTS, "VFIDETestnetFaucet"]
+    : DEPLOYMENT_CONTRACTS;
+  await assertDeploymentBytecodeLimits(preflightSet);
+  console.log("  Bytecode size preflight: all deployment contracts are within EIP-170 runtime limit.");
 
   // ─── helper: deploy + record ─────────────────────────────────────────────
   async function deploy(name: string, ...args: unknown[]) {

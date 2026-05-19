@@ -66,7 +66,6 @@ error MERCH_NotMerchant();
 error MERCH_NotRegistered();
 error MERCH_AlreadyRegistered();
 error MERCH_Suspended();
-error MERCH_VaultLocked();
 error MERCH_LowTrust();
 error MERCH_InvalidPayment();
 error MERCH_EscrowRequired();
@@ -81,8 +80,6 @@ error MERCH_AlreadyCompleted();
 error MERCH_Forbidden();
 error MERCH_CapExceeded();
 error MERCH_NotConfigured();
-error MERCH_ApproveFailed();
-error MERCH_RevokeFailed();
 error MERCH_VFIDESettlementDisabled();
 error MERCH_IntentInvalid();
 error MERCH_IntentRecipientMismatch();
@@ -128,16 +125,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         PaymentChannel channel
     );
     /// @notice Enhanced payment event with channel tracking
-    event PaymentWithChannel(
-        address indexed customer,
-        address indexed merchant,
-        address token,
-        uint256 amount,
-        uint256 fee,
-        string orderId,
-        uint16 customerScore,
-        PaymentChannel channel
-    );
     event FeeUpdated(uint256 feeBasisPoints);
     event ProtocolFeeProposed(uint256 newFeeBps, uint64 effectiveAt); // H3
     event ProtocolFeeCancelled(); // H3

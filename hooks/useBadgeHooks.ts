@@ -2,7 +2,7 @@
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '../lib/contracts'
-import { getFutureContractAddresses, isFutureFeaturesEnabled } from '@/lib/contracts/future-contracts'
+import { getFutureContractAddress } from '@/lib/contracts/future-contracts'
 import { VFIDEBadgeNFTABI } from '@/lib/abis/future'
 
 // ============================================
@@ -34,12 +34,11 @@ export function useUserBadges(_address?: `0x${string}`) {
 export function useBadgeNFTs(address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
-  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
-  const badgeNftAddress = futureContracts?.BadgeNFT
+  const badgeNftAddress = getFutureContractAddress('CardBoundVault')
   const isAvailable = isConfiguredContractAddress(badgeNftAddress)
   
   const { data: tokenIds, isLoading, refetch } = useReadContract({
-    address: badgeNftAddress,
+    address: badgeNftAddress as `0x${string}` | undefined,
     abi: VFIDEBadgeNFTABI,
     functionName: 'getBadgesOfUser',
     args: targetAddress ? [targetAddress] : undefined,
@@ -59,8 +58,7 @@ export function useBadgeNFTs(address?: `0x${string}`) {
 
 export function useMintBadge() {
   const { writeContract, data, isPending } = useWriteContract()
-  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
-  const badgeNftAddress = futureContracts?.BadgeNFT
+  const badgeNftAddress = getFutureContractAddress('CardBoundVault')
   const isAvailable = isConfiguredContractAddress(badgeNftAddress)
   
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
@@ -89,12 +87,11 @@ export function useMintBadge() {
 export function useCanMintBadge(badgeId: `0x${string}`, address?: `0x${string}`) {
   const { address: connectedAddress } = useAccount()
   const targetAddress = address || connectedAddress
-  const futureContracts = isFutureFeaturesEnabled() ? getFutureContractAddresses() : null
-  const badgeNftAddress = futureContracts?.BadgeNFT
+  const badgeNftAddress = getFutureContractAddress('CardBoundVault')
   const isAvailable = isConfiguredContractAddress(badgeNftAddress)
   
   const { data, isLoading } = useReadContract({
-    address: badgeNftAddress,
+    address: badgeNftAddress as `0x${string}` | undefined,
     abi: VFIDEBadgeNFTABI,
     functionName: 'canMintBadge',
     args: targetAddress && badgeId ? [targetAddress, badgeId] : undefined,

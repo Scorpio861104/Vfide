@@ -212,7 +212,7 @@ const config: VfideHardhatConfig = {
       },
       // Inheritance build adds substantial logic to CardBoundVault. Optimize primarily for deployability
       // and code-size headroom under EIP-170 while preserving behavior.
-      "contracts/CardBoundVault.sol": {
+      "contracts/vault/CardBoundVault.sol": {
         version: "0.8.30",
         settings: {
           optimizer: {
@@ -229,7 +229,7 @@ const config: VfideHardhatConfig = {
         },
       },
       // Deployer includes CardBoundVault creation code in predict/deploy paths.
-      "contracts/CardBoundVaultDeployer.sol": {
+      "contracts/vault/CardBoundVaultDeployer.sol": {
         version: "0.8.30",
         settings: {
           optimizer: {

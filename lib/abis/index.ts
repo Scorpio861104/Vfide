@@ -21,7 +21,10 @@ import ProofLedgerRaw from './ProofLedger.json'
 // New consolidated ABIs
 import DutyDistributorRaw from './DutyDistributor.json'
 import SanctumVaultRaw from './SanctumVault.json'
-import DevReserveVestingRaw from './DevReserveVesting.json'
+// DevReserveVesting was previously its own JSON file (byte-identical to
+// DevReserveVestingVault). The duplicate was consolidated 2026-05-19 v19.13
+// cleanup — both ABI constants now point to the same source. The frontend
+// continues to import DevReserveVestingABI via the symbol exported below.
 import PayrollManagerRaw from './PayrollManager.json'
 import EcosystemVaultRaw from './EcosystemVault.json'
 import EcosystemVaultViewRaw from './EcosystemVaultView.json'
@@ -102,7 +105,7 @@ const ProofScoreBurnRouterABI = normalizeImportedABI(ProofScoreBurnRouterRaw);
 const ProofLedgerABI = normalizeImportedABI(ProofLedgerRaw);
 const DutyDistributorABI = normalizeImportedABI(DutyDistributorRaw);
 const SanctumVaultABI = normalizeImportedABI(SanctumVaultRaw);
-const DevReserveVestingABI = normalizeImportedABI(DevReserveVestingRaw);
+const DevReserveVestingABI = normalizeImportedABI(DevReserveVestingVaultRaw);
 const PayrollManagerABI = normalizeImportedABI(PayrollManagerRaw);
 const EcosystemVaultABI = normalizeImportedABI(EcosystemVaultRaw);
 const EcosystemVaultViewABI = normalizeImportedABI(EcosystemVaultViewRaw);

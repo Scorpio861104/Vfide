@@ -192,19 +192,19 @@ describe("Integration: Vault Operations Full Flow", function () {
   });
 
   it("should enforce daily transfer limits", async function () {
-    const vaultSource = fs.readFileSync("contracts/CardBoundVault.sol", "utf-8");
+    const vaultSource = fs.readFileSync("contracts/vault/CardBoundVault.sol", "utf-8");
     expect(vaultSource).to.include("dailyTransferLimit");
     expect(vaultSource).to.include("CBV_DailyLimit");
   });
 
   it("should validate EIP-712 signatures correctly", async function () {
-    const vaultSource = fs.readFileSync("contracts/CardBoundVault.sol", "utf-8");
+    const vaultSource = fs.readFileSync("contracts/vault/CardBoundVault.sol", "utf-8");
     expect(vaultSource).to.include("CBV_InvalidSignature");
     expect(vaultSource).to.include("EIP712");
   });
 
   it("should enforce guardian timelock on sensitive operations", async function () {
-    const vaultSource = fs.readFileSync("contracts/CardBoundVault.sol", "utf-8");
+    const vaultSource = fs.readFileSync("contracts/vault/CardBoundVault.sol", "utf-8");
     expect(vaultSource).to.include("proposeGuardianChange");
     expect(vaultSource).to.include("+ 1 days");
   });

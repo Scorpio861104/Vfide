@@ -101,9 +101,13 @@ describe("FiatRampRegistry", function () {
 });
 
 describe("VFIDECommerce artifact compatibility", function () {
+  // After the v19 split, MerchantRegistry and CommerceEscrow live in their
+  // own .sol files (was: contracts/VFIDECommerce.sol containing both).
+  // The frontend still imports a merged VFIDECommerce.json — produced by
+  // scripts/sync-abis.ts MERGE_MAP — but the source artifacts have moved.
   const suiteAvailable =
-    hasArtifact("artifacts/contracts/VFIDECommerce.sol/MerchantRegistry.json") &&
-    hasArtifact("artifacts/contracts/VFIDECommerce.sol/CommerceEscrow.json");
+    hasArtifact("artifacts/contracts/MerchantRegistry.sol/MerchantRegistry.json") &&
+    hasArtifact("artifacts/contracts/CommerceEscrow.sol/CommerceEscrow.json");
 
   it("should expose MerchantRegistry and CommerceEscrow artifacts", async function () {
     if (!suiteAvailable) {

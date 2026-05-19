@@ -261,18 +261,32 @@ describeSecurityAudit('R-044 – Guardian and recovery flow deadlocks', () => {
     expect(vaultHubSrc).toMatch(/CARD_GUARDIAN_THRESHOLD\s*=\s*1/);
   });
 
-  it('approveForceRecovery guards against non-approver callers (VH:not-approver)', () => {
-    expect(vaultHubSrc).toMatch(/function\s+approveForceRecovery\([^)]*\)\s+external\s+pure/);
-    expect(vaultHubSrc).toMatch(/revert\s+VH_RecoveryDisabled\(\)/);
+  it('approveForceRecovery selector is absent from VaultHub (non-custody guarantee)', () => {
+    // v19.13 cleanup: the previous revert-stub for `approveForceRecovery` was
+    // removed entirely. Auditors should see absence-of-code, not
+    // presence-with-revert. Verifies regression-safety.
+    expect(vaultHubSrc).not.toMatch(/function\s+approveForceRecovery\s*\(/);
+    expect(vaultHubSrc).not.toMatch(/function\s+initiateForceRecovery\s*\(/);
+    expect(vaultHubSrc).not.toMatch(/function\s+finalizeForceRecovery\s*\(/);
   });
 
-  it('approveForceRecovery prevents double-voting via recoveryApprovals mapping', () => {
-    // Legacy mapping remains declared for storage compatibility.
+  it('recoveryApprovals storage retained for the guardian-rotation path', () => {
+    // The mapping is part of the legitimate guardian-led recovery flow
+    // (executeRecoveryRotation). It is NOT part of any force-recovery
+    // surface — the public functions that previously wrote to it from a
+    // force-recovery codepath were removed in v19.13.
     expect(vaultHubSrc).toMatch(/mapping\(address\s*=>\s*mapping\(address\s*=>\s*mapping\(uint256\s*=>\s*bool\)\)\)\s+public\s+recoveryApprovals/);
   });
 
-  it('recovery candidate mismatch is rejected (VH:candidate-mismatch)', () => {
-    expect(vaultHubSrc).toMatch(/revert\s+VH_RecoveryDisabled\(\)/);
+  it('DAO-recovery selectors are absent from VaultHub (non-custody guarantee)', () => {
+    // v19.13 cleanup: requestDAORecovery / finalizeDAORecovery /
+    // cancelDAORecovery were removed entirely. The VH_RecoveryDisabled
+    // error went with them. Recovery is exclusively through
+    // VaultRecoveryClaim (guardian-led, 14-day vote + 7-day challenge).
+    expect(vaultHubSrc).not.toMatch(/function\s+requestDAORecovery\s*\(/);
+    expect(vaultHubSrc).not.toMatch(/function\s+finalizeDAORecovery\s*\(/);
+    expect(vaultHubSrc).not.toMatch(/function\s+cancelDAORecovery\s*\(/);
+    expect(vaultHubSrc).not.toMatch(/error\s+VH_RecoveryDisabled\s*\(\s*\)/);
   });
 
   it('TypeScript model: 3-of-3 approval reaches RECOVERY_APPROVALS_REQUIRED', () => {

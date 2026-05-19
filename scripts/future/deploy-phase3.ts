@@ -47,7 +47,8 @@ async function main() {
     'EcosystemVault',
     'EcosystemVaultView',
     'CouncilElection',
-    'CouncilManager',
+    // CouncilManager removed 2026-05-19 v19.13 cleanup — orphan contract,
+    // had zero callers across the codebase.
     'CouncilSalary',
     'BadgeManager',
     'VFIDEBadgeNFT',

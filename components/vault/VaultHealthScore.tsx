@@ -2,7 +2,7 @@
 
 import { useAccount, useReadContract } from 'wagmi';
 import { Shield, AlertTriangle, CheckCircle, Info } from 'lucide-react';
-import { CARD_BOUND_VAULT_ABI } from '@/lib/abis';
+import { CardBoundVaultABI as CARD_BOUND_VAULT_ABI } from '@/lib/abis';
 
 interface Dimension {
   label: string;

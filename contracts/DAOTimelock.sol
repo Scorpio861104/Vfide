@@ -6,7 +6,6 @@ import "./SharedInterfaces.sol";
 error TL_NotAdmin();
 error TL_AlreadyQueued();
 error TL_NotQueued();
-error TL_TooEarly();
 error TL_AlreadyExecuted(); // TL-02 FIX: distinct error for already-executed ops
 error TL_OnlyTimelock();
 
@@ -28,7 +27,6 @@ contract DAOTimelock is ReentrancyGuard {
     event Cancelled(bytes32 id);
     event CancelledBySecondary(bytes32 indexed id);
     event Executed(bytes32 id);
-    event GracePeriodExpired(bytes32 id);
     /// @notice TL-02 FIX: Events for secondary executor role
     event SecondaryExecutorSet(address indexed executor);
     event SecondaryExecutorEOAWarning(address indexed executor);

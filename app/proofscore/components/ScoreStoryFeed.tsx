@@ -43,7 +43,7 @@ function ScoreSparkline({ events }: { events: ScoreEvent[] }) {
 }
 
 function EventRow({ event }: { event: ScoreEvent }) {
-  const meta = KIND_META[event.kind] ?? KIND_META.unknown;
+  const meta = KIND_META[event.kind] ?? KIND_META['unknown'] ?? { label: 'Score Update', color: 'text-slate-400', icon: '📊' };
   const sign = event.delta >= 0 ? '+' : '';
   const deltaColor = event.delta > 0 ? 'text-emerald-400' : event.delta < 0 ? 'text-red-400' : 'text-slate-400';
   const timeAgo = event.timestamp

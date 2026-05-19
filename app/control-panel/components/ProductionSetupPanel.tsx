@@ -240,7 +240,6 @@ export function ProductionSetupPanel() {
           <h3 className="text-white font-bold mb-3">📋 Safe Defaults Includes:</h3>
           <ul className="text-slate-300 text-sm space-y-2">
             <li>• CouncilSalary: Compliance enforced on-chain</li>
-            <li>• CouncilManager: Compliance enforced on-chain</li>
             <li>• LiquidityIncentives: Compliance enforced on-chain</li>
             <li>• Auto-swap: Disabled</li>
           </ul>

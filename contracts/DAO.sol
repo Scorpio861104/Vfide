@@ -16,7 +16,6 @@ interface ISeerAutonomous_DAO {
 
 error DAO_NotAdmin();
 error DAO_NotTimelock();
-error DAO_Zero();
 error DAO_NotEligible();
 error DAO_UnknownProposal();
 error DAO_AlreadyVoted();
@@ -47,7 +46,6 @@ contract DAO is ReentrancyGuard {
     event Executed(uint256 id);
     event ProposalStateChanged(uint256 indexed id, string oldState, string newState);
     event DisputeFlagged(address indexed user, address indexed caller, string reason);
-    event VoteDelegated(address indexed delegator, address indexed delegate);
     event ProposalWithdrawn(uint256 id, address indexed proposer);
     event ProposalCooldownSet(uint64 cooldown);
     event ProposalTypeTargetPolicySet(ProposalType indexed ptype, address indexed target, bool allowed);

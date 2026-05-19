@@ -51,7 +51,6 @@ error ECO_NotEligible();
 error ECO_TooEarly();
 error ECO_ArrayCapReached();
 /// @notice Permanently reverts — token rewards for referrals or merchant ranking are not available (Howey compliance)
-error ECO_RewardsNotAvailable();
 error ECO_CouncilBelowMinimum();
 error ECO_MerchantBelowMinimum();
 error ECO_HeadhunterBelowMinimum();
@@ -73,7 +72,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
-    event PaymentMade(address indexed recipient, uint256 amount, string reason);
     event FundsBurned(uint256 amount);
     event ManagerSet(address manager, bool active);
     event CouncilDistributed(uint256 totalAmount, uint8 memberCount, uint256 perMember);
@@ -85,19 +83,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event PendingReferralRegistered(address indexed referred, address indexed referrer, bool isMerchant);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
     event ReferralVaultHubUpdated(address indexed oldHub, address indexed newHub);
-    event WorkRewardPaid(address indexed worker, uint256 amount, string program, string reason);
     event ManagerChangeQueued(address indexed manager, bool active, uint256 executeAfter);
-    event ManagerChangeCancelled(address indexed manager, bool active);
     event AllocationChangeQueued(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps, uint256 executeAfter);
-    event AllocationChangeCancelled(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps);
     event CouncilManagerChangeQueued(address indexed councilManager, uint256 executeAfter);
-    event CouncilManagerChangeCancelled(address indexed councilManager);
     event CouncilManagerUpdated(address indexed oldCouncilManager, address indexed newCouncilManager);
     event OperationsWalletChangeQueued(address indexed wallet, uint256 executeAfter);
-    event OperationsWalletChangeCancelled(address indexed wallet);
     event OperationsWalletUpdated(address indexed oldWallet, address indexed newWallet);
     event ExpenseEpochRolled(uint256 startedAt, uint256 baseOperationsPool, uint256 capAmount);
-    event OperationsCooldownUpdated(uint256 oldCooldown, uint256 newCooldown);
     event WithdrawRequested(uint256 indexed id, address to, uint256 amount);
     event WithdrawCancelled(uint256 indexed id);
     event WithdrawExecuted(uint256 indexed id, address to, uint256 amount);

@@ -253,7 +253,8 @@ describeIfEnabled('Layer 5: Every ABI has a corresponding Solidity source', () =
 
   const REMAP: Record<string, string> = {
     'BurnRouter.json': 'ProofScoreBurnRouter.sol',
-    'DevReserveVesting.json': 'DevReserveVestingVault.sol',
+    // DevReserveVesting.json entry removed 2026-05-19 v19.13 cleanup —
+    // file no longer exists (was a byte-identical duplicate).
   };
 
   for (const abiFile of abiFiles) {

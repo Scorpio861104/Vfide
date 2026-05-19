@@ -10,7 +10,7 @@ These contracts are deployed directly by the deploy scripts and need their
 own Etherscan source verification on mainnet.
 
 - AdminMultiSig.sol
-- CardBoundVault.sol
+- vault/CardBoundVault.sol
 - DAO.sol
 - DAOTimelock.sol
 - DevReserveVestingVault.sol
@@ -33,7 +33,8 @@ own Etherscan source verification on mainnet.
 - Seer.sol
 - SystemHandover.sol
 - VFIDEAccessControl.sol              ← base contract; deployed implicitly as parent of others, not standalone
-- VFIDECommerce.sol                   ← aliased to MerchantRegistry in deploy-full.ts Layer 11
+- MerchantRegistry.sol                ← split from former VFIDECommerce.sol (Phase 3e cleanup)
+- CommerceEscrow.sol                  ← split from former VFIDECommerce.sol (Phase 3e cleanup)
 - EcoTreasuryVault.sol                ← renamed from `VFIDEFinance.sol` 2026-05-16 to match contract name inside
 - VFIDEFlashLoan.sol
 - VFIDEPriceOracle.sol
@@ -58,20 +59,20 @@ from the spawning contract's deploy. They MUST still be compiled and shipped
 with the deploy artifacts so the spawning `new <Module>(address(this), …)`
 calls succeed.
 
-- **`CardBoundVaultDeployer.sol`**
+- **`vault/CardBoundVaultDeployer.sol`**
   Spawned by `VaultHub`'s constructor (see `VaultHub.sol:135`,
   `vaultDeployer = new CardBoundVaultDeployer()`). The deployer becomes
   `vaultHub = msg.sender` (immutable). One instance exists per `VaultHub`
   deployment.
 
 - **Per-vault auxiliary modules** — each new `CardBoundVault` instance spawns
-  these in its constructor (see `CardBoundVault.sol:463-470`). They live at
+  these in its constructor (in `vault/CardBoundVault.sol`). They live at
   deterministic addresses derived from the parent vault and require
   per-vault-instance Etherscan source verification.
-  - `CardBoundVaultAdminManager.sol`
-  - `CardBoundVaultInheritanceManager.sol`
-  - `CardBoundVaultPaymentQueueManager.sol`
-  - `CardBoundVaultWithdrawalQueueManager.sol`
+  - `vault/CardBoundVaultAdminManager.sol`
+  - `vault/CardBoundVaultInheritanceManager.sol`
+  - `vault/CardBoundVaultPaymentQueueManager.sol`
+  - `vault/CardBoundVaultWithdrawalQueueManager.sol`
 
 ## V1 Mainnet Deploy Status
 
@@ -97,47 +98,33 @@ all of them. The gap, with the status of each as of this writing:
 
 ## Interfaces
 
-- interfaces/AggregatorV3Interface.sol
-- interfaces/ICommerceEscrow.sol
-- interfaces/IDAO.sol
-- interfaces/IDAOTimelock.sol
-- interfaces/IDevReserveVestingVault.sol
-- interfaces/IERC20Minimal.sol
-- interfaces/IEcoTreasuryVault.sol
-- interfaces/IEmergencyBreaker.sol
-- interfaces/IEmergencyControl.sol
-- interfaces/IGovernanceHooks.sol
-- interfaces/IGuardianLock.sol
-- interfaces/IGuardianRegistry.sol
-- interfaces/IMerchantRegistry.sol
-- interfaces/IPanicGuard.sol
-- interfaces/IProofLedger.sol
-- interfaces/IProofScoreBurnRouter.sol
-- interfaces/IReviewRegistry.sol
-- interfaces/ISanctumFund.sol
-- interfaces/ISecurityHub.sol
-- interfaces/ISeer.sol
-- interfaces/IStablecoinRegistry.sol
-- interfaces/ISystemHandover.sol
-- interfaces/IVFIDEToken.sol
-- interfaces/IVaultFactory.sol
-- interfaces/IVaultHub.sol
-- interfaces/IVaultInfrastructure.sol
+After v19.13 dead-code sweep, three interface files remain — the rest
+were orphan and have been deleted. The active interface declarations
+live file-scope inside their consumer contracts (the codebase's chosen
+convention; e.g., `IVaultHub` is declared in `SharedInterfaces.sol`,
+the `_COM`/`_PAY` interface shims are declared inside their consumers).
+
+- interfaces/AggregatorV3Interface.sol — Chainlink price feed (used by `VFIDEPriceOracle.sol`)
+- interfaces/ICommerceEscrow.sol — used by external integration tests
+- interfaces/IVaultInfrastructure.sol — minimal hub-lookup interface, used by legacy ownership lookups
 
 ## Legacy / Not Deployed To Mainnet
 
 - `legacy/VFIDESecurity.sol` — kept in `contracts/legacy/` for the
   `EmergencyBreaker` reference comment in `EmergencyControl.sol:15`. Not
   deployed at V1.
-- `legacy/SharedInterfaces.sol` — superseded by the canonical
-  `contracts/SharedInterfaces.sol`.
+- `legacy/VaultInfrastructure.sol` — kept for backward-compat with any
+  pre-existing UserVaultLegacy deployments; not on V1 path.
+- `legacy/CircuitBreaker.sol` — kept for historical reference; not on V1 path.
+- `legacy/SharedInterfaces.sol` — DELETED 2026-05-19 (was a 4-line
+  re-export shim of the root canonical file; legacy/ contracts now
+  import `../SharedInterfaces.sol` directly).
 
 ## Excluded From Production Set
 
 - contracts/future/**     (Bridge, MainstreamPayments, Seer satellite contracts, Council, etc.)
 - contracts/legacy/**
 - contracts/mocks/**
-- contracts/security/**   (test helpers — not deployed)
 - scripts/**
 - package.json
 - package-lock.json

@@ -67,9 +67,12 @@ interface IVaultHub {
     function setProofLedger(address ledger) external;
     function setDAORecoveryMultisig(address multisig) external;
     function setRecoveryTimelock(uint256 timelock) external;
-    function requestDAORecovery(address vault, address newOwner) external;
-    function finalizeDAORecovery(address vault) external;
-    function cancelDAORecovery(address vault) external;
+    // requestDAORecovery / finalizeDAORecovery / cancelDAORecovery removed
+    // 2026-05-19. Per the non-custody guarantee, no on-chain DAO recovery
+    // flow exists on VaultHub — recovery is exclusively through the user's
+    // own guardians via VaultRecoveryClaim or wallet rotation. The selectors
+    // are deliberately absent from the ABI; absence is asserted by
+    // scripts/verify-vault-hub-cardbound-integration.ts.
     function totalVaultsCreated() external view returns (uint256);
     /// @dev R-4 — true if `vault` is in MEMORIAL (state 3) or CLOSED (state 4).
     ///      Used by external obligation managers to gate inheritance-driven settlement.

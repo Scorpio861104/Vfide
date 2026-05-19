@@ -64,7 +64,11 @@ const ACCESS_CONTROL_CONTRACTS = [
   'Seer',
   'SeerAutonomous',
   'SeerGuardian',
-  'VFIDECommerce',
+  // MerchantRegistry and CommerceEscrow use the `onlyDAO` modifier pattern,
+  // not OpenZeppelin AccessControl — they have no DEFAULT_ADMIN_ROLE to verify.
+  // (Previous entry "VFIDECommerce" was a stale alias from when both lived in
+  // VFIDECommerce.sol; the script's role lookup harmlessly fell through to the
+  // "doesn't implement AccessControl" warning branch every run.)
   'MerchantPortal',
   'PayrollManager',
   'SubscriptionManager',

@@ -48,7 +48,6 @@ error FR_Zero();
 error FR_AlreadyComplained();
 error FR_InsufficientScore();
 error FR_NotDAO();
-error FR_AlreadyFlagged();
 error FR_NotFlagged();
 error FR_SelfComplaint();
 error FR_EscrowNotReady();
@@ -56,7 +55,6 @@ error FR_EscrowAlreadyProcessed();
 error FR_EscrowInvalidIndex();
 error FR_ReviewActive();
 error FR_InvalidTarget();
-error FR_SystemExemptViolation();
 error FR_EscrowRecipientMismatch();
 
 contract FraudRegistry is ReentrancyGuard {

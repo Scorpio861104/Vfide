@@ -81,7 +81,7 @@ async function main() {
   const candidate2Address = await candidate2.getAddress();
 
   const tokenArtifact = loadArtifact(
-    'artifacts/contracts/mocks/EscrowManagerVerifierMocks.sol/MockTokenForEscrow.json'
+    'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockTokenForEscrow.json'
   );
   const endpointArtifact = loadArtifact(
     'artifacts/contracts/mocks/BridgeGovernanceVerifierMocks.sol/MockLzEndpointForBridge.json'

@@ -63,7 +63,6 @@ contract DevReserveVestingVault is ReentrancyGuard {
     error DV_Zero();
     error DV_NotBeneficiary();
     error DV_NotStarted();
-    error DV_VaultLocked();
     error DV_NothingToClaim();
     error DV_Paused();
     error DV_InvalidAllocation();

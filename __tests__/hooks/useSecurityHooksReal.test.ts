@@ -57,77 +57,9 @@ jest.mock('../../lib/abis', () => ({
 
 // Import hooks after mocks are set up
 import {
-  useIsVaultLocked,
   useQuarantineStatus,
   useCanSelfPanic,
 } from '../../hooks/useSecurityHooks'
-
-describe('useIsVaultLocked', () => {
-  beforeEach(() => {
-    jest.clearAllMocks()
-  })
-
-  it('returns false when vault lock controls are removed', () => {
-    mockUseReadContract.mockReturnValue({
-      data: true,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
-    
-    const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
-    
-    expect(result.current.isLocked).toBe(false)
-  })
-
-  it('returns false when vault is unlocked', () => {
-    mockUseReadContract.mockReturnValue({
-      data: false,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
-    
-    const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
-    
-    expect(result.current.isLocked).toBe(false)
-  })
-
-  it('returns false when data is undefined', () => {
-    mockUseReadContract.mockReturnValue({
-      data: undefined,
-      isLoading: false,
-      refetch: jest.fn(),
-    })
-    
-    const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
-    
-    expect(result.current.isLocked).toBe(false)
-  })
-
-  it('returns non-loading state for static lock status hook', () => {
-    mockUseReadContract.mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      refetch: jest.fn(),
-    })
-    
-    const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
-    
-    expect(result.current.isLoading).toBe(false)
-  })
-
-  it('provides refetch function', () => {
-    const mockRefetch = jest.fn()
-    mockUseReadContract.mockReturnValue({
-      data: false,
-      isLoading: false,
-      refetch: mockRefetch,
-    })
-    
-    const { result } = renderHook(() => useIsVaultLocked('0xVaultAddress' as `0x${string}`))
-    
-    expect(typeof result.current.refetch).toBe('function')
-  })
-})
 
 describe('useQuarantineStatus', () => {
   beforeEach(() => {

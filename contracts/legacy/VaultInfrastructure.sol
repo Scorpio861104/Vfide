@@ -13,7 +13,7 @@ pragma solidity 0.8.30;
 // called by V1 paths. File retained for reference / backward-compat with
 // any pre-existing UserVaultLegacy deployments.
 
-import "./SharedInterfaces.sol";
+import "../SharedInterfaces.sol";
 
 /**
  * VaultInfrastructure (zkSync Era ready) — FINAL
