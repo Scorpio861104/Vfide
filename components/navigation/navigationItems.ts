@@ -90,6 +90,8 @@ export interface NavItem {
   badge?: string;
   /** Tutorial / product-tour anchor. Not used by MoreSheet. */
   dataOnboarding?: string;
+  /** T2-4: If true, item is rendered grayed-out and unclickable in MoreSheet. */
+  comingSoon?: boolean;
 }
 
 export const navigationItems: NavItem[] = [
@@ -130,17 +132,21 @@ export const navigationItems: NavItem[] = [
     color: '#10B981',
     dataOnboarding: 'nav-merchant',
     children: [
-      { id: 'merchant-main', label: 'Merchant Hub', href: '/merchant', icon: Store, color: '#10B981', dataOnboarding: 'nav-merchant' },
-      { id: 'pos', label: 'POS Terminal', href: '/pos', icon: CreditCard, color: '#10B981' },
-      { id: 'buy', label: 'Buy Tokens', href: '/buy', icon: Globe, color: '#10B981' },
-      { id: 'flashloan', label: 'Flashloans P2P', href: '/flashloans', icon: Banknote, color: '#10B981', badge: 'P2P' },
-      { id: 'escrow', label: 'Escrow', href: '/escrow', icon: Lock, color: '#10B981' },
-      { id: 'payroll', label: 'Payroll', href: '/payroll', icon: Banknote, color: '#10B981' },
-      { id: 'streaming', label: 'Streaming', href: '/streaming', icon: Zap, color: '#10B981', badge: 'NEW' },
-      { id: 'cross-chain', label: 'Cross-Chain', href: '/cross-chain', icon: ArrowLeftRight, color: '#10B981' },
-      { id: 'stealth', label: 'Private Pay', href: '/stealth', icon: Eye, color: '#10B981' },
-      { id: 'pay', label: 'Quick Pay', href: '/pay', icon: Send, color: '#10B981' },
-      { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat, color: '#10B981' },
+      { id: 'merchant-main', label: 'Merchant Hub',  href: '/merchant',      icon: Store,          color: '#10B981', dataOnboarding: 'nav-merchant' },
+      { id: 'pos',           label: 'POS Terminal',  href: '/pos',           icon: CreditCard,     color: '#10B981' },
+      { id: 'buy',           label: 'Buy Tokens',    href: '/buy',           icon: Globe,          color: '#10B981' },
+      { id: 'flashloan',     label: 'Flashloans P2P',href: '/flashloans',    icon: Banknote,       color: '#10B981', badge: 'P2P' },
+      { id: 'escrow',        label: 'Escrow',        href: '/escrow',        icon: Lock,           color: '#10B981' },
+      { id: 'payroll',       label: 'Payroll',       href: '/payroll',       icon: Banknote,       color: '#10B981' },
+      { id: 'streaming',     label: 'Streaming',     href: '/streaming',     icon: Zap,            color: '#10B981', comingSoon: true },
+      { id: 'cross-chain',   label: 'Cross-Chain',   href: '/cross-chain',   icon: ArrowLeftRight, color: '#10B981' },
+      { id: 'stealth',       label: 'Private Pay',   href: '/stealth',       icon: Eye,            color: '#10B981' },
+      { id: 'pay',           label: 'Quick Pay',     href: '/pay',           icon: Send,           color: '#10B981' },
+      { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat,         color: '#10B981' },
+      { id: 'lending',       label: 'Lending',       href: '/lending',       icon: Banknote,       color: '#10B981', comingSoon: true },
+      { id: 'multisig',      label: 'Multi-Sig',     href: '/multisig',      icon: Users,          color: '#10B981', comingSoon: true },
+      { id: 'time-locks',    label: 'Time Locks',    href: '/time-locks',    icon: Clock,          color: '#10B981', comingSoon: true },
+      { id: 'agent',         label: 'AI Agent',      href: '/agent',         icon: Cpu,            color: '#10B981', comingSoon: true },
     ],
   },
   {
@@ -150,12 +156,12 @@ export const navigationItems: NavItem[] = [
     color: '#F59E0B',
     dataOnboarding: 'nav-social',
     children: [
-      { id: 'social-hub', label: 'Social Hub', href: '/social-hub', icon: Rss, color: '#F59E0B', dataOnboarding: 'nav-social' },
-      { id: 'feed', label: 'Feed', href: '/feed', icon: Rss, color: '#F59E0B' },
-      { id: 'stories', label: 'Stories', href: '/stories', icon: Camera, color: '#F59E0B' },
-      { id: 'messages', label: 'Messages', href: '/social-messaging', icon: Mail, color: '#F59E0B' },
-      { id: 'social-pay', label: 'Social Pay', href: '/social-payments', icon: Banknote, color: '#F59E0B' },
-      { id: 'social-analytics', label: 'Analytics', href: '/social', icon: TrendingUp, color: '#F59E0B' },
+      // T1-1: All social routes now consolidated under /social-hub with tabs
+      { id: 'social-hub',  label: 'Social Hub',   href: '/social-hub', icon: Rss,     color: '#F59E0B', dataOnboarding: 'nav-social' },
+      { id: 'feed',        label: 'Feed',         href: '/social-hub', icon: Rss,     color: '#F59E0B' },
+      { id: 'stories',     label: 'Stories',      href: '/stories',    icon: Camera,  color: '#F59E0B' },
+      { id: 'messages',    label: 'Messages',     href: '/social-hub', icon: Mail,    color: '#F59E0B' },
+      { id: 'social-pay',  label: 'Pay Friends',  href: '/social-hub', icon: Banknote, color: '#F59E0B' },
     ],
   },
   {
@@ -165,12 +171,13 @@ export const navigationItems: NavItem[] = [
     color: '#6366F1',
     dataOnboarding: 'nav-governance',
     children: [
-      { id: 'dao-hub', label: 'DAO Hub', href: '/dao-hub', icon: Crown, color: '#6366F1', badge: 'DAO' },
-      { id: 'governance-main', label: 'Proposals', href: '/governance', icon: FileText, color: '#6366F1', dataOnboarding: 'nav-governance' },
-      { id: 'council', label: 'Council', href: '/council', icon: Gavel, color: '#6366F1', dataOnboarding: 'nav-council' },
-      { id: 'appeals', label: 'Appeals', href: '/appeals', icon: AlertTriangle, color: '#6366F1' },
-      { id: 'fraud', label: 'Fraud Reporting', href: '/fraud', icon: ShieldCheck, color: '#6366F1' },
-      { id: 'treasury', label: 'Treasury', href: '/treasury', icon: Landmark, color: '#6366F1' },
+      // T1-2: /governance is now the single consolidated hub (Proposals | DAO | Council | Elections | Treasury | Disputes)
+      { id: 'governance-main', label: 'Governance Hub', href: '/governance', icon: Vote, color: '#6366F1', dataOnboarding: 'nav-governance', badge: 'DAO' },
+      { id: 'appeals',         label: 'Appeals',         href: '/appeals',   icon: AlertTriangle, color: '#6366F1' },
+      { id: 'fraud',           label: 'Fraud Reporting', href: '/fraud',     icon: ShieldCheck,   color: '#6366F1' },
+      { id: 'treasury',        label: 'Treasury',        href: '/treasury',  icon: Landmark,      color: '#6366F1' },
+      // T1-4: Sanctum moved from Account to Governance (it's protocol finance, not account settings)
+      { id: 'sanctum',         label: 'Sanctum',         href: '/sanctum',   icon: Cpu,           color: '#6366F1' },
     ],
   },
   {
@@ -196,12 +203,12 @@ export const navigationItems: NavItem[] = [
     icon: TrendingUp,
     color: '#14B8A6',
     children: [
-      { id: 'insights-main', label: 'Analytics', href: '/insights', icon: TrendingUp, color: '#14B8A6' },
-      { id: 'taxes', label: 'Tax Report', href: '/taxes', icon: FileText, color: '#14B8A6' },
-      { id: 'budgets', label: 'Budgets', href: '/budgets', icon: PiggyBank, color: '#14B8A6' },
-      { id: 'performance', label: 'Performance', href: '/performance', icon: BarChart3, color: '#14B8A6' },
-      { id: 'reporting', label: 'Reports', href: '/reporting', icon: ClipboardList, color: '#14B8A6' },
-      { id: 'price-alerts', label: 'Price Alerts', href: '/price-alerts', icon: Bell, color: '#14B8A6' },
+      { id: 'insights-main', label: 'Analytics',    href: '/insights',      icon: TrendingUp,  color: '#14B8A6' },
+      { id: 'taxes',         label: 'Tax Report',   href: '/taxes',         icon: FileText,    color: '#14B8A6' },
+      { id: 'budgets',       label: 'Budgets',      href: '/budgets',       icon: PiggyBank,   color: '#14B8A6' },
+      { id: 'performance',   label: 'Performance',  href: '/performance',   icon: BarChart3,   color: '#14B8A6' },
+      { id: 'reporting',     label: 'Reports',      href: '/reporting',     icon: ClipboardList, color: '#14B8A6', comingSoon: true },
+      { id: 'price-alerts',  label: 'Price Alerts', href: '/price-alerts',  icon: Bell,        color: '#14B8A6' },
     ],
   },
   {
@@ -223,20 +230,18 @@ export const navigationItems: NavItem[] = [
     icon: User,
     color: '#94A3B8',
     children: [
-      { id: 'profile', label: 'Profile', href: '/profile', icon: User, color: '#94A3B8' },
-      { id: 'notifications', label: 'Notifications', href: '/notifications', icon: Bell, color: '#94A3B8' },
-      { id: 'security', label: 'Security', href: '/security-center', icon: ShieldCheck, color: '#94A3B8' },
-      { id: 'settings', label: 'Settings', href: '/setup', icon: Settings, color: '#94A3B8' },
-      { id: 'help', label: 'Help & Docs', href: '/docs', icon: HelpCircle, color: '#94A3B8' },
-      { id: 'legal', label: 'Legal', href: '/legal', icon: Scale, color: '#94A3B8' },
-      { id: 'about', label: 'About', href: '/about', icon: Info, color: '#94A3B8' },
-      { id: 'support', label: 'Support', href: '/support', icon: LifeBuoy, color: '#94A3B8' },
-      { id: 'theme', label: 'Theme', href: '/theme', icon: Palette, color: '#94A3B8' },
-      { id: 'theme-manager', label: 'Theme Manager', href: '/theme-manager', icon: Sliders, color: '#94A3B8' },
-      { id: 'theme-showcase', label: 'Theme Showcase', href: '/theme-showcase', icon: Layers, color: '#94A3B8' },
-      { id: 'admin', label: 'Admin', href: '/admin', icon: ShieldAlert, color: '#94A3B8' },
-      { id: 'control-panel', label: 'Control Panel', href: '/control-panel', icon: Monitor, color: '#94A3B8' },
-      { id: 'sanctum', label: 'Sanctum', href: '/sanctum', icon: Cpu, color: '#94A3B8' },
+      // T1-3: /settings is now the single config hub (Account | Vault | Security | Notifications)
+      { id: 'settings',      label: 'Settings',     href: '/settings',        icon: Settings,  color: '#94A3B8' },
+      { id: 'profile',       label: 'Profile',      href: '/profile',         icon: User,      color: '#94A3B8' },
+      { id: 'security',      label: 'Security',     href: '/security-center', icon: ShieldCheck, color: '#94A3B8' },
+      // T1-4: Theme merged — one entry for /theme (the canonical theme page)
+      { id: 'theme',         label: 'Theme',        href: '/theme',           icon: Palette,   color: '#94A3B8' },
+      { id: 'help',          label: 'Help & Docs',  href: '/docs',            icon: HelpCircle, color: '#94A3B8' },
+      { id: 'legal',         label: 'Legal',        href: '/legal',           icon: Scale,     color: '#94A3B8' },
+      { id: 'about',         label: 'About',        href: '/about',           icon: Info,      color: '#94A3B8' },
+      { id: 'support',       label: 'Support',      href: '/support',         icon: LifeBuoy,  color: '#94A3B8' },
+      // T1-4: Admin/Control Panel removed from public nav; they still exist at their routes
+      //       but are not listed here so regular users don't see them.
     ],
   },
 ];

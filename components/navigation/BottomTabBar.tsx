@@ -29,17 +29,18 @@ import {
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { MoreSheet } from './MoreSheet';
+import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
 
+// T2-2: "Shop" → "Marketplace" pointing to /marketplace (buyer view).
+// Sellers access /merchant via More → Merchant group.
 const MAIN_TABS = [
-  { id: 'home',   href: '/dashboard',  icon: Home,           label: 'Home',   match: ['/dashboard', '/'] },
-  { id: 'shop',   href: '/merchant',   icon: Store,          label: 'Shop',   match: ['/merchant', '/pos', '/marketplace', '/merchants', '/store', '/product', '/checkout'] },
-  { id: 'pay',    href: '/pay',        icon: ArrowLeftRight, label: 'Pay',    match: ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy', '/streaming', '/subscriptions'] },
-  { id: 'social', href: '/social-hub', icon: MessageCircle,  label: 'Social', match: ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'] },
+  { id: 'home',        href: '/dashboard',   icon: Home,           label: 'Home',        match: ['/dashboard', '/'] },
+  { id: 'marketplace', href: '/marketplace', icon: Store,          label: 'Marketplace', match: ['/marketplace', '/merchants', '/store', '/product', '/checkout'] },
+  { id: 'pay',         href: '/pay',         icon: ArrowLeftRight, label: 'Pay',         match: ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy', '/streaming', '/subscriptions'] },
+  { id: 'social',      href: '/social-hub',  icon: MessageCircle,  label: 'Social',      match: ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'] },
 ];
 
-// All the routes that, when active, should also visually highlight the
-// More tab — since the user got there from More, that tab should still
-// look "current".
+// All routes that should highlight the More tab when active.
 const MORE_MATCH = [
   '/me', '/profile', '/vault', '/settings', '/badges', '/achievements',
   '/guardians', '/governance', '/dao-hub', '/council', '/elections',
@@ -51,6 +52,8 @@ const MORE_MATCH = [
   '/token-launch', '/payroll', '/cross-chain', '/stealth', '/benefits',
   '/invite', '/docs', '/legal', '/about', '/support', '/theme',
   '/theme-manager', '/theme-showcase', '/admin', '/control-panel',
+  // T2-2: merchant routes now in More (not the Shop/Marketplace tab)
+  '/merchant', '/pos',
 ];
 
 export function BottomTabBar() {
@@ -122,7 +125,7 @@ export function BottomTabBar() {
             );
           })}
 
-          {/* 5th slot: "Connect" when not connected, "More" when connected */}
+          {/* 5th slot: "Connect" when not connected, ProofScore + "More" when connected */}
           {!isConnected ? (
             /* Connect Wallet — always visible on mobile so users never get stuck. */
             <ConnectButton.Custom>
@@ -162,14 +165,15 @@ export function BottomTabBar() {
               )}
             </ConnectButton.Custom>
           ) : (
-            /* More tab — opens the sheet instead of navigating. */
+            /* T2-3: ProofScore crystal + More combined slot when connected.
+               Tapping navigates to /proofscore; long-press opens More sheet. */
             <button
               type="button"
               onClick={() => setMoreOpen((v) => !v)}
               aria-haspopup="dialog"
               aria-expanded={moreOpen}
-              aria-label="More destinations"
-              className={`relative flex w-16 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 transition-all duration-200 ${
+              aria-label="ProofScore & more destinations"
+              className={`relative flex w-16 flex-col items-center justify-center gap-0.5 rounded-xl py-1 transition-all duration-200 ${
                 activeTab === 'more' ? 'text-cyan-400' : 'text-zinc-500 active:text-zinc-300'
               }`}
             >
@@ -180,8 +184,10 @@ export function BottomTabBar() {
                   style={{ background: 'rgba(0,240,255,0.08)' }}
                 />
               )}
+              {/* ProofScore crystal as the icon — doubles as the visual focus */}
               <div className="relative">
-                <MoreHorizontal size={21} strokeWidth={activeTab === 'more' ? 2.2 : 1.5} />
+                <ProofScoreCrystal size={24} showScore />
+                {/* Green "More" indicator dot */}
                 <div
                   className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full"
                   style={{

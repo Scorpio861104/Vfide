@@ -36,18 +36,20 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { MoreSheet } from './MoreSheet';
 import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
 
+// T2-2: "Shop" renamed → "Marketplace" and points to /marketplace (buyer view).
+// Merchant sellers reach their portal via More → Merchant group.
 const MAIN_SECTIONS = [
-  { id: 'home',   href: '/dashboard',  icon: Home,           label: 'Home'   },
-  { id: 'shop',   href: '/merchant',   icon: Store,          label: 'Shop'   },
-  { id: 'pay',    href: '/pay',        icon: ArrowLeftRight, label: 'Pay'    },
-  { id: 'social', href: '/social-hub', icon: MessageCircle,  label: 'Social' },
+  { id: 'home',        href: '/dashboard',   icon: Home,           label: 'Home'        },
+  { id: 'marketplace', href: '/marketplace', icon: Store,          label: 'Marketplace' },
+  { id: 'pay',         href: '/pay',         icon: ArrowLeftRight, label: 'Pay'         },
+  { id: 'social',      href: '/social-hub',  icon: MessageCircle,  label: 'Social'      },
 ];
 
 const SECTION_MATCH: Record<string, string[]> = {
-  home:   ['/dashboard', '/'],
-  shop:   ['/merchant', '/pos', '/marketplace', '/merchants', '/store', '/product', '/checkout'],
-  pay:    ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
-  social: ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'],
+  home:        ['/dashboard', '/'],
+  marketplace: ['/marketplace', '/merchants', '/store', '/product', '/checkout'],
+  pay:         ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
+  social:      ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'],
 };
 
 const MORE_MATCH = [

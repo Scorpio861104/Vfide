@@ -301,6 +301,27 @@ function ItemRow({
   const active = pathname === href || (href !== '/' && pathname.startsWith(href + '/'));
   const Icon = item.icon;
 
+  // T2-4: Coming-soon items are shown but grayed out and unclickable.
+  if (item.comingSoon) {
+    return (
+      <div
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-40 cursor-not-allowed select-none"
+        aria-disabled="true"
+      >
+        <span
+          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
+          style={{ background: `${item.color}10`, color: item.color }}
+        >
+          <Icon size={14} />
+        </span>
+        <span className="flex-1 truncate text-gray-500">{item.label}</span>
+        <span className="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-white/5 text-white/30">
+          Soon
+        </span>
+      </div>
+    );
+  }
+
   return (
     <Link
       href={href}
