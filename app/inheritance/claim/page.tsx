@@ -112,7 +112,7 @@ function ClaimInner() {
   // ─── Step 1: ask for vault address if not provided ───────────────
   if (!committedVault) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading
           title="Claim an inheritance"
           subtitle="Enter the address of the vault you're claiming from. It's printed at the top of your envelope."
@@ -147,7 +147,7 @@ function ClaimInner() {
   // ─── Step 2: not connected — prompt ──────────────────────────────
   if (!connectedAddress) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading
           title="Claim an inheritance"
           subtitle="Connect your guardian wallet to continue."
@@ -171,7 +171,7 @@ function ClaimInner() {
 
   if (!claim.isValidVault) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading title="Claim an inheritance" subtitle="" />
         <section className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-center">
           <AlertTriangle className="mx-auto text-red-400" size={28} />
@@ -194,7 +194,7 @@ function ClaimInner() {
   // ─── Step 4: connected wallet isn't an heir of this vault ────────
   if (!claim.amHeir) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading title="Claim an inheritance" subtitle="" />
         <VaultBanner vault={committedVault} onChange={() => setCommittedVault(undefined)} />
         <section className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-center">
@@ -257,7 +257,7 @@ function ClaimWorkflow({
   const showMemorialState = claim.state === 3 && !claim.myStatus.readyToWithdraw;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+    <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
       <Heading title="Claim an inheritance" subtitle="" />
       <VaultBanner vault={vault} onChange={onChangeVault} />
       <StateBanner state={claim.state} windowEnd={Number(claim.windowEnd)} nowSec={nowSec} />

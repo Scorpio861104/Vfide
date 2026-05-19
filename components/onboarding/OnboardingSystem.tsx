@@ -225,7 +225,7 @@ export function OnboardingProgressBar() {
       initial={{ y: -60 }}
       animate={{ y: 0 }}
       exit={{ y: -60 }}
-      className="sticky top-20 z-30 bg-zinc-900/95 backdrop-blur-sm border-b border-white/5"
+      className="sticky top-7 md:top-[5.25rem] z-30 bg-zinc-900/95 backdrop-blur-sm border-b border-white/5"
     >
       <div className="container mx-auto px-4 max-w-6xl py-3">
         <div className="flex items-center gap-4">

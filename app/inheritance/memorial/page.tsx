@@ -80,7 +80,7 @@ function MemorialInner() {
   // Step 1: ask for vault if not provided
   if (!committedVault) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading />
         <section className="rounded-xl border border-white/10 bg-white/5 p-4">
           <label className="block text-xs uppercase tracking-wider text-gray-500">
@@ -159,7 +159,7 @@ function MemorialContent({
 
   if (!isValidVault) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading />
         <section className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-center">
           <AlertTriangle className="mx-auto text-red-400" size={28} />
@@ -179,7 +179,7 @@ function MemorialContent({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 pt-24 pb-12">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 md:pt-[3.5rem] pb-12">
       <Heading />
       <VaultBanner vault={vault} onChange={onChange} />
 

@@ -167,7 +167,7 @@ export function TopNav() {
           {isConnected && (
             <Link
               href="/proofscore"
-              className="flex items-center rounded-lg border border-white/8 bg-white/4 px-2.5 py-1 hover:bg-white/8 hover:border-cyan-500/20 transition-all"
+              className="hidden lg:flex items-center rounded-lg border border-white/8 bg-white/4 px-2.5 py-1 hover:bg-white/8 hover:border-cyan-500/20 transition-all"
               title="ProofScore"
             >
               <ProofScoreCrystal size={28} showScore />

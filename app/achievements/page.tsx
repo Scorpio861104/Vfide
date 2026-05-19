@@ -22,7 +22,7 @@ export default function AchievementsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('achievements');
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -47,9 +47,9 @@ export default function AchievementsPage() {
         </motion.div>
 
         {/* Sticky Tab Bar */}
-        <div className="sticky top-[4.5rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
+        <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
           style={{ background: 'rgba(9,9,11,0.85)' }}>
-          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setActiveTab(id)}
                 className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>

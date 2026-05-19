@@ -185,6 +185,28 @@
     }
   }
 
+  /* iOS Safari: prevent zoom on input focus (font-size must be >= 16px on mobile) */
+  @media (max-width: 767px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Consistent input font size across devices */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  input[type="tel"],
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+
   /* Selection styling */
   ::selection {
     background: rgba(0, 240, 255, 0.3);
@@ -1028,5 +1050,64 @@
     .mobile-page-wrapper {
       padding-bottom: 0;
     }
+  }
+
+  /* AppShell content wrapper - safe-area-aware bottom clearance on mobile */
+  .appshell-content {
+    /* pb-20 is 80px, add safe area on top */
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 768px) {
+    .appshell-content {
+      padding-bottom: 0;
+    }
+  }
+
+  /* MoreSheet bottom - sits above BottomTabBar (64px) + safe area */
+  .more-sheet-bottom {
+    bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ==========================================
+   * PERFORMANCE: Low-end device fallbacks
+   * Reduces visual complexity on phones that
+   * struggle with backdrop-filter and large
+   * blurred gradients.
+   * ========================================== */
+
+  /* Reduce backdrop-filter cost on low-powered devices */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-card-premium,
+    .analytics-card,
+    .glass-surface,
+    .glass-input,
+    .glass-button,
+    .glass-button-ghost,
+    .topnav-premium,
+    [class*="backdrop-blur"] {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .glass-card-premium {
+      background: rgba(15, 15, 20, 0.95) !important;
+    }
+    .analytics-card {
+      background: rgba(15, 15, 20, 0.95) !important;
+    }
+  }
+
+  /* On very small screens (≤360px width), scale down ambient orbs visually */
+  @media (max-width: 360px) {
+    .text-4xl { font-size: 1.75rem; line-height: 2rem; }
+    .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
+    .text-6xl { font-size: 2.5rem; line-height: 2.75rem; }
+    /* Reduce px padding on very small screens */
+    .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  }
+
+  /* Ensure no horizontal overflow from any element */
+  .min-h-screen {
+    overflow-x: hidden;
   }
 }

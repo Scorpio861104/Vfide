@@ -8,7 +8,7 @@ const VaultContent = lazy(() => import('./components/VaultContent').then(m => ({
 
 function VaultSkeleton() {
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       <div className="container mx-auto px-3 sm:px-4 py-12">
         <div className="animate-pulse space-y-6">
           <div className="h-12 bg-white/5 rounded-2xl w-1/3" />

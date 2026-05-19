@@ -79,7 +79,7 @@ export default function StoriesPage() {
   const hasUnviewedStories = (stories: Story[]) => stories.some(s => !viewedStories.has(s.id) && !isStoryExpired(s));
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 relative">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -124,7 +124,7 @@ export default function StoriesPage() {
             {/* Stories Row */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               className="glass-card-premium p-6 mb-8">
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                 {/* Add Story */}
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="flex flex-col items-center gap-2 cursor-pointer shrink-0"

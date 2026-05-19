@@ -149,7 +149,7 @@ export default function ElectionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 relative">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -228,7 +228,7 @@ export default function ElectionsPage() {
         ) : null}
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none">
+        <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide">
           {([
             { id: 'candidates' as const, label: 'Candidates', icon: <Users size={14} /> },
             { id: 'council' as const, label: 'Current Council', icon: <Award size={14} /> },

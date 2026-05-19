@@ -31,7 +31,7 @@ export default function SanctumPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -52,7 +52,7 @@ export default function SanctumPage() {
           </div>
           <p className="text-white/60 mb-8">20% of all protocol fees fund verified charitable causes</p>
 
-          <div className="sticky top-[4.5rem] z-30 backdrop-blur-xl bg-zinc-950/80 flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-white/5">
+          <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-white/5">
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                 className={activeTab === tab.id ? 'tab-pill-active flex items-center gap-2' : 'tab-pill-inactive flex items-center gap-2'}>

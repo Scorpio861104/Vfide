@@ -254,7 +254,7 @@ export function PayContent() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-zinc-950 pt-[4.5rem] relative overflow-hidden"
+      className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
     >
       {/* Premium Background Effects */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">

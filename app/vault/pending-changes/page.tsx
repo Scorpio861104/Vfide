@@ -129,7 +129,7 @@ export default function PendingChangesPage() {
 
   return (
     <>
-      <div className="min-h-screen pt-24 text-white">
+      <div className="min-h-screen md:pt-[3.5rem] text-white">
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault"

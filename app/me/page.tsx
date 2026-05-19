@@ -103,7 +103,7 @@ export default function MeHubPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+        <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
               style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
@@ -135,7 +135,7 @@ export default function MeHubPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"

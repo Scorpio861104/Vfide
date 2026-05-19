@@ -24,7 +24,7 @@ export default function ThemeManagerPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -90,7 +90,7 @@ export default function ThemeManagerPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
+      <div className="sticky top-7 md:top-[5.25rem] z-40 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex gap-1 overflow-x-auto py-3 scrollbar-hide">
             {tabs.map(({ id, label }) => (

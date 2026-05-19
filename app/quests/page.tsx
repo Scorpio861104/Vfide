@@ -10,7 +10,7 @@ import { Footer } from '@/components/layout/Footer';
 
 export default function QuestsPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 relative">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"

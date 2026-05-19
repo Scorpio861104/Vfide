@@ -203,7 +203,7 @@ export function EscrowDetailContent({ id }: Props) {
   // Invalid id
   if (parsedId === null) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
@@ -226,7 +226,7 @@ export function EscrowDetailContent({ id }: Props) {
   // Loading
   if (isLoading || !escrow) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
@@ -245,7 +245,7 @@ export function EscrowDetailContent({ id }: Props) {
   // Escrow id doesn't exist (state is NONE)
   if (escrow.state === EscrowState.None) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
@@ -278,7 +278,7 @@ export function EscrowDetailContent({ id }: Props) {
   const canMerchantDispute = viewerRole === 'merchant' && escrow.state === EscrowState.Funded;
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-12">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-12">
       <div className="container mx-auto px-4 max-w-3xl py-8">
         <button
           onClick={() => router.push('/escrow')}

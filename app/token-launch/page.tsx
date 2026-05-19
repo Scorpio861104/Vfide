@@ -8,7 +8,7 @@ import { Zap, ArrowRight, Wallet } from "lucide-react";
 export default function TokenLaunchPage() {
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative flex flex-col">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative flex flex-col">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.08]"

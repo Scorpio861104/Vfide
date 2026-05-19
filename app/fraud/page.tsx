@@ -24,7 +24,7 @@ export default function FraudPage() {
   const [activeTab, setActiveTab] = useState<TabId>('lookup');
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
           style={{ background: 'radial-gradient(circle, #ef4444 0%, transparent 70%)' }} />
@@ -47,9 +47,9 @@ export default function FraudPage() {
           <p className="text-white/50 text-lg">Community-driven fraud reporting. Non-custodial — escrows delay transfers, never seize them.</p>
           <p className="text-white/30 text-sm mt-1">DAO-arbitrated: 3 complaints trigger review, the DAO decides the outcome, escrows release after 30 days.</p>
         </motion.div>
-        <div className="sticky top-[4.5rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
+        <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
           style={{ background: 'rgba(9,9,11,0.85)' }}>
-          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setActiveTab(id)}
                 className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>

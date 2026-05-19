@@ -96,7 +96,7 @@ export default function ApiCoveragePage() {
   };
 
   return (
-    <main className="min-h-screen bg-zinc-950 pt-[4.5rem] text-zinc-100 p-6 md:p-10 relative">
+    <main className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-zinc-100 p-6 md:p-10 relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"

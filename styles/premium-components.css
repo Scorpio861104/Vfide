@@ -885,3 +885,73 @@
     0 12px 40px -8px rgba(0, 0, 0, 0.6),
     0 0 20px -10px rgba(0, 240, 255, 0.2);
 }
+
+/* ==========================================
+ * PERFORMANCE OPTIMIZATIONS
+ * GPU-friendly rendering hints
+ * ========================================== */
+
+/* Ambient orb containers - contain compositing to avoid layer blowout */
+.pointer-events-none.absolute.inset-0.overflow-hidden {
+  contain: strict;
+  will-change: auto;
+}
+
+/* Prevent mesh animations from triggering on low-power mode */
+@media (prefers-reduced-motion: reduce) {
+  .hero-mesh-bg::before,
+  .hero-mesh-bg::after,
+  .mesh-orb-cyan,
+  .mesh-orb-purple,
+  .mesh-orb-blue {
+    animation: none !important;
+  }
+}
+
+/* Reduce backdrop-filter blur radius on mobile for performance */
+@media (max-width: 767px) {
+  .glass-card-premium {
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+  .analytics-card {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* ==========================================
+ * MOBILE TOUCH IMPROVEMENTS
+ * ========================================== */
+
+/* Larger tap targets for tab bar pills on mobile */
+@media (pointer: coarse) {
+  .tab-pill-active,
+  .tab-pill-inactive {
+    min-height: 44px;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+  .badge-live {
+    min-height: 28px;
+  }
+  .btn-premium-primary,
+  .btn-premium-ghost {
+    min-height: 48px;
+  }
+}
+
+/* ==========================================
+ * SCROLLBAR FIXES
+ * ========================================== */
+
+/* Horizontal scrolling tab bars - consistent on all platforms */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+/* Prevent tab bars from being clipped */
+.overflow-x-auto > * {
+  scroll-snap-align: start;
+}

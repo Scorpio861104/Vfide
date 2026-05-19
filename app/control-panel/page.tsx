@@ -39,7 +39,7 @@ export default function ControlPanelPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.08]"
@@ -71,7 +71,7 @@ export default function ControlPanelPage() {
 
       <div className="border-b border-white/10 bg-black/10 backdrop-blur-sm">
         <div className="container mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto py-4">
+          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide pb-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

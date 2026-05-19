@@ -21,7 +21,7 @@ export default function LegalPage() {
       <motion.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="min-h-screen bg-zinc-950 pt-[4.5rem] relative overflow-hidden"
+        className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
       >
         {/* Ambient background */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -46,7 +46,7 @@ export default function LegalPage() {
         </section>
 
         {/* Tab Navigation */}
-        <section className="border-b border-white/8 sticky top-14 z-40"
+        <section className="border-b border-white/8 sticky top-7 md:top-[5.25rem] z-40"
           style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(24px)' }}>
           <div className="container mx-auto px-4 max-w-4xl">
             <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Legal document sections">

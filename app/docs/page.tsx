@@ -23,7 +23,7 @@ export default function DocsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] text-white relative">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -43,7 +43,7 @@ export default function DocsPage() {
           </h1>
           <p className="mb-8 text-white/60">Learn how trust scoring, wallets, payments, and recovery all work together in VFIDE.</p>
 
-          <div className="sticky top-[4.5rem] z-30 backdrop-blur-xl bg-zinc-950/80 mb-8 flex gap-2 overflow-x-auto pb-2 border-b border-white/5">
+          <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 mb-8 flex gap-2 overflow-x-auto pb-2 border-b border-white/5">
             {TAB_IDS.map((id) => (
               <button
                 key={id}

@@ -226,7 +226,7 @@ export default function MerchantPayoutsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 text-white relative">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 text-white relative">
         {/* Ambient orbs */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -369,7 +369,8 @@ export default function MerchantPayoutsPage() {
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-white/10 bg-white/3 overflow-hidden">
-                    <table className="w-full text-sm">
+                    <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[560px]">
                       <thead className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
                         <tr>
                           <th className="text-left px-4 py-3">When</th>
@@ -405,6 +406,7 @@ export default function MerchantPayoutsPage() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 )}
 

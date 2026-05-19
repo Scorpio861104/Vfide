@@ -40,7 +40,7 @@ export function RecoveryBeacon() {
       href={linkTarget}
       title={tooltip}
       aria-label={tooltip}
-      className="fixed bottom-20 right-6 md:bottom-6 md:right-20 z-40 group"
+      className="fixed bottom-32 right-4 md:bottom-6 md:right-20 z-40 group"
     >
       <div className="relative">
         {/* The pulse — rendered behind the dot. */}

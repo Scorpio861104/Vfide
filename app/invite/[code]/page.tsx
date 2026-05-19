@@ -22,7 +22,7 @@ export default function InvitePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm" aria-live="polite" aria-busy={status === 'loading'}>
           {status === 'loading' && (
             <>

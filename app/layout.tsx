@@ -21,9 +21,22 @@ export const metadata: Metadata = {
   title: 'VFIDE — Trust-Scored Payment Protocol',
   description: 'Zero merchant fees. Guardian-protected self-custody. Trust earned through real transactions.',
   openGraph: { title: 'VFIDE — Keep What You Earn', description: 'Decentralized payment protocol with zero merchant fees.', type: 'website' },
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-touch-icon.svg',
+  },
 };
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#06b6d4' };
+export const viewport: Viewport = { 
+  width: 'device-width', 
+  initialScale: 1, 
+  themeColor: '#06b6d4',
+  // Allow users to manually zoom, but prevent browser auto-zoom on input focus
+  minimumScale: 1,
+  // viewportFit covers safe area on notched phones (iPhone X+, Android notches)
+  viewportFit: 'cover',
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const nonce = (await headers()).get('x-nonce') ?? '';

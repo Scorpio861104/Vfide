@@ -22,7 +22,7 @@ export default function AppealsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('submit');
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 relative">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
@@ -47,8 +47,8 @@ export default function AppealsPage() {
         </motion.div>
 
         {/* Sticky tab bar */}
-        <div className="sticky top-[4.5rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+        <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setActiveTab(t.id)}
                 className={activeTab === t.id ? 'tab-pill-active' : 'tab-pill-inactive'}>

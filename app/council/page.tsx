@@ -51,7 +51,7 @@ export default function CouncilPage() {
   useReadContract({ address: COUNCIL_ELECTION_ADDRESS, abi: CouncilElectionABI, functionName: 'getElectionStatus', query: { enabled: IS_COUNCIL_ELECTION_DEPLOYED } });
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-[4.5rem] pb-16 relative">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
       {/* Ambient orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -left-20 w-[700px] h-[700px] rounded-full opacity-[0.07]"
@@ -78,8 +78,8 @@ export default function CouncilPage() {
         </motion.div>
 
         {/* Sticky tab bar */}
-        <div className="sticky top-[4.5rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
-          <div className="flex gap-2 overflow-x-auto scrollbar-none justify-center">
+        <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide justify-center">
             {TAB_CONFIG.map(t => (
               <button key={t.id} onClick={() => setActiveTab(t.id)}
                 className={activeTab === t.id ? 'tab-pill-active' : 'tab-pill-inactive'}>

@@ -98,7 +98,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
         // the tab bar — including the More button that toggled the
         // sheet — remains tappable for re-closing. Rounded top corners,
         // max-height capped so the sheet never covers the whole screen.
-        'fixed inset-x-0 bottom-16 z-50 max-h-[70vh] rounded-t-3xl border-t border-x border-white/10 bg-zinc-950/95 backdrop-blur-xl'
+        'fixed inset-x-0 z-50 max-h-[70vh] rounded-t-3xl border-t border-x border-white/10 bg-zinc-950/95 backdrop-blur-xl more-sheet-bottom'
       : // Desktop popover: anchored below TopNav (56px) + ticker
         // (28px) = top 88px. Width-constrained so it doesn't dominate.
         // Max height leaves a comfortable gutter at the viewport bottom.
@@ -157,7 +157,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Find anywhere…"
-                className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 outline-none"
+                className="flex-1 bg-transparent text-base text-white placeholder-gray-500 outline-none min-h-[36px]"
                 aria-label="Search destinations"
               />
               <button

@@ -23,7 +23,7 @@ export default function MerchantSetupPage() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-150 h-150 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-100 h-100 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
@@ -42,7 +42,7 @@ export default function MerchantSetupPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 pb-16 relative overflow-hidden">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-1/4 -left-32 w-100 h-100 bg-cyan-500/8 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-emerald-500/8 rounded-full blur-[100px]" />

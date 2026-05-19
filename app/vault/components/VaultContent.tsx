@@ -25,7 +25,7 @@ export function VaultContent() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem] relative overflow-hidden">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden">
         {/* Ambient Background */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-24 right-1/4 w-[500px] h-[500px] rounded-full"

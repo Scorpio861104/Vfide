@@ -87,7 +87,7 @@ export default function MerchantPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-[4.5rem]">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         {/* Premium hero header */}
         <section className="relative py-16 overflow-hidden">
           <div className="hero-mesh-bg opacity-60" aria-hidden="true">

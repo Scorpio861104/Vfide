@@ -61,7 +61,7 @@ export default async function StorePage({ params }: StorePageProps) {
   return (
     <div className="min-h-screen bg-zinc-950">
       <header className="border-b border-white/5">
-        <div className="container mx-auto px-4 max-w-6xl py-8 pt-24">
+        <div className="container mx-auto px-4 max-w-6xl py-8 md:pt-[3.5rem]">
           <div className="flex items-center gap-5">
             {merchant.logo_url ? (
               <img

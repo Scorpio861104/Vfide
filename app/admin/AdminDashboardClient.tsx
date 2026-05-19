@@ -1343,7 +1343,7 @@ export default function AdminPanel() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 pt-24">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 md:pt-[3.5rem]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 md:p-8 mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
