@@ -1,21 +1,34 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "@openzeppelin/contracts/access/extensions/AccessControlEnumerable.sol";
+import "./SharedInterfaces.sol";
 
 /**
  * @title VFIDEAccessControl
- * @notice Enhanced access control system for VFIDE ecosystem with granular role-based permissions
- * @dev Implements OpenZeppelin AccessControl with custom roles for security and operational separation
+ * @notice Enhanced access control system for VFIDE ecosystem with granular
+ *         role-based permissions.
+ * @dev Phase-1 fix: replaced OpenZeppelin AccessControlEnumerable import with
+ *      SharedInterfaces.AccessControl to maintain supply-chain isolation for
+ *      core contracts (see SharedInterfaces.sol I-02 / H-01 notes).
+ *      Enumerable member tracking is handled locally via _roleMembers mapping.
+ *
+ *      VFIDEBridge retains OZ because LayerZero OApp requires it.
+ *      VFIDEAccessControl is a core contract and must use SharedInterfaces.
  */
-contract VFIDEAccessControl is AccessControlEnumerable {
-    bytes32 public constant EMERGENCY_PAUSER_ROLE = keccak256("EMERGENCY_PAUSER_ROLE");
-    bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
-    bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER_ROLE");
-    uint64 public constant ADMIN_TRANSFER_DELAY = 48 hours;
+contract VFIDEAccessControl is AccessControl {
+    bytes32 public constant EMERGENCY_PAUSER_ROLE  = keccak256("EMERGENCY_PAUSER_ROLE");
+    bytes32 public constant CONFIG_MANAGER_ROLE    = keccak256("CONFIG_MANAGER_ROLE");
+    bytes32 public constant TREASURY_MANAGER_ROLE  = keccak256("TREASURY_MANAGER_ROLE");
+
+    uint64  public constant ADMIN_TRANSFER_DELAY = 48 hours;
+
     uint256 private _reentrancyLock;
-    address public pendingAdmin;
-    uint64 public pendingAdminAt;
+    address public  pendingAdmin;
+    uint64  public  pendingAdminAt;
+
+    // Enumerable member tracking (mirrors OZ AccessControlEnumerable without OZ dep)
+    mapping(bytes32 => address[])                   private _roleMembers;
+    mapping(bytes32 => mapping(address => uint256)) private _roleMemberIndex; // 1-based
 
     event RoleGrantedWithReason(bytes32 indexed role, address indexed account, address indexed grantor, string reason);
     event RoleRevokedWithReason(bytes32 indexed role, address indexed account, address indexed revoker, string reason);
@@ -31,156 +44,134 @@ contract VFIDEAccessControl is AccessControlEnumerable {
     }
 
     /**
-     * @notice Constructor sets up initial admin and all roles
-     * @param _admin Address that will receive DEFAULT_ADMIN_ROLE
+     * @notice Sets up initial admin and all role admins.
+     * @dev SharedInterfaces.AccessControl auto-grants DEFAULT_ADMIN_ROLE to
+     *      msg.sender; revoke that and grant to explicit _admin instead.
      */
     constructor(address _admin) {
         require(_admin != address(0), "VFIDEAccessControl: admin is zero address");
+        if (msg.sender != _admin) {
+            _revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        }
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
-        
-        _setRoleAdmin(EMERGENCY_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
-        _setRoleAdmin(CONFIG_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
-        _setRoleAdmin(TREASURY_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
+        _addMember(DEFAULT_ADMIN_ROLE, _admin);
+        _setRoleAdmin(EMERGENCY_PAUSER_ROLE,  DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(CONFIG_MANAGER_ROLE,    DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(TREASURY_MANAGER_ROLE,  DEFAULT_ADMIN_ROLE);
     }
 
-    /**
-     * @notice Queue DEFAULT_ADMIN_ROLE transfer to a new admin (e.g. DAO timelock).
-     *         Call applyAdminRoleTransfer after the delay to complete the handoff.
-     * @param newAdmin Address to receive DEFAULT_ADMIN_ROLE (should be DAO timelock)
-     */
+    function _addMember(bytes32 role, address account) internal {
+        if (_roleMemberIndex[role][account] == 0) {
+            _roleMembers[role].push(account);
+            _roleMemberIndex[role][account] = _roleMembers[role].length;
+        }
+    }
+
+    function _removeMember(bytes32 role, address account) internal {
+        uint256 idx = _roleMemberIndex[role][account];
+        if (idx == 0) return;
+        uint256 lastIdx = _roleMembers[role].length;
+        if (idx != lastIdx) {
+            address last = _roleMembers[role][lastIdx - 1];
+            _roleMembers[role][idx - 1] = last;
+            _roleMemberIndex[role][last] = idx;
+        }
+        _roleMembers[role].pop();
+        delete _roleMemberIndex[role][account];
+    }
+
+    function getRoleMemberCount(bytes32 role) external view returns (uint256) {
+        return _roleMembers[role].length;
+    }
+
+    function getRoleMember(bytes32 role, uint256 index) external view returns (address) {
+        return _roleMembers[role][index];
+    }
+
     function transferAdminRole(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(newAdmin != address(0), "VFIDEAccessControl: new admin is zero address");
-        require(newAdmin != msg.sender, "VFIDEAccessControl: already admin");
-        require(pendingAdminAt == 0, "VFIDEAccessControl: transfer already pending");
-
-        pendingAdmin = newAdmin;
+        require(newAdmin != msg.sender,  "VFIDEAccessControl: already admin");
+        require(pendingAdminAt == 0,     "VFIDEAccessControl: transfer already pending");
+        pendingAdmin   = newAdmin;
         pendingAdminAt = uint64(block.timestamp) + ADMIN_TRANSFER_DELAY;
         emit AdminTransferQueued(msg.sender, newAdmin, pendingAdminAt);
     }
 
-    /**
-     * @notice Complete a queued DEFAULT_ADMIN_ROLE transfer after the timelock expires.
-     */
     function applyAdminRoleTransfer() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(pendingAdmin != address(0) && pendingAdminAt != 0, "VFIDEAccessControl: no pending transfer");
         require(block.timestamp >= pendingAdminAt, "VFIDEAccessControl: transfer timelock active");
-
-        address previousAdmin = msg.sender;
-        address newAdmin = pendingAdmin;
-        _grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
-        _revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
-
-        delete pendingAdmin;
-        delete pendingAdminAt;
-        emit AdminTransferApplied(previousAdmin, newAdmin);
-        // RoleGranted/RoleRevoked emit naturally via OZ AccessControl hooks.
+        address prev = msg.sender;
+        address next = pendingAdmin;
+        _grantRole(DEFAULT_ADMIN_ROLE, next);  _addMember(DEFAULT_ADMIN_ROLE, next);
+        _revokeRole(DEFAULT_ADMIN_ROLE, prev); _removeMember(DEFAULT_ADMIN_ROLE, prev);
+        delete pendingAdmin; delete pendingAdminAt;
+        emit AdminTransferApplied(prev, next);
     }
 
-    /**
-     * @notice Cancel a queued DEFAULT_ADMIN_ROLE transfer.
-     */
     function cancelAdminRoleTransfer() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(pendingAdmin != address(0) && pendingAdminAt != 0, "VFIDEAccessControl: no pending transfer");
-
-        address queuedAdmin = pendingAdmin;
-        delete pendingAdmin;
-        delete pendingAdminAt;
-        emit AdminTransferCanceled(msg.sender, queuedAdmin);
+        address q = pendingAdmin;
+        delete pendingAdmin; delete pendingAdminAt;
+        emit AdminTransferCanceled(msg.sender, q);
     }
 
-    /**
-     * @notice Grant a role to an account with logged reason
-     * @param role The role to grant
-     * @param account The account to receive the role
-     * @param reason Human-readable reason for granting the role
-     */
-    function grantRoleWithReason(
-        bytes32 role,
-        address account,
-        string calldata reason
-    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function grantRoleWithReason(bytes32 role, address account, string calldata reason)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
+    {
         require(account != address(0), "VFIDEAccessControl: account is zero address");
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
-        
-        _grantRole(role, account);
+        _grantRole(role, account); _addMember(role, account);
         emit RoleGrantedWithReason(role, account, msg.sender, reason);
     }
 
-    /**
-     * @notice Revoke a role from an account with logged reason
-     * @param role The role to revoke
-     * @param account The account to revoke the role from
-     * @param reason Human-readable reason for revoking the role
-     */
-    function revokeRoleWithReason(
-        bytes32 role,
-        address account,
-        string calldata reason
-    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function revokeRoleWithReason(bytes32 role, address account, string calldata reason)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
+    {
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
-        
-        _revokeRole(role, account);
+        _revokeRole(role, account); _removeMember(role, account);
         emit RoleRevokedWithReason(role, account, msg.sender, reason);
     }
 
-    /**
-     * @notice Check if an account has any of the specified roles
-     * @param roles Array of roles to check
-     * @param account The account to check
-     * @return bool True if account has at least one of the roles
-     */
+    function grantRole(bytes32 role, address account) public override onlyRole(getRoleAdmin(role)) {
+        super.grantRole(role, account); _addMember(role, account);
+    }
+
+    function revokeRole(bytes32 role, address account) public override onlyRole(getRoleAdmin(role)) {
+        super.revokeRole(role, account); _removeMember(role, account);
+    }
+
+    function renounceRole(bytes32 role, address account) public override {
+        super.renounceRole(role, account); _removeMember(role, account);
+    }
+
     function hasAnyRole(bytes32[] calldata roles, address account) external view returns (bool) {
         for (uint256 i = 0; i < roles.length; i++) {
-            if (hasRole(roles[i], account)) {
-                return true;
-            }
+            if (hasRole(roles[i], account)) return true;
         }
         return false;
     }
 
-    /**
-     * @notice Check if an account has all specified roles
-     * @param roles Array of roles to check
-     * @param account The account to check
-     * @return bool True if account has all the roles
-     */
     function hasAllRoles(bytes32[] calldata roles, address account) external view returns (bool) {
         for (uint256 i = 0; i < roles.length; i++) {
-            if (!hasRole(roles[i], account)) {
-                return false;
-            }
+            if (!hasRole(roles[i], account)) return false;
         }
         return true;
     }
 
-    /**
-     * @notice Batch grant roles to multiple accounts
-     * @param role The role to grant
-     * @param accounts Array of accounts to receive the role
-     */
-    function batchGrantRole(bytes32 role, address[] calldata accounts) 
-        external 
-        onlyRole(getRoleAdmin(role))
-        nonReentrantAC
+    function batchGrantRole(bytes32 role, address[] calldata accounts)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
     {
         for (uint256 i = 0; i < accounts.length; i++) {
             require(accounts[i] != address(0), "VFIDEAccessControl: account is zero address");
-            _grantRole(role, accounts[i]);
+            _grantRole(role, accounts[i]); _addMember(role, accounts[i]);
         }
     }
 
-    /**
-     * @notice Batch revoke roles from multiple accounts
-     * @param role The role to revoke
-     * @param accounts Array of accounts to revoke the role from
-     */
-    function batchRevokeRole(bytes32 role, address[] calldata accounts) 
-        external 
-        onlyRole(getRoleAdmin(role))
-        nonReentrantAC
+    function batchRevokeRole(bytes32 role, address[] calldata accounts)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
     {
         for (uint256 i = 0; i < accounts.length; i++) {
-            _revokeRole(role, accounts[i]);
+            _revokeRole(role, accounts[i]); _removeMember(role, accounts[i]);
         }
     }
 }
