@@ -100,7 +100,7 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
 
   if (state.kind === 'loading') {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center text-white">
         <div className="flex items-center gap-3 text-zinc-400">
           <Loader2 size={20} className="animate-spin" />
           Loading payment link…
@@ -111,7 +111,7 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
 
   if (state.kind === 'error') {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-20 px-4 flex items-start justify-center text-white">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] px-4 flex items-start justify-center text-white">
         <div className="max-w-md w-full mt-20 rounded-2xl border border-red-500/30 bg-red-500/5 p-8 text-center">
           <AlertCircle size={40} className="mx-auto text-red-400 mb-4" />
           <h1 className="text-xl font-bold mb-2">This link isn&apos;t available</h1>
@@ -127,7 +127,7 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
   const fixedAmount = l.amount !== null ? Number(l.amount) : null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-20 px-4 text-white">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] px-4 text-white">
       <div className="container mx-auto max-w-md py-8">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">

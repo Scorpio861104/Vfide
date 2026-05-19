@@ -59,7 +59,7 @@ export function NetworkWarning() {
   };
 
   const handleSwitch = () => {
-    switchChain({ chainId: expectedChainId as 84532 | 8453 });
+    switchChain({ chainId: expectedChainId as 84532 | 8453 | 80002 | 137 | 300 | 324 });
   };
   
   // Show warning if connected but on wrong chain (and not dismissed)

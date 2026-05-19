@@ -1,5 +1,6 @@
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi';
 import { parseUnits, maxUint256 } from 'viem';
@@ -343,6 +344,9 @@ export function SubscriptionManager({
             <p className="text-yellow-800 dark:text-yellow-200">
               Connect your wallet to subscribe
             </p>
+              <div className="mt-6 flex justify-center">
+                <ConnectButton />
+              </div>
           </motion.div>
         )}
       </AnimatePresence>

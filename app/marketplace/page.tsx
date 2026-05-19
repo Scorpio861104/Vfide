@@ -52,9 +52,24 @@ export default function MarketplacePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
-        <div className="container mx-auto px-4 max-w-7xl py-8">
-          <h1 className="text-4xl font-bold text-white mb-6">Marketplace</h1>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+        <div className="relative container mx-auto px-4 max-w-7xl py-8">
+          <div className="mb-6">
+            <div className="badge-live mb-3">
+              <Package size={12} /> Live Market
+            </div>
+            <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
+              <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Marketplace</span>
+            </h1>
+          </div>
 
           {/* Search bar */}
           <div className="flex gap-3 mb-6">

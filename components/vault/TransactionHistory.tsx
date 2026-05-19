@@ -14,18 +14,10 @@ import {
 import { VirtualizedList } from '@/lib/ux/performanceUtils';
 import { useChainId } from 'wagmi';
 import { getExplorerLink } from '@/components/ui/EtherscanLink';
+import { type VaultTransaction } from '@/hooks/useVaultTransactions';
 
-interface Transaction {
-  id: string;
-  type: 'send' | 'receive' | 'vault_deposit' | 'vault_withdraw' | 'guardian_added' | 'guardian_removed' | 'next_of_kin_set' | 'recovery_requested' | 'recovery_approved' | 'recovery_finalized' | 'recovery_cancelled';
-  amount?: string;
-  from?: string;
-  to?: string;
-  timestamp: string;
-  status: 'completed' | 'pending' | 'failed';
-  txHash: string;
-  blockNumber?: number;
-}
+// Alias for backwards compatibility
+type Transaction = VaultTransaction;
 
 interface TransactionHistoryProps {
   transactions?: Transaction[];

@@ -52,6 +52,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useRecoveryClaim } from '@/hooks/useRecoveryClaim';
+import { useChallengePeriodPreview } from '@/hooks/useChallengePeriodPreview';
 
 export function ClaimFlowModal({
   vault,
@@ -77,6 +78,12 @@ export function ClaimFlowModal({
   const { initiateByRecoveryId, isWritePending } = useRecoveryClaim({
     targetVault: vault?.address as `0x${string}` | undefined,
   });
+
+  // Challenge period preview — computes the effective challenge window for
+  // the vault under recovery, accounting for activity-window preferences.
+  const { label: challengePeriodLabel } = useChallengePeriodPreview(
+    vault?.address as `0x${string}` | undefined,
+  );
 
   if (!vault) return null;
 
@@ -213,10 +220,9 @@ export function ClaimFlowModal({
                     <div>
                       <p className="text-sm text-amber-400 font-semibold mb-1">Security Notice</p>
                       <p className="text-xs text-gray-400 leading-relaxed">
-                        This initiates a <strong className="text-white">multi-day challenge period</strong>.
+                        This initiates a <strong className="text-white">
+                          {challengePeriodLabel ?? 'multi-day'} challenge period</strong>.
                         Your guardians must approve, and the original wallet can cancel if not truly lost.
-                        Exact duration depends on the vault's challenge period preference (3–30 days,
-                        extended to 14 days for recently-active vaults).
                       </p>
                     </div>
                   </div>
@@ -335,7 +341,7 @@ export function ClaimFlowModal({
                 <div className="space-y-3">
                   {[
                     { icon: Users, title: 'Guardian Approval', desc: 'Waiting for guardian votes', color: 'cyan' },
-                    { icon: Clock, title: 'Challenge Period', desc: 'Original wallet can contest', color: 'amber' },
+                    { icon: Clock, title: 'Challenge Period', desc: challengePeriodLabel ? `${challengePeriodLabel} window` : 'Original wallet can contest', color: 'amber' },
                     { icon: Unlock, title: 'Ownership Transfer', desc: 'Vault transfers to new wallet', color: 'emerald' },
                   ].map((item, i) => (
                     <motion.div

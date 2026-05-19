@@ -56,12 +56,13 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 // ============================================================================
 
 function getTierFromScore(score: number): string {
-  if (score >= 9000) return 'CHAMPION';
-  if (score >= 7500) return 'GUARDIAN';
-  if (score >= 6000) return 'DELEGATE';
-  if (score >= 4500) return 'ADVOCATE';
-  if (score >= 3000) return 'MERCHANT';
-  return 'NEUTRAL';
+  if (score >= 8000) return 'ELITE';
+  if (score >= 7000) return 'COUNCIL';
+  if (score >= 5600) return 'TRUSTED';
+  if (score >= 5400) return 'GOVERNANCE';
+  if (score >= 5000) return 'NEUTRAL';
+  if (score >= 3500) return 'LOW TRUST';
+  return 'RISKY';
 }
 
 function getCachedLeaderboard(): LeaderboardEntry[] | null {

@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useEffect } from 'react';
 import { Loader2, Award } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -39,6 +40,9 @@ export function HistoryTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Award size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view your badge history.</p>
+        <div className="mt-6 flex justify-center">
+          <VfideConnectButton size="md" />
+        </div>
       </div>
     );
   }

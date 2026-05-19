@@ -39,12 +39,24 @@ export default function ControlPanelPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <div className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.08]"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, #ef4444 0%, transparent 70%)' }} />
+      </div>
+      <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+
+      <div className="relative border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Owner Control Panel</h1>
+              <div className="badge-live mb-2">
+                ⚙️ Protocol Admin
+              </div>
+              <h1 className="text-3xl font-black text-white mb-1 tracking-tight">Owner Control Panel</h1>
               <p className="text-slate-400">Unified interface for VFIDE protocol management</p>
             </div>
             <div className="text-right">
@@ -59,7 +71,7 @@ export default function ControlPanelPage() {
 
       <div className="border-b border-white/10 bg-black/10 backdrop-blur-sm">
         <div className="container mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto py-4">
+          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide pb-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

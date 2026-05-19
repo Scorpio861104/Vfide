@@ -28,6 +28,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
+import { getRequestIp } from '@/lib/security/requestContext';
+
 
 const MAX_REASON_LENGTH = 500;
 const RATE_LIMIT_MAX_PER_HOUR = 5;
@@ -55,9 +57,7 @@ async function checkRateLimit(ip: string): Promise<{ allowed: boolean }> {
 }
 
 function clientIp(req: NextRequest): string {
-  const xff = req.headers.get('x-forwarded-for');
-  if (xff) return (xff.split(',')[0] ?? '').trim();
-  return req.headers.get('x-real-ip') || 'unknown';
+  return getRequestIp(req.headers).ip;
 }
 
 export async function POST(req: NextRequest) {

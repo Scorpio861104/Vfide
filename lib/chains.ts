@@ -125,10 +125,10 @@ export const CHAINS: Record<SupportedChain, ChainConfig> = {
         seer: '',
       },
       testnet: {
-        // Already deployed!
-        vfideToken: '0x3249215721a21BC9635C01Ea05AdE032dd90961f',
-        vaultHub: '0xe34dF8582fccC39CdE15e9a1aae73cd3890744Cc',
-        seer: '0xD22944d47bAD4Bd5fF1A366393c4bdbc9250fd8E',
+        // zkSync Sepolia — use env vars to match Base pattern (env-driven, not hardcoded)
+        vfideToken: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_VFIDE_TOKEN_ADDRESS || '',
+        vaultHub: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_VAULT_HUB_ADDRESS || '',
+        seer: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_SEER_ADDRESS || '',
       },
     },
     faucetUrl: 'https://cloud.google.com/application/web3/faucet/ethereum/sepolia',
@@ -242,10 +242,24 @@ export function isChainReady(chain: SupportedChain): boolean {
 }
 
 /**
- * Get all chains that are ready (have contracts deployed)
+ * Get all chains that are ready (have contracts deployed).
+ * Base is always listed first so it is treated as the primary chain.
  */
 export function getReadyChains(): SupportedChain[] {
-  return (Object.keys(CHAINS) as SupportedChain[]).filter(isChainReady)
+  const ready = (Object.keys(CHAINS) as SupportedChain[]).filter(isChainReady)
+  // Sort so Base is always first — it is the primary deployment target
+  return ready.sort((a, _b) => (a === 'base' ? -1 : 1))
+}
+
+/**
+ * Get the primary chain for the current environment.
+ * Always returns 'base' — Base is the default/primary deployment chain.
+ * Falls back to the first ready chain if Base is not ready.
+ */
+export function getPrimaryChain(): SupportedChain {
+  if (isChainReady('base')) return 'base'
+  const ready = getReadyChains()
+  return ready[0] ?? DEFAULT_CHAIN
 }
 
 /**

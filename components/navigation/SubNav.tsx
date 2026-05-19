@@ -56,9 +56,10 @@ const SUB_NAVS: Record<string, { title: string; items: SubNavItem[] }> = {
     items: [
       { href: '/feed', label: 'Feed' },
       { href: '/stories', label: 'Stories' },
-      { href: '/social-messaging', label: 'Messages' },
+      // NAV-3: social-messaging / social-payments now live as tabs inside /social-hub
+      { href: '/social-hub?tab=messages', label: 'Messages' },
       { href: '/endorsements', label: 'Endorsements' },
-      { href: '/social-payments', label: 'Social Pay' },
+      { href: '/social-hub?tab=pay', label: 'Social Pay' },
       { href: '/headhunter', label: 'Headhunter' },
     ],
   },
@@ -78,10 +79,11 @@ const SUB_NAVS: Record<string, { title: string; items: SubNavItem[] }> = {
     title: 'Community',
     items: [
       { href: '/governance', label: 'Governance' },
-      { href: '/elections', label: 'Elections' },
-      { href: '/council', label: 'Council' },
-      { href: '/dao-hub', label: 'DAO Hub' },
-      { href: '/disputes', label: 'Disputes' },
+      // NAV-3: elections, council, dao-hub, disputes now live as tabs inside /governance
+      { href: '/governance?tab=elections', label: 'Elections' },
+      { href: '/governance?tab=council', label: 'Council' },
+      { href: '/governance?tab=dao', label: 'DAO Hub' },
+      { href: '/governance?tab=disputes', label: 'Disputes' },
       { href: '/fraud', label: 'Fraud Reporting' },
       { href: '/sanctum', label: 'Sanctum' },
       { href: '/leaderboard', label: 'Leaderboard' },
@@ -102,6 +104,7 @@ function findSubNav(pathname: string): { title: string; items: SubNavItem[] } | 
   }
 
   // Special: social paths under /social-* or /stories
+  // NAV-3: /social-messaging and /social-payments now redirect to /social-hub — keep matching so SubNav still shows
   for (const socialPath of ['/stories', '/social-messaging', '/endorsements', '/social-payments', '/headhunter', '/social-hub']) {
     if (pathname.startsWith(socialPath)) return SUB_NAVS['/feed']!;
   }
@@ -110,12 +113,13 @@ function findSubNav(pathname: string): { title: string; items: SubNavItem[] } | 
   if (pathname.startsWith('/merchant/') || pathname === '/pos') return SUB_NAVS['/merchant']!;
 
   // Special: me sub-paths
-  for (const mePath of ['/vault', '/badges', '/achievements', '/guardians', '/proofscore', '/settings', '/rewards', '/security-center', '/notifications']) {
+  for (const mePath of ['/vault', '/badges', '/achievements', '/guardians', '/proofscore', '/settings', '/rewards', '/security-center', '/notifications', '/setup']) {
     if (pathname.startsWith(mePath)) return SUB_NAVS['/profile']!;
   }
 
   // Special: governance/community sub-paths
-  for (const govPath of ['/elections', '/council', '/dao-hub', '/disputes', '/sanctum', '/appeals', '/leaderboard', '/quests']) {
+  // NAV-3: /elections, /council, /dao-hub, /disputes now redirect to /governance — keep matching so SubNav still shows
+  for (const govPath of ['/elections', '/council', '/dao-hub', '/disputes', '/treasury', '/sanctum', '/appeals', '/leaderboard', '/quests']) {
     if (pathname.startsWith(govPath)) return SUB_NAVS['/governance']!;
   }
 

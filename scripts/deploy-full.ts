@@ -403,6 +403,14 @@ async function main() {
     await call("VaultHub.setRecoveryApprover(VaultRecoveryClaim)", () =>
       hub.setRecoveryApprover(book.VaultRecoveryClaim, true),
     );
+    // Capture the immutable CardBoundVaultDeployer address from VaultHub
+    try {
+      const deployerAddr: string = await hub.cardBoundVaultDeployer();
+      book.CardBoundVaultDeployer = deployerAddr;
+      console.log(`  → CardBoundVaultDeployer: ${deployerAddr}`);
+    } catch {
+      console.warn("  ⚠ cardBoundVaultDeployer() not available on this VaultHub");
+    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -583,6 +591,7 @@ async function main() {
     ["NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS",     book.AdminMultiSig],
     ["NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS",      book.SanctumVault],
     ["NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS",    book.EcosystemVault],
+    ["NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS", book.CardBoundVaultDeployer],
   ];
   for (const [key, val] of envPairs) {
     if (val) console.log(`${key}=${val}`);

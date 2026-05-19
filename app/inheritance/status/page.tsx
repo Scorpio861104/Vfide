@@ -65,7 +65,7 @@ export default function InheritanceStatusPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 pt-24 pb-12">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 md:pt-[3.5rem] pb-12">
       <Heading />
 
       <StateBanner state={inh.state} windowEnd={Number(inh.windowEnd)} nowSec={nowSec} />

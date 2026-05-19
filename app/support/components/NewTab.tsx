@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 interface NewTabProps {
   isConnected: boolean;
   subject: string;
@@ -20,7 +21,12 @@ export function NewTab({
   return (
     <div className="rounded-2xl border border-white/10 bg-white/3 p-6 space-y-4">
       {!isConnected ? (
-        <p className="text-gray-300">Connect your wallet to create support tickets.</p>
+        <>
+          <p className="text-gray-300">Connect your wallet to create support tickets.</p>
+          <div className="mt-6 flex justify-center">
+            <VfideConnectButton size="md" />
+          </div>
+        </>
       ) : (
         <>
           <input

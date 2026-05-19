@@ -176,7 +176,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
               <FileText className="h-3.5 w-3.5 text-gray-500 mt-0.5 shrink-0" />
               <div className="min-w-0">
                 <span className="text-gray-500 uppercase tracking-wider">Reason: </span>
-                <span className="text-gray-300 italic">"{claim.claimReason}"</span>
+                <span className="text-gray-300 italic">&quot;{claim.claimReason}&quot;</span>
               </div>
             </div>
           )}
@@ -313,7 +313,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="h-5 w-5 text-amber-400 mt-0.5 shrink-0" />
                     <p className="text-xs text-gray-300 leading-relaxed">
-                      Votes cannot be changed once cast. Make sure you've reviewed the claimant address
+                      Votes cannot be changed once cast. Make sure you&apos;ve reviewed the claimant address
                       {claim.initiator !== claim.claimant && ' and initiator'} and the reason given.
                     </p>
                   </div>
@@ -333,7 +333,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
                   {claim.claimReason && (
                     <div className="p-3 rounded-lg bg-white/5">
                       <p className="text-gray-500 uppercase tracking-wider mb-1">Reason given</p>
-                      <p className="text-gray-300 italic">"{claim.claimReason}"</p>
+                      <p className="text-gray-300 italic">&quot;{claim.claimReason}&quot;</p>
                     </div>
                   )}
                 </div>

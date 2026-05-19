@@ -42,15 +42,13 @@ import {
   Settings,
   Bell,
   Lock,
-  Users,
-  Gavel,
+  // NAV-5: Users, Gavel and ScrollText removed — GOVERNANCE section now uses a single hub link
   Crown,
-  ScrollText,
   Sparkles,
   ArrowRight,
   Wallet,
 } from 'lucide-react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 import { Footer } from '@/components/layout/Footer';
 import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
@@ -76,18 +74,22 @@ const MONEY: HubLink[] = [
 ];
 
 const SECURITY: HubLink[] = [
-  { href: '/guardians',        icon: Shield,   label: 'Guardians',       description: 'Trusted addresses that can help with vault recovery.' },
-  { href: '/security-center',  icon: Lock,     label: 'Security center', description: 'Session activity, signing keys, device trust.' },
-  { href: '/settings',         icon: Settings, label: 'Settings',        description: 'Account preferences, notifications, privacy.' },
-  { href: '/notifications',    icon: Bell,     label: 'Notifications',   description: 'Activity stream and notification preferences.' },
+  { href: '/guardians',                icon: Shield,   label: 'Guardians',       description: 'Trusted addresses that can help with vault recovery.' },
+  { href: '/security-center',          icon: Lock,     label: 'Security center', description: 'Session activity, signing keys, device trust.' },
+  { href: '/settings',                 icon: Settings, label: 'Settings',        description: 'Account preferences, notifications, privacy.' },
+  // NAV-5: /notifications redirects to /settings?tab=notifications — link directly to the tab
+  { href: '/settings?tab=notifications', icon: Bell,   label: 'Notifications',   description: 'Activity stream and notification preferences.' },
 ];
 
+// NAV-5: Governance section — single hub link instead of listing old standalone routes
+// (/dao-hub, /council, /elections, /disputes all redirect to /governance now)
 const GOVERNANCE: HubLink[] = [
-  { href: '/governance', icon: Vote,       label: 'Governance',  description: 'Vote on proposals. Requires ProofScore \u2265 5,400.' },
-  { href: '/dao-hub',    icon: Users,      label: 'DAO hub',     description: 'Community hub for active DAO contributors.' },
-  { href: '/council',    icon: Crown,      label: 'Council',     description: 'Elected council members and their roles.' },
-  { href: '/elections',  icon: ScrollText, label: 'Elections',   description: 'Active and upcoming council elections.' },
-  { href: '/disputes',   icon: Gavel,      label: 'Disputes',    description: 'Filed disputes and their resolution status.' },
+  {
+    href: '/governance',
+    icon: Vote,
+    label: 'Governance Hub',
+    description: 'Proposals, Council, Elections, DAO Hub, and Disputes \u2014 all in one place.',
+  },
 ];
 
 const ENGAGEMENT: HubLink[] = [
@@ -103,15 +105,28 @@ export default function MeHubPage() {
   if (!isConnected) {
     return (
       <>
-        <div className="min-h-screen bg-zinc-950 pt-24 text-white">
-          <div className="container mx-auto max-w-3xl px-4 py-12 text-center">
-            <User size={48} className="mx-auto mb-4 text-cyan-300" />
-            <h1 className="mb-2 text-3xl font-bold">Your VFIDE</h1>
-            <p className="mb-6 max-w-md mx-auto text-gray-400">
+        <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+              style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+            <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+              style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+          </div>
+          <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+          <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              Account Hub
+            </div>
+            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
+              <User size={28} className="text-cyan-300" />
+            </div>
+            <h1 className="mb-3 text-4xl font-black text-white tracking-tight">Your VFIDE</h1>
+            <p className="mb-8 max-w-md mx-auto text-gray-400 text-lg">
               Connect your wallet to see your ProofScore, your vault, your governance position, and the rest of your VFIDE account.
             </p>
             <div className="inline-block">
-              <ConnectButton />
+              <VfideConnectButton size="md" />
             </div>
           </div>
         </div>
@@ -122,21 +137,34 @@ export default function MeHubPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 text-white">
-        <div className="container mx-auto max-w-5xl px-4 pb-16">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 left-1/3 w-[400px] h-[400px] rounded-full opacity-[0.04]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+
+        <div className="relative container mx-auto max-w-5xl px-4 pb-16">
 
           {/* Header: tier badge + name + ProofScore snapshot */}
           <motion.header
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mb-10 flex flex-wrap items-end justify-between gap-6"
+            className="mb-10 flex flex-wrap items-end justify-between gap-6 pt-8"
           >
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
-                <User size={12} /> Your account
+              <div className="badge-live mb-3">
+                <User size={12} /> Account Hub
               </div>
-              <h1 className="text-4xl font-bold sm:text-5xl">Your VFIDE</h1>
+              <h1 className="text-4xl font-black sm:text-5xl tracking-tight">
+                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Your VFIDE</span>
+              </h1>
               {address && (
                 <div className="mt-2 font-mono text-sm text-gray-500">
                   {address.slice(0, 6)}...{address.slice(-4)}
@@ -145,7 +173,7 @@ export default function MeHubPage() {
             </div>
 
             {/* Live ProofScore snapshot */}
-            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3">
+            <div className="flex items-center gap-4 glass-card-premium px-4 py-3">
               {isLoading ? (
                 <div className="h-14 w-14 animate-pulse rounded-full bg-white/5" />
               ) : (
@@ -193,7 +221,7 @@ export default function MeHubPage() {
 
           {/* Quick "what to do next" suggestion based on score tier */}
           {!isLoading && (
-            <div className="mt-12 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+            <div className="mt-12 glass-card-premium border-cyan-500/20 bg-cyan-500/5 p-5">
               <div className="mb-2 text-xs uppercase tracking-widest text-cyan-300">Next step</div>
               <NextStep score={score} />
             </div>
@@ -246,7 +274,7 @@ function NextStep({ score }: { score: number }) {
   if (score < 7000) {
     return (
       <p className="text-gray-300">
-        You're a Trusted user. Consider{' '}
+        You&apos;re a Trusted user. Consider{' '}
         <Link href="/merchant/setup" className="text-cyan-300 hover:text-cyan-200">
           opening a store <ArrowRight size={12} className="inline" />
         </Link>{' '}
@@ -261,8 +289,9 @@ function NextStep({ score }: { score: number }) {
   if (score < 8000) {
     return (
       <p className="text-gray-300">
-        Council-eligible. If you're active in the community, watch{' '}
-        <Link href="/elections" className="text-cyan-300 hover:text-cyan-200">
+        Council-eligible. If you&apos;re active in the community, watch{' '}
+        {/* NAV-5: /elections now redirects to /governance?tab=elections */}
+        <Link href="/governance?tab=elections" className="text-cyan-300 hover:text-cyan-200">
           upcoming elections <ArrowRight size={12} className="inline" />
         </Link>{' '}
         for a chance to stand for council.
@@ -275,7 +304,7 @@ function NextStep({ score }: { score: number }) {
       <Link href="/profile" className="text-cyan-300 hover:text-cyan-200">
         endorse other users <ArrowRight size={12} className="inline" />
       </Link>{' '}
-      to help them build trust, and you're paying the minimum 0.25% fee on every payment.
+      to help them build trust, and you&apos;re paying the minimum 0.25% fee on every payment.
     </p>
   );
 }

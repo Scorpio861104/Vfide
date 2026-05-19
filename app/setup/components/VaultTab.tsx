@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { Lock, Loader2, CheckCircle, AlertCircle, TrendingUp, Briefcase, Zap } from 'lucide-react';
 
 interface UserState {
@@ -41,11 +42,13 @@ export function VaultTab() {
       .finally(() => setLoading(false));
   }, [address]);
 
+  // UX-2: Disconnected-wallet guard — show prompt instead of trying to fetch
   if (!address) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <Lock size={40} className="text-gray-600 mb-4" />
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
+        <Lock size={40} className="text-gray-600" />
         <p className="text-gray-400">Connect your wallet to view vault status.</p>
+        <VfideConnectButton size="md" />
       </div>
     );
   }

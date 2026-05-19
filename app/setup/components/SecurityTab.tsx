@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { Shield, LogIn, AlertTriangle, XCircle, Info, Loader2, ShieldCheck, ShieldOff } from 'lucide-react';
 
 interface SecurityLog {
@@ -48,9 +49,10 @@ export function SecurityTab() {
 
   if (!address) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <ShieldOff size={40} className="text-gray-600 mb-4" />
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
+        <ShieldOff size={40} className="text-gray-600" />
         <p className="text-gray-400">Connect your wallet to view security events.</p>
+        <VfideConnectButton size="md" />
       </div>
     );
   }

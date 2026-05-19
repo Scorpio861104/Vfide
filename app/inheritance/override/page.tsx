@@ -74,7 +74,7 @@ function OverrideInner() {
   // ─── Step 1: ask for the vault address. ─────────────────────────────
   if (!committedVault) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading />
         <section className="rounded-xl border border-white/10 bg-white/5 p-4">
           <label className="block text-xs uppercase tracking-wider text-gray-500">
@@ -206,7 +206,7 @@ function OverrideContent({
   // Invalid vault.
   if (!isValidVault) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading />
         <NoticeCard tone="red" icon={<AlertTriangle size={20} />} title="Vault not found">
           We couldn&apos;t reach an inheritance manager at that address.
@@ -228,7 +228,7 @@ function OverrideContent({
   // Already submitted — show confirmation.
   if (submittedTx) {
     return (
-      <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+      <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
         <Heading />
         <VaultBanner vault={vault} onChange={onChange} />
         <NoticeCard tone="emerald" icon={<CheckCircle2 size={20} />} title="Claim cancelled">
@@ -243,7 +243,7 @@ function OverrideContent({
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-24 pb-12 space-y-6">
+    <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12 space-y-6">
       <Heading />
       <VaultBanner vault={vault} onChange={onChange} />
 

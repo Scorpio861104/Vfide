@@ -252,9 +252,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     /**
      * @notice Deprecated: blacklist controls are disabled to preserve non-custodial guarantees.
      */
-    function setBlacklist(address user, bool status) external onlyOwner {
-        user;
-        status;
+    function setBlacklist(address, bool) external pure {
         revert("BSM: blacklist disabled");
     }
 
@@ -273,8 +271,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     /**
      * @notice Deprecated: manual suspicious-flag clearing is disabled.
      */
-    function clearSuspiciousFlags(address user) external onlyOwner {
-        user;
+    function clearSuspiciousFlags(address) external pure {
         revert("BSM: clear flags disabled");
     }
 

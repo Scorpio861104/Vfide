@@ -65,7 +65,7 @@ export function GuardianPendingQueueWidget() {
       >
         <Inbox className="w-10 h-10 mx-auto mb-3 text-gray-500" />
         <div className="text-sm text-gray-400">
-          You don't have any vaults in your Guardian Watchlist yet. Add a vault
+          You don&apos;t have any vaults in your Guardian Watchlist yet. Add a vault
           address above to see its pending queue here.
         </div>
       </motion.div>
@@ -80,7 +80,7 @@ export function GuardianPendingQueueWidget() {
       </div>
       <div className="text-xs text-gray-400 -mt-2">
         Anything below is sitting in a 7-day queue. Cancel button is available
-        to you as a guardian. If you don't recognize an entry, cancel it and
+        to you as a guardian. If you don&apos;t recognize an entry, cancel it and
         contact the vault owner.
       </div>
 

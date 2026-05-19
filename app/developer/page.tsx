@@ -81,11 +81,25 @@ export default function DeveloperPage() {
   const [activeTab, setActiveTab] = useState<'sdk' | 'webhooks' | 'api'>('sdk');
 
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-8 pt-20 pb-24 md:pb-10 space-y-6">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 text-white relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+      </div>
+      <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+      <div className="relative container mx-auto max-w-6xl px-4 py-8 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Integrations Center</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
+        <div className="badge-live mb-3">
+          🔌 Developer API
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+          <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Integrations Center</span>
+        </h1>
+        <p className="text-sm sm:text-base text-white/60 mt-1">
           Connect checkout, subscriptions, and payout flows with clear guides and safe defaults.
         </p>
       </div>
@@ -284,6 +298,7 @@ export default function DeveloperPage() {
           <h4 className="font-medium">Discord</h4>
           <p className="text-sm text-muted-foreground">Community support</p>
         </a>
+      </div>
       </div>
     </div>
   );

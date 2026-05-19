@@ -44,7 +44,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center">
         <Loader2 size={32} className="text-cyan-400 animate-spin" />
       </div>
     );
@@ -52,7 +52,7 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center">
         <div className="text-center">
           <Package size={48} className="mx-auto mb-4 text-gray-600" />
           <p className="text-gray-400 text-lg">Product not found</p>
@@ -66,7 +66,7 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         <div className="container mx-auto px-4 max-w-6xl py-8">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">

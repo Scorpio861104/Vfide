@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 export function ConnectWalletPrompt() {
   return (
@@ -13,7 +13,7 @@ export function ConnectWalletPrompt() {
           <br />
           Make sure you&apos;re using the owner address.
         </p>
-        <ConnectButton />
+        <VfideConnectButton size="md" />
       </div>
     </div>
   );

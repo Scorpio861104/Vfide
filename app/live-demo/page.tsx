@@ -43,22 +43,33 @@ export default function LiveDemoPage() {
   
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#0A0A0A] to-zinc-900 py-16 sm:py-20 px-3 sm:px-4 pt-20 sm:pt-24 overflow-x-hidden">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] px-3 sm:px-4 overflow-x-hidden relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+      </div>
+      <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
       <TransactionNotification 
         notification={notification}
         onClose={closeNotification}
       />
       
-      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 md:space-y-12">
+      <div className="relative max-w-7xl mx-auto space-y-6 sm:space-y-8 md:space-y-12 py-10">
         {/* Hero */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-2 sm:space-y-4"
         >
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-zinc-100">
+          <div className="badge-live mb-4 justify-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Interactive Demo
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-100 tracking-tight">
             Experience{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-500">
               VFIDE Live
             </span>
           </h1>

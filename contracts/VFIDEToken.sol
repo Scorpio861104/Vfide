@@ -739,14 +739,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("plk");
     }
 
-    function setCircuitBreaker(bool _active, uint256 _duration) external onlyOwner {
+    function setCircuitBreaker(bool, uint256) external view onlyOwner {
         // #311: Circuit-breaker transfer halts were removed from token policy.
         // Keep this ABI method as a no-op for backward compatibility with existing tooling.
-        _active;
-        _duration;
     }
 
-    function confirmCircuitBreaker() external onlyOwner {
+    function confirmCircuitBreaker() external pure {
         // #311: No pending circuit-breaker state exists after removing token-side halts.
         revert VF_NoPending();
     }
@@ -790,7 +788,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         _log("fb+");
     }
     
-    function isCircuitBreakerActive() public view returns (bool) {
+    function isCircuitBreakerActive() public pure returns (bool) {
         return false;
     }
 

@@ -955,6 +955,19 @@
   },
   {
     "inputs": [],
+    "name": "cardBoundVaultDeployer",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "cardDefaultDailyLimit",
     "outputs": [
       {
@@ -1401,7 +1414,7 @@
     "inputs": [],
     "name": "pause",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2030,7 +2043,7 @@
     "inputs": [],
     "name": "unpause",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

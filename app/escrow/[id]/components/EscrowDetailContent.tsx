@@ -203,7 +203,7 @@ export function EscrowDetailContent({ id }: Props) {
   // Invalid id
   if (parsedId === null) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
@@ -226,7 +226,7 @@ export function EscrowDetailContent({ id }: Props) {
   // Loading
   if (isLoading || !escrow) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
@@ -245,7 +245,7 @@ export function EscrowDetailContent({ id }: Props) {
   // Escrow id doesn't exist (state is NONE)
   if (escrow.state === EscrowState.None) {
     return (
-      <div className="min-h-screen bg-zinc-950 pt-20">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem]">
         <div className="container mx-auto px-4 max-w-3xl py-8">
           <button
             onClick={() => router.push('/escrow')}
@@ -278,7 +278,7 @@ export function EscrowDetailContent({ id }: Props) {
   const canMerchantDispute = viewerRole === 'merchant' && escrow.state === EscrowState.Funded;
 
   return (
-    <div className="min-h-screen bg-zinc-950 pt-20 pb-12">
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-12">
       <div className="container mx-auto px-4 max-w-3xl py-8">
         <button
           onClick={() => router.push('/escrow')}
@@ -488,7 +488,7 @@ export function EscrowDetailContent({ id }: Props) {
                     : buyerMemorial
                       ? "The buyer's vault has entered memorial state."
                       : "The merchant's vault has entered memorial state."}{' '}
-                  Anyone can settle this escrow now — funds return to the buyer's current vault for
+                  Anyone can settle this escrow now — funds return to the buyer&apos;s current vault for
                   inheritance distribution.
                 </p>
               </div>

@@ -18,10 +18,13 @@ const sizeConfig = {
 };
 
 function getTierInfo(score: number) {
-  if (score >= 8000) return { tier: "ELITE", color: "#FFD700", gradient: "from-amber-400 to-orange-500" };
-  if (score >= 7000) return { tier: "VERIFIED", color: "#A78BFA", gradient: "from-violet-400 to-violet-500" };
-  if (score >= 5000) return { tier: "TRUSTED", color: "#00FF88", gradient: "from-emerald-400 to-[#00CC6A]" };
-  return { tier: "NEUTRAL", color: "#00F0FF", gradient: "from-cyan-400 to-blue-500" };
+  if (score >= 8000) return { tier: 'ELITE',      color: '#00FF88', gradient: 'from-emerald-400 to-[#00CC6A]'  };
+  if (score >= 7000) return { tier: 'COUNCIL',    color: '#A78BFA', gradient: 'from-violet-400 to-violet-500'  };
+  if (score >= 5600) return { tier: 'TRUSTED',    color: '#34D399', gradient: 'from-emerald-400 to-green-500'  };
+  if (score >= 5400) return { tier: 'GOVERNANCE', color: '#60A5FA', gradient: 'from-blue-400 to-blue-500'      };
+  if (score >= 5000) return { tier: 'NEUTRAL',    color: '#FFD700', gradient: 'from-yellow-400 to-amber-500'   };
+  if (score >= 3500) return { tier: 'LOW TRUST',  color: '#FFA500', gradient: 'from-orange-400 to-orange-500'  };
+  return               { tier: 'RISKY',       color: '#FF4444', gradient: 'from-red-400 to-red-500'        };
 }
 
 export function ProofScoreRing({ score, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {

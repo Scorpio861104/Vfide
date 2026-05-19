@@ -17,7 +17,7 @@ export default function CommerceLayout({ children }: { children: ReactNode }) {
   return (
     <CommerceProviders>
       <WalletGate>
-        <main className="min-h-screen pt-20">{children}</main>
+        <main className="min-h-screen md:pt-[3.5rem]">{children}</main>
         <Footer />
       </WalletGate>
     </CommerceProviders>

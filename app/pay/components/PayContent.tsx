@@ -254,13 +254,16 @@ export function PayContent() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-zinc-950 pt-20 relative overflow-hidden"
+      className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
     >
       {/* Premium Background Effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 -left-32 w-125 h-125 bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 -right-32 w-100 h-100 bg-blue-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-24 -left-24 w-[500px] h-[500px] rounded-full"
+          style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.08), transparent 65%)', filter: 'blur(80px)' }} />
+        <div className="absolute bottom-1/4 -right-24 w-[400px] h-[400px] rounded-full"
+          style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.07), transparent 65%)', filter: 'blur(80px)' }} />
       </div>
+      <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
       {/* Header */}
       <section className="py-12 relative z-10">
@@ -268,10 +271,10 @@ export function PayContent() {
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-full mb-4"
+            className="badge-live mb-4 mx-auto w-fit"
           >
-            <CreditCard className="w-4 h-4 text-cyan-400" />
-            <span className="text-cyan-400 text-sm font-medium">Secure Checkout</span>
+            <CreditCard className="w-3 h-3" />
+            <span>Secure Checkout</span>
           </motion.div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
             Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Payment</span>

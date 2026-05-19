@@ -74,7 +74,15 @@ export default function MerchantSuppliersPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
             <ArrowLeft size={16} /> Back to Merchant Hub
@@ -82,7 +90,10 @@ export default function MerchantSuppliersPage() {
 
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="flex items-center gap-3 text-3xl font-bold"><Truck className="text-cyan-400" /> Suppliers & purchase orders</h1>
+              <div className="badge-live mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Supply Chain
+            </div>
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Truck className="text-cyan-400" /> Suppliers & purchase orders</h1>
               <p className="mt-2 text-gray-400">Maintain your supplier directory and keep a clean record of restock requests and deliveries.</p>
             </div>
             <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">

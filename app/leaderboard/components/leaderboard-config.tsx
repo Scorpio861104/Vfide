@@ -1,13 +1,19 @@
 import { Crown, Medal, ChevronUp, ChevronDown, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+/**
+ * Tier color config aligned with the 7-tier ProofScore system per VFIDE Manual v1.0.
+ * Tiers: Elite(≥8000) / Council(≥7000) / Trusted(≥5600) / Governance(≥5400)
+ *        / Neutral(≥5000) / Low Trust(≥3500) / Risky(<3500)
+ */
 export const tierColors: Record<string, { gradient: string; text: string; glow: string; bg: string; border: string }> = {
-  'CHAMPION': { gradient: 'from-amber-400 to-orange-500', text: 'text-amber-400', glow: 'shadow-amber-400/30', bg: 'bg-amber-400/20', border: 'border-amber-400/30' },
-  'GUARDIAN': { gradient: 'from-[#C0C0C0] to-[#A0A0A0]', text: 'text-zinc-400', glow: 'shadow-zinc-400/30', bg: 'bg-zinc-400/20', border: 'border-zinc-400/30' },
-  'DELEGATE': { gradient: 'from-[#CD7F32] to-[#8B4513]', text: 'text-amber-600', glow: 'shadow-amber-600/30', bg: 'bg-amber-600/20', border: 'border-amber-600/30' },
-  'ADVOCATE': { gradient: 'from-cyan-400 to-cyan-600', text: 'text-cyan-400', glow: 'shadow-cyan-400/30', bg: 'bg-cyan-400/20', border: 'border-cyan-400/30' },
-  'MERCHANT': { gradient: 'from-emerald-500 to-[#3DA55D]', text: 'text-emerald-500', glow: 'shadow-emerald-500/30', bg: 'bg-emerald-500/20', border: 'border-emerald-500/30' },
-  'NEUTRAL': { gradient: 'from-zinc-400 to-zinc-500', text: 'text-zinc-400', glow: 'shadow-zinc-400/30', bg: 'bg-zinc-400/20', border: 'border-zinc-400/30' },
+  'ELITE':      { gradient: 'from-emerald-400 to-[#00CC6A]',   text: 'text-emerald-400',  glow: 'shadow-emerald-400/30',  bg: 'bg-emerald-400/20',  border: 'border-emerald-400/30' },
+  'COUNCIL':    { gradient: 'from-violet-400 to-violet-600',   text: 'text-violet-400',   glow: 'shadow-violet-400/30',   bg: 'bg-violet-400/20',   border: 'border-violet-400/30' },
+  'TRUSTED':    { gradient: 'from-emerald-500 to-green-600',   text: 'text-emerald-500',  glow: 'shadow-emerald-500/30',  bg: 'bg-emerald-500/20',  border: 'border-emerald-500/30' },
+  'GOVERNANCE': { gradient: 'from-blue-400 to-blue-600',       text: 'text-blue-400',     glow: 'shadow-blue-400/30',     bg: 'bg-blue-400/20',     border: 'border-blue-400/30' },
+  'NEUTRAL':    { gradient: 'from-yellow-400 to-amber-500',    text: 'text-yellow-400',   glow: 'shadow-yellow-400/30',   bg: 'bg-yellow-400/20',   border: 'border-yellow-400/30' },
+  'LOW TRUST':  { gradient: 'from-orange-400 to-orange-600',   text: 'text-orange-400',   glow: 'shadow-orange-400/30',   bg: 'bg-orange-400/20',   border: 'border-orange-400/30' },
+  'RISKY':      { gradient: 'from-red-400 to-red-600',         text: 'text-red-400',      glow: 'shadow-red-400/30',      bg: 'bg-red-400/20',      border: 'border-red-400/30' },
 };
 
 export function getRankIcon(rank: number) {

@@ -1,23 +1,25 @@
 export default function GovernanceLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header skeleton */}
-        <div className="space-y-3">
-          <div className="h-12 bg-gray-800/50 rounded-lg w-2/3 animate-pulse"></div>
-          <div className="h-4 bg-gray-800/30 rounded w-1/2 animate-pulse"></div>
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
+      <div className="container mx-auto px-4 max-w-5xl py-10">
+        <div className="mb-8">
+          <div className="h-3 w-24 rounded-full bg-white/5 animate-pulse mb-3" />
+          <div className="h-9 w-64 rounded-xl bg-white/8 animate-pulse mb-2" />
+          <div className="h-4 w-72 rounded-lg bg-white/5 animate-pulse" />
         </div>
-
-        {/* Grid of proposal cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-gray-800/20 rounded-lg p-6 border border-gray-700/50 space-y-4">
-              <div className="h-6 bg-gray-700/50 rounded w-3/4 animate-pulse"></div>
-              <div className="space-y-2">
-                <div className="h-3 bg-gray-700/30 rounded animate-pulse"></div>
-                <div className="h-3 bg-gray-700/30 rounded w-5/6 animate-pulse"></div>
+        {/* Proposal list */}
+        <div className="space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-white/6 bg-white/[0.02] p-5">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <div>
+                  <div className="h-5 w-64 rounded bg-white/8 animate-pulse mb-2" />
+                  <div className="h-3 w-48 rounded bg-white/5 animate-pulse" />
+                </div>
+                <div className="h-6 w-20 rounded-full bg-white/8 animate-pulse shrink-0" />
               </div>
-              <div className="h-8 bg-gray-700/30 rounded animate-pulse"></div>
+              {/* Vote bar */}
+              <div className="h-2 w-full rounded-full bg-white/5 animate-pulse" />
             </div>
           ))}
         </div>

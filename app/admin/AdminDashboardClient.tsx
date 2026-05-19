@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { Footer } from '@/components/layout/Footer';
 import { ProofScoreBurnRouterABI, VFIDETokenABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, ZERO_ADDRESS } from '@/lib/contracts';
@@ -213,7 +214,7 @@ export default function AdminPanel() {
   const { data: circuitBreakerRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
-    functionName: 'circuitBreaker',
+    functionName: 'isCircuitBreakerActive',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
   const circuitBreaker = circuitBreakerRaw as boolean | undefined;
@@ -1319,6 +1320,9 @@ export default function AdminPanel() {
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-md">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">Admin Panel</h1>
           <p className="text-gray-300">Please connect your wallet to access admin functions.</p>
+          <div className="mt-6 flex justify-center">
+            <VfideConnectButton size="md" />
+          </div>
         </div>
       </div>
     );
@@ -1343,7 +1347,7 @@ export default function AdminPanel() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 pt-24">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12 px-4 md:pt-[3.5rem]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 md:p-8 mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1838,7 +1842,7 @@ export default function AdminPanel() {
             <h2 className="text-2xl font-bold text-white mb-4">🔒 Vault-Only Mode</h2>
             <p className="text-gray-300 text-sm mb-4">
               Vault-only mode is ENABLED BY DEFAULT at deployment for security. Users&apos; tokens automatically create vaults on first receipt. 
-              Vaults have enhanced security: freeze function, abnormal transaction detection, and recovery mechanisms.
+              Vaults have enhanced security: per-transfer spend limits, abnormal transaction detection, queued large-transfer approval, and guardian recovery mechanisms. Note: there is no admin freeze function — the protocol deliberately has no capability to freeze user tokens.
             </p>
 
             <div className="bg-black/30 rounded-lg p-4 mb-4">

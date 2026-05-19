@@ -136,7 +136,15 @@ export default function MerchantBookingsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 text-white">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <section className="py-12">
           <div className="container mx-auto max-w-6xl px-4">
             <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
@@ -145,10 +153,10 @@ export default function MerchantBookingsPage() {
 
             <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
+                <div className="badge-live mb-3">
                   <CalendarDays size={14} /> Bookings
                 </div>
-                <h1 className="text-4xl font-bold">Appointments and slots</h1>
+                <h1 className="text-4xl font-black tracking-tight">Appointments and slots</h1>
                 <p className="mt-3 max-w-3xl text-gray-400">
                   Set your availability, customers book a slot, you confirm or reschedule. Built for salons, barbers, nail techs, and any service business.
                 </p>

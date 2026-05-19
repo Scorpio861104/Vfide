@@ -73,7 +73,7 @@ export function LockVaultPanel() {
     return (
       <PanelShell>
         <div className="text-center text-gray-400 py-8">
-          No vault detected for this wallet. If you guard someone else's vault,
+          No vault detected for this wallet. If you guard someone else&apos;s vault,
           use the Guardian dashboard instead.
         </div>
       </PanelShell>
@@ -507,7 +507,7 @@ function GuardianAlertSection({ vault }: { vault: `0x${string}` }) {
       <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-xs text-amber-100 flex gap-2">
         <Shield size={14} className="flex-shrink-0 mt-0.5" />
         <span>
-          If you've fully lost your wallet (no signer access), don't use this
+          If you&apos;ve fully lost your wallet (no signer access), don&apos;t use this
           page — instead, contact your guardians and have them initiate
           recovery from the Recovery tab. They can rotate the wallet on your
           behalf with M-of-N approval.

@@ -3,50 +3,74 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { ActiveTab } from './components/ActiveTab';
 import { ResolvedTab } from './components/ResolvedTab';
 import { SubmitTab } from './components/SubmitTab';
+import { AlertCircle, PlusCircle, CheckCircle2 } from 'lucide-react';
 
 type TabId = 'active' | 'submit' | 'resolved';
 
-const TAB_LABELS: Record<TabId, string> = { active: 'Active', submit: 'Submit', resolved: 'Resolved' };
-const TAB_IDS: TabId[] = ['active', 'submit', 'resolved'];
+const TABS = [
+  { id: 'active' as const, label: 'Active', icon: <AlertCircle size={14} /> },
+  { id: 'submit' as const, label: 'Submit Appeal', icon: <PlusCircle size={14} /> },
+  { id: 'resolved' as const, label: 'Resolved', icon: <CheckCircle2 size={14} /> },
+];
 
 export default function AppealsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('submit');
 
   return (
-    <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
-        <div className="container mx-auto max-w-6xl px-4 py-8">
-          <h1 className="mb-2 text-4xl font-bold text-white">
-            Appeals
-          </h1>
-          <p className="mb-8 text-white/60">Dispute review and trusted appeal handling for flagged actions.</p>
+    <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
+        <div className="absolute top-1/2 -left-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+      </div>
 
-          <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-            {TAB_IDS.map((id) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`rounded-xl border px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
-                  activeTab === id
-                    ? 'border-cyan-500/30 bg-cyan-500/20 text-cyan-400'
-                    : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
-                }`}
-              >
-                {TAB_LABELS[id]}
+      <div className="relative container mx-auto max-w-5xl px-4">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="badge-live"><span className="badge-live-dot" />Dispute Resolution</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 bg-clip-text text-transparent">
+              Appeals
+            </span>
+          </h1>
+          <p className="text-white/50">Dispute review and trusted appeal handling for flagged actions.</p>
+        </motion.div>
+
+        {/* Sticky tab bar */}
+        <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setActiveTab(t.id)}
+                className={activeTab === t.id ? 'tab-pill-active' : 'tab-pill-inactive'}>
+                {t.icon}{t.label}
               </button>
             ))}
           </div>
-
-          {activeTab === 'active' && <ActiveTab />}
-          {activeTab === 'submit' && <SubmitTab />}
-          {activeTab === 'resolved' && <ResolvedTab />}
         </div>
+
+        {/* Tab content */}
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}>
+            {activeTab === 'active' && <ActiveTab />}
+            {activeTab === 'submit' && <SubmitTab />}
+            {activeTab === 'resolved' && <ResolvedTab />}
+          </motion.div>
+        </AnimatePresence>
       </div>
+
       <Footer />
-    </>
+    </div>
   );
 }

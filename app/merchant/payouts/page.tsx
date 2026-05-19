@@ -226,29 +226,41 @@ export default function MerchantPayoutsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 pb-16 text-white">
-        <div className="container mx-auto max-w-5xl px-4">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-8 text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+          <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+        </div>
+        <div className="relative container mx-auto max-w-5xl px-4">
           <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200 text-sm">
             <ArrowLeft size={16} /> Back to Merchant Hub
           </Link>
 
           <header className="mb-8">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
-              <Banknote size={14} /> Earnings &amp; payouts
+            <div className="flex items-center gap-3 mb-3">
+              <span className="badge-live"><span className="badge-live-dot" />Earnings &amp; Payouts</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold">Your earnings</h1>
-            <p className="mt-3 max-w-3xl text-gray-400">
+            <h1 className="text-4xl font-bold mb-2">
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
+                <Banknote size={32} className="text-emerald-400" />Your Earnings
+              </span>
+            </h1>
+            <p className="mt-2 max-w-3xl text-white/50">
               Confirmed on-chain payments from your customers, and a record of every cash-out
-              request you've initiated. VFIDE never holds your fiat — when you cash out we hand
+              request you&apos;ve initiated. VFIDE never holds your fiat — when you cash out we hand
               you off to your chosen provider, who handles KYC and settlement into your
               mobile-money, bank, or airtime balance.
             </p>
           </header>
 
           {!isConnected && (
-            <div className="rounded-2xl border border-white/10 bg-white/3 p-6">
-              <h2 className="text-xl font-semibold">Connect your merchant wallet</h2>
-              <p className="text-gray-400 mt-2">
+            <div className="glass-card-premium p-6">
+              <h2 className="text-xl font-semibold text-white mb-2">Connect your merchant wallet</h2>
+              <p className="text-white/40">
                 Sign in with the wallet linked to your store to see your confirmed earnings
                 and request a payout.
               </p>
@@ -351,13 +363,14 @@ export default function MerchantPayoutsPage() {
                     <Banknote size={36} className="mx-auto mb-3 text-gray-500" />
                     <p className="text-gray-300">No payouts requested yet.</p>
                     <p className="text-gray-500 text-sm mt-1">
-                      Once you've received customer payments, request a cash-out above to settle into mobile money,
+                      Once you&apos;ve received customer payments, request a cash-out above to settle into mobile money,
                       bank, or airtime.
                     </p>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-white/10 bg-white/3 overflow-hidden">
-                    <table className="w-full text-sm">
+                    <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[560px]">
                       <thead className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
                         <tr>
                           <th className="text-left px-4 py-3">When</th>
@@ -393,13 +406,14 @@ export default function MerchantPayoutsPage() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 )}
 
                 <p className="mt-4 text-xs text-gray-500 leading-relaxed">
                   <strong className="text-gray-300">How status works:</strong> a payout stays at{' '}
-                  <em>Awaiting provider</em> until the provider's webhook lets us know they've moved
-                  to processing or completed. If you completed the provider flow and it's still
+                  <em>Awaiting provider</em> until the provider&apos;s webhook lets us know they&apos;ve moved
+                  to processing or completed. If you completed the provider flow and it&apos;s still
                   shown as awaiting after a few minutes,{' '}
                   <Link href="/support" className="text-cyan-300 hover:underline inline-flex items-center gap-1">
                     contact support <ExternalLink size={11} />

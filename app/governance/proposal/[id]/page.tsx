@@ -277,7 +277,7 @@ export default function ProposalDetailPage() {
           <Link href="/governance" className="underline hover:text-blue-200">
             /governance
           </Link>
-          's main page, where each proposal renders with its full ProposalCard. This detail page is
+          &apos;s main page, where each proposal renders with its full ProposalCard. This detail page is
           read-only for shareable URLs.
         </p>
       </div>
@@ -290,7 +290,7 @@ export default function ProposalDetailPage() {
 function DetailFrame({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 pb-16">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-16">
         <div className="max-w-4xl mx-auto px-4 space-y-6">
           <Link
             href="/governance"

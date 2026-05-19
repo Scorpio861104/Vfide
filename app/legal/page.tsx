@@ -2,50 +2,67 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Scale, Lock, FileText } from "lucide-react";
 
 type TabType = 'legal' | 'privacy' | 'terms';
+
+const TABS = [
+  { id: 'legal' as TabType, label: 'Disclaimers', icon: Scale },
+  { id: 'privacy' as TabType, label: 'Privacy', icon: Lock },
+  { id: 'terms' as TabType, label: 'Terms', icon: FileText },
+];
 
 export default function LegalPage() {
   const [activeTab, setActiveTab] = useState<TabType>('legal');
 
   return (
     <>
-      
-      <main className="min-h-screen bg-zinc-900 pt-20">
-        <section className="py-12 bg-zinc-800 border-b border-zinc-700">
-          <div className="container mx-auto px-3 sm:px-4">
-            <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-display)] font-bold text-zinc-100 mb-2 text-center">
-              Legal & Policies
-            </h1>
-            <p className="text-center text-zinc-400 text-sm">
-              Important legal information, privacy policy, and terms of service
-            </p>
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
+      >
+        {/* Ambient background */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-24 left-1/3 w-[500px] h-[500px] rounded-full"
+            style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.05), transparent 65%)', filter: 'blur(60px)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
+
+        {/* Header */}
+        <section className="py-10 relative z-10">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="badge-live mb-3 w-fit"><Scale size={11} /> Legal</div>
+              <h1 className="text-4xl font-black text-white tracking-tight mb-2">
+                Legal & Policies
+              </h1>
+              <p className="text-zinc-400">
+                Important legal information, privacy policy, and terms of service.
+              </p>
+            </motion.div>
           </div>
         </section>
 
         {/* Tab Navigation */}
-        <section className="bg-zinc-900 border-b border-zinc-700 sticky top-20 z-40">
-          <div className="container mx-auto px-3 sm:px-4">
-            <div className="flex gap-1 overflow-x-auto py-2" role="tablist" aria-label="Legal document sections">
-              {[
-                { id: 'legal' as const, label: 'Disclaimers', color: '#FF6B6B' },
-                { id: 'privacy' as const, label: 'Privacy', color: '#00F0FF' },
-                { id: 'terms' as const, label: 'Terms', color: '#00FF88' },
-              ].map(tab => (
+        <section className="border-b border-white/8 sticky top-7 md:top-[5.25rem] z-40"
+          style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(24px)' }}>
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist" aria-label="Legal document sections">
+              {TABS.map(tab => (
                 <button
                   key={tab.id}
                   role="tab"
                   aria-selected={activeTab === tab.id}
                   aria-controls={`tabpanel-${tab.id}`}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-3 rounded-t-lg font-bold transition-all whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'bg-zinc-800 text-zinc-100 border-t-2'
-                      : 'bg-transparent text-zinc-400 hover:text-zinc-100'
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
+                    activeTab === tab.id ? 'tab-pill-active' : 'tab-pill-inactive'
                   }`}
-                  style={{ borderColor: activeTab === tab.id ? tab.color : 'transparent' }}
                 >
-                  {tab.label}
+                  <tab.icon size={15} />
+                  <span>{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -53,19 +70,24 @@ export default function LegalPage() {
         </section>
 
         {/* Tab Content */}
-        <div className="container mx-auto px-4 max-w-4xl py-12">
-          <div role="tabpanel" id="tabpanel-legal" hidden={activeTab !== 'legal'}>
-            {activeTab === 'legal' && <LegalDisclaimersTab />}
-          </div>
-          <div role="tabpanel" id="tabpanel-privacy" hidden={activeTab !== 'privacy'}>
-            {activeTab === 'privacy' && <PrivacyPolicyTab />}
-          </div>
-          <div role="tabpanel" id="tabpanel-terms" hidden={activeTab !== 'terms'}>
-            {activeTab === 'terms' && <TermsOfServiceTab />}
-          </div>
+        <div className="container mx-auto px-4 max-w-4xl py-10 relative z-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              role="tabpanel"
+              id={`tabpanel-${activeTab}`}
+            >
+              {activeTab === 'legal' && <LegalDisclaimersTab />}
+              {activeTab === 'privacy' && <PrivacyPolicyTab />}
+              {activeTab === 'terms' && <TermsOfServiceTab />}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </main>
-      
+      </motion.main>
       <Footer />
     </>
   );

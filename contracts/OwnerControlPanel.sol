@@ -129,9 +129,17 @@ contract OwnerControlPanel {
     }
 
     modifier nonReentrant() {
+        _nonReentrantBefore();
+        _;
+        _nonReentrantAfter();
+    }
+
+    function _nonReentrantBefore() private {
         if (_reentrancyLock == 1) revert OCP_ReentrantCall();
         _reentrancyLock = 1;
-        _;
+    }
+
+    function _nonReentrantAfter() private {
         _reentrancyLock = 0;
     }
 

@@ -281,7 +281,7 @@ export function OwnerChallengeBanner() {
                   {claim.claimReason && (
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Reason given</p>
-                      <p className="text-sm text-gray-300 italic">"{claim.claimReason}"</p>
+                      <p className="text-sm text-gray-300 italic">&quot;{claim.claimReason}&quot;</p>
                     </div>
                   )}
                   <div className="flex items-center gap-2 pt-2">

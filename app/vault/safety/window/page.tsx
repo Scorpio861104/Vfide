@@ -185,7 +185,7 @@ export default function ChallengeWindowPage() {
 
   return (
     <>
-      <div className="min-h-screen pt-24 text-white">
+      <div className="min-h-screen md:pt-[3.5rem] text-white">
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault/safety"
@@ -238,9 +238,9 @@ export default function ChallengeWindowPage() {
               </li>
               <li>
                 <strong className="text-white">Note:</strong> The protocol automatically extends
-                the window to 14 days for vaults that were recently active — so even a "3 days"
+                the window to 14 days for vaults that were recently active — so even a &quot;3 days&quot;
                 preference becomes a 14-day window if your vault is active when recovery starts.
-                This means short preferences are mostly relevant for vaults you haven't touched in
+                This means short preferences are mostly relevant for vaults you haven&apos;t touched in
                 a while.
               </li>
             </ul>

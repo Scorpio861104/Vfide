@@ -72,7 +72,15 @@ export default function MerchantReturnsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-24 text-white">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #ef4444 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link href="/merchant" className="mb-6 inline-flex items-center gap-2 text-cyan-300 hover:text-cyan-200">
             <ArrowLeft size={16} /> Back to Merchant Hub
@@ -80,7 +88,10 @@ export default function MerchantReturnsPage() {
 
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="flex items-center gap-3 text-3xl font-bold">
+              <div className="badge-live mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Returns & RMA
+            </div>
+            <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
                 <RotateCcw className="text-cyan-400" /> Returns & exchanges
                 {pendingCount > 0 && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-300">{pendingCount}</span>}
               </h1>

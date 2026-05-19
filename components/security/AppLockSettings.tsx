@@ -241,7 +241,7 @@ export function AppLockSettings() {
             <div className="text-[10px] text-gray-500">
               Forget your PIN? Remove it from this panel on another logged-in
               device, or clear browser storage to wipe AppLock on this device.
-              There's no server-side recovery — that's intentional.
+              There&apos;s no server-side recovery — that&apos;s intentional.
             </div>
           </div>
         )}
@@ -278,7 +278,7 @@ export function AppLockSettings() {
       <div className="space-y-2">
         <div className="text-sm font-medium text-white">Session timeout</div>
         <div className="text-xs text-gray-400">
-          How long an unlock stays valid before you're prompted again. Default
+          How long an unlock stays valid before you&apos;re prompted again. Default
           15 minutes. Range 1 minute – 24 hours.
         </div>
         <div className="flex items-center gap-3">

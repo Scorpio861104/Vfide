@@ -277,7 +277,7 @@ export default function InheritanceSetupPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pt-24 pb-12">
+    <div className="mx-auto max-w-3xl px-4 md:pt-[3.5rem] pb-12">
       <Header step={step} />
 
       <AnimatePresence mode="wait">
@@ -803,7 +803,7 @@ function NavButtons({
 
 function ExistingConfigNotice() {
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-24 pb-12">
+    <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12">
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 text-center">
         <Shield className="mx-auto text-amber-400" size={32} />
         <h2 className="mt-4 text-xl font-bold text-white">
@@ -827,7 +827,7 @@ function ExistingConfigNotice() {
 
 function NoVaultNotice() {
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-24 pb-12">
+    <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12">
       <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
         <h2 className="text-xl font-bold text-white">No vault deployed</h2>
         <p className="mt-2 text-sm text-gray-400">
@@ -847,7 +847,7 @@ function NoVaultNotice() {
 
 function NoGuardiansNotice() {
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-24 pb-12">
+    <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12">
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6 text-center">
         <Users className="mx-auto text-amber-400" size={32} />
         <h2 className="mt-4 text-xl font-bold text-white">Add guardians first</h2>
@@ -882,7 +882,7 @@ function ProposalSuccessPage({
   }, []);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pt-24 pb-12">
+    <div className="mx-auto max-w-2xl px-4 md:pt-[3.5rem] pb-12">
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6">
         <CheckCircle2 className="text-emerald-400" size={32} />
         <h2 className="mt-3 text-xl font-bold text-white">

@@ -1,3 +1,5 @@
+'use client';
+
 import { formatSecurityEventType } from '@/config/security-advanced';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useState } from 'react';

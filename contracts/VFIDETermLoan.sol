@@ -613,11 +613,11 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.borrower != msg.sender) revert TL_NotBorrower();
         if (l.state != LoanState.ACTIVE && l.state != LoanState.GRACE) revert TL_WrongState();
 
-        bool isLate = block.timestamp > l.deadline;
+        bool isLate = block.timestamp >= l.deadline;
 
         // If past deadline, must be in grace period
         if (isLate && l.state == LoanState.ACTIVE) {
-            if (block.timestamp > l.deadline + GRACE_PERIOD) revert TL_WrongState();
+            if (block.timestamp >= l.deadline + GRACE_PERIOD) revert TL_WrongState();
             l.state = LoanState.GRACE;
         }
 
@@ -674,7 +674,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.borrower != msg.sender) revert TL_NotBorrower();
         // Can propose during GRACE or if lender hasn't claimed default yet
         if (l.state != LoanState.GRACE && l.state != LoanState.ACTIVE) revert TL_WrongState();
-        if (block.timestamp <= l.deadline) revert TL_WrongState(); // Not overdue yet
+        if (block.timestamp < l.deadline) revert TL_WrongState(); // Not overdue yet
         if (plans[id].totalOwed > 0) revert TL_PlanExists();
         if (installments < 2 || installments > MAX_PLAN_INSTALLMENTS) revert TL_InvalidTerms();
         if (intervalDays < 7 || intervalDays > 30) revert TL_InvalidTerms();
@@ -795,14 +795,14 @@ contract VFIDETermLoan is ReentrancyGuard {
             PaymentPlan storage p = plans[id];
             if (p.accepted && p.paidInstallments < p.totalInstallments) {
                 // Must be 7+ days past the installment due date
-                if (block.timestamp <= p.nextDue + 7 days) revert TL_GraceNotExpired();
+                if (block.timestamp < p.nextDue + 7 days) revert TL_GraceNotExpired();
                 planFailed = true;
             } else {
                 revert TL_WrongState();
             }
         } else if (l.state == LoanState.ACTIVE || l.state == LoanState.GRACE) {
             // No plan — standard default after deadline + grace
-            if (block.timestamp <= l.deadline + GRACE_PERIOD) revert TL_GraceNotExpired();
+            if (block.timestamp < l.deadline + GRACE_PERIOD) revert TL_GraceNotExpired();
         } else {
             revert TL_WrongState();
         }
@@ -1188,8 +1188,8 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 interest = (l.principal * l.interestBps) / 10000;
         uint256 total = l.principal + interest;
         remaining = total > l.amountRepaid ? total - l.amountRepaid : 0;
-        overdue = block.timestamp > l.deadline;
-        defaultable = block.timestamp > l.deadline + GRACE_PERIOD;
+        overdue = block.timestamp >= l.deadline;
+        defaultable = block.timestamp >= l.deadline + GRACE_PERIOD;
     }
 
     function getStats() external view returns (uint256, uint256, uint256, uint256, uint256) {

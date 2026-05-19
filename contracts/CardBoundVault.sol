@@ -108,6 +108,8 @@ interface ICardBoundVaultPaymentQueueManager {
         returns (uint64 requestTime, uint256 amount);
     function setLargePaymentThreshold(uint256 threshold, uint64 delay) external returns (uint64 executeAfter);
     function applyLargePaymentThreshold() external returns (uint256 oldThreshold, uint256 newThreshold);
+    /// @notice R77: cancel a pending large-payment threshold change (completes apply+cancel symmetry)
+    function cancelLargePaymentThreshold() external returns (uint256 threshold, uint64 executeAfter);
     function clearOnRecovery() external;
 }
 
@@ -410,6 +412,8 @@ contract CardBoundVault is ReentrancyGuard {
     event PaymentQueueCancelled(uint256 indexed queueIndex, address by);
     event LargePaymentThresholdSet(uint256 oldThreshold, uint256 newThreshold);
     event LargePaymentThresholdProposed(uint256 threshold, uint64 executeAfter);
+    /// @notice R77: emitted when a pending large-payment threshold change is cancelled.
+    event LargePaymentThresholdCancelled(uint256 threshold, uint64 executeAfter);
 
 
     /// @notice GUARDIAN-WARN-1: emitted on every outgoing payment/transfer made before the
@@ -1230,6 +1234,14 @@ contract CardBoundVault is ReentrancyGuard {
         (uint256 oldThreshold, uint256 newThreshold) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
             .applyLargePaymentThreshold();
         emit LargePaymentThresholdSet(oldThreshold, newThreshold);
+    }
+
+    /// @notice Cancel a pending large-payment threshold change (R77: completes apply+cancel symmetry).
+    /// @dev Delegates to PaymentQueueManager.cancelLargePaymentThreshold().
+    function cancelLargePaymentThreshold() external onlyAdmin {
+        (uint256 threshold, uint64 executeAfter) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
+            .cancelLargePaymentThreshold();
+        emit LargePaymentThresholdCancelled(threshold, executeAfter);
     }
     // ═══════════════════════════════════════════════════════════════
     //  WITHDRAWAL QUEUE — Large transfer protection

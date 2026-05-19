@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * ActiveTab — escrows currently in non-terminal states (OPEN, FUNDED, DISPUTED).
  *
@@ -87,6 +88,9 @@ export function ActiveTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Lock size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view active escrows.</p>
+        <div className="mt-6 flex justify-center">
+          <VfideConnectButton size="md" />
+        </div>
       </div>
     );
   }
@@ -110,7 +114,7 @@ export function ActiveTab() {
       {combinedListError && (
         <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2">
           <AlertCircle size={12} className="shrink-0 mt-0.5" />
-          <span>Couldn't load some escrows: {combinedListError}</span>
+          <span>Couldn&apos;t load some escrows: {combinedListError}</span>
         </div>
       )}
 

@@ -1,6 +1,8 @@
 'use client';
 
 import { Sparkles, Shield, KeyRound, Wallet, CreditCard, BarChart3 } from 'lucide-react';
+import { useAccount } from 'wagmi';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 import { ChapterShell } from '../ChapterShell';
 
@@ -10,14 +12,31 @@ interface WelcomeChapterProps {
 }
 
 export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
+  const { isConnected } = useAccount();
+
   return (
     <ChapterShell
       chapter="welcome"
       description="Five quick chapters to get your vault, guardians, and first payment ready. You can stop after any step and come back later — the only required one is creating your vault."
-      onPrimary={onContinue}
-      primaryLabel="Start setup"
+      onPrimary={isConnected ? onContinue : () => {/* no-op until connected */}}
+      primaryLabel={isConnected ? 'Start setup' : 'Connect wallet to start'}
+      primaryDisabled={!isConnected}
       onSkip={onSkipAll}
     >
+      {/* Wallet connect prompt — shown only when not connected */}
+      {!isConnected && (
+        <div className="mb-4 flex flex-col items-center gap-3 rounded-xl border border-cyan-500/30 bg-cyan-500/8 p-4 text-center">
+          <Wallet className="text-cyan-300" size={28} aria-hidden />
+          <p className="text-sm text-white/80 font-medium">
+            Connect your wallet to begin setup
+          </p>
+          <p className="text-xs text-white/50">
+            Your vault is owned by your wallet — VFIDE never holds your funds.
+          </p>
+          <VfideConnectButton size="md" />
+        </div>
+      )}
+
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {[
           {

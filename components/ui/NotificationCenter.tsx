@@ -672,8 +672,9 @@ export function NotificationCenter() {
 
               {/* Footer */}
               <div className="px-4 py-3 border-t border-zinc-700 flex items-center justify-between">
+                {/* NAV-13: /notifications redirects to /settings?tab=notifications — link directly */}
                 <Link
-                  href="/notifications"
+                  href="/settings?tab=notifications"
                   onClick={() => setIsOpen(false)}
                   className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
                 >

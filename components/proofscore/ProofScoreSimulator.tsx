@@ -25,7 +25,7 @@ const SIM_TIERS: SimTier[] = [
   { label: 'Neutral',    min: 5000,  max: 5400,  color: '#FFD700', glowColor: '#FFD70040', icon: '🟡', canVote: false, canMerchant: false, canCouncil: false, canEndorse: false },
   { label: 'Governance', min: 5400,  max: 5600,  color: '#60A5FA', glowColor: '#60A5FA40', icon: '🗳️', canVote: true,  canMerchant: false, canCouncil: false, canEndorse: false },
   { label: 'Trusted',    min: 5600,  max: 7000,  color: '#34D399', glowColor: '#34D39940', icon: '✅', canVote: true,  canMerchant: true,  canCouncil: false, canEndorse: false },
-  { label: 'Council',    min: 7000,  max: 8000,  color: '#A78BFA', glowColor: '#A78BFA40', icon: '⭐', canVote: true,  canMerchant: true,  canCouncil: true,  canEndorse: false },
+  { label: 'Council',    min: 7000,  max: 8000,  color: '#A78BFA', glowColor: '#A78BFA40', icon: '⭐', canVote: true,  canMerchant: true,  canCouncil: true,  canEndorse: true  },
   { label: 'Elite',      min: 8000,  max: 10001, color: '#00FF88', glowColor: '#00FF8840', icon: '🏆', canVote: true,  canMerchant: true,  canCouncil: true,  canEndorse: true  },
 ];
 
@@ -195,8 +195,8 @@ export function ProofScoreSimulator() {
                   <span className="font-semibold" style={{ color: nextTier.color }}>{nextTier.label}</span>
                   {nextTier.label === 'Governance' && ' (enables voting)'}
                   {nextTier.label === 'Trusted' && ' (enables merchant + lower fee)'}
-                  {nextTier.label === 'Council' && ' (enables council eligibility)'}
-                  {nextTier.label === 'Elite' && ' (0.25% fee + endorse others)'}
+                  {nextTier.label === 'Council' && ' (enables council eligibility + endorse others)'}
+                  {nextTier.label === 'Elite' && ' (0.25% minimum fee)'}
                 </div>
               </div>
             )}

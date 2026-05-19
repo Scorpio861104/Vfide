@@ -230,7 +230,7 @@ export function SpendLimitsConfigurator({
             Spend Limits
           </h3>
           <p className="text-sm text-gray-400 mt-1">
-            Caps below trigger the vault's withdrawal-queue protection. Anything
+            Caps below trigger the vault&apos;s withdrawal-queue protection. Anything
             at or above the daily limit goes into a 7-day queue your guardians
             can cancel.
           </p>
@@ -344,10 +344,10 @@ export function SpendLimitsConfigurator({
         <Clock size={14} className="flex-shrink-0 mt-0.5" />
         <span>
           <strong>How the queue works:</strong> a withdrawal at or above your
-          queue threshold doesn't execute immediately — it sits in a 7-day
+          queue threshold doesn&apos;t execute immediately — it sits in a 7-day
           queue. Any guardian (or you) can cancel it during that window. This is
           your safety net if your wallet is compromised. Smaller thresholds =
-          more protection, more queued transactions you'll review.
+          more protection, more queued transactions you&apos;ll review.
         </span>
       </div>
 

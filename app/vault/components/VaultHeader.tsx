@@ -29,10 +29,13 @@ export function VaultHeader({
     <section className="relative py-12 border-b border-white/5">
       <div className="container mx-auto px-4 max-w-6xl">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 flex items-center gap-3">
-            Vault Manager
+          <div className="badge-live mb-4">
+            <Shield size={12} /> Self-Custody Vault
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-3 flex items-center gap-3 tracking-tight">
+            <span className="bg-gradient-to-r from-white to-emerald-300 bg-clip-text text-transparent">Vault Manager</span>
             <motion.span animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 5 }}>
-              <Shield className="text-emerald-400" size={40} />
+              <Shield className="text-emerald-400" size={36} />
             </motion.span>
           </h1>
           <p className="text-xl text-white/60 mb-6">

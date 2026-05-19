@@ -28,14 +28,14 @@ import { motion } from 'framer-motion'
 export default function VaultSettingsPage() {
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white pt-20">
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white md:pt-[3.5rem]">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           {/* Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl mb-4">
               <Vault className="w-10 h-10" />
             </div>
-            <h1 className="text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400">
+            <h1 className="text-3xl sm:text-5xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-blue-400 to-pink-400">
               Vault Settings
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -170,7 +170,7 @@ export default function VaultSettingsPage() {
                 </div>
                 <div className="font-bold text-yellow-400 mb-2">Guardian Governance</div>
                 <div className="text-xs text-gray-400">
-                  Guardians approve wallet-rotation and vault-protection actions; configure heirs in the vault's Inheritance section
+                  Guardians approve wallet-rotation and vault-protection actions; configure heirs in the vault&apos;s Inheritance section
                 </div>
               </div>
 

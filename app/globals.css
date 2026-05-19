@@ -2,6 +2,7 @@
 @import "@fontsource/inter/latin.css";
 @import "@fontsource/space-grotesk/latin.css";
 @import "../styles/enhanced-animations.css";
+@import "../styles/premium-components.css";
 
 @layer base {
   :root {
@@ -182,6 +183,28 @@
     input:not([type="checkbox"]):not([type="radio"]) {
       min-height: 44px;
     }
+  }
+
+  /* iOS Safari: prevent zoom on input focus (font-size must be >= 16px on mobile) */
+  @media (max-width: 767px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Consistent input font size across devices */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  input[type="tel"],
+  textarea,
+  select {
+    font-size: max(16px, 1em);
   }
 
   /* Selection styling */
@@ -1027,5 +1050,266 @@
     .mobile-page-wrapper {
       padding-bottom: 0;
     }
+  }
+
+  /* AppShell content wrapper - safe-area-aware bottom clearance on mobile */
+  .appshell-content {
+    /* pb-20 is 80px, add safe area on top */
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 768px) {
+    .appshell-content {
+      padding-bottom: 0;
+    }
+  }
+
+  /* MoreSheet bottom - sits above BottomTabBar (64px) + safe area */
+  .more-sheet-bottom {
+    bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ==========================================
+   * PERFORMANCE: Low-end device fallbacks
+   * Reduces visual complexity on phones that
+   * struggle with backdrop-filter and large
+   * blurred gradients.
+   * ========================================== */
+
+  /* Reduce backdrop-filter cost on low-powered devices */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-card-premium,
+    .analytics-card,
+    .glass-surface,
+    .glass-input,
+    .glass-button,
+    .glass-button-ghost,
+    .topnav-premium,
+    [class*="backdrop-blur"] {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .glass-card-premium {
+      background: rgba(15, 15, 20, 0.95) !important;
+    }
+    .analytics-card {
+      background: rgba(15, 15, 20, 0.95) !important;
+    }
+  }
+
+  /* On very small screens (≤360px width), scale down ambient orbs visually */
+  @media (max-width: 360px) {
+    .text-4xl { font-size: 1.75rem; line-height: 2rem; }
+    .text-5xl { font-size: 2.25rem; line-height: 2.5rem; }
+    .text-6xl { font-size: 2.5rem; line-height: 2.75rem; }
+    /* Reduce px padding on very small screens */
+    .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  }
+
+  /* Ensure no horizontal overflow from any element */
+  .min-h-screen {
+    overflow-x: hidden;
+  }
+}
+
+/* ============================================================
+ * R89: PERFECT UI/UX — GLOBAL POLISH ADDITIONS
+ * ============================================================ */
+
+@layer utilities {
+
+  /* ── Skip-to-content (accessibility) ─────────────────── */
+  .skip-to-content {
+    position: fixed;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    padding: 0.75rem 1.5rem;
+    background: #22d3ee;
+    color: #030712;
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-radius: 0 0 0.75rem 0.75rem;
+    text-decoration: none;
+    transition: top 0.15s ease;
+    outline: none;
+  }
+  .skip-to-content:focus {
+    top: 0;
+  }
+
+  /* ── Page-entry fade-up (route transitions) ──────────── */
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page-enter {
+    animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* ── Premium shimmer skeleton ────────────────────────── */
+  @keyframes skeleton-shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.04) 0%,
+      rgba(255,255,255,0.09) 40%,
+      rgba(255,255,255,0.04) 80%
+    );
+    background-size: 800px 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+  /* Convenience: combine animate-pulse with shimmer */
+  .skeleton {
+    border-radius: 0.5rem;
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.04) 0%,
+      rgba(255,255,255,0.08) 40%,
+      rgba(255,255,255,0.04) 80%
+    );
+    background-size: 800px 100%;
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+
+  /* ── Consistent focus ring (supplement Tailwind) ─────── */
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    box-shadow: 0 0 0 2px #030712, 0 0 0 4px rgba(34,211,238,0.6);
+  }
+
+  /* ── Smooth press / tap feedback ─────────────────────── */
+  .press {
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+  .press:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+
+  /* ── Number / amount display ──────────────────────────── */
+  .amount-display {
+    font-family: var(--font-numeric), ui-monospace, monospace;
+    font-feature-settings: "tnum" 1, "zero" 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Status pills ─────────────────────────────────────── */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .status-pill-success {
+    background: rgba(34,197,94,0.12);
+    color: #4ade80;
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+  .status-pill-warning {
+    background: rgba(245,158,11,0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+  .status-pill-danger {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+    border: 1px solid rgba(239,68,68,0.2);
+  }
+  .status-pill-info {
+    background: rgba(59,130,246,0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59,130,246,0.2);
+  }
+  .status-pill-neutral {
+    background: rgba(255,255,255,0.06);
+    color: #a1a1aa;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ── Scrollable container with fade-out edges ─────────── */
+  .scroll-fade-right {
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  }
+  .scroll-fade-both {
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  }
+
+  /* ── Divider with label ────────────────────────────────── */
+  .divider-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #52525b;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .divider-label::before,
+  .divider-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  /* ── Interactive row (table / list item) ──────────────── */
+  .row-interactive {
+    transition: background 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+  }
+  .row-interactive:hover {
+    background: rgba(255,255,255,0.03);
+  }
+  .row-interactive:active {
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* ── Gradient text helpers ────────────────────────────── */
+  .text-gradient-cyan {
+    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-green {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Card hover glow ──────────────────────────────────── */
+  .card-glow-cyan:hover {
+    box-shadow:
+      0 0 0 1px rgba(34,211,238,0.15),
+      0 8px 32px -8px rgba(0,0,0,0.4),
+      0 0 24px -8px rgba(34,211,238,0.15);
+  }
+  .card-glow-violet:hover {
+    box-shadow:
+      0 0 0 1px rgba(139,92,246,0.15),
+      0 8px 32px -8px rgba(0,0,0,0.4),
+      0 0 24px -8px rgba(139,92,246,0.15);
   }
 }

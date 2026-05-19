@@ -98,11 +98,12 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
         // the tab bar — including the More button that toggled the
         // sheet — remains tappable for re-closing. Rounded top corners,
         // max-height capped so the sheet never covers the whole screen.
-        'fixed inset-x-0 bottom-16 z-50 max-h-[70vh] rounded-t-3xl border-t border-x border-white/10 bg-zinc-950/95 backdrop-blur-xl'
+        'fixed inset-x-0 z-50 max-h-[70vh] rounded-t-3xl border-t border-x border-white/10 bg-zinc-950/95 backdrop-blur-xl more-sheet-bottom'
       : // Desktop popover: anchored below TopNav (56px) + ticker
         // (28px) = top 88px. Width-constrained so it doesn't dominate.
         // Max height leaves a comfortable gutter at the viewport bottom.
-        'fixed right-4 top-[88px] z-50 w-[min(420px,calc(100vw-2rem))] max-h-[calc(100vh-7rem)] rounded-2xl border border-white/10 bg-zinc-950/95 backdrop-blur-xl shadow-2xl';
+        // CODE-5: Use rem instead of px so the offset scales with the user's font size preference
+        'fixed right-4 top-[5.5rem] z-50 w-[min(420px,calc(100vw-2rem))] max-h-[calc(100vh-7rem)] rounded-2xl border border-white/10 bg-zinc-950/95 backdrop-blur-xl shadow-2xl';
 
   const motionInitial =
     variant === 'bottom' ? { y: '100%', opacity: 1 } : { opacity: 0, y: -8, scale: 0.97 };
@@ -157,7 +158,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Find anywhere…"
-                className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 outline-none"
+                className="flex-1 bg-transparent text-base text-white placeholder-gray-500 outline-none min-h-[36px]"
                 aria-label="Search destinations"
               />
               <button
@@ -300,6 +301,27 @@ function ItemRow({
   const href = item.href ?? '/';
   const active = pathname === href || (href !== '/' && pathname.startsWith(href + '/'));
   const Icon = item.icon;
+
+  // T2-4: Coming-soon items are shown but grayed out and unclickable.
+  if (item.comingSoon) {
+    return (
+      <div
+        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm opacity-40 cursor-not-allowed select-none"
+        aria-disabled="true"
+      >
+        <span
+          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md"
+          style={{ background: `${item.color}10`, color: item.color }}
+        >
+          <Icon size={14} />
+        </span>
+        <span className="flex-1 truncate text-gray-500">{item.label}</span>
+        <span className="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider bg-white/5 text-white/30">
+          Soon
+        </span>
+      </div>
+    );
+  }
 
   return (
     <Link

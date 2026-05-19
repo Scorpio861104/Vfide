@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
@@ -51,6 +52,9 @@ export function OwnerGuard({ children }: { children: React.ReactNode }) {
             <p className="text-slate-300">
               Please connect your wallet to access the control panel.
             </p>
+              <div className="mt-6 flex justify-center">
+                <VfideConnectButton size="md" />
+              </div>
           </div>
         </div>
       </div>

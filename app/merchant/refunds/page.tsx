@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -197,7 +198,15 @@ export default function MerchantRefundsPage() {
 
   return (
     <>
-      <div className="min-h-screen pt-24 text-white">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #ef4444 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="container mx-auto max-w-4xl px-4 pb-16">
           <Link
             href="/merchant"
@@ -208,12 +217,15 @@ export default function MerchantRefundsPage() {
 
           <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+              <div className="badge-live mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Refund Management
+            </div>
+            <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3 tracking-tight">
                 <RotateCcw className="text-cyan-400" size={28} />
                 Refunds
               </h1>
               <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
-                On-chain refunds you've initiated to customers. Initiated refunds must be
+                On-chain refunds you&apos;ve initiated to customers. Initiated refunds must be
                 completed within 30 days, after which they expire and can no longer be
                 completed. The customer sees both stages in their transaction history.
               </p>
@@ -337,6 +349,9 @@ export default function MerchantRefundsPage() {
           {!address && (
             <GlassCard hover={false} className="p-6 text-center">
               <p className="text-gray-400 text-sm">Connect your wallet to view your refund history.</p>
+              <div className="mt-6 flex justify-center">
+                <VfideConnectButton size="md" />
+              </div>
             </GlassCard>
           )}
 
@@ -364,8 +379,8 @@ export default function MerchantRefundsPage() {
               <RotateCcw className="w-10 h-10 mx-auto mb-4 text-gray-500" />
               <h3 className="text-lg font-bold text-white mb-2">No refunds yet</h3>
               <p className="text-sm text-gray-400 max-w-md mx-auto">
-                Refunds you initiate will appear here. You'll see when they've been completed
-                or when they're approaching the 30-day expiry window.
+                Refunds you initiate will appear here. You&apos;ll see when they&apos;ve been completed
+                or when they&apos;re approaching the 30-day expiry window.
               </p>
             </GlassCard>
           )}
@@ -442,8 +457,8 @@ export default function MerchantRefundsPage() {
                 <div className="text-xs text-amber-200">
                   <p className="font-semibold mb-1">Some refunds need their refundId to complete</p>
                   <p className="leading-relaxed">
-                    The MerchantPortal contract doesn't emit refundIds in events, so refunds
-                    initiated from a different browser or before this device was set up don't
+                    The MerchantPortal contract doesn&apos;t emit refundIds in events, so refunds
+                    initiated from a different browser or before this device was set up don&apos;t
                     have their IDs locally. To complete them, find the original initiateRefund
                     transaction on a block explorer — the refundId is the return value. Then
                     call <code className="font-mono">completeRefund(refundId)</code> directly.

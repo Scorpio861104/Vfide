@@ -198,4 +198,19 @@ contract CardBoundVaultPaymentQueueManager {
         activeQueuedPayments = 0;
         delete pendingLargePaymentThresholdChange;
     }
+
+    /// @notice Cancel a pending large-payment threshold change before it executes.
+    /// Backlog fix (R77): Completes the apply+cancel symmetry for all 8 timelocked
+    /// pipelines. Previously only applyLargePaymentThreshold existed with no cancel.
+    function cancelLargePaymentThreshold()
+        external
+        onlyVault
+        returns (uint256 threshold, uint64 executeAfter)
+    {
+        PendingLargePaymentThresholdChange memory pending = pendingLargePaymentThresholdChange;
+        if (pending.executeAfter == 0) revert PQM_NoPending();
+        threshold = pending.threshold;
+        executeAfter = pending.executeAfter;
+        delete pendingLargePaymentThresholdChange;
+    }
 }

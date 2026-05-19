@@ -248,36 +248,51 @@ export default function SupportPage() {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-zinc-950 pt-20">
-        <div className="container mx-auto px-4 max-w-6xl py-8 space-y-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-4xl font-bold text-white mb-2">{copy.heading}</h1>
-          </motion.div>
-          <p className="text-white/60">{copy.subtitle}</p>
-
-          <div className="flex items-center gap-3">
-            <label htmlFor="support-language" className="text-sm text-gray-300">Language</label>
-            <select
-              id="support-language"
-              value={locale}
-              onChange={(event) => persistLocale(event.target.value as LocaleId)}
-              className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white"
-            >
-              <option value="en-US">English</option>
-              <option value="es-ES">Español</option>
-            </select>
+    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
+      </div>
+      <div className="relative container mx-auto px-4 max-w-6xl py-8 space-y-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex items-center gap-3 mb-3">
+            <span className="badge-live"><span className="badge-live-dot" />Support Center</span>
           </div>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">
+                <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                  {copy.heading}
+                </span>
+              </h1>
+              <p className="text-white/50">{copy.subtitle}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <label htmlFor="support-language" className="text-sm text-white/50">Language</label>
+              <select
+                id="support-language"
+                value={locale}
+                onChange={(event) => persistLocale(event.target.value as LocaleId)}
+                className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white text-sm"
+              >
+                <option value="en-US">English</option>
+                <option value="es-ES">Español</option>
+              </select>
+            </div>
+          </div>
+        </motion.div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {TAB_IDS.map((id) => (
               <button
                 key={id}
                 type="button"
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
-                  activeTab === id ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
-                }`}
+                className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}
               >
                 {copy.tabs[id]}
               </button>
@@ -314,8 +329,7 @@ export default function SupportPage() {
             />
           ) : null}
         </div>
-      </div>
       <Footer />
-    </>
+    </div>
   );
 }

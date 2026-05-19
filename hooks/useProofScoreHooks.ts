@@ -35,10 +35,12 @@ export function useProofScore(userAddress?: `0x${string}`) {
     ? (typeof score === 'bigint' ? safeBigIntToNumber(score, 0) : Number(score))
     : 5000 // Default neutral score (10x scale) when contract hasn't responded yet
   
-  // Calculate tier and benefits (updated for 10x scale: 0-10000)
-  const tier = 
+  // Calculate tier and benefits (7-tier system per manual, 0-10000 scale)
+  const tier =
     scoreNum >= 8000 ? 'Elite' :
-    scoreNum >= 7000 ? 'High Trust' :
+    scoreNum >= 7000 ? 'Council' :
+    scoreNum >= 5600 ? 'Trusted' :
+    scoreNum >= 5400 ? 'Governance' :
     scoreNum >= 5000 ? 'Neutral' :
     scoreNum >= 3500 ? 'Low Trust' : 'Risky'
   
@@ -52,11 +54,13 @@ export function useProofScore(userAddress?: `0x${string}`) {
     scoreNum >= 4000 ? 3.5 :   // Low Trust: ~3.5% (interpolated)
     5.0                        // Risky (≤4000): 5% max (contract maximum)
   
-  const color = 
+  const color =
     scoreNum >= 8000 ? '#00FF88' : // Elite green
-    scoreNum >= 7000 ? '#00F0FF' : // High trust cyan
+    scoreNum >= 7000 ? '#A78BFA' : // Council purple
+    scoreNum >= 5600 ? '#34D399' : // Trusted emerald
+    scoreNum >= 5400 ? '#60A5FA' : // Governance blue
     scoreNum >= 5000 ? '#FFD700' : // Neutral gold
-    scoreNum >= 3500 ? '#FFA500' : '#FF4444' // Low/Risky orange/red
+    scoreNum >= 3500 ? '#FFA500' : '#FF4444' // Low Trust orange / Risky red
   
   return {
     score: scoreNum,
@@ -66,7 +70,8 @@ export function useProofScore(userAddress?: `0x${string}`) {
     canVote: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
     canMerchant: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
     canCouncil: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
-    canEndorse: scoreNum >= 8000,
+    canEndorse: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_ENDORSE,
+    canMentor: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MENTOR,
     isElite: scoreNum >= 8000,
     isLoading,
     refetch,

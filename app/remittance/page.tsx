@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
@@ -31,14 +32,27 @@ export default function RemittancePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 text-white">
-        <section className="py-16">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
+        {/* Ambient orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+
+        <section className="relative py-12">
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300">
-                <Send size={14} /> Remittance flow
+              <div className="badge-live mb-4">
+                <Send size={12} /> Global Transfers
               </div>
-              <h1 className="text-4xl font-bold md:text-5xl">Send money home with transparent fees</h1>
+              <h1 className="text-4xl font-black md:text-5xl tracking-tight">
+                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
+                  Send money home with transparent fees
+                </span>
+              </h1>
               <p className="mt-4 text-lg text-gray-400">
                 Save beneficiaries, compare corridor pricing, and prepare a proof-of-send flow for mobile-money and bank recipients.
               </p>
@@ -46,9 +60,9 @@ export default function RemittancePage() {
           </div>
         </section>
 
-        <section className="pb-10">
+        <section className="relative pb-10">
           <div className="container mx-auto grid max-w-6xl gap-6 px-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="glass-card-premium p-5">
               <BeneficiaryManager
                 selectedId={selectedBeneficiary?.id ?? null}
                 onSelect={(beneficiary) => {
@@ -59,14 +73,14 @@ export default function RemittancePage() {
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="glass-card-premium p-5">
                 <div className="mb-3 flex items-center gap-2 text-cyan-300">
                   <Coins size={18} />
                   <h2 className="text-xl font-bold text-white">Corridor pricing</h2>
                 </div>
                 <div className="space-y-2">
                   {comparisonRows.map((row) => (
-                    <div key={row.provider} className={`grid grid-cols-3 rounded-xl px-3 py-2 text-sm ${row.highlight ? 'bg-cyan-500/10 text-cyan-100' : 'bg-black/20 text-gray-300'}`}>
+                    <div key={row.provider} className={`grid grid-cols-3 rounded-xl px-3 py-2 text-sm ${row.highlight ? 'bg-cyan-500/10 text-cyan-100' : 'analytics-card text-gray-300'}`}>
                       <span>{row.provider}</span>
                       <span>{row.fee}</span>
                       <span>{row.payout}</span>
@@ -75,7 +89,7 @@ export default function RemittancePage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="glass-card-premium p-5">
                 <div className="mb-4 flex items-center gap-2 text-cyan-300">
                   <Wallet size={18} />
                   <h2 className="text-xl font-bold text-white">Send preview</h2>
@@ -103,7 +117,7 @@ export default function RemittancePage() {
                     type="button"
                     onClick={() => setShareReceipt(true)}
                     disabled={!isConnected || !selectedBeneficiary || !Number.isFinite(parsedAmount) || parsedAmount <= 0}
-                    className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-white disabled:opacity-60"
+                    className="btn-premium-primary flex items-center gap-2 disabled:opacity-60"
                   >
                     <ArrowRight size={16} /> Generate receipt preview
                   </button>
@@ -112,7 +126,7 @@ export default function RemittancePage() {
                     <Link
                       href={`https://wa.me/?text=${whatsappText}`}
                       target="_blank"
-                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm text-gray-200"
+                      className="btn-premium-ghost flex items-center gap-2"
                     >
                       Share via WhatsApp
                     </Link>
@@ -120,11 +134,16 @@ export default function RemittancePage() {
                 </div>
 
                 {!isConnected && (
-                  <p className="mt-3 text-sm text-amber-300">Connect your wallet to finalize remittance sends.</p>
+                  <>
+                    <p className="mt-3 text-sm text-amber-300">Connect your wallet to finalize remittance sends.</p>
+                    <div className="mt-6 flex justify-center">
+                      <VfideConnectButton size="md" />
+                    </div>
+                  </>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5 text-sm text-emerald-50">
+              <div className="glass-card-premium border-emerald-500/20 bg-emerald-500/5 p-5 text-sm text-emerald-50">
                 <div className="mb-2 flex items-center gap-2 font-semibold">
                   <Shield size={16} /> Why this matters
                 </div>

@@ -656,10 +656,11 @@ contract FraudRegistry is ReentrancyGuard {
     ) {
         uint256[] storage userIndices = userEscrowIndices[user];
         uint256 pendingCount = 0;
+        uint256 _len = userIndices.length;
 
-        for (uint256 i = 0; i < userIndices.length; i++) {
+        for (uint256 i = 0; i < _len; i++) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) pendingCount++;
+            if (!e.released && !e.cancelled) { pendingCount++; }
         }
 
         indices = new uint256[](pendingCount);
@@ -668,7 +669,7 @@ contract FraudRegistry is ReentrancyGuard {
         releaseAts = new uint64[](pendingCount);
 
         uint256 idx = 0;
-        for (uint256 i = 0; i < userIndices.length; i++) {
+        for (uint256 i = 0; i < _len; i++) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
             if (!e.released && !e.cancelled) {
                 indices[idx] = userIndices[i];
@@ -750,9 +751,10 @@ contract FraudRegistry is ReentrancyGuard {
 
         // Count pending escrows
         uint256[] storage userIndices = userEscrowIndices[user];
-        for (uint256 i = 0; i < userIndices.length; i++) {
+        uint256 _lenUI = userIndices.length;
+        for (uint256 i = 0; i < _lenUI; i++) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) pendingEscrowCount++;
+            if (!e.released && !e.cancelled) { pendingEscrowCount++; }
         }
     }
 

@@ -161,7 +161,7 @@ export default function RecoveryStatusPage() {
 
   return (
     <>
-      <div className="min-h-screen pt-24 text-white">
+      <div className="min-h-screen md:pt-[3.5rem] text-white">
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault/recover"
@@ -177,7 +177,7 @@ export default function RecoveryStatusPage() {
             </h1>
             <p className="text-gray-400 leading-relaxed">
               Track the progress of a recovery claim, finalize when ready, or check what happened
-              to a claim that didn't go through.
+              to a claim that didn&apos;t go through.
             </p>
           </div>
 
@@ -417,7 +417,7 @@ function RecoveryStatusBody({
             Waiting for guardians
           </h3>
           <p className="text-sm text-gray-300">
-            Your guardians need to review and vote on this claim. They'll see the reason you
+            Your guardians need to review and vote on this claim. They&apos;ll see the reason you
             provided and decide whether to approve. Once enough guardians approve, the challenge
             window begins.
           </p>
@@ -433,7 +433,7 @@ function RecoveryStatusBody({
           </h3>
           <p className="text-sm text-gray-300">
             Guardians approved your claim. The original wallet now has a window to challenge if
-            this recovery wasn't actually requested. Assuming no challenge, you'll be able to
+            this recovery wasn&apos;t actually requested. Assuming no challenge, you&apos;ll be able to
             finalize when the window closes ({formatTimeRemaining(challengeTimeRemaining)}).
           </p>
         </GlassCard>
@@ -485,7 +485,7 @@ function RecoveryStatusBody({
           </h3>
           <p className="text-sm text-gray-300">
             Guardians voted against this recovery. The most common reasons are that they
-            couldn't verify the claimant's identity, the reason given didn't match what they
+            couldn&apos;t verify the claimant&apos;s identity, the reason given didn&apos;t match what they
             knew about the situation, or they suspected the claim was fraudulent.
           </p>
         </GlassCard>
@@ -528,7 +528,7 @@ function RecoveryStatusBody({
           </p>
           {claim.claimReason && (
             <p>
-              <span className="text-gray-600">Reason:</span> <em>"{claim.claimReason}"</em>
+              <span className="text-gray-600">Reason:</span> <em>&quot;{claim.claimReason}&quot;</em>
             </p>
           )}
         </div>

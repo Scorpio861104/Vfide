@@ -7,6 +7,7 @@
 
 'use client';
 
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 import { usePremiumContent } from '@/lib/socialPayments';
 import { motion } from 'framer-motion';
@@ -189,9 +190,14 @@ export function PremiumContentGate({
           </button>
 
           {!isConnected && (
-            <p className="text-xs text-yellow-400 mt-4">
-              Connect your wallet to unlock content
-            </p>
+            <>
+              <p className="text-xs text-yellow-400 mt-4">
+                Connect your wallet to unlock content
+              </p>
+              <div className="mt-6 flex justify-center">
+                <ConnectButton />
+              </div>
+            </>
           )}
         </motion.div>
       </div>

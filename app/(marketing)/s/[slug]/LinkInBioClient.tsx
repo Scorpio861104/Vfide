@@ -98,10 +98,10 @@ export function LinkInBioClient({ merchant, products, slug, themeColor }: LinkIn
             {products.slice(0, 6).map(product => (
               <a key={product.id} href={`${storeUrl}?product=${product.slug}`}
                 className="bg-white/3 border border-white/5 rounded-xl overflow-hidden hover:border-white/15 transition-colors">
-                <div className="aspect-square bg-white/5 overflow-hidden">
+                <div className="aspect-square bg-white/5 relative overflow-hidden">
                   {product.images[0] ? (
                     <Image src={getImageUrl(product.images[0])} alt={product.name}
-                      className="w-full h-full object-cover" loading="lazy"  width={48} height={48} />
+                      className="object-cover" fill sizes="(max-width: 768px) 45vw, 200px" loading="lazy" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Package size={20} className="text-gray-600" />

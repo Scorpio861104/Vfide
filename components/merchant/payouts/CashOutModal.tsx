@@ -190,7 +190,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
               <div className="font-medium mb-1">Request created.</div>
               <p className="text-emerald-100/80">
                 Continue with {PAYOUT_PROVIDERS.find((p) => p.id === provider)?.label} to verify your
-                identity and finalise the {token.label} → fiat conversion. Your funds aren't moved
+                identity and finalise the {token.label} → fiat conversion. Your funds aren&apos;t moved
                 until you complete the provider flow.
               </p>
               {submitted.request.provider_tx_id && (
@@ -209,7 +209,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
             </button>
             <p className="text-xs text-gray-500">
               The provider opens in a new tab. Your payout row stays in <em>Awaiting provider</em>
-              {' '}until the provider's webhook updates it (or, if you close this without completing
+              {' '}until the provider&apos;s webhook updates it (or, if you close this without completing
               the provider flow, it stays awaiting and can be cancelled by support).
             </p>
           </div>
@@ -255,7 +255,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                 ))}
               </select>
               <p className="text-xs text-gray-500 mt-1.5">
-                Network support varies by provider. If your combination isn't supported, the
+                Network support varies by provider. If your combination isn&apos;t supported, the
                 provider will tell you on the next screen.
               </p>
             </label>

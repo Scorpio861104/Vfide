@@ -129,7 +129,7 @@ export default function PendingChangesPage() {
 
   return (
     <>
-      <div className="min-h-screen pt-24 text-white">
+      <div className="min-h-screen md:pt-[3.5rem] text-white">
         <div className="container mx-auto max-w-3xl px-4 pb-16">
           <Link
             href="/vault"
@@ -144,7 +144,7 @@ export default function PendingChangesPage() {
               Pending changes
             </h1>
             <p className="text-gray-400 leading-relaxed">
-              Timelocked admin changes you've queued on your vault. After the timelock expires
+              Timelocked admin changes you&apos;ve queued on your vault. After the timelock expires
               you can apply the change here, or cancel it before then if you change your mind.
               Some changes (guardian, trustee) are also manageable from the guardian tab.
             </p>
@@ -173,7 +173,7 @@ export default function PendingChangesPage() {
               <Inbox className="w-12 h-12 mx-auto mb-4 text-gray-500" />
               <h3 className="text-lg font-bold text-white mb-2">No vault on this wallet</h3>
               <p className="text-sm text-gray-400">
-                You don't have a vault yet, so there's nothing to manage here.
+                You don&apos;t have a vault yet, so there&apos;s nothing to manage here.
               </p>
             </GlassCard>
           )}
@@ -185,8 +185,8 @@ export default function PendingChangesPage() {
                 <div>
                   <p className="text-sm font-semibold text-amber-300 mb-1">View-only mode</p>
                   <p className="text-xs text-gray-300">
-                    Your connected wallet is not the admin of this vault. You can see what's
-                    pending but can't apply or cancel changes from here.
+                    Your connected wallet is not the admin of this vault. You can see what&apos;s
+                    pending but can&apos;t apply or cancel changes from here.
                   </p>
                 </div>
               </div>
@@ -221,7 +221,7 @@ export default function PendingChangesPage() {
                   <p className="text-sm text-gray-400 max-w-md mx-auto">
                     When you propose a timelocked change to your vault — spend limits, large
                     transfer threshold, token approvals, rescue operations, or large payment
-                    threshold — it'll show up here while it waits for the timelock to expire.
+                    threshold — it&apos;ll show up here while it waits for the timelock to expire.
                   </p>
                 </GlassCard>
               ) : (
@@ -416,7 +416,7 @@ function PendingChangeCard({
         )}
         {!change.canCancel && (
           <span className="text-xs text-gray-500 italic self-center">
-            This pipeline doesn't support cancellation
+            This pipeline doesn&apos;t support cancellation
           </span>
         )}
       </div>

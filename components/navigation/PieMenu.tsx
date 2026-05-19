@@ -649,6 +649,10 @@ export function PieMenu() {
   }, []);
 
   const handleItemClick = useCallback((item: NavItem) => {
+    // R90-3: If the item is marked comingSoon, do nothing — the tile already renders
+    // grayed-out with a "soon" badge; clicking it should not navigate anywhere
+    if (item.comingSoon) return;
+
     if (item.children && item.children.length > 0) {
       setActiveCategory(item);
       playClickTone(AUDIO_FREQUENCIES.categoryOpen);

@@ -70,28 +70,41 @@ export default function MerchantDirectoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-zinc-950 text-white relative">
+      {/* Ambient orbs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+      </div>
+      <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12 px-4">
+      <div className="relative bg-gradient-to-r from-cyan-600/20 to-violet-600/20 border-b border-white/10 py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Merchant Directory</h1>
-          <p className="text-blue-100 text-lg mb-6">Discover merchants accepting VFIDE payments</p>
+          <div className="badge-live mb-4">
+            <ShoppingBag size={12} /> Merchant Directory
+          </div>
+          <h1 className="text-3xl md:text-4xl font-black mb-2 tracking-tight">
+            <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Merchant Directory</span>
+          </h1>
+          <p className="text-white/60 text-lg mb-6">Discover merchants accepting VFIDE payments</p>
 
           <form onSubmit={handleSearch} className="flex gap-2 max-w-xl">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-               
                 value={search}
                 onChange={(e) =>  setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-300 outline-none"
+                className="w-full pl-10 pr-4 py-3 rounded-lg text-white bg-white/5 border border-white/10 focus:ring-2 focus:ring-cyan-500/30 outline-none"
                 maxLength={100}
               />
             </div>
             <button
               type="submit"
-              className="px-6 py-3 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition"
+              className="btn-premium-primary px-6 py-3"
             >
               Search
             </button>

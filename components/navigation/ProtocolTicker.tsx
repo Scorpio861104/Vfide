@@ -125,7 +125,12 @@ export function ProtocolTicker() {
     // doesn't reflow when events arrive.
     return (
       <div
-        className="pointer-events-none fixed left-0 right-0 top-0 md:top-14 z-40 h-7 border-b border-white/5 bg-zinc-950/80 backdrop-blur-md"
+        className="pointer-events-none fixed left-0 right-0 top-0 md:top-14 z-40 h-7 border-b border-white/5"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(6,6,10,0.92), rgba(8,8,14,0.85))',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+        }}
         aria-hidden="true"
       />
     );
@@ -135,7 +140,12 @@ export function ProtocolTicker() {
     <div
       role="region"
       aria-label="Live protocol activity"
-      className="fixed left-0 right-0 top-0 md:top-14 z-40 h-7 select-none overflow-hidden border-b border-white/5 bg-zinc-950/80 backdrop-blur-md"
+      className="fixed left-0 right-0 top-0 md:top-14 z-40 h-7 select-none overflow-hidden border-b border-white/5"
+      style={{
+        background: 'linear-gradient(to bottom, rgba(6,6,10,0.92), rgba(8,8,14,0.85))',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+      }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >

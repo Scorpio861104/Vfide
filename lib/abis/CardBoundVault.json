@@ -601,6 +601,25 @@
         "type": "uint64"
       }
     ],
+    "name": "LargePaymentThresholdCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "threshold",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
     "name": "LargePaymentThresholdProposed",
     "type": "event"
   },
@@ -1691,6 +1710,13 @@
   {
     "inputs": [],
     "name": "cancelInheritanceConfigChangeByGuardians",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelLargePaymentThreshold",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

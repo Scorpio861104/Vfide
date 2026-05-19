@@ -91,6 +91,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     uint16 public constant LOW_SCORE_THRESHOLD = ScoringConstants.LOW_FEE_FLOOR;  // ≤4000 pays max fee (40%)
     uint16 public constant HIGH_SCORE_THRESHOLD = ScoringConstants.HIGH_FEE_CEIL;  // ≥8000 pays min fee (80%)
     uint16 public constant MIN_TOTAL_FEE_FLOOR_BPS = 10; // 0.10% hard floor
+    uint16 public constant BPS_SCALE = 10_000; // 100% in basis points
     uint16 public minTotalBps = 25;   // 0.25% minimum fee for score ≥8000
     uint16 public maxTotalBps = 500;  // 5% maximum fee for score ≤4000
     uint16 public microTxFeeCeilingBps = 100; // 1.00% max fee for small payments
@@ -261,7 +262,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @return multiplier in basis points (10000 = 1x)
      */
     function getVolumeMultiplier() public view returns (uint16) {
-        if (!adaptiveFeesEnabled) return 10000; // 1x
+        if (!adaptiveFeesEnabled) return BPS_SCALE; // 1x
         
         uint256 volume = dailyVolumeTracked;
         // Reset if new day
@@ -518,8 +519,8 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         
         // Apply volume multiplier for adaptive fees
         uint16 volMult = getVolumeMultiplier();
-        if (volMult != 10000) {
-            baseFee = (baseFee * volMult) / 10000;
+        if (volMult != BPS_SCALE) {
+            baseFee = (baseFee * volMult) / BPS_SCALE;
             // Ensure fee stays within bounds
             if (baseFee > maxTotalBps) baseFee = maxTotalBps;
             if (baseFee < minTotalBps) baseFee = minTotalBps;
@@ -677,7 +678,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         }
         
         // Compute aggregate fee first, then split by amount to avoid BPS-share rounding drift.
-        uint256 totalFee = (amount * totalBps) / 10000;
+        uint256 totalFee = (amount * totalBps) / BPS_SCALE;
 
         // Split total fee: 40% burn, 10% sanctum, 50% ecosystem.
         // Ecosystem receives rounding dust by construction.
@@ -686,7 +687,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         ecosystemAmount = totalFee - burnAmount - sanctumAmount;
 
         // Ensure ecosystem always gets minimum (sustainability)
-        uint256 minEcosystemAmount = (amount * ecosystemMinBps) / 10000;
+        uint256 minEcosystemAmount = (amount * ecosystemMinBps) / BPS_SCALE;
         if (ecosystemAmount < minEcosystemAmount) {
             uint256 shortfall = minEcosystemAmount - ecosystemAmount;
             uint256 availableToShift = burnAmount + sanctumAmount;
@@ -934,13 +935,13 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
             return (0, 0, 0, 0, 0);
         }
         uint256 effectiveMaxBps = maxTotalBps;
-        if (effectiveMaxBps >= 10000) {
-            effectiveMaxBps = 9999;
+        if (effectiveMaxBps >= BPS_SCALE) {
+            effectiveMaxBps = BPS_SCALE - 1;
         }
 
         // Conservative gross-up against current max fee bound.
-        uint256 denominator = 10000 - effectiveMaxBps;
-        grossAmount = (desiredNetAmount * 10000 + denominator - 1) / denominator;
+        uint256 denominator = BPS_SCALE - effectiveMaxBps;
+        grossAmount = (desiredNetAmount * BPS_SCALE + denominator - 1) / denominator;
 
         // Normalize returned split values for final grossAmount.
         (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(from, to, grossAmount);

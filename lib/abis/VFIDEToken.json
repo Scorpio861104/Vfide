@@ -721,6 +721,37 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "subject",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "action",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "counterparty",
+        "type": "address"
+      }
+    ],
+    "name": "SeerWarned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "who",
         "type": "address"
       },
@@ -1445,7 +1476,7 @@
     "inputs": [],
     "name": "confirmCircuitBreaker",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1756,7 +1787,7 @@
         "type": "bool"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -2647,18 +2678,18 @@
     "inputs": [
       {
         "internalType": "bool",
-        "name": "_active",
+        "name": "",
         "type": "bool"
       },
       {
         "internalType": "uint256",
-        "name": "_duration",
+        "name": "",
         "type": "uint256"
       }
     ],
     "name": "setCircuitBreaker",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

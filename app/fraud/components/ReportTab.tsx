@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * ReportTab — file a fraud complaint against a target address.
  *
@@ -147,7 +148,12 @@ export function ReportTab() {
         <Wallet className="text-cyan-400 shrink-0 mt-0.5" size={18} />
         <div className="flex-1 text-sm">
           {!address ? (
-            <p className="text-zinc-300">Connect your wallet to file a complaint.</p>
+            <>
+              <p className="text-zinc-300">Connect your wallet to file a complaint.</p>
+              <div className="mt-6 flex justify-center">
+                <VfideConnectButton size="md" />
+              </div>
+            </>
           ) : !seerConfigured ? (
             <p className="text-zinc-300">Seer (ProofScore) not configured — eligibility cannot be verified.</p>
           ) : !scoreReady ? (

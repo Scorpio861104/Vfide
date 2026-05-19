@@ -272,7 +272,7 @@ export default function CharityDetailPage() {
 function DetailFrame({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 pt-20 pb-16">
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] pb-16">
         <div className="max-w-4xl mx-auto px-4 space-y-6">
           <Link
             href="/sanctum?tab=charities"

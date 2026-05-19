@@ -88,7 +88,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
       </section>
 
       {/* Toolbar */}
-      <section className="sticky top-20 z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/5">
+      <section className="sticky top-7 md:top-[5.25rem] z-30 bg-zinc-950/90 backdrop-blur-sm border-b border-white/5">
         <div className="container mx-auto px-4 max-w-6xl py-3">
           <div className="flex items-center gap-3">
             {/* Search */}

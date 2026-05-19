@@ -1,5 +1,6 @@
 'use client';
 
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * CreateTab — one-click escrow creation via openAndFundWithIntent.
  *
@@ -110,6 +111,9 @@ export function CreateTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Lock size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to create an escrow.</p>
+        <div className="mt-6 flex justify-center">
+          <VfideConnectButton size="md" />
+        </div>
       </div>
     );
   }
@@ -122,7 +126,7 @@ export function CreateTab() {
           <h3 className="text-white font-semibold">Pay with escrow protection</h3>
         </div>
         <p className="text-xs text-gray-400 leading-relaxed">
-          Funds are held in a smart contract until you confirm fulfillment. If something's wrong, you
+          Funds are held in a smart contract until you confirm fulfillment. If something&apos;s wrong, you
           can open a dispute and the DAO will arbitrate. One signature, one transaction — no separate
           approval setup needed.
         </p>
@@ -146,7 +150,7 @@ export function CreateTab() {
           )}
           {merchantValid && !merchantRegistry.isLoadingInfo && !merchantRegistry.isRegistered && (
             <p className="mt-1 text-xs text-amber-300/80 inline-flex items-center gap-1">
-              <AlertCircle size={10} /> Address isn't in the MerchantRegistry. Escrow creation will revert.
+              <AlertCircle size={10} /> Address isn&apos;t in the MerchantRegistry. Escrow creation will revert.
             </p>
           )}
           {merchantValid && !merchantRegistry.isLoadingInfo && merchantRegistry.isSuspended && (
