@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-// T1-3: /setup is now /settings (unified Account | Vault | Security | Notifications)
+// NAV-2: Pass tab context so /setup lands on the Account tab inside /settings
 export default function SetupRedirect() {
-  redirect('/settings');
+  redirect('/settings?tab=account');
 }

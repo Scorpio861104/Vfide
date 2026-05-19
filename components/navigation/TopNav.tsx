@@ -63,6 +63,10 @@ const MORE_MATCH = [
   '/token-launch', '/payroll', '/cross-chain', '/stealth', '/benefits',
   '/invite', '/docs', '/legal', '/about', '/support', '/theme',
   '/theme-manager', '/theme-showcase', '/admin', '/control-panel',
+  // NAV-1: merchant routes in More (not Marketplace tab) — matches BottomTabBar
+  '/merchant', '/pos',
+  // NAV-1: streaming & subscriptions belong to More, not Pay, on desktop
+  '/streaming', '/subscriptions',
 ];
 
 export function TopNav() {

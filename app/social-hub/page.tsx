@@ -2,6 +2,9 @@
 
 export const dynamic = 'force-dynamic';
 
+// TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
+import type React from 'react';
+
 /**
  * Social Hub — consolidated social surface.
  *
@@ -32,12 +35,14 @@ import {
   Users,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 
 // Feed tab imports
 import { CreatePostCard } from './components/CreatePostCard';
-import { PostCard } from './components/PostCard';
+// TYPE-1: Import exported SocialPost type for proper useState typing
+import { PostCard, type SocialPost } from './components/PostCard';
 import { TrendingSidebar } from './components/TrendingSidebar';
 
 // Messages tab — lazy import from social-messaging components
@@ -89,21 +94,36 @@ const ANALYTICS_TABS: { id: AnalyticsTab; label: string }[] = [
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// UX-1: Valid tab IDs for type-safe URL parsing
+const VALID_MAIN_TABS = new Set<MainTab>(['feed', 'messages', 'pay', 'analytics']);
+
 export default function SocialHubPage() {
   const { isConnected, address } = useAccount();
-  const [mainTab, setMainTab]           = useState<MainTab>('feed');
+  // UX-1: Read initial tab from URL search params so ?tab= links work correctly
+  // and browser Back/Forward preserves the active tab context
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as MainTab | null;
+
+  const [mainTab, setMainTab]           = useState<MainTab>(
+    tabParam && VALID_MAIN_TABS.has(tabParam) ? tabParam : 'feed'
+  );
   const [feedFilter, setFeedFilter]     = useState<FeedFilter>('all');
   const [msgTab, setMsgTab]             = useState<MsgTab>('messages');
   const [analyticsTab, setAnalyticsTab] = useState<AnalyticsTab>('overview');
-  const [posts, setPosts]               = useState<any[]>([]);
+  const [posts, setPosts]               = useState<SocialPost[]>([]);
   const [postError, setPostError]       = useState<string | null>(null);
+  // UX-4: Track posts loading state so we show a skeleton instead of flashing "0 posts"
+  const [postsLoading, setPostsLoading] = useState(false);
 
   useEffect(() => {
-    if (!isConnected || mainTab !== 'feed') { setPosts([]); return; }
+    if (!isConnected || mainTab !== 'feed') { setPosts([]); setPostsLoading(false); return; }
+    // UX-4: Set loading=true before fetch so the count shows skeleton not "0"
+    setPostsLoading(true);
     fetch('/api/community/posts')
       .then((r) => (r.ok ? r.json() : { posts: [] }))
       .then((d) => setPosts(Array.isArray(d.posts) ? d.posts : []))
-      .catch(() => setPosts([]));
+      .catch(() => setPosts([]))
+      .finally(() => setPostsLoading(false));
   }, [isConnected, mainTab]);
 
   const filteredPosts = useMemo(() => {
@@ -170,7 +190,12 @@ export default function SocialHubPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">{posts.length}</div>
+                {/* UX-4: Show skeleton while posts are loading to avoid flashing "0" */}
+                {postsLoading ? (
+                  <div className="h-7 w-10 mx-auto rounded bg-white/10 animate-pulse" />
+                ) : (
+                  <div className="text-xl font-bold text-cyan-400">{posts.length}</div>
+                )}
                 <div className="text-xs text-white/40">Posts</div>
               </div>
               <div className="analytics-card text-center px-5 py-3">
@@ -186,9 +211,14 @@ export default function SocialHubPage() {
           className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
           style={{ background: 'rgba(9,9,11,0.85)' }}
         >
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          {/* A11Y-1: role=tablist so AT announces this as a tab widget */}
+          <div role="tablist" aria-label="Social Hub sections" className="flex gap-2 overflow-x-auto scrollbar-hide">
             {MAIN_TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setMainTab(id)}
+                role="tab"
+                aria-selected={mainTab === id}
+                aria-controls={"social-panel-" + id}
+                id={"social-tab-" + id}
                 className={mainTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                 <Icon size={14} />{label}
               </button>
@@ -214,6 +244,7 @@ export default function SocialHubPage() {
             {/* ── FEED ── */}
             {mainTab === 'feed' && (
               <motion.div key="feed"
+                role="tabpanel" id="social-panel-feed" aria-labelledby="social-tab-feed"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
                 {/* Feed sub-filters */}
@@ -257,6 +288,7 @@ export default function SocialHubPage() {
             {/* ── MESSAGES ── */}
             {mainTab === 'messages' && (
               <motion.div key="messages"
+                role="tabpanel" id="social-panel-messages" aria-labelledby="social-tab-messages"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
                 {/* Messages sub-tabs */}
@@ -278,6 +310,7 @@ export default function SocialHubPage() {
             {/* ── PAY FRIENDS ── */}
             {mainTab === 'pay' && (
               <motion.div key="pay"
+                role="tabpanel" id="social-panel-pay" aria-labelledby="social-tab-pay"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
                 <div className="mb-6">
@@ -291,6 +324,7 @@ export default function SocialHubPage() {
             {/* ── ANALYTICS ── */}
             {mainTab === 'analytics' && (
               <motion.div key="analytics"
+                role="tabpanel" id="social-panel-analytics" aria-labelledby="social-tab-analytics"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
                 <div className="flex gap-2 mb-6">

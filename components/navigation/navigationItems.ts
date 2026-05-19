@@ -75,6 +75,10 @@ import {
   ShieldAlert,
   HardDrive,
   Tag,
+  // CODE-3: Heart added for Sanctum (charity/community giving — semantic match over Cpu)
+  Heart,
+  // CODE-4: Calendar added for Payroll (scheduled payment, not a banknote)
+  Calendar,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -135,17 +139,19 @@ export const navigationItems: NavItem[] = [
       { id: 'merchant-main', label: 'Merchant Hub',  href: '/merchant',      icon: Store,          color: '#10B981', dataOnboarding: 'nav-merchant' },
       { id: 'pos',           label: 'POS Terminal',  href: '/pos',           icon: CreditCard,     color: '#10B981' },
       { id: 'buy',           label: 'Buy Tokens',    href: '/buy',           icon: Globe,          color: '#10B981' },
-      { id: 'flashloan',     label: 'Flashloans P2P',href: '/flashloans',    icon: Banknote,       color: '#10B981', badge: 'P2P' },
+      // CODE-4: Distinct icons to avoid triple-Banknote confusion in the Merchant group
+      { id: 'flashloan',     label: 'Flashloans P2P',href: '/flashloans',    icon: Zap,            color: '#10B981', badge: 'P2P' },
       { id: 'escrow',        label: 'Escrow',        href: '/escrow',        icon: Lock,           color: '#10B981' },
-      { id: 'payroll',       label: 'Payroll',       href: '/payroll',       icon: Banknote,       color: '#10B981' },
+      { id: 'payroll',       label: 'Payroll',       href: '/payroll',       icon: Calendar,       color: '#10B981' },
       { id: 'streaming',     label: 'Streaming',     href: '/streaming',     icon: Zap,            color: '#10B981', comingSoon: true },
       { id: 'cross-chain',   label: 'Cross-Chain',   href: '/cross-chain',   icon: ArrowLeftRight, color: '#10B981' },
       { id: 'stealth',       label: 'Private Pay',   href: '/stealth',       icon: Eye,            color: '#10B981' },
       { id: 'pay',           label: 'Quick Pay',     href: '/pay',           icon: Send,           color: '#10B981' },
       { id: 'subscriptions', label: 'Subscriptions', href: '/subscriptions', icon: Repeat,         color: '#10B981' },
-      { id: 'lending',       label: 'Lending',       href: '/lending',       icon: Banknote,       color: '#10B981', comingSoon: true },
-      { id: 'multisig',      label: 'Multi-Sig',     href: '/multisig',      icon: Users,          color: '#10B981', comingSoon: true },
-      { id: 'time-locks',    label: 'Time Locks',    href: '/time-locks',    icon: Clock,          color: '#10B981', comingSoon: true },
+      { id: 'lending',       label: 'Lending',       href: '/lending',       icon: Scale,          color: '#10B981', comingSoon: true },
+      // NAV-10: Use merchant-prefixed IDs to avoid duplicate IDs with Vault group
+      { id: 'merchant-multisig',    label: 'Multi-Sig',     href: '/multisig',      icon: Users,          color: '#10B981', comingSoon: true },
+      { id: 'merchant-time-locks',  label: 'Time Locks',    href: '/time-locks',    icon: Clock,          color: '#10B981', comingSoon: true },
       { id: 'agent',         label: 'AI Agent',      href: '/agent',         icon: Cpu,            color: '#10B981', comingSoon: true },
     ],
   },
@@ -157,11 +163,12 @@ export const navigationItems: NavItem[] = [
     dataOnboarding: 'nav-social',
     children: [
       // T1-1: All social routes now consolidated under /social-hub with tabs
-      { id: 'social-hub',  label: 'Social Hub',   href: '/social-hub', icon: Rss,     color: '#F59E0B', dataOnboarding: 'nav-social' },
-      { id: 'feed',        label: 'Feed',         href: '/social-hub', icon: Rss,     color: '#F59E0B' },
-      { id: 'stories',     label: 'Stories',      href: '/stories',    icon: Camera,  color: '#F59E0B' },
-      { id: 'messages',    label: 'Messages',     href: '/social-hub', icon: Mail,    color: '#F59E0B' },
-      { id: 'social-pay',  label: 'Pay Friends',  href: '/social-hub', icon: Banknote, color: '#F59E0B' },
+      { id: 'social-hub',  label: 'Social Hub',   href: '/social-hub',              icon: Rss,      color: '#F59E0B', dataOnboarding: 'nav-social' },
+      // NAV-11: Removed duplicate 'feed' entry — both pointed to /social-hub (Feed is the default tab)
+      { id: 'stories',     label: 'Stories',      href: '/stories',                  icon: Camera,   color: '#F59E0B' },
+      // NAV-3/NAV-11: Use tab-specific hrefs so clicking opens the right tab directly
+      { id: 'messages',    label: 'Messages',     href: '/social-hub?tab=messages',  icon: Mail,     color: '#F59E0B' },
+      { id: 'social-pay',  label: 'Pay Friends',  href: '/social-hub?tab=pay',       icon: Banknote, color: '#F59E0B' },
     ],
   },
   {
@@ -177,7 +184,8 @@ export const navigationItems: NavItem[] = [
       { id: 'fraud',           label: 'Fraud Reporting', href: '/fraud',     icon: ShieldCheck,   color: '#6366F1' },
       { id: 'treasury',        label: 'Treasury',        href: '/treasury',  icon: Landmark,      color: '#6366F1' },
       // T1-4: Sanctum moved from Account to Governance (it's protocol finance, not account settings)
-      { id: 'sanctum',         label: 'Sanctum',         href: '/sanctum',   icon: Cpu,           color: '#6366F1' },
+      // CODE-3: Heart is semantically correct for Sanctum (charity/community giving) vs Cpu (AI/hardware)
+      { id: 'sanctum',         label: 'Sanctum',         href: '/sanctum',   icon: Heart,         color: '#6366F1' },
     ],
   },
   {
@@ -193,7 +201,8 @@ export const navigationItems: NavItem[] = [
       { id: 'endorsements', label: 'Endorsements', href: '/endorsements', icon: Medal, color: '#EC4899' },
       { id: 'badges', label: 'Badges', href: '/badges', icon: Star, color: '#EC4899' },
       { id: 'benefits', label: 'Benefits', href: '/benefits', icon: Tag, color: '#EC4899' },
-      { id: 'rewards', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
+      // NAV-10: Use rewards-hub ID to avoid duplicate with the parent group ID 'rewards'
+      { id: 'rewards-hub', label: 'Rewards Hub', href: '/rewards', icon: Sparkles, color: '#EC4899' },
       { id: 'invite', label: 'Invite Friends', href: '/invite', icon: UserPlus, color: '#EC4899' },
     ],
   },

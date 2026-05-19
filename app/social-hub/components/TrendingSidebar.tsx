@@ -45,11 +45,14 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
             <Camera className="w-5 h-5" />
             <span>Stories</span>
           </Link>
-          <Link href="/social-messaging" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
+          {/* NAV-4: Use tab-based hrefs instead of the old standalone routes
+              (/social-messaging and /social-payments now redirect → /social-hub,
+               which would cause a redirect loop from this sidebar on /social-hub) */}
+          <Link href="/social-hub?tab=messages" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <MessageCircle className="w-5 h-5" />
             <span>Messages</span>
           </Link>
-          <Link href="/social-payments" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
+          <Link href="/social-hub?tab=pay" className="flex items-center gap-3 p-2 rounded-lg hover:bg-zinc-700 transition-colors text-zinc-400">
             <Zap className="w-5 h-5" />
             <span>Social Payments</span>
           </Link>
@@ -104,8 +107,11 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
                 </div>
                 <span className="text-xs text-zinc-500">{user.mutualFriends} mutual</span>
               </div>
+              {/* A11Y-2: aria-disabled + aria-label so AT announces the unavailable action */}
               <button
                 disabled
+                aria-disabled="true"
+                aria-label={`Follow ${user.name} (not yet available)`}
                 title="Following requires a social-graph API that isn't built yet."
                 className="px-3 py-1 bg-cyan-400/40 text-zinc-950/60 text-sm font-semibold rounded-full cursor-not-allowed"
               >
@@ -114,8 +120,11 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
             </div>
           ))}
         </div>
+        {/* A11Y-2: aria-disabled + aria-label for the paginate button */}
         <button
           disabled
+          aria-disabled="true"
+          aria-label="Show more suggested users (not yet available)"
           title="Pagination not wired up — only the initial trending users are returned."
           className="w-full mt-4 text-cyan-400/40 text-sm cursor-not-allowed"
         >

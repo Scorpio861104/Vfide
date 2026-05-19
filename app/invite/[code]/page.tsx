@@ -35,7 +35,8 @@ export default function InvitePage() {
               <Gift size={48} className="text-cyan-400 mx-auto mb-6" />
               <h1 className="text-3xl font-bold text-white mb-4">You&apos;re invited to VFIDE</h1>
               <p className="text-gray-400 mb-8">Join the trust-scored payment network. Zero merchant fees.</p>
-              <Link href="/setup" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold">
+              {/* NAV-9: /setup redirects to /settings?tab=account — use /onboarding for new users */}
+              <Link href="/onboarding" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-bold">
                 Accept Invite <ArrowRight size={20} />
               </Link>
             </>

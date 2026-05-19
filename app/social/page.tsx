@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation';
-
-// T1-1: /social now consolidates into /social-hub under the Analytics tab.
-// Keeping this file so any bookmarks/links to /social still work.
+// NAV-2: Pass tab context so /social lands on the Analytics tab inside /social-hub
 export default function SocialAnalyticsRedirect() {
-  redirect('/social-hub');
+  redirect('/social-hub?tab=analytics');
 }

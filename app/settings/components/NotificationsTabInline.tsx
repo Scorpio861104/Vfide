@@ -28,6 +28,10 @@ export function NotificationsTabInline() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<Partial<NotificationFilter>>({});
 
+  // CODE-6: filterNotifications and searchNotifications are listed as deps here.
+  // If those functions are not wrapped in useCallback inside the hook they come from,
+  // they will be recreated on every render, causing this memo to rerun every render.
+  // Verify that the hook providing them (useNotificationCenter) memoises them with useCallback.
   const filteredNotifications = useMemo(() => {
     let result = notifications;
     if (activeTab === 'unread') result = result.filter(n => n.status !== 'read');

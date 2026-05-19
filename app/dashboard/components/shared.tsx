@@ -48,7 +48,7 @@ export const ecosystemLoadout = [
     icon: Vote,
     label: 'DAO Hub',
     description: 'Proposals + dispute flow',
-    href: '/dao-hub',
+    href: '/governance?tab=dao', // NAV-7: /dao-hub redirects to governance
   },
   {
     icon: Sparkles,

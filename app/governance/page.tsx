@@ -2,6 +2,9 @@
 
 export const dynamic = 'force-dynamic';
 
+// TYPE-2: Explicit React type import for React.ElementType usage in MAIN_TABS definition
+import type React from 'react';
+
 /**
  * Governance — consolidated DAO surface (R90 T1-2).
  *
@@ -26,10 +29,14 @@ import {
 } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Footer } from '@/components/layout/Footer';
+// UX-3: Import SampleDataBanner to label hardcoded governance stats as illustrative
+import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
 // Existing governance tabs
-import { CouncilTab }   from './components/CouncilTab';
+// CODE-1: CouncilTab is dead code — the consolidated council section uses CouncilOverviewTab etc.
+// import { CouncilTab }   from './components/CouncilTab';
 import { CreateTab }    from './components/CreateTab';
 import { HistoryTab }   from './components/HistoryTab';
 import { ProposalsTab } from './components/ProposalsTab';
@@ -68,11 +75,25 @@ type ProposalSub = 'list' | 'create' | 'stats' | 'history';
 type DaoSub      = 'overview' | 'members' | 'treasury';
 type CouncilSub  = 'overview' | 'members' | 'salary' | 'voting';
 
+// UX-1: Valid tab IDs for type-safe URL parsing
+const VALID_MAIN_TABS = new Set<MainTab>(['proposals', 'dao', 'council', 'elections', 'disputes']);
+const VALID_DAO_SUBS  = new Set<DaoSub>(['overview', 'members', 'treasury']);
+
 export default function GovernancePage() {
   const { isConnected } = useAccount();
-  const [mainTab,      setMainTab]      = useState<MainTab>('proposals');
+  // UX-1: Read initial tab from URL search params so ?tab= links work correctly
+  // and browser Back/Forward preserves the active tab context
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as MainTab | null;
+  const daoParam = searchParams.get('dao') as DaoSub | null;
+
+  const [mainTab,      setMainTab]      = useState<MainTab>(
+    tabParam && VALID_MAIN_TABS.has(tabParam) ? tabParam : 'proposals'
+  );
   const [proposalSub,  setProposalSub]  = useState<ProposalSub>('list');
-  const [daoSub,       setDaoSub]       = useState<DaoSub>('overview');
+  const [daoSub,       setDaoSub]       = useState<DaoSub>(
+    daoParam && VALID_DAO_SUBS.has(daoParam) ? daoParam : 'overview'
+  );
   const [councilSub,   setCouncilSub]   = useState<CouncilSub>('overview');
 
   return (
@@ -101,20 +122,25 @@ export default function GovernancePage() {
                   Governance
                 </span>
               </h1>
-              <p className="text-white/50 text-lg">Proposals, council, elections, treasury, and disputes — in one place.</p>
+              {/* R90-2: "treasury" is a sub-tab of DAO Hub, not a top-level tab — use "DAO Hub" */}
+              <p className="text-white/50 text-lg">Proposals, council, elections, DAO Hub, and disputes &mdash; in one place.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-violet-400">247</div>
-                <div className="text-xs text-white/40">Proposals</div>
-              </div>
-              <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">18</div>
-                <div className="text-xs text-white/40">Active</div>
-              </div>
-              <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-emerald-400">89%</div>
-                <div className="text-xs text-white/40">Pass Rate</div>
+            {/* UX-3: Hardcoded stats labeled as sample data until live governance API is wired */}
+            <div className="flex flex-col items-end gap-2">
+              <SampleDataBanner label="Stats shown are illustrative until live governance data is available." />
+              <div className="flex items-center gap-2">
+                <div className="analytics-card text-center px-5 py-3">
+                  <div className="text-xl font-bold text-violet-400">247</div>
+                  <div className="text-xs text-white/40">Proposals</div>
+                </div>
+                <div className="analytics-card text-center px-5 py-3">
+                  <div className="text-xl font-bold text-cyan-400">18</div>
+                  <div className="text-xs text-white/40">Active</div>
+                </div>
+                <div className="analytics-card text-center px-5 py-3">
+                  <div className="text-xl font-bold text-emerald-400">89%</div>
+                  <div className="text-xs text-white/40">Pass Rate</div>
+                </div>
               </div>
             </div>
           </div>
@@ -123,9 +149,14 @@ export default function GovernancePage() {
         {/* Primary tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-6"
           style={{ background: 'rgba(9,9,11,0.85)' }}>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          {/* A11Y-1: role=tablist so AT announces this as a tab widget */}
+          <div role="tablist" aria-label="Governance sections" className="flex gap-2 overflow-x-auto scrollbar-hide">
             {MAIN_TABS.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => setMainTab(id)}
+                role="tab"
+                aria-selected={mainTab === id}
+                aria-controls={`gov-panel-${id}`}
+                id={`gov-tab-${id}`}
                 className={mainTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                 <Icon size={14} />{label}
               </button>
@@ -137,10 +168,12 @@ export default function GovernancePage() {
           {/* ── PROPOSALS ── */}
           {mainTab === 'proposals' && (
             <motion.div key="proposals"
+              role="tabpanel" id="gov-panel-proposals" aria-labelledby="gov-tab-proposals"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               {/* Sub-tabs */}
-              <div className="flex gap-2 mb-6">
+              {/* A11Y-1: Proposals sub-tabs */}
+              <div role="tablist" aria-label="Proposals sub-sections" className="flex gap-2 mb-6">
                 {([
                   { id: 'list',    label: 'All Proposals', icon: Vote       },
                   { id: 'create',  label: 'Create',        icon: PlusCircle },
@@ -148,6 +181,9 @@ export default function GovernancePage() {
                   { id: 'history', label: 'History',       icon: Clock      },
                 ] as { id: ProposalSub; label: string; icon: React.ElementType }[]).map(({ id, label, icon: Icon }) => (
                   <button key={id} onClick={() => setProposalSub(id)}
+                    role="tab"
+                    aria-selected={proposalSub === id}
+                    aria-controls={`proposals-panel-${id}`}
                     className={proposalSub === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
                     <Icon size={13} />{label}
                   </button>
@@ -169,6 +205,7 @@ export default function GovernancePage() {
           {/* ── DAO HUB ── */}
           {mainTab === 'dao' && (
             <motion.div key="dao"
+              role="tabpanel" id="gov-panel-dao" aria-labelledby="gov-tab-dao"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <div className="flex gap-2 mb-6">
@@ -198,6 +235,7 @@ export default function GovernancePage() {
           {/* ── COUNCIL ── */}
           {mainTab === 'council' && (
             <motion.div key="council"
+              role="tabpanel" id="gov-panel-council" aria-labelledby="gov-tab-council"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <div className="flex gap-2 mb-6">
@@ -229,6 +267,7 @@ export default function GovernancePage() {
           {/* ── ELECTIONS ── */}
           {mainTab === 'elections' && (
             <motion.div key="elections"
+              role="tabpanel" id="gov-panel-elections" aria-labelledby="gov-tab-elections"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <ElectionsTabContent />
@@ -238,6 +277,7 @@ export default function GovernancePage() {
           {/* ── DISPUTES ── */}
           {mainTab === 'disputes' && (
             <motion.div key="disputes"
+              role="tabpanel" id="gov-panel-disputes" aria-labelledby="gov-tab-disputes"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <DisputesTabContent />

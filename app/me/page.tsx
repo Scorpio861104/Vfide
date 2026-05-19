@@ -42,10 +42,8 @@ import {
   Settings,
   Bell,
   Lock,
-  Users,
-  Gavel,
+  // NAV-5: Users, Gavel and ScrollText removed — GOVERNANCE section now uses a single hub link
   Crown,
-  ScrollText,
   Sparkles,
   ArrowRight,
   Wallet,
@@ -76,18 +74,22 @@ const MONEY: HubLink[] = [
 ];
 
 const SECURITY: HubLink[] = [
-  { href: '/guardians',        icon: Shield,   label: 'Guardians',       description: 'Trusted addresses that can help with vault recovery.' },
-  { href: '/security-center',  icon: Lock,     label: 'Security center', description: 'Session activity, signing keys, device trust.' },
-  { href: '/settings',         icon: Settings, label: 'Settings',        description: 'Account preferences, notifications, privacy.' },
-  { href: '/notifications',    icon: Bell,     label: 'Notifications',   description: 'Activity stream and notification preferences.' },
+  { href: '/guardians',                icon: Shield,   label: 'Guardians',       description: 'Trusted addresses that can help with vault recovery.' },
+  { href: '/security-center',          icon: Lock,     label: 'Security center', description: 'Session activity, signing keys, device trust.' },
+  { href: '/settings',                 icon: Settings, label: 'Settings',        description: 'Account preferences, notifications, privacy.' },
+  // NAV-5: /notifications redirects to /settings?tab=notifications — link directly to the tab
+  { href: '/settings?tab=notifications', icon: Bell,   label: 'Notifications',   description: 'Activity stream and notification preferences.' },
 ];
 
+// NAV-5: Governance section — single hub link instead of listing old standalone routes
+// (/dao-hub, /council, /elections, /disputes all redirect to /governance now)
 const GOVERNANCE: HubLink[] = [
-  { href: '/governance', icon: Vote,       label: 'Governance',  description: 'Vote on proposals. Requires ProofScore \u2265 5,400.' },
-  { href: '/dao-hub',    icon: Users,      label: 'DAO hub',     description: 'Community hub for active DAO contributors.' },
-  { href: '/council',    icon: Crown,      label: 'Council',     description: 'Elected council members and their roles.' },
-  { href: '/elections',  icon: ScrollText, label: 'Elections',   description: 'Active and upcoming council elections.' },
-  { href: '/disputes',   icon: Gavel,      label: 'Disputes',    description: 'Filed disputes and their resolution status.' },
+  {
+    href: '/governance',
+    icon: Vote,
+    label: 'Governance Hub',
+    description: 'Proposals, Council, Elections, DAO Hub, and Disputes \u2014 all in one place.',
+  },
 ];
 
 const ENGAGEMENT: HubLink[] = [
@@ -288,7 +290,8 @@ function NextStep({ score }: { score: number }) {
     return (
       <p className="text-gray-300">
         Council-eligible. If you&apos;re active in the community, watch{' '}
-        <Link href="/elections" className="text-cyan-300 hover:text-cyan-200">
+        {/* NAV-5: /elections now redirects to /governance?tab=elections */}
+        <Link href="/governance?tab=elections" className="text-cyan-300 hover:text-cyan-200">
           upcoming elections <ArrowRight size={12} className="inline" />
         </Link>{' '}
         for a chance to stand for council.

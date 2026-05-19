@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-// T1-2: /dao-hub is now the "DAO Hub" tab inside /governance
+// NAV-2: Pass tab context so /dao-hub lands on the DAO Hub tab inside /governance
 export default function DaoHubRedirect() {
-  redirect('/governance');
+  redirect('/governance?tab=dao');
 }

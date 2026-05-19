@@ -42,6 +42,7 @@ export function VaultTab() {
       .finally(() => setLoading(false));
   }, [address]);
 
+  // UX-2: Disconnected-wallet guard — show prompt instead of trying to fetch
   if (!address) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center gap-4">

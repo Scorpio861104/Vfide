@@ -16,7 +16,8 @@ import {
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
 import { toast } from '@/lib/toast';
 
-type SocialPost = {
+// TYPE-1: Export SocialPost so social-hub/page.tsx can type its posts state correctly
+export type SocialPost = {
   id?: string | number;
   author: {
     name: string;

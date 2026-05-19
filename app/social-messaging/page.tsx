@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
-
-// T1-1: /social-messaging now lives as the "Messages" tab inside /social-hub.
+// NAV-2: Pass tab context so /social-messaging lands on the Messages tab inside /social-hub
 export default function SocialMessagingRedirect() {
-  redirect('/social-hub');
+  redirect('/social-hub?tab=messages');
 }

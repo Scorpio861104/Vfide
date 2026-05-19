@@ -102,7 +102,8 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
       : // Desktop popover: anchored below TopNav (56px) + ticker
         // (28px) = top 88px. Width-constrained so it doesn't dominate.
         // Max height leaves a comfortable gutter at the viewport bottom.
-        'fixed right-4 top-[88px] z-50 w-[min(420px,calc(100vw-2rem))] max-h-[calc(100vh-7rem)] rounded-2xl border border-white/10 bg-zinc-950/95 backdrop-blur-xl shadow-2xl';
+        // CODE-5: Use rem instead of px so the offset scales with the user's font size preference
+        'fixed right-4 top-[5.5rem] z-50 w-[min(420px,calc(100vw-2rem))] max-h-[calc(100vh-7rem)] rounded-2xl border border-white/10 bg-zinc-950/95 backdrop-blur-xl shadow-2xl';
 
   const motionInitial =
     variant === 'bottom' ? { y: '100%', opacity: 1 } : { opacity: 0, y: -8, scale: 0.97 };

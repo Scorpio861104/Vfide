@@ -76,7 +76,8 @@ const NAV_ITEMS: NavItem[] = [
 
   // Unlocks at ProofScore 3000 / council
   { id: 'governance', label: 'Governance', href: '/governance', icon: Vote, unlocksAt: 'governor', group: 'governance' },
-  { id: 'council', label: 'Council', href: '/council', icon: Vote, unlocksAt: 'governor', group: 'governance' },
+  // NAV-8: /council redirects to /governance?tab=council — use the canonical URL
+  { id: 'council', label: 'Council', href: '/governance?tab=council', icon: Vote, unlocksAt: 'governor', group: 'governance' },
   { id: 'fraud', label: 'Fraud Reporting', href: '/fraud', icon: ShieldCheck, unlocksAt: 'trusted', group: 'governance' },
 
   // System — always visible when connected

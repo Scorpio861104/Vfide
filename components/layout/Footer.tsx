@@ -25,7 +25,7 @@ const footerLinks: {
   ],
   community: [
     { href: "/governance",                           label: "Governance" },
-    { href: "/dao-hub",                              label: "DAO Hub" },
+    { href: "/governance?tab=dao",                    label: "DAO Hub" },  // NAV-6: /dao-hub redirects to governance
     { href: "/fraud",                                label: "Fraud Reporting" },
     { href: "/token-launch",                         label: "Token Launch" },
     { href: "https://github.com/Scorpio861104/Vfide", label: "GitHub",  external: true },

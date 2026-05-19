@@ -35,8 +35,9 @@ export function VaultSubNav() {
   );
 
   return (
+    // NAV-12: Correct sticky offset = TopNav (3.5rem) + ProtocolTicker (1.75rem) = 5.25rem
     <div
-      className="sticky top-[3.5rem] md:top-[5.5rem] z-20 -mx-4 px-4 py-2 border-b border-white/5"
+      className="sticky top-[3.5rem] md:top-[5.25rem] z-20 -mx-4 px-4 py-2 border-b border-white/5"
       style={{ background: 'rgba(9,9,11,0.90)', backdropFilter: 'blur(20px)' }}
     >
       <div className="container mx-auto max-w-6xl flex items-center gap-1.5 text-sm">

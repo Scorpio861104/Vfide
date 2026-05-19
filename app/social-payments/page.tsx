@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
-
-// T1-1: /social-payments now lives as the "Pay Friends" tab inside /social-hub.
+// NAV-2: Pass tab context so /social-payments lands on the Pay Friends tab inside /social-hub
 export default function SocialPaymentsRedirect() {
-  redirect('/social-hub');
+  redirect('/social-hub?tab=pay');
 }
