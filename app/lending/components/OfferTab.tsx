@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * Lending: lender creates a new loan offer.
  *
@@ -85,7 +85,7 @@ export function OfferTab() {
         <Plus size={40} className="text-zinc-600 mb-4" aria-hidden="true" />
         <p className="text-zinc-400">Connect your wallet to create a loan offer.</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </div>
     );

@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { motion } from 'framer-motion';
 import { AlertTriangle, Lock, Unlock } from 'lucide-react';
 
@@ -29,7 +29,7 @@ export function ClaimTab({
         <h2 className="mb-2 text-2xl font-bold text-white">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to review vesting eligibility and claim status.</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </motion.div>
     );

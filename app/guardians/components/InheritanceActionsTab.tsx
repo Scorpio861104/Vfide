@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * InheritanceActionsTab — per-vault panel for guardians and heirs in the
  * CardBound inheritance flow.
@@ -639,7 +639,7 @@ export function InheritanceActionsTab({ isConnected }: { isConnected: boolean })
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see inheritance actions</p>
-        <div className="mt-6 flex justify-center"><ConnectButton /></div>
+        <div className="mt-6 flex justify-center"><VfideConnectButton size="md" /></div>
       </motion.div>
     );
   }

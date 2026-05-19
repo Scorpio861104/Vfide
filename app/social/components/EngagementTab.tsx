@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { MessageSquare, Loader2, ThumbsUp } from 'lucide-react';
@@ -51,7 +51,7 @@ export function EngagementTab() {
         <MessageSquare size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view engagement data.</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </div>
     );

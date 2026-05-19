@@ -7,7 +7,7 @@ import { Wallet, TrendingUp, History, LayoutDashboard } from 'lucide-react';
 import { WalletButton as _WalletButton } from '@/components/crypto/WalletButton';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { Footer } from '@/components/layout/Footer';
 
 const TransactionHistory = dynamic(
@@ -45,7 +45,7 @@ export default function CryptoDashboard() {
               <p className="text-gray-400 mb-6">
                 Connect your wallet to access payments and transaction history.
               </p>
-              <ConnectButton />
+              <VfideConnectButton size="md" />
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function CryptoDashboard() {
               </h1>
               <p className="text-gray-400">Manage your wallet and payments</p>
             </div>
-            <ConnectButton />
+            <VfideConnectButton size="md" />
           </div>
 
           {/* Stats Overview */}

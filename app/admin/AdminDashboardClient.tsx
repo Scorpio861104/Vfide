@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { Footer } from '@/components/layout/Footer';
 import { ProofScoreBurnRouterABI, VFIDETokenABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, ZERO_ADDRESS } from '@/lib/contracts';
@@ -1321,7 +1321,7 @@ export default function AdminPanel() {
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">Admin Panel</h1>
           <p className="text-gray-300">Please connect your wallet to access admin functions.</p>
           <div className="mt-6 flex justify-center">
-            <ConnectButton />
+            <VfideConnectButton size="md" />
           </div>
         </div>
       </div>

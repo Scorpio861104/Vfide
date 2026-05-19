@@ -6,7 +6,7 @@ import React from 'react';
 import { Footer } from '@/components/layout/Footer';
 import { ProfileSettings } from '@/components/profile/ProfileSettings';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { User } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -36,7 +36,7 @@ export default function ProfilePage() {
               Connect your wallet to view and edit your profile, display name, and avatar.
             </p>
             <div className="inline-block">
-              <ConnectButton />
+              <VfideConnectButton size="md" />
             </div>
           </div>
         </div>

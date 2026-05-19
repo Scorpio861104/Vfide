@@ -50,7 +50,7 @@ import {
   ArrowRight,
   Wallet,
 } from 'lucide-react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 import { Footer } from '@/components/layout/Footer';
 import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
@@ -124,7 +124,7 @@ export default function MeHubPage() {
               Connect your wallet to see your ProofScore, your vault, your governance position, and the rest of your VFIDE account.
             </p>
             <div className="inline-block">
-              <ConnectButton />
+              <VfideConnectButton size="md" />
             </div>
           </div>
         </div>

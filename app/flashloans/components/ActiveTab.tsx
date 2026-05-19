@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useEffect } from 'react';
 import { Loader2, Zap } from 'lucide-react';
 import { useAccount } from 'wagmi';
@@ -43,7 +43,7 @@ export function ActiveTab() {
         <Zap size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view active flash loans.</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </div>
     );

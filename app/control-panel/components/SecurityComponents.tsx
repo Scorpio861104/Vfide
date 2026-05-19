@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ADDRESS } from '../config/contracts';
@@ -53,7 +53,7 @@ export function OwnerGuard({ children }: { children: React.ReactNode }) {
               Please connect your wallet to access the control panel.
             </p>
               <div className="mt-6 flex justify-center">
-                <ConnectButton />
+                <VfideConnectButton size="md" />
               </div>
           </div>
         </div>

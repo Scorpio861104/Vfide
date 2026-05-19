@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * Lending: the user's loans (as lender, borrower, or guarantor).
  *
@@ -114,7 +114,7 @@ export function MyLoansTab() {
         <Coins size={40} className="text-zinc-600 mb-4" aria-hidden="true" />
         <p className="text-zinc-400">Connect your wallet to view your loans.</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </div>
     );

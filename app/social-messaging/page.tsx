@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Compass, Lock, MessageCircle, Shield, UserCog, Users, UserX } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -71,7 +71,7 @@ export default function SocialMessagingPage() {
             <h1 className="text-2xl font-bold text-white mb-3">Connect Your Wallet</h1>
             <p className="text-white/50 mb-8">Access encrypted messaging, circles, and community coordination.</p>
             <div className="flex justify-center">
-              <ConnectButton />
+              <VfideConnectButton size="md" />
             </div>
           </motion.div>
         </div>

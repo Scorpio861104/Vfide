@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { useHeadhunterStats, useReferralLink } from '@/hooks/useHeadhunterHooks';
@@ -27,7 +27,7 @@ export function DashboardTab() {
           <h2 className="text-2xl font-bold text-white mb-3">Referral Dashboard</h2>
           <p className="text-gray-300">Connect your wallet to participate in the Headhunter Competition, track your rank, and copy your invite link.</p>
           <div className="mt-6 flex justify-center">
-            <ConnectButton />
+            <VfideConnectButton size="md" />
           </div>
         </div>
       </div>

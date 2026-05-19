@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Hash, MessageCircle, Sparkles, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -131,7 +131,7 @@ export default function SocialHubPage() {
             <h2 className="text-2xl font-bold text-white mb-3">Join the Conversation</h2>
             <p className="text-white/50 mb-8">Connect your wallet to unlock the VFIDE social feed and community.</p>
             <div className="flex justify-center">
-              <ConnectButton />
+              <VfideConnectButton size="md" />
             </div>
           </motion.div>
         ) : (

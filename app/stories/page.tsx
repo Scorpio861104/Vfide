@@ -8,7 +8,7 @@ import { StoryCreator } from '@/components/social/StoryCreator';
 import { StoryRing } from '@/components/social/StoryRing';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Plus, Camera, Sparkles } from 'lucide-react';
@@ -116,7 +116,7 @@ export default function StoriesPage() {
               <div className="text-6xl mb-4">📸</div>
               <h2 className="text-xl font-bold text-white mb-3">Connect Your Wallet</h2>
               <p className="text-white/50 mb-6">Connect your wallet to view and share stories with the community.</p>
-              <ConnectButton />
+              <VfideConnectButton size="md" />
             </div>
           </motion.div>
         ) : (

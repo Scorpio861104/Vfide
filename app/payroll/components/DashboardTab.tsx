@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { Users, Loader2, Zap, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
@@ -46,7 +46,7 @@ export function DashboardTab() {
         <Users size={40} className="text-gray-600 mb-4" />
         <p className="text-gray-400">Connect your wallet to view your payroll dashboard.</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </div>
     );

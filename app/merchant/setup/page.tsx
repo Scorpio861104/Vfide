@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantQuickSetup } from '@/components/merchant/MerchantQuickSetup';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { motion } from 'framer-motion';
 import { Store, Wallet } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -34,7 +34,7 @@ export default function MerchantSetupPage() {
           </div>
           <h1 className="text-3xl font-bold text-white mb-3">Connect to get started</h1>
           <p className="text-gray-400 mb-8 max-w-md">Connect your wallet to create your merchant storefront. No monthly fees — ever.</p>
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </motion.div>
       </div>
     );

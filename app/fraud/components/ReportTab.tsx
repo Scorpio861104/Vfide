@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * ReportTab — file a fraud complaint against a target address.
  *
@@ -151,7 +151,7 @@ export function ReportTab() {
             <>
               <p className="text-zinc-300">Connect your wallet to file a complaint.</p>
               <div className="mt-6 flex justify-center">
-                <ConnectButton />
+                <VfideConnectButton size="md" />
               </div>
             </>
           ) : !seerConfigured ? (

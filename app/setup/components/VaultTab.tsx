@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { Lock, Loader2, CheckCircle, AlertCircle, TrendingUp, Briefcase, Zap } from 'lucide-react';
 
 interface UserState {
@@ -47,7 +47,7 @@ export function VaultTab() {
       <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
         <Lock size={40} className="text-gray-600" />
         <p className="text-gray-400">Connect your wallet to view vault status.</p>
-        <ConnectButton />
+        <VfideConnectButton size="md" />
       </div>
     );
   }

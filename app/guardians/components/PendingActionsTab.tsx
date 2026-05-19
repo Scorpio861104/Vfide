@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
@@ -37,7 +37,7 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see pending guardian actions</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </motion.div>
     );

@@ -24,7 +24,7 @@ import { type Address } from 'viem';
 import { useVerifierVote } from '@/hooks/useVerifierVote';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import VaultRecoveryClaimABI from '@/lib/abis/VaultRecoveryClaim.json';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types mirroring VaultRecoveryClaim.RecoveryClaim struct
@@ -385,7 +385,7 @@ export default function VerifierConsolePage() {
             <p className="text-zinc-400 text-sm">
               Connect your wallet to access the verifier console.
             </p>
-            <ConnectButton />
+            <VfideConnectButton size="md" />
           </div>
         ) : (
           <div className="rounded-2xl border border-zinc-700 bg-zinc-800/60 p-4 flex items-center justify-between">

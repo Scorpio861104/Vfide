@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
@@ -137,7 +137,7 @@ export default function RemittancePage() {
                   <>
                     <p className="mt-3 text-sm text-amber-300">Connect your wallet to finalize remittance sends.</p>
                     <div className="mt-6 flex justify-center">
-                      <ConnectButton />
+                      <VfideConnectButton size="md" />
                     </div>
                   </>
                 )}

@@ -15,7 +15,7 @@ import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Power } from 'lucide-react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useAccount } from 'wagmi';
 
 import { Footer } from '@/components/layout/Footer';
@@ -93,7 +93,7 @@ export default function OnboardingPage() {
                   Connect your wallet to start setup. The first chapter creates your CardBound
                   vault — everything after is skippable.
                 </p>
-                <ConnectButton />
+                <VfideConnectButton size="md" />
               </div>
             ) : (
               <div className="space-y-4">

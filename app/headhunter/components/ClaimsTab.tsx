@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useMemo } from 'react';
 import { useAccount, useReadContracts } from 'wagmi';
 import { Loader2, CheckCircle, AlertCircle, Trophy, ChevronRight } from 'lucide-react';
@@ -154,7 +154,7 @@ export function ClaimsTab() {
           Connect your wallet to view and claim your share of past headhunter quarters.
         </p>
           <div className="mt-6 flex justify-center">
-            <ConnectButton />
+            <VfideConnectButton size="md" />
           </div>
       </div>
     );

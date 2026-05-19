@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { AlertTriangle, Heart } from 'lucide-react';
 
@@ -17,7 +17,7 @@ export function DonateTab({ isConnected }: { isConnected: boolean }) {
         <h2 className="text-2xl font-bold text-zinc-100 mb-2">Connect to Donate</h2>
         <p className="text-zinc-400">Connect your wallet to make a direct donation to The Sanctum</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </div>
     );

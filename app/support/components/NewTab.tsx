@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 interface NewTabProps {
   isConnected: boolean;
   subject: string;
@@ -24,7 +24,7 @@ export function NewTab({
         <>
           <p className="text-gray-300">Connect your wallet to create support tickets.</p>
           <div className="mt-6 flex justify-center">
-            <ConnectButton />
+            <VfideConnectButton size="md" />
           </div>
         </>
       ) : (

@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 /**
  * Flash Loans: lender's own dashboard.
  *
@@ -97,7 +97,7 @@ export function LenderDashboardTab() {
         <Zap size={40} className="text-zinc-600 mb-4" aria-hidden="true" />
         <p className="text-zinc-400">Connect your wallet to manage your lender position.</p>
         <div className="mt-6 flex justify-center">
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </div>
     );

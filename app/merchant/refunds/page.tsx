@@ -1,6 +1,6 @@
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 /**
@@ -350,7 +350,7 @@ export default function MerchantRefundsPage() {
             <GlassCard hover={false} className="p-6 text-center">
               <p className="text-gray-400 text-sm">Connect your wallet to view your refund history.</p>
               <div className="mt-6 flex justify-center">
-                <ConnectButton />
+                <VfideConnectButton size="md" />
               </div>
             </GlassCard>
           )}
