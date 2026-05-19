@@ -29,13 +29,21 @@ export interface Tier {
   icon: string;
 }
 
+/**
+ * 7-tier ProofScore system as defined in VFIDE Complete Manual v1.0
+ * Fee curve: 500 bps (5%) at score ≤4000, 25 bps (0.25%) at score ≥8000,
+ * linear interpolation between 4000-8000.
+ * SeerSocial.sol:117 — minScoreToEndorse = 7_000
+ * SeerSocial.sol:127 — minScoreToMentor  = 7_200
+ */
 export const TIERS: Tier[] = [
-  { name: 'Newcomer',   minScore: 0,    maxScore: 999,   feeBps: 100, color: '#71717a', glowColor: '#71717a40', bgGradient: 'from-zinc-500/20 to-zinc-600/20',    icon: '○' },
-  { name: 'Verified',   minScore: 1000, maxScore: 2999,  feeBps: 75,  color: '#22d3ee', glowColor: '#22d3ee40', bgGradient: 'from-cyan-500/20 to-blue-500/20',    icon: '◉' },
-  { name: 'Trusted',    minScore: 3000, maxScore: 4999,  feeBps: 50,  color: '#a78bfa', glowColor: '#a78bfa40', bgGradient: 'from-purple-500/20 to-violet-500/20', icon: '◈' },
-  { name: 'Advocate',   minScore: 5000, maxScore: 6999,  feeBps: 35,  color: '#34d399', glowColor: '#34d39940', bgGradient: 'from-emerald-500/20 to-green-500/20', icon: '◆' },
-  { name: 'Guardian',   minScore: 7000, maxScore: 7999,  feeBps: 30,  color: '#60a5fa', glowColor: '#60a5fa40', bgGradient: 'from-blue-500/20 to-indigo-500/20',  icon: '⬡' },
-  { name: 'Champion',   minScore: 8000, maxScore: 10000, feeBps: 25,  color: '#fbbf24', glowColor: '#fbbf2440', bgGradient: 'from-amber-400/20 to-orange-500/20', icon: '★' },
+  { name: 'Risky',      minScore: 0,    maxScore: 3499,  feeBps: 500, color: '#FF4444', glowColor: '#FF444440', bgGradient: 'from-red-500/20 to-red-600/20',          icon: '⚠️' },
+  { name: 'Low Trust',  minScore: 3500, maxScore: 4999,  feeBps: 400, color: '#FFA500', glowColor: '#FFA50040', bgGradient: 'from-orange-500/20 to-orange-600/20',    icon: '🔶' },
+  { name: 'Neutral',    minScore: 5000, maxScore: 5399,  feeBps: 250, color: '#FFD700', glowColor: '#FFD70040', bgGradient: 'from-yellow-500/20 to-amber-500/20',     icon: '🟡' },
+  { name: 'Governance', minScore: 5400, maxScore: 5599,  feeBps: 200, color: '#60A5FA', glowColor: '#60A5FA40', bgGradient: 'from-blue-500/20 to-indigo-500/20',      icon: '🗳️' },
+  { name: 'Trusted',    minScore: 5600, maxScore: 6999,  feeBps: 150, color: '#34D399', glowColor: '#34D39940', bgGradient: 'from-emerald-500/20 to-green-500/20',    icon: '✅' },
+  { name: 'Council',    minScore: 7000, maxScore: 7999,  feeBps: 75,  color: '#A78BFA', glowColor: '#A78BFA40', bgGradient: 'from-violet-500/20 to-purple-500/20',    icon: '⭐' },
+  { name: 'Elite',      minScore: 8000, maxScore: 10000, feeBps: 25,  color: '#00FF88', glowColor: '#00FF8840', bgGradient: 'from-emerald-400/20 to-[#00CC6A]/20',    icon: '🏆' },
 ];
 
 export function getTier(score: number): Tier {
