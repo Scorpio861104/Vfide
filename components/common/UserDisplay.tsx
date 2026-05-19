@@ -1,3 +1,5 @@
+'use client';
+
 // Helper component to display user with username support
 
 import React, { useEffect, useState } from 'react';

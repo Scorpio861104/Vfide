@@ -214,7 +214,7 @@ export default function AdminPanel() {
   const { data: circuitBreakerRaw } = useReadContract({
     address: TOKEN_ADDRESS,
     abi: TOKEN_ABI,
-    functionName: 'circuitBreaker',
+    functionName: 'isCircuitBreakerActive',
     query: { enabled: IS_TOKEN_DEPLOYED },
   });
   const circuitBreaker = circuitBreakerRaw as boolean | undefined;
