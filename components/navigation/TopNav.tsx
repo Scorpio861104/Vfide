@@ -29,7 +29,10 @@ import {
   Search,
 } from 'lucide-react';
 import { NotificationBell } from '@/lib/notifications';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+// FIX UX-1: Use VfideConnectButton instead of raw RainbowKit ConnectButton.
+// The raw ConnectButton renders in RainbowKit's default colorful palette which
+// clashes with VFIDE's dark zinc + cyan design system.
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { MoreSheet } from './MoreSheet';
 import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
 
@@ -174,7 +177,7 @@ export function TopNav() {
             </Link>
           )}
 
-          <ConnectButton accountStatus="avatar" chainStatus="icon" showBalance={false} />
+          <VfideConnectButton size="sm" />
         </div>
       </nav>
 

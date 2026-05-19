@@ -5,31 +5,29 @@
  *
  * Tier 3 Round 10 (2026-05-17). Replaces the raw `<ConnectButton/>` from
  * RainbowKit, which renders in RainbowKit's default colorful "rainbow"
- * palette and clashes with the VFIDE dark/cyan design system. Particularly
- * jarring in the TopNav where everything else is dark zinc + cyan and the
- * wallet pill stuck out with its colorful avatar and bright background.
+ * palette and clashes with the VFIDE dark/cyan design system.
  *
- * Three visible states (matching RainbowKit's mounted lifecycle):
- *   1. **Disconnected** — cyan gradient CTA labeled "Connect" (with Wallet
- *      icon when not size="sm"). Opens RainbowKit's connect modal.
- *   2. **Connected** — Identicon (deterministic per-address jazzicon) +
- *      truncated 0x1234…5678 + ChevronDown affordance. Opens RainbowKit's
- *      account modal (switch / sign out).
- *   3. **Wrong network** — amber warning pill with AlertTriangle. Opens
- *      RainbowKit's chain modal so the user can switch.
+ * Four visible states:
+ *   1. **Pre-mount / Reconnecting** — subtle shimmer skeleton pill so there
+ *      is never a blank/flash on page load while wagmi reconnects.
+ *   2. **Disconnected** — cyan gradient CTA labeled "Connect". Opens modal.
+ *   3. **Connected** — Identicon + truncated address + ChevronDown. Opens
+ *      RainbowKit account modal (switch / sign out).
+ *   4. **Wrong network** — amber warning pill. Opens chain modal.
  *
- * Pre-mount state is rendered with opacity-0 + aria-hidden + no pointer
- * events to avoid hydration mismatch flash, as recommended by RainbowKit.
+ * Pre-mount rendered with opacity-0 + aria-hidden + no pointer events to
+ * avoid hydration mismatch flash (recommended by RainbowKit docs).
  *
  * Sizes:
- *   - sm — nav-bar height (h-9), label only on "Connect"
+ *   - sm — nav-bar height (h-9), icon-only on "Connect" when space is tight
  *   - md — default (h-10), label always shown
  *   - lg — hero CTA (h-12, larger icon, bold)
  */
 
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { ChevronDown, AlertTriangle, Wallet } from 'lucide-react';
+import { ChevronDown, AlertTriangle, Wallet, Loader2 } from 'lucide-react';
 import { Identicon } from '@/components/identity/Identicon';
+import { useAccount } from 'wagmi';
 
 export type VfideConnectButtonSize = 'sm' | 'md' | 'lg';
 
@@ -63,6 +61,11 @@ export function VfideConnectButton({
   hideChain: _hideChain = true,
 }: VfideConnectButtonProps = {}) {
   const s = SIZE[size];
+  // FIX UX-3: useAccount gives us isConnecting/isReconnecting so we can show
+  // a skeleton while wagmi is restoring the previous session, preventing the
+  // button from flashing "Connect" and then snapping to the connected state.
+  const { isConnecting, isReconnecting } = useAccount();
+  const isRestoring = isConnecting || isReconnecting;
 
   return (
     <ConnectButton.Custom>
@@ -70,13 +73,24 @@ export function VfideConnectButton({
         const ready = mounted;
         const connected = ready && account && chain;
 
+        // Skeleton while pre-mounted or actively reconnecting
+        if (!ready || isRestoring) {
+          return (
+            <div
+              aria-hidden={!ready}
+              className={`inline-flex items-center gap-2 ${s.container} rounded-lg bg-white/5 border border-white/8 animate-pulse`}
+              style={!ready ? { opacity: 0, pointerEvents: 'none', userSelect: 'none' } : undefined}
+            >
+              <Loader2 size={s.iconSize} className="text-zinc-600 animate-spin" />
+              <span className="text-zinc-600 text-xs">
+                {isRestoring ? 'Connecting…' : ''}
+              </span>
+            </div>
+          );
+        }
+
         return (
-          <div
-            {...(!ready && {
-              'aria-hidden': true,
-              style: { opacity: 0, pointerEvents: 'none', userSelect: 'none' },
-            })}
-          >
+          <div>
             {(() => {
               // ── 1. Disconnected ──
               if (!connected) {
@@ -103,6 +117,7 @@ export function VfideConnectButton({
                     className={`inline-flex items-center gap-2 ${s.container} rounded-lg font-semibold text-amber-200 bg-amber-500/10 border border-amber-500/40 hover:bg-amber-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950`}
                   >
                     <AlertTriangle size={s.iconSize} />
+                    {/* FIX UX-5: Show "Wrong network" text at all sizes in nav */}
                     Wrong network
                   </button>
                 );
