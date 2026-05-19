@@ -13,6 +13,7 @@ import { WagmiProvider, useAccount } from 'wagmi';
 import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { wagmiConfig } from '@/lib/wagmi';
+import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { SecurityProvider } from '@/providers/SecurityProvider';
 import { useWalletPersistence } from '@/hooks/useWalletPersistence';
 import { useAuth } from '@/hooks/useAPI';
@@ -124,7 +125,7 @@ export function Web3Providers({ children }: { children: ReactNode }) {
           1) authenticateWithProvider is wired to a real SDK
           2) ensureVaultExists is implemented against VaultHub
         */}
-        <RainbowKitProvider theme={vfideDarkTheme}>
+        <RainbowKitProvider theme={vfideDarkTheme} initialChain={CURRENT_CHAIN_ID}>
           <SecurityProvider>
             <WalletAuthManager />
             <WalletPersistenceManager>{children}</WalletPersistenceManager>

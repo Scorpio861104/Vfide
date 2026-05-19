@@ -26,7 +26,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronRight, X, Pause, Play, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 import {
   CHAPTERS,
@@ -212,7 +212,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
                   Connect your wallet to continue
                 </span>
               </div>
-              <ConnectButton accountStatus="avatar" chainStatus="none" showBalance={false} />
+              <VfideConnectButton size="sm" />
             </div>
           )}
 

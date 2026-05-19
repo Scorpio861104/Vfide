@@ -2,7 +2,7 @@
 
 import { Sparkles, Shield, KeyRound, Wallet, CreditCard, BarChart3 } from 'lucide-react';
 import { useAccount } from 'wagmi';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 import { ChapterShell } from '../ChapterShell';
 
@@ -33,7 +33,7 @@ export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
           <p className="text-xs text-white/50">
             Your vault is owned by your wallet — VFIDE never holds your funds.
           </p>
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       )}
 

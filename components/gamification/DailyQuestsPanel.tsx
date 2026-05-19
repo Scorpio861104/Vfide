@@ -7,7 +7,7 @@
 
 'use client';
 
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { 
@@ -251,7 +251,7 @@ export default function DailyQuestsPanel() {
         <Target className="w-16 h-16 text-amber-400 mx-auto mb-4 opacity-50" />
         <h3 className="text-xl font-bold text-white mb-2">Connect Wallet</h3>
         <p className="text-zinc-400">Connect your wallet to see daily quests</p>
-        <div className="mt-6 flex justify-center"><ConnectButton /></div>
+        <div className="mt-6 flex justify-center"><VfideConnectButton size="md" /></div>
       </motion.div>
     );
   }

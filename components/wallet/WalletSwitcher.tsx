@@ -36,10 +36,14 @@ export function WalletSwitcher() {
     setWallets(getLinkedWallets());
   };
 
-  // Get injected connector
-  const injectedConnector = connectors.find(c => 
-    c.id === 'injected' || c.id === 'io.metamask' || c.id === 'metaMask'
-  );
+  // Pick the best available connector for add/switch:
+  // Prefer EIP-6963 discovered wallets, then MetaMask, then any injected,
+  // then any available connector so the buttons always work.
+  const bestConnector =
+    connectors.find(c => c.id === 'io.metamask') ??
+    connectors.find(c => c.id === 'injected' || c.id === 'metaMask') ??
+    connectors.find(c => c.type === 'injected') ??
+    connectors[0];
 
   // Switch to a different wallet
   const handleSwitchWallet = async (wallet: LinkedWallet) => {
@@ -48,20 +52,20 @@ export function WalletSwitcher() {
     // Disconnect current wallet
     disconnect();
     
-    // Connect with injected (user will select wallet in MetaMask)
-    if (injectedConnector) {
+    // Re-connect using the best available connector so the wallet picker opens
+    if (bestConnector) {
       setTimeout(() => {
-        connect({ connector: injectedConnector });
+        connect({ connector: bestConnector });
       }, 500);
     }
   };
 
   // Add new wallet
   const handleAddWallet = () => {
-    if (injectedConnector) {
+    if (bestConnector) {
       disconnect();
       setTimeout(() => {
-        connect({ connector: injectedConnector });
+        connect({ connector: bestConnector });
       }, 500);
     }
   };
@@ -104,7 +108,8 @@ export function WalletSwitcher() {
         <h3 className="text-lg font-semibold text-white">Your Wallets</h3>
         <button
           onClick={handleAddWallet}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors"
+          disabled={!bestConnector}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Plus size={14} />
           <span>Add Wallet</span>
@@ -200,7 +205,8 @@ export function WalletSwitcher() {
                     {!isCurrentWallet && (
                       <button
                         onClick={() => handleSwitchWallet(wallet)}
-                        className="px-3 py-1.5 text-xs bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600 transition-colors"
+                        disabled={!bestConnector}
+                        className="px-3 py-1.5 text-xs bg-zinc-700 text-zinc-300 rounded hover:bg-zinc-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         Switch
                       </button>

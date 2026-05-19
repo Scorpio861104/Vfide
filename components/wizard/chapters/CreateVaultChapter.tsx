@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { CheckCircle2, ShieldAlert, Wallet, Loader2 } from 'lucide-react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { ChapterShell } from '../ChapterShell';
@@ -60,7 +61,7 @@ export function CreateVaultChapter({ onComplete }: CreateVaultChapterProps) {
           <p className="text-sm text-white/70">
             Your vault is owned by your wallet. We&apos;ll never custody your funds.
           </p>
-          <ConnectButton />
+          <VfideConnectButton size="md" />
         </div>
       </ChapterShell>
     );

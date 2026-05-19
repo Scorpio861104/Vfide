@@ -129,5 +129,12 @@ export function isChainReady(chain: SupportedChain): boolean {
 }
 
 export function getReadyChains(): SupportedChain[] {
-  return (Object.keys(CHAINS) as SupportedChain[]).filter(isChainReady)
+  const ready = (Object.keys(CHAINS) as SupportedChain[]).filter(isChainReady)
+  return ready.sort((a, _b) => (a === 'base' ? -1 : 1))
+}
+
+export function getPrimaryChain(): SupportedChain {
+  if (isChainReady('base')) return 'base'
+  const ready = getReadyChains()
+  return ready[0] ?? 'base'
 }
