@@ -43,7 +43,7 @@ interface ProposalPreview {
 }
 
 const DEFAULT_ELECTION: ElectionInfo = {
-  councilSize: 12, termDays: 365, minScore: 6000, currentTermEnd: 0,
+  councilSize: 12, termDays: 365, minScore: 7000, currentTermEnd: 0,
   electionActive: true, totalVotes: 0, totalVotePower: 0,
 };
 
@@ -70,7 +70,7 @@ export function ElectionsTabContent() {
     ? {
         councilSize: Number((electionInfoData as any)[0] ?? 12),
         termDays: Number((electionInfoData as any)[1] ?? 365),
-        minScore: Number((electionInfoData as any)[2] ?? 6000),
+        minScore: Number((electionInfoData as any)[2] ?? 7000),
         currentTermEnd: Number((electionInfoData as any)[3] ?? 0),
         electionActive: Boolean((electionInfoData as any)[4] ?? true),
         totalVotes: Number((electionInfoData as any)[5] ?? 0),

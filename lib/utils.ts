@@ -319,14 +319,24 @@ export function formatUSD(amount: number): string {
 
 /**
  * Get ProofScore tier color
- * Uses 0-10000 scale (10x precision) matching the Seer contract
+ * Uses 0-10000 scale (10x precision) matching the Seer contract.
+ * 7-tier system per VFIDE manual:
+ *   ELITE      ≥8000  — Amber
+ *   COUNCIL    ≥7000  — Purple
+ *   TRUSTED    ≥5600  — Emerald
+ *   GOVERNANCE ≥5400  — Cyan
+ *   NEUTRAL    ≥5000  — Blue
+ *   LOW TRUST  ≥3500  — Yellow
+ *   RISKY       <3500 — Red
  */
 export function getScoreTierColor(score: number): string {
-  if (score >= 9000) return '#50C878' // VERIFIED - Green (90%+)
-  if (score >= 7000) return '#00F0FF' // TRUSTED - Cyan (70%+)
-  if (score >= 4000) return '#FFA500' // ESTABLISHED - Orange (40%+)
-  if (score >= 2000) return '#FFD700' // PROBATIONARY - Gold (20%+)
-  return '#A0A0A5' // UNRANKED - Grey (<20%)
+  if (score >= 8000) return '#F59E0B' // ELITE      — Amber
+  if (score >= 7000) return '#A855F7' // COUNCIL    — Purple
+  if (score >= 5600) return '#10B981' // TRUSTED    — Emerald
+  if (score >= 5400) return '#00F0FF' // GOVERNANCE — Cyan
+  if (score >= 5000) return '#3B82F6' // NEUTRAL    — Blue
+  if (score >= 3500) return '#EAB308' // LOW TRUST  — Yellow
+  return '#EF4444'                    // RISKY      — Red
 }
 
 /**

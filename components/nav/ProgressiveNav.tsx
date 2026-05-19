@@ -5,7 +5,8 @@
  * After first tx: Dashboard unlocks.
  * After vault creation: Vault, Guardians unlock.
  * After 10 transactions: Analytics unlocks.
- * After ProofScore 1000: Governance unlocks.
+ * After ProofScore 5000 (NEUTRAL): Trusted features unlock.
+ * After ProofScore 5400 (GOVERNANCE): Governance features unlock.
  * 
  * The nav doesn't hide features — it introduces them at the right time.
  * Advanced users can access everything via a "Show all" toggle.
@@ -30,8 +31,8 @@ export type JourneyStage =
   | 'transacting'  // Has made 1+ transactions
   | 'established'  // Has vault + guardians
   | 'merchant'     // Registered merchant
-  | 'trusted'      // ProofScore 1000+
-  | 'governor';    // ProofScore 3000+ or council member
+  | 'trusted'      // ProofScore 5000+ (NEUTRAL tier — baseline trust)
+  | 'governor';    // ProofScore 5400+ (GOVERNANCE tier) or council member
 
 export interface NavItem {
   id: string;
@@ -70,11 +71,11 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'pos', label: 'POS', href: '/pos', icon: Store, unlocksAt: 'merchant', group: 'commerce' },
   { id: 'analytics', label: 'Analytics', href: '/merchant/analytics', icon: BarChart3, unlocksAt: 'merchant', group: 'commerce' },
 
-  // Unlocks at ProofScore 1000
+  // Unlocks at ProofScore 5000 (NEUTRAL tier)
   { id: 'leaderboard', label: 'Leaderboard', href: '/leaderboard', icon: Award, unlocksAt: 'trusted', group: 'social' },
   { id: 'social', label: 'Social', href: '/social', icon: Users, unlocksAt: 'trusted', group: 'social', featureFlag: 'socialFeed' },
 
-  // Unlocks at ProofScore 3000 / council
+  // Unlocks at ProofScore 5400 (GOVERNANCE tier) / council
   { id: 'governance', label: 'Governance', href: '/governance', icon: Vote, unlocksAt: 'governor', group: 'governance' },
   // NAV-8: /council redirects to /governance?tab=council — use the canonical URL
   { id: 'council', label: 'Council', href: '/governance?tab=council', icon: Vote, unlocksAt: 'governor', group: 'governance' },
@@ -98,8 +99,8 @@ interface UserState {
 
 function detectStage(state: UserState): JourneyStage {
   if (!state.isConnected) return 'visitor';
-  if (state.isCouncilMember || state.proofScore >= 3000) return 'governor';
-  if (state.proofScore >= 1000) return 'trusted';
+  if (state.isCouncilMember || state.proofScore >= 5400) return 'governor';
+  if (state.proofScore >= 5000) return 'trusted';
   if (state.isMerchant) return 'merchant';
   if (state.hasVault && state.hasGuardians) return 'established';
   if (state.hasTransactions) return 'transacting';
@@ -181,8 +182,8 @@ export function ProgressiveNavProvider({ children, userState }: ProgressiveNavPr
             transacting: 'Make your first transaction',
             established: 'Create a vault and add guardians',
             merchant: 'Register as a merchant',
-            trusted: 'Reach ProofScore 1,000',
-            governor: 'Reach ProofScore 3,000',
+            trusted: 'Reach ProofScore 5,000 (NEUTRAL tier)',
+            governor: 'Reach ProofScore 5,400 (GOVERNANCE tier)',
           };
           nextMilestone = {
             stage: nextStage,

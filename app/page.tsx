@@ -19,11 +19,11 @@ import { Step } from './components/Step';
 const PROTOCOL_METRICS = [
   { label: 'Merchant Fees', value: '0%', icon: '💸' },
   { label: 'Max ProofScore', value: '10,000', icon: '🏆' },
-  { label: 'Burn Rate', value: '35%', icon: '🔥' },
-  { label: 'Sanctum Fund', value: '20%', icon: '🛡️' },
+  { label: 'Burn Rate', value: '40%', icon: '🔥' },
+  { label: 'Sanctum Fund', value: '10%', icon: '🛡️' },
   { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
   { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
-  { label: 'ProofScore Tiers', value: '5 Tiers', icon: '🎯' },
+  { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
   { label: 'Self-Custody', value: '100%', icon: '🗝️' },
 ];
 
@@ -254,8 +254,8 @@ export default function Home() {
               {[
                 { value: 0,     label: 'Merchant Fees',  suffix: '%',   color: 'cyan'    },
                 { value: 10000, label: 'Max ProofScore', suffix: '',    color: 'amber'   },
-                { value: 35,    label: 'Burn Rate',       suffix: '%',   color: 'emerald' },
-                { value: 20,    label: 'Sanctum Fund',   suffix: '%',   color: 'pink'    },
+                { value: 40,    label: 'Burn Rate',      suffix: '%',   color: 'emerald' },
+                { value: 10,    label: 'Sanctum Fund',   suffix: '%',   color: 'pink'    },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}

@@ -31,11 +31,14 @@ interface MerchantTrustBadgeProps {
 }
 
 function getScoreTier(score: number): { label: string; color: string; bgColor: string } {
-  if (score >= 8000) return { label: 'ELITE', color: 'text-amber-400', bgColor: 'bg-amber-500/15 border-amber-500/30' };
-  if (score >= 6000) return { label: 'TRUSTED', color: 'text-emerald-400', bgColor: 'bg-emerald-500/15 border-emerald-500/30' };
-  if (score >= 4000) return { label: 'VERIFIED', color: 'text-cyan-400', bgColor: 'bg-cyan-500/15 border-cyan-500/30' };
-  if (score >= 2000) return { label: 'ACTIVE', color: 'text-blue-400', bgColor: 'bg-blue-500/15 border-blue-500/30' };
-  return { label: 'NEW', color: 'text-gray-400', bgColor: 'bg-white/5 border-white/10' };
+  // 7-tier ProofScore system per VFIDE manual (Seer contract, 0-10000 scale)
+  if (score >= 8000) return { label: 'ELITE',      color: 'text-amber-400',   bgColor: 'bg-amber-500/15 border-amber-500/30' };
+  if (score >= 7000) return { label: 'COUNCIL',    color: 'text-purple-400',  bgColor: 'bg-purple-500/15 border-purple-500/30' };
+  if (score >= 5600) return { label: 'TRUSTED',    color: 'text-emerald-400', bgColor: 'bg-emerald-500/15 border-emerald-500/30' };
+  if (score >= 5400) return { label: 'GOVERNANCE', color: 'text-cyan-400',    bgColor: 'bg-cyan-500/15 border-cyan-500/30' };
+  if (score >= 5000) return { label: 'NEUTRAL',    color: 'text-blue-400',    bgColor: 'bg-blue-500/15 border-blue-500/30' };
+  if (score >= 3500) return { label: 'LOW TRUST',  color: 'text-yellow-400',  bgColor: 'bg-yellow-500/15 border-yellow-500/30' };
+  return                     { label: 'RISKY',     color: 'text-red-400',     bgColor: 'bg-red-500/15 border-red-500/30' };
 }
 
 function getFeeRate(score: number): string {

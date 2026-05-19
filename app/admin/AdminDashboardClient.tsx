@@ -1842,7 +1842,7 @@ export default function AdminPanel() {
             <h2 className="text-2xl font-bold text-white mb-4">🔒 Vault-Only Mode</h2>
             <p className="text-gray-300 text-sm mb-4">
               Vault-only mode is ENABLED BY DEFAULT at deployment for security. Users&apos; tokens automatically create vaults on first receipt. 
-              Vaults have enhanced security: freeze function, abnormal transaction detection, and recovery mechanisms.
+              Vaults have enhanced security: per-transfer spend limits, abnormal transaction detection, queued large-transfer approval, and guardian recovery mechanisms. Note: there is no admin freeze function — the protocol deliberately has no capability to freeze user tokens.
             </p>
 
             <div className="bg-black/30 rounded-lg p-4 mb-4">

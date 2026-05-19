@@ -171,9 +171,9 @@ async function postHandler(request: NextRequest, user: JWTPayload) {
       'SELECT proof_score FROM users WHERE wallet_address = $1',
       [authAddress]
     );
-    if (eligibility.rows.length === 0 || Number(eligibility.rows[0]?.proof_score ?? 0) < 1000) {
+    if (eligibility.rows.length === 0 || Number(eligibility.rows[0]?.proof_score ?? 0) < 5600) {
       return NextResponse.json(
-        { error: 'Minimum proof score of 1000 required for merchant registration' },
+        { error: 'Minimum proof score of 5600 (TRUSTED tier) required for merchant registration' },
         { status: 403 }
       );
     }
