@@ -1,6 +1,6 @@
 # Deep Frontend Audit (v2)
 
-Files scanned: 1410
+Files scanned: 1411
 Routes registered: 124 static + 11 dynamic
 Findings: high=0 medium=0 low=0
 

@@ -17,6 +17,7 @@ import { VaultInheritancePanel } from './VaultInheritancePanel';
 import { VaultQueueSection } from './VaultQueueSection';
 import { WithdrawModal } from './WithdrawModal';
 import { VaultPendingChangesBanner } from '@/components/vault/VaultPendingChangesBanner';
+import { VaultGuardianSetupBanner } from '@/components/vault/VaultGuardianSetupBanner';
 import { IncomingRefunds } from '@/components/vault/IncomingRefunds';
 
 export function VaultContent() {
@@ -60,6 +61,8 @@ export function VaultContent() {
             />
 
             <VaultPendingChangesBanner vaultAddress={ops.vaultAddress} />
+
+            <VaultGuardianSetupBanner vaultAddress={ops.vaultAddress as `0x${string}` | undefined} />
 
             <VaultQuickActions
               onTransfer={() => { ops.setWithdrawRecipient(''); ops.setShowWithdrawModal(true); }}

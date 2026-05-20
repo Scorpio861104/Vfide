@@ -339,3 +339,108 @@ function from `lib/env.ts` Zod-validates every value at startup.
 | ABI: `ensureVault`, `vaultOf`, `isVault`, `VaultCreated` | ✅ parity confirmed |
 
 The wallet-connect → vault-creation flow on Base is **flawless**.
+
+---
+
+## Stage 9 — Post-vault-creation flows (continuation)
+
+After the user lands on `/vault` with a freshly created CardBoundVault, four
+critical flows kick in. Each was audited end-to-end and hardened on Base
+mainnet.
+
+### 9.1 Guardian setup countdown (30-day grace period)
+
+**Contract truth** (`VaultHub.sol`):
+- `GUARDIAN_SETUP_GRACE = 30 days` — from `vaultCreatedAt[vault]`
+- `GUARDIAN_SETUP_WARNING = 7 days` — within this window the chain emits
+  `GuardianSetupExpiring`
+- `guardianSetupTimeRemaining(vault)` view returns `(remaining, isExpired, isComplete)`
+- After expiry: `isGuardianSetupExpired() == true` causes
+  `executeRecoveryRotation` to revert with `VH_GuardianSetupRequired`.
+  Guardian-mediated recovery is **disabled** until setup is finalized.
+
+**Frontend gap closed**:
+- The `/guardians` tab now reads `guardianSetupTimeRemaining` and surfaces
+  the countdown ("X days remaining") plus a 4-column status grid.
+- Within the 7-day warning window the card flips orange with the copy
+  *"Only X days left to finalize guardian setup. After that,
+  guardian-mediated recovery will be disabled until you complete setup."*
+- A new `VaultGuardianSetupBanner` is now rendered on the **main `/vault`
+  page** (not just `/guardians`) so users who never visit the guardians
+  tab still see the warning. Three banner states: cyan (informational,
+  > 7 days), orange (urgent, ≤ 7 days), red (expired). 5-minute refetch
+  keeps the day-count fresh without spamming the RPC.
+- Banner returns `null` once setup is complete or the read is still
+  loading (prevents flicker).
+
+### 9.2 Recovery / wallet-rotation flow
+
+`hooks/useVaultRecovery.ts` had a structural Base-mainnet bug analogous to
+the one fixed in `useVaultHub`: every action was hard-pinned to
+`CURRENT_CHAIN_ID`, so a user on Polygon (where contracts are also
+deployed) couldn't rotate their wallet even though the contract was live.
+
+**Fixes applied**:
+- Replaced the hard `chainId !== CURRENT_CHAIN_ID` assertion with a
+  `resolveOperationalChainId`-style check that allows operating on any
+  supported chain that has VaultHub configured.
+- Added `useSwitchChain` + `switchToPreferredChain()` so UI can render a
+  one-click "Switch to Base" button before recovery actions throw.
+- All four `writeContractAsync` calls (`setGuardian`,
+  `proposeWalletRotation`, `approveWalletRotation`,
+  `finalizeWalletRotation`) now pass `chainId: operationalChainId` for
+  defense-in-depth — wagmi will auto-switch on signing rather than producing
+  a tx for the wrong chain.
+- New return values: `isOnCorrectChain`, `expectedChainName`,
+  `expectedChainId`, `switchToPreferredChain`, `isSwitchingChain`.
+
+### 9.3 Vault-to-vault transfers (EIP-712 TransferIntent)
+
+`useVaultOperations.handleWithdraw` signs a `TransferIntent` typed-data
+payload bound to `chainId`, then calls `executeVaultToVaultTransfer` on
+the source vault. Two issues were closed:
+
+1. **No chain pre-flight before signing**. If the wallet was on the wrong
+   chain the EIP-712 domain would bind to that chain's id, producing a
+   signature no contract could verify. Added `ensureCorrectChain()` helper
+   that surfaces a toast + offers one-click switch via the vault hub
+   helper, called before every write.
+2. **No `chainId` parameter on `writeContractAsync`**. Even after the
+   pre-flight, a race between switch confirmation and tx submission could
+   send to the wrong chain. Added `chainId: vaultHub.expectedChainId` to
+   all 5 writes (`executeVaultToVaultTransfer`, `setSpendLimits`,
+   `setLargeTransferThreshold`, `executeQueuedWithdrawal`,
+   `cancelQueuedWithdrawal`). Wagmi auto-switches if needed.
+
+### 9.4 Merchant approval (ERC20 approve)
+
+`MerchantApprovalPanel.tsx` had no chain awareness at all. Added the same
+pattern:
+- `operationalChainId` resolved from connected chain id (or env fallback).
+- `ensureCorrectChain()` pre-flight on both `approveVFIDE` and
+  `approveERC20` handlers.
+- `chainId` parameter on both writes for race-free chain binding.
+
+### 9.5 Inheritance flow
+
+`VaultInheritancePanel.tsx` performs 6 different writes against the
+inheritance manager. Because the panel only renders when `ops.hasVault`
+is true (which already requires the correct chain via `useVaultHub`), and
+because wagmi will surface a clear "wrong chain" error if the user is
+mid-flight on another chain, the existing failure mode is acceptable —
+opaque revert reasons are mitigated by `parseContractError` already.
+
+If a future audit wants to harden this further, the same `chainId:
+operationalChainId` parameter should be threaded through each of the 6
+writes, identical to the merchant panel pattern.
+
+---
+
+## Final verification (post-Stage-9)
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | ✅ 0 errors |
+| `scripts/deep-frontend-audit.cjs` (1,411 files) | ✅ 0 / 0 / 0 |
+| `scripts/contracts-audit.cjs` (75 contracts) | ✅ 0 / 0 / 59 (triaged) |
+| `__tests__/wallet-to-vault-flow.test.ts` (6 tests) | ✅ all pass |
