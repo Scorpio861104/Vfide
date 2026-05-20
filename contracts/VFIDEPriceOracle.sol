@@ -266,7 +266,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             }
 
             // Convert to 18 decimals
-            uint8 decimals;
+            uint8 decimals = 0;
             try chainlinkFeed.decimals() returns (uint8 d) {
                 decimals = d;
             } catch {
@@ -297,8 +297,8 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         }
 
         IUniswapV3PoolLite pool = IUniswapV3PoolLite(uniswapPool);
-        address token0;
-        address token1;
+        address token0 = address(0);
+        address token1 = address(0);
         try pool.token0() returns (address t0) {
             token0 = t0;
         } catch {
@@ -320,7 +320,8 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         secondsAgos[0] = TWAP_PERIOD;
         secondsAgos[1] = 0;
 
-        int56[] memory tickCumulatives;
+        int56[] memory tickCumulatives = new int56[](0);
+        // slither-disable-next-line unused-return  // 2nd tuple element (secondsPerLiquidityCumulativeX128) intentionally ignored
         try pool.observe(secondsAgos) returns (
             int56[] memory observedTickCumulatives,
             uint160[] memory

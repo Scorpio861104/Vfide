@@ -618,6 +618,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @dev H-8 FIX: Uses VaultHub.executeRecoveryRotation instead of forceSetOwner.
      *      Non-custodial: only reachable after guardian approvals + 7-day challenge.
      */
+    // slither-disable-next-line reentrancy-no-eth  // internal helper; only called from finalizeClaim (which has nonReentrant guard)
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
         

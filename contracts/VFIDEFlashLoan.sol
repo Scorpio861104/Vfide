@@ -255,7 +255,9 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         if (_vfideToken == address(0) || _dao == address(0)) revert FL_Zero();
         vfideToken = IERC20(_vfideToken);
         dao = _dao;
+        // slither-disable-next-line missing-zero-check  // _seer is optional; address(0) leaves seer unset
         if (_seer != address(0)) seer = ISeerFL(_seer);
+        // slither-disable-next-line missing-zero-check  // _feeDistributor optional; address(0) routes fees per existing fallback
         feeDistributor = _feeDistributor;
     }
 
@@ -652,6 +654,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     /// @notice Propose a fraud registry change with 24-hour timelock (L-2 FIX)
     function setFraudRegistry(address _fr) external onlyDAO {
+        if (_fr == address(0)) revert FL_Zero();
         pendingFraudRegistry = _fr;
         pendingFraudRegistryAt = uint64(block.timestamp) + FRAUD_REGISTRY_DELAY;
         emit FraudRegistryProposed(_fr, pendingFraudRegistryAt);

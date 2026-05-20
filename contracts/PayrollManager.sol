@@ -30,6 +30,7 @@ error PM_NotPayee();
 error PM_NotAuthorized();
 error PM_StreamInactive();
 error PM_StreamPaused();
+error PM_Zero();
 error PM_StreamNotPaused();
 error PM_InvalidRate();
 error PM_InvalidPayee();
@@ -168,6 +169,7 @@ contract PayrollManager is ReentrancyGuard {
     }
     
     function setSeer(address _seer) external onlyDAO {
+        if (_seer == address(0)) revert PM_Zero();
         pendingSeer_PM = _seer;
         pendingSeerAt_PM = uint64(block.timestamp) + SEER_CHANGE_DELAY_PM;
         emit SeerChangeProposed(_seer, pendingSeerAt_PM);
@@ -280,6 +282,7 @@ contract PayrollManager is ReentrancyGuard {
      * Add more funds to an existing stream
      */
     function topUp(uint256 streamId, uint256 amount) external nonReentrant {
+        // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; safeTransferFrom reverts atomically
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
@@ -626,6 +629,7 @@ contract PayrollManager is ReentrancyGuard {
     ///         valid batch does not waste the entire transaction.
     ///
     ///         Bounded to 100 IDs per call to keep gas usage predictable.
+    // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; per-stream state updates are atomic
     function claimExpiredStreamBatch(uint256[] calldata streamIds) external nonReentrant {
         require(streamIds.length <= 100, "PM: batch too large");
         for (uint256 i = 0; i < streamIds.length; i++) {

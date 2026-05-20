@@ -14,7 +14,7 @@ import { IERC20, SafeERC20, ReentrancyGuard } from "./SharedInterfaces.sol";
 
 contract RevenueSplitter is ReentrancyGuard {
     using SafeERC20 for IERC20;
-    address public owner;
+    address public immutable owner;
     
     struct Payee {
         address account;

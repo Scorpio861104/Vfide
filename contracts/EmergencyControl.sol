@@ -78,7 +78,7 @@ contract EmergencyControl is ReentrancyGuard {
     uint8 public approvalsHalt;
     uint8 public approvalsUnhalt;
     
-    uint64 public voteExpiryPeriod = 7 days;
+    uint64 public constant voteExpiryPeriod = 7 days;
     uint64 public haltVotingStartTime;
     uint64 public unhaltVotingStartTime;
 
@@ -181,7 +181,8 @@ contract EmergencyControl is ReentrancyGuard {
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
         
         // Clear old members
-        for (uint256 i = 0; i < currentMembers.length; i++) {
+        uint256 _curLen = currentMembers.length;
+        for (uint256 i = 0; i < _curLen; i++) {
             isMember[currentMembers[i]] = false;
         }
         delete currentMembers;

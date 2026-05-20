@@ -56,6 +56,7 @@ contract Seer is ReentrancyGuard {
     event DecentralizationUpdated(uint8 daoWeight, uint8 onChainWeight);
     event OperatorSet(address indexed operator, bool authorized);
     event DecayApplied(address indexed subject, uint16 oldScore, uint16 newScore, uint256 inactiveDays);
+    event DecayConfigSet(bool enabled, uint64 startDays, uint16 perMonth);
     event Paused(bool isPaused);
     // Endorsement/mentorship events emitted by SeerSocial directly
     event SeerSocialSet(address indexed seerSocial);
@@ -169,7 +170,7 @@ contract Seer is ReentrancyGuard {
         uint32 public maxDailySubjectDelta = 300; // Max 3% per day from ALL operators combined
         /// F-16 FIX: Limit the maximum score delta any single DAO setScore() call can make
         // H-5 FIX: Reduced from 2000 (20%) to 500 (5%) to limit DAO manipulation velocity
-        uint16 public maxDAOScoreChange = 500; // Max 5% change per call
+        uint16 public constant maxDAOScoreChange = 500; // Max 5% change per call
         
         // S-04 FIX: Rate limit DAO score changes to prevent rapid cascading manipulation
         // H-5 FIX: Increased cooldown from 1 hour to 4 hours
@@ -379,6 +380,7 @@ contract Seer is ReentrancyGuard {
         decayEnabled = enabled;
         decayStartDays = startDays;
         decayPerMonth = perMonth;
+        emit DecayConfigSet(enabled, startDays, perMonth);
         _consumePolicyChange(SEL_SET_DECAY_CONFIG, PolicyClass.Important);
         _logSystem();
     }
@@ -407,7 +409,8 @@ contract Seer is ReentrancyGuard {
     uint256 public constant MAX_SCORE_SOURCES = 50; // I-11: Cap to prevent gas amplification in transfer path
 
     function _activeScoreSourceWeight() internal view returns (uint256 totalWeight) {
-        for (uint256 i = 0; i < scoreSources.length; i++) {
+        uint256 _ssLen = scoreSources.length;
+        for (uint256 i = 0; i < _ssLen; i++) {
             if (scoreSources[i].active) {
                 totalWeight += scoreSources[i].weight;
             }
@@ -472,7 +475,8 @@ contract Seer is ReentrancyGuard {
         if (daoWeight + onChainWeight != 100) revert TRUST_Bounds();
         // Count active score sources to determine if the floor applies.
         uint256 activeSources = 0;
-        for (uint256 i = 0; i < scoreSources.length;) {
+        uint256 _ssLen2 = scoreSources.length;
+        for (uint256 i = 0; i < _ssLen2;) {
             if (scoreSources[i].active) activeSources++;
             unchecked { i++; }
         }
@@ -633,10 +637,12 @@ contract Seer is ReentrancyGuard {
         uint256 weightedScore = 0;
         
         // Aggregate from registered sources
-        for (uint256 i = 0; i < scoreSources.length; i++) {
+        uint256 _ssLen3 = scoreSources.length;
+        for (uint256 i = 0; i < _ssLen3; i++) {
             if (!scoreSources[i].active) continue;
             
             uint8 sourceWeight = scoreSources[i].weight;
+            // slither-disable-next-line unused-return  // 2nd tuple element (confidence) intentionally ignored
             try IScoreSource(scoreSources[i].source).getScoreContribution(subject) returns (uint16 score, uint8) {
                 if (sourceWeight > 0 && score <= 1000) {
                     // Score sources return 0-1000, we need 0-10000
@@ -1304,7 +1310,7 @@ contract ProofScoreBurnRouterPlus {
     event SeerSet(address indexed seer);
     event PolicySet(uint16 baseBurnBps, uint16 baseRewardBps, uint16 highBoostBps, uint16 lowPenaltyBps, uint16 maxTotalBps, address treasury);
 
-    address public dao;
+    address public immutable dao;
     Seer    public seer;
 
     // base policy (DAO-tunable)

@@ -28,6 +28,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
     event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
     event MicroTxUsdCapSet(address indexed priceOracle, uint256 maxUsd6);
+    event AdaptiveFeesSet(uint256 lowVolumeThreshold, uint256 highVolumeThreshold, uint16 lowVolMultiplier, uint16 highVolMultiplier, bool enabled);
         event SustainabilityProposed(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps, uint64 effectiveAt);
         event SustainabilityCancelled();
         event MicroTxFeeCeilingProposed(uint16 maxBps, uint256 maxAmount, uint64 effectiveAt);
@@ -78,9 +79,9 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     uint16 public constant DEFAULT_SANCTUM_BPS = 5;  // 0.05% base Sanctum
     uint16 public constant DEFAULT_ECOSYSTEM_BPS = 20;  // 0.2% base Ecosystem
     
-    uint16 public baseBurnBps = DEFAULT_BURN_BPS;
-    uint16 public baseSanctumBps = DEFAULT_SANCTUM_BPS;
-    uint16 public baseEcosystemBps = DEFAULT_ECOSYSTEM_BPS;
+    uint16 public constant baseBurnBps = DEFAULT_BURN_BPS;
+    uint16 public constant baseSanctumBps = DEFAULT_SANCTUM_BPS;
+    uint16 public constant baseEcosystemBps = DEFAULT_ECOSYSTEM_BPS;
     
     // Linear fee curve parameters (0-10000 scale)
     // Fee = linear interpolation between minFeeBps and maxFeeBps based on score
@@ -160,6 +161,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     mapping(address => uint16) public cachedTimeWeightedScore;
 
     function _dayStart(uint256 timestamp) internal pure returns (uint256) {
+        // slither-disable-next-line divide-before-multiply  // intentional truncation to start-of-day boundary
         return (timestamp / 1 days) * 1 days;
     }
 
@@ -170,6 +172,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         address _ecosystemSink,
         address _token
     ) {
+        // slither-disable-next-line missing-zero-check  // validated by _validateModules; _burnSink intentionally allows address(0)
         _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         if (_token == address(0)) {
             revert BURN_Zero();
@@ -252,6 +255,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         highVolumeFeeMultiplier = _highVolMultiplier;
         adaptiveFeesEnabled = _enabled;
         lastFeePolicyChange = uint64(block.timestamp);
+        emit AdaptiveFeesSet(_lowVolumeThreshold, _highVolumeThreshold, _lowVolMultiplier, _highVolMultiplier, _enabled);
     }
     
     /**
@@ -799,6 +803,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     function recordBurn(uint256 burnAmount) external nonReentrant {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
+        // slither-disable-next-line events-maths  // hot-path accumulator; events emitted by token on Transfer
         dailyBurnedAmount += burnAmount;
     }
     
@@ -809,6 +814,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     function recordVolume(uint256 amount) external {
         require(msg.sender == token, "only token");
         _resetDayIfNeeded();
+        // slither-disable-next-line events-maths  // hot-path accumulator; events emitted by token on Transfer
         dailyVolumeTracked += amount;
     }
 

@@ -84,7 +84,7 @@ contract DAO is ReentrancyGuard {
     uint64 public votingPeriod = 7 days;
     uint64 public constant MIN_VOTING_PERIOD = 1 hours;
     uint64 public constant MAX_VOTING_PERIOD = 30 days;
-    uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
+    uint64 public constant votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
     uint64 public constant VOTE_GRACE_PERIOD = 30 minutes; // Anti-front-running: voting closes early
     uint64 public proposalCooldown = 1 hours;
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
@@ -801,6 +801,7 @@ contract DAO is ReentrancyGuard {
         // Execute the queued transaction via the timelock interface.
         // This will revert if not yet ripe, already executed, or if execution fails.
         // The timelock will call this DAO's markExecuted() to update the associated proposal state.
+        // slither-disable-next-line unused-return  // timelock.execute reverts on failure; return value not needed
         timelock.execute(timelockId);
     }
 

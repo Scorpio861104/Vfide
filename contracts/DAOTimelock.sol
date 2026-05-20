@@ -139,7 +139,7 @@ contract DAOTimelock is ReentrancyGuard {
         daoProposalForTx[id] = daoProposalId;
     }
 
-    function cancel(bytes32 id) external onlyAdminOrSelf {
+    function cancel(bytes32 id) external onlyAdminOrSelf nonReentrant {
         if(queue[id].eta==0) revert TL_NotQueued();
         // #454 FIX: notify DAO of cancellation so proposal doesn't stay stuck in "queued" state
         _notifyDaoCancelledIfTracked(id);
@@ -454,7 +454,7 @@ contract DAOTimelock is ReentrancyGuard {
      * @notice Clean up expired transaction (anyone can call to free storage)
      * @param id Transaction ID to clean up
      */
-    function cleanupExpired(bytes32 id) external onlyAdminOrSelf { // TL-03 + #455 FIX: also callable by self (DAO proposal flow)
+    function cleanupExpired(bytes32 id) external onlyAdminOrSelf nonReentrant { // TL-03 + #455 FIX: also callable by self (DAO proposal flow)
         Op storage op = queue[id];
         require(op.eta > 0, "TL: not queued");
         require(!op.done, "TL: already executed");

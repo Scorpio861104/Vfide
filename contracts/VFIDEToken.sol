@@ -339,6 +339,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         );
     }
 
+    // slither-disable-next-line shadowing-local  // 'owner' parameter mandated by EIP-2612 spec
     function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
         if (block.timestamp > deadline) revert VF_PermitExpired();
         // F-01 FIX: Reject malleable signatures (EIP-2 / secp256k1 upper bound on s)
@@ -438,6 +439,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     /// @notice TL-308 FIX: Propose a seerAutonomous change (48h timelock). (#308)
     function setSeerAutonomous(address _seerAutonomous) external onlyOwner {
+        if (_seerAutonomous == address(0)) revert VF_ZeroAddress();
         if (pendingSeerAutonomousAt != 0) revert VF_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
         pendingSeerAutonomous = _seerAutonomous;
@@ -1082,6 +1084,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             // transfer reverts — no silent token loss.
             _balances[address(fraudRegistry)] += remaining;
             emit Transfer(from, address(fraudRegistry), remaining);
+            // slither-disable-next-line unused-return  // escrowTransfer reverts on failure; bool not consumed by design
             fraudRegistry.escrowTransfer(from, custodyTo, remaining);
         } else {
             // Normal delivery — tokens go directly to receiver
@@ -1166,9 +1169,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
     }
     
-    function _hasVault(address owner) internal view returns (bool) {
+    function _hasVault(address account) internal view returns (bool) {
         if (address(vaultHub) == address(0)) return false;
-        try vaultHub.vaultOf(owner) returns (address vault) {
+        try vaultHub.vaultOf(account) returns (address vault) {
             return vault != address(0);
         } catch {
             return false;

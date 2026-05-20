@@ -161,8 +161,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     modifier onlyVaultOwner(address vault) {
-        address owner = vaultHub.ownerOfVault(vault);
-        if (owner != msg.sender) revert NotVaultOwner();
+        address vaultOwnerAddr = vaultHub.ownerOfVault(vault);
+        if (vaultOwnerAddr != msg.sender) revert NotVaultOwner();
         _;
     }
     
@@ -180,8 +180,8 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @dev Called automatically when vault is created, or manually by user
      */
     function registerVault(address vault) external validVault(vault) {
-        address owner = vaultHub.ownerOfVault(vault);
-        require(msg.sender == owner || msg.sender == address(vaultHub), "not authorized");
+        address vaultOwnerAddr = vaultHub.ownerOfVault(vault);
+        require(msg.sender == vaultOwnerAddr || msg.sender == address(vaultHub), "not authorized");
         
         if (vaultCreatedAt[vault] < 1) {
             vaultIndex[vault] = allVaults.length;
@@ -361,10 +361,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @dev Called periodically or when badges change to enable badge-based lookup
      */
     function updateBadgeFingerprint(address vault) external validVault(vault) {
-        address owner = vaultHub.ownerOfVault(vault);
+        address vaultOwnerAddr = vaultHub.ownerOfVault(vault);
         
         if (address(badgeManager) != address(0)) {
-            uint256[] memory badges = badgeManager.getUserBadges(owner);
+            uint256[] memory badges = badgeManager.getUserBadges(vaultOwnerAddr);
             
             if (badges.length > 0) {
                 // Create unique fingerprint from badge IDs
@@ -639,25 +639,25 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     function getVaultInfo(address vault) public view returns (VaultInfo memory info) {
         if (!vaultHub.isVault(vault)) revert InvalidVault();
         
-        address owner = vaultHub.ownerOfVault(vault);
+        address vaultOwnerAddr = vaultHub.ownerOfVault(vault);
         
         uint256 proofScore = 0;
         if (address(proofScoreManager) != address(0)) {
-            try proofScoreManager.getProofScore(owner) returns (uint256 score) {
+            try proofScoreManager.getProofScore(vaultOwnerAddr) returns (uint256 score) {
                 proofScore = score;
             } catch {}
         }
         
         uint256 badgeCount = 0;
         if (address(badgeManager) != address(0)) {
-            try badgeManager.getUserBadges(owner) returns (uint256[] memory badges) {
+            try badgeManager.getUserBadges(vaultOwnerAddr) returns (uint256[] memory badges) {
                 badgeCount = badges.length;
             } catch {}
         }
         
         info = VaultInfo({
             vault: vault,
-            originalOwner: owner,
+            originalOwner: vaultOwnerAddr,
             createdAt: vaultCreatedAt[vault],
             lastActiveAt: vaultLastActiveAt[vault],
             proofScore: proofScore,

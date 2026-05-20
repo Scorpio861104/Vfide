@@ -492,6 +492,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     function _advancePeriodIfNeeded() internal {
         if (block.timestamp >= periodStartTime + PERIOD_DURATION) {
             uint256 elapsed = block.timestamp - periodStartTime;
+            // slither-disable-next-line divide-before-multiply  // intentional: periods is integer count, then aligned back to PERIOD_DURATION boundary
             uint256 periods = elapsed / PERIOD_DURATION;
             currentPeriod += periods;
             periodStartTime = periodStartTime + (periods * PERIOD_DURATION);
