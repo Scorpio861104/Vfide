@@ -1486,6 +1486,13 @@ contract CardBoundVault is ReentrancyGuard {
         }
 
         uint64 daysSince = (uint64(block.timestamp) - recoveryUnseparatedSince) / 1 days;
+        // SLITHER FALSE POSITIVE (weak-prng): block.timestamp modulo 7 here is a
+        // deterministic time-based gate ("emit a reminder once per week") used
+        // exclusively to decide whether to emit a notification event. There is
+        // no randomness, no value transfer, and no security decision keyed on
+        // this value. A miner manipulating timestamp by ~15s cannot affect the
+        // weekly cadence in any meaningful way.
+        // slither-disable-next-line weak-prng
         if (daysSince >= 7 && daysSince % 7 == 0) {
             emit RecoverySplitReminderEmitted(wallet, daysSince);
         }

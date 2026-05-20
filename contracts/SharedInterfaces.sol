@@ -491,23 +491,23 @@ abstract contract AccessControl {
         _;
     }
     
-    function hasRole(bytes32 role, address account) public view returns (bool) {
+    function hasRole(bytes32 role, address account) public view virtual returns (bool) {
         return _roles[role].members[account];
     }
     
-    function getRoleAdmin(bytes32 role) public view returns (bytes32) {
+    function getRoleAdmin(bytes32 role) public view virtual returns (bytes32) {
         return _roles[role].adminRole;
     }
     
-    function grantRole(bytes32 role, address account) public onlyRole(getRoleAdmin(role)) {
+    function grantRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {
         _grantRole(role, account);
     }
     
-    function revokeRole(bytes32 role, address account) public onlyRole(getRoleAdmin(role)) {
+    function revokeRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {
         _revokeRole(role, account);
     }
     
-    function renounceRole(bytes32 role, address account) public {
+    function renounceRole(bytes32 role, address account) public virtual {
         require(account == msg.sender, "AC: can only renounce for self");
         _revokeRole(role, account);
     }

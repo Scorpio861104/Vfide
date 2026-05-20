@@ -167,10 +167,12 @@ const config: VfideHardhatConfig = {
             bytecodeHash: "none",
           },
           viaIR: true,
-          // Suppress the solc 0.8.30 false-positive "unreachable code" warning
-          // that fires on the OZ nonReentrant modifier pattern (_nonReentrantAfter
-          // after _;). This is a known solc CFG analysis limitation, not a real bug.
-          suppressWarnings: ["2394"],
+          // NOTE: A previous revision tried `suppressWarnings: ["2394"]` here
+          // to silence a solc 0.8.30 false-positive "unreachable code" warning
+          // on the OZ nonReentrant modifier pattern. That key is not part of
+          // the solc standard-JSON input schema and Hardhat 3.x rejects it as
+          // a fatal error ("Unknown key 'suppressWarnings'"). The warning is
+          // a known harmless solc CFG limitation; it stays as a warning.
         },
       },
       // MerchantPortal is user-facing but complex (1159 lines); runs:1 retained for size safety.

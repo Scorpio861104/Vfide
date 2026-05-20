@@ -84,6 +84,15 @@ library FullMath {
         // modulo 2**256 such that denominator * inv = 1 mod 2**256.
         // Compute the inverse by starting with a seed that is correct
         // correct for four bits. That is, denominator * inv = 1 mod 2**4
+        //
+        // SLITHER FALSE POSITIVE (incorrect-exp): The `^ 2` here is
+        // INTENTIONAL bitwise XOR, not exponentiation. This is the canonical
+        // Hensel's-lifting-lemma seed used by Uniswap V3's FullMath.mulDiv
+        // (see https://xn--2-umb.com/21/muldiv/index.html). Replacing it with
+        // `** 2` would silently break the modular-inverse computation that
+        // follows. This file is a vendored copy of Uniswap V3 FullMath; the
+        // exact same line is present in v3-core.
+        // slither-disable-next-line incorrect-exp
         uint256 inv = (3 * denominator) ^ 2;
         // Now use Newton-Raphson iteration to improve the precision.
         // Thanks to Hensel's lifting lemma, this also works in modular

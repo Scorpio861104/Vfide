@@ -226,6 +226,15 @@ contract CommerceEscrow {
         emit EscrowFunded(id, msg.sender, intent.amount);
     }
 
+    // SLITHER FALSE POSITIVE (arbitrary-send-erc20):
+    //   The "from" address (`e.buyerVault`) is *not* arbitrary — it is the
+    //   buyer's own vault, recorded in the Escrow record at open() time
+    //   (line 213) and re-validated above to match VaultHub.vaultOf(buyerOwner).
+    //   The buyer (or the DAO) initiates this funding step, and the buyer's
+    //   vault must have explicitly `approve()`d this CommerceEscrow before
+    //   the call. This is the standard pull-based escrow funding pattern.
+    //   Function is also `nonReentrant`.
+    // slither-disable-next-line arbitrary-send-erc20
     function markFunded(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.OPEN) revert COM_BadState();

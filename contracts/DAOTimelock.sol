@@ -166,6 +166,24 @@ contract DAOTimelock is ReentrancyGuard {
         _log("tl_cancelled_by_secondary");
     }
 
+    // SLITHER FALSE POSITIVE (reentrancy-eth):
+    //   Function is `nonReentrant`. The "state variable written after the
+    //   call" Slither flags is `delete daoProposalForTx[id]` after the
+    //   external `op.target.call`. This is post-execution bookkeeping
+    //   cleanup, not a security-critical write:
+    //     - `op.done = true` is set BEFORE the external call (line 190),
+    //       so a re-entrant `execute()` would revert at the
+    //       TL_AlreadyExecuted check.
+    //     - The functions Slither lists as cross-function reentrancy
+    //       targets (cancel, queue, requeue, cleanupExpired) are all
+    //       admin-gated; only the DAO admin can call them. A successful
+    //       cross-function reentrancy would require the DAO admin contract
+    //       itself to be reentrancy-vulnerable, which is a separate trust
+    //       boundary.
+    //     - `_markDaoExecutedIfTracked` calls back into `admin` (the DAO
+    //       contract); admin is trusted by construction.
+    //   The post-call `delete` is harmless cleanup of a tracking mapping.
+    // slither-disable-next-line reentrancy-eth,reentrancy-no-eth,reentrancy-benign
     function execute(bytes32 id) external payable nonReentrant returns(bytes memory res){
         Op storage op=queue[id];
         if(op.eta==0) revert TL_NotQueued();
@@ -237,6 +255,12 @@ contract DAOTimelock is ReentrancyGuard {
      * This ensures the secondary executor always has at least half the expiry window to act,
      * regardless of how short the original ETA window was.
      */
+    // SLITHER FALSE POSITIVE (reentrancy-eth): same rationale as execute()
+    //   above. Function is `nonReentrant`; `op.done = true` is set BEFORE
+    //   the external call; cross-function reentrancy targets are all
+    //   admin-gated; the post-call `delete daoProposalForTx[id]` is
+    //   harmless cleanup.
+    // slither-disable-next-line reentrancy-eth,reentrancy-no-eth,reentrancy-benign
     function executeBySecondary(bytes32 id) external payable nonReentrant returns (bytes memory res) {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");
         require(msg.sender == secondaryExecutor, "TL: not secondary executor");
