@@ -1,7 +1,8 @@
 'use client';
 
 import { Footer } from "@/components/layout/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
 
@@ -13,8 +14,19 @@ const TABS = [
   { id: 'terms' as TabType, label: 'Terms', icon: FileText },
 ];
 
+const VALID_TABS: TabType[] = ['legal', 'privacy', 'terms'];
+
 export default function LegalPage() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('legal');
+
+  // Honor ?tab=privacy / ?tab=terms deeplinks (e.g. from /vault/safety).
+  useEffect(() => {
+    const requested = searchParams?.get('tab');
+    if (requested && (VALID_TABS as string[]).includes(requested)) {
+      setActiveTab(requested as TabType);
+    }
+  }, [searchParams]);
 
   return (
     <>
