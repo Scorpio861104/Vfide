@@ -537,6 +537,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // cannot saturate the full 500-slot history and block all future refunds.
         if (customerRefunds[customer].length >= 450) revert MERCH_CapExceeded();
         
+        // audit-ok(weak-randomness): Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller/nonce/length is sufficient
         refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
         
         refundRequests[refundId] = RefundRequest({

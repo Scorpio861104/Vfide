@@ -136,6 +136,7 @@ contract CardBoundVaultWithdrawalQueueManager {
         executeAfter = uint64(block.timestamp) + uint64(WITHDRAWAL_DELAY);
 
         bytes32 codeHash;
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly {
             codeHash := extcodehash(toVault)
         }
@@ -170,6 +171,7 @@ contract CardBoundVaultWithdrawalQueueManager {
 
         toVault = w.toVault;
         bytes32 currentCodeHash;
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly {
             currentCodeHash := extcodehash(toVault)
         }

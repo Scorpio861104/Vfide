@@ -1,7 +1,7 @@
 # Contracts Audit
 
 Files scanned: 75
-Findings: high=0 medium=0 low=59
+Findings: high=0 medium=0 low=0
 
 ## Triage Notes
 
@@ -13,68 +13,72 @@ All remaining LOW findings have been reviewed and are intentional / idiomatic:
 
 ## By category
 
-- assembly: 48
-- weak-randomness: 7
-- require-no-message: 4
 
 ## Findings
 
-- **LOW** [assembly] contracts/AdminMultiSig.sol:254 — assembly {
-- **LOW** [assembly] contracts/DAO.sol:510 — assembly {
-- **LOW** [assembly] contracts/DAOTimelock.sol:212 — assembly {
-- **LOW** [assembly] contracts/DAOTimelock.sol:279 — assembly {
-- **LOW** [assembly] contracts/DAOTimelock.sol:312 — assembly {
-- **LOW** [assembly] contracts/future/MainstreamPayments.sol:1145 — assembly {
-- **LOW** [weak-randomness] contracts/future/SeerGuardian.sol:414 — bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
-- **LOW** [weak-randomness] contracts/future/SeerGuardian.sol:433 — bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
-- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:232 — bytes32 evidence = keccak256(abi.encodePacked("gov_vote", proposalId, voter, block.number));
-- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:239 — bytes32 evidence = keccak256(abi.encodePacked("merchant_settle", settlementId, block.number));
-- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:246 — bytes32 evidence = keccak256(abi.encodePacked("bridge_relay", relayId, block.number));
-- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:253 — bytes32 evidence = keccak256(abi.encodePacked("mentorship", sessionId, block.number));
-- **LOW** [assembly] contracts/future/VFIDEBridge.sol:1152 — assembly {
-- **LOW** [assembly] contracts/legacy/VaultInfrastructure.sol:827 — assembly {
-- **LOW** [assembly] contracts/legacy/VaultInfrastructure.sol:865 — assembly {
-- **LOW** [assembly] contracts/legacy/VaultInfrastructure.sol:1274 — assembly { vault := create2(0, add(bytecode, 0x20), mload(bytecode), salt) }
-- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:26 — assembly {
-- **LOW** [require-no-message] contracts/libraries/uniswapv3/FullMath.sol:34 — require(denominator > 0);
-- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:35 — assembly {
-- **LOW** [require-no-message] contracts/libraries/uniswapv3/FullMath.sol:43 — require(denominator > prod1);
-- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:52 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:56 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:66 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:71 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:77 — assembly {
-- **LOW** [require-no-message] contracts/libraries/uniswapv3/FullMath.sol:120 — require(result < type(uint256).max);
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:69 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:74 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:79 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:84 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:89 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:94 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:99 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:104 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:114 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:120 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:126 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:132 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:138 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:144 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:150 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:156 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:162 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:168 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:174 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:180 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:186 — assembly {
-- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:192 — assembly {
-- **LOW** [weak-randomness] contracts/MerchantPortal.sol:540 — refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
-- **LOW** [require-no-message] contracts/testnet/VFIDETestnetFaucet.sol:320 — if (ethBal > 0) { (bool ok, ) = to.call{value: ethBal}(""); require(ok); }
-- **LOW** [assembly] contracts/vault/CardBoundVault.sol:1379 — assembly {
-- **LOW** [assembly] contracts/vault/CardBoundVaultPaymentQueueManager.sol:99 — assembly {
-- **LOW** [assembly] contracts/vault/CardBoundVaultPaymentQueueManager.sol:135 — assembly {
-- **LOW** [assembly] contracts/vault/CardBoundVaultWithdrawalQueueManager.sol:139 — assembly {
-- **LOW** [assembly] contracts/vault/CardBoundVaultWithdrawalQueueManager.sol:173 — assembly {
-- **LOW** [assembly] contracts/VFIDEToken.sol:253 — assembly { size := extcodesize(devReserveVestingVault) }
-- **LOW** [assembly] contracts/VFIDEToken.sol:257 — assembly { size := extcodesize(treasury) }
-- **LOW** [assembly] contracts/VFIDEToken.sol:1151 — assembly { size := extcodesize(addr) }
-- **LOW** [assembly] contracts/VFIDEToken.sol:1156 — assembly { codeHash := extcodehash(addr) }
+_No findings._
+
+## Suppressed (59) — marked `audit-ok(<category>)`
+
+These were flagged by the static scanner but have been triaged with an inline
+`audit-ok(<category>): <reason>` annotation in the contract source.
+
+- **LOW** [assembly] contracts/AdminMultiSig.sol:255 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/DAO.sol:511 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/DAOTimelock.sol:213 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/DAOTimelock.sol:281 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/DAOTimelock.sol:315 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [weak-randomness] contracts/MerchantPortal.sol:541 — refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length)); — _Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller_
+- **LOW** [assembly] contracts/VFIDEToken.sol:254 — assembly { size := extcodesize(devReserveVestingVault) } — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/VFIDEToken.sol:259 — assembly { size := extcodesize(treasury) } — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/VFIDEToken.sol:1154 — assembly { size := extcodesize(addr) } — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/VFIDEToken.sol:1160 — assembly { codeHash := extcodehash(addr) } — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/future/MainstreamPayments.sol:1146 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [weak-randomness] contracts/future/SeerGuardian.sol:415 — bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp)); — _Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller_
+- **LOW** [weak-randomness] contracts/future/SeerGuardian.sol:435 — bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp)); — _Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller_
+- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:233 — bytes32 evidence = keccak256(abi.encodePacked("gov_vote", proposalId, voter, block.number)); — _Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller_
+- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:241 — bytes32 evidence = keccak256(abi.encodePacked("merchant_settle", settlementId, block.number)); — _Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller_
+- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:249 — bytes32 evidence = keccak256(abi.encodePacked("bridge_relay", relayId, block.number)); — _Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller_
+- **LOW** [weak-randomness] contracts/future/SeerWorkAttestation.sol:257 — bytes32 evidence = keccak256(abi.encodePacked("mentorship", sessionId, block.number)); — _Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller_
+- **LOW** [assembly] contracts/future/VFIDEBridge.sol:1153 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/legacy/VaultInfrastructure.sol:828 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/legacy/VaultInfrastructure.sol:867 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/legacy/VaultInfrastructure.sol:1277 — assembly { vault := create2(0, add(bytecode, 0x20), mload(bytecode), salt) } — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:28 — assembly { — _file-level audit-ok marker_
+- **LOW** [require-no-message] contracts/libraries/uniswapv3/FullMath.sol:36 — require(denominator > 0); — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:37 — assembly { — _file-level audit-ok marker_
+- **LOW** [require-no-message] contracts/libraries/uniswapv3/FullMath.sol:45 — require(denominator > prod1); — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:54 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:58 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:68 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:73 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/FullMath.sol:79 — assembly { — _file-level audit-ok marker_
+- **LOW** [require-no-message] contracts/libraries/uniswapv3/FullMath.sol:122 — require(result < type(uint256).max); — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:70 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:75 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:80 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:85 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:90 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:95 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:100 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:105 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:115 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:121 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:127 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:133 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:139 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:145 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:151 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:157 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:163 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:169 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:175 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:181 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:187 — assembly { — _file-level audit-ok marker_
+- **LOW** [assembly] contracts/libraries/uniswapv3/TickMath.sol:193 — assembly { — _file-level audit-ok marker_
+- **LOW** [require-no-message] contracts/testnet/VFIDETestnetFaucet.sol:321 — if (ethBal > 0) { (bool ok, ) = to.call{value: ethBal}(""); require(ok); } — _Reviewed: vendored audited code (Uniswap V3) or testnet-only contract; not deployed to mainnet_
+- **LOW** [assembly] contracts/vault/CardBoundVault.sol:1380 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/vault/CardBoundVaultPaymentQueueManager.sol:100 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/vault/CardBoundVaultPaymentQueueManager.sol:137 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/vault/CardBoundVaultWithdrawalQueueManager.sol:140 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_
+- **LOW** [assembly] contracts/vault/CardBoundVaultWithdrawalQueueManager.sol:175 — assembly { — _Reviewed: idiomatic low-level pattern (extcodesize_

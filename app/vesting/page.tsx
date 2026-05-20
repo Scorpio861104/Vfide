@@ -5,10 +5,11 @@ export const dynamic = 'force-dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, Clock, Gift } from 'lucide-react';
 import { useState } from 'react';
-import { useAccount, useReadContract } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 
 import { Footer } from '@/components/layout/Footer';
 import { CONTRACT_ADDRESSES, DevReserveVestingABI, isConfiguredContractAddress } from '@/lib/contracts';
+import { parseContractError } from '@/lib/errorHandling';
 
 import { ClaimTab } from './components/ClaimTab';
 import { OverviewTab } from './components/OverviewTab';
@@ -39,6 +40,40 @@ export default function VestingPage() {
   const typedVestingStatus = vestingStatus as readonly [bigint, bigint, bigint, bigint, number, bigint, boolean] | undefined;
   const claimable = typedVestingStatus?.[3] ?? 0n;
   const isBeneficiary = Boolean(address && beneficiary && String(beneficiary).toLowerCase() === String(address).toLowerCase());
+
+  // ── Claim wiring ─────────────────────────────────────────────────────
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [claimSuccess, setClaimSuccess] = useState<string | null>(null);
+
+  const handleClaim = async () => {
+    setClaimError(null);
+    setClaimSuccess(null);
+    if (!isAvailable) {
+      setClaimError('DevReserveVesting contract is not configured on this network.');
+      return;
+    }
+    setIsClaiming(true);
+    try {
+      const hash = await writeContractAsync({
+        address: VESTING_ADDRESS,
+        abi: VESTING_ABI,
+        functionName: 'claim',
+        args: [],
+      });
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+      }
+      setClaimSuccess('Claim submitted successfully. Vested VFIDE has been transferred to your wallet.');
+    } catch (err) {
+      const parsed = parseContractError(err);
+      setClaimError(`Claim failed: ${parsed.userMessage}`);
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
@@ -111,6 +146,10 @@ export default function VestingPage() {
                 isBeneficiary={isBeneficiary}
                 claimable={claimable}
                 claimsPaused={Boolean(claimsPaused)}
+                onClaim={handleClaim}
+                isClaiming={isClaiming}
+                claimError={claimError}
+                claimSuccess={claimSuccess}
               />
             )}
           </motion.div>

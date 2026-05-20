@@ -74,6 +74,7 @@ export function useAllPoolInfo(): { pools: PoolInfo[]; isLoading: boolean } {
           address: LiquidityIncentives,
           abi: LiquidityIncentivesABI as any,
           functionName: 'getPoolInfo',
+          // abi-parity-ok: getPoolInfo(address lpToken) — 1 arg, statically present
           args: [lp] as const,
         }))
       : [],

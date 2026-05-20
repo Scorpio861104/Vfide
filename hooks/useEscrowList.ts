@@ -174,6 +174,7 @@ export function useEscrowList(
         address: escrowAddress! as Address,
         abi: CommerceEscrowABI as any,
         functionName: 'escrows' as const,
+        // abi-parity-ok: escrows(uint256 id) — 1 arg, statically present in .map callback
         args: [id] as const,
       }));
       const results = await publicClient.multicall({ contracts: calls });

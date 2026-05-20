@@ -2,13 +2,17 @@
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Lock, Unlock } from 'lucide-react';
+import { AlertTriangle, Loader2, Lock, Unlock } from 'lucide-react';
 
 type ClaimTabProps = {
   isConnected: boolean;
   isBeneficiary?: boolean;
   claimable?: bigint;
   claimsPaused?: boolean;
+  onClaim?: () => void | Promise<void>;
+  isClaiming?: boolean;
+  claimError?: string | null;
+  claimSuccess?: string | null;
 };
 
 export function ClaimTab({
@@ -16,6 +20,10 @@ export function ClaimTab({
   isBeneficiary = true,
   claimable = 0n,
   claimsPaused = false,
+  onClaim,
+  isClaiming = false,
+  claimError,
+  claimSuccess,
 }: ClaimTabProps) {
   const claimableAmount = Number(claimable) / 1e18;
   const hasClaimable = claimable > 0n;
@@ -47,6 +55,8 @@ export function ClaimTab({
     );
   }
 
+  const disabled = !hasClaimable || claimsPaused || isClaiming || !onClaim;
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mx-auto max-w-xl">
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/8 to-white/2 p-8 backdrop-blur-xl">
@@ -68,14 +78,35 @@ export function ClaimTab({
 
         <button
           type="button"
-          disabled={!hasClaimable || claimsPaused}
+          onClick={() => { void onClaim?.(); }}
+          disabled={disabled}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-violet-500 py-4 font-bold text-white transition-all disabled:cursor-not-allowed disabled:from-gray-600 disabled:to-gray-700"
         >
-          <Unlock className="h-5 w-5" />
-          {hasClaimable ? `Claim ${claimableAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })} VFIDE` : 'Nothing claimable yet'}
+          {isClaiming ? (
+            <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+          ) : (
+            <Unlock className="h-5 w-5" />
+          )}
+          {isClaiming
+            ? 'Submitting claim…'
+            : hasClaimable
+              ? `Claim ${claimableAmount.toLocaleString(undefined, { maximumFractionDigits: 0 })} VFIDE`
+              : 'Nothing claimable yet'}
         </button>
 
         {!hasClaimable && !claimsPaused && <p className="mt-4 text-center text-sm text-gray-400">No tokens are available to claim at this time.</p>}
+
+        {claimError && (
+          <div role="alert" className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+            {claimError}
+          </div>
+        )}
+
+        {claimSuccess && (
+          <div role="status" className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-300">
+            {claimSuccess}
+          </div>
+        )}
       </div>
     </motion.div>
   );

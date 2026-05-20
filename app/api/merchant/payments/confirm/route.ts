@@ -139,6 +139,7 @@ async function readTokenDecimals(
   if (typeof cached === 'number') return cached;
 
   try {
+    // abi-parity-ok: inline ABI for ERC20 decimals(); 0-arg view function
     const decimals = await client.readContract({
       address: getAddress(tokenAddress),
       abi: [parseAbiItem('function decimals() view returns (uint8)')],
