@@ -1,6 +1,6 @@
 # VFIDE Frontend Mainnet-Readiness Audit
 
-_Generated: 2026-05-20T04:54:30.971Z_  
+_Generated: 2026-05-20T04:56:39.044Z_  
 _Mode A — automated + manual sweep across all 135 user-facing pages._
 
 ## Summary
@@ -194,7 +194,7 @@ Status: 🟢 clean · 🟡 medium · 🔴 high. Loading/Error: ✅ present (own 
 - **`localhost` fallbacks for `NEXT_PUBLIC_APP_URL`** (`(marketing)/s/[slug]/page.tsx:28,36`, `store/[slug]/page.tsx:17,27`)  
   Used only for OG/canonical URL construction during build/SSR. Production env must set `NEXT_PUBLIC_APP_URL=https://vfide.io`. Already enforced by `scripts/validate-mainnet-env.ts` and `lib/validateProduction.ts`. **Keep with env enforcement.**
 
-### Fixed in this PR
+### Fixed in PR #232
 
 | Issue | File | Severity | Fix |
 |---|---|:-:|---|
@@ -216,7 +216,6 @@ Status: 🟢 clean · 🟡 medium · 🔴 high. Loading/Error: ✅ present (own 
 
 - **0** `TODO` / `FIXME` / `HACK` markers in `app/`
 - **0** `dangerouslySetInnerHTML`, **0** `eval`
-- **0** unhandled promise chains (only 2 `.then(setX)` patterns, both safe)
 - **2** `console.log` calls total in `app/` (both in admin/dev tools)
 - **13** `as any` casts across all of `app/` (acceptable for a 354-file frontend)
 - **0** empty `catch {}` blocks (all catches handle the error or fall through to a default value)
@@ -225,16 +224,6 @@ Status: 🟢 clean · 🟡 medium · 🔴 high. Loading/Error: ✅ present (own 
 - `robots.ts` correctly disallows `/api/`, `/admin/`, `/dashboard/`, `/vault/`, `/settings/` and blocks `GPTBot`, `ChatGPT-User`, `CCBot`
 - `/testnet` page self-redirects away on mainnet chains and is excluded from the sitemap
 
-### Network/contract gating (sampled, all pass)
-
-| Page | Pattern | Status |
-|---|---|:-:|
-| `/sanctum` | `isConfiguredContractAddress(SanctumVault)` gate | ✅ |
-| `/treasury` | `isConfiguredContractAddress(FeeDistributor)` gate | ✅ |
-| `/endorsements` | `query.enabled = isSeerViewAvailable && isSeerAvailable` | ✅ |
-| `/vault/recover` | "Connect to Base mainnet or Base Sepolia" notice when not configured | ✅ |
-| `/lending` | Cap on lookback range for indexer reads | ✅ |
-
 ### Verdict
 
-**Frontend is mainnet-ready.** All 13 fixable issues addressed in this commit. The 1 remaining scanner finding (`/control-panel` operator checklist) is correctly accepted on manual review. 134 / 135 pages clean automatically; 135 / 135 clean after manual review.
+**Frontend is mainnet-ready.** All 13 fixable issues addressed. The 1 remaining scanner finding (`/control-panel` operator checklist) is correctly accepted on manual review. 134 / 135 pages clean automatically; 135 / 135 clean after manual review.
