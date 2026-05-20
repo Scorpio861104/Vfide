@@ -7,6 +7,7 @@ import { History, PlusCircle, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
 
 import { Footer } from '@/components/layout/Footer';
+import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
 
 import { ActiveTab } from './components/ActiveTab';
 import { CreateTab } from './components/CreateTab';
@@ -41,12 +42,24 @@ export default function SubscriptionsPage() {
             <span className="badge-live"><span className="badge-live-dot" />Recurring Payments</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-violet-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
               Subscriptions
             </span>
           </h1>
-          <p className="text-white/50 text-lg">Manage recurring payments — set schedules, auto-renew, and track history.</p>
+          <p className="text-white/50 text-lg">Plan and track recurring payments. On-chain auto-debit is a future release.</p>
         </motion.div>
+
+        <div className="mb-6">
+          <FutureReleaseBanner
+            inline
+            title="Tracker only — on-chain auto-debit ships with SubscriptionManager"
+            description={
+              'You can record subscription schedules here and they persist in the database so you have a history of intended recurring payments. ' +
+              'Automatic on-chain debits on the next-payment date require SubscriptionManager.sol (currently in contracts/future/) to be deployed. ' +
+              'Until then, treat the "next payment" date as a reminder, not an automated transfer.'
+            }
+          />
+        </div>
 
         {/* Sticky Tab Bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"

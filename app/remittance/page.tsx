@@ -10,9 +10,10 @@ import { ArrowRight, Coins, Send, Shield, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { Beneficiary, BeneficiaryManager } from '@/components/remittance/BeneficiaryManager';
+import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
 
 const comparisonRows = [
-  { provider: 'VFIDE', fee: '0.25%–1.00%', payout: 'Minutes', highlight: true },
+  { provider: 'VFIDE (wallet-to-wallet)', fee: '0.25%–1.00%', payout: 'Minutes', highlight: true },
   { provider: 'Western Union', fee: '≈ 7.5%', payout: 'Hours–days' },
   { provider: 'Bank wire', fee: '$25 flat', payout: '1–3 business days' },
 ];
@@ -53,10 +54,25 @@ export default function RemittancePage() {
                   Send money home with transparent fees
                 </span>
               </h1>
-              <p className="mt-4 text-lg text-gray-400">
+              <p className="mt-4 text-lg text-zinc-400">
                 Save beneficiaries, compare corridor pricing, and prepare a proof-of-send flow for mobile-money and bank recipients.
               </p>
             </motion.div>
+          </div>
+        </section>
+
+        <section className="relative pb-6">
+          <div className="container mx-auto max-w-6xl px-4">
+            <FutureReleaseBanner
+              inline
+              title="Today: VFIDE-to-wallet only. Direct M-Pesa / MoMo / GCash / Bank cash-out is a future release."
+              description={
+                'You can send VFIDE tokens to anyone with a wallet address today (settlement in minutes on Base). ' +
+                'Direct delivery into M-Pesa, MTN MoMo, GCash, or a bank account requires a regulated cash-out partner ' +
+                'per corridor — those integrations are not live yet. The Rail tag on each beneficiary is currently a label, ' +
+                'not a delivery route. Use "Generate receipt preview" + WhatsApp share until partners are wired in.'
+              }
+            />
           </div>
         </section>
 
@@ -80,7 +96,7 @@ export default function RemittancePage() {
                 </div>
                 <div className="space-y-2">
                   {comparisonRows.map((row) => (
-                    <div key={row.provider} className={`grid grid-cols-3 rounded-xl px-3 py-2 text-sm ${row.highlight ? 'bg-cyan-500/10 text-cyan-100' : 'analytics-card text-gray-300'}`}>
+                    <div key={row.provider} className={`grid grid-cols-3 rounded-xl px-3 py-2 text-sm ${row.highlight ? 'bg-cyan-500/10 text-cyan-100' : 'analytics-card text-zinc-300'}`}>
                       <span>{row.provider}</span>
                       <span>{row.fee}</span>
                       <span>{row.payout}</span>
@@ -95,7 +111,7 @@ export default function RemittancePage() {
                   <h2 className="text-xl font-bold text-white">Send preview</h2>
                 </div>
 
-                <label className="mb-3 block text-sm text-gray-300">
+                <label className="mb-3 block text-sm text-zinc-300">
                   Transfer amount
                   <input
                     value={amount}
@@ -105,7 +121,7 @@ export default function RemittancePage() {
                   />
                 </label>
 
-                <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
+                <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300">
                   <div className="flex items-center justify-between"><span>Selected beneficiary</span><span>{selectedBeneficiary?.name ?? 'Choose one'}</span></div>
                   <div className="flex items-center justify-between"><span>Estimated VFIDE fee</span><span>{vfideFee.toFixed(2)}</span></div>
                   <div className="flex items-center justify-between"><span>Estimated recipient amount</span><span>{netAmount.toFixed(2)}</span></div>

@@ -39,11 +39,11 @@ export default function BuyPage() {
             <span className="badge-live"><span className="badge-live-dot" />On-Ramp</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
               Buy Crypto
             </span>
           </h1>
-          <p className="text-white/50">Purchase VFIDE through trusted on-ramp partners or swap from an existing wallet.</p>
+          <p className="text-white/50">Plan a VFIDE purchase, then execute via Uniswap on Base. Direct fiat on-ramp is a future release.</p>
         </motion.div>
 
         {/* Sticky tab bar */}

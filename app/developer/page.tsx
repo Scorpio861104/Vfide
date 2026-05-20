@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
 
 const SDK_CODE_SNIPPET = `// Example checkout widget
 
@@ -143,15 +144,43 @@ export default function DeveloperPage() {
       {/* SDK Tab */}
       {activeTab === 'sdk' && (
         <div className="space-y-4">
-          <div className="bg-card rounded-xl p-4 border">
-            <h3 className="font-medium mb-2">Checkout Quick Start</h3>
+          <FutureReleaseBanner
+            title="@vfide/sdk not yet published"
+            description={
+              'The drop-in SDK shown below is the integration surface we plan to ship — payment ' +
+              'buttons, streaming, and escrow primitives as one npm package. It is not yet published ' +
+              'to the registry. Copying the import will fail at `npm install`.\n\n' +
+              'For integrations today, talk directly to the merchant API surface (see Webhooks tab ' +
+              'for the working portion) or call the on-chain contracts directly using viem/wagmi.'
+            }
+            requirements={[
+              'Public npm package @vfide/sdk with TypeScript types',
+              'Hosted CDN bundle for script-tag embeds (vanilla HTML)',
+              'Versioning policy + semver discipline for breaking changes',
+              'Documentation site (the snippets below are the reference, not the implementation)',
+              'Integration test suite covering Base + Polygon + zkSync Era once those chains ship',
+            ]}
+            alternative={{
+              href: '/merchant',
+              label: 'Use Merchant Portal directly',
+              description: 'Payment links, invoices, and webhooks work today through /merchant — no SDK required.',
+            }}
+          />
+
+          <div className="bg-card rounded-xl p-4 border opacity-70">
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              Checkout Quick Start
+              <span className="text-[10px] uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 rounded-full">Preview</span>
+            </h3>
             <pre className="bg-muted p-3 sm:p-4 rounded-lg overflow-x-auto text-xs sm:text-sm font-mono">
               <code>{SDK_CODE_SNIPPET}</code>
             </pre>
-            <p className="mt-3 text-xs text-muted-foreground">If code looks crowded on mobile, swipe horizontally inside the snippet.</p>
+            <p className="mt-3 text-xs text-muted-foreground">
+              This is the API shape we&apos;re aiming for, not currently-shipping code. The package does not yet exist on npm.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-70">
             <div className="bg-card rounded-xl p-4 border">
               <div className="text-2xl mb-2">🔘</div>
               <h4 className="font-medium">Payment Buttons</h4>
@@ -236,8 +265,37 @@ export default function DeveloperPage() {
       {/* API Tab */}
       {activeTab === 'api' && (
         <div className="space-y-4">
-          <div className="bg-card rounded-xl p-4 border">
-            <h3 className="font-medium mb-3">REST API Endpoints</h3>
+          <FutureReleaseBanner
+            title="Public /v1 REST API not yet shipping"
+            description={
+              'The /v1 endpoint surface below is the public REST API we plan to ship — a stable, ' +
+              'versioned, externally-callable interface for partners and integrators. It is NOT yet ' +
+              'mounted; calling these URLs will 404.\n\n' +
+              'Internal frontend routes under /api/* (used by this web app) are real and documented ' +
+              'in the manual. They are not stable contracts for outside integration — they can change ' +
+              'between releases without notice. The /v1 surface exists specifically to give partners a ' +
+              'frozen contract they can build against.'
+            }
+            requirements={[
+              'Mount /v1/* routes as a separate namespace with strict versioning (no breaking changes within v1)',
+              'API-key auth model distinct from the wallet-session JWT used by /api/*',
+              'Per-key rate limits, usage analytics, and a partner dashboard',
+              'OpenAPI 3.1 spec published alongside the routes (so partners can codegen clients)',
+              'External-partner onboarding: contract, KYC of the integrator, signed terms',
+            ]}
+            alternative={{
+              href: '/merchant',
+              label: 'Use the Merchant Portal + Webhooks today',
+              description: 'Webhook delivery is real (see Webhooks tab) — the only frozen partner contract we currently honor.',
+            }}
+          />
+
+          <div className="bg-card rounded-xl p-4 border opacity-70">
+            <h3 className="font-medium mb-3 flex items-center gap-2">
+              REST API Endpoints
+              <span className="text-[10px] uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 rounded-full">Planned</span>
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">Shape preview only. These URLs are not yet routable.</p>
             <div className="space-y-3">
               {[
                 { method: 'POST', path: '/v1/payments', desc: 'Create a payment request' },
@@ -251,10 +309,10 @@ export default function DeveloperPage() {
                 <div key={`${endpoint.method}-${endpoint.path}`} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 bg-muted rounded-lg min-w-0">
                   <span className={`px-2 py-0.5 rounded text-xs font-mono ${
                     endpoint.method === 'POST'
-                      ? 'bg-green-500/20 text-green-500'
+                      ? 'bg-emerald-500/20 text-emerald-500'
                       : endpoint.method === 'DELETE'
                       ? 'bg-red-500/20 text-red-500'
-                      : 'bg-blue-500/20 text-blue-500'
+                      : 'bg-cyan-500/20 text-cyan-500'
                   }`}>
                     {endpoint.method}
                   </span>
@@ -265,8 +323,12 @@ export default function DeveloperPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-xl p-4 border">
-            <h3 className="font-medium mb-2">Rate Limits</h3>
+          <div className="bg-card rounded-xl p-4 border opacity-70">
+            <h3 className="font-medium mb-2 flex items-center gap-2">
+              Rate Limits
+              <span className="text-[10px] uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-400/40 px-2 py-0.5 rounded-full">Planned</span>
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">Target limits for the /v1 surface once it ships.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-3 bg-muted rounded-lg">
                 <div className="text-2xl font-bold">1,000</div>
