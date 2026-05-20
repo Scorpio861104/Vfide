@@ -322,13 +322,14 @@ for (const c of checks) {
   }
 
   const m = src.match(c.pattern);
-  if (!m) {
+  if (!m || m[1] === undefined) {
     fails++;
     failures.push(`[NO-MATCH] ${c.id}: pattern not found in ${c.file}`);
     continue;
   }
 
-  const found = canonical(m[1]);
+  const matched: string = m[1];
+  const found = canonical(matched);
   const expected = canonical(c.expected);
   const altsCanonical = (c.alternates ?? []).map(canonical);
 
@@ -338,7 +339,7 @@ for (const c of checks) {
   } else {
     fails++;
     failures.push(
-      `[MISMATCH] ${c.id}: expected canonical=${expected} (raw=${c.expected})  got canonical=${found} (raw=${m[1].trim()})  in ${c.file}`,
+      `[MISMATCH] ${c.id}: expected canonical=${expected} (raw=${c.expected})  got canonical=${found} (raw=${matched.trim()})  in ${c.file}`,
     );
   }
 }

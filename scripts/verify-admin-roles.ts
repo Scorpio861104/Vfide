@@ -124,11 +124,15 @@ async function main() {
 
   // Hardhat ethers is loaded lazily so this script can be unit-tested
   // without hardhat in the loop. The check fails gracefully if hardhat
-  // isn't available.
-  let ethers: typeof import('ethers');
+  // isn't available. Hardhat extends ethers with `.provider` and signer
+  // helpers at runtime, so we use a loose type here.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let ethers: any;
   try {
     const hardhat = await import('hardhat');
-    ethers = hardhat.ethers as unknown as typeof import('ethers');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ethers = (hardhat as any).ethers;
+    if (!ethers) throw new Error('hardhat.ethers undefined');
   } catch {
     console.error('[verify-admin-roles] FATAL: hardhat ethers not available. Run via `npx hardhat run`.');
     process.exit(2);

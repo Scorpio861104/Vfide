@@ -117,7 +117,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
       explanation:
         "Guardians are people you trust who can help you get back into your vault if you lose your phone. They can't touch your money — they just confirm it's really you. Without at least one guardian, there's no way to recover your vault if your phone is lost, stolen, or broken.",
       status: 'missing',
-      cta: { label: 'Add guardians', href: '/vault/guardians' },
+      cta: { label: 'Add guardians', href: '/guardians' },
     });
   } else if (guardianCount === 1) {
     items.push({
@@ -127,7 +127,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
       explanation:
         "You have 1 guardian. This means your only path to recovery depends entirely on that one person being available, reachable, and willing to help when you need them. If they're traveling, sick, or unreachable, you can't recover. We recommend at least 3 guardians so your recovery still works even if some are unavailable.",
       status: 'warn',
-      cta: { label: 'Add more guardians', href: '/vault/guardians' },
+      cta: { label: 'Add more guardians', href: '/guardians' },
     });
   } else {
     items.push({
@@ -149,7 +149,7 @@ export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
       explanation:
         "Trustees are guardians you've granted a special power: the ability to START a recovery if you've lost your phone and can't start one yourself. Without any trustees, recovery has to be started by you from a new device — which works if you can reach the app, but is impossible if you can't. Designating 1-2 trustees lets a trusted family member or close friend kick off the recovery process for you. You always have a window to cancel if they start one inappropriately.",
       status: 'warn',
-      cta: { label: 'Designate a trustee', href: '/vault/guardians' },
+      cta: { label: 'Designate a trustee', href: '/guardians' },
     });
   } else if (trusteeCount > 0) {
     items.push({

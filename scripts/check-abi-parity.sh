@@ -6,6 +6,14 @@ cd "$(dirname "$0")/.."
 KNOWN_ORPHAN_ABIS=(
   DevReserveVesting
   ERC20
+  # VFIDECommerce.json is an intentional merged-ABI bundle that contains
+  # MerchantRegistry + VFIDECommerce + CommerceEscrow function ABIs in
+  # one file. The frontend re-exports the bundle under MerchantRegistryABI
+  # (see lib/abis/index.ts) and slices out CommerceEscrow function defs in
+  # hooks/useCommerceEscrow.ts. There is no contracts/VFIDECommerce.sol
+  # file by design — the constituent contracts live under their real
+  # filenames (MerchantRegistry.sol, CommerceEscrow.sol, etc.).
+  VFIDECommerce
 )
 
 contracts=$(

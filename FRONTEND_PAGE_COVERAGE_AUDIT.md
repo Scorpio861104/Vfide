@@ -1,0 +1,148 @@
+# Frontend Page Coverage Audit
+
+Generated: 2026-05-20T05:19:53.753Z
+
+Total routes: 135
+Directly covered routes: 79
+Missing direct route tests: 56
+
+## Covered Routes
+
+- / -> __tests__/app/home-page.test.tsx
+- /about -> __tests__/app/about-page.test.tsx
+- /achievements -> __tests__/app/achievements-page.test.tsx
+- /appeals -> __tests__/app/appeals-page.test.tsx
+- /badges -> __tests__/app/badges-page.test.tsx
+- /benefits -> __tests__/app/benefits-page.test.tsx
+- /budgets -> __tests__/app/budgets-page.test.tsx
+- /buy -> __tests__/app/buy-page.test.tsx
+- /checkout/[id] -> __tests__/app/checkout-id-page-param-guard.test.tsx
+- /control-panel -> __tests__/app/control-panel-page.test.tsx
+- /council -> __tests__/app/council-page.test.tsx
+- /cross-chain -> __tests__/app/cross-chain-page.test.tsx
+- /crypto -> __tests__/app/crypto-page.test.tsx
+- /dao-hub -> __tests__/app/dao-hub-page.test.tsx
+- /dashboard -> __tests__/app/dashboard-page.test.tsx
+- /demo/crypto-social -> __tests__/app/demo-crypto-social-page.test.tsx
+- /developer -> __tests__/app/developer-page.test.tsx
+- /disputes -> __tests__/app/uploaded-handoff-pages.test.tsx
+- /docs -> __tests__/app/docs-page.test.tsx
+- /elections -> __tests__/app/uploaded-handoff-pages.test.tsx
+- /endorsements -> __tests__/app/endorsements-page.test.tsx
+- /enterprise -> __tests__/app/enterprise-page.test.tsx
+- /escrow -> __tests__/app/escrow-page.test.tsx
+- /explorer -> __tests__/app/explorer-page.test.tsx
+- /explorer/[id] -> __tests__/app/explorer-id-page.test.tsx
+- /feed -> __tests__/app/feed-page.test.tsx
+- /flashloans -> __tests__/app/flashloan-page.test.tsx, __tests__/app/flashloans-workspace-page.test.tsx
+- /governance -> __tests__/app/governance-page.test.tsx
+- /guardians -> __tests__/app/guardians-next-of-kin.test.tsx, __tests__/app/guardians-page.test.tsx
+- /hardware-wallet -> __tests__/app/hardware-wallet-page.test.tsx
+- /headhunter -> __tests__/app/headhunter-page.test.tsx
+- /insights -> __tests__/app/insights-page.test.tsx
+- /invite -> __tests__/app/invite-page.test.tsx
+- /invite/[code] -> __tests__/app/invite-code-page-param-guard.test.tsx, __tests__/app/invite-code-page.test.tsx
+- /leaderboard -> __tests__/app/leaderboard-page.test.tsx
+- /legal -> __tests__/app/legal-page.test.tsx
+- /lending -> __tests__/app/uploaded-handoff-pages.test.tsx
+- /live-demo -> __tests__/app/live-demo-page.test.tsx
+- /merchant -> __tests__/app/merchant-page.test.tsx
+- /merchant/setup -> __tests__/app/merchant-setup-page.test.tsx
+- /merchant/wholesale -> __tests__/app/merchant-wholesale-page.test.tsx
+- /multisig -> __tests__/app/multisig-page.test.tsx
+- /notifications -> __tests__/app/notifications-page-error-boundary.test.tsx, __tests__/app/notifications-page.test.tsx
+- /paper-wallet -> __tests__/app/paper-wallet-page.test.tsx
+- /pay -> __tests__/app/pay-page.test.tsx
+- /payroll -> __tests__/app/payroll-page.test.tsx
+- /performance -> __tests__/app/performance-page.test.tsx
+- /pos -> __tests__/app/pos-page.test.tsx
+- /price-alerts -> __tests__/app/price-alerts-page.test.tsx
+- /product/[id] -> __tests__/app/product-id-page-param-guard.test.tsx
+- /profile -> __tests__/app/profile-page.test.tsx
+- /quests -> __tests__/app/quests-page.test.tsx
+- /rewards -> __tests__/app/rewards-page.test.tsx
+- /sanctum -> __tests__/app/sanctum-page.test.tsx
+- /security-center -> __tests__/app/security-center-page.test.tsx
+- /seer-academy -> __tests__/app/seer-academy-page.test.tsx
+- /seer-service -> __tests__/app/seer-service-page.test.tsx
+- /setup -> __tests__/app/setup-page.test.tsx
+- /social -> __tests__/app/social-page.test.tsx
+- /social-hub -> __tests__/app/social-hub-page.test.tsx
+- /social-messaging -> __tests__/app/social-messaging-page.test.tsx
+- /social-payments -> __tests__/app/social-payments-page.test.tsx
+- /stealth -> __tests__/app/stealth-page.test.tsx
+- /stories -> __tests__/app/stories-page.test.tsx
+- /streaming -> __tests__/app/streaming-page.test.tsx
+- /subscriptions -> __tests__/app/subscriptions-page.test.tsx
+- /support -> __tests__/app/support-page.test.tsx
+- /taxes -> __tests__/app/taxes-page.test.tsx
+- /testnet -> __tests__/app/testnet-page.test.tsx
+- /theme -> __tests__/app/theme-page.test.tsx
+- /theme-manager -> __tests__/app/theme-manager-page.test.tsx
+- /theme-showcase -> __tests__/app/theme-showcase-page.test.tsx
+- /time-locks -> __tests__/app/time-locks-page.test.tsx
+- /token-launch -> __tests__/app/token-launch-page.test.tsx
+- /treasury -> __tests__/app/treasury-page.test.tsx
+- /vault -> __tests__/app/vault-page.test.tsx
+- /vault/recover -> __tests__/app/vault-recover-page.test.tsx
+- /vault/settings -> __tests__/app/vault-settings-page.test.tsx
+- /vesting -> __tests__/app/vesting-page.test.tsx
+
+## Missing Routes
+
+- /(commerce)/embed/[slug] (app/(commerce)/embed/[slug]/page.tsx)
+- /(marketing)/s/[slug] (app/(marketing)/s/[slug]/page.tsx)
+- /admin (app/admin/page.tsx)
+- /agent (app/agent/page.tsx)
+- /api-coverage (app/api-coverage/page.tsx)
+- /escrow/[id] (app/escrow/[id]/page.tsx)
+- /fraud (app/fraud/page.tsx)
+- /governance/proposal/[id] (app/governance/proposal/[id]/page.tsx)
+- /inheritance (app/inheritance/page.tsx)
+- /inheritance/claim (app/inheritance/claim/page.tsx)
+- /inheritance/memorial (app/inheritance/memorial/page.tsx)
+- /inheritance/override (app/inheritance/override/page.tsx)
+- /inheritance/setup (app/inheritance/setup/page.tsx)
+- /inheritance/status (app/inheritance/status/page.tsx)
+- /marketplace (app/marketplace/page.tsx)
+- /me (app/me/page.tsx)
+- /merchant/analytics (app/merchant/analytics/page.tsx)
+- /merchant/bookings (app/merchant/bookings/page.tsx)
+- /merchant/coupons (app/merchant/coupons/page.tsx)
+- /merchant/customers (app/merchant/customers/page.tsx)
+- /merchant/expenses (app/merchant/expenses/page.tsx)
+- /merchant/gift-cards (app/merchant/gift-cards/page.tsx)
+- /merchant/installments (app/merchant/installments/page.tsx)
+- /merchant/inventory (app/merchant/inventory/page.tsx)
+- /merchant/invoices (app/merchant/invoices/page.tsx)
+- /merchant/locations (app/merchant/locations/page.tsx)
+- /merchant/loyalty (app/merchant/loyalty/page.tsx)
+- /merchant/payment-links (app/merchant/payment-links/page.tsx)
+- /merchant/payouts (app/merchant/payouts/page.tsx)
+- /merchant/profile/edit (app/merchant/profile/edit/page.tsx)
+- /merchant/profile/setup (app/merchant/profile/setup/page.tsx)
+- /merchant/refunds (app/merchant/refunds/page.tsx)
+- /merchant/returns (app/merchant/returns/page.tsx)
+- /merchant/staff (app/merchant/staff/page.tsx)
+- /merchant/subscriptions (app/merchant/subscriptions/page.tsx)
+- /merchant/suppliers (app/merchant/suppliers/page.tsx)
+- /merchant/tax (app/merchant/tax/page.tsx)
+- /merchant/tips (app/merchant/tips/page.tsx)
+- /merchants (app/merchants/page.tsx)
+- /onboarding (app/onboarding/page.tsx)
+- /pay/link/[id] (app/pay/link/[id]/page.tsx)
+- /proofscore (app/proofscore/page.tsx)
+- /remittance (app/remittance/page.tsx)
+- /reporting (app/reporting/page.tsx)
+- /sanctum/charities/[id] (app/sanctum/charities/[id]/page.tsx)
+- /scan (app/scan/page.tsx)
+- /settings (app/settings/page.tsx)
+- /splitter (app/splitter/page.tsx)
+- /staking (app/staking/page.tsx)
+- /store/[slug] (app/store/[slug]/page.tsx)
+- /vault/lock (app/vault/lock/page.tsx)
+- /vault/pending-changes (app/vault/pending-changes/page.tsx)
+- /vault/recover/status (app/vault/recover/status/page.tsx)
+- /vault/safety (app/vault/safety/page.tsx)
+- /vault/safety/window (app/vault/safety/window/page.tsx)
+- /verifier (app/verifier/page.tsx)

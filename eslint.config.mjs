@@ -44,6 +44,16 @@ const eslintConfig = defineConfig([
     "app/admin/page.tsx",
   ]),
 
+  // CommonJS audit/verification scripts (`.cjs`) are runnable by Node
+  // without a build step and intentionally use `require()`. These are
+  // dev/CI tooling, not production source.
+  {
+    files: ["scripts/**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+
   // Make lint actionable for this repo: avoid failing on widespread, intentional patterns.
   {
     plugins: {
