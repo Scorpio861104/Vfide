@@ -133,11 +133,12 @@ function LegalDisclaimersTab() {
       </div>
 
       <div className="bg-zinc-800 border border-amber-400 rounded-xl p-8">
-        <h2 className="text-2xl font-bold text-amber-400 mb-6">🌍 Jurisdiction Notice</h2>
+        <h2 className="text-2xl font-bold text-amber-400 mb-6">🌍 Your Local Laws Apply</h2>
         <p className="text-zinc-100 leading-relaxed">
-          VFIDE tokens are not offered to residents of the United States, China, or any jurisdiction where 
-          cryptocurrency transactions are prohibited. It is YOUR responsibility to ensure compliance with 
-          your local laws before participating.
+          VFIDE is a permissionless protocol with no KYC, no geo-restrictions, and no minimums &mdash;
+          if you have a wallet, you can interact with it. Cryptocurrency regulations vary by location
+          and change over time, so it is YOUR responsibility to ensure your use of VFIDE complies
+          with the laws that apply to you before participating.
         </p>
       </div>
     </div>
