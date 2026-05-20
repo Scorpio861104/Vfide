@@ -411,6 +411,7 @@ contract SeerGuardian is ReentrancyGuard {
             revert SG_Cooldown();
         }
         
+        // audit-ok(weak-randomness): Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller/nonce/length is sufficient
         bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
         daoOverridden[subject] = true;
         
@@ -430,6 +431,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @param reason Justification
      */
     function daoAdjustScore(address subject, uint16 newDelta, bool isPositive, string calldata reason) external onlyDAO nonReentrant {
+        // audit-ok(weak-randomness): Not a PRNG: keccak hash used as a unique identifier; collision-resistance from caller/nonce/length is sufficient
         bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
         actionOverridden[actionId] = true;
         

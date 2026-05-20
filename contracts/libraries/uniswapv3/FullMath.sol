@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MIT
+// audit-ok(assembly): vendored Uniswap V3 library — well-audited, must not be modified
+// audit-ok(require-no-message): vendored Uniswap V3 library — well-audited, must not be modified
 pragma solidity 0.8.30;
 
 /// @title Contains 512-bit math functions

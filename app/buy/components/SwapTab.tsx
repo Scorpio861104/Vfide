@@ -30,6 +30,7 @@ export function SwapTab() {
   const [amount, setAmount] = useState('1');
   const [prices, setPrices] = useState<{ vfideUsd: number; ethUsd: number }>({ vfideUsd: 0.1, ethUsd: 2000 });
   const [balances, setBalances] = useState<Record<string, number>>({});
+  const [routeSummary, setRouteSummary] = useState<string | null>(null);
 
   useEffect(() => {
     if (!address) return;
@@ -82,6 +83,17 @@ export function SwapTab() {
   const flipTokens = () => {
     setFromToken(toToken);
     setToToken(fromToken);
+    setRouteSummary(null);
+  };
+
+  const prepareRoute = () => {
+    if (!canSubmit) return;
+    const input = Number(amount);
+    setRouteSummary(
+      `Route prepared: ${input.toFixed(4)} ${fromToken} → ${estimatedOut.toFixed(4)} ${toToken} ` +
+      `(spot ${(input > 0 ? estimatedOut / input : 0).toFixed(6)} ${toToken}/${fromToken}). ` +
+      `Execute via your preferred AMM router using this quote as a slippage reference.`
+    );
   };
 
   if (loading) {
@@ -156,11 +168,21 @@ export function SwapTab() {
 
         <button
           type="button"
+          onClick={prepareRoute}
           disabled={!canSubmit}
-          className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2.5 rounded-lg bg-cyan-500/20 text-cyan-400 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-500/30 transition-colors"
         >
           Prepare Swap Route
         </button>
+
+        {routeSummary && (
+          <div
+            role="status"
+            className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-3 text-xs text-cyan-300"
+          >
+            {routeSummary}
+          </div>
+        )}
 
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <RefreshCcw size={12} /> Route preparation validates pricing and pair direction before final execution.

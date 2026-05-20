@@ -202,11 +202,13 @@ export async function GET(request: NextRequest) {
     if (VFIDE_WETH_POOL && VFIDE_WETH_POOL !== ZERO_ADDRESS) {
       try {
         const [slot0Data, token0] = await Promise.all([
+          // abi-parity-ok: POOL_ABI defined at top of file; slot0 takes 0 args
           client.readContract({
             address: VFIDE_WETH_POOL as `0x${string}`,
             abi: POOL_ABI,
             functionName: 'slot0',
           }),
+          // abi-parity-ok: POOL_ABI defined at top of file; token0 takes 0 args
           client.readContract({
             address: VFIDE_WETH_POOL as `0x${string}`,
             abi: POOL_ABI,

@@ -138,6 +138,7 @@ export default function SplitterPage() {
       address: tokenReadTarget,
       abi: erc20Abi,
       functionName: 'balanceOf' as const,
+      // abi-parity-ok: balanceOf(address) — 1 arg, statically present
       args: [tokenReadBalanceArg] as const,
     },
   ] as const;

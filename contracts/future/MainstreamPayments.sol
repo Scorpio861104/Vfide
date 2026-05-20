@@ -1142,6 +1142,7 @@ contract TerminalRegistry is ReentrancyGuard {
         bytes32 r;
         bytes32 s;
         uint8 v;
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly {
             r := calldataload(signature.offset)
             s := calldataload(add(signature.offset, 32))

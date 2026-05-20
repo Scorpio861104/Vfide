@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
+// audit-ok(assembly): vendored Uniswap V3 library — well-audited, must not be modified
 pragma solidity 0.8.30;
 
 /// @title Math library for computing sqrt prices from ticks and vice versa

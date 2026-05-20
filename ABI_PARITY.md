@@ -4,9 +4,9 @@ Cross-references every `functionName:` use site in the frontend against
 the ABI it claims to use.
 
 - Frontend files scanned: **1413**
-- Call sites found: **592**
-- ABI symbols resolved: **66**
-- ABIs loaded: **63**
+- Call sites found: **593**
+- ABI symbols resolved: **134**
+- ABIs loaded: **70**
 
 ## Summary
 
@@ -14,261 +14,37 @@ the ABI it claims to use.
 |---|---|
 | HIGH (broken call) | 0 |
 | MEDIUM (suspect) | 0 |
-| INFO (manual review) | 253 |
+| INFO (manual review) | 0 |
 
-## INFO (inline ABI — manually verified separately) (253)
+## HIGH findings (0)
 
-- `app/admin/AdminDashboardClient.tsx:192` — Local/inline ABI symbol "TOKEN_ABI" for owner — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:201` — Local/inline ABI symbol "TOKEN_ABI" for vaultOnly — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:209` — Local/inline ABI symbol "TOKEN_ABI" for policyLocked — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:217` — Local/inline ABI symbol "TOKEN_ABI" for isCircuitBreakerActive — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:225` — Local/inline ABI symbol "TOKEN_ABI" for totalSupply — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:233` — Local/inline ABI symbol "TOKEN_ABI" for whitelisted — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:241` — Local/inline ABI symbol "TOKEN_ABI" for systemExempt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:250` — Local/inline ABI symbol "TOKEN_ABI" for whitelisted — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:259` — Local/inline ABI symbol "TOKEN_ABI" for whaleLimitExempt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:268` — Local/inline ABI symbol "TOKEN_ABI" for vaultHub — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:277` — Local/inline ABI symbol "TOKEN_ABI" for ledger — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:284` — Local/inline ABI symbol "TOKEN_ABI" for burnRouter — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:291` — Local/inline ABI symbol "TOKEN_ABI" for treasurySink — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:298` — Local/inline ABI symbol "TOKEN_ABI" for sanctumSink — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:311` — Local/inline ABI symbol "TOKEN_ABI" for pendingVaultHub — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:319` — Local/inline ABI symbol "TOKEN_ABI" for pendingVaultHubAt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:327` — Local/inline ABI symbol "TOKEN_ABI" for pendingLedger — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:335` — Local/inline ABI symbol "TOKEN_ABI" for pendingLedgerAt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:343` — Local/inline ABI symbol "TOKEN_ABI" for pendingBurnRouter — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:351` — Local/inline ABI symbol "TOKEN_ABI" for pendingBurnRouterAt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:359` — Local/inline ABI symbol "TOKEN_ABI" for pendingTreasurySink — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:367` — Local/inline ABI symbol "TOKEN_ABI" for pendingTreasurySinkAt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:375` — Local/inline ABI symbol "TOKEN_ABI" for pendingSanctumSink — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:383` — Local/inline ABI symbol "TOKEN_ABI" for pendingSanctumSinkAt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:392` — Local/inline ABI symbol "BURN_ROUTER_ABI" for baseBurnBps — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:399` — Local/inline ABI symbol "BURN_ROUTER_ABI" for baseSanctumBps — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:406` — Local/inline ABI symbol "BURN_ROUTER_ABI" for baseEcosystemBps — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:413` — Local/inline ABI symbol "BURN_ROUTER_ABI" for maxTotalBps — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:420` — Local/inline ABI symbol "BURN_ROUTER_ABI" for minTotalBps — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:497` — Local/inline ABI symbol "TOKEN_ABI" for proposeWhitelist — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:509` — Local/inline ABI symbol "TOKEN_ABI" for proposeWhitelist — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:519` — Local/inline ABI symbol "TOKEN_ABI" for setVaultOnly — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:534` — Local/inline ABI symbol "TOKEN_ABI" for setCircuitBreaker — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:547` — Local/inline ABI symbol "TOKEN_ABI" for setCircuitBreaker — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:557` — Local/inline ABI symbol "TOKEN_ABI" for confirmCircuitBreaker — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:621` — Local/inline ABI symbol "TOKEN_ABI" for proposeSystemExempt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:633` — Local/inline ABI symbol "TOKEN_ABI" for proposeSystemExempt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:643` — Local/inline ABI symbol "TOKEN_ABI" for confirmSystemExempt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:656` — Local/inline ABI symbol "TOKEN_ABI" for proposeWhitelist — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:668` — Local/inline ABI symbol "TOKEN_ABI" for proposeWhitelist — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:678` — Local/inline ABI symbol "TOKEN_ABI" for confirmWhitelist — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:691` — Local/inline ABI symbol "TOKEN_ABI" for setWhaleLimitExempt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:703` — Local/inline ABI symbol "TOKEN_ABI" for setWhaleLimitExempt — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:727` — Local/inline ABI symbol "TOKEN_ABI" for lockPolicy — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:746` — Local/inline ABI symbol "TOKEN_ABI" for transferOwnership — manual review recommended
-- `app/admin/AdminDashboardClient.tsx:1309` — Local/inline ABI symbol "BURN_ROUTER_ABI" for setFeePolicy — manual review recommended
-- `app/api/crypto/price/route.ts:208` — Local/inline ABI symbol "POOL_ABI" for slot0 — manual review recommended
-- `app/api/crypto/price/route.ts:213` — Local/inline ABI symbol "POOL_ABI" for token0 — manual review recommended
-- `app/api/merchant/payments/confirm/route.ts:145` — Inline ABI used for decimals — manual review recommended
-- `app/api/proposals/route.ts:156` — Local/inline ABI symbol "SEER_GOVERNANCE_ABI" for minForGovernance — manual review recommended
-- `app/api/proposals/route.ts:161` — Local/inline ABI symbol "SEER_GOVERNANCE_ABI" for getScore — manual review recommended
-- `app/control-panel/components/AutoSwapPanel.tsx:31` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for autoSwap_getConfig — manual review recommended
-- `app/control-panel/components/AutoSwapPanel.tsx:57` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for autoSwap_configure — manual review recommended
-- `app/control-panel/components/AutoSwapPanel.tsx:92` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for autoSwap_quickSetupUSDC — manual review recommended
-- `app/control-panel/components/AutoSwapPanel.tsx:120` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for autoSwap_setEnabled — manual review recommended
-- `app/control-panel/components/EcosystemPanel.tsx:29` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for ecosystem_getAutoWorkPayoutConfig — manual review recommended
-- `app/control-panel/components/EcosystemPanel.tsx:53` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for ecosystem_configureAutoWorkPayout — manual review recommended
-- `app/control-panel/components/EmergencyPanel.tsx:45` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for emergency_pauseAll — manual review recommended
-- `app/control-panel/components/EmergencyPanel.tsx:72` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for emergency_resumeAll — manual review recommended
-- `app/control-panel/components/EmergencyPanel.tsx:99` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for token_setCircuitBreaker — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:36` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for governanceDelay — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:42` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for maxAutoSwapSlippageBps — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:48` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for minAutoWorkPayoutWei — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:54` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for maxAutoWorkPayoutWei — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:104` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for queuedActionEta — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:146` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for governance_queueAction — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:172` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for governance_cancelAction — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:199` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for token_lockPolicy — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:207` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for autoSwap_configure — manual review recommended
-- `app/control-panel/components/GovernancePanel.tsx:220` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for ecosystem_configureAutoWorkPayout — manual review recommended
-- `app/control-panel/components/ProductionSetupPanel.tsx:31` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for system_getStatus — manual review recommended
-- `app/control-panel/components/ProductionSetupPanel.tsx:54` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for production_setupSafeDefaults — manual review recommended
-- `app/control-panel/components/ProductionSetupPanel.tsx:90` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for production_setupWithAutoSwap — manual review recommended
-- `app/control-panel/components/SecurityComponents.tsx:25` — Inline ABI used for owner — manual review recommended
-- `app/control-panel/components/SystemStatusPanel.tsx:10` — Local/inline ABI symbol "OWNER_CONTROL_PANEL_ABI" for system_getStatus — manual review recommended
-- `app/dashboard/components/OverviewTab.tsx:40` — getScoreBreakdown expects 1 arg — args is conditional/spread, manual verification recommended
-- `app/endorsements/page.tsx:25` — getActiveEndorsements expects 2 args — args is conditional/spread, manual verification recommended
-- `app/endorsements/page.tsx:33` — getEndorsementStats expects 1 arg — args is conditional/spread, manual verification recommended
-- `app/escrow/[id]/components/EscrowDetailContent.tsx:118` — Local/inline ABI symbol "VaultHubABI" for isInMemorialState — manual review recommended
-- `app/escrow/[id]/components/EscrowDetailContent.tsx:125` — Local/inline ABI symbol "VaultHubABI" for isInMemorialState — manual review recommended
-- `app/flashloans/components/LenderDashboardTab.tsx:77` — Local/inline ABI symbol "erc20Abi" for balanceOf — manual review recommended
-- `app/fraud/components/ReportTab.tsx:43` — getCachedScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `app/governance/components/ElectionsTabContent.tsx:63` — Local/inline ABI symbol "CouncilElectionABI" for getElectionInfo — manual review recommended
-- `app/guardians/components/GuardianPendingRecoveryCard.tsx:52` — isGuardian expects 1 arg — args is conditional/spread, manual verification recommended
-- `app/guardians/components/GuardianPendingRecoveryCard.tsx:60` — Local/inline ABI symbol "VAULT_HUB_ABI" for guardianSetupComplete — manual review recommended
-- `app/guardians/components/GuardianResponsibilitiesCard.tsx:41` — Local/inline ABI symbol "VAULT_HUB_ABI" for ownerOfVault — manual review recommended
-- `app/guardians/components/GuardianResponsibilitiesCard.tsx:49` — isGuardian expects 1 arg — args is conditional/spread, manual verification recommended
-- `app/guardians/components/GuardianResponsibilitiesCard.tsx:57` — Local/inline ABI symbol "VAULT_HUB_ABI" for guardianSetupComplete — manual review recommended
-- `app/guardians/components/InheritanceActionsTab.tsx:145` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirCount — manual review recommended
-- `app/guardians/components/InheritanceActionsTab.tsx:152` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirCommitmentByGuardian — manual review recommended
-- `app/guardians/components/InheritanceActionsTab.tsx:160` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for distributionFinalized — manual review recommended
-- `app/guardians/components/InheritanceActionsTab.tsx:167` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for payoutBalance — manual review recommended
-- `app/guardians/components/InheritanceActionsTab.tsx:174` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for vetoCount — manual review recommended
-- `app/guardians/components/InheritanceActionsTab.tsx:181` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for snapshotVetoThreshold — manual review recommended
-- `app/guardians/components/InheritanceActionsTab.tsx:188` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for totalRevealedBasisPoints — manual review recommended
-- `app/guardians/components/MyGuardiansTab.tsx:44` — Local/inline ABI symbol "VAULT_HUB_ABI" for guardianSetupComplete — manual review recommended
-- `app/guardians/components/MyGuardiansTab.tsx:51` — Local/inline ABI symbol "VAULT_HUB_ABI" for isGuardianSetupExpired — manual review recommended
-- `app/guardians/components/MyGuardiansTab.tsx:61` — Local/inline ABI symbol "VAULT_HUB_ABI" for guardianSetupTimeRemaining — manual review recommended
-- `app/guardians/components/MyGuardiansTab.tsx:267` — Local/inline ABI symbol "VAULT_HUB_ABI" for completeGuardianSetup — manual review recommended
-- `app/headhunter/components/ClaimsTab.tsx:84` — previewHeadhunterReward expects 3 args — args is conditional/spread, manual verification recommended
-- `app/lending/components/OfferTab.tsx:64` — Local/inline ABI symbol "erc20Abi" for balanceOf — manual review recommended
-- `app/proofscore/components/TrustChallenges.tsx:118` — Local/inline ABI symbol "VAULT_HUB_ABI" for vaultOf — manual review recommended
-- `app/splitter/page.tsx:130` — Local/inline ABI symbol "erc20Abi" for symbol — manual review recommended
-- `app/splitter/page.tsx:135` — Local/inline ABI symbol "erc20Abi" for decimals — manual review recommended
-- `app/splitter/page.tsx:140` — Local/inline ABI symbol "erc20Abi" for balanceOf — manual review recommended
-- `app/staking/page.tsx:80` — Local/inline ABI symbol "erc20Abi" for balanceOf — manual review recommended
-- `app/vault/components/MerchantApprovalPanel.tsx:65` — allowance expects 2 args — args is conditional/spread, manual verification recommended
-- `app/vault/components/MerchantApprovalPanel.tsx:82` — allowance expects 2 args — args is conditional/spread, manual verification recommended
-- `app/vault/components/VaultInheritancePanel.tsx:208` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirCount — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:215` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for pendingHeirConfigEffectiveAt — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:222` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for proofOfLifeWallet — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:229` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for inheritanceInitiator — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:236` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for inheritanceReasonHash — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:243` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for vetoCount — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:250` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for snapshotVetoThreshold — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:256` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirGuardianByIndex — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:257` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirGuardianByIndex — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:258` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirGuardianByIndex — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:259` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirGuardianByIndex — manual review recommended
-- `app/vault/components/VaultInheritancePanel.tsx:260` — Local/inline ABI symbol "INHERITANCE_MANAGER_ABI" for heirGuardianByIndex — manual review recommended
-- `app/vault/components/useVaultOperations.ts:79` — Local/inline ABI symbol "VAULT_HUB_ABI" for isVault — manual review recommended
-- `app/vault/recover/page.tsx:90` — Local/inline ABI symbol "VFIDEBadgeNFTABI" for balanceOf — manual review recommended
-- `app/verifier/page.tsx:328` — trustedVerifier expects 1 arg — args is conditional/spread, manual verification recommended
-- `app/vesting/page.tsx:34` — Local/inline ABI symbol "VESTING_ABI" for BENEFICIARY — manual review recommended
-- `app/vesting/page.tsx:35` — Local/inline ABI symbol "VESTING_ABI" for claimsPaused — manual review recommended
-- `app/vesting/page.tsx:36` — Local/inline ABI symbol "VESTING_ABI" for getVestingStatus — manual review recommended
-- `app/vesting/page.tsx:37` — Local/inline ABI symbol "VESTING_ABI" for getVestingSchedule — manual review recommended
-- `components/navigation/LiveProofScoreProvider.tsx:45` — getScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `components/navigation/PieMenu.tsx:518` — Inline ABI used for getScore — manual review recommended
-- `components/navigation/PieMenu.tsx:564` — Inline ABI used for getScore — manual review recommended
-- `components/security/GuardianPendingQueueWidget.tsx:170` — Local/inline ABI symbol "paymentQueueMgrAbi" for queueLength — manual review recommended
-- `components/security/GuardianPendingQueueWidget.tsx:179` — Local/inline ABI symbol "paymentQueueMgrAbi" for paymentQueue — manual review recommended
-- `components/social/SubscriptionManager.tsx:137` — Local/inline ABI symbol "SubscriptionManagerABI" for createSubscription — manual review recommended
-- `components/trust/EndorsementStats.tsx:26` — getEndorsementStats expects 1 arg — args is conditional/spread, manual verification recommended
-- `components/ui/TokenBalance.tsx:35` — balanceOf expects 1 arg — args is conditional/spread, manual verification recommended
-- `components/vault/LockVaultPanel.tsx:187` — Inline ABI used for queueLength — manual review recommended
-- `components/vault/LockVaultPanel.tsx:243` — Inline ABI used for paymentQueue — manual review recommended
-- `components/vault/VaultGuardianSetupBanner.tsx:48` — Local/inline ABI symbol "VAULT_HUB_ABI" for guardianSetupTimeRemaining — manual review recommended
-- `components/vault/VaultSafetyPanel.tsx:82` — Local/inline ABI symbol "VAULT_SAFETY_ABI" for guardianCount — manual review recommended
-- `components/vault/VaultSafetyPanel.tsx:83` — Local/inline ABI symbol "VAULT_SAFETY_ABI" for guardianThreshold — manual review recommended
-- `components/vault/VaultSafetyPanel.tsx:84` — Local/inline ABI symbol "VAULT_SAFETY_ABI" for trusteeCountView — manual review recommended
-- `components/vault/VaultSafetyPanel.tsx:85` — Local/inline ABI symbol "VAULT_SAFETY_ABI" for challengePeriodPreferenceView — manual review recommended
-- `components/wizard/chapters/FinalizeGuardiansChapter.tsx:51` — Local/inline ABI symbol "VAULT_HUB_ABI" for guardianSetupComplete — manual review recommended
-- `components/wizard/chapters/FinalizeGuardiansChapter.tsx:104` — Local/inline ABI symbol "VAULT_HUB_ABI" for completeGuardianSetup — manual review recommended
-- `components/wizard/chapters/MerchantApprovalChapter.tsx:47` — allowance expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useBadgeHooks.ts:43` — Local/inline ABI symbol "VFIDEBadgeNFTABI" for getBadgesOfUser — manual review recommended
-- `hooks/useBadgeHooks.ts:73` — Local/inline ABI symbol "VFIDEBadgeNFTABI" for mintBadge — manual review recommended
-- `hooks/useBadgeHooks.ts:96` — Local/inline ABI symbol "VFIDEBadgeNFTABI" for canMintBadge — manual review recommended
-- `hooks/useChallengePeriodPreview.ts:87` — vaultLastActivity expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useCommerceEscrow.ts:163` — Local/inline ABI symbol "CommerceEscrowABI" for escrows — manual review recommended
-- `hooks/useCommerceEscrow.ts:177` — Local/inline ABI symbol "CommerceEscrowABI" for escrowDeposited — manual review recommended
-- `hooks/useCommerceEscrow.ts:196` — Local/inline ABI symbol "CommerceEscrowABI" for escrowCount — manual review recommended
-- `hooks/useCommerceEscrow.ts:218` — Local/inline ABI symbol "CommerceEscrowABI" for getRequiredApproval — manual review recommended
-- `hooks/useCommerceEscrow.ts:281` — Local/inline ABI symbol "CommerceEscrowABI" for open — manual review recommended
-- `hooks/useCommerceEscrow.ts:302` — Local/inline ABI symbol "CommerceEscrowABI" for open — manual review recommended
-- `hooks/useCommerceEscrow.ts:344` — Local/inline ABI symbol "VaultHubABI" for vaultOf — manual review recommended
-- `hooks/useCommerceEscrow.ts:360` — Local/inline ABI symbol "CommerceEscrowABI" for escrowCount — manual review recommended
-- `hooks/useCommerceEscrow.ts:414` — Local/inline ABI symbol "CommerceEscrowABI" for openAndFundWithIntent — manual review recommended
-- `hooks/useCommerceEscrow.ts:446` — Local/inline ABI symbol "CommerceEscrowABI" for markFunded — manual review recommended
-- `hooks/useCommerceEscrow.ts:467` — Local/inline ABI symbol "CommerceEscrowABI" for release — manual review recommended
-- `hooks/useCommerceEscrow.ts:487` — Local/inline ABI symbol "CommerceEscrowABI" for refund — manual review recommended
-- `hooks/useCommerceEscrow.ts:509` — Local/inline ABI symbol "CommerceEscrowABI" for dispute — manual review recommended
-- `hooks/useCommerceEscrow.ts:529` — Local/inline ABI symbol "CommerceEscrowABI" for cancelStaleOpen — manual review recommended
-- `hooks/useCommerceEscrow.ts:549` — Local/inline ABI symbol "CommerceEscrowABI" for settleByInheritance — manual review recommended
-- `hooks/useDAO.ts:215` — isEligible expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useDAO.ts:223` — getVotingPower expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useDAO.ts:231` — lastProposalAt expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useDAO.ts:239` — getVoterStats expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useDAO.ts:247` — getFatigueInfo expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useEnterpriseTreasury.ts:168` — getMultiTokenBalances expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useEnterpriseTreasury.ts:208` — stablecoinReserves expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useEnterpriseTreasury.ts:215` — totalMerchantBonusesPaid expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useEscrowList.ts:134` — Local/inline ABI symbol "CommerceEscrowABI" for escrowCount — manual review recommended
-- `hooks/useEscrowList.ts:146` — Local/inline ABI symbol "CommerceEscrowABI" for escrows — manual review recommended
-- `hooks/useEscrowList.ts:176` — Local/inline ABI symbol "CommerceEscrowABI" for escrows — manual review recommended
-- `hooks/useFlashLoan.ts:81` — getLenderInfo expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useFlashLoan.ts:147` — maxFlashLoan expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useFlashLoan.ts:160` — flashFee expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useFlashLoan.ts:193` — Local/inline ABI symbol "erc20Abi" for approve — manual review recommended
-- `hooks/useFraudRegistry.ts:160` — getPendingEscrows expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useFraudRegistry.ts:168` — userActiveEscrowCount expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useGuardianVote.ts:62` — guardianVoted expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useGuardianVote.ts:70` — guardianApproval expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useHasVault.ts:21` — Local/inline ABI symbol "VAULT_HUB_ABI" for vaultOf — manual review recommended
-- `hooks/useHeadhunterHooks.ts:67` — getHeadhunterStats expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useHeadhunterHooks.ts:126` — previewHeadhunterReward expects 3 args — args is conditional/spread, manual verification recommended
-- `hooks/useHeadhunterHooks.ts:173` — getPendingReferral expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useHeadhunterHooks.ts:216` — getReferralLevelStatus expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useHeadhunterHooks.ts:508` — stablecoinReserves expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useLeaderboard.ts:259` — getScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantHooks.ts:78` — merchants expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantHooks.ts:371` — Local/inline ABI symbol "VaultHubABI" for vaultOf — manual review recommended
-- `hooks/useMerchantHooks.ts:382` — Local/inline ABI symbol "MerchantPortalIntentABI" for merchants — manual review recommended
-- `hooks/useMerchantHooks.ts:390` — Local/inline ABI symbol "VaultHubABI" for vaultOf — manual review recommended
-- `hooks/useMerchantHooks.ts:469` — Local/inline ABI symbol "MerchantPortalIntentABI" for payWithIntent — manual review recommended
-- `hooks/useMerchantHooks.ts:560` — Local/inline ABI symbol "VaultHubABI" for vaultOf — manual review recommended
-- `hooks/useMerchantHooks.ts:571` — Local/inline ABI symbol "MerchantPortalIntentABI" for merchants — manual review recommended
-- `hooks/useMerchantHooks.ts:579` — Local/inline ABI symbol "VaultHubABI" for vaultOf — manual review recommended
-- `hooks/useMerchantHooks.ts:705` — getCustomerTrustScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantHooks.ts:736` — autoConvert expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantPayments.ts:176` — getMerchantStats expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantPayments.ts:189` — getCustomerTrustScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantPayments.ts:408` — getRefundStatus expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantProfile.ts:77` — merchants expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantRegistry.ts:143` — info expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useMerchantStatus.ts:16` — merchants expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/usePayoutAddressChange.ts:72` — pendingPayoutAddress expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/usePayoutAddressChange.ts:80` — pendingPayoutAddressEffectiveAt expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/usePayroll.ts:95` — getPayerStreams expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/usePayroll.ts:112` — getPayeeStreams expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/usePayroll.ts:128` — getStream expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/usePayroll.ts:146` — claimable expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/usePayroll.ts:226` — Local/inline ABI symbol "erc20Abi" for approve — manual review recommended
-- `hooks/usePayroll.ts:269` — Local/inline ABI symbol "erc20Abi" for approve — manual review recommended
-- `hooks/useProofScore.ts:22` — getScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useProofScore.ts:32` — computeFees expects 3 args — args is conditional/spread, manual verification recommended
-- `hooks/useProofScore.ts:170` — hasBadge expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useProofScoreHooks.ts:27` — getScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useProofScoreHooks.ts:153` — getScore expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useRecoveryClaim.ts:133` — getActiveClaimForVault expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:156` — getBalance expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:179` — isApprover expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:194` — charityList expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:216` — getCharityInfo expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:257` — getDisbursement expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:302` — getCharityInfo expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:313` — getDisbursement expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSanctumVault.ts:324` — hasApproved expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useScoreDispute.ts:49` — scoreDisputes expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useSecurityHooks.ts:63` — Local/inline ABI symbol "VAULT_HUB_ABI" for vaultOf — manual review recommended
-- `hooks/useSecurityHooks.ts:104` — Local/inline ABI symbol "VAULT_HUB_ABI" for vaultOf — manual review recommended
-- `hooks/useStaking.ts:76` — getPoolInfo expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useStaking.ts:106` — getUserStake expects 2 args — args is conditional/spread, manual verification recommended
-- `hooks/useStaking.ts:142` — Local/inline ABI symbol "erc20Abi" for allowance — manual review recommended
-- `hooks/useStaking.ts:171` — Local/inline ABI symbol "erc20Abi" for approve — manual review recommended
-- `hooks/useTermLoan.ts:117` — getLoan expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useTermLoan.ts:158` — amountOwed expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useTermLoan.ts:175` — maxBorrowable expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useTermLoan.ts:210` — getGuarantors expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useTermLoan.ts:249` — Local/inline ABI symbol "erc20Abi" for approve — manual review recommended
-- `hooks/useTermLoan.ts:327` — Local/inline ABI symbol "erc20Abi" for approve — manual review recommended
-- `hooks/useTermLoan.ts:357` — Local/inline ABI symbol "erc20Abi" for approve — manual review recommended
-- `hooks/useVFIDEBalance.ts:12` — balanceOf expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useVaultHooks.ts:44` — Local/inline ABI symbol "HUB_ABI" for vaultOf — manual review recommended
-- `hooks/useVaultHooks.ts:75` — balanceOf expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useVaultHub.ts:150` — Local/inline ABI symbol "PARSED_VAULT_HUB_ABI" for vaultOf — manual review recommended
-- `hooks/useVaultHub.ts:217` — Local/inline ABI symbol "PARSED_VAULT_HUB_ABI" for ensureVault — manual review recommended
-- `hooks/useVaultHub.ts:229` — Local/inline ABI symbol "PARSED_VAULT_HUB_ABI" for ensureVault — manual review recommended
-- `hooks/useVaultIdentity.ts:147` — merchants expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useVaultRecovery.ts:111` — isGuardian expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useVaultRecovery.ts:126` — Local/inline ABI symbol "VAULT_HUB_ABI" for guardianSetupComplete — manual review recommended
-- `hooks/useVerifierVote.ts:50` — trustedVerifier expects 1 arg — args is conditional/spread, manual verification recommended
-- `hooks/useVerifierVote.ts:62` — verifierVoted expects 2 args — args is conditional/spread, manual verification recommended
+_None._
+
+## MEDIUM findings (0)
+
+_None._
+
+## INFO (inline ABI — manually verified separately) (0)
+
+_None._
+
+## Suppressed (13) — marked `abi-parity-ok`
+
+These call sites were flagged by the static parser but have been
+manually verified against contract source and triaged with an inline
+`abi-parity-ok: <reason>` annotation.
+
+- `app/api/crypto/price/route.ts:209` (INFO) — Local/inline ABI symbol "POOL_ABI" for slot0 — manual review recommended — _POOL_ABI defined at top of file; slot0 takes 0 args_
+- `app/api/crypto/price/route.ts:215` (INFO) — Local/inline ABI symbol "POOL_ABI" for token0 — manual review recommended — _POOL_ABI defined at top of file; slot0 takes 0 args_
+- `app/api/merchant/payments/confirm/route.ts:146` (INFO) — Inline ABI used for decimals — manual review recommended — _inline ABI for ERC20 decimals(); 0-arg view function_
+- `app/control-panel/components/SecurityComponents.tsx:26` (INFO) — Inline ABI used for owner — manual review recommended — _inline minimal ABI for OZ Ownable owner(); 0-arg view function_
+- `app/headhunter/components/ClaimsTab.tsx:84` (INFO) — previewHeadhunterReward expects 3 args — args is conditional/spread, manual verification recommended — _previewHeadhunterReward(uint256 year, uint256 quarter, address user) — 3 args, statically present_
+- `app/splitter/page.tsx:140` (INFO) — balanceOf expects 1 arg — args is conditional/spread, manual verification recommended — _balanceOf(address) — 1 arg, statically present_
+- `components/vault/LockVaultPanel.tsx:188` (INFO) — Inline ABI used for queueLength — manual review recommended — _inline ABI for CardBoundVaultPaymentQueueManager.queueLength(); 0-arg view_
+- `components/vault/LockVaultPanel.tsx:245` (INFO) — Inline ABI used for paymentQueue — manual review recommended — _inline ABI for paymentQueue(uint256); 1 arg, statically present_
+- `hooks/useEscrowList.ts:176` (INFO) — escrows expects 1 arg — args is conditional/spread, manual verification recommended — _escrows(uint256 id) — 1 arg, statically present in .map callback_
+- `hooks/useSanctumVault.ts:194` (INFO) — charityList expects 1 arg — args is conditional/spread, manual verification recommended — _charityList is a public address[] auto-getter — 1 uint256 index arg_
+- `hooks/useSanctumVault.ts:217` (INFO) — getCharityInfo expects 1 arg — args is conditional/spread, manual verification recommended — _charityList is a public address[] auto-getter — 1 uint256 index arg_
+- `hooks/useSanctumVault.ts:259` (INFO) — getDisbursement expects 1 arg — args is conditional/spread, manual verification recommended — _getDisbursement(uint256 proposalId) — 1 arg, statically present_
+- `hooks/useStaking.ts:76` (INFO) — getPoolInfo expects 1 arg — args is conditional/spread, manual verification recommended — _getPoolInfo(address lpToken) — 1 arg, statically present_
 

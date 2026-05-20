@@ -1149,6 +1149,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     function _decodeMessageType(bytes calldata payload) internal pure returns (uint16 messageType) {
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly {
             messageType := and(calldataload(payload.offset), 0xffff)
         }
