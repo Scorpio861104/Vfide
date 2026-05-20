@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./future/BridgeSecurityModule.sol";
-import "./VFIDEPriceOracle.sol";
+// Moved to contracts/future/ on 2026-05-20 as part of the final mainnet-readiness sweep.
+// Import paths updated: BridgeSecurityModule is now a sibling, VFIDEPriceOracle is one level up.
+import "./BridgeSecurityModule.sol";
+import "../VFIDEPriceOracle.sol";
 
 /// @title DeployPhase3Peripherals
 /// @notice Deploys BSM and VFIDEPriceOracle (SharedInterfaces-based, no OZ).

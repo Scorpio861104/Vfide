@@ -263,7 +263,7 @@ export function ProductionSetupPanel() {
         <h3 className="text-white font-bold mb-2">⚠️ Before Production Deployment</h3>
         <ul className="text-slate-300 text-sm space-y-2">
           <li>✓ Ensure all contracts are deployed and verified</li>
-          <li>✓ Test on testnet first</li>
+          <li>✓ Validate the full flow on a non-production network first</li>
           <li>✓ Verify DEX has sufficient VFIDE/USDC liquidity (for auto-swap)</li>
           <li>✓ Transfer ownership to multisig wallet</li>
           <li>✓ Document all configuration parameters</li>

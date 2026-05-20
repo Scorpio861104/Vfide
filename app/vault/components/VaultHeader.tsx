@@ -17,11 +17,15 @@ interface VaultHeaderProps {
   isOnCorrectChain: boolean | undefined;
   expectedChainName: string | null | undefined;
   refetchVault: () => void;
+  switchToPreferredChain?: () => Promise<boolean>;
+  isSwitchingChain?: boolean;
+  isContractConfigured?: boolean;
 }
 
 export function VaultHeader({
   address, hasVault, isLoadingVault, createVault, isCreatingVault,
   isOnCorrectChain, expectedChainName, refetchVault,
+  switchToPreferredChain, isSwitchingChain, isContractConfigured,
 }: VaultHeaderProps) {
   const { showToast } = useToast();
 
@@ -44,7 +48,7 @@ export function VaultHeader({
         </motion.div>
 
         {/* No Vault */}
-        {!hasVault && !isLoadingVault && address && (
+        {!hasVault && !isLoadingVault && address && isOnCorrectChain && isContractConfigured !== false && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <GlassCard className="p-6 border-amber-500/30" gradient="gold" hover={false}>
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -54,7 +58,7 @@ export function VaultHeader({
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white mb-1">No Vault Found</h3>
-                    <p className="text-white/60">Create your vault to start using VFIDE securely</p>
+                    <p className="text-white/60">Create your vault to start using VFIDE securely on {expectedChainName ?? 'Base'}</p>
                   </div>
                 </div>
                 <motion.button
@@ -62,8 +66,12 @@ export function VaultHeader({
                   whileTap={{ scale: 0.95 }}
                   onClick={async () => {
                     try {
-                      await createVault();
-                      showToast('Vault created successfully!', 'success');
+                      const result = await createVault() as { transactionHash?: string; vaultAddress?: string } | undefined;
+                      if (result?.vaultAddress) {
+                        showToast(`Vault created: ${result.vaultAddress.slice(0, 6)}…${result.vaultAddress.slice(-4)}`, 'success');
+                      } else {
+                        showToast('Vault created successfully!', 'success');
+                      }
                       void refetchVault();
                     } catch (error) {
                       devLog.error('Vault creation error:', error);
@@ -72,9 +80,10 @@ export function VaultHeader({
                     }
                   }}
                   disabled={isCreatingVault}
+                  aria-busy={isCreatingVault}
                   className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
                 >
-                  {isCreatingVault ? 'Creating...' : 'Create Vault'}
+                  {isCreatingVault ? 'Creating…' : 'Create Vault'}
                 </motion.button>
               </div>
             </GlassCard>
@@ -124,25 +133,56 @@ export function VaultHeader({
           <GlassCard className="p-6 border-amber-500/30" gradient="gold" hover={false}>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-2">
               <div>
-                <p className="text-amber-400 font-bold mb-1">Wrong Network</p>
+                <p className="text-amber-400 font-bold mb-1">Switch to {expectedChainName ?? 'the correct network'}</p>
                 <p className="text-white/60 text-sm">
-                  Please switch to {expectedChainName ?? 'the correct network'} to use your vault
+                  Your vault lives on {expectedChainName ?? 'the correct network'}. Switch your wallet there to view and manage it.
                 </p>
               </div>
-              <ConnectButton.Custom>
-                {({ openChainModal, mounted }) => (
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={openChainModal}
-                    disabled={!mounted}
-                    aria-label={`Switch to ${expectedChainName ?? 'the correct network'}`}
-                    className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
-                  >
-                    Switch Network
-                  </motion.button>
-                )}
-              </ConnectButton.Custom>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={async () => {
+                    if (switchToPreferredChain) {
+                      const ok = await switchToPreferredChain();
+                      if (!ok) {
+                        showToast(`Could not switch to ${expectedChainName ?? 'the network'}. Please switch manually in your wallet.`, 'error');
+                      }
+                    }
+                  }}
+                  disabled={isSwitchingChain || !switchToPreferredChain}
+                  aria-label={`Switch to ${expectedChainName ?? 'the correct network'}`}
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold shadow-lg shadow-amber-500/25 disabled:opacity-50"
+                >
+                  {isSwitchingChain ? 'Switching…' : `Switch to ${expectedChainName ?? 'Network'}`}
+                </motion.button>
+                {/* Fallback: open RainbowKit's chain modal for users whose wallet doesn't support programmatic switching */}
+                <ConnectButton.Custom>
+                  {({ openChainModal, mounted }) => (
+                    <button
+                      onClick={openChainModal}
+                      disabled={!mounted}
+                      aria-label="Open network selector"
+                      className="px-3 py-3 text-white/60 hover:text-white text-sm underline disabled:opacity-50"
+                    >
+                      Manual
+                    </button>
+                  )}
+                </ConnectButton.Custom>
+              </div>
+            </div>
+          </GlassCard>
+        )}
+
+        {/* Contracts not deployed on this chain (separate from "wrong chain") */}
+        {address && isOnCorrectChain && isContractConfigured === false && (
+          <GlassCard className="p-6 border-red-500/30" gradient="red" hover={false}>
+            <div className="flex flex-col items-center gap-4 py-2 text-center">
+              <p className="text-red-400 font-bold">Vault contracts not yet deployed</p>
+              <p className="text-white/60 text-sm max-w-md">
+                Vault contracts are not yet available on {expectedChainName ?? 'this network'}.
+                Please check back shortly or follow our deployment status page for updates.
+              </p>
             </div>
           </GlassCard>
         )}

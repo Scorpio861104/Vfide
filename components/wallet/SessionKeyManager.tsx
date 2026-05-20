@@ -7,10 +7,12 @@ import { useSessionKeys, type CreateSessionParams } from '@/lib/sessionKeys/sess
 import { type SessionKeyManagerProps } from './session-key-types';
 import { SessionKeyCard } from './SessionKeyCard';
 import { CreateSessionDialog } from './CreateSessionDialog';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 export function SessionKeyManager({ targetContracts = [], className = '' }: SessionKeyManagerProps) {
   const { sessions, activeSessions, createSession, revokeSession, revokeAll, hasActiveSessions, refresh } = useSessionKeys();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showRevokeAllConfirm, setShowRevokeAllConfirm] = useState(false);
 
   return (
     <div className={className}>
@@ -52,7 +54,7 @@ export function SessionKeyManager({ targetContracts = [], className = '' }: Sess
             <SessionKeyCard key={session.id} session={session} onRevoke={revokeSession} />
           ))}
           {hasActiveSessions && (
-            <button onClick={() => { if (confirm('Are you sure you want to revoke all active sessions?')) revokeAll(); }}
+            <button onClick={() => setShowRevokeAllConfirm(true)}
               className="w-full py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
               Revoke All Sessions
             </button>
@@ -78,6 +80,17 @@ export function SessionKeyManager({ targetContracts = [], className = '' }: Sess
           />
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={showRevokeAllConfirm}
+        onClose={() => setShowRevokeAllConfirm(false)}
+        onConfirm={() => { revokeAll(); setShowRevokeAllConfirm(false); }}
+        title="Revoke all sessions?"
+        message="All active session keys will be revoked. You'll need to sign each transaction individually until you create a new session."
+        confirmText="Revoke all"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

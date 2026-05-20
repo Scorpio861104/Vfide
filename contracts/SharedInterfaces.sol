@@ -24,7 +24,8 @@ pragma solidity 0.8.30;
  * Core contracts (VFIDEToken, Seer, ProofLedger, DAO, VaultHub, OwnerControlPanel)
  * use LOCAL reimplementations defined in this file. VFIDEBridge imports from OZ directly
  * because LayerZero OApp requires OZ Ownable. BSM and VFIDEPriceOracle were migrated to
- * custom SharedInterfaces (H-18 fix) and deployed via DeployPhase3Peripherals.sol.
+ * custom SharedInterfaces (H-18 fix) and deployed via future/DeployPhase3Peripherals.sol
+ * (file moved to contracts/future/ in 2026-05-20 mainnet-readiness sweep; not in V1 deploy path).
  *
  * This intentional split means:
  *   - Core protocol attack surface is isolated from npm supply-chain risk.

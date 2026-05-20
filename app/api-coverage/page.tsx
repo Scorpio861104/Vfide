@@ -110,7 +110,7 @@ export default function ApiCoveragePage() {
         <h1 className="text-3xl font-black tracking-tight">API Coverage Console</h1>
         <p className="text-zinc-300 text-sm">
           UI verification surface for API routes that previously had no direct frontend wiring.
-          Use this page to validate route reachability before testnet deployment.
+          Use this page to validate route reachability in any deployment environment.
         </p>
         <div className="rounded-xl border border-zinc-700 bg-zinc-900/50 p-4 text-xs text-zinc-300">
           Total previously uncovered routes: {rows.length}

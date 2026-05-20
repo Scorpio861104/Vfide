@@ -1,13 +1,44 @@
 import process from 'node:process';
 
 const ADDRESS_VARS = [
+  // Frontend NEXT_PUBLIC_* — read by the user-facing app at runtime.
+  // Every entry that has `production: true` in lib/validateProduction.ts MUST
+  // also be listed here, otherwise we have two divergent definitions of "ready".
   'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS',
-  'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS',
+  // StablecoinRegistry is DEFERRED for V1 mainnet (see contracts/PRODUCTION_SET.md
+  // 2026-05-16 entry: "V1 is VFIDE-only by architectural decision"). Validator
+  // therefore must NOT require it; the API routes already gracefully degrade
+  // when CONTRACT_ADDRESSES.StablecoinRegistry is unconfigured.
+  // 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS',
   'NEXT_PUBLIC_VAULT_HUB_ADDRESS',
   'NEXT_PUBLIC_DAO_ADDRESS',
+  'NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS',
   'NEXT_PUBLIC_SEER_ADDRESS',
+  'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS',
   'NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS',
+  'NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS',
+  'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS',
   'NEXT_PUBLIC_BURN_ROUTER_ADDRESS',
+  'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS',
+  'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS',
+  'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS',
+  'NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS',
+  'NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS',
+  'NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS',
+  'NEXT_PUBLIC_FLASH_LOAN_ADDRESS',
+  'NEXT_PUBLIC_TERM_LOAN_ADDRESS',
+  'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS',
+  'NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS',
+  'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS',
+  'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS',
+  'NEXT_PUBLIC_DEV_VAULT_ADDRESS',
+  'NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS',
+  'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS',
+  'NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS',
+  'NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS',
+  // Server-side bootstrap addresses (multisigs / sinks). These are checked
+  // independently from the public ones because the deploy script binds them
+  // to constructor args before any NEXT_PUBLIC_* is even known.
   'DAO_ADDRESS',
   'TREASURY_ADDRESS',
   'BENEFICIARY_ADDRESS',

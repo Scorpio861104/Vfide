@@ -320,7 +320,7 @@ export default function VaultSafetyPage() {
             <p>
               For a complete breakdown of what&apos;s visible to whom and how to
               think about privacy on VFIDE, see the{' '}
-              <Link href="/about/privacy" className="text-cyan-300 hover:text-cyan-200">
+              <Link href="/legal?tab=privacy" className="text-cyan-300 hover:text-cyan-200">
                 full privacy explanation
               </Link>.
             </p>
@@ -336,7 +336,7 @@ export default function VaultSafetyPage() {
               what was unclear.
             </p>
             <Link
-              href="/about/contact"
+              href="/support"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-300 hover:text-cyan-200"
             >
               Tell us what was unclear

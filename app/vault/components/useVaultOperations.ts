@@ -137,6 +137,26 @@ export function useVaultOperations() {
     }));
   }, [pendingQueuedWithdrawalData]);
 
+  /**
+   * Pre-flight chain check shared by every write action below. CardBoundVault
+   * and VaultHub may be deployed on multiple chains (Base, Polygon, zkSync);
+   * if the wallet is on a different chain than the vault was deployed on,
+   * the write would either revert (wrong contract address) or, worse for
+   * EIP-712 transfers, produce a signature that no contract can verify.
+   *
+   * Returns true if the user is on (or successfully switched to) the right
+   * chain, false otherwise. UI handlers should bail when this returns false.
+   */
+  const ensureCorrectChain = async (): Promise<boolean> => {
+    if (vaultHub.isOnCorrectChain) return true;
+    showToast(`Switch to ${vaultHub.expectedChainName} before continuing`, 'error');
+    try {
+      return await vaultHub.switchToPreferredChain();
+    } catch {
+      return false;
+    }
+  };
+
   const handleWithdraw = async () => {
     if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
       showToast('Enter a valid amount', 'error');
@@ -154,6 +174,11 @@ export function useVaultOperations() {
       showToast('Vault hub contract is not configured.', 'error');
       return;
     }
+    // Chain pre-flight: a TransferIntent's EIP-712 domain binds to the wallet's
+    // current chainId. If the user is on the wrong chain we'd produce a signature
+    // that no contract can verify and the on-chain call would revert. Offer a
+    // one-click switch via the vault hub helper rather than throwing late.
+    if (!(await ensureCorrectChain())) return;
 
     const amountWei = parseUnits(withdrawAmount, 18);
 
@@ -227,6 +252,7 @@ export function useVaultOperations() {
             },
             signature,
           ],
+          chainId: vaultHub.expectedChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
         });
         trailHandle.resolve(true);
       } catch (writeErr) {
@@ -264,6 +290,7 @@ export function useVaultOperations() {
     if (!hasVaultAddress) {
       return;
     }
+    if (!(await ensureCorrectChain())) return;
 
     const maxTransferValue = safeParseFloat(spendLimitPerTransfer, 0);
     const dailyLimitValue = safeParseFloat(spendLimitPerDay, 0);
@@ -286,6 +313,7 @@ export function useVaultOperations() {
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'setSpendLimits',
         args: [parseUnits(spendLimitPerTransfer, 18), parseUnits(spendLimitPerDay, 18)],
+        chainId: vaultHub.expectedChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
       showToast('Spend limits updated.', 'success');
     } catch (error) {
@@ -304,6 +332,7 @@ export function useVaultOperations() {
     if (!hasVaultAddress) {
       return;
     }
+    if (!(await ensureCorrectChain())) return;
 
     const thresholdValue = safeParseFloat(largeTransferThresholdInput, -1);
     if (thresholdValue < 0) {
@@ -319,6 +348,7 @@ export function useVaultOperations() {
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'setLargeTransferThreshold',
         args: [parseUnits(largeTransferThresholdInput || '0', 18)],
+        chainId: vaultHub.expectedChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
       showToast('Queue threshold updated.', 'success');
     } catch (error) {
@@ -337,6 +367,7 @@ export function useVaultOperations() {
     if (!hasVaultAddress) {
       return;
     }
+    if (!(await ensureCorrectChain())) return;
 
     setPendingQueueActionIndex(queueIndex);
     setPendingQueueActionType('execute');
@@ -347,6 +378,7 @@ export function useVaultOperations() {
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'executeQueuedWithdrawal',
         args: [queueIndex],
+        chainId: vaultHub.expectedChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
       await refreshQueuedWithdrawals();
       showToast('Queued withdrawal executed.', 'success');
@@ -367,6 +399,7 @@ export function useVaultOperations() {
     if (!hasVaultAddress) {
       return;
     }
+    if (!(await ensureCorrectChain())) return;
 
     setPendingQueueActionIndex(queueIndex);
     setPendingQueueActionType('cancel');
@@ -377,6 +410,7 @@ export function useVaultOperations() {
         abi: CARD_BOUND_VAULT_ABI,
         functionName: 'cancelQueuedWithdrawal',
         args: [queueIndex],
+        chainId: vaultHub.expectedChainId as 84532 | 8453 | 300 | 137 | 324 | 80002,
       });
       await refreshQueuedWithdrawals();
       showToast('Queued withdrawal cancelled.', 'success');

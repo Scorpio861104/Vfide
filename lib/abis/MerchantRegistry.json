@@ -1,0 +1,256 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      { "name": "_dao", "type": "address", "internalType": "address" },
+      { "name": "_token", "type": "address", "internalType": "address" },
+      { "name": "_hub", "type": "address", "internalType": "address" },
+      { "name": "_seer", "type": "address", "internalType": "address" },
+      { "name": "_ledger", "type": "address", "internalType": "address" }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "dao",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "token",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "contract IERC20" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "vaultHub",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "contract IVaultHub_COM" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "seer",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "contract ISeer_COM" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ledger",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "contract IProofLedger_COM" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "merchants",
+    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "vault", "type": "address", "internalType": "address" },
+      { "name": "status", "type": "uint8", "internalType": "enum MerchantRegistry.Status" },
+      { "name": "refunds", "type": "uint32", "internalType": "uint32" },
+      { "name": "disputes", "type": "uint32", "internalType": "uint32" },
+      { "name": "metaHash", "type": "bytes32", "internalType": "bytes32" }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "minScore",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint16", "internalType": "uint16" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "autoSuspendRefunds",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint8", "internalType": "uint8" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "autoSuspendDisputes",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint8", "internalType": "uint8" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lastRefundAt",
+    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [{ "name": "", "type": "uint64", "internalType": "uint64" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lastDisputeAt",
+    "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "outputs": [{ "name": "", "type": "uint64", "internalType": "uint64" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "STRIKE_DECAY_INTERVAL",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint64", "internalType": "uint64" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "info",
+    "inputs": [{ "name": "owner", "type": "address", "internalType": "address" }],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MerchantRegistry.Merchant",
+        "components": [
+          { "name": "owner", "type": "address", "internalType": "address" },
+          { "name": "vault", "type": "address", "internalType": "address" },
+          { "name": "status", "type": "uint8", "internalType": "enum MerchantRegistry.Status" },
+          { "name": "refunds", "type": "uint32", "internalType": "uint32" },
+          { "name": "disputes", "type": "uint32", "internalType": "uint32" },
+          { "name": "metaHash", "type": "bytes32", "internalType": "bytes32" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "addMerchant",
+    "inputs": [{ "name": "metaHash", "type": "bytes32", "internalType": "bytes32" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMetaHash",
+    "inputs": [{ "name": "newHash", "type": "bytes32", "internalType": "bytes32" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setAuthorizedEscrow",
+    "inputs": [{ "name": "_escrow", "type": "address", "internalType": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "clearAuthorizedEscrow",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "_noteRefund",
+    "inputs": [{ "name": "owner", "type": "address", "internalType": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "_noteDispute",
+    "inputs": [{ "name": "owner", "type": "address", "internalType": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "unsuspendMerchant",
+    "inputs": [{ "name": "owner", "type": "address", "internalType": "address" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "delistMerchant",
+    "inputs": [
+      { "name": "owner", "type": "address", "internalType": "address" },
+      { "name": "reason", "type": "string", "internalType": "string" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ModulesSet",
+    "anonymous": false,
+    "inputs": [
+      { "name": "dao", "type": "address", "indexed": false, "internalType": "address" },
+      { "name": "token", "type": "address", "indexed": false, "internalType": "address" },
+      { "name": "hub", "type": "address", "indexed": false, "internalType": "address" },
+      { "name": "seer", "type": "address", "indexed": false, "internalType": "address" },
+      { "name": "ledger", "type": "address", "indexed": false, "internalType": "address" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "PolicySet",
+    "anonymous": false,
+    "inputs": [
+      { "name": "minScore", "type": "uint16", "indexed": false, "internalType": "uint16" },
+      { "name": "autoSuspendRefunds", "type": "uint8", "indexed": false, "internalType": "uint8" },
+      { "name": "autoSuspendDisputes", "type": "uint8", "indexed": false, "internalType": "uint8" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "MerchantAdded",
+    "anonymous": false,
+    "inputs": [
+      { "name": "owner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "vault", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "metaHash", "type": "bytes32", "indexed": false, "internalType": "bytes32" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "MerchantMetaHashUpdated",
+    "anonymous": false,
+    "inputs": [
+      { "name": "owner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "newHash", "type": "bytes32", "indexed": false, "internalType": "bytes32" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "MerchantStatus",
+    "anonymous": false,
+    "inputs": [
+      { "name": "owner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "status", "type": "uint8", "indexed": false, "internalType": "enum MerchantRegistry.Status" },
+      { "name": "reason", "type": "string", "indexed": false, "internalType": "string" }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "AutoFlagged",
+    "anonymous": false,
+    "inputs": [
+      { "name": "owner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "reason", "type": "string", "indexed": false, "internalType": "string" }
+    ]
+  },
+  { "type": "error", "name": "COM_NotDAO", "inputs": [] },
+  { "type": "error", "name": "COM_Zero", "inputs": [] },
+  { "type": "error", "name": "COM_NotMerchant", "inputs": [] },
+  { "type": "error", "name": "COM_AlreadyMerchant", "inputs": [] },
+  { "type": "error", "name": "COM_Suspended", "inputs": [] },
+  { "type": "error", "name": "COM_Delisted", "inputs": [] },
+  { "type": "error", "name": "COM_NotBuyer", "inputs": [] },
+  { "type": "error", "name": "COM_NotSeller", "inputs": [] },
+  { "type": "error", "name": "COM_BadAmount", "inputs": [] },
+  { "type": "error", "name": "COM_BadState", "inputs": [] },
+  { "type": "error", "name": "COM_NotAllowed", "inputs": [] },
+  { "type": "error", "name": "COM_NotInheritanceActive", "inputs": [] }
+]

@@ -189,6 +189,28 @@ async function main() {
   const isTestnetChain = TESTNET_CHAIN_IDS.has(chainId);
   const deployTestnetFaucet = parseBooleanEnv(process.env.DEPLOY_TESTNET_FAUCET);
 
+  // ── 2026-05-20 mainnet-readiness gate ─────────────────────────────────────
+  // On any mainnet chain (Base 8453, Polygon 137, zkSync 324) the static
+  // readiness sweep MUST pass before a single transaction is sent. This
+  // re-runs the same checks executed by .github/workflows/mainnet-readiness.yml
+  // so a developer cannot bypass the CI gate by deploying from a stale branch.
+  const MAINNET_CHAIN_IDS = new Set<number>([8453, 137, 324]);
+  if (MAINNET_CHAIN_IDS.has(chainId)) {
+    const { execFileSync } = await import("node:child_process");
+    try {
+      execFileSync("node", ["scripts/mainnet-readiness.cjs"], {
+        cwd: process.cwd(),
+        stdio: "inherit",
+      });
+    } catch (err) {
+      throw new Error(
+        "Mainnet readiness sweep FAILED. Refusing to deploy to a mainnet chainId. " +
+        "Fix the failing checks (see output above) and re-run.",
+      );
+    }
+  }
+
+
   if (deployTestnetFaucet && !isTestnetChain) {
     throw new Error(
       `DEPLOY_TESTNET_FAUCET=true is not allowed on chainId ${chainId}. ` +

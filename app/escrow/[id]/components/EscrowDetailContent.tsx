@@ -50,6 +50,7 @@ import {
 } from '@/hooks/useCommerceEscrow';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { VaultHubABI } from '@/lib/abis';
+import { PromptModal } from '@/components/ui/PromptModal';
 
 const VFIDE_DECIMALS = 18;
 const OPEN_ESCROW_EXPIRY_SECONDS = 7 * 24 * 60 * 60;
@@ -129,6 +130,8 @@ export function EscrowDetailContent({ id }: Props) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [hashCopied, setHashCopied] = useState(false);
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [disputeSubmitting, setDisputeSubmitting] = useState(false);
 
   // Resolve viewer role. If the wallet matches neither buyer nor merchant, they're an observer
   // (can still see most things; only state-independent actions like cancelStaleOpen and
@@ -176,11 +179,20 @@ export function EscrowDetailContent({ id }: Props) {
 
   const handleRelease = () => escrow && runAction(() => release(escrow.id), `Escrow #${escrow.id} released to merchant.`);
   const handleRefund = () => escrow && runAction(() => refund(escrow.id), `Escrow #${escrow.id} refunded to buyer.`);
-  const handleDispute = async () => {
+  const handleDispute = () => {
     if (!escrow) return;
-    const reason = prompt('Briefly describe the dispute (visible on-chain):') ?? '';
-    if (reason.trim().length === 0) return;
-    return runAction(() => dispute({ escrowId: escrow.id, reason }), `Dispute opened on escrow #${escrow.id}. DAO will review.`);
+    setDisputeModalOpen(true);
+  };
+
+  const submitDispute = async (reason: string) => {
+    if (!escrow) return;
+    setDisputeSubmitting(true);
+    try {
+      await runAction(() => dispute({ escrowId: escrow.id, reason }), `Dispute opened on escrow #${escrow.id}. DAO will review.`);
+      setDisputeModalOpen(false);
+    } finally {
+      setDisputeSubmitting(false);
+    }
   };
   const handleCancelStale = () =>
     escrow && runAction(() => cancelStaleOpen(escrow.id), `Stale escrow #${escrow.id} cancelled.`);
@@ -511,6 +523,26 @@ export function EscrowDetailContent({ id }: Props) {
           </div>
         )}
       </div>
+
+      <PromptModal
+        isOpen={disputeModalOpen}
+        onClose={() => !disputeSubmitting && setDisputeModalOpen(false)}
+        onSubmit={submitDispute}
+        title="Open a dispute"
+        description={
+          <span>
+            Briefly describe the issue with this escrow. <strong className="text-amber-300">This text is recorded
+            on-chain</strong> and will be visible to the DAO during review.
+          </span>
+        }
+        placeholder="What's wrong with this transaction?"
+        submitText={disputeSubmitting ? 'Submitting…' : 'Open dispute'}
+        cancelText="Cancel"
+        multiline
+        minLength={5}
+        maxLength={500}
+        isLoading={disputeSubmitting}
+      />
     </div>
   );
 }

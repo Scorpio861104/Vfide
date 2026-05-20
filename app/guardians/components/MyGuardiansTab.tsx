@@ -52,6 +52,20 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
     args: vaultAddress ? [vaultAddress] : undefined,
     query: { enabled: isVaultHubAvailable && !!vaultAddress },
   });
+  // Surface the time remaining in the 30-day guardian-setup grace period so users
+  // see "X days left" instead of just a binary pending/expired state. Mirrors
+  // VaultHub.guardianSetupTimeRemaining(vault) → (remaining, isExpired, isComplete).
+  const { data: guardianSetupTimeRemainingRaw } = useReadContract({
+    address: CONTRACT_ADDRESSES.VaultHub,
+    abi: VAULT_HUB_ABI,
+    functionName: 'guardianSetupTimeRemaining',
+    args: vaultAddress ? [vaultAddress] : undefined,
+    query: {
+      enabled: isVaultHubAvailable && !!vaultAddress,
+      // Refetch every 5 minutes so the countdown stays accurate
+      refetchInterval: 5 * 60 * 1000,
+    },
+  });
   // H-CBV-01 FIX: pendingGuardianChange lives on the AdminManager contract, not the vault.
   // The vault delegates timelocked admin state to a separate AdminManager via the
   // IAdminManager interface. To read pending state we must:
@@ -126,6 +140,19 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
   const guardianThreshold = Number(guardianThresholdRaw || 0);
   const guardianSetupComplete = !!guardianSetupCompleteRaw;
   const guardianSetupExpired = !!guardianSetupExpiredRaw;
+  // guardianSetupTimeRemaining returns (remaining_seconds, isExpired, isComplete)
+  const setupTimeTuple = guardianSetupTimeRemainingRaw as [bigint, boolean, boolean] | undefined;
+  const guardianSetupSecondsRemaining = setupTimeTuple ? Number(setupTimeTuple[0]) : 0;
+  const guardianSetupDaysRemaining = guardianSetupSecondsRemaining > 0
+    ? Math.ceil(guardianSetupSecondsRemaining / (24 * 60 * 60))
+    : 0;
+  // Within the 7-day warning window the contract emits GuardianSetupExpiring.
+  // Surface it visually in the UI so users see urgency before the deadline hits.
+  const guardianSetupInWarningWindow =
+    !guardianSetupComplete &&
+    !guardianSetupExpired &&
+    guardianSetupSecondsRemaining > 0 &&
+    guardianSetupSecondsRemaining < 7 * 24 * 60 * 60;
   const canCompleteGuardianSetup = !!vaultAddress && guardianCountOnChain >= 2 && guardianThreshold >= 2 && !guardianSetupComplete;
   const isOwner = !!address && !!vaultOwner && address.toLowerCase() === (vaultOwner as string).toLowerCase();
   const pendingGuardianChange = pendingGuardianChangeRaw as [string, boolean, bigint] | undefined;
@@ -405,19 +432,21 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       {actionSuccess && <div className="bg-green-500/15 border border-green-500/40 rounded-xl p-4 text-green-300 text-sm">{actionSuccess}</div>}
 
       {hasVault && (
-        <div className={`rounded-2xl p-6 border ${guardianSetupExpired ? 'bg-red-500/10 border-red-500/30' : guardianSetupComplete ? 'bg-green-500/10 border-green-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
+        <div className={`rounded-2xl p-6 border ${guardianSetupExpired ? 'bg-red-500/10 border-red-500/30' : guardianSetupInWarningWindow ? 'bg-orange-500/10 border-orange-500/40' : guardianSetupComplete ? 'bg-green-500/10 border-green-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
           <div className="flex items-start gap-3">
-            <AlertTriangle className={`mt-1 ${guardianSetupExpired ? 'text-red-300' : guardianSetupComplete ? 'text-green-300' : 'text-amber-300'}`} size={20} />
+            <AlertTriangle className={`mt-1 ${guardianSetupExpired ? 'text-red-300' : guardianSetupInWarningWindow ? 'text-orange-300' : guardianSetupComplete ? 'text-green-300' : 'text-amber-300'}`} size={20} />
             <div className="flex-1">
               <h3 className="text-lg font-bold text-white mb-2">Guardian Setup Status</h3>
               <p className="text-sm text-gray-200 mb-3">
                 {guardianSetupComplete
                   ? 'Guardian setup is complete. Recovery rotation and vault-to-vault transfer protections remain active.'
                   : guardianSetupExpired
-                    ? 'Guardian setup grace period has expired. Complete setup now to restore guarded recovery and transfer flows.'
-                    : 'Guardian setup is not yet finalized. Add enough guardians, then complete setup before the grace period expires.'}
+                    ? 'Guardian setup grace period has expired. Guardian-mediated recovery is currently disabled. Complete setup now to restore guarded recovery and transfer flows.'
+                    : guardianSetupInWarningWindow
+                      ? `Only ${guardianSetupDaysRemaining} day${guardianSetupDaysRemaining === 1 ? '' : 's'} left to finalize guardian setup. After that, guardian-mediated recovery will be disabled until you complete setup.`
+                      : `Guardian setup is not yet finalized. You have ${guardianSetupDaysRemaining} day${guardianSetupDaysRemaining === 1 ? '' : 's'} of the 30-day grace period remaining.`}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm mb-4">
                 <div className="bg-black/20 rounded-lg p-3">
                   <p className="text-gray-400">Guardians</p>
                   <p className="text-white font-bold">{guardianCountOnChain}</p>
@@ -429,6 +458,18 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                 <div className="bg-black/20 rounded-lg p-3">
                   <p className="text-gray-400">Vault Status</p>
                   <p className="text-white font-bold">{guardianSetupComplete ? 'Complete' : guardianSetupExpired ? 'Expired' : 'Pending'}</p>
+                </div>
+                <div className="bg-black/20 rounded-lg p-3">
+                  <p className="text-gray-400">Time Remaining</p>
+                  <p className={`font-bold ${guardianSetupExpired ? 'text-red-300' : guardianSetupInWarningWindow ? 'text-orange-300' : 'text-white'}`}>
+                    {guardianSetupComplete
+                      ? '—'
+                      : guardianSetupExpired
+                        ? 'Expired'
+                        : guardianSetupDaysRemaining > 0
+                          ? `${guardianSetupDaysRemaining} day${guardianSetupDaysRemaining === 1 ? '' : 's'}`
+                          : '< 1 day'}
+                  </p>
                 </div>
               </div>
               {!guardianSetupComplete && (

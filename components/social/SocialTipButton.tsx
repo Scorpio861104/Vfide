@@ -13,6 +13,7 @@ import { useTipping } from '@/lib/socialPayments';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DollarSign, Send, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from '@/lib/toast';
 
 interface SocialTipButtonProps {
   postId?: string;
@@ -43,23 +44,23 @@ export function SocialTipButton({
 
   const handleTip = async () => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast.error('Please connect your wallet first');
       return;
     }
 
     if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount');
+      toast.error('Please enter a valid amount');
       return;
     }
 
     try {
       await sendTip(recipientAddress, amount, currency, message);
-      alert(`Tipped ${amount} ${currency} to ${recipientName}! 💸`);
+      toast.success(`Tipped ${amount} ${currency} to ${recipientName}`);
       setIsOpen(false);
       setAmount('');
       setMessage('');
     } catch {
-      alert('Failed to send tip. Please try again.');
+      toast.error('Failed to send tip. Please try again.');
     }
   };
 

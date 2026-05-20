@@ -54,23 +54,32 @@ export function VaultHealthScore({
     query: { enabled: !!vaultAddress },
   });
 
-  const { data: spendLimit } = useReadContract({
+  // Spend-limit is stored as two separate fields on CardBoundVault:
+  // `maxPerTransfer` (per-tx cap) and `dailyTransferLimit` (24h cap).
+  // There's no aggregate `spendLimit()` getter — using maxPerTransfer
+  // as the "is a spend limit configured" signal is the closest match
+  // and mirrors what the SpendLimitsConfigurator panel writes via
+  // setSpendLimits(maxPerTransfer, dailyTransferLimit).
+  const { data: maxPerTransfer } = useReadContract({
     address: vaultAddress,
     abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'spendLimit',
+    functionName: 'maxPerTransfer',
     query: { enabled: !!vaultAddress },
   });
 
-  const { data: isLocked } = useReadContract({
+  // CardBoundVault exposes `paused` (bool storage), not `isLocked()`.
+  // The lock concept on this contract is the pause state, which gates
+  // transfers when emergency pause is active.
+  const { data: isPaused } = useReadContract({
     address: vaultAddress,
     abi: CARD_BOUND_VAULT_ABI,
-    functionName: 'isLocked',
+    functionName: 'paused',
     query: { enabled: !!vaultAddress },
   });
 
   const gc = Number(guardianCount ?? 0n);
-  const sl = Number(spendLimit ?? 0n);
-  const locked = Boolean(isLocked);
+  const sl = Number(maxPerTransfer ?? 0n);
+  const locked = Boolean(isPaused);
   const hasVault = !!vaultAddress;
 
   // Security dimension (0-25)

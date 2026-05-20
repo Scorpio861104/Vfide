@@ -19,6 +19,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 type LinkStatus = 'active' | 'paused' | 'archived' | 'exhausted';
 
@@ -55,6 +56,7 @@ export default function MerchantPaymentLinksPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!address) return;
@@ -90,7 +92,13 @@ export default function MerchantPaymentLinksPage() {
   }, [load]);
 
   const deleteLink = useCallback(async (id: number) => {
-    if (!confirm('Delete this payment link? Existing customers with the link will get an error.')) return;
+    setPendingDelete(id);
+  }, []);
+
+  const confirmDeleteLink = useCallback(async () => {
+    const id = pendingDelete;
+    if (id == null) return;
+    setPendingDelete(null);
     try {
       const response = await fetch(`/api/merchant/payment-links?id=${id}`, { method: 'DELETE' });
       const data = await response.json().catch(() => ({}));
@@ -99,7 +107,7 @@ export default function MerchantPaymentLinksPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete link');
     }
-  }, [load]);
+  }, [pendingDelete, load]);
 
   const copyLink = useCallback(async (link: PaymentLink) => {
     const url = `${window.location.origin}/pay/link/${link.link_id}`;
@@ -187,6 +195,17 @@ export default function MerchantPaymentLinksPage() {
           onError={setError}
         />
       )}
+
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDeleteLink}
+        title="Delete payment link?"
+        message="Existing customers who have this link saved will get an error. This cannot be undone."
+        confirmText="Delete"
+        cancelText="Keep"
+        variant="danger"
+      />
 
       <Footer />
     </>

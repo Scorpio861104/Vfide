@@ -32,11 +32,25 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New service worker available
             logger.info('[Service Worker] New version available');
-            
-            // Notify user about update
-            if (window.confirm('A new version is available. Reload to update?')) {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-              window.location.reload();
+
+            // Notify the app via a custom event. The root layout listens for
+            // this and renders a non-blocking toast with a Reload action,
+            // instead of the old blocking window.confirm() dialog (which
+            // looks unprofessional and is silently ignored on iOS in-app
+            // browsers).
+            try {
+              window.dispatchEvent(
+                new CustomEvent('vfide:sw-update-available', {
+                  detail: {
+                    apply: () => {
+                      newWorker.postMessage({ type: 'SKIP_WAITING' });
+                      window.location.reload();
+                    },
+                  },
+                }),
+              );
+            } catch (e) {
+              logger.warn('[Service Worker] Failed to dispatch update event', e);
             }
           }
         });

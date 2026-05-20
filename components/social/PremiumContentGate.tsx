@@ -13,6 +13,7 @@ import { usePremiumContent } from '@/lib/socialPayments';
 import { motion } from 'framer-motion';
 import { Check, Loader, Lock, Unlock } from 'lucide-react';
 import React from 'react';
+import { toast } from '@/lib/toast';
 
 interface PremiumContentGateProps {
   contentId: string;
@@ -45,15 +46,15 @@ export function PremiumContentGate({
 
   const handlePurchase = async () => {
     if (!isConnected) {
-      alert('Please connect your wallet first');
+      toast.error('Please connect your wallet first');
       return;
     }
 
     try {
       await purchase(contentType, price, currency, sellerAddress);
-      alert(`Successfully unlocked ${contentType}! 🎉`);
+      toast.success(`Successfully unlocked ${contentType}!`);
     } catch {
-      alert('Failed to purchase content. Please try again.');
+      toast.error('Failed to purchase content. Please try again.');
     }
   };
 

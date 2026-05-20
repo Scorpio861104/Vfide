@@ -30,7 +30,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
 import { type Address, getAbiItem, type Log } from 'viem';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
-import { MerchantRegistryABI } from '@/lib/abis';
+// CommerceEscrow ABI ships as VFIDECommerceABI (lib/abis/VFIDECommerce.json).
+// Aliased here as CommerceEscrowABI for readability — this hook reads escrow
+// state/events from CommerceEscrow, NOT the merchant registry.
+import { VFIDECommerceABI as CommerceEscrowABI } from '@/lib/abis';
 import { EscrowState, type CommerceEscrowRecord } from './useCommerceEscrow';
 
 export type EscrowRole = 'buyer' | 'merchant';
@@ -102,7 +105,7 @@ export function useEscrowList(
       // 1. Scan EscrowOpened events filtered by the user's address.
       //    For buyers, filter by the `buyer` indexed arg. For merchants,
       //    filter by the `merchant` indexed arg.
-      const escrowOpenedAbi = getAbiItem({ abi: MerchantRegistryABI, name: 'EscrowOpened' });
+      const escrowOpenedAbi = getAbiItem({ abi: CommerceEscrowABI, name: 'EscrowOpened' });
 
       const args: Record<string, Address> =
         role === 'buyer' ? { buyer: target } : { merchant: target };
@@ -127,7 +130,7 @@ export function useEscrowList(
       if (ids.length === 0 && options.fallbackToIteration) {
         const totalCountRaw = await publicClient.readContract({
           address: escrowAddress!,
-          abi: MerchantRegistryABI,
+          abi: CommerceEscrowABI,
           functionName: 'escrowCount',
         });
         const totalCount = BigInt(totalCountRaw as any);
@@ -139,7 +142,7 @@ export function useEscrowList(
           for (let i = startId; i <= endId; i += 1n) {
             calls.push({
               address: escrowAddress!,
-              abi: MerchantRegistryABI as any,
+              abi: CommerceEscrowABI as any,
               functionName: 'escrows',
               args: [i],
             });
@@ -169,7 +172,7 @@ export function useEscrowList(
       // 2. Multicall-read current state of all matched escrows.
       const calls = ids.map((id) => ({
         address: escrowAddress! as Address,
-        abi: MerchantRegistryABI as any,
+        abi: CommerceEscrowABI as any,
         functionName: 'escrows' as const,
         args: [id] as const,
       }));
