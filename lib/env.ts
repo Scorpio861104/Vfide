@@ -60,6 +60,13 @@ const envSchema = z.object({
   NEXT_PUBLIC_PROOF_LEDGER_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS: optionalEthAddress,
 
+  // Chain-scoped Base mainnet (8453) overrides — operators can deploy a single
+  // chain or override per-chain with these scoped variants. Falls back to the
+  // unscoped names above when not set.
+  NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453: optionalEthAddress,
+  NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453: optionalEthAddress,
+  NEXT_PUBLIC_SEER_ADDRESS_8453: optionalEthAddress,
+
   // Security Contracts
   NEXT_PUBLIC_SECURITY_HUB_ADDRESS: optionalEthAddress,
   NEXT_PUBLIC_GUARDIAN_REGISTRY_ADDRESS: optionalEthAddress,
@@ -233,6 +240,11 @@ function parseEnv(): Environment {
     NEXT_PUBLIC_PROOF_SCORE_ADDRESS: process.env.NEXT_PUBLIC_PROOF_SCORE_ADDRESS,
     NEXT_PUBLIC_PROOF_LEDGER_ADDRESS: process.env.NEXT_PUBLIC_PROOF_LEDGER_ADDRESS,
     NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS: process.env.NEXT_PUBLIC_TRUST_GATEWAY_ADDRESS,
+
+    // Chain-scoped Base mainnet (8453) overrides
+    NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453: process.env.NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS_8453,
+    NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453: process.env.NEXT_PUBLIC_VAULT_HUB_ADDRESS_8453,
+    NEXT_PUBLIC_SEER_ADDRESS_8453: process.env.NEXT_PUBLIC_SEER_ADDRESS_8453,
     
     // Security Contracts
     NEXT_PUBLIC_SECURITY_HUB_ADDRESS: process.env.NEXT_PUBLIC_SECURITY_HUB_ADDRESS,

@@ -46,6 +46,9 @@ export function VaultContent() {
           isOnCorrectChain={ops.isOnCorrectChain}
           expectedChainName={ops.expectedChainName}
           refetchVault={ops.refetchVault}
+          switchToPreferredChain={ops.switchToPreferredChain}
+          isSwitchingChain={ops.isSwitchingChain}
+          isContractConfigured={ops.isContractConfigured}
         />
 
         {ops.hasVault && (
