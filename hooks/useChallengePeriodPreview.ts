@@ -32,10 +32,14 @@ import { type Address } from 'viem';
 import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import VaultRecoveryClaimABI from '@/lib/abis/VaultRecoveryClaim.json';
 
-// Mirror the contract constants
+// Mirror the contract constants exactly. Source of truth:
+//   contracts/VaultRecoveryClaim.sol
+//     CHALLENGE_PERIOD              = 7 days
+//     ACTIVE_VAULT_CHALLENGE_PERIOD = 14 days
+//     VAULT_ACTIVITY_WINDOW         = 30 days
 const CHALLENGE_PERIOD_SECS = 7 * 24 * 3600;          // 7 days
 const ACTIVE_VAULT_CHALLENGE_PERIOD_SECS = 14 * 24 * 3600; // 14 days
-const ACTIVITY_WINDOW_SECS = 90 * 24 * 3600;           // 90 days
+const ACTIVITY_WINDOW_SECS = 30 * 24 * 3600;           // 30 days (was incorrectly 90 days)
 
 export interface ChallengePeriodPreview {
   /** Effective challenge period in seconds */

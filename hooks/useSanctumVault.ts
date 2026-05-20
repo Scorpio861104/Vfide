@@ -48,7 +48,7 @@ import {
 } from 'wagmi';
 import { type Address, type Abi } from 'viem';
 import { SanctumVaultABI } from '@/lib/abis';
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -145,11 +145,17 @@ export function useSanctumVault() {
     query: { enabled },
   });
 
+  // Sanctum's getBalance(token) requires an explicit token address. We default
+  // to the VFIDE token (the primary asset Sanctum holds) so the dashboard has a
+  // sensible value to show; callers that need a different token should read it
+  // separately via the public client.
+  const vfideToken = CONTRACT_ADDRESSES.VFIDEToken as Address | undefined;
   const { data: vaultBalance } = useReadContract({
     address: sanctumAddress,
     abi: SanctumVaultABI,
     functionName: 'getBalance',
-    query: { enabled },
+    args: vfideToken ? [vfideToken] : undefined,
+    query: { enabled: enabled && !!vfideToken && vfideToken !== ZERO_ADDRESS },
   });
 
   const { data: approvalsRequired } = useReadContract({
@@ -326,19 +332,29 @@ export function useSanctumVault() {
   const { writeContractAsync, isPending: isWritePending } = useWriteContract();
 
   /**
-   * Donate VFIDE to the Sanctum vault. The depositor pays the gas; the vault
-   * tracks `totalReceived` and emits a Donation event. Above MIN_REWARDABLE_DEPOSIT
-   * the depositor earns ProofScore via the DONATION_REWARD parameter.
+   * Donate VFIDE (or another ERC-20 stablecoin held by Sanctum) to the vault.
+   * The depositor pays the gas; the vault tracks `totalReceived` per token and
+   * emits a Deposit event. Above MIN_REWARDABLE_DEPOSIT the depositor earns
+   * ProofScore via the DONATION_REWARD parameter (once per UTC day).
+   *
+   * IMPORTANT: The contract pulls the tokens via `safeTransferFrom`, so the
+   * caller MUST first call `approve(sanctumVault, amount)` on the token. If the
+   * `token` argument is omitted, we default to the canonical VFIDE token.
    */
   const deposit = useCallback(
-    async (amountWei: bigint) => {
+    async (amountWei: bigint, options?: { token?: Address; note?: string }) => {
       if (!sanctumAddress) throw new Error('SanctumVault address not configured');
       if (amountWei <= 0n) throw new Error('Deposit amount must be greater than zero');
+      const token = options?.token ?? (CONTRACT_ADDRESSES.VFIDEToken as Address | undefined);
+      if (!token || token === ZERO_ADDRESS) {
+        throw new Error('Sanctum deposit requires a token address; VFIDE token is not configured');
+      }
+      const note = options?.note ?? '';
       return writeContractAsync({
         address: sanctumAddress,
         abi: SanctumVaultABI,
         functionName: 'deposit',
-        args: [amountWei],
+        args: [token, amountWei, note],
       });
     },
     [sanctumAddress, writeContractAsync],

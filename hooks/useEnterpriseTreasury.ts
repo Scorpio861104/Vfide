@@ -185,6 +185,38 @@ export function useEnterpriseTreasury(extraTokens: readonly Address[] = []) {
 
   // ─── EcosystemVault — pool composition + flows ──────────────────────────
 
+  // Two of the EcosystemVault reads (`stablecoinReserves` and
+  // `totalMerchantBonusesPaid`) are public mappings keyed by token address —
+  // they REQUIRE a token argument. Previously they were in the batch below
+  // with no args, which always reverted on-chain (the dashboard silently
+  // showed 0). Fixed by resolving `preferredStablecoin()` first and threading
+  // it through both per-token reads. When no preferred stablecoin is set we
+  // disable both reads so we never query against the zero address.
+  const { data: preferredStablecoinRaw } = useReadContract({
+    address: ecosystemVaultAddress,
+    abi: EcosystemVaultABI,
+    functionName: 'preferredStablecoin',
+    query: { enabled: ecosystemVaultConfigured },
+  });
+  const preferredStablecoin = preferredStablecoinRaw as Address | undefined;
+  const hasPreferredStable =
+    !!preferredStablecoin && preferredStablecoin !== '0x0000000000000000000000000000000000000000';
+
+  const { data: stablecoinReservesRaw } = useReadContract({
+    address: ecosystemVaultAddress,
+    abi: EcosystemVaultABI,
+    functionName: 'stablecoinReserves',
+    args: hasPreferredStable ? [preferredStablecoin!] : undefined,
+    query: { enabled: ecosystemVaultConfigured && hasPreferredStable },
+  });
+  const { data: totalMerchantBonusesPaidRaw } = useReadContract({
+    address: ecosystemVaultAddress,
+    abi: EcosystemVaultABI,
+    functionName: 'totalMerchantBonusesPaid',
+    args: hasPreferredStable ? [preferredStablecoin!] : undefined,
+    query: { enabled: ecosystemVaultConfigured && hasPreferredStable },
+  });
+
   // Batch the 6 pool/flow reads via useReadContracts so they all fetch in
   // one network round-trip (Multicall). Skips entirely when EcosystemVault
   // isn't configured.
@@ -195,13 +227,11 @@ export function useEnterpriseTreasury(extraTokens: readonly Address[] = []) {
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'headhunterPool' as const },
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'merchantPool' as const },
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'operationsPool' as const },
-        { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'stablecoinReserves' as const },
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'pendingWithdrawTotal' as const },
         // Paid totals
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'totalCouncilPaid' as const },
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'totalExpensesPaid' as const },
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'totalHeadhunterPaid' as const },
-        { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'totalMerchantBonusesPaid' as const },
         // Top-level flow
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'totalReceived' as const },
         { address: ecosystemVaultAddress!, abi: EcosystemVaultABI, functionName: 'totalBurned' as const },
@@ -234,20 +264,24 @@ export function useEnterpriseTreasury(extraTokens: readonly Address[] = []) {
     headhunterPool: decodeBigint(1),
     merchantPool: decodeBigint(2),
     operationsPool: decodeBigint(3),
-    stablecoinReserves: decodeBigint(4),
-    pendingWithdrawTotal: decodeBigint(5),
+    // stablecoinReserves moved to its own per-token read (above) because it
+    // takes an `address token` arg. When preferredStablecoin is unset the
+    // raw read stays disabled and we surface 0n.
+    stablecoinReserves: (stablecoinReservesRaw as bigint | undefined) ?? 0n,
+    pendingWithdrawTotal: decodeBigint(4),
   };
 
   const paidTotals: PaidTotals = {
-    totalCouncilPaid: decodeBigint(6),
-    totalExpensesPaid: decodeBigint(7),
-    totalHeadhunterPaid: decodeBigint(8),
-    totalMerchantBonusesPaid: decodeBigint(9),
+    totalCouncilPaid: decodeBigint(5),
+    totalExpensesPaid: decodeBigint(6),
+    totalHeadhunterPaid: decodeBigint(7),
+    // totalMerchantBonusesPaid is also per-token (see above).
+    totalMerchantBonusesPaid: (totalMerchantBonusesPaidRaw as bigint | undefined) ?? 0n,
   };
 
   const ecosystemFlow: EcosystemFlow = {
-    totalReceived: decodeBigint(10),
-    totalBurned: decodeBigint(11),
+    totalReceived: decodeBigint(8),
+    totalBurned: decodeBigint(9),
   };
 
   // ─── VFIDEToken — totalSupply for ratio displays (e.g. "X% of supply") ──
