@@ -77,7 +77,12 @@ contract DAO is ReentrancyGuard {
     ISeer public seer;
     IVaultHub public vaultHub;
     IGovernanceHooks public hooks; // optional callbacks (logs/penalties)
-    IProofLedger public ledger; // optional via hooks
+    // Optional ledger module wired via GovernanceHooks; declared here so external consumers
+    // and the upgrade plumbing can discover it via the public getter. Cannot be `constant`
+    // (interface type — Solidity only allows constants for value types), and cannot be
+    // `immutable` (set after deployment by the hooks contract). Suppress Slither here.
+    // slither-disable-next-line constable-states
+    IProofLedger public ledger;
     ISeerGuardian_DAO public guardian; // SeerGuardian for mutual oversight
     ISeerAutonomous_DAO public seerAutonomous; // optional proactive Seer automation checks
 

@@ -165,6 +165,9 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         return (timestamp / 1 days) * 1 days;
     }
 
+    // slither-disable-start missing-zero-check
+    // _seer, _sanctumSink, _ecosystemSink validated by _validateModules() below;
+    // _burnSink is intentionally allowed to be address(0) so tokens are sent to address(0) (true burn).
     constructor(
         address _seer,
         address _sanctumSink,
@@ -172,7 +175,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         address _ecosystemSink,
         address _token
     ) {
-        // slither-disable-next-line missing-zero-check  // validated by _validateModules; _burnSink intentionally allows address(0)
         _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         if (_token == address(0)) {
             revert BURN_Zero();
@@ -185,6 +187,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         currentDayStart = _dayStart(block.timestamp);
         emit ModulesSet(_seer, _sanctumSink, _burnSink, _ecosystemSink);
     }
+    // slither-disable-end missing-zero-check
     
     /**
      * @notice Configure sustainability parameters

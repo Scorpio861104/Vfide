@@ -282,7 +282,8 @@ contract PayrollManager is ReentrancyGuard {
      * Add more funds to an existing stream
      */
     function topUp(uint256 streamId, uint256 amount) external nonReentrant {
-        // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; safeTransferFrom reverts atomically
+        // slither-disable-start reentrancy-no-eth
+        // function has nonReentrant guard; safeTransferFrom reverts atomically
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
@@ -293,6 +294,7 @@ contract PayrollManager is ReentrancyGuard {
         uint256 actualReceived = IERC20(s.token).balanceOf(address(this)) - balBefore;
         s.depositBalance += actualReceived;
         emit TopUp(streamId, actualReceived);
+        // slither-disable-end reentrancy-no-eth
     }
     
     /**
@@ -629,7 +631,8 @@ contract PayrollManager is ReentrancyGuard {
     ///         valid batch does not waste the entire transaction.
     ///
     ///         Bounded to 100 IDs per call to keep gas usage predictable.
-    // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; per-stream state updates are atomic
+    // slither-disable-start reentrancy-no-eth
+    // function has nonReentrant guard; per-stream state updates are atomic
     function claimExpiredStreamBatch(uint256[] calldata streamIds) external nonReentrant {
         require(streamIds.length <= 100, "PM: batch too large");
         for (uint256 i = 0; i < streamIds.length; i++) {
@@ -656,6 +659,7 @@ contract PayrollManager is ReentrancyGuard {
             emit StreamExpired(streamId, msg.sender, remaining);
         }
     }
+    // slither-disable-end reentrancy-no-eth
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              VIEW FUNCTIONS

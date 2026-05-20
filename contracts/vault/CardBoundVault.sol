@@ -1006,12 +1006,12 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Execute a signed transfer intent from this vault to another vault.
     /// @param intent Structured transfer intent signed by active wallet.
     /// @param signature ECDSA signature over the intent digest.
+    // slither-disable-start reentrancy-no-eth
     function executeVaultToVaultTransfer(TransferIntent calldata intent, bytes calldata signature)
         external
         nonReentrant
         whenNotPaused
     {
-        // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; intent flow is atomic
         _requireOperationalForOutboundTransfers();
         // GUARDIAN-WARN-1 FIX: warn-instead-of-revert. See executePayMerchant for full rationale.
         // Recovery operations remain gated; everyday transfers are not.
@@ -1068,16 +1068,17 @@ contract CardBoundVault is ReentrancyGuard {
         emit VaultTransferAuthorized(signer, intent.toVault, amount, intent.nonce, intent.walletEpoch);
         _logTransfer(intent.toVault, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Execute a signed merchant payment intent from this vault.
     /// @param intent Structured payment intent signed by active wallet.
     /// @param signature ECDSA signature over the pay intent digest.
+    // slither-disable-start reentrancy-no-eth
     function executePayMerchant(PayIntent calldata intent, bytes calldata signature)
         external
         nonReentrant
         whenNotPaused
     {
-        // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; intent flow is atomic
         _requireOperationalForOutboundTransfers();
         // GUARDIAN-WARN-1 FIX: Previously reverted with CBV_GuardianSetupRequired. That blocked
         // every merchant payment from new users until they had configured 2+ guardians with at
@@ -1129,6 +1130,7 @@ contract CardBoundVault is ReentrancyGuard {
         IERC20(intent.token).safeTransfer(intent.recipient, amount);
         _logPayment(intent.recipient, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Phase 3d Turn 3 — atomic escrow funding via signed intent.
     /// @dev Mirrors executePayMerchant's security pattern: nonce, walletEpoch, deadline, chainId,
@@ -1144,6 +1146,7 @@ contract CardBoundVault is ReentrancyGuard {
     ///
     /// Caller responsibility (CommerceEscrow): validate the merchant, create the escrow record,
     /// pass through this intent unchanged, and emit EscrowFunded once this returns.
+    // slither-disable-start reentrancy-no-eth
     function executeFundEscrow(EscrowFundIntent calldata intent, bytes calldata signature)
         external
         nonReentrant
@@ -1181,6 +1184,7 @@ contract CardBoundVault is ReentrancyGuard {
         spentToday += amount;
         IERC20(intent.token).safeTransfer(intent.escrowContract, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Execute a queued payment after the 7-day delay (admin only).
     function executeQueuedPayment(uint256 queueIndex)
@@ -1264,6 +1268,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Execute a previously queued large withdrawal after the delay period.
     /// @param queueIndex Index in the withdrawal queue.
+    // slither-disable-start reentrancy-no-eth
     function executeQueuedWithdrawal(uint256 queueIndex)
         external
         nonReentrant
@@ -1292,6 +1297,7 @@ contract CardBoundVault is ReentrancyGuard {
         emit WithdrawalExecuted(queueIndex, toVault, amount);
         _logTransfer(toVault, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Cancel a queued withdrawal. Callable by admin OR any guardian.
     /// @param queueIndex Index in the withdrawal queue.

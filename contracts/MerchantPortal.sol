@@ -792,12 +792,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * Signed-intent payment path: customer signs an intent and merchant/relayer submits it.
      * Avoids requiring standing ERC20 approvals from the customer vault to this portal.
      */
+    // slither-disable-start reentrancy-no-eth
     function payWithIntent(
         ICardBoundVaultPay.PayIntent calldata intent,
         bytes calldata signature,
         string calldata orderId
     ) external nonReentrant returns (uint256 netAmount) {
-        // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; cross-contract calls are to trusted vault/escrow modules
+        // function has nonReentrant guard; cross-contract calls are to trusted vault/escrow modules
         if (intent.merchantPortal != address(this)) revert MERCH_IntentInvalid();
         if (intent.merchant == address(0) || intent.token == address(0)) revert MERCH_IntentInvalid();
         if (intent.amount == 0) revert MERCH_IntentInvalid();
@@ -850,6 +851,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _rewardPaymentParticipants(customer, intent.merchant);
         _logEv(customer, "m_pay", intent.amount, orderId);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /**
      * Enable or disable automatic conversion for stable-pay merchants

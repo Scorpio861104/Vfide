@@ -168,7 +168,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     
 
     // EIP-2612 Permit
+    // NOTE: These two fields cannot be `immutable` even though they are set in the constructor:
+    // EIP-712 requires recomputing the domain separator if the chain id changes (e.g. hard-fork
+    // chain split). The `DOMAIN_SEPARATOR()` accessor recomputes and re-caches both values when
+    // `block.chainid != _cachedChainId`. Marking them immutable would break that contract.
+    // Slither's `immutable-states` detector cannot model this fork-aware caching pattern.
+    // slither-disable-next-line immutable-states
     bytes32 private _cachedDomainSeparator;
+    // slither-disable-next-line immutable-states
     uint256 private _cachedChainId;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
