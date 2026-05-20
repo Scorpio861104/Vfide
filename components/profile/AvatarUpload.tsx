@@ -13,6 +13,7 @@ import { Upload, Camera, X, Check, AlertCircle, Loader2, Image as ImageIcon } fr
 import NextImage from 'next/image';
 import { useAccount } from 'wagmi';
 import { apiClient } from '@/lib/api-client';
+import { toast } from '@/lib/toast';
 
 interface AvatarUploadProps {
   currentAvatar?: string;
@@ -348,11 +349,11 @@ export function AvatarUploadCompact({
 
     // Quick validation
     if (!ALLOWED_TYPES.includes(file.type)) {
-      alert('Please upload a valid image file');
+      toast.error('Please upload a valid image file');
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      alert('File must be less than 5MB');
+      toast.error('File must be less than 5MB');
       return;
     }
 
@@ -364,7 +365,7 @@ export function AvatarUploadCompact({
         onUploadComplete(response.avatarUrl);
       }
     } catch (_err) {
-      alert('Upload failed. Please try again.');
+      toast.error('Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
     }

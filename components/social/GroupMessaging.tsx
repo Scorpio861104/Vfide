@@ -20,6 +20,7 @@ import { encryptGroupMessage, formatAddress } from '@/lib/messageEncryption';
 import { UserDisplay } from '@/components/common/UserDisplay';
 import { addNotification } from './SocialNotifications';
 import { safeLocalStorage } from '@/lib/utils';
+import { toast } from '@/lib/toast';
 
 const KEY_DIR_ROUTE = '/api/security/keys';
 const GROUPS_ROUTE = '/api/groups';
@@ -328,13 +329,13 @@ export function GroupMessaging() {
 
     if (numericGroupId === null && process.env.NODE_ENV === 'production') {
       setEncryptionStatus('error');
-      alert('This group is not backend-verified. Please recreate the group to continue with secure messaging.');
+      toast.error('This group is not backend-verified. Please recreate the group to continue with secure messaging.');
       return;
     }
 
     if (!signMessageAsync) {
       setEncryptionStatus('error');
-      alert('Wallet signing is required for authenticated encrypted messages.');
+      toast.error('Wallet signing is required for authenticated encrypted messages.');
       return;
     }
 
@@ -343,7 +344,7 @@ export function GroupMessaging() {
 
     if (missingKeyMembers.length > 0) {
       setEncryptionStatus('error');
-      alert('Cannot send encrypted group message until all group members publish encryption keys.');
+      toast.error('Cannot send encrypted group message until all group members publish encryption keys.');
       return;
     }
 
@@ -355,7 +356,7 @@ export function GroupMessaging() {
 
     if (publicKeys.length === 0) {
       setEncryptionStatus('error');
-      alert('Group encryption keys are unavailable. Please try again.');
+      toast.error('Group encryption keys are unavailable. Please try again.');
       return;
     }
 
@@ -437,7 +438,7 @@ export function GroupMessaging() {
       setNewMessage('');
     } catch {
       setEncryptionStatus('error');
-      alert('Failed to encrypt group message. Please try again.');
+      toast.error('Failed to encrypt group message. Please try again.');
     }
   };
 
@@ -457,11 +458,11 @@ export function GroupMessaging() {
           );
 
           if (!response.ok) {
-            alert('Failed to leave group. Please try again.');
+            toast.error('Failed to leave group. Please try again.');
             return;
           }
         } catch {
-          alert('Failed to leave group. Please try again.');
+          toast.error('Failed to leave group. Please try again.');
           return;
         }
       }
@@ -720,12 +721,12 @@ export function GroupMessaging() {
                     createdGroup = data.group as Group;
                   }
                 } else if (process.env.NODE_ENV === 'production') {
-                  alert('Failed to create secure backend group. Please try again.');
+                  toast.error('Failed to create secure backend group. Please try again.');
                   return;
                 }
               } catch {
                 if (process.env.NODE_ENV === 'production') {
-                  alert('Failed to create secure backend group. Please try again.');
+                  toast.error('Failed to create secure backend group. Please try again.');
                   return;
                 }
                 // Fallback to local-only group on network/API failure in non-production.
@@ -769,7 +770,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
 
   const handleCreate = () => {
     if (!name.trim() || selectedFriends.length === 0) {
-      alert('Please enter a group name and select at least one member');
+      toast.error('Please enter a group name and select at least one member');
       return;
     }
 

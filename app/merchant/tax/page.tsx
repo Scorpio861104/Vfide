@@ -16,6 +16,7 @@ import {
   PowerOff,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export default function MerchantTaxPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!address) return;
@@ -87,7 +89,13 @@ export default function MerchantTaxPage() {
   }, [load]);
 
   const deleteRate = useCallback(async (id: number) => {
-    if (!confirm('Delete this tax rate? Past invoices that used it are unaffected.')) return;
+    setPendingDelete(id);
+  }, []);
+
+  const confirmDeleteRate = useCallback(async () => {
+    const id = pendingDelete;
+    if (id == null) return;
+    setPendingDelete(null);
     try {
       const response = await fetch(`/api/merchant/tax-rates?id=${id}`, { method: 'DELETE' });
       const data = await response.json().catch(() => ({}));
@@ -96,7 +104,7 @@ export default function MerchantTaxPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete tax rate');
     }
-  }, [load]);
+  }, [pendingDelete, load]);
 
   return (
     <>
@@ -181,6 +189,17 @@ export default function MerchantTaxPage() {
           onError={setError}
         />
       )}
+
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDeleteRate}
+        title="Delete tax rate?"
+        message="Past invoices that used this rate are unaffected. New checkouts will fall back to the default rate."
+        confirmText="Delete"
+        cancelText="Keep"
+        variant="danger"
+      />
 
       <Footer />
     </>

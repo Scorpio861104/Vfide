@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { History, TrendingUp, TrendingDown, Bell } from 'lucide-react';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 interface PriceAlert {
   id: string;
@@ -24,6 +25,7 @@ function loadAlerts(): PriceAlert[] {
 
 export function HistoryTab() {
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const refresh = useCallback(() => {
     // History shows all alerts ever created (both active and inactive)
@@ -37,9 +39,13 @@ export function HistoryTab() {
   }, [refresh]);
 
   function clearAll() {
-    if (!confirm('Clear all alert history?')) return;
+    setShowClearConfirm(true);
+  }
+
+  function confirmClearAll() {
     localStorage.removeItem(STORAGE_KEY);
     refresh();
+    setShowClearConfirm(false);
   }
 
   return (
@@ -85,6 +91,17 @@ export function HistoryTab() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={confirmClearAll}
+        title="Clear all alert history?"
+        message="This will remove every alert you've ever created. This cannot be undone."
+        confirmText="Clear all"
+        cancelText="Keep"
+        variant="danger"
+      />
     </div>
   );
 }

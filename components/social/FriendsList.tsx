@@ -21,6 +21,8 @@ import { safeLocalStorage } from '@/lib/utils';
 import { PresenceDot } from './PresenceIndicator';
 import { useBulkPresence } from '@/lib/presence';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { toast } from '@/lib/toast';
 
 interface FriendsListProps {
   onSelectFriend: (friend: Friend) => void;
@@ -36,6 +38,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   const [newFriendAlias, setNewFriendAlias] = useState('');
   const [filter, setFilter] = useState<'all' | 'favorites' | 'online'>('all');
   const [justAdded, setJustAdded] = useState<string | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<string | null>(null);
   const { playSuccess, playNotification, playError } = useTransactionSounds();
   
   // Get presence for all friends
@@ -72,14 +75,14 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
     // Validate address format
     if (!/^0x[a-fA-F0-9]{40}$/.test(newFriendAddress)) {
       playError();
-      alert('Invalid wallet address');
+      toast.error('Invalid wallet address');
       return;
     }
     
     // Check if already friends
     if (friends.some(f => f.address.toLowerCase() === newFriendAddress.toLowerCase())) {
       playError();
-      alert('Already in your friends list');
+      toast.error('Already in your friends list');
       return;
     }
     
@@ -100,10 +103,14 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
   };
 
   const handleRemoveFriend = (friendAddress: string) => {
-    if (confirm('Remove this friend?')) {
-      setFriends(friends.filter(f => f.address !== friendAddress));
-      playNotification();
-    }
+    setPendingRemoval(friendAddress);
+  };
+
+  const confirmRemoveFriend = () => {
+    if (!pendingRemoval) return;
+    setFriends(friends.filter(f => f.address !== pendingRemoval));
+    playNotification();
+    setPendingRemoval(null);
   };
 
   const handleToggleFavorite = (friendAddress: string) => {
@@ -425,6 +432,17 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
           )}
         </AnimatePresence>
       </div>
+
+      <ConfirmModal
+        isOpen={pendingRemoval !== null}
+        onClose={() => setPendingRemoval(null)}
+        onConfirm={confirmRemoveFriend}
+        title="Remove friend?"
+        message="They will no longer appear in your friends list. You can add them again later."
+        confirmText="Remove"
+        cancelText="Keep"
+        variant="danger"
+      />
     </div>
   );
 }

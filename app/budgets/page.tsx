@@ -9,12 +9,14 @@ import { toast } from '@/lib/toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, PlusCircle, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 export default function BudgetsPage() {
   const { address } = useAccount();
   const { budgets, spendingByCategory, setBudget, removeBudget, loading: _loading } = useFinancialIntelligence(address);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Budget | null>(null);
   const [newBudget, setNewBudget] = useState({
     category: '',
     limit: '',
@@ -47,10 +49,15 @@ export default function BudgetsPage() {
   }, []);
 
   const handleDelete = useCallback((budget: Budget) => {
-    if (typeof window !== 'undefined' && !window.confirm(`Delete budget for ${budget.category}?`)) return;
-    removeBudget(budget.id);
+    setPendingDelete(budget);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!pendingDelete) return;
+    removeBudget(pendingDelete.id);
     toast.success('Budget deleted');
-  }, [removeBudget]);
+    setPendingDelete(null);
+  }, [pendingDelete, removeBudget]);
 
   const getSpentAmount = (category: string) => {
     const cat = spendingByCategory.find(c => c.name === category);
@@ -231,6 +238,17 @@ export default function BudgetsPage() {
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+        title="Delete budget?"
+        message={pendingDelete ? `Delete budget for ${pendingDelete.category}? This action cannot be undone.` : ''}
+        confirmText="Delete"
+        cancelText="Keep"
+        variant="danger"
+      />
 
       <Footer />
     </div>

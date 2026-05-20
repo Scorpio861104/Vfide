@@ -1151,10 +1151,19 @@ contract TerminalRegistry is ReentrancyGuard {
         if (v < 27) v += 27;
         if (v != 27 && v != 28) return address(0);
 
+        // EIP-2 — reject high-s signatures (malleability protection).
+        // secp256k1n / 2 = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+            return address(0);
+        }
+
         bytes32 ethSignedDigest = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n32", digest)
         );
-        return ecrecover(ethSignedDigest, v, r, s);
+        address recovered = ecrecover(ethSignedDigest, v, r, s);
+        // Defense-in-depth: ecrecover returns address(0) on invalid sig; reject explicitly.
+        require(recovered != address(0), "TR: invalid signature");
+        return recovered;
     }
 }
 

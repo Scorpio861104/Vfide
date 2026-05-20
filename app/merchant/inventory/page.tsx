@@ -17,6 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ export default function MerchantInventoryPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | ProductStatus>('active');
   const [showCreate, setShowCreate] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!address) return;
@@ -115,7 +117,13 @@ export default function MerchantInventoryPage() {
   }, [load]);
 
   const deleteProduct = useCallback(async (id: number) => {
-    if (!confirm('Delete this product? This cannot be undone.')) return;
+    setPendingDelete(id);
+  }, []);
+
+  const confirmDeleteProduct = useCallback(async () => {
+    const id = pendingDelete;
+    if (id == null) return;
+    setPendingDelete(null);
     try {
       const response = await fetch(`/api/merchant/products?id=${id}`, { method: 'DELETE' });
       const data = await response.json().catch(() => ({}));
@@ -124,7 +132,7 @@ export default function MerchantInventoryPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete product');
     }
-  }, [load]);
+  }, [pendingDelete, load]);
 
   return (
     <>
@@ -239,6 +247,17 @@ export default function MerchantInventoryPage() {
           onError={setError}
         />
       )}
+
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={confirmDeleteProduct}
+        title="Delete product?"
+        message="This cannot be undone. Customers with the product link will get an error."
+        confirmText="Delete"
+        cancelText="Keep"
+        variant="danger"
+      />
 
       <Footer />
     </>

@@ -126,6 +126,63 @@ const envSchema = z.object({
   NEXT_PUBLIC_BUILD_ID: z.string().optional(),
   NEXT_PUBLIC_BUILD_TIME: z.string().optional(),
   NEXT_PUBLIC_APP_VERSION: z.string().default('1.0.0'),
+
+  // ── Multi-chain support ─────────────────────────────────────────────
+  // List of supported chain IDs, comma-separated (e.g. "8453,137,324").
+  NEXT_PUBLIC_SUPPORTED_CHAIN_IDS: z.string().optional(),
+  NEXT_PUBLIC_DEFAULT_CHAIN_ID: z.coerce.number().int().positive().optional(),
+
+  // Polygon mainnet (137)
+  NEXT_PUBLIC_POLYGON_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_POLYGON_VAULT_HUB_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_POLYGON_SEER_ADDRESS: optionalEthAddress,
+
+  // Polygon Amoy testnet (80002)
+  NEXT_PUBLIC_POLYGON_AMOY_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_POLYGON_AMOY_VAULT_HUB_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_POLYGON_AMOY_SEER_ADDRESS: optionalEthAddress,
+
+  // zkSync Sepolia testnet (300)
+  NEXT_PUBLIC_ZKSYNC_SEPOLIA_VFIDE_TOKEN_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_ZKSYNC_SEPOLIA_VAULT_HUB_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_ZKSYNC_SEPOLIA_SEER_ADDRESS: optionalEthAddress,
+
+  // ── On-ramp providers (publishable / sandbox keys only) ─────────────
+  NEXT_PUBLIC_TRANSAK_KEY: z.string().optional(),
+  NEXT_PUBLIC_MOONPAY_KEY: z.string().optional(),
+  NEXT_PUBLIC_RAMP_KEY: z.string().optional(),
+
+  // ── Off-ramp / payout token addresses (per active chain) ────────────
+  // Used by lib/payoutTokens.ts to decide which tokens the merchant can
+  // cash out into. Unset = token excluded from picker.
+  NEXT_PUBLIC_USDC_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_USDT_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_DAI_ADDRESS: optionalEthAddress,
+
+  // ── Additional contract addresses referenced by feature pages ───────
+  NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_SEER_VIEW_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_SEER_SOCIAL_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_FAUCET_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_TERM_LOAN_ADDRESS: optionalEthAddress,
+  NEXT_PUBLIC_FLASH_LOAN_ADDRESS: optionalEthAddress,
+
+  // ── Feature flags ───────────────────────────────────────────────────
+  NEXT_PUBLIC_FUTURE_FEATURES_ENABLED: z.string().optional(),
+  NEXT_PUBLIC_DEMO_MODE: z.string().optional(),
+  // When set to 'true', the app skips DATABASE_URL/JWT_SECRET requirements
+  // and runs in a static/preview mode (no merchant-server features).
+  NEXT_PUBLIC_FRONTEND_ONLY: z.string().optional(),
+
+  // ── Realtime / WebSocket ────────────────────────────────────────────
+  // Legacy alias for NEXT_PUBLIC_WS_URL — accepted for backwards compat.
+  NEXT_PUBLIC_WEBSOCKET_URL: z.string().optional(),
+
+  // ── Avatar / media host ─────────────────────────────────────────────
+  // Used by next/image config to allow remote avatars from a CDN.
+  NEXT_PUBLIC_VFIDE_AVATAR_HOST: z.string().optional(),
 });
 
 export type Environment = z.infer<typeof envSchema>;
@@ -241,6 +298,48 @@ function parseEnv(): Environment {
     NEXT_PUBLIC_BUILD_ID: process.env.NEXT_PUBLIC_BUILD_ID,
     NEXT_PUBLIC_BUILD_TIME: process.env.NEXT_PUBLIC_BUILD_TIME,
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION,
+
+    // Multi-chain support
+    NEXT_PUBLIC_SUPPORTED_CHAIN_IDS: process.env.NEXT_PUBLIC_SUPPORTED_CHAIN_IDS,
+    NEXT_PUBLIC_DEFAULT_CHAIN_ID: process.env.NEXT_PUBLIC_DEFAULT_CHAIN_ID,
+    NEXT_PUBLIC_POLYGON_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_VFIDE_TOKEN_ADDRESS,
+    NEXT_PUBLIC_POLYGON_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_VAULT_HUB_ADDRESS,
+    NEXT_PUBLIC_POLYGON_SEER_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_SEER_ADDRESS,
+    NEXT_PUBLIC_POLYGON_AMOY_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_AMOY_VFIDE_TOKEN_ADDRESS,
+    NEXT_PUBLIC_POLYGON_AMOY_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_AMOY_VAULT_HUB_ADDRESS,
+    NEXT_PUBLIC_POLYGON_AMOY_SEER_ADDRESS: process.env.NEXT_PUBLIC_POLYGON_AMOY_SEER_ADDRESS,
+    NEXT_PUBLIC_ZKSYNC_SEPOLIA_VFIDE_TOKEN_ADDRESS: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_VFIDE_TOKEN_ADDRESS,
+    NEXT_PUBLIC_ZKSYNC_SEPOLIA_VAULT_HUB_ADDRESS: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_VAULT_HUB_ADDRESS,
+    NEXT_PUBLIC_ZKSYNC_SEPOLIA_SEER_ADDRESS: process.env.NEXT_PUBLIC_ZKSYNC_SEPOLIA_SEER_ADDRESS,
+
+    // On-ramp providers
+    NEXT_PUBLIC_TRANSAK_KEY: process.env.NEXT_PUBLIC_TRANSAK_KEY,
+    NEXT_PUBLIC_MOONPAY_KEY: process.env.NEXT_PUBLIC_MOONPAY_KEY,
+    NEXT_PUBLIC_RAMP_KEY: process.env.NEXT_PUBLIC_RAMP_KEY,
+
+    // Off-ramp / payout tokens
+    NEXT_PUBLIC_USDC_ADDRESS: process.env.NEXT_PUBLIC_USDC_ADDRESS,
+    NEXT_PUBLIC_USDT_ADDRESS: process.env.NEXT_PUBLIC_USDT_ADDRESS,
+    NEXT_PUBLIC_DAI_ADDRESS: process.env.NEXT_PUBLIC_DAI_ADDRESS,
+
+    // Additional contract addresses
+    NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS: process.env.NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS,
+    NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS: process.env.NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS,
+    NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS: process.env.NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS,
+    NEXT_PUBLIC_SEER_VIEW_ADDRESS: process.env.NEXT_PUBLIC_SEER_VIEW_ADDRESS,
+    NEXT_PUBLIC_SEER_SOCIAL_ADDRESS: process.env.NEXT_PUBLIC_SEER_SOCIAL_ADDRESS,
+    NEXT_PUBLIC_FAUCET_ADDRESS: process.env.NEXT_PUBLIC_FAUCET_ADDRESS,
+    NEXT_PUBLIC_TERM_LOAN_ADDRESS: process.env.NEXT_PUBLIC_TERM_LOAN_ADDRESS,
+    NEXT_PUBLIC_FLASH_LOAN_ADDRESS: process.env.NEXT_PUBLIC_FLASH_LOAN_ADDRESS,
+
+    // Feature flags
+    NEXT_PUBLIC_FUTURE_FEATURES_ENABLED: process.env.NEXT_PUBLIC_FUTURE_FEATURES_ENABLED,
+    NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
+    NEXT_PUBLIC_FRONTEND_ONLY: process.env.NEXT_PUBLIC_FRONTEND_ONLY,
+
+    // Realtime / Avatar
+    NEXT_PUBLIC_WEBSOCKET_URL: process.env.NEXT_PUBLIC_WEBSOCKET_URL,
+    NEXT_PUBLIC_VFIDE_AVATAR_HOST: process.env.NEXT_PUBLIC_VFIDE_AVATAR_HOST,
   };
 
   const result = envSchema.safeParse(raw);

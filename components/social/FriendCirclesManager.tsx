@@ -18,6 +18,7 @@ import { FriendCircle, CircleMember, DEFAULT_CIRCLES } from '@/types/friendCircl
 import { Friend } from '@/types/messaging';
 import { STORAGE_KEYS, formatAddress } from '@/lib/messageEncryption';
 import { safeLocalStorage } from '@/lib/utils';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 interface FriendCirclesManagerProps {
   friends: Friend[];
@@ -46,6 +47,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
   const [circleColor, setCircleColor] = useState('#00F0FF');
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [memberNicknames, setMemberNicknames] = useState<Record<string, string>>({});
+  const [pendingDeleteCircle, setPendingDeleteCircle] = useState<string | null>(null);
 
   // Load circles and members
   useEffect(() => {
@@ -156,13 +158,18 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
   };
 
   const handleDeleteCircle = (circleId: string) => {
-    if (!confirm('Delete this circle? Members will not be unfriended.')) return;
-    
+    setPendingDeleteCircle(circleId);
+  };
+
+  const confirmDeleteCircle = () => {
+    const circleId = pendingDeleteCircle;
+    if (!circleId) return;
     setCircles(circles.filter(c => c.id !== circleId));
     setCircleMembers(circleMembers.filter(m => m.circleId !== circleId));
     if (selectedCircle?.id === circleId) {
       setSelectedCircle(null);
     }
+    setPendingDeleteCircle(null);
   };
 
   const getCircleMembers = (circleId: string) => {
@@ -594,6 +601,17 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={pendingDeleteCircle !== null}
+        onClose={() => setPendingDeleteCircle(null)}
+        onConfirm={confirmDeleteCircle}
+        title="Delete this circle?"
+        message="Members will not be unfriended — they just won't be in this circle anymore."
+        confirmText="Delete"
+        cancelText="Keep"
+        variant="danger"
+      />
     </div>
   );
 }
