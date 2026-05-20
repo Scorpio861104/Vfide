@@ -32,7 +32,10 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
 
   // Core contract addresses
   { name: 'NEXT_PUBLIC_VFIDE_TOKEN_ADDRESS', required: false, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+  // StablecoinRegistry is deferred for V1 mainnet (see contracts/PRODUCTION_SET.md
+  // 2026-05-16). API routes gracefully degrade when this is unset; do NOT require
+  // it in production. Frontend ABI + env var key retained for forward compatibility.
+  { name: 'NEXT_PUBLIC_STABLECOIN_REGISTRY_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_VAULT_HUB_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_VAULT_IMPLEMENTATION', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_DAO_ADDRESS', required: false, category: 'blockchain', production: true },
@@ -41,13 +44,37 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
-  { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
+  // SubscriptionManager is in contracts/future/ — NOT deployed for V1 mainnet.
+  // Frontend has graceful-degrade behavior. Do not require in production.
+  { name: 'NEXT_PUBLIC_SUBSCRIPTION_MANAGER_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_DEV_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_ECO_TREASURY_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_ESCROW_MANAGER_ADDRESS', required: false, category: 'blockchain' },
-  { name: 'NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_FEE_DISTRIBUTOR_ADDRESS', required: false, category: 'blockchain', production: true },
+
+  // 2026-05-20 mainnet-readiness sweep: every contract referenced by lib/contracts.ts
+  // that participates in the V1 production flow MUST be `production: true`.
+  // Without this, NODE_ENV=production silently falls back to undefined for these
+  // addresses, causing client-side reads to return zero/empty and breaking core flows.
+  { name: 'NEXT_PUBLIC_BURN_ROUTER_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_DAO_TIMELOCK_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_FRAUD_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_GOVERNANCE_HOOKS_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_FLASH_LOAN_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_TERM_LOAN_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS', required: false, category: 'blockchain', production: true },
 
 
   // WalletConnect (optional but recommended)

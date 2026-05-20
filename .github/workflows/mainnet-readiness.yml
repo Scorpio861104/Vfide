@@ -1,0 +1,33 @@
+name: Mainnet Readiness
+
+on:
+  push:
+    branches: [main, "release/**"]
+  pull_request:
+    branches: [main, "release/**"]
+  workflow_dispatch: {}
+
+# This workflow is the canonical hard gate that the codebase still satisfies
+# every constraint published in the VFIDE_Complete_Manual_v1_0 PDF.
+# It is intentionally dependency-free (no `npm ci`) so it stays fast (<30s)
+# and has no flaky network dependencies.
+
+jobs:
+  static-readiness:
+    name: Static mainnet-readiness sweep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Manual ↔ code constant parity
+        run: node scripts/verify-manual-parity.cjs
+
+      - name: Full readiness sweep
+        run: node scripts/mainnet-readiness.cjs
