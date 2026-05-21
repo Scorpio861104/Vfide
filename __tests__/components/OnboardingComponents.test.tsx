@@ -17,7 +17,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   ChevronRight: () => <span data-testid="chevron-right" />,
   ChevronLeft: () => <span data-testid="chevron-left" />,
   Check: () => <span data-testid="check-icon" />,
@@ -30,7 +31,22 @@ jest.mock('lucide-react', () => ({
   Users: () => <span data-testid="users-icon" />,
   Award: () => <span data-testid="award-icon" />,
   Info: () => <span data-testid="info-icon" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test Setup Wizard pattern
 describe('SetupWizard Pattern', () => {

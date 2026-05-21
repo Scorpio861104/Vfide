@@ -32,14 +32,30 @@ jest.mock('wagmi', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   ExternalLink: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'external-link' }),
   Copy: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'copy-icon' }),
   Check: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'check-icon' }),
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 import { EtherscanLink, ContractLink, getExplorerUrl, getExplorerLink } from '@/components/ui/EtherscanLink'
 

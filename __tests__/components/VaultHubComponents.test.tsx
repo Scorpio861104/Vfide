@@ -16,7 +16,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Vault: () => <span data-testid="vault-icon" />,
   Lock: () => <span data-testid="lock-icon" />,
   Unlock: () => <span data-testid="unlock-icon" />,
@@ -28,7 +29,22 @@ jest.mock('lucide-react', () => ({
   ArrowDownLeft: () => <span data-testid="arrow-down-left" />,
   Plus: () => <span data-testid="plus-icon" />,
   AlertTriangle: () => <span data-testid="alert-triangle" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test VaultDashboard pattern
 describe('VaultDashboard Pattern', () => {

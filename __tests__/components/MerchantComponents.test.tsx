@@ -16,7 +16,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Store: () => <span data-testid="store-icon" />,
   DollarSign: () => <span data-testid="dollar-icon" />,
   TrendingUp: () => <span data-testid="trending-up" />,
@@ -32,7 +33,22 @@ jest.mock('lucide-react', () => ({
   Users: () => <span data-testid="users-icon" />,
   ExternalLink: () => <span data-testid="external-link" />,
   Download: () => <span data-testid="download-icon" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test Merchant Dashboard pattern
 describe('MerchantDashboard Pattern', () => {

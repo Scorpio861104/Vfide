@@ -16,7 +16,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Coins: () => <span data-testid="coins-icon" />,
   Send: () => <span data-testid="send-icon" />,
   ArrowDownLeft: () => <span data-testid="receive-icon" />,
@@ -29,7 +30,22 @@ jest.mock('lucide-react', () => ({
   Unlock: () => <span data-testid="unlock-icon" />,
   TrendingUp: () => <span data-testid="trending-up" />,
   Percent: () => <span data-testid="percent-icon" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test Token Balance Display pattern
 describe('TokenBalance Pattern', () => {

@@ -16,7 +16,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Shield: () => <span data-testid="shield-icon" />,
   ShieldAlert: () => <span data-testid="shield-alert" />,
   ShieldCheck: () => <span data-testid="shield-check" />,
@@ -34,7 +35,22 @@ jest.mock('lucide-react', () => ({
   Clock: () => <span data-testid="clock-icon" />,
   Activity: () => <span data-testid="activity-icon" />,
   Power: () => <span data-testid="power-icon" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test Security Panel pattern
 describe('SecurityPanel Pattern', () => {

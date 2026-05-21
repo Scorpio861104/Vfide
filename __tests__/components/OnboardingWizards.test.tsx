@@ -68,7 +68,8 @@ jest.mock('@/lib/testnet', () => ({
 }))
 
 // Mock lucide-react icons
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Wallet: () => <span>WalletIcon</span>,
   Globe: () => <span>GlobeIcon</span>,
   Droplets: () => <span>DropletsIcon</span>,
@@ -98,7 +99,22 @@ jest.mock('lucide-react', () => ({
   Lock: () => <span>LockIcon</span>,
   FileText: () => <span>FileTextIcon</span>,
   RefreshCw: () => <span>RefreshIcon</span>,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Mock localStorage
 const localStorageMock = {

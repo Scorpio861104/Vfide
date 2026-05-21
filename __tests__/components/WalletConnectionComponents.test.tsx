@@ -45,7 +45,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Wallet: () => <span data-testid="wallet-icon" />,
   LogOut: () => <span data-testid="logout-icon" />,
   ChevronDown: () => <span data-testid="chevron-down" />,
@@ -56,7 +57,22 @@ jest.mock('lucide-react', () => ({
   RefreshCw: () => <span data-testid="refresh-icon" />,
   Droplets: () => <span data-testid="droplets-icon" />,
   Link2: () => <span data-testid="link2-icon" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test WalletConnectButton pattern
 describe('WalletConnectButton Pattern', () => {

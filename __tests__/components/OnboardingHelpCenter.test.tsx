@@ -18,7 +18,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   HelpCircle: () => <span data-testid="help-icon">Help</span>,
   X: () => <span>X</span>,
   Book: () => <span>Book</span>,
@@ -34,7 +35,22 @@ jest.mock('lucide-react', () => ({
   Users: () => <span>Users</span>,
   ArrowRight: () => <span>ArrowRight</span>,
   ChevronLeft: () => <span>ChevronLeft</span>,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 jest.mock('@/lib/contracts', () => ({
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),

@@ -23,7 +23,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react icons
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   HelpCircle: () => <span data-testid="icon-help-circle">HelpCircle</span>,
   X: () => <span data-testid="icon-x">X</span>,
   Book: () => <span data-testid="icon-book">Book</span>,
@@ -35,7 +36,22 @@ jest.mock('lucide-react', () => ({
   ChevronRight: () => <span data-testid="icon-chevron-right">ChevronRight</span>,
   Globe: () => <span data-testid="icon-globe">Globe</span>,
   Droplets: () => <span data-testid="icon-droplets">Droplets</span>,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 describe('HelpCenter', () => {
   beforeEach(() => {

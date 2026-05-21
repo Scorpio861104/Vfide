@@ -15,7 +15,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   TrendingUp: () => <span data-testid="trending-up" />,
   TrendingDown: () => <span data-testid="trending-down" />,
   ArrowUp: () => <span data-testid="arrow-up" />,
@@ -30,7 +31,22 @@ jest.mock('lucide-react', () => ({
   Clock: () => <span data-testid="clock-icon" />,
   RefreshCw: () => <span data-testid="refresh-icon" />,
   Info: () => <span data-testid="info-icon" />,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Test StatCard pattern
 describe('StatCard Pattern', () => {

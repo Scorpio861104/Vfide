@@ -3,7 +3,8 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   CheckCircle2: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'check-icon' }),
   XCircle: ({ className }: { className?: string }) => 
@@ -11,7 +12,22 @@ jest.mock('lucide-react', () => ({
   AlertCircle: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'info-icon' }),
   X: () => React.createElement('svg', { 'data-testid': 'close-icon' }),
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Mock framer-motion
 jest.mock('framer-motion', () => ({

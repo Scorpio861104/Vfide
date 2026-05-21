@@ -44,7 +44,8 @@ jest.mock('@/lib/testnet', () => ({
   },
 }))
 
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Droplets: ({ size, className }: { size?: number; className?: string }) => (
     <span data-testid="droplets-icon" className={className} data-size={size} />
   ),
@@ -57,7 +58,22 @@ jest.mock('lucide-react', () => ({
   Check: ({ size, className }: { size?: number; className?: string }) => (
     <span data-testid="check-icon" className={className} data-size={size} />
   ),
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 import { useAccount, useBalance } from 'wagmi'
 import { FaucetButton } from '@/components/wallet/FaucetButton'

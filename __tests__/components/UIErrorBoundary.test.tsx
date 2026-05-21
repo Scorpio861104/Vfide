@@ -16,13 +16,29 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide icons
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   AlertCircle: () => <span>AlertIcon</span>,
   RefreshCw: () => <span>RefreshIcon</span>,
   Home: () => <span>HomeIcon</span>,
   ChevronDown: () => <span>ChevronDownIcon</span>,
   Copy: () => <span>CopyIcon</span>,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Import after mocking
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'

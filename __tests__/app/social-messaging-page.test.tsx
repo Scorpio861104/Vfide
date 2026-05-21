@@ -145,10 +145,26 @@ jest.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
-jest.mock('lucide-react', () => {
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = {
   const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
   return new Proxy({}, { get: () => Icon });
-});
+};
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})());
 
 describe('Social messaging page pathways', () => {
   beforeEach(() => {

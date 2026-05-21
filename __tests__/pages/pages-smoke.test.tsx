@@ -127,7 +127,8 @@ jest.mock('framer-motion', () => ({
 }))
 
 // Mock lucide-react
-jest.mock('lucide-react', () => {
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = {
   const MockIcon = ({ className, 'data-testid': testId }: { className?: string; 'data-testid'?: string }) =>
     React.createElement('svg', { className, 'data-testid': testId })
   
@@ -139,7 +140,22 @@ jest.mock('lucide-react', () => {
       return MockIcon
     }
   })
-})
+};
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 // Simple page component mockups for smoke testing
 const DashboardPage = () => (
