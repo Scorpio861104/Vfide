@@ -11,30 +11,41 @@ import re
 from pathlib import Path
 
 SENTINELS = {
-    "contracts": "// CANONICAL_CONTRACTS_MOCK_V2",
-    "future":    "// CANONICAL_FUTURE_CONTRACTS_MOCK_V2",
+    "contracts": "// CANONICAL_CONTRACTS_MOCK_V4",
+    "future":    "// CANONICAL_FUTURE_CONTRACTS_MOCK_V4",
 }
 
 CANONICAL_KEYS_CONTRACTS = [
-    ("CONTRACT_ADDRESSES",          "{}"),
+    ("CONTRACT_ADDRESSES",          "{ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' }"),
     ("CONTRACTS",                   "{}"),
-    ("getContractAddresses",        "jest.fn(() => ({}))"),
+    ("getContractAddresses",        "jest.fn(() => ({ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' }))"),
     ("isConfiguredContractAddress", "jest.fn((addr) => typeof addr === 'string' && /^0x[0-9a-fA-F]{40}$/.test(addr) && addr !== '0x0000000000000000000000000000000000000000')"),
     ("validateContractAddress",     "jest.fn((addr) => addr)"),
     ("ZERO_ADDRESS",                "'0x0000000000000000000000000000000000000000'"),
     ("CURRENT_CHAIN_ID",            "84532"),
 ]
 CANONICAL_KEYS_FUTURE = [
-    ("getFutureContractAddress",    "jest.fn(() => '0x0000000000000000000000000000000000000000')"),
-    ("getFutureContractAddresses",  "jest.fn(() => ({}))"),
-    ("isConfiguredFutureContract",  "jest.fn(() => false)"),
+    ("getFutureContractAddress",    "jest.fn(() => '0x2222222222222222222222222222222222222201')"),
+    ("getFutureContractAddresses",  "jest.fn(() => ({ CardBoundVault: '0x2222222222222222222222222222222222222202', BadgeNFT: '0x2222222222222222222222222222222222222203', BadgeManager: '0x2222222222222222222222222222222222222204' }))"),
+    ("isConfiguredFutureContract",  "jest.fn(() => true)"),
     ("isFutureFeaturesEnabled",     "jest.fn(() => true)"),
-    ("isFutureContractDeployed",    "jest.fn(() => false)"),
-    ("FUTURE_CONTRACT_ADDRESSES",   "{}"),
+    ("isFutureContractDeployed",    "jest.fn(() => true)"),
+    ("FUTURE_CONTRACT_ADDRESSES",   "{ CardBoundVault: '0x2222222222222222222222222222222222222202', BadgeNFT: '0x2222222222222222222222222222222222222203', BadgeManager: '0x2222222222222222222222222222222222222204' }"),
 ]
 
 PRESERVE_CONTRACTS = {"CONTRACT_ADDRESSES", "CONTRACTS", "getContractAddresses", "isConfiguredContractAddress", "validateContractAddress"}
 PRESERVE_FUTURE = {"getFutureContractAddress", "getFutureContractAddresses", "isConfiguredFutureContract", "isFutureFeaturesEnabled", "isFutureContractDeployed"}
+
+# Values considered "trivially empty" — overwrite with canonical defaults:
+EMPTY_VALUES = {
+    "{}",
+    "() => ({})",
+    "jest.fn(() => ({}))",
+    "jest.fn(() => null)",
+    "jest.fn(() => undefined)",
+    "jest.fn(() => false)",
+    "jest.fn(() => '0x0000000000000000000000000000000000000000')",
+}
 
 MODULES = [
     ("@/lib/contracts",                        "contracts"),
@@ -250,6 +261,9 @@ def build_canonical(module_path: str, kind: str, preserved: dict[str, str]) -> s
     used = set()
     for k, default in keys:
         v = preserved.get(k) if k in preserve_set else None
+        # Reject trivially empty values — fall back to canonical default
+        if v is not None and v.strip() in EMPTY_VALUES:
+            v = None
         if not v:
             v = default
         lines.append(f"  {k}: {v},")
