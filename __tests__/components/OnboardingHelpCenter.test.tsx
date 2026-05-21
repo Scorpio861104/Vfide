@@ -5,20 +5,67 @@ import React from 'react'
 const mockIsCardBoundVaultMode = jest.fn(() => false)
 
 // Mock framer-motion
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, className, style, onClick, ...props }: any) => (
-      <div className={className} style={style} onClick={onClick} {...props}>{children}</div>
-    ),
-    button: ({ children, className, onClick, ...props }: any) => (
-      <button className={className} onClick={onClick} {...props}>{children}</button>
-    ),
-  },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
-}))
+jest.mock('framer-motion', () => {
+  /* FRAMER_MOTION_MOCK_V1 */
+  const React = require('react');
+  // Reusable component that strips motion-only props and renders the underlying tag.
+  const __MOTION_PROPS = new Set([
+    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
+    'whileTap', 'whileFocus', 'whileDrag', 'whileInView', 'drag',
+    'dragConstraints', 'dragElastic', 'dragMomentum', 'dragTransition',
+    'layout', 'layoutId', 'layoutDependency', 'layoutScroll',
+    'onAnimationStart', 'onAnimationComplete', 'onUpdate', 'onPan',
+    'onPanStart', 'onPanEnd', 'onTap', 'onTapStart', 'onTapCancel',
+    'onHoverStart', 'onHoverEnd', 'onDrag', 'onDragStart', 'onDragEnd',
+    'onDirectionLock', 'onViewportEnter', 'onViewportLeave',
+    'viewport', 'custom', 'transformTemplate', 'inherit',
+  ]);
+  const __makeMotion = (tag) => React.forwardRef((props, ref) => {
+    const sanitized = {};
+    for (const k of Object.keys(props || {})) {
+      if (!__MOTION_PROPS.has(k)) sanitized[k] = props[k];
+    }
+    return React.createElement(tag, { ...sanitized, ref });
+  });
+  const motion = new Proxy({}, {
+    get: (t, prop) => {
+      if (typeof prop !== 'string') return undefined;
+      if (!t[prop]) t[prop] = __makeMotion(prop === 'custom' ? 'div' : prop);
+      return t[prop];
+    },
+  });
+  return {
+    motion,
+    AnimatePresence: ({ children }) => children,
+    LayoutGroup: ({ children }) => children,
+    LazyMotion: ({ children }) => children,
+    MotionConfig: ({ children }) => children,
+    Reorder: { Group: ({ children }) => children, Item: ({ children }) => children },
+    domAnimation: {},
+    domMax: {},
+    useAnimation: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
+    useAnimationControls: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
+    useScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollX: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollXProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
+    useMotionValue: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useTransform: (v) => ({ get: () => 0, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useSpring: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useInView: () => true,
+    useReducedMotion: () => false,
+    useDragControls: () => ({ start: jest.fn() }),
+    usePresence: () => [true, jest.fn()],
+    useIsPresent: () => true,
+    useMotionTemplate: () => ({ get: () => '', set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useViewportScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
+    useCycle: (...args) => [args[0], jest.fn()],
+    animate: jest.fn(),
+    stagger: jest.fn(() => 0),
+    transform: jest.fn((v) => v),
+  };
+});
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   HelpCircle: () => <span data-testid="help-icon">Help</span>,
   X: () => <span>X</span>,
   Book: () => <span>Book</span>,
@@ -34,26 +81,37 @@ jest.mock('lucide-react', () => ({
   Users: () => <span>Users</span>,
   ArrowRight: () => <span>ArrowRight</span>,
   ChevronLeft: () => <span>ChevronLeft</span>,
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 jest.mock('@/lib/contracts', () => ({
-  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-  getContractConfigurationError: (name: string) =>
-    new Error(`[VFIDE] ${name} contract not configured.`),
+  // CANONICAL_CONTRACTS_MOCK_V4
+  CONTRACT_ADDRESSES: { VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' },
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' })),
+  isConfiguredContractAddress: (_address?: string | null) => true,
+  validateContractAddress: jest.fn((addr: any) => addr),
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  CONTRACT_ADDRESSES: {},
+  CURRENT_CHAIN_ID: 84532,
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  getContractConfigurationError: (_name: string) => null,
 }))
 
-jest.mock('@/components/onboarding/OnboardingManager', () => ({
-  WIZARD_ENABLED_KEY: 'vfide_wizard_enabled',
-  TOUR_COMPLETED_KEY: 'vfide_tour_completed',
-  BEGINNER_COMPLETED_KEY: 'vfide_beginner_completed',
-}))
+// OnboardingManager was removed during refactoring; HelpCenter no longer depends on it.
 
 // Import after mocking
 import { HelpCenter } from '@/components/onboarding/HelpCenter'

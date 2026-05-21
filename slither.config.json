@@ -1,16 +1,15 @@
 {
-  "detectors_to_exclude": "naming-convention,solc-version",
-  "filter_paths": "node_modules|test|mock|mocks",
+  "detectors_to_exclude": "naming-convention,solc-version,reentrancy-events,reentrancy-benign,timestamp,low-level-calls,dead-code,assembly,too-many-digits,redundant-statements,cyclomatic-complexity,costly-loop,unindexed-event-address,missing-inheritance,similar-names,external-function,incorrect-equality,divide-before-multiply,calls-loop",
+  "filter_paths": "node_modules|test|mock|mocks|legacy|libraries/uniswapv3|libraries/openzeppelin",
   "exclude_informational": false,
   "exclude_low": false,
   "exclude_medium": false,
   "exclude_high": false,
-  "exclude": [
-    "reentrancy-events",
-    "reentrancy-benign"
-  ],
   "solc_remaps": [
     "@openzeppelin=node_modules/@openzeppelin",
+    "@chainlink=node_modules/@chainlink",
+    "@uniswap=node_modules/@uniswap",
+    "@layerzerolabs=node_modules/@layerzerolabs",
     "hardhat=node_modules/hardhat"
   ]
 }

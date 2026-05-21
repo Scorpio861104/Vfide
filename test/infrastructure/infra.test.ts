@@ -96,9 +96,17 @@ describe("Database Migrations", () => {
 
   it("should not contain GRANT ALL or SUPERUSER", () => {
     migrationFiles.forEach((file) => {
-      const sql = fs.readFileSync(path.join("migrations", file), "utf-8");
-      expect(sql.toUpperCase()).not.toContain("GRANT ALL");
-      expect(sql.toUpperCase()).not.toContain("SUPERUSER");
+      const raw = fs.readFileSync(path.join("migrations", file), "utf-8").toUpperCase();
+      // Strip SQL line comments before scanning for role grants. Comments may
+      // legitimately mention SUPERUSER as informational documentation.
+      const sql = raw
+        .split("\n")
+        .map((line) => line.replace(/--.*$/, ""))
+        .join("\n");
+      expect(sql).not.toContain("GRANT ALL");
+      // Allow "NOSUPERUSER" — that is a denial flag, not a grant.
+      const sqlSansNo = sql.replace(/NOSUPERUSER/g, "");
+      expect(sqlSansNo).not.toContain("SUPERUSER");
     });
     expect(Array.isArray(migrationFiles)).toBe(true);
   });

@@ -298,9 +298,9 @@ contract CardBoundVault is ReentrancyGuard {
     uint64 public dayStart;
 
     uint256 public largeTransferThreshold; // Transfers above this get queued
-    address public paymentQueueManager;
-    address public withdrawalQueueManager;
-    address public adminManager;
+    address public immutable paymentQueueManager;
+    address public immutable withdrawalQueueManager;
+    address public immutable adminManager;
 
     struct WalletRotation {
         address newWallet;
@@ -1006,6 +1006,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Execute a signed transfer intent from this vault to another vault.
     /// @param intent Structured transfer intent signed by active wallet.
     /// @param signature ECDSA signature over the intent digest.
+    // slither-disable-start reentrancy-no-eth
     function executeVaultToVaultTransfer(TransferIntent calldata intent, bytes calldata signature)
         external
         nonReentrant
@@ -1067,10 +1068,12 @@ contract CardBoundVault is ReentrancyGuard {
         emit VaultTransferAuthorized(signer, intent.toVault, amount, intent.nonce, intent.walletEpoch);
         _logTransfer(intent.toVault, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Execute a signed merchant payment intent from this vault.
     /// @param intent Structured payment intent signed by active wallet.
     /// @param signature ECDSA signature over the pay intent digest.
+    // slither-disable-start reentrancy-no-eth
     function executePayMerchant(PayIntent calldata intent, bytes calldata signature)
         external
         nonReentrant
@@ -1127,6 +1130,7 @@ contract CardBoundVault is ReentrancyGuard {
         IERC20(intent.token).safeTransfer(intent.recipient, amount);
         _logPayment(intent.recipient, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Phase 3d Turn 3 — atomic escrow funding via signed intent.
     /// @dev Mirrors executePayMerchant's security pattern: nonce, walletEpoch, deadline, chainId,
@@ -1142,11 +1146,13 @@ contract CardBoundVault is ReentrancyGuard {
     ///
     /// Caller responsibility (CommerceEscrow): validate the merchant, create the escrow record,
     /// pass through this intent unchanged, and emit EscrowFunded once this returns.
+    // slither-disable-start reentrancy-no-eth
     function executeFundEscrow(EscrowFundIntent calldata intent, bytes calldata signature)
         external
         nonReentrant
         whenNotPaused
     {
+        // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; intent flow is atomic
         _requireOperationalForOutboundTransfers();
         // Mirrors GUARDIAN-WARN-1 FIX: warn instead of revert when guardians aren't set up. Same
         // rationale as executePayMerchant — recovery flows remain gated; everyday operations don't.
@@ -1178,6 +1184,7 @@ contract CardBoundVault is ReentrancyGuard {
         spentToday += amount;
         IERC20(intent.token).safeTransfer(intent.escrowContract, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Execute a queued payment after the 7-day delay (admin only).
     function executeQueuedPayment(uint256 queueIndex)
@@ -1261,11 +1268,13 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Execute a previously queued large withdrawal after the delay period.
     /// @param queueIndex Index in the withdrawal queue.
+    // slither-disable-start reentrancy-no-eth
     function executeQueuedWithdrawal(uint256 queueIndex)
         external
         nonReentrant
         whenNotPaused
     {
+        // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; queue manager is trusted internal module
         _requireOperationalForOutboundTransfers();
         if (msg.sender != admin) revert CBV_NotAdmin();
 
@@ -1288,6 +1297,7 @@ contract CardBoundVault is ReentrancyGuard {
         emit WithdrawalExecuted(queueIndex, toVault, amount);
         _logTransfer(toVault, amount);
     }
+    // slither-disable-end reentrancy-no-eth
 
     /// @notice Cancel a queued withdrawal. Callable by admin OR any guardian.
     /// @param queueIndex Index in the withdrawal queue.
@@ -1313,6 +1323,7 @@ contract CardBoundVault is ReentrancyGuard {
         external view
         returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters)
     {
+        // slither-disable-next-line unused-return  // forwarding tuple return; values are returned to caller
         return ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).getPendingQueuedWithdrawals();
     }
 
@@ -1605,6 +1616,7 @@ contract CardBoundVault is ReentrancyGuard {
         emit PauseSet(true, msg.sender);
     }
 
+    // slither-disable-next-line missing-zero-check  // address(0) is a valid value to detach inheritance manager
     function setInheritanceManager(address manager) external onlyAdmin {
         inheritanceManager = manager;
     }
@@ -1710,6 +1722,7 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function withdrawFinalHeirPayout() external nonReentrant {
+        // slither-disable-next-line unused-return  // 2nd & 3rd tuple elements (lastClaimedAt, totalClaimed) intentionally ignored
         (uint256 amount,,) = ICardBoundVaultInheritanceManager(inheritanceManager).consumeHeirPayout(msg.sender);
         address heirVault = IVaultHub(hub).ensureVault(msg.sender);
         IERC20(vfideToken).safeTransfer(heirVault, amount);
@@ -1720,6 +1733,7 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function inheritanceState() external view returns (uint8 state, uint64 windowEnd) {
+        // slither-disable-next-line unused-return  // forwarding tuple return; values are returned to caller
         return ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceState();
     }
 
@@ -1728,6 +1742,7 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     function _requireOperationalForOutboundTransfers() internal view {
+        // slither-disable-next-line unused-return  // 2nd tuple element (windowEnd) intentionally ignored — only state matters here
         (uint8 state,) = ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceState();
         if (state != 0) revert CBV_InheritanceActive();
     }

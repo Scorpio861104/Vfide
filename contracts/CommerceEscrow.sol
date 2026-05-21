@@ -44,10 +44,10 @@ contract CommerceEscrow {
 
     enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED }
 
-    address public dao;
-    IERC20     public token;
-    IVaultHub_COM  public vaultHub;
-    MerchantRegistry public merchants;
+    address public immutable dao;
+    IERC20     public immutable token;
+    IVaultHub_COM  public immutable vaultHub;
+    MerchantRegistry public immutable merchants;
 
     uint256 private _reentrancyStatus = 1;
     modifier nonReentrant() {

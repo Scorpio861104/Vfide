@@ -890,7 +890,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     //   reverts, the catch-block emits `GuarantorExtractionSkipped` and
     //   continues. Both paths are safer than a plain bool check, which would
     //   silently accept a successful-but-misreporting token.
-    // slither-disable-next-line arbitrary-send-erc20,unchecked-transfer
+    // slither-disable-next-line arbitrary-send-erc20,unchecked-transfer,reentrancy-no-eth
     function extractFromGuarantors(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();

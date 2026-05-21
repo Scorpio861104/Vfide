@@ -14,6 +14,45 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
   requireOwnership: jest.fn(),
+  requireAdmin: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  verifyAuth: jest.fn(async () => ({ ok: true, user: { sub: 'test' } })),
+  getRequestAuthToken: jest.fn(async () => null),
+  optionalAuth: jest.fn(async () => null),
+  isAdmin: jest.fn(() => false),
+  verifyOnChainAdmin: jest.fn(async () => false),
+  checkOwnership: jest.fn(() => true),
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => {
+    // V3: consult requireAuth (sync or async) so tests that set its return value flow through.
+    const m = (jest.requireMock('@/lib/auth/middleware') as any);
+    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
+    try {
+      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
+      if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
+      if (r && r.user) user = r.user;
+    } catch { /* ignore */ }
+    return handler(req, user, ctx);
+  }),
+  withOwnership: jest.fn((extractor: any, handler: any) => async (req: any, ctx?: any) => {
+    // V3: extract target address from request and use it as auth user, bubble up
+    // requireAuth Response if set.
+    const m = (jest.requireMock('@/lib/auth/middleware') as any);
+    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
+    try {
+      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
+      if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
+      if (r && r.user) user = r.user;
+      else {
+        const target = await extractor(req, ctx);
+        if (typeof target === 'string' && target) {
+          const addr = target.toLowerCase();
+          user = { sub: addr, address: addr };
+        }
+      }
+    } catch { /* ignore */ }
+    return handler(req, user, ctx);
+  }),
 }));
 
 describe('/api/merchant/returns', () => {
@@ -44,9 +83,16 @@ describe('/api/merchant/returns', () => {
   });
 
   it('creates a return request', async () => {
-    query.mockResolvedValueOnce({
-      rows: [{ id: 'ret_2', order_id: 'order-2', status: 'requested' }],
-    });
+    // Route now performs (1) order ownership check, (2) item validation,
+    // (3) the INSERT. Mock all three calls in order. The auth user (= merchant
+    // in this fixture) is also the order's customer_address since the V3
+    // withAuth mock and requireAuth share the same address.
+    query
+      .mockResolvedValueOnce({ rows: [{ customer_address: merchant }] }) // order ownership lookup
+      .mockResolvedValueOnce({ rows: [] }) // order item product_id lookup (empty allowed)
+      .mockResolvedValueOnce({
+        rows: [{ id: 'ret_2', order_id: 'order-2', status: 'requested' }],
+      });
 
     const request = new NextRequest('http://localhost:3000/api/merchant/returns', {
       method: 'POST',
@@ -67,7 +113,12 @@ describe('/api/merchant/returns', () => {
   });
 
   it('updates a return request status', async () => {
-    query.mockResolvedValueOnce({ rowCount: 1, rows: [] });
+    // Route now does (1) state-machine SELECT, (2) UPDATE. Mock both. The
+    // current status must legally transition to 'approved' — only 'pending'
+    // -> 'approved' is allowed by the state map.
+    query
+      .mockResolvedValueOnce({ rows: [{ status: 'pending', items: [] }] }) // state SELECT
+      .mockResolvedValueOnce({ rowCount: 1, rows: [] }); // UPDATE
 
     const request = new NextRequest('http://localhost:3000/api/merchant/returns', {
       method: 'PATCH',

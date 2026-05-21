@@ -641,6 +641,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     function isInheritanceActive(address vault) external view returns (bool) {
         if (ownerOfVault[vault] == address(0)) return false;
         if (vaultOf[ownerOfVault[vault]] != vault) return false;
+        // slither-disable-next-line unused-return  // 2nd tuple element (windowEnd) intentionally ignored — only state matters here
         (uint8 state, ) = ICardBoundVaultInheritanceProbe(vault).inheritanceState();
         // state codes: 0 = NORMAL, 1 = VETO_PERIOD, 2 = CLAIM_WINDOW, 3 = MEMORIAL, 4 = CLOSED.
         // "Active" means anything that affects normal vault operation — VETO_PERIOD, CLAIM_WINDOW,
@@ -657,6 +658,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     function isInMemorialState(address vault) external view returns (bool) {
         if (ownerOfVault[vault] == address(0)) return false;
         if (vaultOf[ownerOfVault[vault]] != vault) return false;
+        // slither-disable-next-line unused-return  // 2nd tuple element (windowEnd) intentionally ignored — only state matters here
         (uint8 state, ) = ICardBoundVaultInheritanceProbe(vault).inheritanceState();
         return state == 3 || state == 4;
     }

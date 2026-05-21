@@ -133,6 +133,7 @@ contract CardBoundVaultInheritanceManager {
     }
 
     constructor(address vault_) {
+        require(vault_ != address(0), "CBV-IM: zero vault");
         vault = vault_;
         inheritanceStateValue = STATE_NORMAL;
     }
@@ -255,6 +256,7 @@ contract CardBoundVaultInheritanceManager {
         emit InheritanceConfigProposed(pendingConfigVersion, noHeirs, noCommitments, pendingHeirConfigEffectiveAt);
     }
 
+    // slither-disable-next-line missing-zero-check  // address(0) clears the proof-of-life wallet (intentional)
     function setProofOfLifeWallet(address actor, address polWallet) external onlyVault {
         _requireAdmin(actor);
         proofOfLifeWallet = polWallet;
@@ -266,6 +268,7 @@ contract CardBoundVaultInheritanceManager {
     ///      claims per design Decision 12, but can still veto (it's a guardian
     ///      otherwise). Set to address(0) to clear. No cooldown — same semantics
     ///      as setProofOfLifeWallet since this is purely a defensive constraint.
+    // slither-disable-next-line missing-zero-check  // address(0) clears the DAO guardian (intentional per docstring)
     function setDAOGuardian(address actor, address dao) external onlyVault {
         _requireAdmin(actor);
         address previous = daoGuardian;

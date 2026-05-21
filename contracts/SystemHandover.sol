@@ -43,7 +43,7 @@ contract SystemHandover {
     address public devMultisig;
     IDAO_SH public dao;
     IDAOTimelock_SH public timelock;
-    ISeer_SH public seer;
+    ISeer_SH public immutable seer;
     ICouncilElection_SH public councilElection;
     IProofLedger_SH public ledger; // optional
 

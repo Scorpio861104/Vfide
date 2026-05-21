@@ -8,6 +8,16 @@ let mockPathname = '/dashboard';
 jest.mock('next/navigation', () => ({
   usePathname: () => mockPathname,
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),
+  redirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+  useParams: jest.fn(() => ({,
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
+})),
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
 }));
 
 jest.mock('@/lib/notifications', () => ({

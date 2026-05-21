@@ -34,6 +34,7 @@ contract CardBoundVaultWithdrawalQueueManager {
     }
 
     constructor(address vault_) {
+        require(vault_ != address(0), "CBV-WQM: zero vault");
         vault = vault_;
     }
 
@@ -47,7 +48,8 @@ contract CardBoundVaultWithdrawalQueueManager {
         returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters)
     {
         uint256 pendingCount = 0;
-        for (uint256 i = 0; i < _withdrawalQueue.length; i++) {
+        uint256 _wqLen = _withdrawalQueue.length;
+        for (uint256 i = 0; i < _wqLen; i++) {
             if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) pendingCount++;
         }
 
@@ -56,7 +58,7 @@ contract CardBoundVaultWithdrawalQueueManager {
         executeAfters = new uint64[](pendingCount);
 
         uint256 idx = 0;
-        for (uint256 i = 0; i < _withdrawalQueue.length; i++) {
+        for (uint256 i = 0; i < _wqLen; i++) {
             if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) {
                 indices[idx] = i;
                 amounts[idx] = _withdrawalQueue[i].amount;

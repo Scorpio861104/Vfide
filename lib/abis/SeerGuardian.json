@@ -37,12 +37,22 @@
   },
   {
     "inputs": [],
+    "name": "SG_NoPending",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "SG_NoViolation",
     "type": "error"
   },
   {
     "inputs": [],
     "name": "SG_NotAuthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SG_TimelockActive",
     "type": "error"
   },
   {
@@ -148,6 +158,50 @@
       }
     ],
     "name": "DAOActionFlaggedCode",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "oldDAO",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newDAO",
+        "type": "address"
+      }
+    ],
+    "name": "DAOChangeCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "oldDAO",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newDAO",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "executeAfter",
+        "type": "uint64"
+      }
+    ],
+    "name": "DAOChangeQueued",
     "type": "event"
   },
   {
@@ -415,6 +469,19 @@
   },
   {
     "inputs": [],
+    "name": "DAO_CHANGE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "DAO_OVERRIDE_MIN_AGE",
     "outputs": [
       {
@@ -462,6 +529,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyDAO",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -544,6 +618,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelDAO",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -833,6 +914,32 @@
         "internalType": "uint16",
         "name": "",
         "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingDAO",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingDAOAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
       }
     ],
     "stateMutability": "view",

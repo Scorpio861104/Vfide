@@ -9,6 +9,25 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) =>
+    handler(req, { sub: 'merchant', address: '0x1234567890123456789012345678901234567890' }, ctx)),
+  requireAuth: jest.fn(async () => ({ user: { sub: 'merchant', address: '0x1234567890123456789012345678901234567890' } })),
+}));
+
+// Mock viem so verifySubmittedTransaction returns a confirmed tx whose sender
+// matches the authenticated customer address. Provide an RPC URL via env.
+const mockGetTransactionReceipt = jest.fn(async () => ({ status: 'success' }));
+const mockGetTransaction = jest.fn(async () => ({ from: '0x1234567890123456789012345678901234567890' }));
+jest.mock('viem', () => ({
+  createPublicClient: jest.fn(() => ({
+    getTransactionReceipt: mockGetTransactionReceipt,
+    getTransaction: mockGetTransaction,
+  })),
+  http: jest.fn(() => ({})),
+}));
+process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC = 'https://test.example/rpc';
+
 describe('/api/merchant/checkout/[id] payment hardening', () => {
   const { query } = require('@/lib/db');
   const { withRateLimit } = require('@/lib/auth/rateLimit');
@@ -23,7 +42,7 @@ describe('/api/merchant/checkout/[id] payment hardening', () => {
 
   it('rejects pay action when invoice is already pending_confirmation', async () => {
     query.mockResolvedValueOnce({
-      rows: [{ id: 42, status: 'pending_confirmation' }],
+      rows: [{ id: 42, status: 'pending_confirmation', customer_address: '0x1234567890123456789012345678901234567890' }],
     });
 
     const request = new NextRequest(`http://localhost:3000/api/merchant/checkout/${paymentLinkId}`, {
@@ -41,7 +60,7 @@ describe('/api/merchant/checkout/[id] payment hardening', () => {
 
   it('only transitions sent/viewed invoices to pending_confirmation', async () => {
     query
-      .mockResolvedValueOnce({ rows: [{ id: 77, status: 'viewed' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 77, status: 'viewed', customer_address: '0x1234567890123456789012345678901234567890' }] })
       .mockResolvedValueOnce({ rowCount: 1, rows: [] });
 
     const request = new NextRequest(`http://localhost:3000/api/merchant/checkout/${paymentLinkId}`, {
@@ -63,7 +82,7 @@ describe('/api/merchant/checkout/[id] payment hardening', () => {
 
   it('returns 409 when status changes before update', async () => {
     query
-      .mockResolvedValueOnce({ rows: [{ id: 88, status: 'viewed' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 88, status: 'viewed', customer_address: '0x1234567890123456789012345678901234567890' }] })
       .mockResolvedValueOnce({ rowCount: 0, rows: [] });
 
     const request = new NextRequest(`http://localhost:3000/api/merchant/checkout/${paymentLinkId}`, {

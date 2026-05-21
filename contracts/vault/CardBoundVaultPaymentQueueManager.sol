@@ -45,6 +45,7 @@ contract CardBoundVaultPaymentQueueManager {
     }
 
     constructor(address vault_, uint256 initialThreshold) {
+        require(vault_ != address(0), "CBV-PQM: zero vault");
         vault = vault_;
         largePaymentThreshold = initialThreshold;
     }

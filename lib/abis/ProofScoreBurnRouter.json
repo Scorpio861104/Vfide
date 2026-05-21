@@ -41,23 +41,35 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "dailyBurned",
+        "name": "lowVolumeThreshold",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "dailyCap",
+        "name": "highVolumeThreshold",
         "type": "uint256"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "redirectedToEcosystem",
-        "type": "uint256"
+        "internalType": "uint16",
+        "name": "lowVolMultiplier",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "highVolMultiplier",
+        "type": "uint16"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "enabled",
+        "type": "bool"
       }
     ],
-    "name": "BurnCapReached",
+    "name": "AdaptiveFeesSet",
     "type": "event"
   },
   {
@@ -146,49 +158,6 @@
       }
     ],
     "name": "EmergencyOwnershipProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "burnAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "sanctumAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "ecosystemAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "score",
-        "type": "uint16"
-      }
-    ],
-    "name": "FeesComputed",
     "type": "event"
   },
   {

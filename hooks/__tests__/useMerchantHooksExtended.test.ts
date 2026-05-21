@@ -4,12 +4,31 @@ import { renderHook, act } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
 jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useReadContract: jest.fn(),
-  useWriteContract: jest.fn(),
-  useWaitForTransactionReceipt: jest.fn(),
-  useChainId: jest.fn(),
-  usePublicClient: jest.fn(),
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useChainId: jest.fn(() => 1),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: jest.fn(),
+  createConfig: jest.fn(),
+  http: jest.fn(),
 }))
 
 // Mock viem
@@ -20,6 +39,43 @@ jest.mock('viem', () => ({
   parseUnits: (val, decimals) => BigInt(Math.floor(parseFloat(val) * Math.pow(10, decimals !== undefined ? decimals : 18))),
   isAddress: (addr) => addr && addr.startsWith('0x') && addr.length === 42,
   getAddress: (addr) => addr,
+  parseAbi: jest.fn(() => []),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
+})),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
 }))
 
 // Mock abis
@@ -29,15 +85,14 @@ jest.mock('@/lib/abis', () => ({
 
 // Mock contracts
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    MerchantPortal: '0x1234567890123456789012345678901234567890',
-  },
+  // CANONICAL_CONTRACTS_MOCK_V4
+  CONTRACT_ADDRESSES: { VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' },
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' })),
+  isConfiguredContractAddress: (address?: string | null) =>,
+  validateContractAddress: jest.fn((addr: any) => addr),
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
+  CURRENT_CHAIN_ID: 84532,
 }))
 
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId, usePublicClient } from 'wagmi'

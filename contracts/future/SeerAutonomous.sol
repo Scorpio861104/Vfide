@@ -337,65 +337,10 @@ contract SeerAutonomous is ReentrancyGuard {
     }
     
     function _initializeRateLimits() internal {
-        // None: unlimited
-        rateLimits[RestrictionLevel.None][ActionType.Transfer] = 1000;
-        rateLimits[RestrictionLevel.None][ActionType.VaultDeposit] = 1000;
-        rateLimits[RestrictionLevel.None][ActionType.VaultWithdraw] = 1000;
-        rateLimits[RestrictionLevel.None][ActionType.GovernanceVote] = 100;
-        rateLimits[RestrictionLevel.None][ActionType.GovernancePropose] = 20;
-        rateLimits[RestrictionLevel.None][ActionType.Endorse] = 100;
-        rateLimits[RestrictionLevel.None][ActionType.Stake] = 200;
-        rateLimits[RestrictionLevel.None][ActionType.Trade] = 1000;
-        
-        // Monitored: normal limits
-        rateLimits[RestrictionLevel.Monitored][ActionType.Transfer] = 100;
-        rateLimits[RestrictionLevel.Monitored][ActionType.VaultDeposit] = 100;
-        rateLimits[RestrictionLevel.Monitored][ActionType.VaultWithdraw] = 100;
-        rateLimits[RestrictionLevel.Monitored][ActionType.GovernanceVote] = 50;
-        rateLimits[RestrictionLevel.Monitored][ActionType.GovernancePropose] = 10;
-        rateLimits[RestrictionLevel.Monitored][ActionType.Endorse] = 50;
-        rateLimits[RestrictionLevel.Monitored][ActionType.Stake] = 50;
-        rateLimits[RestrictionLevel.Monitored][ActionType.Trade] = 100;
-        
-        // Limited: reduced
-        rateLimits[RestrictionLevel.Limited][ActionType.Transfer] = 20;
-        rateLimits[RestrictionLevel.Limited][ActionType.VaultDeposit] = 20;
-        rateLimits[RestrictionLevel.Limited][ActionType.VaultWithdraw] = 20;
-        rateLimits[RestrictionLevel.Limited][ActionType.GovernanceVote] = 10;
-        rateLimits[RestrictionLevel.Limited][ActionType.GovernancePropose] = 3;
-        rateLimits[RestrictionLevel.Limited][ActionType.Endorse] = 10;
-        rateLimits[RestrictionLevel.Limited][ActionType.Stake] = 10;
-        rateLimits[RestrictionLevel.Limited][ActionType.Trade] = 20;
-        
-        // Restricted: minimal
-        rateLimits[RestrictionLevel.Restricted][ActionType.Transfer] = 5;
-        rateLimits[RestrictionLevel.Restricted][ActionType.VaultDeposit] = 2;
-        rateLimits[RestrictionLevel.Restricted][ActionType.VaultWithdraw] = 2;
-        rateLimits[RestrictionLevel.Restricted][ActionType.GovernanceVote] = 0;
-        rateLimits[RestrictionLevel.Restricted][ActionType.GovernancePropose] = 0;
-        rateLimits[RestrictionLevel.Restricted][ActionType.Endorse] = 2;
-        rateLimits[RestrictionLevel.Restricted][ActionType.Stake] = 2;
-        rateLimits[RestrictionLevel.Restricted][ActionType.Trade] = 5;
-        
-        // Suspended: emergency only
-        rateLimits[RestrictionLevel.Suspended][ActionType.Transfer] = 1;
-        rateLimits[RestrictionLevel.Suspended][ActionType.VaultDeposit] = 0;
-        rateLimits[RestrictionLevel.Suspended][ActionType.VaultWithdraw] = 0;
-        rateLimits[RestrictionLevel.Suspended][ActionType.GovernanceVote] = 0;
-        rateLimits[RestrictionLevel.Suspended][ActionType.GovernancePropose] = 0;
-        rateLimits[RestrictionLevel.Suspended][ActionType.Endorse] = 0;
-        rateLimits[RestrictionLevel.Suspended][ActionType.Stake] = 0;
-        rateLimits[RestrictionLevel.Suspended][ActionType.Trade] = 0;
-        
-        // Frozen: nothing
-        rateLimits[RestrictionLevel.Frozen][ActionType.Transfer] = 0;
-        rateLimits[RestrictionLevel.Frozen][ActionType.VaultDeposit] = 0;
-        rateLimits[RestrictionLevel.Frozen][ActionType.VaultWithdraw] = 0;
-        rateLimits[RestrictionLevel.Frozen][ActionType.GovernanceVote] = 0;
-        rateLimits[RestrictionLevel.Frozen][ActionType.GovernancePropose] = 0;
-        rateLimits[RestrictionLevel.Frozen][ActionType.Endorse] = 0;
-        rateLimits[RestrictionLevel.Frozen][ActionType.Stake] = 0;
-        rateLimits[RestrictionLevel.Frozen][ActionType.Trade] = 0;
+        SeerAutonomousLib.RateLimitEntry[48] memory entries = SeerAutonomousLib.getDefaultProfile();
+        for (uint256 i = 0; i < 48; i++) {
+            rateLimits[RestrictionLevel(entries[i].level)][ActionType(entries[i].action)] = entries[i].limit;
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -512,38 +457,23 @@ contract SeerAutonomous is ReentrancyGuard {
     
     function _checkRestrictions(address subject, ActionType action) internal view returns (EnforcementResult) {
         RestrictionLevel level = restrictionLevel[subject];
-        
+
         // Check if restriction has expired
         if (level != RestrictionLevel.None && block.timestamp >= restrictionExpiry[subject]) {
-            // Expired - would be lifted, treat as None for this check
             level = RestrictionLevel.None;
         }
-        
-        // Frozen = block everything
-        if (level == RestrictionLevel.Frozen) {
-            return EnforcementResult.Blocked;
-        }
-        
-        // Check rate limits
+
         uint16 limit = rateLimits[level][action];
-        if (limit == 0 && level >= RestrictionLevel.Restricted) {
-            return EnforcementResult.Blocked;
-        } else if (limit == 0) {
-            return EnforcementResult.Allowed;
-        }
-        
-        // Check daily count
         uint16 count = actionCountToday[subject][action];
-        if (count >= limit) {
-            return EnforcementResult.Blocked;
-        }
-        
-        // Suspended = warn
-        if (level == RestrictionLevel.Suspended) {
-            return EnforcementResult.Warned;
-        }
-        
-        return EnforcementResult.Allowed;
+        uint8 r = SeerAutonomousLib.evaluateRestriction(
+            uint8(level),
+            uint8(RestrictionLevel.Frozen),
+            uint8(RestrictionLevel.Restricted),
+            uint8(RestrictionLevel.Suspended),
+            limit,
+            count
+        );
+        return EnforcementResult(r);
     }
     
     function _updateRateLimits(address subject, ActionType action) internal {
@@ -682,16 +612,9 @@ contract SeerAutonomous is ReentrancyGuard {
         uint8 count = patternViolations[subject][pattern];
         lastViolationTime[subject] = uint64(block.timestamp);
         networkViolationCount++;
-        
-        // Calculate severity-weighted violation score
-        uint16 severity = 0;
-        if (pattern == PatternType.RapidTransfers) severity = 10;
-        else if (pattern == PatternType.CircularTransfers) severity = 30;
-        else if (pattern == PatternType.SelfEndorsement) severity = 50;
-        else if (pattern == PatternType.VoteManipulation) severity = 70;
-        else if (pattern == PatternType.WashTrading) severity = 80;
-        else if (pattern == PatternType.SybilActivity) severity = 100;
-        
+
+        // Severity lookup table (extracted to library to reduce bytecode).
+        uint16 severity = SeerAutonomousLib.severityFor(uint8(pattern));
         _saturatingAddViolationScore(subject, severity);
 
         // Blend oracle risk if available (F-08: try/catch prevents broken oracle from freezing enforcement)
@@ -1213,30 +1136,31 @@ contract SeerAutonomous is ReentrancyGuard {
         if (daoOverridden[subject]) {
             return (true, "dao_override");
         }
-        
+
         RestrictionLevel level = restrictionLevel[subject];
-        
+
         // Check expiry
         if (level != RestrictionLevel.None && block.timestamp >= restrictionExpiry[subject]) {
             level = RestrictionLevel.None;
         }
-        
-        if (level == RestrictionLevel.Frozen) {
-            return (false, "frozen");
-        }
-        
+
         uint16 limit = rateLimits[level][action];
-        if (limit == 0 && level >= RestrictionLevel.Restricted) {
-            return (false, "action_blocked");
-        } else if (limit == 0) {
-            return (true, "allowed");
-        }
-        
         uint16 count = actionCountToday[subject][action];
-        if (count >= limit) {
+        uint8 r = SeerAutonomousLib.evaluateRestriction(
+            uint8(level),
+            uint8(RestrictionLevel.Frozen),
+            uint8(RestrictionLevel.Restricted),
+            uint8(RestrictionLevel.Suspended),
+            limit,
+            count
+        );
+        // r: 0=Allowed, 1=Warned (Suspended → still allowed for canPerformAction's bool semantics), 3=Blocked
+        if (r == 3) {
+            // Distinguish frozen vs other blocked
+            if (level == RestrictionLevel.Frozen) return (false, "frozen");
+            if (limit == 0) return (false, "action_blocked");
             return (false, "rate_limited");
         }
-        
         return (true, "allowed");
     }
     

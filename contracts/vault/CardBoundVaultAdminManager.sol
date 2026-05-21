@@ -79,6 +79,7 @@ contract CardBoundVaultAdminManager {
     }
 
     constructor(address vault_) {
+        require(vault_ != address(0), "CBV-AM: zero vault");
         vault = vault_;
     }
 

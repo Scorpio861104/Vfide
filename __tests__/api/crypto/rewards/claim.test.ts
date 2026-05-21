@@ -11,13 +11,100 @@ jest.mock('@/lib/auth/rateLimit', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  requireOwnership: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  requireAdmin: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  verifyAuth: jest.fn(async () => ({ ok: true, user: { sub: 'test' } })),
+  getRequestAuthToken: jest.fn(async () => null),
+  optionalAuth: jest.fn(async () => null),
+  isAdmin: jest.fn(() => false),
+  verifyOnChainAdmin: jest.fn(async () => false),
+  checkOwnership: jest.fn(() => true),
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => {
+    // V3: consult requireAuth (sync or async) so tests that set its return value flow through.
+    const m = (jest.requireMock('@/lib/auth/middleware') as any);
+    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
+    try {
+      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
+      if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
+      if (r && r.user) user = r.user;
+    } catch { /* ignore */ }
+    return handler(req, user, ctx);
+  }),
+  withOwnership: jest.fn((extractor: any, handler: any) => async (req: any, ctx?: any) => {
+    // V3: extract target address from request and use it as auth user, bubble up
+    // requireAuth Response if set.
+    const m = (jest.requireMock('@/lib/auth/middleware') as any);
+    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
+    try {
+      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
+      if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
+      if (r && r.user) user = r.user;
+      else {
+        const target = await extractor(req, ctx);
+        if (typeof target === 'string' && target) {
+          const addr = target.toLowerCase();
+          user = { sub: addr, address: addr };
+        }
+      }
+    } catch { /* ignore */ }
+    return handler(req, user, ctx);
+  }),
 }));
 
 // Prevent the route from making real RPC calls to the blockchain during tests
 jest.mock('viem', () => ({
   createPublicClient: jest.fn(() => ({
     readContract: jest.fn().mockResolvedValue(true),
-  })),
+  parseAbi: jest.fn(() => []),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  isAddress: jest.fn((a: any) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a)),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
+})),
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  isAddress: jest.fn((a: any) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a)),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
+})),
   http: jest.fn(),
   isAddress: jest.fn().mockReturnValue(true),
 }));
@@ -143,7 +230,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       expect(data.error).toContain('Invalid request body');
     });
 
-    it('should skip unsupported on-chain reward verifiers and still claim rewards', async () => {
+    it('should refuse claim when on-chain reward verifier is unsupported (F-BE-024 fail-closed)', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
@@ -156,8 +243,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
             reward_type: 'quest',
             source_contract: '0x9999999999999999999999999999999999999999',
           }],
-        })
-        .mockResolvedValueOnce({ rows: [{ id: '11111111-1111-1111-1111-111111111111', amount: '25' }] });
+        });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
         method: 'POST',
@@ -169,9 +255,8 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(data.claimed).toBe(1);
+      expect(response.status).toBe(503);
+      expect(data.error).toContain('on-chain verifier');
     });
   });
 });

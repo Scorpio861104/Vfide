@@ -14,6 +14,15 @@ jest.mock('@/lib/auth/middleware', () => {
       if (!authResult?.user) return authResult;
       return handler(request, authResult.user, ...rest);
     },
+    requireOwnership: async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } }),
+    requireAdmin: async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } }),
+    verifyAuth: async () => ({ ok: true, user: { sub: 'test' } }),
+    getRequestAuthToken: async () => null,
+    optionalAuth: async () => null,
+    isAdmin: () => false,
+    verifyOnChainAdmin: async () => false,
+    checkOwnership: () => true,
+    withOwnership: (handler) => async (req, ctx) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx),
   };
 });
 
