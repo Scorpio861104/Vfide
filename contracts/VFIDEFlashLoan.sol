@@ -274,6 +274,14 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice Deposit VFIDE to offer for flash loans
+    // SLITHER FALSE POSITIVE (reentrancy-balance / reentrancy-no-eth):
+    //   The function is `nonReentrant`, so the "stale balance" pattern Slither
+    //   flags is not exploitable. The before/after balance compare against
+    //   the requested `amount` is an intentional fee-on-transfer / rebasing-
+    //   token guard: we reject any token whose actual transferred amount
+    //   differs from what was requested. This is a strictly defensive check,
+    //   not a vulnerable balance-read.
+    // slither-disable-next-line reentrancy-balance,reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function deposit(uint256 amount) external nonReentrant whenNotPaused {
         // H-18 FIX: Block deposits until DAO confirms systemExempt is set on VFIDEToken.
         require(systemExemptConfirmed, "FL: not initialized");
@@ -353,6 +361,27 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         uint256 maxFeeBps,
         bytes calldata data
     ) external nonReentrant whenNotPaused returns (bool) {
+        // SLITHER FALSE POSITIVES (suppressed via slither-disable-start below):
+        //
+        //   arbitrary-send-erc20:
+        //     This is the *defining* mechanic of an ERC-3156 flash loan: at
+        //     the end of the borrow callback the borrower MUST transfer back
+        //     amount + fee. The borrower's `onFlashLoan` callback is required
+        //     to call `vfideToken.approve(address(this), amount + fee)` before
+        //     returning — this is part of the ERC-3156 contract. The "from"
+        //     address is the borrower's own contract; if approval was not
+        //     granted the entire flashLoan tx reverts atomically. No funds
+        //     can be drained from an unrelated party.
+        //
+        //   reentrancy-balance:
+        //     Function carries `nonReentrant`. The balance-before/after check
+        //     is a defensive fee-on-transfer guard, not vulnerable to read
+        //     manipulation: if balance does not increase by exactly
+        //     amount + totalFee the call reverts and lender funds are
+        //     restored. The "stale" `balBefore` is intentional — it's the
+        //     pre-call snapshot we are deliberately comparing against.
+        //
+        // slither-disable-start arbitrary-send-erc20,reentrancy-balance,reentrancy-no-eth,reentrancy-benign,reentrancy-events
         // H-18 FIX: Block flash loans until systemExempt is confirmed.
         require(systemExemptConfirmed, "FL: not initialized");
         if (amount == 0) revert FL_Zero();
@@ -427,6 +456,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
         emit FlashLoanExecuted(lender, msg.sender, address(receiver), amount, lenderFee, protocolFee);
         return true;
+        // slither-disable-end arbitrary-send-erc20,reentrancy-balance,reentrancy-no-eth,reentrancy-benign,reentrancy-events
     }
 
     function getOrphanBalance() public view returns (uint256) {
