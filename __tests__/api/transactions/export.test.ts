@@ -20,7 +20,7 @@ jest.mock('@/lib/auth/middleware', () => ({
   verifyOnChainAdmin: jest.fn(async () => false),
   checkOwnership: jest.fn(() => true),
   withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
-  withOwnership: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
+  withOwnership: jest.fn((_extractor: any, handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
 }));
 
 describe('/api/transactions/export', () => {

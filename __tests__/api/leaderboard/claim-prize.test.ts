@@ -12,7 +12,7 @@ jest.mock('@/lib/auth/middleware', () => ({
   isAdmin: jest.fn(() => false),
   verifyOnChainAdmin: jest.fn(async () => false),
   checkOwnership: jest.fn(() => true),
-  withOwnership: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
+  withOwnership: jest.fn((_extractor: any, handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
 }));
 
 describe('/api/leaderboard/claim-prize', () => {

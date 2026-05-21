@@ -16,6 +16,19 @@ const renderSetupPage = () => {
   return render(<SetupPage />);
 };
 
+jest.mock('next/navigation', () => ({
+  redirect: jest.fn((url: string) => { throw new Error(`NEXT_REDIRECT:${url}`); }),
+  permanentRedirect: jest.fn((url: string) => { throw new Error(`NEXT_PERMANENT_REDIRECT:${url}`); }),
+  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), forward: jest.fn(), refresh: jest.fn(), prefetch: jest.fn() }),
+  usePathname: () => '/setup',
+  useSearchParams: () => ({ get: () => null, has: () => false, getAll: () => [], toString: () => '' }),
+  useParams: () => ({}),
+  useSelectedLayoutSegment: () => null,
+  useSelectedLayoutSegments: () => [],
+  RedirectType: { push: 'push', replace: 'replace' },
+}));
+
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: () => mockAccountState,
   useChainId: jest.fn(() => 1),

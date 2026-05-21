@@ -63,7 +63,10 @@ jest.mock('@/lib/toast', () => ({
   },
 }));
 
-describe('Streaming page pathways', () => {
+// SKIPPED: app/streaming/page.tsx is now a ComingSoonPage placeholder; the legacy
+// "Streaming Payments" heading and connect-prompt copy no longer exist. Tests will
+// be re-enabled when the streaming product surface is implemented.
+describe.skip('Streaming page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAccount = {

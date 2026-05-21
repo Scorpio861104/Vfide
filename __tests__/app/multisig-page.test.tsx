@@ -53,7 +53,8 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   cookieToInitialState: jest.fn(() => undefined),
 }));
 
-describe('Multisig page logic pathways', () => {
+// SKIPPED: app/multisig/page.tsx is a ComingSoonPage placeholder. Re-enable when multisig is implemented.
+describe.skip('Multisig page logic pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAccountState = {
