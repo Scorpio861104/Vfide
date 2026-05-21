@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890', isConnected: true,
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
@@ -26,12 +26,9 @@ jest.mock('wagmi', () => ({
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
-})),
-  useReadContract: jest.fn(() => ({ data: 1000000000000000000n, isLoading: false })),
-  useBalance: jest.fn(() => ({ data: { value: 1500000000000000000n, decimals: 18 }, isLoading: false })),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }))
 
 import { TokenBalance, NavbarBalance } from '@/components/ui/TokenBalance'

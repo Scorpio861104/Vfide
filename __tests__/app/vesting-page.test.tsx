@@ -16,31 +16,14 @@ const renderVestingPage = () => {
   return render(<VestingPage />);
 };
 
-jest.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: () => mockAccount,
-  useReadContract: ({ functionName }: { functionName: string }) => {
-    if (functionName === 'BENEFICIARY') {
-      return { data: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' };
-    }
-    if (functionName === 'claimsPaused') {
-      return { data: false };
-    }
-    if (functionName === 'getVestingStatus') {
-      return { data: [5000000000000000000n, 1000000000000000000n, 500000000000000000n, 500000000000000000n, 6, 1893456000n, false] };
-    }
-    if (functionName === 'getVestingSchedule') {
-      return { data: [
-        { month: 1, percentage: 2, unlockTime: 1719878400n, unlocked: true },
-        { month: 2, percentage: 2, unlockTime: 1725148800n, unlocked: false },
-      ] };
-    }
-    return { data: undefined };
-  },
-  useWriteContract: () => ({ writeContract: mockWriteContract, data: undefined, isPending: false }),
-  useWaitForTransactionReceipt: () => ({ isLoading: false, isSuccess: false }),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
   useWatchContractEvent: jest.fn(() => undefined),
   usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
   useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
@@ -56,9 +39,9 @@ jest.mock('wagmi', () => ({
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }));
 
 jest.mock('@/components/layout/Footer', () => ({

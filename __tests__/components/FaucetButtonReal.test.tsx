@@ -8,9 +8,8 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 
 // Mock dependencies
-jest.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })),
-  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
   useChainId: jest.fn(() => 84532),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
@@ -25,15 +24,16 @@ jest.mock('wagmi', () => ({
   useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
   useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
   useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
   useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
   useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
   useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }))
 
 jest.mock('@/lib/testnet', () => ({

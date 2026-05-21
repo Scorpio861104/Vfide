@@ -32,11 +32,10 @@ jest.mock('@/components/onboarding/OnboardingFlow', () => ({
 }))
 
 // Mock wagmi
-jest.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: () => ({ isConnected: false, address: undefined }),
   useChainId: () => 84532,
   useSwitchChain: () => ({ switchChain: jest.fn(), isPending: false }),
-  useBalance: () => ({ data: undefined }),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
@@ -49,15 +48,16 @@ jest.mock('wagmi', () => ({
   useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
   useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
   useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
   useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
   useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
   useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }))
 
 // Mock safeLocalStorage so we control new-user vs returning-user scenarios

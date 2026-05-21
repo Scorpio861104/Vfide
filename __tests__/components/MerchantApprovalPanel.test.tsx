@@ -7,25 +7,13 @@ const mockRefetchVfide = jest.fn(async () => ({ data: 0n }))
 const mockRefetchStablecoin = jest.fn(async () => ({ data: 0n }))
 const mockShowToast = jest.fn()
 
-jest.mock('wagmi', () => ({
-  useReadContract: jest.fn((params?: { functionName?: string; address?: string }) => {
-    if (params?.functionName === 'dailyTransferLimit') {
-      return { data: 123n }
-    }
-    if (params?.functionName === 'allowance' && params?.address === '0x1000000000000000000000000000000000000001') {
-      return { data: 0n, refetch: mockRefetchVfide }
-    }
-    if (params?.functionName === 'allowance') {
-      return { data: 0n, refetch: mockRefetchStablecoin }
-    }
-    return { data: undefined }
-  }),
-  useWriteContract: jest.fn(() => ({
-    writeContractAsync: mockWriteContractAsync,
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
   useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
   useWatchContractEvent: jest.fn(() => undefined),
   usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
@@ -42,10 +30,9 @@ jest.mock('wagmi', () => ({
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
-})),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }))
 
 jest.mock('@/components/ui/toast', () => ({

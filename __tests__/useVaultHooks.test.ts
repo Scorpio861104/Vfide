@@ -11,10 +11,8 @@ const MOCK_TOKEN = '0xVFIDETOKEN1234567890VFIDETOKEN12345678'
 const MOCK_ZERO = '0x0000000000000000000000000000000000000000'
 const MOCK_BALANCE = BigInt('1000000000000000000000')
 
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(() => ({
-    address: '0x1234567890123456789012345678901234567890',
-    isConnected: true,
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
@@ -36,38 +34,9 @@ jest.mock('wagmi', () => ({
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
-})),
-  useReadContract: jest.fn(() => ({
-    data: '0xABCDEF1234567890ABCDEF1234567890ABCDEF12',
-    isLoading: false,
-    error: null,
-    refetch: jest.fn(),
-  })),
-  useWriteContract: jest.fn(() => ({
-    writeContract: jest.fn(),
-    writeContractAsync: jest.fn().mockResolvedValue('0xhash'),
-    data: undefined,
-    isPending: false,
-    error: null,
-  })),
-  useWaitForTransactionReceipt: jest.fn(() => ({
-    isLoading: false,
-    isSuccess: false,
-    error: null,
-  })),
-  useBalance: jest.fn(() => ({
-    data: {
-      value: BigInt('1000000000000000000000'),
-      formatted: '1000.0',
-      symbol: 'VFIDE',
-    },
-    isLoading: false,
-    error: null,
-    refetch: jest.fn(),
-  })),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }))
 
 describe('useVaultHooks', () => {

@@ -130,32 +130,18 @@ jest.mock('@/lib/contracts', () => ({
   validateContractAddress: jest.fn((addr: any) => addr),
 }));
 
-jest.mock('wagmi', () => ({
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: () => ({ address: mockAddress }),
-  useWriteContract: () => ({ writeContractAsync: mockWriteContractAsync }),
   useChainId: () => 1,
-  useSignTypedData: () => ({ signTypedDataAsync: jest.fn() }),
-  useReadContract: (args: { functionName?: string }) => {
-    if (args?.functionName === 'balanceOf') {
-      return { data: 1000000000000000000000n };
-    }
-    if (args?.functionName === 'allowance') {
-      return { data: 0n, refetch: mockRefetchAllowance };
-    }
-    if (args?.functionName === 'nextNonce') {
-      return { data: 0n };
-    }
-    if (args?.functionName === 'walletEpoch') {
-      return { data: 0n };
-    }
-    if (args?.functionName === 'getPendingQueuedWithdrawals') {
-      return { data: mockQueuedWithdrawalData, refetch: jest.fn(async () => ({ data: mockQueuedWithdrawalData,
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
   useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
   useWatchContractEvent: jest.fn(() => undefined),
   usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
   useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
   useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
   useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
   useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
@@ -167,28 +153,9 @@ jest.mock('wagmi', () => ({
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
-})) };
-    }
-    if (args?.functionName === 'activeQueuedWithdrawals') {
-      return { data: mockQueuedWithdrawalData?.[0]?.length ?? 0 };
-    }
-    if (args?.functionName === 'dailyTransferLimit') {
-      return { data: 100000000000000000000n };
-    }
-    if (args?.functionName === 'maxPerTransfer') {
-      return { data: 25000000000000000000n };
-    }
-    if (args?.functionName === 'largeTransferThreshold') {
-      return { data: 10000000000000000000n };
-    }
-    if (args?.functionName === 'viewRemainingDailyCapacity') {
-      return { data: 75000000000000000000n, refetch: jest.fn(async () => ({ data: 75000000000000000000n })) };
-    }
-    return { data: undefined };
-  },
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }));
 
 jest.mock('viem', () => ({

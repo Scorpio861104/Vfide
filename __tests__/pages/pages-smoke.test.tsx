@@ -29,10 +29,8 @@ jest.mock('next/link', () => ({
 }))
 
 // Mock wagmi
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(() => ({ 
-    address: '0x1234567890abcdef1234567890abcdef12345678',
-    isConnected: true,
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
@@ -54,46 +52,9 @@ jest.mock('wagmi', () => ({
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
-})),
-  useChainId: jest.fn(() => 84532),
-  useBalance: jest.fn(() => ({
-    data: { formatted: '1.5', symbol: 'ETH', value: BigInt(1500000000000000000) },
-    isLoading: false,
-    error: null,
-  })),
-  useReadContract: jest.fn(() => ({
-    data: undefined,
-    isLoading: false,
-    error: null,
-  })),
-  useWriteContract: jest.fn(() => ({
-    writeContract: jest.fn(),
-    isPending: false,
-    isSuccess: false,
-    error: null,
-  })),
-  useWaitForTransactionReceipt: jest.fn(() => ({
-    isLoading: false,
-    isSuccess: false,
-    error: null,
-  })),
-  useConfig: jest.fn(() => ({})),
-  useSwitchChain: jest.fn(() => ({
-    switchChain: jest.fn(),
-    isPending: false,
-  })),
-  useConnect: jest.fn(() => ({
-    connect: jest.fn(),
-    connectors: [],
-    isPending: false,
-  })),
-  useDisconnect: jest.fn(() => ({
-    disconnect: jest.fn(),
-    isPending: false,
-  })),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }))
 
 // Mock connectkit

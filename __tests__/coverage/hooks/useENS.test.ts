@@ -7,8 +7,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { useENS } from '../../../hooks/useENS';
 
 // Mock wagmi
-jest.mock('wagmi', () => ({
-  useEnsName: jest.fn(() => ({ data: 'vitalik.eth', isLoading: false,
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
@@ -25,16 +24,15 @@ jest.mock('wagmi', () => ({
   useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
   useConnections: jest.fn(() => []),
   useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
   useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
   useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  createConfig: jest.fn(),
-  http: jest.fn(),
-})),
-  useEnsAvatar: jest.fn(() => ({ data: 'https://avatar.url', isLoading: false })),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }));
 
 // Mock viem/ens

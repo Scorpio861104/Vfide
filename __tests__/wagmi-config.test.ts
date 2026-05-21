@@ -10,12 +10,7 @@ jest.mock('@rainbow-me/rainbowkit/wallets', () => ({
   metaMaskWallet: {},
 }))
 
-jest.mock('wagmi', () => ({
-  createConfig: jest.fn((options) => ({
-    chains: options.chains,
-    transports: options.transports,
-    ssr: options.ssr,
-    storage: options.storage,
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
@@ -38,16 +33,9 @@ jest.mock('wagmi', () => ({
   useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
-  WagmiProvider: jest.fn(),
-  http: jest.fn(),
-})),
-  http: jest.fn((url) => url || 'default-rpc'),
-  fallback: jest.fn((transports) => transports[0] || 'fallback-transport'),
-  createStorage: jest.fn(() => ({
-    getItem: jest.fn(),
-    setItem: jest.fn(),
-    removeItem: jest.fn(),
-  })),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
 }))
 
 jest.mock('wagmi/chains', () => ({
