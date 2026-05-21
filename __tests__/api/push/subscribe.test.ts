@@ -71,7 +71,7 @@ describe('/api/push/subscribe', () => {
     const request = new NextRequest('http://localhost:3000/api/push/subscribe', {
       method: 'POST',
       body: JSON.stringify({
-        endpoint: 'https://example.com/push',
+        endpoint: 'https://fcm.googleapis.com/fcm/send/abc123',
         keys: { p256dh: 'key', auth: 'auth' },
       }),
     });
@@ -96,12 +96,12 @@ describe('/api/push/subscribe', () => {
 
   it('stores the subscription against the authenticated wallet', async () => {
     requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111111' } });
-    query.mockResolvedValue({ rows: [{ endpoint: 'https://example.com/push' }] });
+    query.mockResolvedValue({ rows: [{ endpoint: 'https://fcm.googleapis.com/fcm/send/abc123' }] });
 
     const request = new NextRequest('http://localhost:3000/api/push/subscribe', {
       method: 'POST',
       body: JSON.stringify({
-        endpoint: 'https://example.com/push',
+        endpoint: 'https://fcm.googleapis.com/fcm/send/abc123',
         keys: { p256dh: 'key', auth: 'auth' },
       }),
     });
@@ -113,7 +113,7 @@ describe('/api/push/subscribe', () => {
     expect(data.success).toBe(true);
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO push_subscriptions'),
-      ['0x1111111111111111111111111111111111111111', 'https://example.com/push', 'key', 'auth']
+      ['0x1111111111111111111111111111111111111111', 'https://fcm.googleapis.com/fcm/send/abc123', 'key', 'auth']
     );
   });
 });

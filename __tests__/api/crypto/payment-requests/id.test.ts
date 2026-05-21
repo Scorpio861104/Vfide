@@ -178,8 +178,9 @@ describe('/api/crypto/payment-requests/[id]', () => {
       requireAuth.mockResolvedValue({ user: mockUser });
       // First query: fetch existing payment request
       query.mockResolvedValueOnce({ rows: [mockPaymentRequest] });
-      // Second query: user lookup (user is from_user_id=42)
-      query.mockResolvedValueOnce({ rows: [{ id: 42 }] });
+      // Second query: user lookup — user must be the *recipient* (to_user_id=99)
+      // to legally accept the request per the PUT state machine.
+      query.mockResolvedValueOnce({ rows: [{ id: 99 }] });
       // Third query: update
       query.mockResolvedValueOnce({ rows: [{ ...mockPaymentRequest, status: 'accepted' }] });
 

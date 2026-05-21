@@ -387,7 +387,7 @@ describe('/api/users', () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe('Failed to create/update user');
+      expect(data.error).toBe('Failed to create or update user');
     });
 
     it('should handle partial updates', async () => {

@@ -70,7 +70,7 @@ describe('/api/push/subscribe POST', () => {
     const request = new NextRequest('http://localhost:3000/api/push/subscribe', {
       method: 'POST',
       body: JSON.stringify({
-        endpoint: 'https://example.com/push/endpoint',
+        endpoint: 'https://fcm.googleapis.com/fcm/send/abc123',
         keys: { p256dh: 'abc', auth: 'def' },
       }),
     });
@@ -88,7 +88,7 @@ describe('/api/push/subscribe POST', () => {
     const request = new NextRequest('http://localhost:3000/api/push/subscribe', {
       method: 'POST',
       body: JSON.stringify({
-        endpoint: 'https://example.com/push/endpoint',
+        endpoint: 'https://fcm.googleapis.com/fcm/send/abc123',
         keys: { p256dh: 'abc', auth: 'def' },
       }),
     });
