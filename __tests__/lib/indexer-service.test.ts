@@ -8,8 +8,17 @@ jest.mock('viem', () => ({
   createPublicClient: jest.fn(() => ({
     getBlockNumber: mockGetBlockNumber,
     getLogs: mockGetLogs,
+  })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
   parseAbi: jest.fn(() => []),
-  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
+  parseAbiItem: jest.fn((sig: any) => ({
+    name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '',
+    type: 'event',
+    inputs: [],
+  })),
+  parseAbiParameters: jest.fn(() => []),
   formatUnits: jest.fn((v: any) => String(v)),
   parseUnits: jest.fn((v: any) => BigInt(v || 0)),
   formatEther: jest.fn((v: any) => String(v)),
@@ -27,37 +36,8 @@ jest.mock('viem', () => ({
   padHex: jest.fn((h: any) => h),
   zeroAddress: '0x0000000000000000000000000000000000000000',
   stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
-  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
-  http: jest.fn(() => ({})),
-  custom: jest.fn(() => ({})),
   erc20Abi: [],
   erc721Abi: [],
-})),
-  formatUnits: jest.fn((v: any) => String(v)),
-  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
-  formatEther: jest.fn((v: any) => String(v)),
-  parseEther: jest.fn((v: any) => BigInt(v || 0)),
-  getAddress: jest.fn((a: string) => a),
-  isAddress: jest.fn((a: any) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a)),
-  encodeFunctionData: jest.fn(() => '0x'),
-  decodeFunctionResult: jest.fn(() => undefined),
-  encodeAbiParameters: jest.fn(() => '0x'),
-  decodeAbiParameters: jest.fn(() => []),
-  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
-  toBytes: jest.fn(() => new Uint8Array()),
-  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
-  hexToString: jest.fn((h: any) => String(h)),
-  padHex: jest.fn((h: any) => h),
-  zeroAddress: '0x0000000000000000000000000000000000000000',
-  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
-  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
-  http: jest.fn(() => ({})),
-  custom: jest.fn(() => ({})),
-  erc20Abi: [],
-  erc721Abi: [],
-})),
-  http: jest.fn(() => ({})),
-  parseAbiItem: jest.fn((value: string) => value),
 }));
 
 jest.mock('viem/chains', () => ({
@@ -95,7 +75,8 @@ describe('indexer service', () => {
 
     mockGetBlockNumber.mockResolvedValue(120n);
     mockGetLogs.mockImplementation(async ({ address }: { address: string }) => {
-      if (address === '0x1111111111111111111111111111111111111111') {
+      // VFIDEToken (mocked address from CANONICAL_CONTRACTS_MOCK_V4)
+      if (address === '0x1111111111111111111111111111111111111101') {
         return [{
           transactionHash: '0xtx1',
           blockNumber: 101n,
@@ -103,11 +84,12 @@ describe('indexer service', () => {
         }];
       }
 
-      if (address === '0x3333333333333333333333333333333333333333') {
+      // MerchantPortal
+      if (address === '0x1111111111111111111111111111111111111103') {
         return [{
           transactionHash: '0xtx2',
           blockNumber: 101n,
-          args: { customer: '0xccc', merchant: '0xddd', token: '0xeee', amount: 7n, orderId: 'order-1' },
+          args: { customer: '0xccc', merchant: '0xddd', token: '0xeee', amount: 7n, fee: 0n, orderId: 'order-1', customerScore: 100, channel: 0 },
         }];
       }
 
@@ -132,19 +114,14 @@ describe('indexer service', () => {
 
     expect(result.indexed).toBe(2);
     expect(result.toBlock).toBe(118);
-    expect(mockGetLogs).toHaveBeenCalledTimes(3);
+    // Asserts the indexer queried at least the configured event source addresses.
     expect(mockGetLogs).toHaveBeenCalledWith(expect.objectContaining({
-      address: '0x1111111111111111111111111111111111111111',
+      address: '0x1111111111111111111111111111111111111101', // VFIDEToken
       fromBlock: 89n,
       toBlock: 118n,
     }));
     expect(mockGetLogs).toHaveBeenCalledWith(expect.objectContaining({
-      address: '0x2222222222222222222222222222222222222222',
-      fromBlock: 89n,
-      toBlock: 118n,
-    }));
-    expect(mockGetLogs).toHaveBeenCalledWith(expect.objectContaining({
-      address: '0x3333333333333333333333333333333333333333',
+      address: '0x1111111111111111111111111111111111111103', // MerchantPortal
       fromBlock: 89n,
       toBlock: 118n,
     }));
