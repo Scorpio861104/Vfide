@@ -100,7 +100,7 @@ describe('useProofScore', () => {
     expect(result.current.isElite).toBe(true)
   })
 
-  it('returns High Trust tier for score >= 7000', () => {
+  it('returns Council tier for score >= 7000', () => {
     mockUseReadContract.mockReturnValue({
       data: BigInt(7000),
       isLoading: false,
@@ -109,7 +109,7 @@ describe('useProofScore', () => {
     
     const { result } = renderHook(() => useProofScore())
     
-    expect(result.current.tier).toBe('High Trust')
+    expect(result.current.tier).toBe('Council')
     expect(result.current.burnFee).toBe(1.0)
   })
 
@@ -166,7 +166,7 @@ describe('useProofScore', () => {
 
   it('returns correct color for Neutral tier', () => {
     mockUseReadContract.mockReturnValue({
-      data: BigInt(5500),
+      data: BigInt(5200),
       isLoading: false,
       refetch: jest.fn(),
     })

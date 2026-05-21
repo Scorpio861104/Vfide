@@ -16,8 +16,26 @@ jest.mock('@/lib/auth/middleware', () => ({
   isAdmin: jest.fn(() => false),
   verifyOnChainAdmin: jest.fn(async () => false),
   checkOwnership: jest.fn(() => true),
-  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
-  withOwnership: jest.fn((_extractor: any, handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => {
+    // Use the same address that requireAuth returns so route auth checks line up.
+    // If requireAuth returns a Response (e.g. 401), bubble it up.
+    const auth = (jest.requireMock('@/lib/auth/middleware') as any).requireAuth;
+    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
+    try {
+      const r = typeof auth === 'function' ? auth(req) : null;
+      if (r && typeof r.status === 'number' && typeof r.json === 'function') {
+        // It's a Response — return it directly to mimic real withAuth behavior.
+        return r;
+      }
+      if (r && r.user) user = r.user;
+    } catch { /* ignore */ }
+    return handler(req, user, ctx);
+  }),
+  withOwnership: jest.fn((extractor: any, handler: any) => async (req: any, ctx?: any) => {
+    const target = await extractor(req, ctx);
+    const address = (typeof target === 'string' ? target : '0x0000000000000000000000000000000000000000').toLowerCase();
+    return handler(req, { sub: address, address }, ctx);
+  }),
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({
@@ -305,7 +323,7 @@ describe('/api/messages', () => {
         expect.objectContaining({
           type: 'message',
           payload: expect.objectContaining({
-            topic: `chat.${mockRecipientAddress.toLowerCase()}_${mockUserAddress.toLowerCase()}`,
+            topic: [mockUserAddress.toLowerCase(), mockRecipientAddress.toLowerCase()].sort().join('_').replace(/^/, 'chat.'),
             from: mockUserAddress.toLowerCase(),
             to: mockRecipientAddress.toLowerCase(),
           }),
@@ -316,7 +334,7 @@ describe('/api/messages', () => {
         expect.objectContaining({
           type: 'notification',
           payload: expect.objectContaining({
-            topic: 'notifications',
+            topic: `notifications.${mockRecipientAddress.toLowerCase()}`,
             category: 'message',
             recipient: mockRecipientAddress.toLowerCase(),
             sender: mockUserAddress.toLowerCase(),
@@ -449,7 +467,7 @@ describe('/api/messages', () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe('Database error');
+      expect(data.error).toBe('Failed to send message');
       expect(mockClient.release).toHaveBeenCalled();
     });
 

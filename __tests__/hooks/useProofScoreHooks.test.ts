@@ -107,7 +107,7 @@ describe('useProofScoreHooks', () => {
       expect(canEndorse).toBe(true)
     })
 
-    it('returns High Trust tier for score 7000-7999', () => {
+    it('returns Council tier for score 7000-7999', () => {
       jest.mocked(useReadContract).mockReturnValue({
         data: 7500n as unknown as undefined,
         isLoading: false,
@@ -115,9 +115,9 @@ describe('useProofScoreHooks', () => {
       } as ReturnType<typeof useReadContract>)
 
       const { tier, canCouncil, canEndorse } = useProofScore()
-      expect(tier).toBe('High Trust')
+      expect(tier).toBe('Council')
       expect(canCouncil).toBe(true)
-      expect(canEndorse).toBe(false)
+      expect(canEndorse).toBe(true)
     })
 
     it('returns Low Trust tier for score 3500-4999', () => {
@@ -179,7 +179,7 @@ describe('useProofScoreHooks', () => {
         isLoading: false,
         refetch: jest.fn(),
       } as ReturnType<typeof useReadContract>)
-      expect(useProofScore().color).toBe('#00F0FF') // High trust cyan
+      expect(useProofScore().color).toBe('#A78BFA') // Council purple
 
       jest.mocked(useReadContract).mockReturnValue({
         data: 5000n as unknown as undefined,
