@@ -15,7 +15,10 @@ jest.mock('next/navigation', () => ({
   permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
   notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
   useSearchParams: jest.fn(() => new URLSearchParams()),
-  useParams: jest.fn(() => ({})),
+  useParams: jest.fn(() => ({,
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
+})),
   useSelectedLayoutSegment: jest.fn(() => null),
   useSelectedLayoutSegments: jest.fn(() => []),
 }));

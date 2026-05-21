@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock wagmi hooks
-jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: jest.fn(() => ({ address: '0x0000000000000000000000000000000000000001', isConnected: true, status: 'connected', chainId: 84532 })),
   useChainId: jest.fn(() => 84532),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle', isPending: false, isError: false, error: null, reset: jest.fn() })),
@@ -29,7 +29,18 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useConfig: jest.fn(() => ({})),
   WagmiProvider: ({ children }) => children,
   createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
   http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }));
 
 // Mock chains

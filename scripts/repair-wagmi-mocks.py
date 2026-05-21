@@ -14,7 +14,7 @@ import re
 import sys
 from pathlib import Path
 
-CANONICAL_SENTINEL = "/* CANONICAL_WAGMI_MOCK */"
+CANONICAL_SENTINEL = "/* CANONICAL_WAGMI_MOCK_V2 */"
 
 # Order-preserving canonical key/value pairs.
 DEFAULTS: list[tuple[str, str]] = [
@@ -42,10 +42,28 @@ DEFAULTS: list[tuple[str, str]] = [
     ("useConfig",                 "jest.fn(() => ({}))"),
     ("WagmiProvider",             "({ children }) => children"),
     ("createConfig",              "jest.fn(() => ({}))"),
+    ("createStorage",             "jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() }))"),
+    ("cookieStorage",             "{ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() }"),
     ("http",                      "jest.fn(() => ({}))"),
+    ("fallback",                  "jest.fn(() => ({}))"),
+    ("useGasPrice",               "jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }))"),
+    ("useEstimateFeesPerGas",     "jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() }))"),
+    ("useReconnect",              "jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false }))"),
+    ("useTransaction",            "jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false }))"),
+    ("useTransactionReceipt",     "jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false }))"),
+    ("serialize",                 "jest.fn((v) => JSON.stringify(v))"),
+    ("deserialize",               "jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } })"),
+    ("cookieToInitialState",      "jest.fn(() => undefined)"),
 ]
 
-PRESERVE_KEYS = {"useAccount", "useChainId", "useSwitchChain", "useReadContract", "useReadContracts"}
+PRESERVE_KEYS = {
+    "useAccount", "useChainId", "useSwitchChain", "useReadContract", "useReadContracts",
+    "useWriteContract", "useWaitForTransactionReceipt", "useBalance", "useGasPrice",
+    "useEstimateGas", "useEstimateFeesPerGas", "useConnect", "useDisconnect",
+    "usePublicClient", "useWalletClient", "useSignTypedData", "useSignMessage",
+    "useSendTransaction", "useBlockNumber", "useTransaction", "useTransactionReceipt",
+    "useEnsName", "useEnsAvatar", "useReconnect", "useConnections", "useWatchContractEvent",
+}
 
 START_RE = re.compile(r"jest\.mock\(\s*['\"]wagmi['\"]\s*,")
 

@@ -53,19 +53,16 @@ jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
 })())
 
 jest.mock('@/lib/contracts', () => ({
-  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-  getContractConfigurationError: (name: string) =>
-    new Error(`[VFIDE] ${name} contract not configured.`),
-  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  // CANONICAL_CONTRACTS_MOCK_V2
   CONTRACT_ADDRESSES: {},
-
+  CONTRACTS: {},
   getContractAddresses: () => ({}),
+  isConfiguredContractAddress: (address?: string | null) =>,
   validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  getContractConfigurationError: (name: string) =>,
 }))
 
 jest.mock('@/components/onboarding/OnboardingManager', () => ({

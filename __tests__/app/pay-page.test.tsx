@@ -22,7 +22,12 @@ jest.mock('next/navigation', () => ({
   redirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
   permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
   notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
-  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn(), back: jest.fn(), forward: jest.fn(), refresh: jest.fn() })),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn(), back: jest.fn(), forward: jest.fn(), refresh: jest.fn(),
+  usePathname: jest.fn(() => '/'),
+  useParams: jest.fn(() => ({})),
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
+})),
   usePathname: jest.fn(() => '/'),
   useParams: jest.fn(() => ({})),
   useSelectedLayoutSegment: jest.fn(() => null),
@@ -40,7 +45,7 @@ jest.mock('framer-motion', () => ({
   },
 }));
 
-jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
@@ -65,7 +70,18 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useConfig: jest.fn(() => ({})),
   WagmiProvider: ({ children }) => children,
   createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
   http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }));
 
 jest.mock('@/components/ui/toast', () => ({
@@ -75,18 +91,44 @@ jest.mock('@/components/ui/toast', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
+  // CANONICAL_CONTRACTS_MOCK_V2
   CONTRACT_ADDRESSES: {},
   CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({})),
   isConfiguredContractAddress: jest.fn(() => true),
   validateContractAddress: jest.fn((addr) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
 }));
 
 jest.mock('viem', () => ({
   isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
   verifyMessage: mockVerifyMessage,
   parseAbi: jest.fn(() => []),
-  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function' })),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
+})),
   formatUnits: jest.fn((v: any) => String(v)),
   parseUnits: jest.fn((v: any) => BigInt(v || 0)),
   formatEther: jest.fn((v: any) => String(v)),

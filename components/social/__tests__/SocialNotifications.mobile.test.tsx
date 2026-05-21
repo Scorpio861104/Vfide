@@ -32,13 +32,14 @@ jest.mock('wagmi', () => ({
 }))
 
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    NotificationManager: '0x1234567890123456789012345678901234567890',
-  },
-
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: () => ({}),
   isConfiguredContractAddress: jest.fn(() => true),
   validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
 }))
 
 jest.mock('@/lib/abis', () => ({

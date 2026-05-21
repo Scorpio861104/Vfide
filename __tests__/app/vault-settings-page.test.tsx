@@ -24,11 +24,15 @@ jest.mock('@/components/security/GuardianManagementPanel', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
-  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
-
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: () => ({}),
   isConfiguredContractAddress: jest.fn(() => true),
   validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
+  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
 }));
 
 jest.mock('framer-motion', () => {

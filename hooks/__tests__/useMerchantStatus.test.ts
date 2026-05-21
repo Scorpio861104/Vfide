@@ -5,19 +5,15 @@ import { useReadContract } from 'wagmi'
 
 jest.mock('wagmi')
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    MerchantPortal: '0x1234567890123456789012345678901234567890',
-  },
-  MerchantPortalABI: [],
-  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: () => ({}),
+  isConfiguredContractAddress: (address?: string | null) =>,
   validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
+  MerchantPortalABI: [],
 }))
 
 const mockUseReadContract = useReadContract as jest.MockedFunction<typeof useReadContract>

@@ -11,7 +11,7 @@ const mockUseReadContract = jest.fn()
 const mockUseWriteContract = jest.fn()
 const mockUseWaitForTransactionReceipt = jest.fn()
 
-jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: () => mockUseAccount(),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
@@ -36,27 +36,32 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useConfig: jest.fn(() => ({})),
   WagmiProvider: ({ children }) => children,
   createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
   http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }))
 
-jest.mock('../../lib/contracts', () => {
-  const contractAddresses = {
-    SeerSocial: '0x1234567890123456789012345678901234567890',
-  }
-
-  return {
-    CONTRACT_ADDRESSES: contractAddresses,
-    ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-    isConfiguredContractAddress: (address?: string | null) =>
-      typeof address === 'string' &&
-      address !== '0x0000000000000000000000000000000000000000' &&
-      address.startsWith('0x') &&
-      address.length === 42,
-    getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
-    getContractAddresses: () => ({}),
-    validateContractAddress: (addr) => addr,
-  }
-})
+jest.mock('../../lib/contracts', () => ({
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: contractAddresses,
+  CONTRACTS: {},
+  getContractAddresses: () => ({}),
+  isConfiguredContractAddress: (address?: string | null) =>,
+  validateContractAddress: (addr) => addr,
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
+  SeerSocial: '0x1234567890123456789012345678901234567890',
+  getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
+}))
 
 jest.mock('../../lib/abis', () => ({
   SeerSocialABI: [],

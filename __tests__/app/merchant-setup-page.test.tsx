@@ -20,7 +20,7 @@ jest.mock('@/components/merchant/OffRampWithdraw', () => ({
   default: () => <div>Off-Ramp Withdraw Component</div>,
 }));
 
-jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: () => ({ isConnected: true }),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
@@ -45,7 +45,18 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useConfig: jest.fn(() => ({})),
   WagmiProvider: ({ children }) => children,
   createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
   http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }));
 
 jest.mock('@rainbow-me/rainbowkit', () => ({
@@ -59,7 +70,10 @@ jest.mock('next/navigation', () => ({
   notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
   usePathname: jest.fn(() => '/'),
   useSearchParams: jest.fn(() => new URLSearchParams()),
-  useParams: jest.fn(() => ({})),
+  useParams: jest.fn(() => ({,
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
+})),
   useSelectedLayoutSegment: jest.fn(() => null),
   useSelectedLayoutSegments: jest.fn(() => []),
 }));

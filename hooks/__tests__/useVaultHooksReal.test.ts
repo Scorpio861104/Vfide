@@ -43,21 +43,17 @@ jest.mock('@/lib/abis', () => ({
 const mockIsCardBoundVaultMode = jest.fn(() => false)
 
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    VFIDEToken: '0x1234567890123456789012345678901234567890',
-    VaultHub: '0x2345678901234567890123456789012345678901',
-  },
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: () => ({}),
+  isConfiguredContractAddress: (address?: string | null) =>,
+  validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
   ACTIVE_VAULT_IMPLEMENTATION: 'uservault',
   ACTIVE_VAULT_ABI: [],
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 // Mock utils

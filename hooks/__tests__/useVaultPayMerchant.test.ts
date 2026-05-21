@@ -37,16 +37,14 @@ jest.mock('../useContractAddresses', () => ({
 }))
 
 jest.mock('../../lib/contracts', () => ({
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: (address?: string | null) =>,
+  validateContractAddress: jest.fn((addr: any) => addr),
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address.startsWith('0x') &&
-    address.length === 42 &&
-    address !== '0x0000000000000000000000000000000000000000',
-  getContractAddresses: jest.fn(() => ({,
-  validateContractAddress: jest.fn((addr: any) => addr),
-})),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CURRENT_CHAIN_ID: 84532,
 }))
 
 jest.mock('../../lib/abis', () => ({

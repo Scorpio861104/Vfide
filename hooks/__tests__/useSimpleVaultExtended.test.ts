@@ -51,12 +51,15 @@ jest.mock('../../lib/utils', () => ({
 
 // Mock contracts - disable CardBound mode so generic execute() tests work
 jest.mock('@/lib/contracts', () => ({
-  ...jest.requireActual('../../lib/__mocks__/contracts'),
-  isCardBoundVaultMode: () => false,
-
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: () => ({}),
   isConfiguredContractAddress: jest.fn(() => true),
   validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
+  isCardBoundVaultMode: () => false,
 }))
 
 import { useWriteContract } from 'wagmi'

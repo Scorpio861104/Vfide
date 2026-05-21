@@ -25,21 +25,17 @@ const mockIsCardBoundVaultMode = jest.fn(() => false)
 
 jest.mock('wagmi')
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    VaultHub: '0x1000000000000000000000000000000000000001',
-    VFIDEToken: '0x1000000000000000000000000000000000000002',
-  },
+  // CANONICAL_CONTRACTS_MOCK_V2
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: () => ({}),
+  isConfiguredContractAddress: (address?: string | null) =>,
+  validateContractAddress: jest.fn((addr: any) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
   ACTIVE_VAULT_IMPLEMENTATION: 'uservault',
   ACTIVE_VAULT_ABI: [],
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 // Mock the abis module - must match exact import path from useVaultHooks.ts

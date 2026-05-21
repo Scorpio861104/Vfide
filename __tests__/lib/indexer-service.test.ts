@@ -9,7 +9,30 @@ jest.mock('viem', () => ({
     getBlockNumber: mockGetBlockNumber,
     getLogs: mockGetLogs,
   parseAbi: jest.fn(() => []),
-  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function' })),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  isAddress: jest.fn((a: any) => typeof a === 'string' && /^0x[0-9a-fA-F]{40}$/.test(a)),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
+})),
   formatUnits: jest.fn((v: any) => String(v)),
   parseUnits: jest.fn((v: any) => BigInt(v || 0)),
   formatEther: jest.fn((v: any) => String(v)),
@@ -53,11 +76,14 @@ jest.mock('@/lib/db', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
+  // CANONICAL_CONTRACTS_MOCK_V2
   CONTRACT_ADDRESSES: {},
   CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({})),
   isConfiguredContractAddress: jest.fn(() => true),
   validateContractAddress: jest.fn((addr) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
 }));
 
 describe('indexer service', () => {

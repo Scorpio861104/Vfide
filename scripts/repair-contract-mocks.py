@@ -16,15 +16,15 @@ import sys
 from pathlib import Path
 
 SENTINELS = {
-    "@/lib/contracts": "// CANONICAL_CONTRACTS_MOCK",
-    "@/lib/contracts/future-contracts": "// CANONICAL_FUTURE_CONTRACTS_MOCK",
+    "@/lib/contracts": "// CANONICAL_CONTRACTS_MOCK_V2",
+    "@/lib/contracts/future-contracts": "// CANONICAL_FUTURE_CONTRACTS_MOCK_V2",
 }
 
 CANONICAL_CONTRACTS = """({
   CONTRACT_ADDRESSES: {},
   CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({})),
-  isConfiguredContractAddress: jest.fn(() => true),
+  isConfiguredContractAddress: jest.fn((addr) => typeof addr === 'string' && /^0x[0-9a-fA-F]{40}$/.test(addr) && addr !== '0x0000000000000000000000000000000000000000'),
   validateContractAddress: jest.fn((addr) => addr),
 })"""
 
