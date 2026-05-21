@@ -51,9 +51,7 @@ jest.mock('@/lib/contracts', () => ({
 jest.mock('@/lib/contracts/future-contracts', () => ({
   getFutureContractAddresses: jest.fn(() => ({
     BadgeNFT: '0x1234567890123456789012345678901234567891',
-  getFutureContractAddress: jest.fn(() => '0x0000000000000000000000000000000000000000'),
-  isConfiguredFutureContract: jest.fn(() => false),
-})),
+  })),
   isFutureFeaturesEnabled: jest.fn(() => true),
 }))
 

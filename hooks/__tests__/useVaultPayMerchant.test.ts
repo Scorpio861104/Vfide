@@ -43,6 +43,8 @@ jest.mock('../../lib/contracts', () => ({
     address.startsWith('0x') &&
     address.length === 42 &&
     address !== '0x0000000000000000000000000000000000000000',
+  getContractAddresses: jest.fn(() => ({})),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 jest.mock('../../lib/abis', () => ({

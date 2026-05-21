@@ -46,6 +46,8 @@ jest.mock('../../lib/contracts', () => ({
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
   isConfiguredContractAddress: (address: string) => address !== '0x0000000000000000000000000000000000000000',
   getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
+  getContractAddresses: jest.fn(() => ({})),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 jest.mock('../../lib/abis', () => ({

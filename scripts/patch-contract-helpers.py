@@ -100,12 +100,18 @@ def main() -> int:
             continue
         new_src = src
         n_total = 0
-        if "@/lib/contracts" in src:
-            new_src, n = patch_text(new_src, "@/lib/contracts", DEFAULTS_CONTRACTS)
-            n_total += n
-        if "@/lib/contracts/future-contracts" in src:
-            new_src, n = patch_text(new_src, "@/lib/contracts/future-contracts", DEFAULTS_FUTURE)
-            n_total += n
+        # Match both `@/lib/contracts` (alias) and any relative form like
+        # `../../lib/contracts` / `../lib/contracts`. The test author's
+        # choice between them is irrelevant — both ultimately resolve to
+        # the same lib/contracts module under jest's resolver.
+        for module_path in ("@/lib/contracts", "../lib/contracts", "../../lib/contracts", "../../../lib/contracts"):
+            if module_path in src:
+                new_src, n = patch_text(new_src, module_path, DEFAULTS_CONTRACTS)
+                n_total += n
+        for module_path in ("@/lib/contracts/future-contracts", "../lib/contracts/future-contracts", "../../lib/contracts/future-contracts"):
+            if module_path in src:
+                new_src, n = patch_text(new_src, module_path, DEFAULTS_FUTURE)
+                n_total += n
         if "@/lib/futurecontracts" in src:
             new_src, n = patch_text(new_src, "@/lib/futurecontracts", DEFAULTS_FUTURE)
             n_total += n

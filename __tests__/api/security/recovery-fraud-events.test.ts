@@ -19,7 +19,6 @@ jest.mock('@/lib/auth/middleware', () => {
       return handler(request, authResult.user, ...rest);
     },
     isAdmin: jest.fn(() => false),
-    requireAuth: async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } }),
     requireOwnership: async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } }),
     requireAdmin: async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } }),
     verifyAuth: async () => ({ ok: true, user: { sub: 'test' } }),

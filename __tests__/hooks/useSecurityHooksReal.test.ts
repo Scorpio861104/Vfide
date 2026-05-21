@@ -63,6 +63,7 @@ jest.mock('../../lib/contracts', () => ({
   }),
   isCardBoundVaultMode: () => false,
   isConfiguredContractAddress: (address: string) => address !== '0x0000000000000000000000000000000000000000',
+  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 // Mock ABIs

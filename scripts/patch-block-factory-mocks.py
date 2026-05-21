@@ -135,7 +135,13 @@ def patch_block_factory(
             pos = body_close_idx + 1
             continue
         obj_text = src[ret_obj_open + 1 : ret_obj_close]
+        # Detect both `key:` (regular) AND `key,` / `key }` (shorthand
+        # property syntax: e.g. `return { requireAuth, withAuth }`).
         existing = set(re.findall(r"\b(\w+)\s*:", obj_text))
+        existing |= set(re.findall(r"\b(\w+)\s*[,}]", obj_text))
+        # Also exclude reserved JS words / control-flow tokens that could
+        # match the shorthand pattern.
+        existing -= {"return", "if", "else", "for", "while", "true", "false", "null"}
         missing = [(k, v) for k, v in defaults.items() if k not in existing]
         if not missing:
             out.append(src[m.end():body_close_idx + 1])
@@ -191,15 +197,18 @@ def main() -> int:
             continue
         new_src = src
         n_total = 0
-        if "@/lib/contracts" in src:
-            new_src, n = patch_block_factory(new_src, "@/lib/contracts", DEFAULTS_CONTRACTS)
-            n_total += n
-        if "@/lib/contracts/future-contracts" in src:
-            new_src, n = patch_block_factory(new_src, "@/lib/contracts/future-contracts", DEFAULTS_FUTURE)
-            n_total += n
-        if "@/lib/auth/middleware" in src:
-            new_src, n = patch_block_factory(new_src, "@/lib/auth/middleware", DEFAULTS_MIDDLEWARE)
-            n_total += n
+        for module_path in ("@/lib/contracts", "../lib/contracts", "../../lib/contracts", "../../../lib/contracts"):
+            if module_path in src:
+                new_src, n = patch_block_factory(new_src, module_path, DEFAULTS_CONTRACTS)
+                n_total += n
+        for module_path in ("@/lib/contracts/future-contracts", "../lib/contracts/future-contracts", "../../lib/contracts/future-contracts"):
+            if module_path in src:
+                new_src, n = patch_block_factory(new_src, module_path, DEFAULTS_FUTURE)
+                n_total += n
+        for module_path in ("@/lib/auth/middleware", "../lib/auth/middleware", "../../lib/auth/middleware"):
+            if module_path in src:
+                new_src, n = patch_block_factory(new_src, module_path, DEFAULTS_MIDDLEWARE)
+                n_total += n
         if n_total > 0 and new_src != src:
             f.write_text(new_src, encoding="utf-8")
             patched += 1
