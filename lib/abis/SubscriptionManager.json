@@ -67,6 +67,11 @@
   },
   {
     "inputs": [],
+    "name": "SM_NotInheritanceActive",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "SM_NotMerchant",
     "type": "error"
   },
@@ -150,6 +155,38 @@
         "type": "uint256"
       },
       {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "EmergencyCancelQueued",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "EmergencyCancelRevoked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
         "indexed": true,
         "internalType": "address",
         "name": "cancelledBy",
@@ -157,6 +194,51 @@
       }
     ],
     "name": "EmergencyCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "fraudRegistry",
+        "type": "address"
+      }
+    ],
+    "name": "FraudRegistryChangeApplied",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "fraudRegistry",
+        "type": "address"
+      }
+    ],
+    "name": "FraudRegistryChangeCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "fraudRegistry",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "effectiveAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "FraudRegistryChangeQueued",
     "type": "event"
   },
   {
@@ -386,8 +468,53 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "deceasedParty",
+        "type": "address"
+      }
+    ],
+    "name": "SubscriptionSettledByInheritance",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "BREAKER_CHANGE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "EMERGENCY_CANCEL_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "FRAUD_REGISTRY_CHANGE_DELAY",
     "outputs": [
       {
         "internalType": "uint64",
@@ -486,6 +613,26 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "applyEmergencyCancel",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "applyFraudRegistry",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256[]",
         "name": "subIds",
         "type": "uint256[]"
@@ -534,6 +681,13 @@
   {
     "inputs": [],
     "name": "cancelEmergencyBreakerChange",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelFraudRegistryChange",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1034,6 +1188,51 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "pendingEmergencyCancelAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingFraudRegistry",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pendingFraudRegistryAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "subId",
         "type": "uint256"
       }
@@ -1052,6 +1251,19 @@
       }
     ],
     "name": "resumeSubscription",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "revokeEmergencyCancel",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1117,6 +1329,19 @@
       }
     ],
     "name": "setSeer",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "subId",
+        "type": "uint256"
+      }
+    ],
+    "name": "settleByInheritance",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

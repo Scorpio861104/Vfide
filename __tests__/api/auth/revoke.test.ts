@@ -4,6 +4,15 @@ import { POST } from '@/app/api/auth/revoke/route';
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
   getRequestAuthToken: jest.fn(),
+  requireOwnership: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  requireAdmin: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  verifyAuth: jest.fn(async () => ({ ok: true, user: { sub: 'test' } })),
+  optionalAuth: jest.fn(async () => null),
+  isAdmin: jest.fn(() => false),
+  verifyOnChainAdmin: jest.fn(async () => false),
+  checkOwnership: jest.fn(() => true),
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
+  withOwnership: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({

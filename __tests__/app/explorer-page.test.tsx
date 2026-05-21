@@ -15,6 +15,14 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+  redirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
+  usePathname: jest.fn(() => '/'),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+  useParams: jest.fn(() => ({})),
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
 }));
 
 jest.mock('framer-motion', () => ({

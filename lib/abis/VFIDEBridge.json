@@ -2421,7 +2421,7 @@
     "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {

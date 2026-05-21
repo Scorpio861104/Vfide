@@ -47,6 +47,9 @@ jest.mock('@/lib/contracts', () => ({
     new Error(`[VFIDE] ${name} contract not configured.`),
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
   CONTRACT_ADDRESSES: {},
+
+  getContractAddresses: () => ({}),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 jest.mock('@/components/onboarding/OnboardingManager', () => ({

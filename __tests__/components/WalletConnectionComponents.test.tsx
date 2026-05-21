@@ -8,15 +8,31 @@ import { render, screen, fireEvent } from '@testing-library/react'
 
 // Mock wagmi
 jest.mock('wagmi', () => ({
-  useAccount: jest.fn().mockReturnValue({ address: null, isConnected: false }),
-  useConnect: jest.fn().mockReturnValue({ connect: jest.fn(), connectors: [], isPending: false }),
-  useDisconnect: jest.fn().mockReturnValue({ disconnect: jest.fn() }),
-  useChainId: jest.fn().mockReturnValue(84532),
-  useSwitchChain: jest.fn().mockReturnValue({ switchChain: jest.fn() }),
-  useBalance: jest.fn().mockReturnValue({ data: null, isLoading: false }),
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })).mockReturnValue({ address: null, isConnected: false }),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })).mockReturnValue({ connect: jest.fn(), connectors: [], isPending: false }),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })).mockReturnValue({ disconnect: jest.fn() }),
+  useChainId: jest.fn(() => 1).mockReturnValue(84532),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })).mockReturnValue({ switchChain: jest.fn() }),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })).mockReturnValue({ data: null, isLoading: false }),
   WagmiProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   createConfig: jest.fn(),
   http: jest.fn(),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
 }))
 
 // Mock framer-motion

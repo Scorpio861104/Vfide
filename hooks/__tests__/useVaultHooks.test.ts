@@ -37,6 +37,9 @@ jest.mock('@/lib/contracts', () => ({
     address !== '0x0000000000000000000000000000000000000000' &&
     address.startsWith('0x') &&
     address.length === 42,
+
+  getContractAddresses: () => ({}),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 // Mock the abis module - must match exact import path from useVaultHooks.ts

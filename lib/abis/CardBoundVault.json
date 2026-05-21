@@ -67,11 +67,6 @@
   },
   {
     "inputs": [],
-    "name": "CBV_DelayActive",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "CBV_Expired",
     "type": "error"
   },
@@ -127,16 +122,6 @@
   },
   {
     "inputs": [],
-    "name": "CBV_Locked",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_NoPending",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "CBV_NoRotation",
     "type": "error"
   },
@@ -148,11 +133,6 @@
   {
     "inputs": [],
     "name": "CBV_NotAdmin",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_NotAuthorized",
     "type": "error"
   },
   {
@@ -198,56 +178,6 @@
   {
     "inputs": [],
     "name": "CBV_PayIntentTokenInvalid",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_PaymentQueueAlreadyProcessed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_PaymentQueueFull",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_PaymentQueueInvalidIndex",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_PaymentQueueNotReady",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_PendingExists",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_QueueAlreadyProcessed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_QueueFull",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_QueueInvalidIndex",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_QueueNotReady",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "CBV_ReceiverChanged",
     "type": "error"
   },
   {
@@ -1501,6 +1431,19 @@
   {
     "inputs": [],
     "name": "SENSITIVE_ADMIN_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "WITHDRAWAL_DELAY",
     "outputs": [
       {
         "internalType": "uint64",

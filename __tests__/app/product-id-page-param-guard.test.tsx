@@ -16,6 +16,13 @@ const renderProductPage = () => {
 jest.mock('next/navigation', () => ({
   useParams: () => mockParams,
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+  redirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
+  usePathname: jest.fn(() => '/'),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
 }));
 
 jest.mock('next/link', () => ({

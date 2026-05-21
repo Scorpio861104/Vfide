@@ -25,6 +25,10 @@ jest.mock('@/components/security/GuardianManagementPanel', () => ({
 
 jest.mock('@/lib/contracts', () => ({
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+
+  getContractAddresses: () => ({}),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }));
 
 jest.mock('framer-motion', () => {

@@ -99,6 +99,9 @@ jest.mock('@/lib/contracts', () => ({
   CARD_BOUND_VAULT_ABI: [],
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
   isCardBoundVaultMode: () => mockCardBoundMode,
+
+  getContractAddresses: () => ({}),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }));
 
 jest.mock('wagmi', () => ({
@@ -120,7 +123,28 @@ jest.mock('wagmi', () => ({
       return { data: 0n };
     }
     if (args?.functionName === 'getPendingQueuedWithdrawals') {
-      return { data: mockQueuedWithdrawalData, refetch: jest.fn(async () => ({ data: mockQueuedWithdrawalData })) };
+      return { data: mockQueuedWithdrawalData, refetch: jest.fn(async () => ({ data: mockQueuedWithdrawalData,
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: jest.fn(),
+  createConfig: jest.fn(),
+  http: jest.fn(),
+})) };
     }
     if (args?.functionName === 'activeQueuedWithdrawals') {
       return { data: mockQueuedWithdrawalData?.[0]?.length ?? 0 };
@@ -146,6 +170,28 @@ jest.mock('viem', () => ({
   parseUnits: (value: string) => BigInt(Math.floor(parseFloat(value || '0') * 1e18)),
   formatUnits: (value: bigint) => String(Number(value) / 1e18),
   maxUint256: (1n << 256n) - 1n,
+  parseAbi: jest.fn(() => []),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function' })),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
 }));
 
 jest.mock('framer-motion', () => {

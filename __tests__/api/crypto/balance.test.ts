@@ -5,6 +5,28 @@ jest.mock('viem', () => ({
   createPublicClient: jest.fn(),
   http: jest.fn(),
   isAddress: jest.fn(),
+  parseAbi: jest.fn(() => []),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function' })),
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({
@@ -17,6 +39,16 @@ jest.mock('@/lib/db', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  requireOwnership: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  requireAdmin: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  verifyAuth: jest.fn(async () => ({ ok: true, user: { sub: 'test' } })),
+  getRequestAuthToken: jest.fn(async () => null),
+  optionalAuth: jest.fn(async () => null),
+  isAdmin: jest.fn(() => false),
+  verifyOnChainAdmin: jest.fn(async () => false),
+  checkOwnership: jest.fn(() => true),
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
+  withOwnership: jest.fn((handler: any) => async (req: any, ctx?: any) => handler(req, { sub: 'test', address: '0x0000000000000000000000000000000000000000' }, ctx)),
 }));
 
 describe('/api/crypto/balance/[address]', () => {

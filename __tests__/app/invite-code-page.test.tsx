@@ -14,6 +14,14 @@ const renderInviteCodePage = () => {
 
 jest.mock('next/navigation', () => ({
   useParams: () => ({ code: mockCode }),
+  redirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn(), back: jest.fn(), forward: jest.fn(), refresh: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
 }));
 
 jest.mock('framer-motion', () => ({

@@ -19,6 +19,14 @@ jest.mock('next/navigation', () => ({
   useSearchParams: () => ({
     get: (key: string) => mockSearchParams.get(key),
   }),
+  redirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  permanentRedirect: jest.fn(() => { throw new Error('NEXT_REDIRECT'); }),
+  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn(), back: jest.fn(), forward: jest.fn(), refresh: jest.fn() })),
+  usePathname: jest.fn(() => '/'),
+  useParams: jest.fn(() => ({})),
+  useSelectedLayoutSegment: jest.fn(() => null),
+  useSelectedLayoutSegments: jest.fn(() => []),
 }));
 
 jest.mock('@/components/layout/Footer', () => ({
@@ -37,6 +45,30 @@ jest.mock('wagmi', () => ({
     isConnected: true,
     address: '0x1111111111111111111111111111111111111111' as const,
   }),
+  useChainId: jest.fn(() => 1),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: jest.fn(),
+  createConfig: jest.fn(),
+  http: jest.fn(),
 }));
 
 jest.mock('@/components/ui/toast', () => ({
@@ -57,11 +89,38 @@ jest.mock('@/lib/contracts', () => ({
   getContractConfigurationError: (name: string) =>
     new Error(`[VFIDE] ${name} contract not configured.`),
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+
+  getContractAddresses: () => ({}),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }));
 
 jest.mock('viem', () => ({
   isAddress: (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value),
   verifyMessage: mockVerifyMessage,
+  parseAbi: jest.fn(() => []),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function' })),
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
 }));
 
 jest.mock('@/hooks/usePriceHooks', () => ({

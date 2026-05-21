@@ -4,14 +4,31 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 
 // Mock wagmi before importing hooks
 jest.mock('wagmi', () => ({
-  useAccount: jest.fn(),
-  useReadContract: jest.fn(),
-  useReadContracts: jest.fn().mockReturnValue({ data: [] }),
-  useWriteContract: jest.fn(),
-  useWaitForTransactionReceipt: jest.fn(),
-  useChainId: jest.fn(),
-  usePublicClient: jest.fn(),
-  useWatchContractEvent: jest.fn(),
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })).mockReturnValue({ data: [] }),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useChainId: jest.fn(() => 1),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: jest.fn(),
+  createConfig: jest.fn(),
+  http: jest.fn(),
 }))
 
 // Mock abis
@@ -38,6 +55,9 @@ jest.mock('@/lib/contracts', () => ({
     address !== '0x0000000000000000000000000000000000000000' &&
     address.startsWith('0x') &&
     address.length === 42,
+
+  getContractAddresses: () => ({}),
+  validateContractAddress: jest.fn((addr: any) => addr),
 }))
 
 // Mock utils
