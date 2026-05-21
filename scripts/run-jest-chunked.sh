@@ -30,12 +30,13 @@ for i in "${!CHUNKS[@]}"; do
     timeout 230 \
     ./node_modules/.bin/jest $CHUNK --passWithNoTests --silent --maxWorkers=1 \
     >> "$OUT" 2>&1
-  # Extract counts
-  TAIL=$(tail -8 "$OUT")
-  PASS=$(echo "$TAIL" | grep -oE "[0-9]+ passed" | head -1 | grep -oE "[0-9]+")
-  FAIL=$(echo "$TAIL" | grep -oE "[0-9]+ failed" | head -1 | grep -oE "[0-9]+")
-  PASS_S=$(echo "$TAIL" | grep "Test Suites:" | grep -oE "[0-9]+ passed" | head -1 | grep -oE "[0-9]+")
-  FAIL_S=$(echo "$TAIL" | grep "Test Suites:" | grep -oE "[0-9]+ failed" | head -1 | grep -oE "[0-9]+")
+  # Extract counts — the "Tests:" line is the test totals; "Test Suites:" is the suite line.
+  TESTS_LINE=$(tail -20 "$OUT" | grep "^Tests:" | tail -1)
+  SUITES_LINE=$(tail -20 "$OUT" | grep "^Test Suites:" | tail -1)
+  PASS=$(echo "$TESTS_LINE" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+")
+  FAIL=$(echo "$TESTS_LINE" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+")
+  PASS_S=$(echo "$SUITES_LINE" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+")
+  FAIL_S=$(echo "$SUITES_LINE" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+")
   echo "[chunk $i SUMMARY] tests pass=${PASS:-0} fail=${FAIL:-0} suites pass=${PASS_S:-0} fail=${FAIL_S:-0}"
   TOTAL_PASS=$(( TOTAL_PASS + ${PASS:-0} ))
   TOTAL_FAIL=$(( TOTAL_FAIL + ${FAIL:-0} ))
