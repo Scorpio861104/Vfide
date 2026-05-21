@@ -48,9 +48,7 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   cookieToInitialState: jest.fn(() => undefined),
 }));
 
-jest.mock('@/components/social/SocialFeed', () => ({
-  SocialFeed: () => <div>Social Feed Component</div>,
-}));
+// Note: app/social-payments no longer mounts the legacy SocialFeed component.
 
 jest.mock('@/components/social/UnifiedActivityFeed', () => ({
   UnifiedActivityFeed: () => <div>Unified Activity Feed Component</div>,

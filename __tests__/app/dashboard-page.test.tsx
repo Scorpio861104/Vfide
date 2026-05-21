@@ -124,9 +124,7 @@ jest.mock('@/components/ui/Skeleton', () => ({
   Skeleton: () => <div data-testid="skeleton" />,
 }));
 
-jest.mock('@/components/seo/SEOHead', () => ({
-  SEOHead: () => <div data-testid="seo-head" />,
-}));
+// Note: app/dashboard does not import @/components/seo/SEOHead anymore.
 
 jest.mock('@/components/proofscore', () => ({
   ProofScoreRing: ({ score }: { score: number }) => <div>ProofScoreRing {score}</div>,

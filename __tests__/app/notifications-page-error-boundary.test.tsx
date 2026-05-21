@@ -150,11 +150,7 @@ jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
   });
 })());
 
-jest.mock('@/lib/errorMonitoring', () => ({
-  errorMonitor: {
-    captureError: jest.fn(),
-  },
-}));
+// Note: @/lib/errorMonitoring is no longer used by the notifications error boundary.
 
 jest.mock('@/lib/logger', () => ({
   logger: {

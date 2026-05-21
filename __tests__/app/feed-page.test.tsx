@@ -62,9 +62,7 @@ jest.mock('@/components/ui/PageLayout', () => ({
   PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-jest.mock('@/components/social/SocialFeed', () => ({
-  SocialFeed: () => <div>Social Feed Component</div>,
-}));
+// Note: app/feed/page.tsx no longer mounts the legacy SocialFeed component.
 
 jest.mock('framer-motion', () => {
   /* FRAMER_MOTION_MOCK_V1 */

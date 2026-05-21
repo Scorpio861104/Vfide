@@ -104,9 +104,13 @@ jest.mock('@/components/fees', () => ({
   FeeSavingsCalculator: () => <div data-testid="fee-savings-calculator" />,
 }));
 
-jest.mock('@/lib/vaultMode', () => ({
-  isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
-}));
+jest.mock('@/lib/contracts', () => {
+  const actual = jest.requireActual('@/lib/contracts');
+  return {
+    ...actual,
+    isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+  };
+});
 
 describe('Home page pathways', () => {
   beforeEach(() => {
