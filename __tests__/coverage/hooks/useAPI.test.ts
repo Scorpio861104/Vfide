@@ -96,6 +96,16 @@ describe('useAuth Hook', () => {
 
   describe('Authentication Flow', () => {
     it('should handle successful authentication', async () => {
+      // Set up wallet connected with address and chainId
+      const { useAccount, useChainId, useSignMessage } = require('wagmi');
+      useAccount.mockReturnValue({ address: '0x1234567890123456789012345678901234567890', isConnected: true });
+      useChainId.mockReturnValue(84532);
+      useSignMessage.mockReturnValue({
+        signMessageAsync: jest.fn().mockResolvedValue('0xsignature'),
+        signMessage: jest.fn(),
+        data: undefined, isPending: false, isError: false, error: null, reset: jest.fn(),
+      });
+
       const { result } = renderHook(() => useAuth());
       
       let success: boolean | undefined;

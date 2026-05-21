@@ -117,6 +117,16 @@ jest.mock('../../lib/abis', () => ({
   MerchantPortalABI: [],
 }))
 
+jest.mock('@/components/security/AppLockProvider', () => ({
+  useAppLock: jest.fn(() => ({
+    requestUnlock: jest.fn().mockResolvedValue(true),
+    isLocked: false,
+    lock: jest.fn(),
+    unlock: jest.fn(),
+  })),
+  AppLockProvider: ({ children }: any) => children,
+}))
+
 // Import hooks after mocks are set up
 import {
   useIsMerchant,

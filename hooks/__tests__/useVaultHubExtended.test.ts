@@ -18,6 +18,10 @@ jest.mock('wagmi', () => {
     useWriteContract: jest.fn(),
     useWaitForTransactionReceipt: jest.fn(),
     useChainId: jest.fn(),
+    useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle', isPending: false })),
+    usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn(), simulateContract: jest.fn(), waitForTransactionReceipt: jest.fn().mockResolvedValue({ status: 'success', transactionHash: '0xabc', logs: [] }) })),
+    useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+    useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   };
 })
 
@@ -81,7 +85,7 @@ jest.mock('@/lib/contracts', () => ({
   CONTRACT_ADDRESSES: { VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' },
   CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' })),
-  isConfiguredContractAddress: (address?: string | null) =>,
+  isConfiguredContractAddress: (address?: string | null) => Boolean(address && address !== '0x0000000000000000000000000000000000000000'),
   validateContractAddress: jest.fn((addr: any) => addr),
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
   CURRENT_CHAIN_ID: 84532,
@@ -102,16 +106,21 @@ jest.mock('@/lib/testnet', () => ({
   CURRENT_CHAIN_ID: 84532,
 }))
 
-// Mock lib/chains
-jest.mock('@/lib/chains', () => ({
-  getChainByChainId: jest.fn().mockReturnValue({
-    testnet: { name: 'Base Sepolia', id: 84532 },
-    mainnet: { name: 'Base', id: 8453 }
-  }),
-  isTestnetChainId: jest.fn().mockReturnValue(true),
-}))
+// Mock lib/chains - merge in everything else from the real module so missing
+// helpers don't break the hook (only override the specific ones we need to control).
+jest.mock('@/lib/chains', () => {
+  const actual = jest.requireActual('@/lib/chains');
+  return {
+    ...actual,
+    getChainByChainId: jest.fn().mockReturnValue({
+      testnet: { name: 'Base Sepolia', id: 84532 },
+      mainnet: { name: 'Base', id: 8453 }
+    }),
+    isTestnetChainId: jest.fn().mockReturnValue(true),
+  };
+})
 
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId, useSwitchChain, usePublicClient } from 'wagmi'
 import { useVaultHub } from '../useVaultHub'
 
 describe('useVaultHub - Extended Tests', () => {
@@ -226,7 +235,7 @@ describe('useVaultHub - Extended Tests', () => {
         try {
           await result.current.createVault()
         } catch (e: unknown) {
-          expect((e as Error).message).toContain('not properly initialized')
+          expect((e as Error).message).toContain('initialised')
         }
       })
     })
@@ -271,7 +280,7 @@ describe('useVaultHub - Extended Tests', () => {
         try {
           await result.current.createVault()
         } catch (e: unknown) {
-          expect((e as Error).message).toContain('would fail')
+          expect((e as Error).message).toContain('would revert')
         }
       })
     })
@@ -288,7 +297,7 @@ describe('useVaultHub - Extended Tests', () => {
         try {
           await result.current.createVault()
         } catch (e: unknown) {
-          expect((e as Error).message).toContain('creation failed')
+          expect((e as Error).message).toContain('reverted')
         }
       })
     })
@@ -303,7 +312,7 @@ describe('useVaultHub - Extended Tests', () => {
         try {
           await result.current.createVault()
         } catch (e: unknown) {
-          expect((e as Error).message).toContain('failed')
+          expect((e as Error).message).toContain('reverted')
         }
       })
     })
@@ -428,7 +437,15 @@ describe('useVaultHub - Extended Tests', () => {
     })
 
     it('should throw error when creating vault on wrong chain', async () => {
-      ;(useChainId as Mock).mockReturnValue(1) // Ethereum mainnet
+      ;(useChainId as Mock).mockReturnValue(1) // Ethereum mainnet - wrong chain
+      // Make switchChainAsync fail so hook cannot auto-switch
+      ;(useSwitchChain as Mock).mockReturnValue({
+        switchChain: jest.fn(),
+        switchChainAsync: jest.fn().mockRejectedValue(new Error('User rejected chain switch')),
+        chains: [],
+        status: 'idle',
+        isPending: false,
+      })
       ;(useReadContract as Mock).mockImplementation(({ functionName }: { functionName: string }) => {
         if (functionName === 'vaultOf') {
           return { 
@@ -484,8 +501,8 @@ describe('useVaultHub - Extended Tests', () => {
       const { result } = renderHook(() => useVaultHub())
 
       await act(async () => {
-        const txHash = await result.current.createVault()
-        expect(txHash).toBe(mockTxHash)
+        const result2 = await result.current.createVault()
+        expect(result2.transactionHash).toBe(mockTxHash)
       })
     })
 

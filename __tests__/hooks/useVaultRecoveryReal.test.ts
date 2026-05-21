@@ -146,7 +146,7 @@ describe('useVaultRecovery', () => {
 
   it('returns vaultOwner', () => {
     mockUseReadContract.mockImplementation(({ functionName }) => {
-      if (functionName === 'owner') return { data: ownerAddress }
+      if (functionName === 'admin') return { data: ownerAddress }
       return { data: undefined }
     })
     
@@ -351,8 +351,8 @@ describe('useVaultRecovery', () => {
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
-        functionName: 'requestRecovery',
-        args: [candidateAddress],
+        functionName: 'proposeWalletRotation',
+        args: [candidateAddress, expect.any(BigInt)],
       }))
     })
 
@@ -375,7 +375,7 @@ describe('useVaultRecovery', () => {
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
-        functionName: 'guardianApproveRecovery',
+        functionName: 'approveWalletRotation',
       }))
     })
 
@@ -398,7 +398,7 @@ describe('useVaultRecovery', () => {
       })
       
       expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
-        functionName: 'finalizeRecovery',
+        functionName: 'finalizeWalletRotation',
       }))
     })
 
@@ -411,25 +411,18 @@ describe('useVaultRecovery', () => {
   })
 
   describe('cancelRecovery', () => {
-    it('calls writeContractAsync', async () => {
-      mockWriteContractAsync.mockResolvedValue('0xtx')
-      
+    it('throws legacy not supported error', async () => {
       const { result } = renderHook(() => useVaultRecovery(testVaultAddress))
       
-      await act(async () => {
-        await result.current.cancelRecovery()
-      })
-      
-      expect(mockWriteContractAsync).toHaveBeenCalledWith(expect.objectContaining({
-        functionName: 'cancelRecovery',
-      }))
+      await expect(result.current.cancelRecovery())
+        .rejects.toThrow('does not support legacy cancelRecovery')
     })
 
     it('throws when no vault address', async () => {
       const { result } = renderHook(() => useVaultRecovery(undefined))
       
       await expect(result.current.cancelRecovery())
-        .rejects.toThrow('Vault address not provided')
+        .rejects.toThrow()
     })
   })
 

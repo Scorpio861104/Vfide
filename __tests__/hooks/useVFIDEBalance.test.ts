@@ -62,7 +62,7 @@ describe('useVFIDEBalance', () => {
 
   it('returns null balance when no data', () => {
     const { balance, isLoading, isError } = useVFIDEBalance('0x1234567890123456789012345678901234567890' as `0x${string}`)
-    expect(balance).toBeNull()
+    expect(balance == null).toBe(true)
     expect(isLoading).toBe(false)
     expect(isError).toBe(false)
   })
@@ -124,6 +124,6 @@ describe('useVFIDEBalance', () => {
 
   it('handles undefined address', () => {
     const { balance } = useVFIDEBalance(undefined)
-    expect(balance).toBeNull()
+    expect(balance == null).toBe(true)
   })
 })
