@@ -186,9 +186,11 @@ jest.mock('framer-motion', () => {
 });;
 
 jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
-  const __orig = {
-  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
-  return {
+  const Icon = ({ className }: { className?: string }) => {
+    const React = require('react');
+    return React.createElement('span', { className }, 'icon');
+  };
+  const __orig: Record<string, any> = {
     X: Icon,
     Bell: Icon,
     Search: Icon,
@@ -205,7 +207,6 @@ jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
     FileText: Icon,
     Plus: Icon,
   };
-};
   return new Proxy(__orig, {
     get: (t, prop) => {
       if (prop in t) return (t as any)[prop];

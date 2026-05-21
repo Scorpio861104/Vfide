@@ -129,15 +129,16 @@ jest.mock('@/components/trust/EndorsementStats', () => ({
 }));
 
 jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
-  const __orig = {
-  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
-  return {
+  const Icon = ({ className }: { className?: string }) => {
+    const React = require('react');
+    return React.createElement('span', { className }, 'icon');
+  };
+  const __orig: Record<string, any> = {
     ArrowLeft: Icon,
     Copy: Icon,
     CheckCircle: Icon,
     AlertCircle: Icon,
   };
-};
   return new Proxy(__orig, {
     get: (t, prop) => {
       if (prop in t) return (t as any)[prop];

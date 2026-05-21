@@ -76,9 +76,11 @@ jest.mock('@/components/ui/PageLayout', () => ({
 }));
 
 jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
-  const __orig = {
-  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
-  return {
+  const Icon = ({ className }: { className?: string }) => {
+    const React = require('react');
+    return React.createElement('span', { className }, 'icon');
+  };
+  const __orig: Record<string, any> = {
     ArrowUpDown: Icon,
     Building2: Icon,
     CreditCard: Icon,
@@ -88,7 +90,6 @@ jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
     TrendingUp: Icon,
     Zap: Icon,
   };
-};
   return new Proxy(__orig, {
     get: (t, prop) => {
       if (prop in t) return (t as any)[prop];
