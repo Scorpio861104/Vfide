@@ -103,6 +103,9 @@ def main() -> int:
         if "@/lib/contracts" in src:
             new_src, n = patch_text(new_src, "@/lib/contracts", DEFAULTS_CONTRACTS)
             n_total += n
+        if "@/lib/contracts/future-contracts" in src:
+            new_src, n = patch_text(new_src, "@/lib/contracts/future-contracts", DEFAULTS_FUTURE)
+            n_total += n
         if "@/lib/futurecontracts" in src:
             new_src, n = patch_text(new_src, "@/lib/futurecontracts", DEFAULTS_FUTURE)
             n_total += n

@@ -155,3 +155,14 @@ export const isConfiguredContractAddress = (address?: string | null): address is
   address.length === 42
 export const getContractConfigurationError = (name: string) =>
   new Error(`[VFIDE] ${name} contract not configured.`)
+
+// Mocked equivalent of the production `getContractAddresses(chainId)`
+// helper. Tests that import this either inspect the keys (so we return
+// the same shape as CONTRACT_ADDRESSES) or just need the call not to
+// throw at module-load time.
+export const getContractAddresses = (_chainId?: number) => CONTRACT_ADDRESSES
+
+// Mocked validator — production returns the address as-is when valid;
+// tests don't assert on rejection paths against this mock module.
+export const validateContractAddress = (address?: string | null) =>
+  address as `0x${string}` | undefined

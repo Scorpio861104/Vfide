@@ -77,6 +77,9 @@ jest.mock('@/lib/contracts', () => {
   return {
     ...actual,
     isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
+    getContractAddresses: () => ({}),
+    isConfiguredContractAddress: (addr) => typeof addr === 'string' && addr.startsWith('0x') && addr.length === 42 && addr !== '0x0000000000000000000000000000000000000000',
+    validateContractAddress: (addr) => addr,
   }
 })
 

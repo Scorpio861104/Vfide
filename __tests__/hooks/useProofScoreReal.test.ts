@@ -51,6 +51,8 @@ jest.mock('@/lib/contracts', () => {
       address.startsWith('0x') &&
       address.length === 42,
     getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
+    getContractAddresses: () => ({}),
+    validateContractAddress: (addr) => addr,
   }
 })
 

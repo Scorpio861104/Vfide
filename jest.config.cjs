@@ -126,6 +126,21 @@ const customJestConfig = {
     'lib/__tests__/stealthAddresses\\.test\\.ts$',
     'hooks/__tests__/useSimpleVaultExtended\\.test\\.ts$',
     'hooks/__tests__/useVaultRegistryExtended\\.test\\.ts$',
+
+    // Tests written against deleted useVaultHooks helpers (useSetGuardian,
+    // useCreateVault, useTransferVFIDE, useIsGuardianMature,
+    // usePendingTransaction, useApprovePendingTransaction, useBalanceSnapshot,
+    // useAbnormalTransactionThreshold, useCleanupExpiredTransaction,
+    // useUpdateBalanceSnapshot, useExecutePendingTransaction,
+    // useVaultGuardiansDetailed, useSetBalanceSnapshotMode). Current
+    // hooks/useVaultHooks.ts only exports useUserVault, useVaultBalance,
+    // useGuardianCancelInheritance, useInheritanceStatus.
+    '__tests__/useVaultHooks\\.test\\.ts$',
+    '__tests__/hooks/useVaultHooksReal\\.test\\.ts$',
+    'hooks/__tests__/useVaultHooks\\.test\\.ts$',
+    'hooks/__tests__/useVaultHooksReal\\.test\\.ts$',
+    '__tests__/components/VaultPanels\\.test\\.tsx$',
+    '__tests__/components/VaultSettingsPanel\\.test\\.tsx$',
   ],
 }
 
