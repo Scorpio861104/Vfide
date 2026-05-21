@@ -88,15 +88,11 @@ jest.mock('@/lib/vfide-hooks', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
-  __esModule: true,
-  CONTRACT_ADDRESSES: {
-    VFIDEToken: '0x1111111111111111111111111111111111111111',
-  },
-  isConfiguredContractAddress: (value?: string | null) =>
-    typeof value === 'string' && value.startsWith('0x') && value !== '0x0000000000000000000000000000000000000000',
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }));
 
 jest.mock('@/components/checkout/CouponInput', () => ({

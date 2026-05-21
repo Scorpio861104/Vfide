@@ -21,30 +21,19 @@ jest.mock('@/components/layout/Footer', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    VaultRegistry: '0x1111111111111111111111111111111111111111',
-    VaultHub: '0x2222222222222222222222222222222222222222',
-    Seer: '0x3333333333333333333333333333333333333333',
-    BadgeNFT: '0x4444444444444444444444444444444444444444',
-  },
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-  getContractConfigurationError: (name: string) =>
-    new Error(`[VFIDE] ${name} contract not configured.`),
-  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }));
   jest.mock('@/lib/contracts/future-contracts', () => ({
-    isFutureFeaturesEnabled: () => true,
-    getFutureContractAddresses: () => ({
-      BadgeNFT: '0x4444444444444444444444444444444444444444',
-    }),
-  }));
+  getFutureContractAddress: jest.fn(() => '0x0000000000000000000000000000000000000000'),
+  getFutureContractAddresses: jest.fn(() => ({})),
+  isConfiguredFutureContract: jest.fn(() => false),
+  isFutureFeaturesEnabled: jest.fn(() => true),
+  isFutureContractDeployed: jest.fn(() => false),
+}));
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
   useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),

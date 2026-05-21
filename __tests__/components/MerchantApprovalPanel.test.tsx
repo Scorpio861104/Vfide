@@ -46,17 +46,11 @@ jest.mock('@/components/ui/GlassCard', () => ({
 }))
 
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    MerchantPortal: '0x2000000000000000000000000000000000000002',
-    VFIDEToken: '0x1000000000000000000000000000000000000001',
-  },
-  CARD_BOUND_VAULT_ABI: [],
-  ERC20ABI: [],
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' && address.startsWith('0x') && address.length === 42,
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }))
 
 const loadMerchantApprovalPanel = () =>

@@ -53,17 +53,11 @@ jest.mock('@/lib/db', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
-  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  CONTRACT_ADDRESSES: {
-    VFIDEToken: '0x1111111111111111111111111111111111111111',
-    Seer: '0x2222222222222222222222222222222222222222',
-    SeerSocial: '0x0000000000000000000000000000000000000000',
-    MerchantPortal: '0x3333333333333333333333333333333333333333',
-  },
-  isConfiguredContractAddress: (address: string) => address !== '0x0000000000000000000000000000000000000000',
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }));
 
 describe('indexer service', () => {

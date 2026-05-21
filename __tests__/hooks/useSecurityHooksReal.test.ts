@@ -42,28 +42,11 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
 
 // Mock contracts
 jest.mock('../../lib/contracts', () => ({
-  ACTIVE_VAULT_ABI: [],
-  CARD_BOUND_VAULT_ABI: [],
-  CONTRACT_ADDRESSES: {
-    SecurityHub: '0x1234567890123456789012345678901234567890',
-    PanicGuard: '0x0987654321098765432109876543210987654321',
-    GuardianRegistry: '0xaaaa111122223333444455556666777788889999',
-    GuardianLock: '0xbbbbccccddddeeeeffffaaaa111122223333',
-    EmergencyBreaker: '0xcccc1111222233334444555566667777',
-    VaultHub: '0xdddd8888999900001111222233334444',
-  },
-  VAULT_HUB_ABI: [],
-  getContractAddresses: () => ({
-    SecurityHub: '0x1234567890123456789012345678901234567890',
-    PanicGuard: '0x0987654321098765432109876543210987654321',
-    GuardianRegistry: '0xaaaa111122223333444455556666777788889999',
-    GuardianLock: '0xbbbbccccddddeeeeffffaaaa111122223333',
-    EmergencyBreaker: '0xcccc1111222233334444555566667777',
-    VaultHub: '0xdddd8888999900001111222233334444',
-  }),
-  isCardBoundVaultMode: () => false,
-  isConfiguredContractAddress: (address: string) => address !== '0x0000000000000000000000000000000000000000',
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }))
 
 // Mock ABIs

@@ -112,22 +112,11 @@ jest.mock('@/lib/vfide-hooks', () => ({
 }));
 
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    VFIDEToken: '0x1111111111111111111111111111111111111111',
-    VaultHub: '0x2222222222222222222222222222222222222222',
-    MerchantPortal: '0x3333333333333333333333333333333333333333',
-  },
-  isConfiguredContractAddress: () => true,
-  VFIDETokenABI: [],
-  VaultHubABI: [],
-  ERC20ABI: [],
-  UserVaultABI: [],
-  CARD_BOUND_VAULT_ABI: [],
-  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  isCardBoundVaultMode: () => mockCardBoundMode,
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }));
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */

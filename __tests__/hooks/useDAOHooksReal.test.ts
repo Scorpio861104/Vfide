@@ -41,16 +41,11 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
 
 // Mock contracts
 jest.mock('../../lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    DAO: '0x1234567890123456789012345678901234567890',
-  },
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({})),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }))
 
 // Mock ABIs

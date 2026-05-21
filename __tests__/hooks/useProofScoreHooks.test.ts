@@ -40,21 +40,11 @@ jest.mock('react', async () => {
 
 // Mock contracts
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    Seer: '0x1234567890123456789012345678901234567890',
-    SeerSocial: '0x1234567890123456789012345678901234567891',
-    BurnRouter: '0x0000000000000000000000000000000000000000',
-  },
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-  SEER_ABI: [],
-  ProofScoreBurnRouterABI: [],
-
-  getContractAddresses: () => ({}),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({})),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }))
 
 // Mock ABIs

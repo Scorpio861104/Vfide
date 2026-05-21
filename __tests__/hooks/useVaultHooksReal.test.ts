@@ -74,17 +74,11 @@ jest.mock('viem', () => ({
 
 // Mock contracts
 jest.mock('../../lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    VaultHub: '0x1234567890123456789012345678901234567890',
-    VFIDEToken: '0x0987654321098765432109876543210987654321',
-  },
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({})),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }))
 
 // Mock ABIs

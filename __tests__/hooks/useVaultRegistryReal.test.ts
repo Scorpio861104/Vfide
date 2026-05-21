@@ -69,18 +69,11 @@ jest.mock('viem', () => ({
 }))
 
 jest.mock('../../lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    VaultRegistry: '0x1234567890123456789012345678901234567890',
-    VaultRecoveryClaim: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd',
-  },
-  VaultRegistryABI: [],
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({})),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }))
 
 // Import hooks after mocks

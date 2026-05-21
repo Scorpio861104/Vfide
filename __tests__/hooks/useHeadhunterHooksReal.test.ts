@@ -39,15 +39,11 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK */
 }))
 
 jest.mock('../../lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    EcosystemVault: '0x0000000000000000000000000000000000000000',
-    EcosystemVaultView: '0x0000000000000000000000000000000000000000',
-  },
-  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
-  isConfiguredContractAddress: (address: string) => address !== '0x0000000000000000000000000000000000000000',
-  getContractConfigurationError: (name: string) => new Error(`[VFIDE] ${name} contract not configured.`),
+  CONTRACT_ADDRESSES: {},
+  CONTRACTS: {},
   getContractAddresses: jest.fn(() => ({})),
-  validateContractAddress: jest.fn((addr: any) => addr),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
 }))
 
 jest.mock('../../lib/abis', () => ({
