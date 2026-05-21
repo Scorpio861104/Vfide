@@ -89,12 +89,12 @@ describe('ProofScoreRing', () => {
 
   it('shows label by default', () => {
     const { container } = render(<ProofScoreRing score={5000} />)
-    expect(container.textContent).toContain('TRUSTED')
+    expect(container.textContent).toContain('NEUTRAL')
   })
 
   it('hides label when showLabel is false', () => {
     const { container } = render(<ProofScoreRing score={5000} showLabel={false} />)
-    expect(container.textContent).not.toContain('TRUSTED')
+    expect(container.textContent).not.toContain('NEUTRAL')
   })
 
   it('applies custom className', () => {
@@ -108,19 +108,24 @@ describe('ProofScoreRing', () => {
       expect(container.textContent).toContain('ELITE')
     })
 
-    it('shows VERIFIED for score >= 7000', () => {
+    it('shows COUNCIL for score >= 7000', () => {
       const { container } = render(<ProofScoreRing score={7000} />)
-      expect(container.textContent).toContain('VERIFIED')
+      expect(container.textContent).toContain('COUNCIL')
     })
 
-    it('shows TRUSTED for score >= 5000', () => {
-      const { container } = render(<ProofScoreRing score={5000} />)
+    it('shows TRUSTED for score >= 5600', () => {
+      const { container } = render(<ProofScoreRing score={5600} />)
       expect(container.textContent).toContain('TRUSTED')
     })
 
-    it('shows NEUTRAL for score < 5000', () => {
-      const { container } = render(<ProofScoreRing score={4000} />)
+    it('shows NEUTRAL for score >= 5000 and < 5400', () => {
+      const { container } = render(<ProofScoreRing score={5000} />)
       expect(container.textContent).toContain('NEUTRAL')
+    })
+
+    it('shows LOW TRUST for score >= 3500 and < 5000', () => {
+      const { container } = render(<ProofScoreRing score={4000} />)
+      expect(container.textContent).toContain('LOW TRUST')
     })
   })
 })
@@ -138,7 +143,7 @@ describe('ProofScoreCard', () => {
     expect(container.textContent).toContain('Vault Created')
     expect(container.textContent).toContain('Transactions')
     expect(container.textContent).toContain('Governance')
-    expect(container.textContent).toContain('Badges')
+    expect(container.textContent).toContain('Achievements')
   })
 
   it('includes ProofScoreRing', () => {

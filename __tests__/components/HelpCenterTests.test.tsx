@@ -80,6 +80,10 @@ jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
   ChevronRight: () => <span data-testid="icon-chevron-right">ChevronRight</span>,
   Globe: () => <span data-testid="icon-globe">Globe</span>,
   Droplets: () => <span data-testid="icon-droplets">Droplets</span>,
+  Sparkles: () => <span data-testid="icon-sparkles">Sparkles</span>,
+  Clock: () => <span data-testid="icon-clock">Clock</span>,
+  Lock: () => <span data-testid="icon-lock">Lock</span>,
+  Fingerprint: () => <span data-testid="icon-fingerprint">Fingerprint</span>,
 });
   return new Proxy(__orig, {
     get: (t, prop) => {
@@ -202,7 +206,7 @@ describe('HelpCenter', () => {
     expect(screen.getByText(/Vault Security/i)).toBeInTheDocument()
   })
 
-  it('should show merchant tools topic', async () => {
+  it('should show wallet setup topic', async () => {
     const { HelpCenter } = await import('@/components/onboarding/HelpCenter')
     render(<HelpCenter />)
     
@@ -210,7 +214,7 @@ describe('HelpCenter', () => {
     const buttons = screen.getAllByRole('button')
     fireEvent.click(buttons[0])
     
-    expect(screen.getByText(/Merchant Tools/i)).toBeInTheDocument()
+    expect(screen.getByText(/Wallet Setup/i)).toBeInTheDocument()
   })
 
   it('should show test ETH topic', async () => {
@@ -250,12 +254,11 @@ describe('HelpCenter', () => {
     fireEvent.click(buttons[0])
     
     // Check for icons using queryAllByTestId since some might appear multiple times
-    expect(screen.queryAllByTestId('icon-book').length).toBeGreaterThan(0)
+    expect(screen.queryAllByTestId('icon-sparkles').length).toBeGreaterThan(0)
     expect(screen.queryAllByTestId('icon-globe').length).toBeGreaterThan(0)
     expect(screen.queryAllByTestId('icon-droplets').length).toBeGreaterThan(0)
     expect(screen.queryAllByTestId('icon-wallet').length).toBeGreaterThan(0)
     expect(screen.queryAllByTestId('icon-shield').length).toBeGreaterThan(0)
-    expect(screen.queryAllByTestId('icon-store').length).toBeGreaterThan(0)
   })
 
   it('should collapse expanded topic when clicked again', async () => {

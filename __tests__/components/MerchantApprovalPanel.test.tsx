@@ -8,12 +8,17 @@ const mockRefetchStablecoin = jest.fn(async () => ({ data: 0n }))
 const mockShowToast = jest.fn()
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
-  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected' })),
-  useChainId: jest.fn(() => 1),
+  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890', isConnected: true, status: 'connected' })),
+  useChainId: jest.fn(() => 84532),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
-  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContract: jest.fn((params: any) => {
+    if (params?.functionName === 'dailyTransferLimit') {
+      return { data: 123n, isError: false, isLoading: false, isSuccess: true, error: null, refetch: jest.fn() };
+    }
+    return { data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() };
+  }),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
-  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: mockWriteContractAsync, data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
   useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
   useWatchContractEvent: jest.fn(() => undefined),
   usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
@@ -97,7 +102,7 @@ describe('MerchantApprovalPanel', () => {
       expect(mockWriteContractAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           functionName: 'approveVFIDE',
-          args: ['0x2000000000000000000000000000000000000002', 123n],
+          args: ['0x1111111111111111111111111111111111111103', 123n],
         })
       )
     })
@@ -124,7 +129,7 @@ describe('MerchantApprovalPanel', () => {
           functionName: 'approveERC20',
           args: [
             '0x4000000000000000000000000000000000000004',
-            '0x2000000000000000000000000000000000000002',
+            '0x1111111111111111111111111111111111111103',
             123n,
           ],
         })

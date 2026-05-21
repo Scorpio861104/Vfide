@@ -108,14 +108,10 @@ jest.mock('@/lib/contracts', () => ({
   ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
   CURRENT_CHAIN_ID: 84532,
   isCardBoundVaultMode: () => mockIsCardBoundVaultMode(),
-  getContractConfigurationError: (name: string) =>,
+  getContractConfigurationError: (_name: string) => null,
 }))
 
-jest.mock('@/components/onboarding/OnboardingManager', () => ({
-  WIZARD_ENABLED_KEY: 'vfide_wizard_enabled',
-  TOUR_COMPLETED_KEY: 'vfide_tour_completed',
-  BEGINNER_COMPLETED_KEY: 'vfide_beginner_completed',
-}))
+// OnboardingManager was removed during refactoring; HelpCenter no longer depends on it.
 
 // Import after mocking
 import { HelpCenter } from '@/components/onboarding/HelpCenter'

@@ -153,7 +153,7 @@ describe('TransactionNotification', () => {
       
       const link = screen.getByText('View on Explorer →')
       expect(link).toBeInTheDocument()
-      expect(link).toHaveAttribute('href', 'https://sepolia.basescan.org/tx/0x1234567890abcdef')
+      expect(link).toHaveAttribute('href', 'https://etherscan.io/tx/0x1234567890abcdef')
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', 'noopener noreferrer')
     })

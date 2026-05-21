@@ -67,7 +67,7 @@ jest.mock('framer-motion', () => {
 
 // Mock wagmi
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
-  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
+  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890', isConnected: true, status: 'connected', chainId: 84532 })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
@@ -122,6 +122,7 @@ jest.mock('@/lib/vfide-hooks', () => ({
   useCustomerTrustScore: () => ({
     highTrust: true,
     lowTrust: false,
+    eligible: true,
   }),
   useProofScore: () => ({
     score: 750,
@@ -190,7 +191,7 @@ describe('PaymentInterface', () => {
     // Check for the icon or some UI element
     const svgs = document.querySelectorAll('svg')
     expect(svgs.length).toBeGreaterThan(0)
-    expect(screen.getByText(/Escrow for online orders/i)).toBeInTheDocument()
+    expect(screen.getByText(/Protected direct settlement for online orders/i)).toBeInTheDocument()
   })
 
   it('displays trust score when connected', () => {

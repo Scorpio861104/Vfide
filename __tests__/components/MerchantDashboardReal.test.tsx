@@ -200,8 +200,8 @@ jest.mock('framer-motion', () => {
     useAnimation: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
     useAnimationControls: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
     useScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollX: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollXProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
-    useMotionValue: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useTransform: (v) => ({ get: () => 0, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
+    useMotionValue: (v) => v,
+    useTransform: (v, fn) => (typeof fn === 'function' ? fn(typeof v === 'number' ? v : 0) : ''),
     useSpring: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
     useInView: () => true,
     useReducedMotion: () => false,
@@ -211,7 +211,7 @@ jest.mock('framer-motion', () => {
     useMotionTemplate: () => ({ get: () => '', set: jest.fn(), on: jest.fn(() => jest.fn()) }),
     useViewportScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
     useCycle: (...args) => [args[0], jest.fn()],
-    animate: jest.fn(),
+    animate: jest.fn(() => ({ stop: jest.fn() })),
     stagger: jest.fn(() => 0),
     transform: jest.fn((v) => v),
   };
@@ -427,7 +427,8 @@ describe('MerchantDashboard', () => {
     it('should show business name for merchants', () => {
       render(<MerchantDashboard />)
 
-      expect(screen.getByText('Test Shop')).toBeInTheDocument()
+      // Business name may appear in multiple places (header, status card, etc.)
+      expect(screen.getAllByText('Test Shop').length).toBeGreaterThan(0)
     })
     
     it('should show total volume for merchants', () => {

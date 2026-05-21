@@ -247,7 +247,23 @@ describe('ChainSelector', () => {
 
   describe('Full Mode Render', () => {
     it('should render full version with all chains visible', () => {
+      // Reset useSwitchChain to non-pending state (Pending State test above sets isPending: true)
+      jest.mocked(wagmi.useSwitchChain).mockReturnValue({
+        switchChain: jest.fn(),
+        switchChainAsync: jest.fn(),
+        chains: [],
+        status: 'idle',
+        isPending: false,
+        isError: false,
+        error: null,
+        reset: jest.fn(),
+      } as any);
+
       render(<ChainSelector />);
+      
+      // Open the dropdown by clicking the toggle button
+      const button = screen.getByRole('button');
+      fireEvent.click(button);
       
       // Multiple instances of Base may exist
       const baseElements = screen.getAllByText('Base');
