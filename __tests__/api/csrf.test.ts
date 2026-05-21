@@ -50,7 +50,9 @@ describe('/api/csrf', () => {
       process.env.NODE_ENV = 'production';
       generateCSRFToken.mockReturnValue('token');
 
-      const request = new NextRequest('http://localhost:3000/api/csrf');
+      const request = new NextRequest('http://localhost:3000/api/csrf', {
+        headers: { origin: 'http://localhost:3000' },
+      });
       const response = await GET(request);
       const cookies = response.cookies.getAll();
       const csrfCookie = cookies.find((c: { name: string }) => c.name === 'csrf_token');

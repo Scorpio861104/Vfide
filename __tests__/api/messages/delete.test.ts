@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DELETE } from '@/app/api/messages/delete/route';
 
-jest.mock('@/lib/db', () => ({
-  query: jest.fn(),
-}));
+jest.mock('@/lib/db', () => {
+  const query = jest.fn();
+  const release = jest.fn();
+  const client = { query, release };
+  return {
+    query,
+    getClient: jest.fn(async () => client),
+  };
+});
 
 jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
@@ -99,6 +105,9 @@ describe('/api/messages/delete', () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockReturnValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
+      // BEGIN
+      query.mockResolvedValueOnce({ rows: [] });
+      // SELECT message
       query.mockResolvedValueOnce({ 
         rows: [{ 
           id: 1, 
@@ -107,7 +116,10 @@ describe('/api/messages/delete', () => {
           is_deleted: false 
         }] 
       });
+      // UPDATE
       query.mockResolvedValueOnce({ rows: [{ id: 1, success: true }] });
+      // COMMIT
+      query.mockResolvedValueOnce({ rows: [] });
 
       const request = new NextRequest('http://localhost:3000/api/messages/delete', {
         method: 'DELETE',

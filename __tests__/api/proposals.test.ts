@@ -217,6 +217,8 @@ describe('/api/proposals', () => {
       createPublicClient.mockReturnValue({ readContract });
 
       query.mockResolvedValueOnce({ rows: [{ id: 1, is_council_member: false, proof_score: 100 }] });
+      // Per-proposer weekly rate limit query (P2-M-18)
+      query.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       query.mockResolvedValueOnce({
         rows: [{
           id: 1,

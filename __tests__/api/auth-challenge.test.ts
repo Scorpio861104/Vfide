@@ -1,60 +1,26 @@
 import { NextRequest } from 'next/server';
-import { POST as createChallenge } from '@/app/api/auth/challenge/route';
 
 jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
-jest.mock('viem', () => ({
-  isAddress: jest.fn(),
-  parseAbi: jest.fn(() => []),
-  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
-  formatUnits: jest.fn((v: any) => String(v)),
-  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
-  formatEther: jest.fn((v: any) => String(v)),
-  parseEther: jest.fn((v: any) => BigInt(v || 0)),
-  getAddress: jest.fn((a: string) => a),
-  encodeFunctionData: jest.fn(() => '0x'),
-  decodeFunctionResult: jest.fn(() => undefined),
-  encodeAbiParameters: jest.fn(() => '0x'),
-  decodeAbiParameters: jest.fn(() => []),
-  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
-  toBytes: jest.fn(() => new Uint8Array()),
-  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
-  hexToString: jest.fn((h: any) => String(h)),
-  padHex: jest.fn((h: any) => h),
-  zeroAddress: '0x0000000000000000000000000000000000000000',
-  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
-  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
-  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
-  http: jest.fn(() => ({})),
-  custom: jest.fn(() => ({})),
-  erc20Abi: [],
-  erc721Abi: [],
-})),
-  formatUnits: jest.fn((v: any) => String(v)),
-  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
-  formatEther: jest.fn((v: any) => String(v)),
-  parseEther: jest.fn((v: any) => BigInt(v || 0)),
-  getAddress: jest.fn((a: string) => a),
-  encodeFunctionData: jest.fn(() => '0x'),
-  decodeFunctionResult: jest.fn(() => undefined),
-  encodeAbiParameters: jest.fn(() => '0x'),
-  decodeAbiParameters: jest.fn(() => []),
-  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
-  toBytes: jest.fn(() => new Uint8Array()),
-  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
-  hexToString: jest.fn((h: any) => String(h)),
-  padHex: jest.fn((h: any) => h),
-  zeroAddress: '0x0000000000000000000000000000000000000000',
-  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
-  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
-  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
-  http: jest.fn(() => ({})),
-  custom: jest.fn(() => ({})),
-  erc20Abi: [],
-  erc721Abi: [],
+jest.mock('@/lib/security/siweChallenge', () => ({
+  createSiweChallenge: jest.fn(async () => ({
+    nonce: 'test-nonce-12345',
+    message:
+      'vfide.io wants you to sign in with your Ethereum account:\n0x1234567890123456789012345678901234567890\n\nSign in to VFIDE\n\nURI: https://vfide.io\nVersion: 1\nChain ID: 8453\nNonce: test-nonce-12345\nIssued At: 2024-01-01T00:00:00.000Z',
+    issuedAt: '2024-01-01T00:00:00.000Z',
+    expiresAt: '2024-01-01T00:10:00.000Z',
+  })),
+  getRequestIp: jest.fn(() => '127.0.0.1'),
+  resolveTrustedAuthDomain: jest.fn(() => 'vfide.io'),
 }));
+
+jest.mock('viem', () => ({
+  isAddress: jest.fn(() => true),
+}));
+
+import { POST as createChallenge } from '@/app/api/auth/challenge/route';
 
 describe('/api/auth/challenge', () => {
   const { withRateLimit } = require('@/lib/auth/rateLimit');
@@ -64,6 +30,8 @@ describe('/api/auth/challenge', () => {
     jest.clearAllMocks();
     withRateLimit.mockResolvedValue(null);
     isAddress.mockReturnValue(true);
+    process.env.NEXT_PUBLIC_CHAIN_ID = '8453';
+    process.env.NEXT_PUBLIC_SUPPORTED_CHAIN_IDS = '8453,84532';
   });
 
   it('creates SIWE challenge payload', async () => {

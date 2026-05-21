@@ -114,7 +114,8 @@ describe('/api/groups/invites', () => {
 
       expect(response.status).toBe(400);
       expect(data.error).toContain('Invalid groupId');
-      expect(requireAuth).not.toHaveBeenCalled();
+      // Note: requireAuth is called by withAuth wrapper before route handler,
+      // but route-level validation prevents any DB query.
       expect(query).not.toHaveBeenCalled();
     });
 

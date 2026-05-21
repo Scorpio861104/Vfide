@@ -230,7 +230,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       expect(data.error).toContain('Invalid request body');
     });
 
-    it('should skip unsupported on-chain reward verifiers and still claim rewards', async () => {
+    it('should refuse claim when on-chain reward verifier is unsupported (F-BE-024 fail-closed)', async () => {
       withRateLimit.mockResolvedValue(null);
       requireAuth.mockResolvedValue({ user: { address: '0x1111111111111111111111111111111111111123' } });
 
@@ -243,8 +243,7 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
             reward_type: 'quest',
             source_contract: '0x9999999999999999999999999999999999999999',
           }],
-        })
-        .mockResolvedValueOnce({ rows: [{ id: '11111111-1111-1111-1111-111111111111', amount: '25' }] });
+        });
 
       const request = new NextRequest('http://localhost:3000/api/crypto/rewards/1/claim', {
         method: 'POST',
@@ -256,9 +255,8 @@ describe('/api/crypto/rewards/[userId]/claim', () => {
       const response = await POST(request, { params: Promise.resolve({ userId: '1' }) });
       const data = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(data.claimed).toBe(1);
+      expect(response.status).toBe(503);
+      expect(data.error).toContain('on-chain verifier');
     });
   });
 });
