@@ -9,6 +9,12 @@ jest.mock('@/lib/auth/rateLimit', () => ({
   withRateLimit: jest.fn(),
 }));
 
+jest.mock('@/lib/auth/middleware', () => ({
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) =>
+    handler(req, { sub: 'customer', address: '0x1234567890123456789012345678901234567890' }, ctx)),
+  requireAuth: jest.fn(async () => ({ user: { sub: 'customer', address: '0x1234567890123456789012345678901234567890' } })),
+}));
+
 jest.mock('viem', () => {
   const actual = jest.requireActual('viem');
   return {
@@ -32,7 +38,7 @@ describe('/api/merchant/checkout/[id] PATCH', () => {
 
   it('returns 503 when tx verification is unavailable', async () => {
     withRateLimit.mockResolvedValue(null);
-    query.mockResolvedValueOnce({ rows: [{ id: 1, status: 'sent' }] });
+    query.mockResolvedValueOnce({ rows: [{ id: 1, status: 'sent', customer_address: '0x1234567890123456789012345678901234567890' }] });
 
     const request = new NextRequest('http://localhost:3000/api/merchant/checkout/abc', {
       method: 'PATCH',
@@ -54,10 +60,11 @@ describe('/api/merchant/checkout/[id] PATCH', () => {
     withRateLimit.mockResolvedValue(null);
     process.env.NEXT_PUBLIC_RPC_URL = 'http://127.0.0.1:8545';
 
-    query.mockResolvedValueOnce({ rows: [{ id: 1, status: 'sent' }] });
+    query.mockResolvedValueOnce({ rows: [{ id: 1, status: 'sent', customer_address: '0x1234567890123456789012345678901234567890' }] });
 
     const getTransactionReceipt = jest.fn().mockRejectedValue(new Error('Transaction not found'));
-    createPublicClient.mockReturnValue({ getTransactionReceipt });
+    const getTransaction = jest.fn().mockRejectedValue(new Error('Transaction not found'));
+    createPublicClient.mockReturnValue({ getTransactionReceipt, getTransaction });
 
     const request = new NextRequest('http://localhost:3000/api/merchant/checkout/abc', {
       method: 'PATCH',
@@ -80,11 +87,12 @@ describe('/api/merchant/checkout/[id] PATCH', () => {
     process.env.NEXT_PUBLIC_RPC_URL = 'http://127.0.0.1:8545';
 
     query
-      .mockResolvedValueOnce({ rows: [{ id: 1, status: 'sent' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 1, status: 'sent', customer_address: '0x1234567890123456789012345678901234567890' }] })
       .mockResolvedValueOnce({ rowCount: 1, rows: [] });
 
     const getTransactionReceipt = jest.fn().mockResolvedValue({ status: 'success' });
-    createPublicClient.mockReturnValue({ getTransactionReceipt });
+    const getTransaction = jest.fn().mockResolvedValue({ from: '0x1234567890123456789012345678901234567890' });
+    createPublicClient.mockReturnValue({ getTransactionReceipt, getTransaction });
 
     const request = new NextRequest('http://localhost:3000/api/merchant/checkout/abc', {
       method: 'PATCH',

@@ -17,23 +17,25 @@ jest.mock('@/lib/auth/middleware', () => ({
   verifyOnChainAdmin: jest.fn(async () => false),
   checkOwnership: jest.fn(() => true),
   withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => {
-    // V2: consult requireAuth so tests that set its return value flow through.
+    // V3: consult requireAuth (sync or async) so tests that set its return value flow through.
     const m = (jest.requireMock('@/lib/auth/middleware') as any);
     let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
     try {
-      const r = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
       if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
       if (r && r.user) user = r.user;
     } catch { /* ignore */ }
     return handler(req, user, ctx);
   }),
   withOwnership: jest.fn((extractor: any, handler: any) => async (req: any, ctx?: any) => {
-    // V2: extract target address from request and use it as auth user, bubble up
+    // V3: extract target address from request and use it as auth user, bubble up
     // requireAuth Response if set.
     const m = (jest.requireMock('@/lib/auth/middleware') as any);
     let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
     try {
-      const r = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r0 = typeof m.requireAuth === 'function' ? m.requireAuth(req) : null;
+      const r = (r0 && typeof (r0 as any).then === 'function') ? await r0 : r0;
       if (r && typeof r.status === 'number' && typeof r.json === 'function') return r;
       if (r && r.user) user = r.user;
       else {
