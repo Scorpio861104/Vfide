@@ -88,7 +88,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_read_own', tbl, tbl);
@@ -99,7 +99,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_insert_own', tbl, tbl);
@@ -110,14 +110,14 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
             WITH CHECK (
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_update_own', tbl, tbl, tbl);
@@ -128,7 +128,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_delete_own', tbl, tbl);
@@ -289,7 +289,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.%I
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, rec.tbl || '_read_own', rec.tbl, rec.tbl, rec.actor_col);
@@ -300,7 +300,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.%I
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, rec.tbl || '_insert_own', rec.tbl, rec.tbl, rec.actor_col);
@@ -349,7 +349,7 @@ BEGIN
                     SELECT 1 FROM group_members gm
                     JOIN users u ON u.id = gm.user_id
                     WHERE gm.group_id = %I.%I
-                      AND u.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(u.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, rec.tbl || '_read_member', rec.tbl, rec.tbl, rec.group_col);
