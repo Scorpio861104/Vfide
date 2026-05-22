@@ -481,7 +481,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
         d.approvals[msg.sender] = true;
         ++d.approvalCount;
-
+        
         emit DisbursementApproved(proposalId, msg.sender);
         _logEv(msg.sender, "disbursement_approval", proposalId, "");
     }

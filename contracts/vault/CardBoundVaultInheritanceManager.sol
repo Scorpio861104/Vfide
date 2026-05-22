@@ -153,15 +153,15 @@ contract CardBoundVaultInheritanceManager {
 
         delete pendingConfigHash;
         pendingHeirCount = uint8(count);
-        for (uint256 i = 0; i < MAX_HEIRS; i++) {
+        for (uint256 i = 0; i < MAX_HEIRS; ++i) {
             delete pendingHeirGuardianByIndex[i];
             delete pendingHeirCommitmentByIndex[i];
         }
 
-        for (uint256 i = 0; i < count; i++) {
+        for (uint256 i = 0; i < count; ++i) {
             address guardian = heirGuardians[i];
             if (guardian == address(0) || !_isGuardian(guardian)) revert INH_NotGuardian();
-            for (uint256 j = 0; j < i; j++) {
+            for (uint256 j = 0; j < i; ++j) {
                 if (heirGuardians[j] == guardian) revert INH_InvalidCommitment();
             }
             if (heirCommitments[i] == bytes32(0)) revert INH_InvalidCommitment();
@@ -192,7 +192,7 @@ contract CardBoundVaultInheritanceManager {
         address[] memory heirs = new address[](count);
         bytes32[] memory commitments = new bytes32[](count);
 
-        for (uint256 i = 0; i < MAX_HEIRS; i++) {
+        for (uint256 i = 0; i < MAX_HEIRS; ++i) {
             address oldGuardian = heirGuardianByIndex[i];
             if (oldGuardian != address(0)) {
                 delete heirCommitmentByGuardian[oldGuardian];
@@ -200,7 +200,7 @@ contract CardBoundVaultInheritanceManager {
             }
         }
 
-        for (uint256 i = 0; i < count; i++) {
+        for (uint256 i = 0; i < count; ++i) {
             address guardian = pendingHeirGuardianByIndex[i];
             if (!_isGuardian(guardian)) revert INH_NotGuardian();
             bytes32 commitment = pendingHeirCommitmentByIndex[i];
@@ -217,7 +217,7 @@ contract CardBoundVaultInheritanceManager {
         delete pendingHeirConfigEffectiveAt;
         delete pendingConfigVersion;
         delete pendingHeirCount;
-        for (uint256 i = 0; i < MAX_HEIRS; i++) {
+        for (uint256 i = 0; i < MAX_HEIRS; ++i) {
             delete pendingHeirGuardianByIndex[i];
             delete pendingHeirCommitmentByIndex[i];
         }
@@ -231,7 +231,7 @@ contract CardBoundVaultInheritanceManager {
         delete pendingHeirConfigEffectiveAt;
         delete pendingConfigVersion;
         delete pendingHeirCount;
-        for (uint256 i = 0; i < MAX_HEIRS; i++) {
+        for (uint256 i = 0; i < MAX_HEIRS; ++i) {
             delete pendingHeirGuardianByIndex[i];
             delete pendingHeirCommitmentByIndex[i];
         }
@@ -245,7 +245,7 @@ contract CardBoundVaultInheritanceManager {
         if (inheritanceStateValue != STATE_NORMAL) {
             revert INH_WrongState(inheritanceStateValue, STATE_NORMAL);
         }
-        for (uint256 i = 0; i < MAX_HEIRS; i++) {
+        for (uint256 i = 0; i < MAX_HEIRS; ++i) {
             delete pendingHeirGuardianByIndex[i];
             delete pendingHeirCommitmentByIndex[i];
         }
@@ -303,7 +303,7 @@ contract CardBoundVaultInheritanceManager {
         if (newCount >= threshold) {
             // Clear the pending state. Vote tally itself is left in storage
             // (version is monotonic so it can never be reused).
-            for (uint256 i = 0; i < MAX_HEIRS; i++) {
+            for (uint256 i = 0; i < MAX_HEIRS; ++i) {
                 delete pendingHeirGuardianByIndex[i];
                 delete pendingHeirCommitmentByIndex[i];
             }
@@ -344,7 +344,7 @@ contract CardBoundVaultInheritanceManager {
         // no daoGuardian is set (zero address), this check is a no-op.
         if (daoGuardian != address(0) && actor == daoGuardian) revert INH_DAOCannotInitiate();
 
-        inheritanceClaimNonce += 1;
+        ++inheritanceClaimNonce;
 
         inheritanceStateValue = STATE_VETO_PERIOD;
         inheritanceStateWindowEnd = uint64(block.timestamp + INHERITANCE_VETO_PERIOD);
@@ -376,7 +376,7 @@ contract CardBoundVaultInheritanceManager {
         if (guardianVetoedAtNonce[actor] == nonce) revert INH_HashAlreadyClaimed();
 
         guardianVetoedAtNonce[actor] = nonce;
-        vetoCount += 1;
+        ++vetoCount;
         emit InheritanceClaimVetoed(actor, vetoCount);
 
         if (vetoCount >= snapshotVetoThreshold) {
@@ -424,7 +424,7 @@ contract CardBoundVaultInheritanceManager {
         if (claimedHashes[expected]) revert INH_HashAlreadyClaimed();
 
         bool isConfiguredHeir = false;
-        for (uint256 i = 0; i < heirCount; i++) {
+        for (uint256 i = 0; i < heirCount; ++i) {
             if (heirGuardianByIndex[i] == actor) {
                 isConfiguredHeir = true;
                 break;
@@ -470,7 +470,7 @@ contract CardBoundVaultInheritanceManager {
         uint256 runningPaid = 0;
         uint256 runningBps = 0;
 
-        for (uint256 i = 0; i < revealedCount; i++) {
+        for (uint256 i = 0; i < revealedCount; ++i) {
             address heir = revealersByNonce[nonce][i];
             uint256 revealedBps = revealedBasisPointsByNonce[nonce][heir];
 
@@ -513,7 +513,7 @@ contract CardBoundVaultInheritanceManager {
         if (amount == 0) revert INH_InvalidCommitment();
 
         withdrawnByNonce[nonce][actor] = true;
-        withdrawnRevealerCount += 1;
+        ++withdrawnRevealerCount;
         totalPaidOut += amount;
         finalBasisPoints = finalBasisPointsByNonce[nonce][actor];
 

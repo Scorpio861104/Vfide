@@ -125,7 +125,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         
         // Mint the NFT
         tokenId = _nextTokenId++;
-        badgeMintCount[badge]++;
+        ++badgeMintCount[badge];
         uint256 badgeNum = badgeMintCount[badge];
         
         // Store metadata BEFORE _safeMint to prevent reentrancy via onERC721Received
@@ -153,7 +153,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         require(badges.length <= 28, "BADGE: batch too large");
         tokenIds = new uint256[](badges.length);
         
-        for (uint256 i = 0; i < badges.length; i++) {
+        for (uint256 i = 0; i < badges.length; ++i) {
             tokenIds[i] = mintBadge(badges[i]);
         }
         
@@ -277,7 +277,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         uint256 balance = balanceOf(user);
         tokens = new uint256[](balance);
         
-        for (uint256 i = 0; i < balance; i++) {
+        for (uint256 i = 0; i < balance; ++i) {
             tokens[i] = tokenOfOwnerByIndex(user, i);
         }
         
@@ -407,7 +407,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         tokenBadge[newTokenId] = badge;
         userBadgeToken[newOwner][badge] = newTokenId;
         mintTimestamp[newTokenId] = block.timestamp;
-        badgeMintCount[badge] += 1;
+        ++badgeMintCount[badge];
         badgeNumber[newTokenId] = badgeMintCount[badge];
 
         emit Locked(newTokenId);
@@ -427,7 +427,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
         
-        for (uint i = 0; i < bStr.length; i++) {
+        for (uint i = 0; i < bStr.length; ++i) {
             if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
                 bLower[i] = bytes1(uint8(bStr[i]) + 32);
             } else {
@@ -445,14 +445,14 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         uint256 digits;
         
         while (temp != 0) {
-            digits++;
+            ++digits;
             temp /= 10;
         }
         
         bytes memory buffer = new bytes(digits);
         
         while (value != 0) {
-            digits -= 1;
+            --digits;
             buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
             value /= 10;
         }

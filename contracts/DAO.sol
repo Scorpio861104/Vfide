@@ -478,9 +478,9 @@ contract DAO is ReentrancyGuard {
 
         proposalTypeTargetAllowed[ptype][target] = allowed;
         if (allowed) {
-            proposalTypeTargetPolicyCount[ptype] += 1;
+            ++proposalTypeTargetPolicyCount[ptype];
         } else {
-            proposalTypeTargetPolicyCount[ptype] -= 1;
+            --proposalTypeTargetPolicyCount[ptype];
         }
 
         emit ProposalTypeTargetPolicySet(ptype, target, allowed);
@@ -494,9 +494,9 @@ contract DAO is ReentrancyGuard {
 
         proposalTypeSelectorAllowed[ptype][selector] = allowed;
         if (allowed) {
-            proposalTypeSelectorPolicyCount[ptype] += 1;
+            ++proposalTypeSelectorPolicyCount[ptype];
         } else {
-            proposalTypeSelectorPolicyCount[ptype] -= 1;
+            --proposalTypeSelectorPolicyCount[ptype];
         }
 
         emit ProposalTypeSelectorPolicySet(ptype, selector, allowed);
@@ -552,16 +552,16 @@ contract DAO is ReentrancyGuard {
         uint256[] storage all = voterProposals[voter];
         uint256 writeIndex = 0;
 
-        for (uint256 readIndex = 0; readIndex < all.length; readIndex++) {
+        for (uint256 readIndex = 0; readIndex < all.length; ++readIndex) {
             uint256 proposalId = all[readIndex];
             bool shouldPrune = removed < maxRemovals && _canPruneVoterHistoryEntry(proposalId);
             if (shouldPrune) {
-                removed++;
+                ++removed;
                 continue;
             }
 
             all[writeIndex] = proposalId;
-            writeIndex++;
+            ++writeIndex;
         }
 
         while (all.length > writeIndex) {
@@ -624,7 +624,7 @@ contract DAO is ReentrancyGuard {
         // withdrawn/finalized proposals cannot permanently brick governance capacity.
         require(activeProposalCount < MAX_PROPOSALS, "DAO: proposal cap reached");
         id=++proposalCount;
-        activeProposalCount += 1;
+        ++activeProposalCount;
         Proposal storage p=proposals[id];
         p.proposer=msg.sender; p.proposalType=ptype; p.target=target; p.value=value; p.data=data; p.description=description;
         p.createdAt = uint64(block.timestamp);
@@ -656,11 +656,11 @@ contract DAO is ReentrancyGuard {
         require(!p.executed && !p.queued, "DAO: proposal already processed");
         
         p.hasVoted[voter] = true;
-        p.voterCount++; // FLOW-2 FIX: Track unique voter count
+        ++p.voterCount; // FLOW-2 FIX: Track unique voter count
 
         if (!hasVotedAnyProposal[voter]) {
             hasVotedAnyProposal[voter] = true;
-            totalActiveVoters += 1;
+            ++totalActiveVoters;
         }
         
         // Track voter history (I-11: capped to prevent unbounded storage growth)
@@ -760,7 +760,7 @@ contract DAO is ReentrancyGuard {
         bool passed = qmet && p.forVotes > p.againstVotes;
 
         if (activeProposalCount > 0) {
-            activeProposalCount -= 1;
+            --activeProposalCount;
         }
 
         emit Finalized(id,passed);
@@ -825,7 +825,7 @@ contract DAO is ReentrancyGuard {
         withdrawnProposalHashes[proposalHash] = uint64(block.timestamp);
 
         if (activeProposalCount > 0) {
-            activeProposalCount -= 1;
+            --activeProposalCount;
         }
 
         // Reset scalar fields instead of deleting the struct, which contains mappings.
@@ -871,13 +871,13 @@ contract DAO is ReentrancyGuard {
         if (offset == 0) offset = 1;
         if (limit == 0 || limit > 100) limit = 100;        uint256[] memory tmp = new uint256[](limit);
         uint256 found = 0;
-        for (uint256 i = offset; i <= proposalCount && found < limit; i++) {
+        for (uint256 i = offset; i <= proposalCount && found < limit; ++i) {
             if (proposals[i].end > block.timestamp && !proposals[i].executed && !proposals[i].queued) {
                 tmp[found++] = i;
             }
         }
         ids = new uint256[](found);
-        for (uint256 j = 0; j < found; j++) {
+        for (uint256 j = 0; j < found; ++j) {
             ids[j] = tmp[j];
         }
     }
@@ -1048,7 +1048,7 @@ contract DAO is ReentrancyGuard {
         uint256 end = offset + limit;
         if (end > all.length) end = all.length;
         proposalIds = new uint256[](end - offset);
-        for (uint256 i = offset; i < end; i++) {
+        for (uint256 i = offset; i < end; ++i) {
             proposalIds[i - offset] = all[i];
         }
     }
@@ -1105,7 +1105,7 @@ contract DAO is ReentrancyGuard {
         executedFlags = new bool[](ids.length);
         queuedFlags = new bool[](ids.length);
         
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; ++i) {
             Proposal storage p = proposals[ids[i]];
             forVotesCounts[i] = p.forVotes;
             againstVotesCounts[i] = p.againstVotes;

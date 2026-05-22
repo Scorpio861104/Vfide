@@ -450,7 +450,9 @@ contract CircuitBreaker is VFIDEAccessControl {
         }
 
         for (uint256 i = 0; i < len; ++i) {
-            uint256 index = len < MAX_TRIGGER_HISTORY ? i : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
+            uint256 index = len < MAX_TRIGGER_HISTORY
+                ? i
+                : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
             history[i] = triggerHistory[index];
         }
     }

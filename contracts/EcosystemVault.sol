@@ -894,8 +894,8 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             periodMerchants[currentMerchantPeriod].push(merchant);
         }
         
-        periodMerchantTxCount[currentMerchantPeriod][merchant]++;
-        merchantLifetimeTxCount[merchant]++;
+        ++periodMerchantTxCount[currentMerchantPeriod][merchant];
+        ++merchantLifetimeTxCount[merchant];
         
         // Store best tier achieved this period
         if (tier > periodMerchantTier[currentMerchantPeriod][merchant]) {
@@ -1406,7 +1406,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         totalCouncilPaid += distributed;
         lastCouncilDistribution = block.timestamp;
 
-        for (uint256 i = 0; i < memberCount; i++) {
+        for (uint256 i = 0; i < memberCount; ++i) {
             if (members[i] != address(0)) {
                 _payoutStablecoin(members[i], preferredStablecoin, perMember);
             }
@@ -1482,7 +1482,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit MerchantPeriodEnded(currentMerchantPeriod, merchantPeriodPoolSnapshot[currentMerchantPeriod]);
 
         lastMerchantDistribution = block.timestamp;
-        currentMerchantPeriod++;
+        ++currentMerchantPeriod;
         return true;
     }
 
@@ -1501,10 +1501,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         if (currentQuarter == 4) {
             currentQuarter = 1;
-            currentYear++;
+            ++currentYear;
             yearStartTime = block.timestamp;
         } else {
-            currentQuarter++;
+            ++currentQuarter;
         }
         lastQuarterPayout = block.timestamp;
         return true;

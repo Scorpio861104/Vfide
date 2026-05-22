@@ -282,7 +282,7 @@ contract CouncilSalary {
 
         // C-2 FIX: Increment nonce to prevent replay
         ++distributionNonce;
-
+        
         uint256 balance = token.balanceOf(address(this));
         require(balance > 0, "no funds");
 

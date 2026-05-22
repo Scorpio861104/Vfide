@@ -754,19 +754,13 @@ contract SubscriptionManager is ReentrancyGuard {
      * @return totalMRR totalMRR
      * @return totalValuePerInterval totalValuePerInterval
      */
-    function getMerchantStats(
-        address merchant
-    )
-        external
-        view
-        returns (
-            uint256 totalSubscriptions,
-            uint256 activeCount,
-            uint256 pausedCount,
-            uint256 totalMRR, // Monthly Recurring Revenue (assumes 30-day interval)
-            uint256 totalValuePerInterval
-        )
-    {
+    function getMerchantStats(address merchant) external view returns (
+        uint256 totalSubscriptions,
+        uint256 activeCount,
+        uint256 pausedCount,
+        uint256 totalMRR,  // Monthly Recurring Revenue (assumes 30-day interval)
+        uint256 totalValuePerInterval
+    ) {
         for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.merchant == merchant) {

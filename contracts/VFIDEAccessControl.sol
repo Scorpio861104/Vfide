@@ -237,10 +237,9 @@ contract VFIDEAccessControl is AccessControl {
         return true;
     }
 
-    /// @notice batchGrantRole
-    /// @param role role
-    /// @param accounts accounts
-    function batchGrantRole(bytes32 role, address[] calldata accounts) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function batchGrantRole(bytes32 role, address[] calldata accounts)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
+    {
         for (uint256 i = 0; i < accounts.length; ++i) {
             require(accounts[i] != address(0), "VFIDEAccessControl: account is zero address");
             _grantRole(role, accounts[i]);
@@ -248,13 +247,11 @@ contract VFIDEAccessControl is AccessControl {
         }
     }
 
-    /// @notice batchRevokeRole
-    /// @param role role
-    /// @param accounts accounts
-    function batchRevokeRole(bytes32 role, address[] calldata accounts) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function batchRevokeRole(bytes32 role, address[] calldata accounts)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
+    {
         for (uint256 i = 0; i < accounts.length; ++i) {
-            _revokeRole(role, accounts[i]);
-            _removeMember(role, accounts[i]);
+            _revokeRole(role, accounts[i]); _removeMember(role, accounts[i]);
         }
     }
 }

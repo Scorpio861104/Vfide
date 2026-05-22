@@ -345,7 +345,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         int56 period = int56(uint56(TWAP_PERIOD));
         int24 arithmeticMeanTick = int24(tickDelta / period);
         if (tickDelta < 0 && (tickDelta % period != 0)) {
-            arithmeticMeanTick--;
+            --arithmeticMeanTick;
         }
 
         uint256 vfideUnit = 10 ** uint256(vfideDecimals);
@@ -426,7 +426,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         uint256 writeIndex;
         if (pricePointCount < MAX_HISTORY) {
             writeIndex = pricePointCount;
-            pricePointCount++;
+            ++pricePointCount;
         } else {
             writeIndex = historyStartIndex;
             historyStartIndex = (historyStartIndex + 1) % MAX_HISTORY;
@@ -576,7 +576,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         uint256 returnCount = count > pricePointCount ? pricePointCount : count;
         prices = new PricePoint[](returnCount);
         
-        for (uint256 i = 0; i < returnCount; i++) {
+        for (uint256 i = 0; i < returnCount; ++i) {
             uint256 relativeIndex = pricePointCount - returnCount + i;
             uint256 storageIndex = pricePointCount < MAX_HISTORY
                 ? relativeIndex

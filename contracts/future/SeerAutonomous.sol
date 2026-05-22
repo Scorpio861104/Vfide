@@ -338,7 +338,7 @@ contract SeerAutonomous is ReentrancyGuard {
     
     function _initializeRateLimits() internal {
         SeerAutonomousLib.RateLimitEntry[48] memory entries = SeerAutonomousLib.getDefaultProfile();
-        for (uint256 i = 0; i < 48; i++) {
+        for (uint256 i = 0; i < 48; ++i) {
             rateLimits[RestrictionLevel(entries[i].level)][ActionType(entries[i].action)] = entries[i].limit;
         }
     }
@@ -380,7 +380,7 @@ contract SeerAutonomous is ReentrancyGuard {
         // 2. Check restriction level and rate limits
         result = _checkRestrictions(subject, action);
         if (result == EnforcementResult.Blocked) {
-            networkBlockedCount++;
+            ++networkBlockedCount;
             emit AutoEnforced(subject, action, result);
             return result;
         }
@@ -425,7 +425,7 @@ contract SeerAutonomous is ReentrancyGuard {
         _maybeAdjustThresholds();
         
         // 7. Increment network counters
-        networkActionCount++;
+        ++networkActionCount;
         
         emit AutoEnforced(subject, action, result);
         return result;
@@ -491,7 +491,7 @@ contract SeerAutonomous is ReentrancyGuard {
             actionCountToday[subject][ActionType.Trade] = 0;
         }
         
-        actionCountToday[subject][action]++;
+        ++actionCountToday[subject][action];
         lastActionTime[subject][action] = uint64(block.timestamp);
     }
     
@@ -520,12 +520,12 @@ contract SeerAutonomous is ReentrancyGuard {
         
         // Update counters
         if (action == ActionType.Transfer) {
-            window.transferCount++;
+            ++window.transferCount;
             window.transferVolume += amount;
         } else if (action == ActionType.GovernanceVote) {
-            window.voteCount++;
+            ++window.voteCount;
         } else if (action == ActionType.Endorse) {
-            window.endorseCount++;
+            ++window.endorseCount;
         }
         
         // F-88 FIX: Track counterparties with ring-buffer eviction (max 20),
@@ -566,7 +566,7 @@ contract SeerAutonomous is ReentrancyGuard {
             if (subjectWindowLen > MAX_COUNTERPARTY_SCAN) {
                 subjectWindowLen = MAX_COUNTERPARTY_SCAN;
             }
-            for (uint256 i = 0; i < subjectWindowLen; i++) {
+            for (uint256 i = 0; i < subjectWindowLen; ++i) {
                 if (window.recentCounterparties[i] == counterparty) {
                     seenCounterpartyBefore = true;
                     break;
@@ -576,7 +576,7 @@ contract SeerAutonomous is ReentrancyGuard {
             if (counterpartyWindowLen > MAX_COUNTERPARTY_SCAN) {
                 counterpartyWindowLen = MAX_COUNTERPARTY_SCAN;
             }
-            for (uint256 j = 0; j < counterpartyWindowLen; j++) {
+            for (uint256 j = 0; j < counterpartyWindowLen; ++j) {
                 if (cpWindow.recentCounterparties[j] == subject) {
                     seenSubjectFromCounterparty = true;
                     break;
@@ -608,10 +608,10 @@ contract SeerAutonomous is ReentrancyGuard {
     
     function _handlePattern(address subject, PatternType pattern) internal returns (EnforcementResult) {
         // Increment violation count
-        patternViolations[subject][pattern]++;
+        ++patternViolations[subject][pattern];
         uint8 count = patternViolations[subject][pattern];
         lastViolationTime[subject] = uint64(block.timestamp);
-        networkViolationCount++;
+        ++networkViolationCount;
 
         // Severity lookup table (extracted to library to reduce bytecode).
         uint16 severity = SeerAutonomousLib.severityFor(uint8(pattern));
@@ -650,11 +650,11 @@ contract SeerAutonomous is ReentrancyGuard {
     function _recordViolation(address subject, PatternType pattern, string memory reason) internal {
         _decayViolationScore(subject);
         if (pattern != PatternType.None) {
-            patternViolations[subject][pattern]++;
+            ++patternViolations[subject][pattern];
         }
         lastViolationTime[subject] = uint64(block.timestamp);
         _saturatingAddViolationScore(subject, 20);
-        networkViolationCount++;
+        ++networkViolationCount;
         _log(reason);
     }
     
@@ -1038,7 +1038,7 @@ contract SeerAutonomous is ReentrancyGuard {
 
         // Apply rate limits from library-supplied profile table
         SeerAutonomousLib.RateLimitEntry[48] memory profile = SeerAutonomousLib.getMaxAutonomyProfile();
-        for (uint256 i = 0; i < 48; i++) {
+        for (uint256 i = 0; i < 48; ++i) {
             _setRateLimitWithEvent(
                 RestrictionLevel(profile[i].level),
                 ActionType(profile[i].action),

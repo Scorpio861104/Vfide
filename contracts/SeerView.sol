@@ -197,8 +197,12 @@ contract SeerView {
         uint256 activeCount = 0;
 
         for (uint256 i = 0; i < total; ++i) {
-            address endorser = useSocial ? ISeerSocialViewTarget(social).getEndorserAt(subject, i) : target.getEndorserAt(subject, i);
-            (uint64 expiry, uint16 weight, ) = useSocial ? ISeerSocialViewTarget(social).endorsements(subject, endorser) : target.endorsements(subject, endorser);
+            address endorser = useSocial
+                ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
+                : target.getEndorserAt(subject, i);
+            (uint64 expiry, uint16 weight, ) = useSocial
+                ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
+                : target.endorsements(subject, endorser);
             if (expiry > block.timestamp && weight > 0) {
                 ++activeCount;
             }
@@ -211,8 +215,12 @@ contract SeerView {
 
         uint256 idx = 0;
         for (uint256 i = 0; i < total; ++i) {
-            address endorser = useSocial ? ISeerSocialViewTarget(social).getEndorserAt(subject, i) : target.getEndorserAt(subject, i);
-            (uint64 expiry, uint16 weight, uint64 ts) = useSocial ? ISeerSocialViewTarget(social).endorsements(subject, endorser) : target.endorsements(subject, endorser);
+            address endorser = useSocial
+                ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
+                : target.getEndorserAt(subject, i);
+            (uint64 expiry, uint16 weight, uint64 ts) = useSocial
+                ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
+                : target.endorsements(subject, endorser);
             if (expiry > block.timestamp && weight > 0) {
                 endorsers[idx] = endorser;
                 weights[idx] = weight;

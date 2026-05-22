@@ -169,7 +169,7 @@ contract MerchantRegistry {
         // never be suspended by the threshold; the counter decays back to
         // ~0 between events.
         _applyRefundDecay(m);
-        m.refunds += 1;
+        ++m.refunds;
         lastRefundAt[owner] = uint64(block.timestamp);
         if (m.refunds >= autoSuspendRefunds) {
             m.status = Status.SUSPENDED;
@@ -183,7 +183,7 @@ contract MerchantRegistry {
         if (m.status == Status.NONE) revert COM_NotMerchant();
         // POW-1 FIX: same decay rule applied to disputes (separate clock).
         _applyDisputeDecay(m);
-        m.disputes += 1;
+        ++m.disputes;
         lastDisputeAt[owner] = uint64(block.timestamp);
         if (m.disputes >= autoSuspendDisputes) {
             m.status = Status.SUSPENDED;

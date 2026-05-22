@@ -316,7 +316,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
         milestones = new UnlockMilestone[](TOTAL_UNLOCKS);
         uint256 cumulativeClaimed = 0;
-
+        
         for (uint256 i = 0; i < TOTAL_UNLOCKS; ++i) {
             // First unlock is available at cliff end; subsequent unlocks are every interval.
             uint64 unlockTime = c + uint64(i * UNLOCK_INTERVAL);

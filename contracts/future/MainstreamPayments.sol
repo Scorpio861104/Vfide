@@ -187,7 +187,7 @@ contract FiatRampRegistry is ReentrancyGuard {
         require(userRampHistory[user].length < 1000, "FRR: history full");
         userRampHistory[user].push(recordId);
         ++providers[msg.sender].txCount;
-
+        
         // Reward trust score for completed ramp activity (no on-chain identity tracking)
         _rewardRampUser(user);
 
@@ -263,7 +263,7 @@ contract FiatRampRegistry is ReentrancyGuard {
         if (userRampRewardCount[user] >= MAX_RAMP_REWARDS_PER_USER) return;
         ++rampRewardCount[msg.sender][user];
         ++userRampRewardCount[user];
-
+        
         uint16 currentScore = seer.getScore(user);
         if (currentScore < 100) {
             try seer.reward(user, FIRST_RAMP_BONUS, "first_ramp") {} catch {}
@@ -971,7 +971,7 @@ contract SessionKeyManager is ReentrancyGuard {
         spent = new uint256[](count);
         expiries = new uint64[](count);
         active = new bool[](count);
-
+        
         for (uint256 i = 0; i < count; ++i) {
             Session storage s = sessions[allKeys[i]];
             keys[i] = allKeys[i];
@@ -1254,7 +1254,7 @@ contract TerminalRegistry is ReentrancyGuard {
         require(amount > 0, "TR: zero amount");
         require(customer != t.merchant, "TR: self-pay blocked");
         require(vaultHub.vaultOf(customer) != address(0), "TR: customer no vault");
-
+        
         ++t.txCount;
         t.totalVolume += amount;
         t.lastTxTime = uint64(block.timestamp);
@@ -1304,7 +1304,7 @@ contract TerminalRegistry is ReentrancyGuard {
         terminalIds = ids;
         activeStatus = new bool[](ids.length);
         volumes = new uint256[](ids.length);
-
+        
         for (uint256 i = 0; i < ids.length; ++i) {
             Terminal storage t = terminals[ids[i]];
             activeStatus[i] = t.active;

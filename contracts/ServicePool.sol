@@ -385,9 +385,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
                 }
             }
 
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
         if (totalPayment == 0) revert NothingToClaim();
@@ -425,9 +423,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
                 emit UnclaimedSwept(period, outstanding, to);
             }
 
-            unchecked {
-                ++i;
-            }
+            unchecked { ++i; }
         }
 
         if (totalSweep > 0) {

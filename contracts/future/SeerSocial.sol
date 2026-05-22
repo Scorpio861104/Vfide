@@ -794,11 +794,17 @@ contract SeerSocial {
     function requestScoreReview(string calldata reason) external {
         require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SOCIAL: invalid reason length");
         require(scoreDisputes[msg.sender].timestamp < 1 || scoreDisputes[msg.sender].resolved, "SOCIAL: dispute pending");
-
-        scoreDisputes[msg.sender] = ScoreDispute({requester: msg.sender, reason: reason, timestamp: uint64(block.timestamp), resolved: false, approved: false});
-
+        
+        scoreDisputes[msg.sender] = ScoreDispute({
+            requester: msg.sender,
+            reason: reason,
+            timestamp: uint64(block.timestamp),
+            resolved: false,
+            approved: false
+        });
+        
         ++pendingDisputeCount;
-
+        
         emit ScoreDisputeRequested(msg.sender, reason);
         _logEv(msg.sender, "score_dispute_requested", 0, reason);
     }

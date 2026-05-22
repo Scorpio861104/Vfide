@@ -407,7 +407,7 @@ contract DAOTimelock is ReentrancyGuard {
         done = new bool[](len);
         expired = new bool[](len);
         
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             bytes32 id = queuedIds[i];
             Op storage op = queue[id];
             ids[i] = id;

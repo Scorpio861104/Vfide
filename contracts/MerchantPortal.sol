@@ -384,7 +384,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (path.length < 2 || path.length > MAX_SWAP_PATH_LENGTH) revert MERCH_InvalidConfig();
         if (path[0] != token) revert MERCH_InvalidConfig();
         if (path[path.length - 1] != stablecoin) revert MERCH_InvalidConfig();
-        for (uint256 i = 0; i < path.length; i++) {
+        for (uint256 i = 0; i < path.length; ++i) {
             if (path[i] == address(0)) revert MERCH_Zero();
         }
         tokenSwapPaths[token] = path;
@@ -1169,7 +1169,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function _hasPendingRefunds(address merchant) internal view returns (bool) {
         bytes32[] storage refundIds = merchantRefunds[merchant];
         uint256 len = refundIds.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (!refundRequests[refundIds[i]].completed) {
                 return true;
             }
@@ -1197,7 +1197,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function _recordMerchantStats(address merchant, uint256 amount) internal {
         MerchantInfo storage info = merchants[merchant];
         info.totalVolume += amount;
-        info.txCount += 1;
+        ++info.txCount;
     }
 
     function _validateSettlementToken(address token) internal view {
