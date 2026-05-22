@@ -41,6 +41,17 @@ export default function robots(): MetadataRoute.Robots {
           '/notifications/', // Block per-user notifications (auth)
           '/security-center/', // Block per-user security center (auth)
           '/inheritance/',   // Block inheritance flows (auth, sensitive)
+          // Internal / dev / demo surfaces — not part of the user-facing nav.
+          // Indexing these would surface non-product content in search and
+          // could mislead users about what the live product offers.
+          '/api-coverage/',  // Internal API endpoint coverage tracker
+          '/live-demo/',     // Marketing demo (not a real product surface)
+          '/demo/',          // Misc demo subroutes (e.g. /demo/crypto-social)
+          '/testnet/',       // Testnet-only faucet hub (auto-redirects on mainnet)
+          '/theme-showcase/',// Legacy designer showcase (now redirects to /theme)
+          '/theme-manager/', // Legacy theme manager (now redirects to /theme)
+          '/verifier/',      // Operator-only trusted-verifier console
+          '/splitter/',      // Operator-only revenue splitter inspector
         ],
       },
       {
