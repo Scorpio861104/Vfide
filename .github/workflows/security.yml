@@ -138,15 +138,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Pre-install node_modules so slither-action can use the existing
-      # install instead of running its own `npm install` (which doesn't
-      # respect our .npmrc and would fail with ERESOLVE on the
-      # @layerzerolabs/lz-evm-oapp-v2 transitive ethers v5/v6 conflict).
+      # Pre-install + pre-compile so slither-action can run with
+      # ignore-compile: true. This is required because slither-action
+      # runs in a fresh Docker container and doesn't see our .npmrc;
+      # its internal `npm ci` would fail with ERESOLVE on the
+      # @layerzerolabs/lz-evm-oapp-v2 transitive ethers v5/v6 conflict.
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci --legacy-peer-deps
+      - name: Install JS deps (with legacy-peer-deps)
+        run: npm ci --legacy-peer-deps
+      - name: Compile contracts
+        run: npx hardhat compile
 
       # Gate policy (post mainnet-readiness PR #235):
       #   The repo currently runs Slither at 0 findings across every severity tier.
@@ -162,8 +166,8 @@ jobs:
           target: 'contracts/'
           slither-args: '--json slither-output.json --solc-args "--via-ir --optimize --optimize-runs 0"'
           fail-on: none
-          # Skip the action's internal `npm install` — we just installed deps above.
-          ignore-compile: false
+          # Skip the action's internal compile + npm install; we did both above.
+          ignore-compile: true
         continue-on-error: true
 
       - name: Enforce zero-findings gate
