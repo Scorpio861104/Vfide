@@ -2,7 +2,7 @@
 
 import { Footer } from '@/components/layout/Footer';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Shield, Zap, Users, Star, TrendingUp, Lock, Globe, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ChevronRight, CheckCircle2, ShoppingBag, Store } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';
@@ -14,17 +14,18 @@ import { MonumentBackdrop } from './components/MonumentBackdrop';
 import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
 import { Step } from './components/Step';
+import { PlainEnglishCard } from './components/PlainEnglishCard';
 
 /* ── Marquee items ─────────────────────────────────────────── */
 const PROTOCOL_METRICS = [
-  { label: 'Merchant Fees', value: '0%', icon: '💸' },
-  { label: 'Max ProofScore', value: '10,000', icon: '🏆' },
-  { label: 'Burn Rate', value: '40%', icon: '🔥' },
-  { label: 'Sanctum Fund', value: '10%', icon: '🛡️' },
-  { label: 'Avg Settlement', value: '<3s', icon: '⚡' },
-  { label: 'Guardian Nodes', value: '3-of-5', icon: '🔐' },
-  { label: 'ProofScore Tiers', value: '7 Tiers', icon: '🎯' },
-  { label: 'Self-Custody', value: '100%', icon: '🗝️' },
+  { label: 'Merchant fee', value: '0%', icon: '💸' },
+  { label: 'Settlement', value: '<3s', icon: '⚡' },
+  { label: 'Custody', value: 'You hold the keys', icon: '🗝️' },
+  { label: 'Buyer fee at top reputation', value: '0.25%', icon: '🏆' },
+  { label: 'Recovery', value: 'Guardian-assisted', icon: '🔐' },
+  { label: 'Network', value: 'Base (L2)', icon: '🌐' },
+  { label: 'Open source', value: 'Yes', icon: '📖' },
+  { label: 'KYC for basic use', value: 'No', icon: '✅' },
 ];
 
 /* ── Feature data ──────────────────────────────────────────── */
@@ -76,8 +77,8 @@ const FEATURES = [
 const TRUST_POINTS = [
   'Non-custodial: your keys, your coins',
   'Open-source contracts on Base',
-  'Guardian multi-sig recovery',
-  'On-chain audit trail for every tx',
+  'Guardian-assisted recovery if you lose access',
+  'Every transaction has an on-chain audit trail',
 ];
 
 export default function Home() {
@@ -126,34 +127,58 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="badge-live mb-6 w-fit"
                 >
-                  Trust-Scored Payments · Now on Base
+                  Self-custodial commerce · Now on Base
                 </motion.div>
 
-                <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 leading-[1.02] tracking-tight">
-                  Keep what you{' '}
-                  <span className="gradient-text-hero">
-                    earn
-                  </span>
+                {/*
+                  HEADLINE FIX (clarity sweep):
+                  The previous H1 read "Keep what you earn" with no
+                  context — beautiful but didn't tell a first-time
+                  visitor what VFIDE is. The new H1 names the product
+                  category in five words, and the subhead is the
+                  one-sentence "what is it" answer agreed with product.
+                */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] tracking-tight">
+                  Payments and commerce,{' '}
+                  <span className="gradient-text-hero">on your terms</span>
                 </h1>
 
-                <p className="text-lg sm:text-xl text-zinc-400 mb-8 max-w-md leading-relaxed">
-                  Zero merchant fees. Guardian-protected self-custody. Reputation that pays you back.
-                  Built for everyone the platforms forgot.
+                <p className="text-lg sm:text-xl text-zinc-300 mb-3 max-w-md leading-relaxed">
+                  VFIDE is a self-custodial payments and commerce protocol on Base.
+                </p>
+                <p className="text-base text-zinc-400 mb-8 max-w-md leading-relaxed">
+                  Zero merchant fees. You hold your keys. A reputation that
+                  lowers your fees the more you use it.
                 </p>
 
-                {/* CTA buttons */}
+                {/*
+                  CTA FIX (clarity sweep):
+                  The page now offers two clear doors — Shop and Sell —
+                  followed by a softer "How it works" link for visitors
+                  who aren't ready to pick a side yet. Previously both
+                  CTAs led to merchant flows, which left shoppers with
+                  nowhere to go.
+                */}
                 <div className="flex flex-wrap gap-3 mb-8">
+                  <Link
+                    href="/marketplace"
+                    className="btn-premium btn-premium-primary text-sm"
+                    aria-label="Shop on VFIDE — browse the marketplace"
+                  >
+                    <ShoppingBag size={16} aria-hidden="true" /> Shop
+                  </Link>
                   <Link
                     href="/merchant/setup"
                     className="btn-premium btn-premium-primary text-sm"
+                    aria-label="Sell on VFIDE — set up a merchant store"
                   >
-                    Start selling <ArrowRight size={16} />
+                    <Store size={16} aria-hidden="true" /> Sell
                   </Link>
                   <Link
-                    href="/marketplace"
+                    href="#how-it-works"
                     className="btn-premium btn-premium-ghost text-sm"
                   >
-                    Browse marketplace
+                    How it works <ChevronRight size={14} aria-hidden="true" />
                   </Link>
                 </div>
 
@@ -167,7 +192,7 @@ export default function Home() {
                       transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }}
                       className="flex items-center gap-2 text-sm text-zinc-400"
                     >
-                      <CheckCircle2 size={14} className="text-cyan-400 shrink-0" />
+                      <CheckCircle2 size={14} className="text-cyan-400 shrink-0" aria-hidden="true" />
                       {point}
                     </motion.div>
                   ))}
@@ -185,7 +210,8 @@ export default function Home() {
                   <LiveProofScoreHero />
                 </div>
                 <p className="mt-3 text-center text-xs text-zinc-500">
-                  Try the slider — drag your trust score and watch the fee curve respond in real time.
+                  Live demo · Drag the slider to see how your reputation
+                  (ProofScore) lowers your fee in real time.
                 </p>
               </motion.div>
             </div>
@@ -194,6 +220,14 @@ export default function Home() {
           {/* Bottom glow */}
           <div className="hero-glow-bottom" aria-hidden="true" />
         </section>
+
+        {/*
+          PLAIN-ENGLISH JARGON TRANSLATOR (clarity sweep):
+          Three proper nouns — ProofScore, Guardian, Sanctum — appear
+          throughout the rest of the page. Defining them here, in one
+          line each, makes the entire site readable to a stranger.
+        */}
+        <PlainEnglishCard />
 
         {/* ════════════════════════════════════════
             PROTOCOL METRICS MARQUEE
@@ -252,10 +286,10 @@ export default function Home() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
-                { value: 0,     label: 'Merchant Fees',  suffix: '%',   color: 'cyan'    },
-                { value: 10000, label: 'Max ProofScore', suffix: '',    color: 'amber'   },
-                { value: 40,    label: 'Burn Rate',      suffix: '%',   color: 'emerald' },
-                { value: 10,    label: 'Sanctum Fund',   suffix: '%',   color: 'pink'    },
+                { value: 0,     label: 'Merchant fee',         suffix: '%',   color: 'cyan'    },
+                { value: 100,   label: 'Self-custody',         suffix: '%',   color: 'amber'   },
+                { value: 3,     label: 'Settlement (seconds)', suffix: '',    color: 'emerald' },
+                { value: 10,    label: 'Buyer-protection pool',suffix: '%',   color: 'pink'    },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -337,7 +371,7 @@ export default function Home() {
         {/* ════════════════════════════════════════
             HOW IT WORKS — premium steps
         ════════════════════════════════════════ */}
-        <section className="py-24">
+        <section id="how-it-works" className="py-24 scroll-mt-24">
           <div className="container mx-auto px-4 max-w-4xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

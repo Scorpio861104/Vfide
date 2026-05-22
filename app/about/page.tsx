@@ -31,9 +31,14 @@ export default function AboutPage() {
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-100 mb-6 tracking-tight">
                 About VFIDE
               </h1>
-              <p className="text-xl md:text-2xl text-zinc-400 leading-relaxed">
-                A decentralized payment protocol built on integrity, not wealth.
-                Where trust is earned through actions, not purchased with capital.
+              <p className="text-xl md:text-2xl text-zinc-300 leading-relaxed mb-4">
+                VFIDE is a self-custodial payments and commerce protocol on Base,
+                with zero merchant fees and a reputation system that rewards honest users.
+              </p>
+              <p className="text-lg md:text-xl text-zinc-400 leading-relaxed">
+                We built it for the people platforms forgot — sellers tired of giving up
+                3–30% to gatekeepers, and buyers who want to know who they&apos;re dealing
+                with before they pay. Trust is earned here through actions, not capital.
               </p>
             </motion.div>
           </div>
