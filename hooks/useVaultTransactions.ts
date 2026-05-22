@@ -308,7 +308,7 @@ export function useVaultTransactions(vaultAddress: Address | undefined): {
 
     load();
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [vaultAddress, publicClient, chainId, tick]);
 
   return { transactions, isLoading, error, refetch };

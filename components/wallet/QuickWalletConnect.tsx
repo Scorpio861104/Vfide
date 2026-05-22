@@ -139,7 +139,7 @@ export function QuickWalletConnect({
       disabled={!primary || isPending}
       onClick={() => {
         if (primary) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           (connect as unknown as (args: { connector: unknown }) => void)({
             connector: primary,
           });

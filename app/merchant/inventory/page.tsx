@@ -288,7 +288,7 @@ function ProductRow({ product, onArchive, onActivate, onDelete }: { product: Pro
     <div className="p-4 hover:bg-white/5 transition-colors flex items-start gap-4 flex-wrap">
       <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
         {product.images?.[0]?.url ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
+           
           <img src={product.images[0].url} alt={product.images[0].alt ?? product.name} className="w-full h-full object-cover" />
         ) : (
           <Package size={20} className="text-zinc-500" />

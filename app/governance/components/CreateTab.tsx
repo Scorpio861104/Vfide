@@ -280,7 +280,7 @@ export function CreateTab() {
       setResolveBuyerWins(prefill.resolveBuyerWins);
     }
     // The effect intentionally runs only on initial mount + when query string changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [searchParams]);
 
   const currentTemplate = TEMPLATES.find((t) => t.key === templateKey)!;

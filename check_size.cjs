@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+// CJS contract-size utility script. Uses require() intentionally because the
+// solc API expects to be invoked under CommonJS, and this script is invoked
+// directly by node, never bundled.
 const solcLib = require('solc');
 const solc = solcLib.setupMethods(require('/tmp/soljson-0.8.30.js'));
 const fs = require('fs');

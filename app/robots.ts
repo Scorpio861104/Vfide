@@ -31,6 +31,16 @@ export default function robots(): MetadataRoute.Robots {
           '/dashboard/',     // Block user dashboard (requires auth)
           '/vault/',         // Block vault pages (requires auth)
           '/settings/',      // Block settings (requires auth)
+          '/wallet/',        // Block wallet hub (requires auth, key material flows)
+          '/me/',            // Block personal user hub (requires auth)
+          '/control-panel/', // Block admin control panel
+          '/multisig/',      // Block multisig admin surface
+          '/paper-wallet/',  // Block paper wallet (private-key generator, env-gated)
+          '/hardware-wallet/', // Block hardware wallet setup (auth)
+          '/profile/',       // Block user profile (auth)
+          '/notifications/', // Block per-user notifications (auth)
+          '/security-center/', // Block per-user security center (auth)
+          '/inheritance/',   // Block inheritance flows (auth, sensitive)
         ],
       },
       {

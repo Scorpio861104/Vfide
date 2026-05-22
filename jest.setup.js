@@ -725,7 +725,8 @@ jest.mock('wagmi/chains', () => ({
 // Mock RainbowKit
 jest.mock('@rainbow-me/rainbowkit', () => {
   const ConnectButton = () => null;
-  ConnectButton.Custom = ({ children }) => {
+  ConnectButton.displayName = 'ConnectButton';
+  const ConnectButtonCustom = ({ children }) => {
     if (typeof children !== 'function') return null;
     return children({
       account: undefined,
@@ -737,6 +738,8 @@ jest.mock('@rainbow-me/rainbowkit', () => {
       mounted: true,
     });
   };
+  ConnectButtonCustom.displayName = 'ConnectButton.Custom';
+  ConnectButton.Custom = ConnectButtonCustom;
   return {
     ConnectButton,
     RainbowKitProvider: ({ children }) => children,
