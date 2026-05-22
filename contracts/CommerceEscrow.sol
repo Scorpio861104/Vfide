@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 // Pulls in SafeERC20 / IERC20 (via SharedInterfaces.sol re-export),
 // the IVaultHub_COM interface, the COM_* errors, and the MerchantRegistry
 // contract type referenced by `merchants` below.
-import "./MerchantRegistry.sol";
+import { IVaultHub_COM, COM_NotDAO, COM_Zero, COM_NotMerchant, COM_Suspended, COM_Delisted, COM_NotBuyer, COM_NotSeller, COM_BadAmount, COM_BadState, COM_NotAllowed, COM_NotInheritanceActive, MerchantRegistry } from "./MerchantRegistry.sol";
 
 /// @notice Phase 3d Turn 3 — calling interface for atomic escrow funding on CardBoundVault.
 /// @dev Mirrors the ICardBoundVaultPay pattern in MerchantPortal: declare the calling interface

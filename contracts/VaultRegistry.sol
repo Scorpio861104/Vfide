@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
-import "./interfaces/IVaultInfrastructure.sol";
+import { Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
+import { IVaultInfrastructure } from "./interfaces/IVaultInfrastructure.sol";
 
 /**
  * @title VaultRegistry

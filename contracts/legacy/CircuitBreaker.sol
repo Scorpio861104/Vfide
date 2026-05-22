@@ -10,7 +10,7 @@ pragma solidity 0.8.30;
 // files). Retained here for reference and potential reactivation if a
 // metric-driven auto-pause system is added later.
 
-import "../VFIDEAccessControl.sol";
+import { VFIDEAccessControl } from "../VFIDEAccessControl.sol";
 
 /// @notice ITVLSource_CB
 /// @title ITVLSource_CB

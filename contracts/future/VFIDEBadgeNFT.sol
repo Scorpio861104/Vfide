@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "../SharedInterfaces.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { ERC721URIStorage } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import { ERC721Enumerable } from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import { Ownable, ReentrancyGuard } from "../SharedInterfaces.sol";
 import { Seer } from "../Seer.sol";
-import "./BadgeRegistry.sol";
+import { BadgeRegistry } from "./BadgeRegistry.sol";
 
 /**
  * @title VFIDEBadgeNFT
@@ -480,7 +480,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
         
-        for (uint i = 0; i < bStr.length; ++i) {
+        for (uint256 i = 0; i < bStr.length; ++i) {
             if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
                 bLower[i] = bytes1(uint8(bStr[i]) + 32);
             } else {

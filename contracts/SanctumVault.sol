@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
  * (exact ratios configurable by DAO)
  */
 
-import "./SharedInterfaces.sol";
+import { LedgerLogFailed, IProofLedger, IERC20, Ownable, ReentrancyGuard, SafeERC20 } from "./SharedInterfaces.sol";
 
 // Seer interface for ProofScore
 /// @notice ISeer_Sanct

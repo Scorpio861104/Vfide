@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../Seer.sol";
-import "./BadgeRegistry.sol";
-import "../SharedInterfaces.sol";
-import "./BadgeQualificationRules.sol";
+import { Seer } from "../Seer.sol";
+import { BadgeRegistry } from "./BadgeRegistry.sol";
+import { IBadgeQualificationRules } from "./BadgeQualificationRules.sol";
 
 /**
  * @title BadgeManager

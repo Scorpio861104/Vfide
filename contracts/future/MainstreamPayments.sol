@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../SharedInterfaces.sol";
+import { IVaultHub, IProofLedger, ISeer, ISwapRouter, ReentrancyGuard } from "../SharedInterfaces.sol";
 
 /**
  * MainstreamPayments.sol - Infrastructure for Mainstream Crypto Payment Adoption

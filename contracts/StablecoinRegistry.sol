@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { Ownable, Pausable } from "./SharedInterfaces.sol";
 
 /// @notice IERC20MetadataSR
 /// @title IERC20MetadataSR

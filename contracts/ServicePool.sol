@@ -7,11 +7,11 @@ pragma solidity 0.8.30;
  * OZ version baseline: 5.1.0. Review OZ advisories on dependency updates.
  */
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // N-M37 FIX: minimal interface so pools can gate score-crediting on SeerWorkAttestation.
 //            When seerAttestation is set (non-zero), _recordContribution requires that

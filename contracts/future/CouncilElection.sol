@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../SharedInterfaces.sol";
+import { LedgerLogFailed, IVaultHub, IProofLedger, ISeer } from "../SharedInterfaces.sol";
 
 /// @notice CE_NotDAO
 error CE_NotDAO();

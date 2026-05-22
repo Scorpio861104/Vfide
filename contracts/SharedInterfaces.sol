@@ -1103,6 +1103,7 @@ library SafeERC20 {
     /// @param to to
     /// @param value value
     function safeTransfer(IERC20 token, address to, uint256 value) internal {
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = address(token).call(
             abi.encodeWithSelector(token.transfer.selector, to, value)
         );
@@ -1115,6 +1116,7 @@ library SafeERC20 {
     /// @param to to
     /// @param value value
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory data) = address(token).call(
             abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
         );
@@ -1153,6 +1155,7 @@ library SafeERC20 {
     /// @param data data
     /// @return _bool _bool
     function _callOptionalReturnBool(IERC20 token, bytes memory data) private returns (bool) {
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returndata) = address(token).call(data);
         return success && (returndata.length == 0 || abi.decode(returndata, (bool)));
     }

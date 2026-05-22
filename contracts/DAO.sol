@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { IVaultHub, IProofLedger, ISeer, ICouncilElection, IDAOTimelock, IGovernanceHooks, ReentrancyGuard } from "./SharedInterfaces.sol";
 
 /// @notice SeerGuardian interface for mutual DAO/Seer oversight
 /// @title ISeerGuardian_DAO

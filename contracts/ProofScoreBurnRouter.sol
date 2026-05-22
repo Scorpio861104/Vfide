@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
-import "./lib/ScoringConstants.sol";
+import { IVFIDEToken, ISeer, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
+import { ScoringConstants } from "./lib/ScoringConstants.sol";
 
 /**
  * ProofScoreBurnRouter — VFIDE Ecosystem Burns & Sanctum Router
