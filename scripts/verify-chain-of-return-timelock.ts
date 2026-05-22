@@ -39,7 +39,7 @@ async function main() {
   const guardian = await provider.getSigner(2);
   const guardian2 = await provider.getSigner(3);
 
-  const vaultArtifact = loadArtifact('artifacts/contracts/VaultInfrastructure.sol/UserVaultLegacy.json');
+  const vaultArtifact = loadArtifact('artifacts/contracts/legacy/VaultInfrastructure.sol/UserVaultLegacy.json');
   const vaultFactory = new ContractFactory(vaultArtifact.abi as any, vaultArtifact.bytecode, owner);
 
   const ownerAddress = await owner.getAddress();
