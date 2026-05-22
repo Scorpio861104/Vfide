@@ -52,6 +52,7 @@ export default function robots(): MetadataRoute.Robots {
           '/theme-manager/', // Legacy theme manager (now redirects to /theme)
           '/verifier/',      // Operator-only trusted-verifier console
           '/splitter/',      // Operator-only revenue splitter inspector
+          '/agent/',         // Coming-soon placeholder (cash-agent operator workflow)
         ],
       },
       {
