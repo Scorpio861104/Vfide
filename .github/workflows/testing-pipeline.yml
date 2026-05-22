@@ -47,8 +47,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci
-      - run: npm install --no-save @nomicfoundation/hardhat-coverage
-      - run: npx hardhat coverage
+      # Hardhat 3 has built-in coverage via the --coverage flag (no separate plugin needed).
+      # The previously-referenced `@nomicfoundation/hardhat-coverage` package does not exist
+      # on npm; `solidity-coverage` is for Hardhat 2.x and is incompatible with HH3.
+      - run: npx hardhat test --coverage
       - name: Check coverage thresholds
         run: |
           # Verify minimum coverage percentages

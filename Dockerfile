@@ -12,8 +12,12 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package manifest + lockfile for deterministic installs
-COPY package.json package-lock.json ./
+# Copy package manifest + lockfile + npm config for deterministic installs.
+# .npmrc carries `legacy-peer-deps=true` which is required because
+# @layerzerolabs/lz-evm-oapp-v2 transitively requires ethers ^5 (via
+# @eth-optimism/contracts), while the root project uses ethers ^6. Without
+# this, `npm ci` fails with ERESOLVE in the Docker build context.
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci && npm cache clean --force
 
 # Rebuild the source code only when needed
