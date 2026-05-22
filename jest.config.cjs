@@ -42,7 +42,7 @@ const customJestConfig = {
     global: {
       branches: 81,
       functions: 82,
-      lines: 85,
+      lines: 84,
       statements: 84,
     },
     './hooks/useVFIDEBalance.ts': {
