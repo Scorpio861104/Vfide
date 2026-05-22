@@ -121,6 +121,7 @@ export function StoryViewer({
         </div>
         <button
           onClick={onClose}
+          aria-label="Close stories"
           className="text-white text-2xl w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
         >
           ✕
@@ -135,13 +136,17 @@ export function StoryViewer({
         onTouchStart={() => setIsPaused(true)}
         onTouchEnd={() => setIsPaused(false)}
       >
-        {/* Navigation Areas */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-1/3 z-10"
+        {/* Navigation Areas — buttons for keyboard + screen-reader access */}
+        <button
+          type="button"
+          aria-label="Previous story"
+          className="absolute left-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-4px]"
           onClick={goToPrevious}
         />
-        <div
-          className="absolute right-0 top-0 bottom-0 w-1/3 z-10"
+        <button
+          type="button"
+          aria-label="Next story"
+          className="absolute right-0 top-0 bottom-0 w-1/3 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-4px]"
           onClick={goToNext}
         />
 

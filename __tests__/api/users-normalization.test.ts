@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 
 // Reimplement the helpers exactly as in app/api/users/route.ts to test
 // them in isolation. The route is a Next.js handler that we can't easily

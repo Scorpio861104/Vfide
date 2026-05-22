@@ -42,7 +42,7 @@ describe('Appeals page logic pathways', () => {
     renderAppealsPage();
 
     expect(screen.getByRole('button', { name: /^Active$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Submit$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Submit Appeal/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Resolved$/i })).toBeTruthy();
   });
 

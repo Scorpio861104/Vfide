@@ -3,15 +3,30 @@ pragma solidity 0.8.30;
 
 import "./CardBoundVault.sol";
 
+/// @notice CardBoundVaultDeployer
+/// @title CardBoundVaultDeployer
+/// @author Vfide
 contract CardBoundVaultDeployer {
+    /// @notice vaultHub
     address public immutable vaultHub;
 
+    /// @notice CBD_OnlyHub
     error CBD_OnlyHub();
 
+    /// @notice constructor
     constructor() {
         vaultHub = msg.sender;
     }
 
+    /// @notice predict
+    /// @param hub hub
+    /// @param vfideToken vfideToken
+    /// @param owner_ owner_
+    /// @param guardianThreshold guardianThreshold
+    /// @param maxPerTransfer maxPerTransfer
+    /// @param dailyLimit dailyLimit
+    /// @param ledger ledger
+    /// @return predicted predicted
     function predict(
         address hub,
         address vfideToken,
@@ -75,6 +90,15 @@ contract CardBoundVaultDeployer {
         );
     }
 
+    /// @notice deploy
+    /// @param hub hub
+    /// @param vfideToken vfideToken
+    /// @param owner_ owner_
+    /// @param guardianThreshold guardianThreshold
+    /// @param maxPerTransfer maxPerTransfer
+    /// @param dailyLimit dailyLimit
+    /// @param ledger ledger
+    /// @return vault vault
     function deploy(
         address hub,
         address vfideToken,
@@ -104,6 +128,15 @@ contract CardBoundVaultDeployer {
         );
     }
 
+    /// @notice _creationCode
+    /// @param hub hub
+    /// @param vfideToken vfideToken
+    /// @param owner_ owner_
+    /// @param guardianThreshold guardianThreshold
+    /// @param maxPerTransfer maxPerTransfer
+    /// @param dailyLimit dailyLimit
+    /// @param ledger ledger
+    /// @return _bytes _bytes
     function _creationCode(
         address hub,
         address vfideToken,
@@ -132,6 +165,14 @@ contract CardBoundVaultDeployer {
         );
     }
 
+    /// @notice _salt
+    /// @param owner_ owner_
+    /// @param hub hub
+    /// @param token token
+    /// @param maxPerTransfer maxPerTransfer
+    /// @param dailyLimit dailyLimit
+    /// @param ledger ledger
+    /// @return _bytes32 _bytes32
     function _salt(
         address owner_,
         address hub,

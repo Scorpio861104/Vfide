@@ -12,52 +12,151 @@ import "./SharedInterfaces.sol";
  * - Pause/resume functionality for disputes
  * - Rate modification support
  * - Emergency withdrawal capability
+ * @notice IERC20_Pay
+ * @title IERC20_Pay
+ * @author Vfide
  */
 
 interface IERC20_Pay {
+    /// @notice transferFrom
+    /// @param from from
+    /// @param to to
+    /// @param amount amount
+    /// @return _bool _bool
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    /// @notice transfer
+    /// @param to to
+    /// @param amount amount
+    /// @return _bool _bool
     function transfer(address to, uint256 amount) external returns (bool);
+    /// @notice balanceOf
+    /// @param account account
+    /// @return _uint256 _uint256
     function balanceOf(address account) external view returns (uint256);
 }
 
 // Seer interface for ProofScore
+/// @notice ISeer_PM
+/// @title ISeer_PM
+/// @author Vfide
 interface ISeer_PM {
+    /// @notice reward
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
 }
 
+/// @notice PM_NotPayer
 error PM_NotPayer();
+/// @notice PM_NotPayee
 error PM_NotPayee();
+/// @notice PM_NotAuthorized
 error PM_NotAuthorized();
+/// @notice PM_StreamInactive
 error PM_StreamInactive();
+/// @notice PM_StreamPaused
 error PM_StreamPaused();
+/// @notice PM_Zero
+error PM_Zero();
+/// @notice PM_StreamNotPaused
 error PM_StreamNotPaused();
+/// @notice PM_InvalidRate
 error PM_InvalidRate();
+/// @notice PM_InvalidPayee
 error PM_InvalidPayee();
+/// @notice PM_InvalidDeposit
 error PM_InvalidDeposit();
+/// @notice PM_NothingDue
 error PM_NothingDue();
+/// @notice PM_StreamNotExpired
 error PM_StreamNotExpired();
 
+/// @notice PayrollManager
+/// @title PayrollManager
+/// @author Vfide
 contract PayrollManager is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // Events
+    /// @notice StreamCreated
+    /// @param streamId streamId
+    /// @param payer payer
+    /// @param payee payee
+    /// @param rate rate
     event StreamCreated(uint256 indexed streamId, address indexed payer, address indexed payee, uint256 rate);
+    /// @notice Withdraw
+    /// @param streamId streamId
+    /// @param payee payee
+    /// @param amount amount
     event Withdraw(uint256 indexed streamId, address indexed payee, uint256 amount);
+    /// @notice StreamCancelled
+    /// @param streamId streamId
     event StreamCancelled(uint256 indexed streamId);
+    /// @notice TopUp
+    /// @param streamId streamId
+    /// @param amount amount
     event TopUp(uint256 indexed streamId, uint256 amount);
+    /// @notice StreamPaused
+    /// @param streamId streamId
+    /// @param pausedBy pausedBy
     event StreamPaused(uint256 indexed streamId, address indexed pausedBy);
+    /// @notice StreamResumed
+    /// @param streamId streamId
+    /// @param resumedBy resumedBy
     event StreamResumed(uint256 indexed streamId, address indexed resumedBy);
+    /// @notice RateModified
+    /// @param streamId streamId
+    /// @param oldRate oldRate
+    /// @param newRate newRate
     event RateModified(uint256 indexed streamId, uint256 oldRate, uint256 newRate);
+    /// @notice PayeeUpdated
+    /// @param streamId streamId
+    /// @param oldPayee oldPayee
+    /// @param newPayee newPayee
     event PayeeUpdated(uint256 indexed streamId, address indexed oldPayee, address indexed newPayee);
+    /// @notice EmergencyWithdraw
+    /// @param streamId streamId
+    /// @param to to
+    /// @param amount amount
     event EmergencyWithdraw(uint256 indexed streamId, address indexed to, uint256 amount);
+    /// @notice EmergencyWithdrawProposed
+    /// @param streamId streamId
+    /// @param to to
+    /// @param amount amount
+    /// @param executeAfter executeAfter
     event EmergencyWithdrawProposed(uint256 indexed streamId, address indexed to, uint256 amount, uint64 executeAfter);
+    /// @notice EmergencyWithdrawCancelled
+    /// @param streamId streamId
+    /// @param to to
     event EmergencyWithdrawCancelled(uint256 indexed streamId, address indexed to);
+    /// @notice StreamExpired
+    /// @param streamId streamId
+    /// @param reclaimedBy reclaimedBy
+    /// @param amount amount
     event StreamExpired(uint256 indexed streamId, address indexed reclaimedBy, uint256 amount);
+    /// @notice DAOSet
+    /// @param dao dao
     event DAOSet(address indexed dao);
+    /// @notice SupportedTokenSet
+    /// @param token token
+    /// @param supported supported
     event SupportedTokenSet(address indexed token, bool supported);
+    /// @notice SeerChangeProposed
+    /// @param pendingSeer pendingSeer
+    /// @param effectiveAt effectiveAt
     event SeerChangeProposed(address indexed pendingSeer, uint64 effectiveAt);
+    /// @notice SeerChangeCancelled
+    /// @param pendingSeer pendingSeer
     event SeerChangeCancelled(address indexed pendingSeer);
+    /// @notice SupportedTokenChangeProposed
+    /// @param token token
+    /// @param supported supported
+    /// @param effectiveAt effectiveAt
     event SupportedTokenChangeProposed(address indexed token, bool supported, uint64 effectiveAt);
+    /// @notice SupportedTokenChangeCancelled
+    /// @param token token
+    /// @param supported supported
     event SupportedTokenChangeCancelled(address indexed token, bool supported);
 
     struct Stream {
@@ -75,7 +174,9 @@ contract PayrollManager is ReentrancyGuard {
         uint256 expiryTime;
     }
 
+    /// @notice streams
     mapping(uint256 => Stream) public streams;
+    /// @notice nextStreamId
     uint256 public nextStreamId = 1;
     
     // H-27 FIX: Two-step payee update with 48h timelock to prevent instant address hijack on key compromise.
@@ -83,39 +184,56 @@ contract PayrollManager is ReentrancyGuard {
         address newPayee;
         uint256 validFrom; // block.timestamp at proposal + PAYEE_UPDATE_DELAY
     }
+    /// @notice pendingPayeeUpdates
     mapping(uint256 => PendingPayeeUpdate) public pendingPayeeUpdates;
+    /// @notice PAYEE_UPDATE_DELAY
     uint256 public constant PAYEE_UPDATE_DELAY = 48 hours;
 
     struct PendingEmergencyWithdraw {
         address to;
         uint64 executeAfter;
     }
+    /// @notice pendingEmergencyWithdraws
     mapping(uint256 => PendingEmergencyWithdraw) public pendingEmergencyWithdraws;
+    /// @notice EMERGENCY_WITHDRAW_DELAY
     uint64 public constant EMERGENCY_WITHDRAW_DELAY = 7 days;
     
     // NEW: DAO for emergency controls
+    /// @notice dao
     address public dao;
     
     // ProofScore integration
+    /// @notice seer
     ISeer_PM public seer;
+    /// @notice PAYROLL_CREATE_REWARD
     uint16 public constant PAYROLL_CREATE_REWARD = 5;     // +0.5 for creating stream
+    /// @notice PAYROLL_WITHDRAW_REWARD
     uint16 public constant PAYROLL_WITHDRAW_REWARD = 1;   // +0.1 per withdrawal
 
     /// @notice M-21 FIX: Payee may unilaterally resume a paused stream after this duration.
     /// @dev Prevents indefinite-pause griefing by an unresponsive payer.
     uint256 public constant MAX_PAUSE_DURATION = 30 days;
+    /// @notice MAX_STREAM_DURATION
     uint256 public constant MAX_STREAM_DURATION = 365 days;
     
     // NEW: Track streams by payer and payee
+    /// @notice payerStreams
     mapping(address => uint256[]) private payerStreams;
+    /// @notice payeeStreams
     mapping(address => uint256[]) private payeeStreams;
+    /// @notice activePayerStreamCount
     mapping(address => uint256) public activePayerStreamCount;
+    /// @notice activePayeeStreamCount
     mapping(address => uint256) public activePayeeStreamCount;
+    /// @notice supportedTokens
     mapping(address => bool) public supportedTokens;
 
     // TL-438 / TL-439 FIX: timelock sensitive module/config changes.
+    /// @notice pendingSeer_PM
     address public pendingSeer_PM;
+    /// @notice pendingSeerAt_PM
     uint64 public pendingSeerAt_PM;
+    /// @notice SEER_CHANGE_DELAY_PM
     uint64 public constant SEER_CHANGE_DELAY_PM = 48 hours;
 
     struct PendingSupportedTokenChange {
@@ -124,27 +242,42 @@ contract PayrollManager is ReentrancyGuard {
         uint64 executeAfter;
         bool exists;
     }
+    /// @notice pendingSupportedTokenChange
     PendingSupportedTokenChange public pendingSupportedTokenChange;
+    /// @notice SUPPORTED_TOKEN_CHANGE_DELAY_PM
     uint64 public constant SUPPORTED_TOKEN_CHANGE_DELAY_PM = 24 hours;
 
     // H-2 FIX: Timelocked DAO rotation
+    /// @notice pendingDAO_PM
     address public pendingDAO_PM;
+    /// @notice pendingDAOAt_PM
     uint64 public pendingDAOAt_PM;
+    /// @notice DAO_CHANGE_DELAY_PM
     uint64 public constant DAO_CHANGE_DELAY_PM = 48 hours;
+    /// @notice DAOChangeProposed
+    /// @param newDAO newDAO
+    /// @param effectiveAt effectiveAt
     event DAOChangeProposed(address indexed newDAO, uint64 effectiveAt);
+    /// @notice DAOChangeCancelled
     event DAOChangeCancelled();
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "PM: not DAO");
         _;
     }
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _seer _seer
     constructor(address _dao, address _seer) {
         require(_dao != address(0), "PM: zero DAO");
         dao = _dao;
         if (_seer != address(0)) seer = ISeer_PM(_seer);
     }
     
+    /// @notice setDAO
+    /// @param _dao _dao
     function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "PM: zero DAO");
         pendingDAO_PM = _dao;
@@ -152,6 +285,7 @@ contract PayrollManager is ReentrancyGuard {
         emit DAOChangeProposed(_dao, pendingDAOAt_PM);
     }
 
+    /// @notice applyDAO
     function applyDAO() external onlyDAO {
         require(pendingDAOAt_PM != 0 && block.timestamp >= pendingDAOAt_PM, "PM: timelock");
         dao = pendingDAO_PM;
@@ -160,6 +294,7 @@ contract PayrollManager is ReentrancyGuard {
         emit DAOSet(dao);
     }
 
+    /// @notice cancelDAOChange
     function cancelDAOChange() external onlyDAO {
         require(pendingDAOAt_PM != 0, "PM: no pending");
         delete pendingDAO_PM;
@@ -167,12 +302,16 @@ contract PayrollManager is ReentrancyGuard {
         emit DAOChangeCancelled();
     }
     
+    /// @notice setSeer
+    /// @param _seer _seer
     function setSeer(address _seer) external onlyDAO {
+        if (_seer == address(0)) revert PM_Zero();
         pendingSeer_PM = _seer;
         pendingSeerAt_PM = uint64(block.timestamp) + SEER_CHANGE_DELAY_PM;
         emit SeerChangeProposed(_seer, pendingSeerAt_PM);
     }
 
+    /// @notice applySeer
     function applySeer() external onlyDAO {
         require(pendingSeerAt_PM != 0 && block.timestamp >= pendingSeerAt_PM, "PM: seer timelock");
         seer = ISeer_PM(pendingSeer_PM);
@@ -180,6 +319,7 @@ contract PayrollManager is ReentrancyGuard {
         delete pendingSeerAt_PM;
     }
 
+    /// @notice cancelSeerChange
     function cancelSeerChange() external onlyDAO {
         require(pendingSeerAt_PM != 0, "PM: no pending seer");
         address oldPending = pendingSeer_PM;
@@ -188,6 +328,9 @@ contract PayrollManager is ReentrancyGuard {
         emit SeerChangeCancelled(oldPending);
     }
 
+    /// @notice setSupportedToken
+    /// @param token token
+    /// @param supported supported
     function setSupportedToken(address token, bool supported) external onlyDAO {
         require(token != address(0), "PM: zero token");
         pendingSupportedTokenChange = PendingSupportedTokenChange({
@@ -199,6 +342,7 @@ contract PayrollManager is ReentrancyGuard {
         emit SupportedTokenChangeProposed(token, supported, pendingSupportedTokenChange.executeAfter);
     }
 
+    /// @notice applySupportedToken
     function applySupportedToken() external onlyDAO {
         PendingSupportedTokenChange memory pending = pendingSupportedTokenChange;
         require(pending.exists, "PM: no pending token");
@@ -208,6 +352,7 @@ contract PayrollManager is ReentrancyGuard {
         emit SupportedTokenSet(pending.token, pending.supported);
     }
 
+    /// @notice cancelSupportedTokenChange
     function cancelSupportedTokenChange() external onlyDAO {
         PendingSupportedTokenChange memory pending = pendingSupportedTokenChange;
         require(pending.exists, "PM: no pending token");
@@ -217,6 +362,10 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @dev Safe transfer helper for IERC20_Pay tokens
+     * @notice _safeTransferPay
+     * @param token token
+     * @param to to
+     * @param amount amount
      */
     function _safeTransferPay(address token, address to, uint256 amount) internal {
         IERC20(token).safeTransfer(to, amount);
@@ -228,6 +377,8 @@ contract PayrollManager is ReentrancyGuard {
      * @param token Payment token (e.g. USDC, VFIDE)
      * @param rate Tokens per second (e.g. 3000 USDC / 30 days / 24h / 3600s)
      * @param initialDeposit Amount to deposit upfront
+     * @notice createStream
+     * @return _uint256 _uint256
      */
     function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external nonReentrant returns (uint256) {
         if (payee == address(0)) revert PM_InvalidPayee();
@@ -254,10 +405,10 @@ contract PayrollManager is ReentrancyGuard {
         // Track streams for both parties (I-11: capped)
         require(activePayerStreamCount[msg.sender] < 200, "PM: payer stream cap");
         payerStreams[msg.sender].push(id);
-        activePayerStreamCount[msg.sender] += 1;
+        ++activePayerStreamCount[msg.sender];
         require(activePayeeStreamCount[payee] < 200, "PM: payee stream cap");
         payeeStreams[payee].push(id);
-        activePayeeStreamCount[payee] += 1;
+        ++activePayeeStreamCount[payee];
 
         emit StreamCreated(id, msg.sender, payee, rate);
 
@@ -278,8 +429,13 @@ contract PayrollManager is ReentrancyGuard {
 
     /**
      * Add more funds to an existing stream
+     * @notice topUp
+     * @param streamId streamId
+     * @param amount amount
      */
     function topUp(uint256 streamId, uint256 amount) external nonReentrant {
+        // slither-disable-start reentrancy-no-eth
+        // function has nonReentrant guard; safeTransferFrom reverts atomically
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
         if (msg.sender != s.payer) revert PM_NotPayer();
@@ -290,11 +446,13 @@ contract PayrollManager is ReentrancyGuard {
         uint256 actualReceived = IERC20(s.token).balanceOf(address(this)) - balBefore;
         s.depositBalance += actualReceived;
         emit TopUp(streamId, actualReceived);
+        // slither-disable-end reentrancy-no-eth
     }
     
     /**
      * @notice Pause stream (payer or payee can pause)
      * @dev Useful for disputes, temporary suspension
+     * @param streamId streamId
      */
     function pauseStream(uint256 streamId) external {
         Stream storage s = streams[streamId];
@@ -321,6 +479,7 @@ contract PayrollManager is ReentrancyGuard {
      * the stream unilaterally. This closes the griefing vector where a payer
      * pauses the stream and disappears, leaving the payee unable to claim
      * future flow without DAO intervention.
+     * @param streamId streamId
      */
     function resumeStream(uint256 streamId) external {
         Stream storage s = streams[streamId];
@@ -346,6 +505,8 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * @notice Modify stream rate (payer only)
      * @dev Settles current accrued before changing rate
+     * @param streamId streamId
+     * @param newRate newRate
      */
     function setRate(uint256 streamId, uint256 newRate) external nonReentrant {
         Stream storage s = streams[streamId];
@@ -382,6 +543,8 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * @notice Update payee address (payee only)
      * @dev Useful if payee's wallet is compromised
+     * @param streamId streamId
+     * @param newPayee newPayee
      */
     function updatePayee(uint256 streamId, address newPayee) external {
         Stream storage s = streams[streamId];
@@ -398,6 +561,7 @@ contract PayrollManager is ReentrancyGuard {
     }
 
     /// @notice Apply a previously-proposed payee update after the 48h lock has elapsed.
+    /// @param streamId streamId
     function applyPayeeUpdate(uint256 streamId) external {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
@@ -409,15 +573,16 @@ contract PayrollManager is ReentrancyGuard {
 
         address oldPayee = s.payee;
         if (activePayeeStreamCount[oldPayee] > 0) {
-            activePayeeStreamCount[oldPayee] -= 1;
+            --activePayeeStreamCount[oldPayee];
         }
-        activePayeeStreamCount[p.newPayee] += 1;
+        ++activePayeeStreamCount[p.newPayee];
         s.payee = p.newPayee;
         delete pendingPayeeUpdates[streamId];
         emit PayeeUpdated(streamId, oldPayee, s.payee);
     }
 
     /// @notice Cancel a pending payee update (callable by current payee or payer).
+    /// @param streamId streamId
     function cancelPayeeUpdate(uint256 streamId) external {
         Stream storage s = streams[streamId];
         require(msg.sender == s.payee || msg.sender == s.payer, "PM: not authorized");
@@ -428,6 +593,8 @@ contract PayrollManager is ReentrancyGuard {
      * @notice Propose emergency withdraw by DAO (for contract migration or disputes)
      * @dev N-M38 FIX: execution is delayed by 7 days to prevent instant confiscation.
      * @dev #436 FIX: recipient must be the stream payer (prevents DAO draining to arbitrary address).
+     * @param streamId streamId
+     * @param to to
      */
     function emergencyWithdraw(uint256 streamId, address to) external onlyDAO {
         Stream storage s = streams[streamId];
@@ -448,6 +615,8 @@ contract PayrollManager is ReentrancyGuard {
         emit EmergencyWithdrawProposed(streamId, to, s.depositBalance, executeAfter);
     }
 
+    /// @notice applyEmergencyWithdraw
+    /// @param streamId streamId
     function applyEmergencyWithdraw(uint256 streamId) external onlyDAO {
         Stream storage s = streams[streamId];
         require(s.active, "PM: stream inactive");
@@ -468,6 +637,8 @@ contract PayrollManager is ReentrancyGuard {
         _safeTransferPay(s.token, to, balance);
     }
 
+    /// @notice cancelEmergencyWithdraw
+    /// @param streamId streamId
     function cancelEmergencyWithdraw(uint256 streamId) external onlyDAO {
         PendingEmergencyWithdraw storage pending = pendingEmergencyWithdraws[streamId];
         require(pending.executeAfter != 0, "PM: no pending emergency withdraw");
@@ -479,6 +650,8 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * Employee withdraws earned funds
      * Add nonReentrant to prevent reentrancy via malicious tokens
+     * @notice withdraw
+     * @param streamId streamId
      */
     function withdraw(uint256 streamId) external nonReentrant {
         Stream storage s = streams[streamId];
@@ -514,6 +687,9 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * Calculate how much is currently claimable
+     * @notice claimable
+     * @param streamId streamId
+     * @return _uint256 _uint256
      */
     function claimable(uint256 streamId) public view returns (uint256) {
         Stream storage s = streams[streamId];
@@ -547,6 +723,8 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * Cancel stream and return remaining funds to payer
      * Add nonReentrant to prevent reentrancy via malicious tokens
+     * @notice cancelStream
+     * @param streamId streamId
      */
     function cancelStream(uint256 streamId) external nonReentrant {
         Stream storage s = streams[streamId];
@@ -583,6 +761,7 @@ contract PayrollManager is ReentrancyGuard {
 
     /// @notice Reclaim remaining stream balance after hard expiry.
     /// @dev L-3 FIX: Restricted to payer or payee to prevent permissionless griefing.
+    /// @param streamId streamId
     function claimExpiredStream(uint256 streamId) external nonReentrant {
         Stream storage s = streams[streamId];
         if (!s.active) revert PM_StreamInactive();
@@ -626,9 +805,13 @@ contract PayrollManager is ReentrancyGuard {
     ///         valid batch does not waste the entire transaction.
     ///
     ///         Bounded to 100 IDs per call to keep gas usage predictable.
+    // slither-disable-start reentrancy-no-eth
+    // function has nonReentrant guard; per-stream state updates are atomic
+    /// @notice claimExpiredStreamBatch
+    /// @param streamIds streamIds
     function claimExpiredStreamBatch(uint256[] calldata streamIds) external nonReentrant {
         require(streamIds.length <= 100, "PM: batch too large");
-        for (uint256 i = 0; i < streamIds.length; i++) {
+        for (uint256 i = 0; i < streamIds.length; ++i) {
             uint256 streamId = streamIds[i];
             Stream storage s = streams[streamId];
             if (!s.active) continue;
@@ -652,6 +835,7 @@ contract PayrollManager is ReentrancyGuard {
             emit StreamExpired(streamId, msg.sender, remaining);
         }
     }
+    // slither-disable-end reentrancy-no-eth
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              VIEW FUNCTIONS
@@ -659,6 +843,8 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Get full stream info
+     * @param streamId streamId
+     * @return _arg _arg
      */
     function getStream(uint256 streamId) external view returns (Stream memory) {
         return streams[streamId];
@@ -666,6 +852,13 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Get stream status summary
+     * @param streamId streamId
+     * @return active active
+     * @return paused paused
+     * @return currentClaimable currentClaimable
+     * @return remainingBalance remainingBalance
+     * @return ratePerSecond ratePerSecond
+     * @return runwaySeconds runwaySeconds
      */
     function getStreamStatus(uint256 streamId) external view returns (
         bool active,
@@ -686,6 +879,8 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Estimate when stream will run out of funds
+     * @param streamId streamId
+     * @return _uint256 _uint256
      */
     function estimateEndTime(uint256 streamId) external view returns (uint256) {
         Stream storage s = streams[streamId];
@@ -705,6 +900,8 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Get all stream IDs where user is payer (employer)
+     * @param payer payer
+     * @return _arg _arg
      */
     function getPayerStreams(address payer) external view returns (uint256[] memory) {
         return payerStreams[payer];
@@ -712,6 +909,8 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Get all stream IDs where user is payee (employee)
+     * @param payee payee
+     * @return _arg _arg
      */
     function getPayeeStreams(address payee) external view returns (uint256[] memory) {
         return payeeStreams[payee];
@@ -719,6 +918,11 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Get total obligations for a payer (total rate per second across all active streams)
+     * @param payer payer
+     * @return activeStreamCount activeStreamCount
+     * @return totalRatePerSecond totalRatePerSecond
+     * @return totalDeposited totalDeposited
+     * @return totalClaimable totalClaimable
      */
     function getTotalObligations(address payer) external view returns (
         uint256 activeStreamCount,
@@ -727,10 +931,10 @@ contract PayrollManager is ReentrancyGuard {
         uint256 totalClaimable
     ) {
         uint256[] memory ids = payerStreams[payer];
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; ++i) {
             Stream storage s = streams[ids[i]];
             if (s.active) {
-                activeStreamCount++;
+                ++activeStreamCount;
                 if (!s.paused) {
                     totalRatePerSecond += s.ratePerSecond;
                 }
@@ -742,6 +946,10 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Get total earnings for a payee across all active streams
+     * @param payee payee
+     * @return activeStreamCount activeStreamCount
+     * @return totalRatePerSecond totalRatePerSecond
+     * @return totalClaimable totalClaimable
      */
     function getTotalEarnings(address payee) external view returns (
         uint256 activeStreamCount,
@@ -749,10 +957,10 @@ contract PayrollManager is ReentrancyGuard {
         uint256 totalClaimable
     ) {
         uint256[] memory ids = payeeStreams[payee];
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; ++i) {
             Stream storage s = streams[ids[i]];
             if (s.active) {
-                activeStreamCount++;
+                ++activeStreamCount;
                 if (!s.paused) {
                     totalRatePerSecond += s.ratePerSecond;
                 }
@@ -763,20 +971,25 @@ contract PayrollManager is ReentrancyGuard {
     
     /**
      * @notice Batch get stream statuses
+     * @param streamIds streamIds
+     * @return results results
      */
     function getStreamsBatch(uint256[] calldata streamIds) external view returns (Stream[] memory results) {
         results = new Stream[](streamIds.length);
-        for (uint256 i = 0; i < streamIds.length; i++) {
+        for (uint256 i = 0; i < streamIds.length; ++i) {
             results[i] = streams[streamIds[i]];
         }
     }
 
+    /// @notice _decrementActiveCounts
+    /// @param payer payer
+    /// @param payee payee
     function _decrementActiveCounts(address payer, address payee) internal {
         if (activePayerStreamCount[payer] > 0) {
-            activePayerStreamCount[payer] -= 1;
+            --activePayerStreamCount[payer];
         }
         if (activePayeeStreamCount[payee] > 0) {
-            activePayeeStreamCount[payee] -= 1;
+            --activePayeeStreamCount[payee];
         }
     }
 }

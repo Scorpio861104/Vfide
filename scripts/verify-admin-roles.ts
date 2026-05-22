@@ -126,11 +126,11 @@ async function main() {
   // without hardhat in the loop. The check fails gracefully if hardhat
   // isn't available. Hardhat extends ethers with `.provider` and signer
   // helpers at runtime, so we use a loose type here.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   let ethers: any;
   try {
     const hardhat = await import('hardhat');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     ethers = (hardhat as any).ethers;
     if (!ethers) throw new Error('hardhat.ethers undefined');
   } catch {

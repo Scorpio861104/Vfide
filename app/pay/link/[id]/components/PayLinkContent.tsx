@@ -178,6 +178,8 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
               <span className="text-xs text-zinc-400 mb-1 block">Your email</span>
               <input
                 type="email"
+                autoComplete="email"
+                inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"

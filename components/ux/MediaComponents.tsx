@@ -461,10 +461,56 @@ export function VideoPlayer({
               opacity-0 group-hover:opacity-100 transition-opacity
             "
           >
-            {/* Progress bar */}
+            {/* Progress bar — keyboard-accessible scrubber.
+                Uses role="slider" + arrow keys; a real <input type="range"> would
+                be more idiomatic but requires restyling against the existing
+                gradient track. This delivers WCAG-compliant keyboard control
+                without changing visual design. */}
             <div
+              role="slider"
+              tabIndex={0}
+              aria-label="Seek video"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+              aria-valuetext={`${Math.round(progress)} percent`}
               onClick={handleSeek}
-              className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3"
+              onKeyDown={(e) => {
+                const STEP = 5;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  // Synthesize a click at progress + STEP
+                  const newPct = Math.min(100, progress + STEP);
+                  const fakeEvent = {
+                    currentTarget: e.currentTarget,
+                    clientX: e.currentTarget.getBoundingClientRect().left + (e.currentTarget.clientWidth * newPct / 100),
+                  } as unknown as React.MouseEvent<HTMLDivElement>;
+                  handleSeek(fakeEvent);
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const newPct = Math.max(0, progress - STEP);
+                  const fakeEvent = {
+                    currentTarget: e.currentTarget,
+                    clientX: e.currentTarget.getBoundingClientRect().left + (e.currentTarget.clientWidth * newPct / 100),
+                  } as unknown as React.MouseEvent<HTMLDivElement>;
+                  handleSeek(fakeEvent);
+                } else if (e.key === 'Home') {
+                  e.preventDefault();
+                  const fakeEvent = {
+                    currentTarget: e.currentTarget,
+                    clientX: e.currentTarget.getBoundingClientRect().left,
+                  } as unknown as React.MouseEvent<HTMLDivElement>;
+                  handleSeek(fakeEvent);
+                } else if (e.key === 'End') {
+                  e.preventDefault();
+                  const fakeEvent = {
+                    currentTarget: e.currentTarget,
+                    clientX: e.currentTarget.getBoundingClientRect().left + e.currentTarget.clientWidth,
+                  } as unknown as React.MouseEvent<HTMLDivElement>;
+                  handleSeek(fakeEvent);
+                }
+              }}
+              className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3 focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-2"
             >
               <motion.div
                 className="h-full bg-cyan-500 rounded-full"

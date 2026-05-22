@@ -109,6 +109,11 @@ async function verifyJWT(token) {
         const decoded = jsonwebtoken_1.default.verify(token, s, {
             issuer: JWT_ISSUER,
             audience: JWT_AUDIENCE,
+            // F-BE-009 FIX: pin algorithms allowlist to defend against algorithm
+            // confusion. Without this, jsonwebtoken accepts any HS-family algorithm
+            // and would accept HS-keyed tokens against an RS public key if RS code
+            // paths are ever added. Mirrors the lib/auth/jwt.ts fix.
+            algorithms: ['HS256'],
         });
         if (typeof decoded === 'string' || !decoded.address) {
             throw new Error('Invalid token payload');

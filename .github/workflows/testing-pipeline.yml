@@ -125,6 +125,31 @@ jobs:
             --config-file slither.config.json \
             --sarif reports/slither.sarif \
             --json reports/slither.json
+      - name: Enforce zero-findings gate
+        # Mainnet-readiness contract: post PR #235 the repo runs Slither at 0 findings
+        # across every severity tier. Any new finding must be either inline-suppressed
+        # with a justification or added to slither.config.json + documented in
+        # SLITHER_TRIAGE_RATIONALE.md.
+        run: |
+          set -euo pipefail
+          if [ ! -f reports/slither.json ]; then
+            echo "::error::reports/slither.json not produced — Slither failed."
+            exit 1
+          fi
+          COUNT=$(python3 -c "import json; d=json.load(open('reports/slither.json')); print(len((d.get('results') or {}).get('detectors') or []))")
+          echo "Slither finding count: $COUNT"
+          if [ "$COUNT" != "0" ]; then
+            echo "::error::Slither found $COUNT issue(s). Required: 0. See SLITHER_TRIAGE_RATIONALE.md."
+            python3 -c "
+          import json
+          d = json.load(open('reports/slither.json'))
+          for r in (d.get('results') or {}).get('detectors') or []:
+              line = (r.get('description') or '').splitlines()[0][:160] if r.get('description') else ''
+              print(f\"  - [{r.get('impact')}] {r.get('check')} :: {line}\")
+          "
+            exit 1
+          fi
+          echo "✅ Slither: 0 findings — gate passes."
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
         if: always()

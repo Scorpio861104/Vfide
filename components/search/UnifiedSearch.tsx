@@ -50,7 +50,7 @@ export function UnifiedSearch({
           onFocus={() => setIsOpen(true)} onKeyDown={handleKeyDown} autoFocus={autoFocus}
           className={`w-full ${sizeClasses[size]} bg-white/5 border border-white/10 rounded-2xl text-white  focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all`} />
         {query && (
-          <button onClick={clearQuery} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-400 transition-colors">
+          <button onClick={clearQuery} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-400 transition-colors" aria-label="Clear search">
             <X size={iconSizes[size] - 4} />
           </button>
         )}

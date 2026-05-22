@@ -10,49 +10,133 @@ import "./SharedInterfaces.sol";
  * Integrates mutual checks:
  * - Seer can flag/delay suspicious proposals via SeerGuardian
  * - DAO actions are logged and can trigger automatic enforcement
+ * @author Vfide
  */
 
-interface IProofLedger_GH { function logSystemEvent(address who, string calldata action, address by) external; }
+interface IProofLedger_GH {
+    /// @notice logSystemEvent
+    /// @param who who
+    /// @param action action
+    /// @param by by
+    function logSystemEvent(address who, string calldata action, address by) external;
+}
+/// @notice ISeer_GH
+/// @title ISeer_GH
+/// @author Vfide
 interface ISeer_GH { 
+    /// @notice punish
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function punish(address subject, uint16 delta, string calldata reason) external; 
+    /// @notice reward
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
+    /// @notice getScore
+    /// @param _address _address
+    /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
+    /// @notice minForGovernance
+    /// @return _uint16 _uint16
     function minForGovernance() external view returns (uint16);
 }
 
+/// @notice ISeerGuardian_GH
+/// @title ISeerGuardian_GH
+/// @author Vfide
 interface ISeerGuardian_GH {
+    /// @notice autoCheckProposer
+    /// @param proposalId proposalId
+    /// @param proposer proposer
     function autoCheckProposer(uint256 proposalId, address proposer) external;
+    /// @notice isProposalBlocked
+    /// @param proposalId proposalId
+    /// @return blocked blocked
+    /// @return reason reason
     function isProposalBlocked(uint256 proposalId) external view returns (bool blocked, string memory reason);
+    /// @notice canParticipateInGovernance
+    /// @param subject subject
+    /// @return _bool _bool
     function canParticipateInGovernance(address subject) external view returns (bool);
+    /// @notice recordViolation
+    /// @param subject subject
+    /// @param vtype vtype
+    /// @param reason reason
     function recordViolation(address subject, uint8 vtype, string calldata reason) external;
 }
 
+/// @notice GovernanceHooks
+/// @title GovernanceHooks
+/// @author Vfide
 contract GovernanceHooks is ReentrancyGuard {
+    /// @notice owner
     address public owner;
+    /// @notice dao
     address public dao; // DAO contract that can call hooks
+    /// @notice ledger
     IProofLedger_GH public ledger; // optional
+    /// @notice seer
     ISeer_GH public seer;          // optional
+    /// @notice guardian
     ISeerGuardian_GH public guardian; // SeerGuardian for mutual checks
 
+    /// @notice ModulesSet
+    /// @param ledger ledger
+    /// @param seer seer
+    /// @param guardian guardian
     event ModulesSet(address ledger, address seer, address guardian);
+    /// @notice DAOSet
+    /// @param dao dao
     event DAOSet(address indexed dao);
+    /// @notice OwnershipTransferred
+    /// @param previousOwner previousOwner
+    /// @param newOwner newOwner
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    /// @notice ProposalAutoChecked
+    /// @param proposalId proposalId
+    /// @param proposer proposer
+    /// @param flagged flagged
     event ProposalAutoChecked(uint256 indexed proposalId, address indexed proposer, bool flagged);
+    /// @notice VoterRestricted
+    /// @param voter voter
+    /// @param reason reason
     event VoterRestricted(address indexed voter, string reason);
+    /// @notice GovernanceViolation
+    /// @param user user
+    /// @param violation violation
     event GovernanceViolation(address indexed user, string violation);
 
+    /// @notice GH_NotAuthorized
     error GH_NotAuthorized();
+    /// @notice GH_ProposalBlocked
+    /// @param reason reason
     error GH_ProposalBlocked(string reason);
+    /// @notice GH_VoterRestricted
     error GH_VoterRestricted();
+    /// @notice ModulesProposed
+    /// @param ledger ledger
+    /// @param seer seer
+    /// @param guardian guardian
+    /// @param effectiveAt effectiveAt
     event ModulesProposed(address ledger, address seer, address guardian, uint64 effectiveAt);
+    /// @notice ModulesCancelled
     event ModulesCancelled();
+    /// @notice OwnershipClaimedByDAO
+    /// @param previousOwner previousOwner
+    /// @param dao dao
     event OwnershipClaimedByDAO(address indexed previousOwner, address indexed dao);
 
+    /// @notice GH_NoPending
     error GH_NoPending();
+    /// @notice GH_DelayActive
     error GH_DelayActive();
+    /// @notice GH_DAOAlreadyOwns
     error GH_DAOAlreadyOwns();
 
     // C3 FIX: 7-day timelock on module changes so DAO can veto a malicious swap.
+    /// @notice MODULE_CHANGE_DELAY
     uint64 public constant MODULE_CHANGE_DELAY = 7 days;
 
     struct PendingModulesChange {
@@ -61,12 +145,20 @@ contract GovernanceHooks is ReentrancyGuard {
         address guardian;
         uint64 effectiveAt;
     }
+    /// @notice pendingModules
     PendingModulesChange public pendingModules;
+    /// @notice hasPendingModules
     bool public hasPendingModules;
 
+    /// @notice onlyOwner
     modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
+    /// @notice onlyDAO
     modifier onlyDAO() { if (msg.sender != dao) revert GH_NotAuthorized(); _; }
 
+    /// @notice constructor
+    /// @param _ledger _ledger
+    /// @param _seer _seer
+    /// @param _dao _dao
     constructor(address _ledger, address _seer, address _dao) { 
         require(_dao != address(0), "zero dao");
         owner = msg.sender;
@@ -78,6 +170,8 @@ contract GovernanceHooks is ReentrancyGuard {
         emit OwnershipTransferred(address(0), msg.sender);
     }
 
+    /// @notice setDAO
+    /// @param _dao _dao
     function setDAO(address _dao) external onlyDAO nonReentrant {
         require(_dao != address(0), "zero dao");
         dao = _dao;
@@ -86,6 +180,9 @@ contract GovernanceHooks is ReentrancyGuard {
 
     /// @notice Propose a module change. Takes effect after MODULE_CHANGE_DELAY.
     /// @dev C3 FIX: Timelock prevents instant malicious module swap.
+    /// @param _ledger _ledger
+    /// @param _seer _seer
+    /// @param _guardian _guardian
     function proposeModules(address _ledger, address _seer, address _guardian)
         external onlyOwner nonReentrant
     {
@@ -115,6 +212,9 @@ contract GovernanceHooks is ReentrancyGuard {
 
     /// @notice Legacy entrypoint retained for ABI compatibility.
     /// @dev Module changes are timelocked via proposeModules/applyModules.
+    /// @param _address _address
+    /// @param _address _address
+    /// @param _address _address
     function setModules(address, address, address) external pure {
         revert("GH: use proposeModules/applyModules");
     }
@@ -140,6 +240,8 @@ contract GovernanceHooks is ReentrancyGuard {
         emit OwnershipClaimedByDAO(previousOwner, dao);
     }
 
+    /// @notice transferOwnership
+    /// @param newOwner newOwner
     function transferOwnership(address newOwner) external onlyOwner nonReentrant {
         require(newOwner != address(0), "zero");
         emit OwnershipTransferred(owner, newOwner);
@@ -149,6 +251,8 @@ contract GovernanceHooks is ReentrancyGuard {
     /**
      * @notice Called when a new proposal is created
      * @dev Automatically checks proposer via SeerGuardian
+     * @param id id
+     * @param proposer proposer
      */
     function onProposalCreated(uint256 id, address proposer) external onlyDAO nonReentrant {
         _log("gh_proposal_created");
@@ -166,6 +270,9 @@ contract GovernanceHooks is ReentrancyGuard {
     /**
      * @notice Called before proposal execution - checks Seer flags
      * @dev Reverts if proposal is blocked by SeerGuardian
+     * @param id id
+     * @param _address _address
+     * @param _uint256 _uint256
      */
     function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO nonReentrant {
         _log("gh_queued");
@@ -185,6 +292,9 @@ contract GovernanceHooks is ReentrancyGuard {
     /**
      * @notice Called when a vote is cast
      * @dev Checks voter restrictions and rewards participation
+     * @param _uint256 _uint256
+     * @param voter voter
+     * @param _bool _bool
      */
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO nonReentrant {
         _log("gh_vote");
@@ -208,6 +318,9 @@ contract GovernanceHooks is ReentrancyGuard {
         }
     }
     
+    /// @notice onFinalized
+    /// @param _uint256 _uint256
+    /// @param passed passed
     function onFinalized(uint256 /*id*/, bool passed) external onlyDAO nonReentrant {
         _log(passed ? "gh_passed" : "gh_failed");
     }
@@ -233,5 +346,7 @@ contract GovernanceHooks is ReentrancyGuard {
         _log("governance_abuse_reported");
     }
 
+    /// @notice _log
+    /// @param action action
     function _log(string memory action) internal { if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} } }
 }

@@ -21,18 +21,23 @@ import "./BadgeRegistry.sol";
  * - Provenance: Stores mint timestamp and badge number
  * - Metadata: Rich JSON with images, descriptions, rarity
  * - Synced with Seer: NFT requires active badge in Seer contract
+ * @author Vfide
  */
 contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, ReentrancyGuard {
     
     // ============ STATE VARIABLES ============
     
+    /// @notice seer
     Seer public immutable seer;
     
     /// @notice Base URI for token metadata
     string private _baseTokenURI;
 
+    /// @notice pendingBaseTokenURI
     string public pendingBaseTokenURI;
+    /// @notice pendingBaseTokenURIAt
     uint256 public pendingBaseTokenURIAt;
+    /// @notice BASE_URI_DELAY
     uint256 public constant BASE_URI_DELAY = 24 hours;
     
     /// @notice Counter for unique token IDs
@@ -61,6 +66,11 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     // ============ EVENTS ============
     
     /// @notice Emitted when a badge NFT is minted
+    /// @param user user
+    /// @param tokenId tokenId
+    /// @param badge badge
+    /// @param badgeNumber badgeNumber
+    /// @param timestamp timestamp
     event BadgeNFTMinted(
         address indexed user,
         uint256 indexed tokenId,
@@ -70,29 +80,51 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     );
     
     /// @notice Emitted when a badge NFT is burned (badge lost/revoked)
+    /// @param user user
+    /// @param tokenId tokenId
+    /// @param badge badge
     event BadgeNFTBurned(
         address indexed user,
         uint256 indexed tokenId,
         bytes32 indexed badge
     );
 
+    /// @notice BaseURIUpdateProposed
+    /// @param newBaseURI newBaseURI
+    /// @param effectiveAt effectiveAt
     event BaseURIUpdateProposed(string newBaseURI, uint256 effectiveAt);
+    /// @notice BaseURIUpdated
+    /// @param oldBaseURI oldBaseURI
+    /// @param newBaseURI newBaseURI
     event BaseURIUpdated(string oldBaseURI, string newBaseURI);
     
     /// @notice ERC-5192: Emitted when token is locked (soulbound)
+    /// @param tokenId tokenId
     event Locked(uint256 tokenId);
     
     // ============ ERRORS ============
     
+    /// @notice BadgeNotEarned
+    /// @param badge badge
     error BadgeNotEarned(bytes32 badge);
+    /// @notice BadgeAlreadyMinted
+    /// @param badge badge
     error BadgeAlreadyMinted(bytes32 badge);
+    /// @notice BadgeExpired
+    /// @param badge badge
     error BadgeExpired(bytes32 badge);
+    /// @notice TokenIsSoulbound
     error TokenIsSoulbound();
+    /// @notice InvalidBadge
     error InvalidBadge();
+    /// @notice NotTokenOwner
     error NotTokenOwner();
     
     // ============ CONSTRUCTOR ============
     
+    /// @notice constructor
+    /// @param _seer _seer
+    /// @param _baseURI _baseURI
     constructor(
         address _seer,
         string memory _baseURI
@@ -108,6 +140,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @notice Mint an NFT for a badge you've earned
      * @param badge The badge ID to mint
      * @dev Verifies badge ownership via Seer contract before minting
+     * @return tokenId tokenId
      */
     function mintBadge(bytes32 badge) public nonReentrant returns (uint256 tokenId) {
         // Check badge is valid
@@ -125,7 +158,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         
         // Mint the NFT
         tokenId = _nextTokenId++;
-        badgeMintCount[badge]++;
+        ++badgeMintCount[badge];
         uint256 badgeNum = badgeMintCount[badge];
         
         // Store metadata BEFORE _safeMint to prevent reentrancy via onERC721Received
@@ -153,7 +186,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         require(badges.length <= 28, "BADGE: batch too large");
         tokenIds = new uint256[](badges.length);
         
-        for (uint256 i = 0; i < badges.length; i++) {
+        for (uint256 i = 0; i < badges.length; ++i) {
             tokenIds[i] = mintBadge(badges[i]);
         }
         
@@ -186,6 +219,8 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     /**
      * @notice Check if token is locked (soulbound)
      * @dev All VFIDE badges are permanently locked
+     * @param _uint256 _uint256
+     * @return _bool _bool
      */
     function locked(uint256 /* tokenId */) external pure returns (bool) {
         return true;
@@ -193,6 +228,10 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     
     /**
      * @notice Override _update to prevent transfers (soulbound) and support ERC721Enumerable
+     * @param to to
+     * @param tokenId tokenId
+     * @param auth auth
+     * @return _address _address
      */
     function _update(
         address to,
@@ -209,6 +248,8 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
 
     /**
      * @notice Override _increaseBalance for ERC721Enumerable
+     * @param account account
+     * @param value value
      */
     function _increaseBalance(address account, uint128 value) internal override(ERC721, ERC721Enumerable) {
         super._increaseBalance(account, value);
@@ -220,6 +261,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @notice Get token URI with metadata
      * @param tokenId The token ID
      * @return Full metadata URI
+     * @return _string _string
      */
     function tokenURI(uint256 tokenId)
         public
@@ -243,6 +285,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     
     /**
      * @notice Set base URI for metadata (only owner/DAO)
+     * @param newBaseURI newBaseURI
      */
     function setBaseURI(string memory newBaseURI) external onlyOwner {
         pendingBaseTokenURI = newBaseURI;
@@ -250,6 +293,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         emit BaseURIUpdateProposed(newBaseURI, pendingBaseTokenURIAt);
     }
 
+    /// @notice applyBaseURI
     function applyBaseURI() external onlyOwner {
         require(pendingBaseTokenURIAt > 0, "BADGE: no pending base URI");
         require(block.timestamp >= pendingBaseTokenURIAt, "BADGE: base URI timelocked");
@@ -264,6 +308,8 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         emit BaseURIUpdated(oldBaseURI, newBaseURI);
     }
 
+    /// @notice baseURI
+    /// @return _string _string
     function baseURI() external view returns (string memory) {
         return _baseTokenURI;
     }
@@ -277,7 +323,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         uint256 balance = balanceOf(user);
         tokens = new uint256[](balance);
         
-        for (uint256 i = 0; i < balance; i++) {
+        for (uint256 i = 0; i < balance; ++i) {
             tokens[i] = tokenOfOwnerByIndex(user, i);
         }
         
@@ -342,6 +388,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @notice Get total minted count for a badge type
      * @param badge The badge ID
      * @return count Total minted
+     * @return _uint256 _uint256
      */
     function getBadgeMintCount(bytes32 badge) external view returns (uint256) {
         return badgeMintCount[badge];
@@ -407,7 +454,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         tokenBadge[newTokenId] = badge;
         userBadgeToken[newOwner][badge] = newTokenId;
         mintTimestamp[newTokenId] = block.timestamp;
-        badgeMintCount[badge] += 1;
+        ++badgeMintCount[badge];
         badgeNumber[newTokenId] = badgeMintCount[badge];
 
         emit Locked(newTokenId);
@@ -416,6 +463,9 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     
     // ============ INTERNAL HELPERS ============
     
+    /// @notice _badgeNameToPath
+    /// @param badge badge
+    /// @return _string _string
     function _badgeNameToPath(bytes32 badge) internal pure returns (string memory) {
         // Convert badge ID to URL-safe path
         // e.g., "PIONEER" => "pioneer"
@@ -423,11 +473,14 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         return _toLowerCase(name);
     }
     
+    /// @notice _toLowerCase
+    /// @param str str
+    /// @return _string _string
     function _toLowerCase(string memory str) internal pure returns (string memory) {
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
         
-        for (uint i = 0; i < bStr.length; i++) {
+        for (uint i = 0; i < bStr.length; ++i) {
             if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
                 bLower[i] = bytes1(uint8(bStr[i]) + 32);
             } else {
@@ -438,6 +491,9 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         return string(bLower);
     }
     
+    /// @notice _toString
+    /// @param value value
+    /// @return _string _string
     function _toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) return "0";
         
@@ -445,14 +501,14 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         uint256 digits;
         
         while (temp != 0) {
-            digits++;
+            ++digits;
             temp /= 10;
         }
         
         bytes memory buffer = new bytes(digits);
         
         while (value != 0) {
-            digits -= 1;
+            --digits;
             buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
             value /= 10;
         }
@@ -462,6 +518,9 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     
     // ============ OVERRIDES ============
     
+    /// @notice supportsInterface
+    /// @param interfaceId interfaceId
+    /// @return _bool _bool
     function supportsInterface(bytes4 interfaceId)
         public
         view

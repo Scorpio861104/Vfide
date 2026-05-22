@@ -288,7 +288,7 @@ function ProductRow({ product, onArchive, onActivate, onDelete }: { product: Pro
     <div className="p-4 hover:bg-white/5 transition-colors flex items-start gap-4 flex-wrap">
       <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
         {product.images?.[0]?.url ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
+           
           <img src={product.images[0].url} alt={product.images[0].alt ?? product.name} className="w-full h-full object-cover" />
         ) : (
           <Package size={20} className="text-zinc-500" />
@@ -386,11 +386,18 @@ function CreateProductModal({ onClose, onCreated, onError }: { onClose: () => vo
   }, [canSubmit, name, price, sku, type, description, tracking, stock, status, onCreated, onError]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      tabIndex={-1}
+    >
       <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 max-w-lg w-full my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold">New product</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white" aria-label="Close"><X size={20} /></button>
         </div>
 
         <div className="space-y-4">

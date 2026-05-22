@@ -65,8 +65,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-          >
+            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors" aria-label="Close">
             <X className="w-5 h-5 text-zinc-500" />
           </button>
         </div>

@@ -164,7 +164,13 @@ export async function POST(req: NextRequest) {
   // Upload. Vercel Blob's `put` accepts string or ArrayBuffer/Blob.
   // We give it a content-addressed-ish filename: a random suffix prevents
   // collisions, the content-type drives the served Content-Type header.
-  const suffix = Math.random().toString(36).slice(2, 12);
+  //
+  // Use crypto.randomUUID() rather than Math.random() — even though this
+  // is a filename uniqifier (not a security secret), the upload path is
+  // a public POST and a CSPRNG suffix forecloses any "guess the next
+  // upload's URL" pre-publish race. Negligible perf cost; matches the
+  // pattern used elsewhere (lib/sessionKeys, lib/crossChain).
+  const suffix = crypto.randomUUID().replace(/-/g, '').slice(0, 16);
   const ext = extensionFor(ct);
   const pathname = `avatars/${Date.now()}-${suffix}.${ext}`;
 

@@ -14,17 +14,15 @@ export const CONTRACT_ADDRESSES = {
   MerchantPortal: addr(4),
   VaultHub: addr(5),
   Seer: addr(6),
-  SeerGuardian: addr(8),
   SeerView: addr(9),
   DAO: addr(10),
   DAOTimelock: addr(11),
   TrustGateway: addr(12),
-  BadgeNFT: addr(13),
   GuardianRegistry: addr(14),
   GuardianLock: addr(15),
   PanicGuard: addr(16),
   EmergencyBreaker: addr(17),
-  BurnRouter: addr(18),
+  ProofScoreBurnRouter: addr(18),
   LiquidityIncentives: addr(19),
   DutyDistributor: addr(20),
   PayrollManager: addr(21),
@@ -40,6 +38,11 @@ export const CONTRACT_ADDRESSES = {
   VaultRecoveryClaim: addr(35),
   OwnerControlPanel: addr(36),
   FeeDistributor: addr(37),
+  MerchantRegistry: addr(38),
+  EcoTreasuryVault: addr(39),
+  CommerceEscrow: addr(40),
+  VFIDETermLoan: addr(41),
+  VFIDEFlashLoan: addr(42),
 } as const
 
 export const VFIDE_TOKEN_ABI = [
@@ -152,3 +155,14 @@ export const isConfiguredContractAddress = (address?: string | null): address is
   address.length === 42
 export const getContractConfigurationError = (name: string) =>
   new Error(`[VFIDE] ${name} contract not configured.`)
+
+// Mocked equivalent of the production `getContractAddresses(chainId)`
+// helper. Tests that import this either inspect the keys (so we return
+// the same shape as CONTRACT_ADDRESSES) or just need the call not to
+// throw at module-load time.
+export const getContractAddresses = (_chainId?: number) => CONTRACT_ADDRESSES
+
+// Mocked validator — production returns the address as-is when valid;
+// tests don't assert on rejection paths against this mock module.
+export const validateContractAddress = (address?: string | null) =>
+  address as `0x${string}` | undefined

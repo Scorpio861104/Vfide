@@ -91,7 +91,7 @@ export function VoiceNoteRecorder({ onRecorded, maxDuration = 60 }: VoiceNoteRec
   return (
     <div className="flex items-center gap-2">
       {!recording ? (
-        <button onClick={startRecording} className="p-2.5 rounded-full bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-all">
+        <button onClick={startRecording} className="p-2.5 rounded-full bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-all" aria-label="Record voice note">
           <Mic size={20} />
         </button>
       ) : (
@@ -104,8 +104,8 @@ export function VoiceNoteRecorder({ onRecorded, maxDuration = 60 }: VoiceNoteRec
             })}
           </div>
           <span className="text-red-400 text-xs font-mono min-w-[40px]">{Math.floor(duration)}s</span>
-          <button onClick={cancelRecording} className="p-1 text-gray-500 hover:text-red-400"><Trash2 size={14} /></button>
-          <button onClick={stopRecording} className="p-1.5 bg-red-500 rounded-full text-white"><Square size={12} fill="white" /></button>
+          <button onClick={cancelRecording} className="p-1 text-gray-500 hover:text-red-400" aria-label="Discard recording"><Trash2 size={14} /></button>
+          <button onClick={stopRecording} className="p-1.5 bg-red-500 rounded-full text-white" aria-label="Stop recording"><Square size={12} fill="white" /></button>
         </div>
       )}
     </div>

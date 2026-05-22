@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useReadContract } from 'wagmi';
 import { OWNER_CONTROL_PANEL_ADDRESS, OWNER_CONTROL_PANEL_ABI } from '../config/contracts';
 
@@ -111,6 +112,48 @@ export function SystemStatusPanel() {
               status="success"
             />
           </div>
+        </div>
+      </div>
+
+      {/*
+        F-NAV-02: Operator-only utility pages that aren't part of the
+        public navigation. They live at stable URLs (/verifier, /splitter)
+        but were previously undiscoverable unless an operator already
+        knew the path. Surfacing them here keeps them off the public nav
+        while making them reachable from the owner-gated control panel.
+      */}
+      <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
+        <h3 className="text-xl font-bold text-white mb-2">Operator Tools</h3>
+        <p className="text-sm text-slate-400 mb-4">
+          Standalone utility pages used by trusted operators. These are not part of the public navigation.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Link
+            href="/verifier"
+            className="flex items-start gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 transition-colors"
+          >
+            <span className="text-2xl" aria-hidden="true">🛡️</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-white font-semibold mb-0.5">Trusted Verifier Console</div>
+              <div className="text-xs text-slate-400">
+                Fallback quorum for vault recovery claims when guardians are unavailable.
+              </div>
+              <div className="text-xs text-purple-300 mt-1 font-mono">/verifier</div>
+            </div>
+          </Link>
+          <Link
+            href="/splitter"
+            className="flex items-start gap-3 p-4 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/50 transition-colors"
+          >
+            <span className="text-2xl" aria-hidden="true">💸</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-white font-semibold mb-0.5">Revenue Splitter Inspector</div>
+              <div className="text-xs text-slate-400">
+                Read payees and balance from any deployed RevenueSplitter address; trigger distribution.
+              </div>
+              <div className="text-xs text-purple-300 mt-1 font-mono">/splitter</div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

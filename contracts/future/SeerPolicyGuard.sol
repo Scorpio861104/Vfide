@@ -1,56 +1,112 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+/// @notice SPG_NotDAO
 error SPG_NotDAO();
+/// @notice SPG_NotSeer
 error SPG_NotSeer();
+/// @notice SPG_Zero
 error SPG_Zero();
+/// @notice SPG_InvalidState
 error SPG_InvalidState();
+/// @notice SPG_NoPending
 error SPG_NoPending();
+/// @notice SPG_TimelockActive
 error SPG_TimelockActive();
 
+/// @notice SeerPolicyGuard
+/// @title SeerPolicyGuard
+/// @author Vfide
 contract SeerPolicyGuard {
+    /// @notice POLICY_CLASS_CRITICAL
     uint8 public constant POLICY_CLASS_CRITICAL = 0;
+    /// @notice POLICY_CLASS_IMPORTANT
     uint8 public constant POLICY_CLASS_IMPORTANT = 1;
+    /// @notice POLICY_CLASS_OPERATIONAL
     uint8 public constant POLICY_CLASS_OPERATIONAL = 2;
 
+    /// @notice POLICY_DELAY_CLASS_A
     uint64 public constant POLICY_DELAY_CLASS_A = 7 days;
+    /// @notice POLICY_DELAY_CLASS_B
     uint64 public constant POLICY_DELAY_CLASS_B = 72 hours;
+    /// @notice POLICY_DELAY_CLASS_C
     uint64 public constant POLICY_DELAY_CLASS_C = 24 hours;
     /// @notice N-L35 FIX: DAO rotation uses the same 48h delay as SeerGuardian
     ///         to prevent an instant capture of the policy guard via DAO takeover.
     uint64 public constant DAO_ROTATION_DELAY = 48 hours;
 
+    /// @notice dao
     address public dao;
+    /// @notice seer
     address public seer;
+    /// @notice seerMigrationInProgress
     bool public seerMigrationInProgress;
+    /// @notice pendingSeer
     address public pendingSeer;
     // N-L35 FIX: two-step DAO rotation state
+    /// @notice pendingDAO
     address public pendingDAO;
+    /// @notice pendingDAOAt
     uint64 public pendingDAOAt;
+    /// @notice _guardLock
     uint256 private _guardLock;
 
+    /// @notice policyChangeReadyAt
     mapping(bytes32 => uint64) public policyChangeReadyAt;
 
+    /// @notice DAOSet
+    /// @param oldDAO oldDAO
+    /// @param newDAO newDAO
     event DAOSet(address indexed oldDAO, address indexed newDAO);
+    /// @notice DAOChangeQueued
+    /// @param pendingDAO pendingDAO
+    /// @param effectiveAt effectiveAt
     event DAOChangeQueued(address indexed pendingDAO, uint64 effectiveAt);
+    /// @notice DAOChangeCancelled
+    /// @param cancelledDAO cancelledDAO
     event DAOChangeCancelled(address indexed cancelledDAO);
+    /// @notice SeerSet
+    /// @param oldSeer oldSeer
+    /// @param newSeer newSeer
     event SeerSet(address indexed oldSeer, address indexed newSeer);
+    /// @notice SeerMigrationStarted
+    /// @param oldSeer oldSeer
+    /// @param newSeer newSeer
     event SeerMigrationStarted(address indexed oldSeer, address indexed newSeer);
+    /// @notice SeerMigrationCancelled
+    /// @param oldSeer oldSeer
+    /// @param pendingSeer pendingSeer
     event SeerMigrationCancelled(address indexed oldSeer, address indexed pendingSeer);
+    /// @notice PolicyChangeScheduled
+    /// @param changeId changeId
+    /// @param selector selector
+    /// @param policyClass policyClass
+    /// @param readyAt readyAt
     event PolicyChangeScheduled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass, uint64 readyAt);
+    /// @notice PolicyChangeConsumed
+    /// @param changeId changeId
+    /// @param selector selector
+    /// @param policyClass policyClass
     event PolicyChangeConsumed(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
+    /// @notice PolicyChangeCancelled
+    /// @param changeId changeId
+    /// @param selector selector
+    /// @param policyClass policyClass
     event PolicyChangeCancelled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
 
+    /// @notice onlyDAO
     modifier onlyDAO() {
         if (msg.sender != dao) revert SPG_NotDAO();
         _;
     }
 
+    /// @notice onlySeer
     modifier onlySeer() {
         if (msg.sender != seer) revert SPG_NotSeer();
         _;
     }
 
+    /// @notice nonReentrantSPG
     modifier nonReentrantSPG() {
         if (_guardLock != 0) revert SPG_InvalidState();
         _guardLock = 1;
@@ -58,6 +114,9 @@ contract SeerPolicyGuard {
         _guardLock = 0;
     }
 
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _seer _seer
     constructor(address _dao, address _seer) {
         if (_dao == address(0) || _seer == address(0)) revert SPG_Zero();
         dao = _dao;
@@ -66,6 +125,7 @@ contract SeerPolicyGuard {
 
     /// @notice N-L35 FIX: Queue a DAO rotation with a 48h delay.
     ///         Mirrors the two-step pattern used by SeerGuardian.setDAO.
+    /// @param _dao _dao
     function setDAO(address _dao) external onlyDAO nonReentrantSPG {
         if (_dao == address(0)) revert SPG_Zero();
         if (pendingDAOAt != 0) revert SPG_InvalidState(); // rotation already pending
@@ -94,6 +154,8 @@ contract SeerPolicyGuard {
         emit DAOChangeCancelled(cancelled);
     }
 
+    /// @notice setSeer
+    /// @param _seer _seer
     function setSeer(address _seer) external onlyDAO nonReentrantSPG {
         if (_seer == address(0)) revert SPG_Zero();
         if (seerMigrationInProgress) revert SPG_InvalidState();
@@ -103,6 +165,7 @@ contract SeerPolicyGuard {
     }
 
     /// @notice Begin planned Seer migration and freeze policy consumption during handoff.
+    /// @param _seer _seer
     function beginSeerMigration(address _seer) external onlyDAO nonReentrantSPG {
         if (_seer == address(0) || _seer == seer) revert SPG_InvalidState();
         if (seerMigrationInProgress) revert SPG_InvalidState();
@@ -131,6 +194,11 @@ contract SeerPolicyGuard {
         emit SeerMigrationCancelled(old, pending);
     }
 
+    /// @notice schedulePolicyChange
+    /// @param selector selector
+    /// @param pclass pclass
+    /// @return changeId changeId
+    /// @return readyAt readyAt
     function schedulePolicyChange(bytes4 selector, uint8 pclass) external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt) {
         if (selector == bytes4(0) || pclass > POLICY_CLASS_OPERATIONAL) revert SPG_InvalidState();
         changeId = getPolicyChangeId(selector, pclass);
@@ -140,6 +208,9 @@ contract SeerPolicyGuard {
         emit PolicyChangeScheduled(changeId, selector, pclass, readyAt);
     }
 
+    /// @notice cancelPolicyChange
+    /// @param selector selector
+    /// @param pclass pclass
     function cancelPolicyChange(bytes4 selector, uint8 pclass) external onlyDAO nonReentrantSPG {
         bytes32 changeId = getPolicyChangeId(selector, pclass);
         if (policyChangeReadyAt[changeId] == 0) revert SPG_InvalidState();
@@ -148,6 +219,9 @@ contract SeerPolicyGuard {
         emit PolicyChangeCancelled(changeId, selector, pclass);
     }
 
+    /// @notice consume
+    /// @param selector selector
+    /// @param pclass pclass
     function consume(bytes4 selector, uint8 pclass) external onlySeer nonReentrantSPG {
         if (seerMigrationInProgress) revert SPG_InvalidState();
         bytes32 changeId = getPolicyChangeId(selector, pclass);
@@ -158,10 +232,17 @@ contract SeerPolicyGuard {
         emit PolicyChangeConsumed(changeId, selector, pclass);
     }
 
+    /// @notice getPolicyChangeId
+    /// @param selector selector
+    /// @param pclass pclass
+    /// @return _bytes32 _bytes32
     function getPolicyChangeId(bytes4 selector, uint8 pclass) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(selector, pclass));
     }
 
+    /// @notice _policyDelay
+    /// @param pclass pclass
+    /// @return _uint64 _uint64
     function _policyDelay(uint8 pclass) internal pure returns (uint64) {
         if (pclass == POLICY_CLASS_CRITICAL) return POLICY_DELAY_CLASS_A;
         if (pclass == POLICY_CLASS_IMPORTANT) return POLICY_DELAY_CLASS_B;
@@ -170,6 +251,10 @@ contract SeerPolicyGuard {
 
         /// @notice F-34 FIX: Generate change ID with parameter hash
         /// @dev Caller must hash all policy parameters: keccak256(abi.encode(param1, param2, ...))
+        /// @param selector selector
+        /// @param pclass pclass
+        /// @param paramHash paramHash
+        /// @return _bytes32 _bytes32
         function getPolicyChangeIdWithHash(bytes4 selector, uint8 pclass, bytes32 paramHash)
             public pure returns (bytes32)
         {
@@ -177,6 +262,11 @@ contract SeerPolicyGuard {
         }
 
         /// @notice F-34 FIX: Schedule policy change with parameter binding
+        /// @param selector selector
+        /// @param pclass pclass
+        /// @param paramHash paramHash
+        /// @return changeId changeId
+        /// @return readyAt readyAt
         function schedulePolicyChangeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash)
             external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt)
         {
@@ -190,6 +280,9 @@ contract SeerPolicyGuard {
         }
 
         /// @notice F-34 FIX: Consume policy change with parameter validation
+        /// @param selector selector
+        /// @param pclass pclass
+        /// @param paramHash paramHash
         function consumeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash)
             external onlySeer nonReentrantSPG
         {
@@ -202,6 +295,9 @@ contract SeerPolicyGuard {
         }
 
         /// @notice F-34 FIX: Cancel a policy change with parameter binding
+        /// @param selector selector
+        /// @param pclass pclass
+        /// @param paramHash paramHash
         function cancelPolicyChangeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash)
             external onlyDAO nonReentrantSPG
         {

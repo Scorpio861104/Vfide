@@ -21,61 +21,159 @@ import "../SharedInterfaces.sol";
 using SafeERC20 for IERC20;
 
 // Seer interface for ProofScore
+/// @notice ISeer_SM
+/// @title ISeer_SM
+/// @author Vfide
 interface ISeer_SM {
+    /// @notice reward
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
 }
 
+/// @notice IFraudRegistry_SM
+/// @title IFraudRegistry_SM
+/// @author Vfide
 interface IFraudRegistry_SM {
+    /// @notice isServiceBanned
+    /// @param user user
+    /// @return _bool _bool
     function isServiceBanned(address user) external view returns (bool);
 }
 
 /// @dev R-4 — narrow interface used only by settleByInheritance. Kept separate
 ///      from the broader IVaultHub in SharedInterfaces.sol so this contract's
 ///      ABI changes are scoped to its own settlement path.
+/// @notice IVaultHubInheritance_SM
+/// @title IVaultHubInheritance_SM
+/// @author Vfide
 interface IVaultHubInheritance_SM {
+    /// @notice isInMemorialState
+    /// @param vault vault
+    /// @return _bool _bool
     function isInMemorialState(address vault) external view returns (bool);
 }
 
+/// @notice SM_NotSubscriber
 error SM_NotSubscriber();
+/// @notice SM_NotMerchant
 error SM_NotMerchant();
+/// @notice SM_NotAuthorized
 error SM_NotAuthorized();
+/// @notice SM_InvalidAmount
 error SM_InvalidAmount();
+/// @notice SM_InvalidInterval
 error SM_InvalidInterval();
+/// @notice SM_InvalidMerchant
 error SM_InvalidMerchant();
+/// @notice SM_InactiveSubscription
 error SM_InactiveSubscription();
+/// @notice SM_AlreadyPaused
 error SM_AlreadyPaused();
+/// @notice SM_NotPaused
 error SM_NotPaused();
+/// @notice SM_SubscriptionPaused
 error SM_SubscriptionPaused();
+/// @notice SM_PaymentTooEarly
 error SM_PaymentTooEarly();
+/// @notice SM_GracePeriodActive
 error SM_GracePeriodActive();
+/// @notice SM_GracePeriodExpired
 error SM_GracePeriodExpired();
+/// @notice SM_EmergencyNotActive
 error SM_EmergencyNotActive();
+/// @notice SM_VaultChanged
 error SM_VaultChanged();
+/// @notice SM_FraudBlocked
 error SM_FraudBlocked();
 /// @notice R-4 — neither party's vault is in MEMORIAL state.
 error SM_NotInheritanceActive();
 
+/// @notice SubscriptionManager
+/// @title SubscriptionManager
+/// @author Vfide
 contract SubscriptionManager is ReentrancyGuard {
+    /// @notice SubscriptionCreated
+    /// @param subId subId
+    /// @param subscriber subscriber
+    /// @param merchant merchant
+    /// @param amount amount
+    /// @param interval interval
     event SubscriptionCreated(uint256 indexed subId, address indexed subscriber, address indexed merchant, uint256 amount, uint256 interval);
+    /// @notice SubscriptionCancelled
+    /// @param subId subId
     event SubscriptionCancelled(uint256 indexed subId);
     /// @notice R-4 — emitted when a subscription is cancelled because one party's vault entered MEMORIAL.
+    /// @param subId subId
+    /// @param deceasedParty deceasedParty
     event SubscriptionSettledByInheritance(uint256 indexed subId, address indexed deceasedParty);
+    /// @notice SubscriptionPaused
+    /// @param subId subId
+    /// @param pausedBy pausedBy
     event SubscriptionPaused(uint256 indexed subId, address indexed pausedBy);
+    /// @notice SubscriptionResumed
+    /// @param subId subId
+    /// @param resumedBy resumedBy
     event SubscriptionResumed(uint256 indexed subId, address indexed resumedBy);
+    /// @notice SubscriptionModified
+    /// @param subId subId
+    /// @param oldAmount oldAmount
+    /// @param newAmount newAmount
+    /// @param oldInterval oldInterval
+    /// @param newInterval newInterval
     event SubscriptionModified(uint256 indexed subId, uint256 oldAmount, uint256 newAmount, uint256 oldInterval, uint256 newInterval);
+    /// @notice PaymentProcessed
+    /// @param subId subId
+    /// @param timestamp timestamp
     event PaymentProcessed(uint256 indexed subId, uint256 timestamp);
+    /// @notice PaymentFailed
+    /// @param subId subId
+    /// @param timestamp timestamp
+    /// @param reason reason
     event PaymentFailed(uint256 indexed subId, uint256 timestamp, string reason);
+    /// @notice SeerRewardFailed
+    /// @param subId subId
+    /// @param subject subject
+    /// @param reason reason
     event SeerRewardFailed(uint256 indexed subId, address indexed subject, string reason);
+    /// @notice GracePeriodStarted
+    /// @param subId subId
+    /// @param graceEndTime graceEndTime
     event GracePeriodStarted(uint256 indexed subId, uint256 graceEndTime);
+    /// @notice EmergencyCancelled
+    /// @param subId subId
+    /// @param cancelledBy cancelledBy
     event EmergencyCancelled(uint256 indexed subId, address indexed cancelledBy);
+    /// @notice EmergencyCancelQueued
+    /// @param subId subId
+    /// @param effectiveAt effectiveAt
     event EmergencyCancelQueued(uint256 indexed subId, uint64 effectiveAt);
+    /// @notice EmergencyCancelRevoked
+    /// @param subId subId
     event EmergencyCancelRevoked(uint256 indexed subId);
+    /// @notice EmergencyBreakerChangeQueued
+    /// @param breaker breaker
+    /// @param effectiveAt effectiveAt
     event EmergencyBreakerChangeQueued(address indexed breaker, uint64 effectiveAt);
+    /// @notice EmergencyBreakerChangeApplied
+    /// @param breaker breaker
     event EmergencyBreakerChangeApplied(address indexed breaker);
+    /// @notice EmergencyBreakerChangeCancelled
+    /// @param breaker breaker
     event EmergencyBreakerChangeCancelled(address indexed breaker);
+    /// @notice FraudRegistrySet
+    /// @param fraudRegistry fraudRegistry
     event FraudRegistrySet(address indexed fraudRegistry);
+    /// @notice FraudRegistryChangeQueued
+    /// @param fraudRegistry fraudRegistry
+    /// @param effectiveAt effectiveAt
     event FraudRegistryChangeQueued(address indexed fraudRegistry, uint64 effectiveAt);
+    /// @notice FraudRegistryChangeApplied
+    /// @param fraudRegistry fraudRegistry
     event FraudRegistryChangeApplied(address indexed fraudRegistry);
+    /// @notice FraudRegistryChangeCancelled
+    /// @param fraudRegistry fraudRegistry
     event FraudRegistryChangeCancelled(address indexed fraudRegistry);
 
     struct Subscription {
@@ -96,43 +194,69 @@ contract SubscriptionManager is ReentrancyGuard {
         string memo; // e.g. "Netflix Premium"
     }
 
+    /// @notice subCount
     uint256 public subCount;
+    /// @notice subscriptions
     mapping(uint256 => Subscription) public subscriptions;
     
     // NEW: Configuration
+    /// @notice GRACE_PERIOD
     uint256 public constant GRACE_PERIOD = 3 days;
+    /// @notice MAX_FAILED_PAYMENTS
     uint256 public constant MAX_FAILED_PAYMENTS = 3;
+    /// @notice MAX_BATCH_SIZE
     uint256 public constant MAX_BATCH_SIZE = 200;
     // Merchant has exclusive calling rights for 24h after payment is due.
     //               After this window anyone (keeper/bot) may process to prevent stalling.
+    /// @notice MERCHANT_EXCLUSIVE_WINDOW
     uint256 public constant MERCHANT_EXCLUSIVE_WINDOW = 24 hours;
     
     // NEW: DAO for emergency controls
+    /// @notice dao
     address public dao;
+    /// @notice emergencyBreaker
     IEmergencyBreaker public emergencyBreaker;
     // #515 FIX: Timelock emergency cancellation so subscriber has 48h notice.
+    /// @notice EMERGENCY_CANCEL_DELAY
     uint64 public constant EMERGENCY_CANCEL_DELAY = 48 hours;
+    /// @notice pendingEmergencyCancelAt
     mapping(uint256 => uint64) public pendingEmergencyCancelAt;
+    /// @notice pendingEmergencyBreaker
     address public pendingEmergencyBreaker;
+    /// @notice pendingEmergencyBreakerAt
     uint64 public pendingEmergencyBreakerAt;
+    /// @notice BREAKER_CHANGE_DELAY
     uint64 public constant BREAKER_CHANGE_DELAY = 48 hours;
+    /// @notice pendingFraudRegistry
     address public pendingFraudRegistry;
+    /// @notice pendingFraudRegistryAt
     uint64 public pendingFraudRegistryAt;
+    /// @notice FRAUD_REGISTRY_CHANGE_DELAY
     uint64 public constant FRAUD_REGISTRY_CHANGE_DELAY = 24 hours;
     
+    /// @notice vaultHub
     IVaultHub public vaultHub;
     
     // ProofScore integration
+    /// @notice seer
     ISeer_SM public seer;
+    /// @notice fraudRegistry
     IFraudRegistry_SM public fraudRegistry;
+    /// @notice SUBSCRIPTION_PAYER_REWARD
     uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2;    // +0.2 per payment
+    /// @notice SUBSCRIPTION_MERCHANT_REWARD
     uint16 public constant SUBSCRIPTION_MERCHANT_REWARD = 3; // +0.3 per payment
 
+    /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "SM: not DAO");
         _;
     }
 
+    /// @notice constructor
+    /// @param _vaultHub _vaultHub
+    /// @param _dao _dao
+    /// @param _seer _seer
     constructor(address _vaultHub, address _dao, address _seer) {
         require(_vaultHub != address(0), "SM: zero vaultHub");
         require(_dao != address(0), "SM: zero DAO");
@@ -143,11 +267,14 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /**
      * @notice Set Seer address (only DAO can change)
+     * @param _seer _seer
      */
     function setSeer(address _seer) external onlyDAO {
         seer = ISeer_SM(_seer);
     }
 
+    /// @notice setFraudRegistry
+    /// @param _fraudRegistry _fraudRegistry
     function setFraudRegistry(address _fraudRegistry) external onlyDAO {
         require(_fraudRegistry != address(0), "SM: zero fraud registry");
         require(pendingFraudRegistryAt == 0, "SM: pending fraud registry");
@@ -157,6 +284,7 @@ contract SubscriptionManager is ReentrancyGuard {
         emit FraudRegistryChangeQueued(_fraudRegistry, pendingFraudRegistryAt);
     }
 
+    /// @notice applyFraudRegistry
     function applyFraudRegistry() external onlyDAO {
         require(pendingFraudRegistryAt != 0, "SM: no pending fraud registry");
         require(block.timestamp >= pendingFraudRegistryAt, "SM: fraud registry timelock");
@@ -169,6 +297,7 @@ contract SubscriptionManager is ReentrancyGuard {
         delete pendingFraudRegistryAt;
     }
 
+    /// @notice cancelFraudRegistryChange
     function cancelFraudRegistryChange() external onlyDAO {
         require(pendingFraudRegistryAt != 0, "SM: no pending fraud registry");
         emit FraudRegistryChangeCancelled(pendingFraudRegistry);
@@ -178,12 +307,15 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /**
      * @notice Set DAO address (only current DAO can change)
+     * @param _dao _dao
      */
     function setDAO(address _dao) external onlyDAO {
         require(_dao != address(0), "SM: zero DAO");
         dao = _dao;
     }
 
+    /// @notice setEmergencyBreaker
+    /// @param _breaker _breaker
     function setEmergencyBreaker(address _breaker) external onlyDAO {
         require(_breaker != address(0), "SM: zero breaker");
         require(pendingEmergencyBreakerAt == 0, "SM: pending breaker");
@@ -193,6 +325,7 @@ contract SubscriptionManager is ReentrancyGuard {
         emit EmergencyBreakerChangeQueued(_breaker, pendingEmergencyBreakerAt);
     }
 
+    /// @notice applyEmergencyBreaker
     function applyEmergencyBreaker() external onlyDAO {
         require(pendingEmergencyBreakerAt != 0, "SM: no pending breaker");
         require(block.timestamp >= pendingEmergencyBreakerAt, "SM: breaker timelock");
@@ -204,6 +337,7 @@ contract SubscriptionManager is ReentrancyGuard {
         delete pendingEmergencyBreakerAt;
     }
 
+    /// @notice cancelEmergencyBreakerChange
     function cancelEmergencyBreakerChange() external onlyDAO {
         require(pendingEmergencyBreakerAt != 0, "SM: no pending breaker");
         emit EmergencyBreakerChangeCancelled(pendingEmergencyBreaker);
@@ -212,6 +346,13 @@ contract SubscriptionManager is ReentrancyGuard {
     }
 
     // 1. User creates a subscription
+    /// @notice createSubscription
+    /// @param merchant merchant
+    /// @param token token
+    /// @param amount amount
+    /// @param interval interval
+    /// @param memo memo
+    /// @return subId subId
     function createSubscription(
         address merchant,
         address token,
@@ -250,6 +391,8 @@ contract SubscriptionManager is ReentrancyGuard {
     }
 
     // 2. User cancels subscription
+    /// @notice cancelSubscription
+    /// @param subId subId
     function cancelSubscription(uint256 subId) external {
         if (subscriptions[subId].subscriber != msg.sender) revert SM_NotSubscriber();
         subscriptions[subId].active = false;
@@ -307,6 +450,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /**
      * @notice Pause subscription temporarily (subscriber or merchant)
      * @dev Useful for disputes, temporary suspension, etc.
+     * @param subId subId
      */
     function pauseSubscription(uint256 subId) external {
         Subscription storage sub = subscriptions[subId];
@@ -323,6 +467,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /**
      * @notice Resume paused subscription
      * @dev Only subscriber can resume (prevents merchant abuse)
+     * @param subId subId
      */
     function resumeSubscription(uint256 subId) external {
         Subscription storage sub = subscriptions[subId];
@@ -342,6 +487,9 @@ contract SubscriptionManager is ReentrancyGuard {
     /**
      * @notice Modify subscription parameters
      * @dev Only subscriber can modify, takes effect after next payment
+     * @param subId subId
+     * @param newAmount newAmount
+     * @param newInterval newInterval
      */
     function modifySubscription(uint256 subId, uint256 newAmount, uint256 newInterval) external {
         Subscription storage sub = subscriptions[subId];
@@ -362,6 +510,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /**
      * @notice Propose emergency cancel by DAO (for fraud/disputes)
      * @dev #515 FIX: 48h notice before cancellation finalises.
+     * @param subId subId
      */
     function emergencyCancel(uint256 subId) external onlyDAO {
         Subscription storage sub = subscriptions[subId];
@@ -377,6 +526,8 @@ contract SubscriptionManager is ReentrancyGuard {
         emit EmergencyCancelQueued(subId, effectiveAt);
     }
 
+    /// @notice applyEmergencyCancel
+    /// @param subId subId
     function applyEmergencyCancel(uint256 subId) external onlyDAO {
         Subscription storage sub = subscriptions[subId];
         require(sub.active, "SM: already inactive");
@@ -386,6 +537,8 @@ contract SubscriptionManager is ReentrancyGuard {
         emit EmergencyCancelled(subId, msg.sender);
     }
 
+    /// @notice revokeEmergencyCancel
+    /// @param subId subId
     function revokeEmergencyCancel(uint256 subId) external onlyDAO {
         require(pendingEmergencyCancelAt[subId] != 0, "SM: no pending cancel");
         delete pendingEmergencyCancelAt[subId];
@@ -395,6 +548,8 @@ contract SubscriptionManager is ReentrancyGuard {
     // 3. Merchant (or anyone) processes the payment
     // Within MERCHANT_EXCLUSIVE_WINDOW after due time, only the merchant
     //                can call — prevents third-party griefing during brief balance dips.
+    /// @notice processPayment
+    /// @param subId subId
     function processPayment(uint256 subId) external nonReentrant {
         Subscription storage sub = subscriptions[subId];
         if (!sub.active) revert SM_InactiveSubscription();
@@ -447,7 +602,7 @@ contract SubscriptionManager is ReentrancyGuard {
             // Prevents merchants from calling processPayment 3x in the same block to force
             // immediate auto-cancellation.
             if (sub.lastFailedPaymentBlock != block.number) {
-                sub.failedPayments++;
+                ++sub.failedPayments;
                 sub.lastFailedPaymentBlock = block.number;
             }
             
@@ -497,12 +652,22 @@ contract SubscriptionManager is ReentrancyGuard {
     //                              VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice getSubscription
+    /// @param subId subId
+    /// @return _arg _arg
     function getSubscription(uint256 subId) external view returns (Subscription memory) {
         return subscriptions[subId];
     }
     
     /**
      * @notice Get next payment info for UI
+     * @param subId subId
+     * @return nextPaymentTime nextPaymentTime
+     * @return amount amount
+     * @return isPaused isPaused
+     * @return isInGracePeriod isInGracePeriod
+     * @return graceTimeRemaining graceTimeRemaining
+     * @return failedPaymentCount failedPaymentCount
      */
     function getNextPaymentInfo(uint256 subId) external view returns (
         uint256 nextPaymentTime,
@@ -523,6 +688,9 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /**
      * @notice Check if subscription can be processed now
+     * @param subId subId
+     * @return processable processable
+     * @return reason reason
      */
     function canProcess(uint256 subId) external view returns (bool processable, string memory reason) {
         Subscription storage sub = subscriptions[subId];
@@ -546,18 +714,20 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /**
      * @notice Get all subscriptions for a user
+     * @param user user
+     * @return _arg _arg
      */
     function getUserSubscriptions(address user) external view returns (uint256[] memory) {
         // Count first
         uint256 count = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
-            if (subscriptions[i].subscriber == user) count++;
+        for (uint256 i = 1; i <= subCount; ++i) {
+            if (subscriptions[i].subscriber == user) ++count;
         }
         
         // Collect
         uint256[] memory result = new uint256[](count);
         uint256 idx = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             if (subscriptions[i].subscriber == user) {
                 result[idx++] = i;
             }
@@ -567,16 +737,18 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /**
      * @notice Get all subscriptions for a merchant
+     * @param merchant merchant
+     * @return _arg _arg
      */
     function getMerchantSubscriptions(address merchant) external view returns (uint256[] memory) {
         uint256 count = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
-            if (subscriptions[i].merchant == merchant) count++;
+        for (uint256 i = 1; i <= subCount; ++i) {
+            if (subscriptions[i].merchant == merchant) ++count;
         }
         
         uint256[] memory result = new uint256[](count);
         uint256 idx = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             if (subscriptions[i].merchant == merchant) {
                 result[idx++] = i;
             }
@@ -586,6 +758,12 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /**
      * @notice Get merchant subscription statistics
+     * @param merchant merchant
+     * @return totalSubscriptions totalSubscriptions
+     * @return activeCount activeCount
+     * @return pausedCount pausedCount
+     * @return totalMRR totalMRR
+     * @return totalValuePerInterval totalValuePerInterval
      */
     function getMerchantStats(address merchant) external view returns (
         uint256 totalSubscriptions,
@@ -594,15 +772,15 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 totalMRR,  // Monthly Recurring Revenue (assumes 30-day interval)
         uint256 totalValuePerInterval
     ) {
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.merchant == merchant) {
-                totalSubscriptions++;
+                ++totalSubscriptions;
                 if (sub.active) {
                     if (sub.paused) {
-                        pausedCount++;
+                        ++pausedCount;
                     } else {
-                        activeCount++;
+                        ++activeCount;
                         totalValuePerInterval += sub.amount;
                         // Normalize to monthly (30 days)
                         if (sub.interval > 0) {
@@ -625,11 +803,11 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 failed
     ) {
         require(subIds.length <= MAX_BATCH_SIZE, "SM: batch too large");
-        for (uint256 i = 0; i < subIds.length; i++) {
+        for (uint256 i = 0; i < subIds.length; ++i) {
             try this.processPayment(subIds[i]) {
-                processed++;
+                ++processed;
             } catch {
-                failed++;
+                ++failed;
             }
         }
     }
@@ -641,11 +819,11 @@ contract SubscriptionManager is ReentrancyGuard {
     function getReadyForProcessing() external view returns (uint256[] memory ready) {
         // Count first
         uint256 count = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.active && !sub.paused && block.timestamp >= sub.nextPayment) {
                 if (sub.graceEndTime == 0 || block.timestamp <= sub.graceEndTime) {
-                    count++;
+                    ++count;
                 }
             }
         }
@@ -653,7 +831,7 @@ contract SubscriptionManager is ReentrancyGuard {
         // Collect
         ready = new uint256[](count);
         uint256 idx = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.active && !sub.paused && block.timestamp >= sub.nextPayment) {
                 if (sub.graceEndTime == 0 || block.timestamp <= sub.graceEndTime) {
@@ -665,10 +843,12 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /**
      * @notice Batch get subscription details
+     * @param subIds subIds
+     * @return results results
      */
     function getSubscriptionsBatch(uint256[] calldata subIds) external view returns (Subscription[] memory results) {
         results = new Subscription[](subIds.length);
-        for (uint256 i = 0; i < subIds.length; i++) {
+        for (uint256 i = 0; i < subIds.length; ++i) {
             results[i] = subscriptions[subIds[i]];
         }
     }

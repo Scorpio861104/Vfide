@@ -67,10 +67,15 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
   return (
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Product details"
+        tabIndex={-1}
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
         className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm py-8 px-4" onClick={onClose}>
         <motion.div initial={{ opacity: 0, y: 30, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 30, scale: 0.98 }}
           className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-          <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-gray-400 hover:text-white transition-colors"><X size={20} /></button>
+          <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/50 rounded-full text-gray-400 hover:text-white transition-colors" aria-label="Close"><X size={20} /></button>
 
           {loading ? (
             <div className="py-24 text-center text-gray-500">
@@ -166,7 +171,20 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                   <h3 className="text-white font-bold mb-3">You might also like</h3>
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                     {related.slice(0, 6).map(r => (
-                      <div key={r.id} className="flex-shrink-0 w-36 cursor-pointer group" onClick={() => loadRelated(r.id)}>
+                      <div
+                        key={r.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`View ${r.name}`}
+                        className="flex-shrink-0 w-36 cursor-pointer group focus-visible:outline-2 focus-visible:outline-cyan-400 rounded-lg"
+                        onClick={() => loadRelated(r.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            loadRelated(r.id);
+                          }
+                        }}
+                      >
                         <div className="aspect-square rounded-lg bg-white/5 overflow-hidden mb-2">
                           {r.imageUrl ? <Image src={r.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform"  width={48} height={48} />
                             : <div className="w-full h-full flex items-center justify-center"><Package size={20} className="text-gray-600" /></div>}

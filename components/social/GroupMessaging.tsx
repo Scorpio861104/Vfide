@@ -653,8 +653,7 @@ export function GroupMessaging() {
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim() || encryptionStatus === 'encrypting'}
-                  className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                  className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Send">
                   <Send className="w-5 h-5" />
                 </button>
               </div>
@@ -803,7 +802,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-zinc-100">Create Group</h2>
-          <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-lg">
+          <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-lg" aria-label="Close">
             <X className="w-5 h-5 text-zinc-500" />
           </button>
         </div>

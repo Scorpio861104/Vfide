@@ -210,8 +210,17 @@ export function StoryCreator({
               {/* Media Upload/Preview */}
               {!mediaPreview ? (
                 <div
-                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-cyan-400 transition-colors"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Add photo or video to story"
+                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-cyan-400 focus-visible:outline-2 focus-visible:outline-cyan-400 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
                 >
                   <ImageIcon className="w-16 h-16 text-zinc-400 mb-4" />
                   <p className="text-zinc-100 text-lg mb-2">Add Photo or Video</p>

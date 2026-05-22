@@ -128,9 +128,46 @@ const wss = new ws_1.WebSocketServer({
 // Set WS_INTERNAL_SECRET env to a long random string; the Next.js API must send
 // the same value. If the env is unset in production, all POST /event calls are
 // rejected (fail-closed).
+//
+// OP-13 FIX: Zero-downtime rotation support. A second secret can be
+// supplied via PREV_WS_INTERNAL_SECRET during the transition window.
+// The bridge accepts either the current OR previous secret while the
+// rotation is in progress; once all callers are migrated, remove
+// PREV_WS_INTERNAL_SECRET. Without this, rotating the WS internal
+// secret required atomic deploy of the WS server and EVERY caller —
+// any drift caused message-bridge outage.
 const WS_INTERNAL_SECRET = process.env.WS_INTERNAL_SECRET || '';
+const PREV_WS_INTERNAL_SECRET = process.env.PREV_WS_INTERNAL_SECRET || '';
 if (IS_PRODUCTION && !WS_INTERNAL_SECRET) {
     console.warn('[ws] WARNING: WS_INTERNAL_SECRET is not set. POST /event will be rejected in production.');
+}
+if (PREV_WS_INTERNAL_SECRET) {
+    console.info('[ws] PREV_WS_INTERNAL_SECRET is set — rotation window active. Remove this env var once all callers are migrated to the new secret.');
+}
+/**
+ * OP-13: Constant-time check of a presented secret against the current
+ * AND (if set) previous WS_INTERNAL_SECRET. Always performs both checks
+ * to avoid leaking timing differences about which secret matched.
+ */
+function _isInternalSecretAuthorized(providedSecret) {
+    if (typeof providedSecret !== 'string' || providedSecret.length === 0) {
+        return false;
+    }
+    const provided = Buffer.from(providedSecret, 'utf8');
+    let matched = false;
+    for (const candidate of [WS_INTERNAL_SECRET, PREV_WS_INTERNAL_SECRET]) {
+        if (!candidate)
+            continue;
+        const expected = Buffer.from(candidate, 'utf8');
+        if (expected.length !== provided.length)
+            continue;
+        if ((0, crypto_1.timingSafeEqual)(expected, provided)) {
+            matched = true;
+            // Keep iterating to maintain constant-time across both candidates;
+            // do not short-circuit once matched.
+        }
+    }
+    return matched;
 }
 server.on('request', (req, res) => {
     if (req.method === 'GET' && req.url === '/health') {
@@ -143,14 +180,8 @@ server.on('request', (req, res) => {
     if (req.method === 'POST' && req.url === '/event') {
         const headerSecretRaw = req.headers['x-internal-secret'];
         const providedSecret = Array.isArray(headerSecretRaw) ? headerSecretRaw[0] : headerSecretRaw;
-        let isAuthorized = false;
-        if (WS_INTERNAL_SECRET && typeof providedSecret === 'string') {
-            const expected = Buffer.from(WS_INTERNAL_SECRET, 'utf8');
-            const provided = Buffer.from(providedSecret, 'utf8');
-            if (expected.length === provided.length) {
-                isAuthorized = (0, crypto_1.timingSafeEqual)(expected, provided);
-            }
-        }
+        // OP-13: verification now accepts current OR previous secret during rotation window.
+        const isAuthorized = WS_INTERNAL_SECRET ? _isInternalSecretAuthorized(providedSecret) : false;
         if (!isAuthorized) {
             res.writeHead(401, { 'content-type': 'application/json' });
             res.end(JSON.stringify({ error: 'Unauthorized' }));
@@ -235,11 +266,16 @@ function chatTopic(addrA, addrB) {
     return `chat.${sorted[0]}_${sorted[1]}`;
 }
 function isAllowedTopic(topic) {
-    if (topic === 'governance' || topic === 'notifications') {
+    // F-BE-013 FIX: removed global 'notifications' topic. Was reachable by ANY
+    // authenticated subscriber and broadcast EVERY message metadata pair to
+    // EVERY connected client — wholesale leak of platform message graph.
+    // Per-user notification topic 'notifications.<address>' replaces it; the
+    // subscriber-self check is enforced in isAuthorizedForTopic below.
+    if (topic === 'governance') {
         return true;
     }
     // Keep topic surface explicit to reduce accidental over-subscription.
-    const topicPrefixes = ['chat.', 'proposal.', 'presence.'];
+    const topicPrefixes = ['chat.', 'proposal.', 'presence.', 'notifications.'];
     return topicPrefixes.some((prefix) => topic.startsWith(prefix));
 }
 function loadTopicAclSnapshot(path) {
@@ -368,6 +404,12 @@ function isAuthorizedForTopic(client, topic, refreshForSubscribe = false) {
         const subject = topic.slice('presence.'.length).toLowerCase();
         return /^0x[a-f0-9]{40}$/.test(subject) && subject === client.vfideAddress.toLowerCase();
     }
+    // F-BE-013 FIX: per-user notification topic. Subscriber MUST be the
+    // address embedded in the topic. Mirrors the presence.<address> pattern.
+    if (topic.startsWith('notifications.')) {
+        const subject = topic.slice('notifications.'.length).toLowerCase();
+        return /^0x[a-f0-9]{40}$/.test(subject) && subject === client.vfideAddress.toLowerCase();
+    }
     if (!TOPIC_ACL_PATH) {
         return false;
     }
@@ -405,6 +447,38 @@ function getClientLabel(client) {
 function broadcast(msg, except) {
     const topic = extractTopicFromOutbound(msg);
     if (topic) {
+        // F-WS-001 FIX: For chat topics (chat.<addrA>_<addrB>) the broadcast
+        // payload's `from` field must match one of the two topic participants.
+        // Without this check, a Next.js code path that holds the
+        // WS_INTERNAL_SECRET could publish a message claiming any sender into a
+        // chat topic — including impersonating a user the recipient trusts. The
+        // delivery-time ACL above only validates the recipient is permitted to
+        // see the topic; it does not validate that the message's claimed sender
+        // is one of the two participants.
+        if (topic.startsWith('chat.')) {
+            const participants = topic.slice('chat.'.length).split('_');
+            if (participants.length !== 2) {
+                console.warn('[ws] dropping chat broadcast with malformed topic participants');
+                return;
+            }
+            const [a, b] = participants.map((entry) => entry.toLowerCase());
+            const addrRe = /^0x[a-f0-9]{40}$/;
+            if (!addrRe.test(a) || !addrRe.test(b)) {
+                console.warn('[ws] dropping chat broadcast with non-address participants');
+                return;
+            }
+            const payload = (msg.payload ?? {});
+            const fromRaw = payload.from;
+            if (typeof fromRaw !== 'string' || fromRaw.length === 0) {
+                console.warn('[ws] dropping chat broadcast missing payload.from');
+                return;
+            }
+            const fromLower = fromRaw.toLowerCase();
+            if (fromLower !== a && fromLower !== b) {
+                console.warn('[ws] dropping chat broadcast where payload.from is not a topic participant');
+                return;
+            }
+        }
         const subscriberSessions = topicSubscribers.get(topic);
         if (!subscriberSessions || subscriberSessions.size === 0) {
             return;
@@ -435,7 +509,32 @@ function extractTopicFromOutbound(msg) {
     }
     return topic;
 }
+// POW-10 FIX: per-client topic-subscription cap. The set was previously
+// unbounded — a client could subscribe to thousands of topics, growing the
+// per-client memory footprint and inflating the per-broadcast iteration
+// cost. 200 is generous (a power user with hundreds of active conversations
+// + presence channels still fits) while preventing pathological clients.
+const MAX_TOPICS_PER_CLIENT = 200;
 function subscribeClientToTopic(client, topic) {
+    if (client.subscribedTopics.size >= MAX_TOPICS_PER_CLIENT && !client.subscribedTopics.has(topic)) {
+        // Silently drop the new subscription rather than disconnecting the
+        // client; this is a soft cap. The client is told via a server-sent
+        // error message so the UI can display it.
+        try {
+            client.send(JSON.stringify({
+                type: 'error',
+                payload: {
+                    code: 'topic_cap_reached',
+                    topic,
+                    limit: MAX_TOPICS_PER_CLIENT,
+                },
+            }));
+        }
+        catch {
+            /* socket may be closing; ignore */
+        }
+        return;
+    }
     client.subscribedTopics.add(topic);
     const subscribers = topicSubscribers.get(topic) || new Set();
     subscribers.add(client.sessionId);

@@ -256,7 +256,7 @@ export function OnboardingProgressBar() {
           )}
 
           {/* Dismiss */}
-          <button onClick={dismiss} className="p-1 text-gray-500 hover:text-white"><X size={16} /></button>
+          <button onClick={dismiss} className="p-1 text-gray-500 hover:text-white" aria-label="Close"><X size={16} /></button>
         </div>
       </div>
     </motion.div>

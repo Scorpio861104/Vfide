@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { generateCSV } from '@/components/export/csv-export';
 
 describe('generateCSV — formula injection defense', () => {
