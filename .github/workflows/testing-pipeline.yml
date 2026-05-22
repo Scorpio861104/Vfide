@@ -241,7 +241,7 @@ jobs:
           JWT_SECRET: test-jwt-secret-for-ci
           NODE_ENV: test
       - name: Wait for server
-        run: npx wait-on http://localhost:3000/api/health -t 30000
+        run: npx wait-on http-get://localhost:3000/api/health -t 30000
       - name: Run API tests
         run: npx jest __tests__/api/ --runInBand --forceExit --detectOpenHandles
         env:
