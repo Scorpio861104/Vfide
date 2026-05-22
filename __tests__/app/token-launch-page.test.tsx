@@ -114,7 +114,7 @@ describe('Token launch page pathways', () => {
   it('renders layout footer and launch icon', () => {
     renderTokenLaunchPage();
 
-    expect(screen.getByText('⚡')).toBeTruthy();
+    expect(screen.getByTestId('zap-icon')).toBeTruthy();
     expect(screen.getByTestId('footer')).toBeTruthy();
   });
 });

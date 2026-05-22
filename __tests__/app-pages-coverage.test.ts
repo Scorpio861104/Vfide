@@ -65,6 +65,27 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => React.createElement('div', { 'data-testid': 'footer' }),
 }))
 
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => null,
+}))
+
+jest.mock('@/hooks/useRequireAppLock', () => ({
+  useRequireAppLock: jest.fn(() => undefined),
+}))
+
+jest.mock('@/components/security/AppLockProvider', () => ({
+  AppLockProvider: ({ children }: { children: React.ReactNode }) => children,
+  useAppLock: jest.fn(() => ({
+    isLocked: false,
+    lock: jest.fn(),
+    unlock: jest.fn(),
+    checkPin: jest.fn(() => true),
+    setPin: jest.fn(),
+    hasPin: false,
+    isEnabled: false,
+  })),
+}))
+
 jest.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => React.createElement('button', null, 'Connect Wallet'),
 }))
@@ -213,7 +234,7 @@ jest.mock('@/lib/contracts', () => ({
   CURRENT_CHAIN_ID: 84532,
   USER_VAULT_ABI: [],
   isCardBoundVaultMode: () => true,
-  getContractConfigurationError: (name: string) =>,
+  getContractConfigurationError: (_name: string) => new Error('Contract not configured'),
 }))
 
 jest.mock('@/lib/recovery/guardianAttestation', () => ({
@@ -444,12 +465,10 @@ describe('App page behavior coverage', () => {
   })
 
   it('renders the setup completion state on the correct chain with balance', () => {
-    renderSetupPage()
-
-    expect(screen.getByRole('heading', { name: /^Setup$/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Account/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Vault/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /Security/i })).toBeTruthy()
+    // /setup redirects to /settings?tab=account - test the redirect
+    const pageModule = require('../app/setup/page')
+    const SetupPage = pageModule.default
+    expect(() => SetupPage({})).toThrow('NEXT_REDIRECT')
   })
 
   it('blocks pay page checkout when QR signature is missing', async () => {

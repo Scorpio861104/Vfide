@@ -34,7 +34,7 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
   useConfig: jest.fn(() => ({})),
   WagmiProvider: ({ children }) => children,
-  createConfig: jest.fn(() => ({})),
+  createConfig: jest.fn(() => ({ chains: [{ id: 84532, name: 'Base Sepolia' }], ssr: true, storage: { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() }, transports: {}, connectors: [] })),
   createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
   cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
   http: jest.fn(() => ({})),

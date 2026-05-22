@@ -7,7 +7,7 @@ jest.mock('@/lib/chains')
 
 // Mock wagmi
 jest.mock('wagmi', () => ({
-  useAccount: () => ({ address: '0x1234567890123456789012345678901234567890', chain: { id: 1 } }),
+  useAccount: () => ({ address: '0x1234567890123456789012345678901234567890', chain: { id: 1 }, isConnected: true }),
   useSwitchChain: () => ({ switchChain: jest.fn(), isPending: false }),
   useChainId: () => 1,
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),

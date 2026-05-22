@@ -97,7 +97,7 @@ jest.mock('framer-motion', () => {
 });;
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
-  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
+  useAccount: jest.fn(() => ({ address: '0xaabbccddaabbccddaabbccddaabbccddaabbccdd', isConnected: true, status: 'connected', chainId: 1 })),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),

@@ -115,7 +115,7 @@ describe('Price alerts page pathways', () => {
     renderPriceAlertsPage();
 
     expect(screen.getByText(/^Price Alerts$/i)).toBeTruthy();
-    expect(screen.getByText(/Monitor token prices/i)).toBeTruthy();
+    expect(screen.getByText(/Get notified when tokens hit/i)).toBeTruthy();
     expect(screen.getByText(/Active alerts content/i)).toBeTruthy();
   });
 

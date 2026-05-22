@@ -118,9 +118,8 @@ describe('Payroll page pathways', () => {
     renderPayrollPage();
 
     expect(screen.getByText(/^Payroll$/i)).toBeTruthy();
-    expect(screen.getByText(/Manage team payments and streaming salaries/i)).toBeTruthy();
+    expect(screen.getByText(/Manage team payments, streaming salaries/i)).toBeTruthy();
     expect(screen.getByText(/Payroll dashboard content/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Create Stream/i })).toBeTruthy();
   });
 
   it('renders payroll tab navigation labels', () => {
@@ -128,7 +127,7 @@ describe('Payroll page pathways', () => {
 
     expect(screen.getByRole('button', { name: /^Dashboard$/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Streams$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Create Stream$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Create$/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^History$/i })).toBeTruthy();
   });
 

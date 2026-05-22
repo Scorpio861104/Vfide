@@ -88,7 +88,7 @@ describe('Achievements page pathways', () => {
     renderAchievementsPage();
 
     expect(screen.getAllByText(/^Achievements$/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Track progress and unlock rewards/i)).toBeTruthy();
+    expect(screen.getByText(/Track your milestones/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Achievements$/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Perks$/i })).toBeTruthy();
     expect(screen.getByText(/Achievements tab content/i)).toBeTruthy();

@@ -91,7 +91,7 @@ describe('Budgets page pathways', () => {
   it('opens create modal and validates required fields', () => {
     renderBudgetsPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /\+ Create Budget/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Create Budget/i }));
     expect(screen.getByRole('heading', { name: /Create Budget/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /^Create$/i }));

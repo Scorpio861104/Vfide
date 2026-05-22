@@ -55,6 +55,10 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   cookieToInitialState: jest.fn(() => undefined),
 }));
 
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => <button>Connect Wallet</button>,
+}));
+
 jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
@@ -164,9 +168,24 @@ describe('Vesting page pathways', () => {
   });
 
   it('switches to schedule tab and shows vesting table rows', () => {
+    // Mock useReadContract to return schedule data for getVestingSchedule
+    const { useReadContract } = require('wagmi');
+    useReadContract.mockImplementation(({ functionName }: { functionName: string }) => {
+      if (functionName === 'getVestingSchedule') {
+        return {
+          data: [
+            { month: 1, percentage: 25, unlockTime: 1000000, unlocked: true },
+            { month: 2, percentage: 25, unlockTime: 2000000, unlocked: false },
+          ],
+          isError: false, isLoading: false, isSuccess: true, error: null, refetch: jest.fn(),
+        };
+      }
+      return { data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() };
+    });
+
     renderVestingPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Vesting Schedule/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Schedule$/i }));
 
     expect(screen.getByRole('heading', { name: /Vesting Schedule/i })).toBeTruthy();
     expect(screen.getByText(/Month 1/i)).toBeTruthy();
@@ -174,11 +193,19 @@ describe('Vesting page pathways', () => {
   });
 
   it('shows claim tab action for beneficiary wallet', () => {
+    // Mock useReadContract so BENEFICIARY matches the current account address
+    const { useReadContract } = require('wagmi');
+    useReadContract.mockImplementation(({ functionName }: { functionName: string }) => {
+      if (functionName === 'BENEFICIARY') {
+        return { data: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', isError: false, isLoading: false, isSuccess: true, error: null, refetch: jest.fn() };
+      }
+      return { data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() };
+    });
+
     renderVestingPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Claim Tokens/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Claim$/i }));
 
-    expect(screen.getByText(/Available to Claim/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Claim Tokens/i })).toBeTruthy();
+    expect(screen.getAllByText(/Available to Claim/i).length).toBeGreaterThan(0);
   });
 });

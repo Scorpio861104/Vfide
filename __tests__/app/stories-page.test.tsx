@@ -63,6 +63,10 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => <button>Connect Wallet</button>,
+}));
+
 jest.mock('@/components/ui/PageLayout', () => ({
   PageWrapper: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));

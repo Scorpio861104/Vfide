@@ -133,7 +133,7 @@ describe('Invite code page', () => {
     renderInviteCodePage();
 
     expect(await screen.findByText(/You\'re invited to VFIDE/i)).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Accept Invite/i }).getAttribute('href')).toBe('/setup');
+    expect(screen.getByRole('link', { name: /Accept Invite/i }).getAttribute('href')).toBe('/onboarding');
     expect(mockFetch).toHaveBeenCalledWith('/api/users/invite?code=abc123');
   });
 

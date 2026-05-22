@@ -167,7 +167,7 @@ describe('Benefits page pathways', () => {
   it('switches to rewards and stats tabs with connect-state stats', () => {
     renderBenefitsPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /Available Rewards/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Rewards$/i }));
     expect(screen.getByRole('heading', { name: /Available Rewards/i })).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /My Stats/i }));

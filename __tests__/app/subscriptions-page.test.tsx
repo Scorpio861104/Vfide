@@ -34,7 +34,7 @@ describe('Subscriptions page pathways', () => {
     renderSubscriptionsPage();
 
     expect(screen.getByText(/^Subscriptions$/i)).toBeTruthy();
-    expect(screen.getByText(/Recurring payments/i)).toBeTruthy();
+    expect(screen.getAllByText(/Recurring payments/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Active subscriptions content/i)).toBeTruthy();
   });
 

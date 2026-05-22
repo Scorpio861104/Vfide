@@ -58,6 +58,15 @@ describe('useVaultHub', () => {
   describe('Wallet Connection States', () => {
     it('returns user address when connected', async () => {
       const { useAccount } = await import('wagmi')
+      const mockUseAccount = useAccount as ReturnType<typeof jest.fn>
+      
+      mockUseAccount.mockReturnValueOnce({
+        address: MOCK_USER,
+        isConnected: true,
+        status: 'connected',
+        chainId: 84532,
+      })
+      
       const result = useAccount()
       
       expect(result.isConnected).toBe(true)
@@ -66,6 +75,10 @@ describe('useVaultHub', () => {
 
     it('returns correct chain ID', async () => {
       const { useChainId } = await import('wagmi')
+      const mockUseChainId = useChainId as ReturnType<typeof jest.fn>
+      
+      mockUseChainId.mockReturnValueOnce(84532)
+      
       const chainId = useChainId()
       
       expect(chainId).toBe(84532) // Base Sepolia
@@ -89,6 +102,15 @@ describe('useVaultHub', () => {
   describe('Vault Read Operations', () => {
     it('reads vault address for connected user', async () => {
       const { useReadContract } = await import('wagmi')
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
+      
+      mockUseReadContract.mockReturnValueOnce({
+        data: MOCK_VAULT,
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      })
+      
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],

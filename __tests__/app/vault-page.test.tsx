@@ -47,6 +47,15 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('@/hooks/useRequireAppLock', () => ({
+  useRequireAppLock: () => jest.fn(async (cb: () => Promise<void>) => cb()),
+}));
+
+jest.mock('@/components/security/AppLockProvider', () => ({
+  AppLockProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useAppLock: () => ({ isLocked: false, lock: jest.fn(), unlock: jest.fn() }),
+}));
+
 jest.mock('@/components/vault/TransactionHistory', () => ({
   TransactionHistory: () => <div data-testid="transaction-history" />,
 }));
@@ -126,7 +135,12 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: () => ({ address: mockAddress }),
   useChainId: () => 1,
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
-  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContract: jest.fn((args?: { functionName?: string }) => {
+    if (args?.functionName === 'getPendingQueuedWithdrawals') {
+      return { data: mockQueuedWithdrawalData, isError: false, isLoading: false, isSuccess: Boolean(mockQueuedWithdrawalData), error: null, refetch: jest.fn() };
+    }
+    return { data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() };
+  }),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
   useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
@@ -396,38 +410,17 @@ describe('Vault page logic pathways', () => {
 
   it('blocks invalid next-of-kin address before contract call', async () => {
     renderVaultPage();
-
-    const kinInput = screen.getAllByRole('textbox')[0] as HTMLInputElement;
-    expect(kinInput).toBeTruthy();
-
-    fireEvent.change(kinInput, {
-      target: { value: 'invalid-address' },
-    });
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Set Next of Kin/i })).not.toBeDisabled();
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Set Next of Kin/i }));
-
+    // VaultRecoveryPanel now shows CardBound guardian setup without Next of Kin input
+    expect(screen.getByText(/CardBound Guardian Setup/i)).toBeTruthy();
+    // The mockSetNextOfKinAddress should not be called since the UI was removed
     expect(mockSetNextOfKinAddress).not.toHaveBeenCalled();
-    expect(mockShowToast).toHaveBeenCalledWith('Invalid address format', 'error');
   });
 
   it('blocks invalid guardian address before contract call', async () => {
     renderVaultPage();
-
-    const guardianInput = screen.getAllByRole('textbox')[1] as HTMLInputElement;
-    expect(guardianInput).toBeTruthy();
-
-    fireEvent.change(guardianInput, {
-      target: { value: 'bad-guardian' },
-    });
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Add Guardian/i })).not.toBeDisabled();
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Add Guardian/i }));
-
+    // VaultRecoveryPanel shows guardian count summary, not an add-guardian form
+    expect(screen.getByText(/CardBound Guardian Setup/i)).toBeTruthy();
     expect(mockAddGuardian).not.toHaveBeenCalled();
-    expect(mockShowToast).toHaveBeenCalledWith('Invalid address format', 'error');
   });
 
   it('shows a connect wallet button in the not-connected state', () => {
@@ -445,8 +438,7 @@ describe('Vault page logic pathways', () => {
 
     renderVaultPage();
 
-    expect(screen.getByText(/Wrong Network/i)).toBeTruthy();
-    expect(screen.getByText(/Base Sepolia/i)).toBeTruthy();
+    expect(screen.getAllByText(/Switch to Base Sepolia/i).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Switch to Base Sepolia/i })).toBeTruthy();
   });
 
@@ -500,7 +492,7 @@ describe('Vault page logic pathways', () => {
     expect(screen.getByRole('button', { name: /Update Threshold/i })).toBeTruthy();
     expect(screen.queryByText(/Next of Kin \(Inheritance\)/i)).toBeNull();
     expect(screen.getByText(/CardBound Guardian Setup/i)).toBeTruthy();
-    expect(screen.getByText(/Manage guardian setup and post-setup guardian changes from the Guardians dashboard/i)).toBeTruthy();
+    expect(screen.getByText(/Manage guardian setup/i)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Add Guardian/i })).toBeNull();
   });
 });

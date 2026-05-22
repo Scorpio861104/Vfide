@@ -130,15 +130,15 @@ describe('Home page pathways', () => {
     renderHomePage();
 
     expect(screen.getAllByText(/Merchant Fees/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Max ProofScore/i)).toBeTruthy();
-    expect(screen.getByText(/Sanctum Fund/i)).toBeTruthy();
-    expect(screen.getByText(/Get started in 60 seconds/i)).toBeTruthy();
+    expect(screen.getAllByText(/Max ProofScore/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Sanctum Fund/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Get started in/i).length).toBeGreaterThan(0);
   });
 
   it('renders account creation step copy', () => {
     renderHomePage();
 
-    expect(screen.getByText(/Connect your wallet to continue/i)).toBeTruthy();
+    expect(screen.getByText(/Connect your wallet/i)).toBeTruthy();
   });
 
   it('uses CardBound-safe vault marketing copy when CardBound mode is active', () => {

@@ -29,7 +29,11 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: () => mockAccount,
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
-  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContract: jest.fn(({ functionName }: { functionName?: string } = {}) => {
+    if (functionName === 'getActiveEndorsements') return { data: mockEndorsementData, isError: false, isLoading: false, isSuccess: !!mockEndorsementData, error: null, refetch: jest.fn() };
+    if (functionName === 'getEndorsementStats') return { data: mockEndorsementStats, isError: false, isLoading: false, isSuccess: !!mockEndorsementStats, error: null, refetch: jest.fn() };
+    return { data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() };
+  }),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
   useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
@@ -180,9 +184,9 @@ describe('Endorsements page pathways', () => {
   it('renders endorsements header, wallet banner, and stats', () => {
     renderEndorsementsPage();
 
-    expect(screen.getByRole('heading', { name: /^Endorsements$/i, level: 2 })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Endorsements/i, level: 1 })).toBeTruthy();
     expect(screen.getByText(/Network of trust and reputation/i)).toBeTruthy();
-    expect(screen.getByText(/You are logged in as/i)).toBeTruthy();
+    expect(screen.getByText(/Logged in as/i)).toBeTruthy();
     expect(screen.getByText(/Total Endorsements/i)).toBeTruthy();
     expect(screen.getByText(/Active Endorsements/i)).toBeTruthy();
   });

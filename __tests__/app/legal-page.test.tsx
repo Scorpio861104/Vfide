@@ -13,6 +13,40 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('next/navigation', () => ({
+  useSearchParams: jest.fn(() => new URLSearchParams()),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() })),
+  usePathname: jest.fn(() => '/legal'),
+}));
+
+jest.mock('framer-motion', () => {
+  const React = require('react');
+  const motion = new Proxy({}, {
+    get: (_t, tag) => {
+      if (tag === '__esModule') return true;
+      return ({ children, ...rest }: any) => React.createElement(String(tag), rest, children);
+    },
+  });
+  return { motion, AnimatePresence: ({ children }: any) => children };
+});
+
+jest.mock('lucide-react', () => (() => {
+  const __orig: Record<string, any> = {};
+  return new Proxy(__orig, {
+    get: (_t, prop) => {
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})());
+
 describe('Legal page pathways', () => {
   beforeEach(() => {
     jest.clearAllMocks();

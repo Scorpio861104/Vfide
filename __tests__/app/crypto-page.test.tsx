@@ -35,7 +35,7 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
   useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
   useConnections: jest.fn(() => []),
-  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useBalance: jest.fn(() => ({ data: mockBalance, isLoading: false, isError: false, refetch: jest.fn() })),
   useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
   useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
   useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
@@ -60,6 +60,10 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
 
 jest.mock('@rainbow-me/rainbowkit', () => ({
   ConnectButton: () => <button>Connect Wallet</button>,
+}));
+
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => <button>Connect Wallet</button>,
 }));
 
 jest.mock('@/components/crypto/TransactionHistory', () => ({

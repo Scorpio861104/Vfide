@@ -118,7 +118,7 @@ describe('Escrow page logic pathways', () => {
     renderEscrowPage();
 
     expect(screen.getByText(/^Escrow$/i)).toBeTruthy();
-    expect(screen.getByText(/Secure conditional payments/i)).toBeTruthy();
+    expect(screen.getByText(/Lock funds, define conditions, release on fulfillment/i)).toBeTruthy();
   });
 
   it('renders escrow tab navigation labels', () => {

@@ -59,6 +59,34 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('../../app/sanctum/components/CharitiesTab', () => ({
+  CharitiesTab: () => (
+    <div>
+      <h2>Approved Charities</h2>
+      <p>DAO-verified organizations receive protocol fee allocations.</p>
+      <div>Save the Children</div>
+    </div>
+  ),
+}));
+
+jest.mock('../../app/sanctum/components/DisbursementsTab', () => ({
+  DisbursementsTab: ({ isConnected }: { isConnected: boolean }) => (
+    <div>
+      <h2>Disbursement Proposals</h2>
+      {isConnected && <button>+ New Proposal</button>}
+    </div>
+  ),
+}));
+
+jest.mock('../../app/sanctum/components/OverviewTab', () => ({
+  OverviewTab: () => (
+    <div>
+      <h2>How The Sanctum Works</h2>
+      <h2>Governance &amp; Security</h2>
+    </div>
+  ),
+}));
+
 jest.mock('@/lib/validation', () => ({
   safeParseFloat: (value: string, fallback: number) => {
     const n = Number(value);

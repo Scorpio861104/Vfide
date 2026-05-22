@@ -49,7 +49,7 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
   useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
   useWatchContractEvent: jest.fn(() => undefined),
-  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  usePublicClient: jest.fn(() => ({ readContract: mockReadContract, getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
   useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
   useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
   useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
@@ -125,6 +125,38 @@ jest.mock('viem', () => ({
   custom: jest.fn(() => ({})),
   erc20Abi: [],
   erc721Abi: [],
+}));
+
+jest.mock('@/hooks/useRecoveryClaim', () => ({
+  useRecoveryClaim: jest.fn(() => ({
+    initiateByRecoveryId: jest.fn(async () => '0xdeadbeef'),
+    isWritePending: false,
+    claim: null,
+    status: 'idle',
+    canFinalize: false,
+    canChallenge: false,
+    finalize: jest.fn(),
+    challenge: jest.fn(),
+    cancel: jest.fn(),
+    isOwner: false,
+    isClaimant: false,
+    challengeDeadline: null,
+    refetch: jest.fn(),
+  })),
+  RecoveryClaimStatus: {
+    None: 'None',
+    Pending: 'Pending',
+    Finalized: 'Finalized',
+    Challenged: 'Challenged',
+    Cancelled: 'Cancelled',
+  },
+}));
+
+jest.mock('@/hooks/useChallengePeriodPreview', () => ({
+  useChallengePeriodPreview: jest.fn(() => ({
+    challengePeriodDays: 7,
+    isLoading: false,
+  })),
 }));
 
 jest.mock('framer-motion', () => {
@@ -265,37 +297,21 @@ describe('Vault recover page logic pathways', () => {
     const foundVault = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
     const ownerAddress = '0xcccccccccccccccccccccccccccccccccccccccc';
 
-      mockReadContract.mockImplementation((params: any) => {
-        const { functionName } = params;
-        switch (functionName) {
-          case 'searchByRecoveryId':
-            return Promise.resolve(foundVault);
-          case 'getVaultInfo':
-            return Promise.resolve([ownerAddress, 1n, false, true]);
-          case 'getScore':
-            return Promise.resolve(1234n);
-          case 'balanceOf':
-            return Promise.resolve(2n);
-          default:
-            return Promise.reject(new Error(`Unknown function: ${functionName}`));
-        }
-      });
-      mockReadContract.mockClear();
-      mockReadContract.mockImplementation((params: any) => {
-        const { functionName } = params;
-        switch (functionName) {
-          case 'searchByRecoveryId':
-            return Promise.resolve(foundVault);
-          case 'getVaultInfo':
-            return Promise.resolve([ownerAddress, 1n, false, true]);
-          case 'getScore':
-            return Promise.resolve(1234n);
-          case 'balanceOf':
-            return Promise.resolve(2n);
-          default:
-            return Promise.reject(new Error(`Unknown function: ${functionName}`));
-        }
-      });
+    mockReadContract.mockImplementation((params: any) => {
+      const { functionName } = params;
+      switch (functionName) {
+        case 'searchByRecoveryId':
+          return Promise.resolve(foundVault);
+        case 'getVaultInfo':
+          return Promise.resolve([ownerAddress, 1n, false, true]);
+        case 'getScore':
+          return Promise.resolve(1234n);
+        case 'balanceOf':
+          return Promise.resolve(2n);
+        default:
+          return Promise.resolve(undefined);
+      }
+    });
 
     renderVaultRecoverPage();
 
@@ -308,25 +324,35 @@ describe('Vault recover page logic pathways', () => {
     fireEvent.click(screen.getByRole('button', { name: /Claim Vault/i }));
     expect(await screen.findByText(/Claim Your Vault/i)).toBeTruthy();
 
+    // Step 1 → Step 2: click Continue
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
+    // Step 2: recovery ID input
     await waitFor(() => {
-      expect(screen.getAllByRole('textbox').length).toBeGreaterThan(1);
+      // Step 2 has the recovery ID text input
+      expect(screen.getByPlaceholderText(/The recovery ID you set/i)).toBeTruthy();
     });
 
-    const continueButton = screen.getByRole('button', { name: /Continue/i });
-    expect(continueButton.hasAttribute('disabled')).toBe(true);
+    // Step 2 Continue button should be disabled without recoveryId
+    const submitButton = screen.getByRole('button', { name: /Submit Recovery Claim/i });
+    expect(submitButton.hasAttribute('disabled')).toBe(true);
 
-    fireEvent.change(screen.getAllByRole('textbox')[1], {
+    // Fill in recovery ID
+    fireEvent.change(screen.getByPlaceholderText(/The recovery ID you set/i), {
       target: { value: 'recovery-id-value' },
     });
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /Continue/i }).hasAttribute('disabled')).toBe(false);
+    // Fill in reason too
+    fireEvent.change(screen.getByPlaceholderText(/What happened/i), {
+      target: { value: 'Lost my wallet' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Submit Recovery Claim/i }).hasAttribute('disabled')).toBe(false);
+    });
 
-    expect(await screen.findByText(/Claim Submitted!/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Submit Recovery Claim/i }));
+
+    expect(await screen.findByText(/Claim Submitted/i)).toBeTruthy();
   });
 });

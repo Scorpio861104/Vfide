@@ -220,14 +220,14 @@ describe('Not Found Page', () => {
     const NotFoundPage = (await import('@/app/not-found')).default
     render(<NotFoundPage />)
 
-    expect(screen.getByText(/doesn't exist or has been moved/i)).toBeInTheDocument()
+    expect(screen.getByText(/doesn't exist or has moved/i)).toBeInTheDocument()
   })
 
   it('should have home link', async () => {
     const NotFoundPage = (await import('@/app/not-found')).default
     render(<NotFoundPage />)
 
-    const homeLink = screen.getByText(/Go Home/i)
+    const homeLink = screen.getByText(/Go home/i)
     expect(homeLink.closest('a')).toHaveAttribute('href', '/')
   })
 
@@ -235,14 +235,14 @@ describe('Not Found Page', () => {
     const NotFoundPage = (await import('@/app/not-found')).default
     render(<NotFoundPage />)
 
-    expect(screen.getByText(/Go Back/i)).toBeInTheDocument()
+    expect(screen.getByText(/Go back/i)).toBeInTheDocument()
   })
 
   it('should call history.back when Go Back is clicked', async () => {
     const NotFoundPage = (await import('@/app/not-found')).default
     render(<NotFoundPage />)
 
-    const goBackButton = screen.getByText(/Go Back/i)
+    const goBackButton = screen.getByText(/Go back/i)
     fireEvent.click(goBackButton)
 
     expect(window.history.back).toHaveBeenCalledTimes(1)
@@ -252,14 +252,14 @@ describe('Not Found Page', () => {
     const NotFoundPage = (await import('@/app/not-found')).default
     render(<NotFoundPage />)
 
-    expect(screen.getByText(/Popular Pages/i)).toBeInTheDocument()
+    expect(screen.getByText(/Quick links/i)).toBeInTheDocument()
   })
 
   it('should have link to dashboard', async () => {
     const NotFoundPage = (await import('@/app/not-found')).default
     render(<NotFoundPage />)
 
-    const dashboardLink = screen.getByText(/Trust Explorer/i)
+    const dashboardLink = screen.getByText(/^Dashboard$/i)
     expect(dashboardLink.closest('a')).toHaveAttribute('href', '/dashboard')
   })
 
@@ -267,7 +267,7 @@ describe('Not Found Page', () => {
     const NotFoundPage = (await import('@/app/not-found')).default
     render(<NotFoundPage />)
 
-    const vaultLink = screen.getByText(/Vault Manager/i)
+    const vaultLink = screen.getByText(/^Vault$/i)
     expect(vaultLink.closest('a')).toHaveAttribute('href', '/vault')
   })
 

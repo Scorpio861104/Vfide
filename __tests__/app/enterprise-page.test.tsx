@@ -134,7 +134,7 @@ describe('Enterprise page logic pathways', () => {
     fireEvent.click(screen.getByRole('button', { name: /Fiat On\/Off Ramp/i }));
 
     expect(screen.getByText(/Convert between fiat currencies and VFIDE/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Sell VFIDE \(Off-Ramp\)/i })).toBeTruthy();
+    expect(screen.getByText(/Fiat ramp pending partner integration/i)).toBeTruthy();
   });
 
   it('shows gateway wallet connection gate when disconnected', () => {

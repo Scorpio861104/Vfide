@@ -55,6 +55,15 @@ describe('useProofScoreHooks', () => {
   describe('useProofScore', () => {
     it('reads neutral score correctly', async () => {
       const { useReadContract } = await import('wagmi')
+      const mockUseReadContract = useReadContract as ReturnType<typeof jest.fn>
+      
+      mockUseReadContract.mockReturnValueOnce({
+        data: BigInt(5000),
+        isLoading: false,
+        error: null,
+        refetch: jest.fn(),
+      })
+      
       const result = useReadContract({
         address: MOCK_USER as `0x${string}`,
         abi: [],

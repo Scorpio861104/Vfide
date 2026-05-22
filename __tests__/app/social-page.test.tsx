@@ -1,124 +1,30 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen } from '@testing-library/react';
-import type React from 'react';
+import { describe, it, expect, jest } from '@jest/globals';
 
-const renderSocialPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/social/page');
-  const SocialPage = pageModule.default as React.ComponentType;
-  return render(<SocialPage />);
-};
+// /social now redirects to /social-hub?tab=analytics
+const redirectMock = jest.fn(() => { throw new Error('NEXT_REDIRECT'); });
 
 jest.mock('next/navigation', () => ({
-  redirect: jest.fn((url: string) => { throw new Error(`NEXT_REDIRECT:${url}`); }),
-  permanentRedirect: jest.fn((url: string) => { throw new Error(`NEXT_PERMANENT_REDIRECT:${url}`); }),
-  notFound: jest.fn(() => { throw new Error('NEXT_NOT_FOUND'); }),
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), forward: jest.fn(), refresh: jest.fn(), prefetch: jest.fn() }),
-  usePathname: () => '/social',
-  useSearchParams: () => ({ get: () => null, has: () => false, getAll: () => [], toString: () => '' }),
-  useParams: () => ({}),
-  useSelectedLayoutSegment: () => null,
-  useSelectedLayoutSegments: () => [],
-  RedirectType: { push: 'push', replace: 'replace' },
-}));
-
-jest.mock('@/components/layout/Footer', () => ({
-  Footer: () => <div data-testid="footer" />,
-}));
-
-jest.mock('framer-motion', () => {
-  /* FRAMER_MOTION_MOCK_V1 */
-  const React = require('react');
-  // Reusable component that strips motion-only props and renders the underlying tag.
-  const __MOTION_PROPS = new Set([
-    'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
-    'whileTap', 'whileFocus', 'whileDrag', 'whileInView', 'drag',
-    'dragConstraints', 'dragElastic', 'dragMomentum', 'dragTransition',
-    'layout', 'layoutId', 'layoutDependency', 'layoutScroll',
-    'onAnimationStart', 'onAnimationComplete', 'onUpdate', 'onPan',
-    'onPanStart', 'onPanEnd', 'onTap', 'onTapStart', 'onTapCancel',
-    'onHoverStart', 'onHoverEnd', 'onDrag', 'onDragStart', 'onDragEnd',
-    'onDirectionLock', 'onViewportEnter', 'onViewportLeave',
-    'viewport', 'custom', 'transformTemplate', 'inherit',
-  ]);
-  const __makeMotion = (tag) => React.forwardRef((props, ref) => {
-    const sanitized = {};
-    for (const k of Object.keys(props || {})) {
-      if (!__MOTION_PROPS.has(k)) sanitized[k] = props[k];
-    }
-    return React.createElement(tag, { ...sanitized, ref });
-  });
-  const motion = new Proxy({}, {
-    get: (t, prop) => {
-      if (typeof prop !== 'string') return undefined;
-      if (!t[prop]) t[prop] = __makeMotion(prop === 'custom' ? 'div' : prop);
-      return t[prop];
-    },
-  });
-  return {
-    motion,
-    AnimatePresence: ({ children }) => children,
-    LayoutGroup: ({ children }) => children,
-    LazyMotion: ({ children }) => children,
-    MotionConfig: ({ children }) => children,
-    Reorder: { Group: ({ children }) => children, Item: ({ children }) => children },
-    domAnimation: {},
-    domMax: {},
-    useAnimation: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
-    useAnimationControls: () => ({ start: jest.fn(), stop: jest.fn(), set: jest.fn() }),
-    useScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollX: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollXProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
-    useMotionValue: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useTransform: (v) => ({ get: () => 0, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useSpring: (v) => ({ get: () => v, set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useInView: () => true,
-    useReducedMotion: () => false,
-    useDragControls: () => ({ start: jest.fn() }),
-    usePresence: () => [true, jest.fn()],
-    useIsPresent: () => true,
-    useMotionTemplate: () => ({ get: () => '', set: jest.fn(), on: jest.fn(() => jest.fn()) }),
-    useViewportScroll: () => ({ scrollY: { get: () => 0, on: jest.fn(() => jest.fn()) }, scrollYProgress: { get: () => 0, on: jest.fn(() => jest.fn()) } }),
-    useCycle: (...args) => [args[0], jest.fn()],
-    animate: jest.fn(),
-    stagger: jest.fn(() => 0),
-    transform: jest.fn((v) => v),
-  };
-});;
-
-jest.mock('../../app/social/components/OverviewTab', () => ({
-  OverviewTab: () => <div>Overview tab content</div>,
-}));
-
-jest.mock('../../app/social/components/EngagementTab', () => ({
-  EngagementTab: () => <div>Engagement tab content</div>,
-}));
-
-jest.mock('../../app/social/components/GrowthTab', () => ({
-  GrowthTab: () => <div>Growth tab content</div>,
+  redirect: (...args: unknown[]) => redirectMock(...args),
 }));
 
 describe('Social analytics page pathways', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('renders page shell with overview tab active', () => {
-    renderSocialPage();
-
-    expect(screen.getByText(/Social Analytics/i)).toBeTruthy();
-    expect(screen.getByText(/Community engagement metrics/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Overview$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Engagement$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Growth$/i })).toBeTruthy();
-    expect(screen.getByText(/Overview tab content/i)).toBeTruthy();
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pageModule = require('../../app/social/page');
+      const SocialPage = pageModule.default as () => never;
+      expect(() => SocialPage()).toThrow('NEXT_REDIRECT');
+    });
+    expect(redirectMock).toHaveBeenCalledWith('/social-hub?tab=analytics');
   });
 
   it('switches between engagement and growth tabs', () => {
-    renderSocialPage();
-
-    fireEvent.click(screen.getByRole('button', { name: /^Engagement$/i }));
-    expect(screen.getByText(/Engagement tab content/i)).toBeTruthy();
-
-    fireEvent.click(screen.getByRole('button', { name: /^Growth$/i }));
-    expect(screen.getByText(/Growth tab content/i)).toBeTruthy();
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pageModule = require('../../app/social/page');
+      const SocialPage = pageModule.default as () => never;
+      expect(() => SocialPage()).toThrow('NEXT_REDIRECT');
+    });
+    expect(redirectMock).toHaveBeenCalledWith('/social-hub?tab=analytics');
   });
 });

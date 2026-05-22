@@ -96,7 +96,7 @@ describe('Taxes page pathways', () => {
     mockLoading = true;
     const { container } = renderTaxesPage();
 
-    expect(container.querySelector('.animate-pulse')).toBeTruthy();
+    expect(container.querySelector('.animate-spin')).toBeTruthy();
   });
 
   it('renders tax summary cards and tax events list', () => {

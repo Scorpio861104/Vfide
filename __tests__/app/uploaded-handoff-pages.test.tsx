@@ -48,7 +48,6 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
 jest.mock('framer-motion', () => {
   /* FRAMER_MOTION_MOCK_V1 */
   const React = require('react');
-  // Reusable component that strips motion-only props and renders the underlying tag.
   const __MOTION_PROPS = new Set([
     'initial', 'animate', 'exit', 'transition', 'variants', 'whileHover',
     'whileTap', 'whileFocus', 'whileDrag', 'whileInView', 'drag',
@@ -125,53 +124,8 @@ jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
   });
 })());
 
-jest.mock('@/components/merchant/disputes/PeerMediation', () => ({
-  __esModule: true,
-  default: () => <div>Peer Mediation Component</div>,
-}));
-
-jest.mock('@/lib/lazy', () => ({
-  LazyPeerMediation: () => <div>Peer Mediation Component</div>,
-}));
-
 beforeEach(() => {
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
-    const url = String(input);
-
-    if (url.includes('/api/flashloans/lanes')) {
-      return {
-        ok: true,
-        json: async () => ({
-          lanes: [
-            { id: 'lane-1', state: { stage: 'active' }, terms: { principal: 1200 } },
-            { id: 'lane-2', state: { stage: 'settled' }, terms: { principal: 800 } },
-          ],
-        }),
-      } as Response;
-    }
-
-    if (url.includes('/api/proposals')) {
-      return {
-        ok: true,
-        json: async () => ({
-          proposals: [{ id: 1, title: 'Upgrade council tooling', status: 'active' }],
-          total: 1,
-        }),
-      } as Response;
-    }
-
-    if (url.includes('/api/merchant/returns')) {
-      return {
-        ok: true,
-        json: async () => ({
-          returns: [
-            { id: 'ret-1', status: 'requested', type: 'refund' },
-            { id: 'ret-2', status: 'approved', type: 'exchange' },
-          ],
-        }),
-      } as Response;
-    }
-
     return {
       ok: true,
       json: async () => ({}),
@@ -180,43 +134,38 @@ beforeEach(() => {
 });
 
 describe('Uploaded handoff pages', () => {
-  it('renders the lending workspace with preview links and interactive tabs', async () => {
-    const pageModule = require('../../app/lending/page');
-    const LendingPage = pageModule.default as React.ComponentType;
-    render(<LendingPage />);
+  it('renders the lending workspace as a coming soon page', () => {
+    jest.isolateModules(() => {
+      const pageModule = require('../../app/lending/page');
+      const LendingPage = pageModule.default as React.ComponentType;
+      render(<LendingPage />);
 
-    expect(screen.getByRole('heading', { name: /p2p lending/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /open flashloans workspace/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /view flash loans/i })).toBeTruthy();
-    expect(await screen.findByText(/2 live lanes/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /borrow/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /lend/i })).toBeTruthy();
-    expect(screen.getByText(/how borrowing works/i)).toBeTruthy();
+      // The lending page is a ComingSoonPage with title "Peer-to-Peer Lending"
+      expect(screen.getByRole('heading', { name: /peer-to-peer lending/i })).toBeTruthy();
+      expect(screen.getByText(/not available in this release/i)).toBeTruthy();
+      expect(screen.getByText(/coming soon/i)).toBeTruthy();
+    });
   });
 
-  it('renders the elections workspace with governance links and candidate tabs', async () => {
-    const pageModule = require('../../app/elections/page');
-    const ElectionsPage = pageModule.default as React.ComponentType;
-    render(<ElectionsPage />);
-
-    expect(screen.getByRole('heading', { name: /council elections/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /open governance hub/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /view council overview/i })).toBeTruthy();
-    expect(await screen.findByText(/1 active proposal/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /candidates/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /current council/i })).toBeTruthy();
-    expect(screen.getByText(/election active/i)).toBeTruthy();
+  it('redirects /elections to /governance?tab=elections', () => {
+    const redirectMock = jest.fn(() => { throw new Error('NEXT_REDIRECT'); });
+    jest.isolateModules(() => {
+      jest.mock('next/navigation', () => ({ redirect: (...args: any[]) => redirectMock(...args) }));
+      const pageModule = require('../../app/elections/page');
+      const ElectionsPage = pageModule.default as React.ComponentType;
+      expect(() => ElectionsPage({})).toThrow('NEXT_REDIRECT');
+    });
+    expect(redirectMock).toHaveBeenCalledWith('/governance?tab=elections');
   });
 
-  it('renders the disputes handoff page and resolution links', async () => {
-    const pageModule = require('../../app/disputes/page');
-    const DisputesPage = pageModule.default as React.ComponentType;
-    render(<DisputesPage />);
-
-    expect(screen.getByRole('heading', { name: /disputes & mediation/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /open appeals center/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /merchant returns/i })).toBeTruthy();
-    expect(screen.getByText(/Peer Mediation Component/i)).toBeTruthy();
-    expect(await screen.findByText(/2 merchant cases/i)).toBeTruthy();
+  it('redirects /disputes to /governance?tab=disputes', () => {
+    const redirectMock = jest.fn(() => { throw new Error('NEXT_REDIRECT'); });
+    jest.isolateModules(() => {
+      jest.mock('next/navigation', () => ({ redirect: (...args: any[]) => redirectMock(...args) }));
+      const pageModule = require('../../app/disputes/page');
+      const DisputesPage = pageModule.default as React.ComponentType;
+      expect(() => DisputesPage({})).toThrow('NEXT_REDIRECT');
+    });
+    expect(redirectMock).toHaveBeenCalledWith('/governance?tab=disputes');
   });
 });

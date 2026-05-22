@@ -171,7 +171,7 @@ describe('Performance page pathways', () => {
     renderPerformancePage();
 
     expect(screen.getAllByRole('heading', { name: /Performance Command/i }).length).toBeGreaterThan(0);
-    expect(screen.getByText(/System Health Score/i)).toBeTruthy();
+    expect(screen.getByText(/Health Score/i)).toBeTruthy();
     expect(screen.getByText('88')).toBeTruthy();
     expect(screen.getByText(/Active Errors/i)).toBeTruthy();
     expect(screen.getByText(/Active Users/i)).toBeTruthy();

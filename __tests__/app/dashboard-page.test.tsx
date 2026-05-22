@@ -291,8 +291,8 @@ describe('Dashboard page logic pathways', () => {
     expect(screen.getByText(/Transfer Amount \(VFIDE\)/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /Score Sim/i }));
-    expect(await screen.findByRole('heading', { name: /Score Simulator/i })).toBeTruthy();
-    expect(screen.getByText(/Projected Score/i)).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /Score Projection/i })).toBeTruthy();
+    expect(screen.getByText(/Activity level/i)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: /Badges/i }));
     expect(await screen.findByText(/Badge Gallery/i)).toBeTruthy();

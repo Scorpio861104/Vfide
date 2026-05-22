@@ -151,7 +151,7 @@ describe('Leaderboard page pathways', () => {
     expect(screen.getByText(/Total Participants/i)).toBeTruthy();
     expect(screen.getByText(/Average Score/i)).toBeTruthy();
     expect(screen.getByText(/Top Score/i)).toBeTruthy();
-    expect(screen.getByText(/Your Rank:/i)).toBeTruthy();
+    expect(screen.getByText(/Your Rank/i)).toBeTruthy();
     expect(screen.getAllByText(/1st|2nd|3rd/i).length).toBeGreaterThan(0);
   });
 

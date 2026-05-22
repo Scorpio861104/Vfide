@@ -58,6 +58,10 @@ jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
 }));
 
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => <button>Connect Wallet</button>,
+}));
+
 jest.mock('@/components/profile/ProfileSettings', () => ({
   ProfileSettings: () => <div>Profile Settings Panel</div>,
 }));
@@ -72,8 +76,8 @@ describe('Profile page pathways', () => {
     mockIsConnected = false;
     renderProfilePage();
 
-    expect(screen.getByRole('heading', { name: /Connect Your Wallet/i })).toBeTruthy();
-    expect(screen.getByText(/Please connect your wallet to view and edit your profile/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Your Profile/i })).toBeTruthy();
+    expect(screen.getByText(/Connect your wallet to view and edit your profile/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Connect Wallet/i })).toBeTruthy();
   });
 

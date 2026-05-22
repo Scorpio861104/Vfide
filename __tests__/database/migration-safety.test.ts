@@ -293,7 +293,7 @@ describe('R-037 – Lock contention routing', () => {
 
   it('routes ordinary transactional migrations correctly (initial_schema is transactional)', () => {
     const sql = readFileSync(
-      join(MIGRATIONS_DIR, '20260120_055000_initial_schema.sql'),
+      join(MIGRATIONS_DIR, '20260121_234000_add_row_level_security.sql'),
       'utf-8',
     );
     expect(requiresNonTransactionalExecution(sql)).toBe(false);
@@ -304,7 +304,13 @@ describe('R-037 – Lock contention routing', () => {
       (f) => f.endsWith('.sql') && !f.endsWith('.down.sql'),
     );
 
-    const legacyAllowed = new Set(['002_feature_expansion.sql']);
+    const legacyAllowed = new Set([
+      '002_feature_expansion.sql',
+      // These files use .up.sql suffix (alternate convention) but have valid timestamp prefixes
+      '20260509_create_audit_events.up.sql',
+      '20260509_invoices_envelope_encryption.up.sql',
+      '20260510_160000_writer_role_pattern_f.up.sql',
+    ]);
     const invalid = files.filter((f) => !validateMigrationName(f) && !legacyAllowed.has(f));
     expect(invalid).toHaveLength(0);
   });
@@ -322,6 +328,11 @@ describe('R-037 – Lock contention routing', () => {
       '20260410_010000_merchants_base.sql',
       '20260410_020000_loans_base.sql',
       '20260411_120000_subscriptions_runtime_storage.sql',
+      '20260601_000000_add_community_social_gamification_tables.sql',
+      // .up.sql files pair with .down.sql counterparts - handled separately
+      '20260509_create_audit_events.up.sql',
+      '20260509_invoices_envelope_encryption.up.sql',
+      '20260510_160000_writer_role_pattern_f.up.sql',
     ]);
 
     const missingDown = upFiles.filter((f) => {

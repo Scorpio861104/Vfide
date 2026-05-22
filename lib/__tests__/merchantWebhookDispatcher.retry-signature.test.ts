@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { createHmac } from 'node:crypto';
 import { dispatchWebhook } from '../webhooks/merchantWebhookDispatcher';
 

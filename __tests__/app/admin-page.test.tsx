@@ -78,7 +78,10 @@ jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
   useAccount: () => mockAccountState,
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
-  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContract: jest.fn((args: any) => {
+    if (args?.functionName === 'owner') return { data: mockOwnerAddress, isError: false, isLoading: false, isSuccess: true, error: null, refetch: jest.fn() }
+    return { data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() }
+  }),
   useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
   useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
   useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),

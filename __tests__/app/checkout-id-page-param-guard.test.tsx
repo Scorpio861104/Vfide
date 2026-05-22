@@ -34,7 +34,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
-  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
+  useAccount: () => ({ address: mockAddress, isConnected: mockIsConnected, status: mockIsConnected ? 'connected' : 'disconnected', chainId: mockIsConnected ? 137 : undefined }),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
@@ -77,6 +77,24 @@ jest.mock('@/hooks/useMerchantHooks', () => ({
     payMerchant: mockPayMerchant,
     isPaying: false,
   }),
+}));
+
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => {
+    const React = require('react');
+    return React.createElement('button', { 'data-testid': 'connect-wallet-btn' }, 'Connect Wallet');
+  },
+}));
+
+jest.mock('@/components/ui/ConfirmModal', () => ({
+  ConfirmModal: ({ isOpen, onConfirm, onCancel }: any) => {
+    const React = require('react');
+    if (!isOpen) return null;
+    return React.createElement('div', { 'data-testid': 'confirm-modal' },
+      React.createElement('button', { onClick: onConfirm }, 'Confirm'),
+      React.createElement('button', { onClick: onCancel }, 'Cancel'),
+    );
+  },
 }));
 
 jest.mock('@/lib/preferences/userPreferences', () => ({

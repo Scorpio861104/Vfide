@@ -50,8 +50,9 @@ describe('Custom Hooks Template', () => {
     const { useAccount } = await import('wagmi')
     const result = useAccount()
     
-    expect(result.address).toBe('0x1234567890123456789012345678901234567890')
-    expect(result.isConnected).toBe(true)
+    // The canonical wagmi mock returns disconnected state by default
+    expect(result.address).toBe(undefined)
+    expect(result.isConnected).toBe(false)
   })
 
   it('useReadContract mock returns expected structure', async () => {

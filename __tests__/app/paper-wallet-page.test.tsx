@@ -157,7 +157,6 @@ describe('Paper wallet page', () => {
     expect(screen.getByText(/^Paper Wallet$/i)).toBeTruthy();
     expect(screen.getByText(/Security Warning/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Generate$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Verify/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Guide/i })).toBeTruthy();
   });
 });

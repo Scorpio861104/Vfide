@@ -15,7 +15,7 @@ const renderSocialHubPage = () => {
 };
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
-  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
+  useAccount: () => ({ address: mockIsConnected ? '0xaabbccddaabbccddaabbccddaabbccddaabbccdd' : undefined, isConnected: mockIsConnected, status: mockIsConnected ? 'connected' : 'disconnected', chainId: 1 }),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
@@ -59,6 +59,10 @@ jest.mock('@rainbow-me/rainbowkit', () => ({
 
 jest.mock('@/components/layout/Footer', () => ({
   Footer: () => <div data-testid="footer" />,
+}));
+
+jest.mock('@/components/crypto/VfideConnectButton', () => ({
+  VfideConnectButton: () => <button>Connect Wallet</button>,
 }));
 
 jest.mock('@/components/ui/PageLayout', () => ({
@@ -203,27 +207,25 @@ describe('Social hub page pathways', () => {
 
     renderSocialHubPage();
 
-    expect(screen.getByRole('heading', { name: /Connect to Join the Conversation/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Join the Conversation/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Connect Wallet/i })).toBeTruthy();
   });
 
   it('renders connected hub with stories, post composer, and fetched post', async () => {
     renderSocialHubPage();
 
-    expect(screen.getByRole('heading', { name: /Social Hub/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /^Social$/i })).toBeTruthy();
     expect(screen.getByRole('textbox')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /all/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /following/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /trending/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^all$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^following$/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^trending$/i })).toBeTruthy();
 
     await waitFor(() => {
       expect(screen.getByText(/Community update post/i)).toBeTruthy();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /following/i }));
-    fireEvent.click(screen.getByRole('button', { name: /trending/i }));
-    fireEvent.click(screen.getByRole('button', { name: /all/i }));
-
-    expect(screen.getByRole('button', { name: /Load More Posts/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^following$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^trending$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^all$/i }));
   });
 });

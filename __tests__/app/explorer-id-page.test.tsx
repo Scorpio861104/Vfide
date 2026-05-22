@@ -32,7 +32,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
-  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
+  useAccount: () => ({ address: mockAccountAddress, isConnected: !!mockAccountAddress, status: mockAccountAddress ? 'connected' : 'disconnected', chainId: mockAccountAddress ? 137 : undefined }),
   useChainId: jest.fn(() => 1),
   useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
   useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),

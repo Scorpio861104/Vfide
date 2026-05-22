@@ -142,7 +142,7 @@ describe('Vault settings page logic pathways', () => {
     renderVaultSettingsPage();
 
     expect(screen.getByText(/Guardian Governance/i)).toBeTruthy();
-    expect(screen.getByText(/wallet-rotation and vault-protection actions instead of legacy inheritance claims/i)).toBeTruthy();
+    expect(screen.getByText(/wallet-rotation and vault-protection actions/i)).toBeTruthy();
     expect(screen.queryByText(/^Inheritance Guard$/i)).toBeNull();
   });
 });
