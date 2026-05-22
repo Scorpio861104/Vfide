@@ -164,6 +164,10 @@ jobs:
         id: slither
         with:
           target: 'contracts/'
+          # Pin solc to 0.8.30 - matches contracts' `pragma solidity 0.8.30`.
+          # Without this, slither-action installs whatever solc-select considers
+          # "latest" (currently 0.8.35) and rejects the pragma.
+          solc-version: '0.8.30'
           slither-args: '--json slither-output.json --solc-args "--via-ir --optimize --optimize-runs 0"'
           fail-on: none
           # Skip the action's internal compile + npm install; we did both above.
