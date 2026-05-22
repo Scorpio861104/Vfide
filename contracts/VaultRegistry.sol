@@ -622,14 +622,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /**
      * @notice Search vaults created in a time range
      * @dev Helps users who remember approximately when they created their vault
-     * @param startTime Unix timestamp for range start
-     * @param endTime Unix timestamp for range end
-     * @param limit Maximum results to return
      * @return matches Array of matching vault info
      */
     /// @param offset Start index into allVaults for pagination (0 = beginning).
     ///               Call again with returned nextOffset to continue scanning.
-    /// @return nextOffset nextOffset
     function searchByCreationTime(
         uint256 startTime,
         uint256 endTime,
@@ -671,7 +667,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @dev Allows users to browse vaults if they remember approximate creation order
      * @param index The vault index
      * @return vault The vault address
-     * @return info Vault information
      */
     function getVaultByIndex(uint256 index) external view returns (address vault, VaultInfo memory info) {
         require(index < allVaults.length, "index out of bounds");
@@ -690,12 +685,9 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /**
      * @notice Search vaults by partial old wallet address
      * @dev For users who remember part of their old address
-     * @param addressPrefix First bytes of the address they remember (e.g., "0x1234")
-     * @param limit Maximum results to return
      * @return matches Array of matching vault info
      */
     /// @param offset Start index into allVaults for pagination (0 = beginning).
-    /// @return nextOffset nextOffset
     function searchByAddressPrefix(
         bytes4 addressPrefix,
         uint256 limit,
@@ -735,7 +727,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /**
      * @notice Get detailed vault info for search results
      * @param vault vault
-     * @return info info
      */
     function getVaultInfo(address vault) public view returns (VaultInfo memory info) {
         if (!vaultHub.isVault(vault)) revert InvalidVault();

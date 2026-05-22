@@ -27,11 +27,9 @@ interface IVaultHub_COM {
 /// @author Vfide
 interface ISeer_COM {
     /// @notice getScore
-    /// @param _address _address
     /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
     /// @notice getCachedScore
-    /// @param _address _address
     /// @return _uint16 _uint16
     function getCachedScore(address) external view returns (uint16);
     /// @notice minForMerchant

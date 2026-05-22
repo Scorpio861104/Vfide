@@ -487,9 +487,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice constructor
     /// @param devReserveVestingVault devReserveVestingVault
     /// @param treasury treasury
-    /// @param _vaultHub _vaultHub
-    /// @param _ledger _ledger
-    /// @param _treasurySink _treasurySink
     constructor(
         address devReserveVestingVault, // MUST be deployed before token (receives 50M locked)
         address treasury,               // Treasury/Owner address (receives 150M for operations/liquidity)
@@ -1070,8 +1067,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice setCircuitBreaker
-    /// @param _bool _bool
-    /// @param _uint256 _uint256
     function setCircuitBreaker(bool, uint256) external view onlyOwner {
         // #311: Circuit-breaker transfer halts were removed from token policy.
         // Keep this ABI method as a no-op for backward compatibility with existing tooling.

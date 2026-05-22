@@ -503,7 +503,6 @@ contract BadgeManager {
      * @notice Record a referral
      * @param referrer The referrer address
      * @param qualified Whether referred user reached 600+ score
-     * @param _address _address
      */
     function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
@@ -674,7 +673,6 @@ contract BadgeManager {
      * @notice Get user statistics
      * @param user The user address
      * @return stats The user's statistics
-     * @return _arg _arg
      */
     function getUserStats(address user) external view returns (UserStats memory) {
         return userStats[user];

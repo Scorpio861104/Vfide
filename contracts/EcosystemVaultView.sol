@@ -56,73 +56,48 @@ interface IEcosystemVaultView {
     /// @return _uint256 _uint256
     function totalExpensesPaid() external view returns (uint256);
     /// @notice periodMerchantTxCount
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint256 _uint256
     function periodMerchantTxCount(uint256, address) external view returns (uint256);
     /// @notice periodMerchantTier
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint16 _uint16
     function periodMerchantTier(uint256, address) external view returns (uint16);
     /// @notice merchantPeriodClaimed
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _bool _bool
     function merchantPeriodClaimed(uint256, address) external view returns (bool);
     /// @notice merchantPeriodEnded
-    /// @param _uint256 _uint256
     /// @return _bool _bool
     function merchantPeriodEnded(uint256) external view returns (bool);
     /// @notice merchantPeriodPoolSnapshot
-    /// @param _uint256 _uint256
     /// @return _uint256 _uint256
     function merchantPeriodPoolSnapshot(uint256) external view returns (uint256);
     /// @notice yearPoints
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint16 _uint16
     function yearPoints(uint256, address) external view returns (uint16);
     /// @notice quarterClaimed
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _bool _bool
     function quarterClaimed(uint256, uint256, address) external view returns (bool);
     /// @notice quarterEnded
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _bool _bool
     function quarterEnded(uint256, uint256) external view returns (bool);
     /// @notice quarterPoolSnapshot
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _uint256 _uint256
     function quarterPoolSnapshot(uint256, uint256) external view returns (uint256);
     /// @notice pendingMerchantReferrer
-    /// @param _address _address
     /// @return _address _address
     function pendingMerchantReferrer(address) external view returns (address);
     /// @notice pendingUserReferrer
-    /// @param _address _address
     /// @return _address _address
     function pendingUserReferrer(address) external view returns (address);
     /// @notice referralCredited
-    /// @param _address _address
     /// @return _bool _bool
     function referralCredited(address) external view returns (bool);
     /// @notice totalMerchantBonusesPaid
-    /// @param _address _address
     /// @return _uint256 _uint256
     function totalMerchantBonusesPaid(address) external view returns (uint256);
     /// @notice periodMerchants
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _address _address
     function periodMerchants(uint256, uint256) external view returns (address);
     /// @notice yearReferrers
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _address _address
     function yearReferrers(uint256, uint256) external view returns (address);
     /// @notice operationsWallet
@@ -135,8 +110,6 @@ interface IEcosystemVaultView {
     /// @return _uint256 _uint256
     function operationsWithdrawalCooldown() external view returns (uint256);
     /// @notice referralLevelPaid
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint8 _uint8
     function referralLevelPaid(uint256, address) external view returns (uint8);
     /// @notice referralLevel1Points
@@ -171,7 +144,6 @@ interface IEcosystemVaultView {
 /// @author Vfide
 interface ISeerView {
     /// @notice getScore
-    /// @param _address _address
     /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
 }

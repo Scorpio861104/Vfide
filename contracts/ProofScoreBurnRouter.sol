@@ -302,9 +302,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     /**
      * @notice Configure sustainability parameters
-     * @param _dailyBurnCap Maximum tokens to burn per day (0 = unlimited)
-     * @param _minimumSupplyFloor Supply floor below which burns pause (0 = no floor)
-     * @param _ecosystemMinBps Minimum ecosystem fee in basis points
      */
     /// @notice TL-348 FIX: Propose sustainability parameter change (24h timelock). (#348)
     function setSustainability(
@@ -375,7 +372,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     /**
      * @notice Get current volume multiplier based on daily activity
      * @return multiplier in basis points (10000 = 1x)
-     * @return _uint16 _uint16
      */
     function getVolumeMultiplier() public view returns (uint16) {
         if (!adaptiveFeesEnabled) return BPS_SCALE; // 1x
@@ -504,10 +500,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     // ─────────────────────────── Admin (LEGACY entrypoint disabled)
     
     /// @notice setModules
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _address _address
     function setModules(address, address, address, address) external pure {
         revert("BR: use proposeModules/applyModules");
     }
@@ -635,7 +627,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * - Score 4000-8000: Linear interpolation
      * 
      * Formula: fee = maxFee - ((score - lowThreshold) * (maxFee - minFee)) / (highThreshold - lowThreshold)
-     * @return _uint256 _uint256
      */
     function _calculateLinearFee(uint16 score) internal view returns (uint256) {
         if (score <= LOW_SCORE_THRESHOLD) {
@@ -793,7 +784,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @return ecosystemSink_ Ecosystem vault address
      * @return burnSink_ Burn sink address (zero = hard burn)
      * @notice computeFees
-     * @param _address _address
      */
     function computeFees(
         address from,

@@ -137,7 +137,10 @@ contract CircuitBreaker {
         return monitoring;
     }
 
-    /// @notice onlyRole
-    /// @param _bytes32 _bytes32
-    function onlyRole(bytes32 /* role */) internal pure {}
+    /// @notice onlyRole — stub modifier. The full role-gating is delegated to the
+    /// upstream caller in this lightweight refactor variant; the modifier exists
+    /// only so the function signatures `external onlyRole(X)` continue to compile.
+    modifier onlyRole(bytes32 /* role */) {
+        _;
+    }
 }

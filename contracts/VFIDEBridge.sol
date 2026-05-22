@@ -409,7 +409,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _amount Amount to bridge
      * @param _options LayerZero options
      * @return receipt MessagingReceipt from LayerZero
-     * @return _bytes32 _bytes32
      */
     function bridge(
         uint32 _dstChainId,
@@ -567,8 +566,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _origin Message origin info
      * @param _guid Message GUID
      * @param payload Message payload
-     * @param _address _address
-     * @param _bytes _bytes
      */
     function _lzReceive(
         Origin calldata _origin,
@@ -1085,7 +1082,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @notice Get user bridge statistics
      * @param _user User address
      * @return stats Bridge statistics
-     * @return _arg _arg
      */
     function getUserStats(address _user) external view returns (BridgeStats memory) {
         return userStats[_user];

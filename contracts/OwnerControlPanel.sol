@@ -998,10 +998,6 @@ contract OwnerControlPanel {
     
     /**
      * @notice Configure anti-whale limits (set to 0 to disable any limit)
-     * @param maxTransfer Max tokens per single transfer (0 = disabled)
-     * @param maxWallet Max tokens per wallet (0 = disabled)
-     * @param dailyLimit Max tokens transferred per 24h (0 = disabled)
-     * @param cooldown Seconds between transfers (0 = disabled)
      */
     // F-14 FIX: actionId helpers for newly-queued functions
     /// @notice actionId_token_setAntiWhale

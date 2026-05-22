@@ -30,8 +30,6 @@ contract MockVFIDEForInheritance {
     }
 
     /// @notice approve
-    /// @param _address _address
-    /// @param _uint256 _uint256
     /// @return _bool _bool
     function approve(address, uint256) external pure returns (bool) {
         return true;

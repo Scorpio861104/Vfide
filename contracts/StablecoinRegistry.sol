@@ -231,7 +231,6 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @notice Check if a stablecoin is allowed
      * @param stable Address to check
      * @return Whether the stablecoin is allowed
-     * @return _bool _bool
      */
     function isAllowed(address stable) external view returns (bool) {
         // L-1 FIX: Return false when paused so callers (MerchantPortal, EcosystemVault, etc.)
@@ -243,7 +242,6 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @notice Alias for isAllowed - implements IStablecoinRegistry interface
      * @param token Address to check
      * @return Whether the stablecoin is whitelisted
-     * @return _bool _bool
      */
     function isWhitelisted(address token) external view returns (bool) {
         return !paused() && stablecoins[token].allowed;
@@ -253,7 +251,6 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @notice Get decimals of a stablecoin
      * @param stable Address to check
      * @return Decimals of the stablecoin
-     * @return _uint8 _uint8
      */
     function decimalsOf(address stable) external view returns (uint8) {
         return stablecoins[stable].decimals;
@@ -263,7 +260,6 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @notice Alias for decimalsOf - implements IStablecoinRegistry interface
      * @param token Address to check
      * @return Decimals of the stablecoin
-     * @return _uint8 _uint8
      */
     function tokenDecimals(address token) external view returns (uint8) {
         return stablecoins[token].decimals;

@@ -35,7 +35,6 @@ interface ISeer_GH {
     /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
     /// @notice getScore
-    /// @param _address _address
     /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
     /// @notice minForGovernance
@@ -212,9 +211,6 @@ contract GovernanceHooks is ReentrancyGuard {
 
     /// @notice Legacy entrypoint retained for ABI compatibility.
     /// @dev Module changes are timelocked via proposeModules/applyModules.
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _address _address
     function setModules(address, address, address) external pure {
         revert("GH: use proposeModules/applyModules");
     }
@@ -271,8 +267,6 @@ contract GovernanceHooks is ReentrancyGuard {
      * @notice Called before proposal execution - checks Seer flags
      * @dev Reverts if proposal is blocked by SeerGuardian
      * @param id id
-     * @param _address _address
-     * @param _uint256 _uint256
      */
     function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO nonReentrant {
         _log("gh_queued");
@@ -292,9 +286,7 @@ contract GovernanceHooks is ReentrancyGuard {
     /**
      * @notice Called when a vote is cast
      * @dev Checks voter restrictions and rewards participation
-     * @param _uint256 _uint256
      * @param voter voter
-     * @param _bool _bool
      */
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO nonReentrant {
         _log("gh_vote");
@@ -319,7 +311,6 @@ contract GovernanceHooks is ReentrancyGuard {
     }
     
     /// @notice onFinalized
-    /// @param _uint256 _uint256
     /// @param passed passed
     function onFinalized(uint256 /*id*/, bool passed) external onlyDAO nonReentrant {
         _log(passed ? "gh_passed" : "gh_failed");

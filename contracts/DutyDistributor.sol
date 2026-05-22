@@ -121,9 +121,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     // -------------------------------------------------------
 
     /// @notice onVoteCast
-    /// @param _uint256 _uint256
     /// @param voter voter
-    /// @param _bool _bool
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external override onlyDAO {
         // L-3 FIX: Check points cap before adding
         // M-7 FIX: Roll over daily window if needed.
@@ -142,16 +140,11 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     }
 
     /// @notice onProposalQueued
-    /// @param _uint256 _uint256
-    /// @param _address _address
-    /// @param _uint256 _uint256
     function onProposalQueued(uint256, address, uint256) external override onlyDAO {
         // Optional: Track proposals submitted
     }
 
     /// @notice onFinalized
-    /// @param _uint256 _uint256
-    /// @param _bool _bool
     function onFinalized(uint256, bool) external override onlyDAO {
         // No action needed
     }

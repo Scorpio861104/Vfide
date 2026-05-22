@@ -11,55 +11,36 @@ contract MockVFIDETokenForOwnerControlPanel {
     bool public circuitBreaker;
 
     /// @notice setVaultHub
-    /// @param _address _address
     function setVaultHub(address) external {}
     /// @notice setSecurityHub
-    /// @param _address _address
     function setSecurityHub(address) external {}
     /// @notice setLedger
-    /// @param _address _address
     function setLedger(address) external {}
     /// @notice setBurnRouter
-    /// @param _address _address
     function setBurnRouter(address) external {}
     /// @notice setTreasurySink
-    /// @param _address _address
     function setTreasurySink(address) external {}
     /// @notice setSanctumSink
-    /// @param _address _address
     function setSanctumSink(address) external {}
     /// @notice proposeSystemExempt
-    /// @param _address _address
-    /// @param _bool _bool
     function proposeSystemExempt(address, bool) external {}
     /// @notice cancelPendingExempt
     function cancelPendingExempt() external {}
     /// @notice confirmSystemExempt
     function confirmSystemExempt() external {}
     /// @notice proposeWhitelist
-    /// @param _address _address
-    /// @param _bool _bool
     function proposeWhitelist(address, bool) external {}
     /// @notice cancelPendingWhitelist
     function cancelPendingWhitelist() external {}
     /// @notice confirmWhitelist
     function confirmWhitelist() external {}
     /// @notice setVaultOnly
-    /// @param _bool _bool
     function setVaultOnly(bool) external {}
     /// @notice setBlacklist
-    /// @param _address _address
-    /// @param _bool _bool
     function setBlacklist(address, bool) external {}
     /// @notice setWhaleLimitExempt
-    /// @param _address _address
-    /// @param _bool _bool
     function setWhaleLimitExempt(address, bool) external {}
     /// @notice setAntiWhale
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     function setAntiWhale(uint256, uint256, uint256, uint256) external {}
 
     /// @notice lockPolicy
@@ -69,7 +50,6 @@ contract MockVFIDETokenForOwnerControlPanel {
 
     /// @notice setCircuitBreaker
     /// @param active active
-    /// @param _uint256 _uint256
     function setCircuitBreaker(bool active, uint256) external {
         circuitBreaker = active;
     }
@@ -93,28 +73,21 @@ contract MockVFIDETokenForOwnerControlPanel {
     /// @return _uint256 _uint256
     function transferCooldown() external pure returns (uint256) { return 0; }
     /// @notice whaleLimitExempt
-    /// @param _address _address
     /// @return _bool _bool
     function whaleLimitExempt(address) external pure returns (bool) { return false; }
     /// @notice remainingDailyLimit
-    /// @param _address _address
     /// @return _uint256 _uint256
     function remainingDailyLimit(address) external pure returns (uint256) { return 0; }
     /// @notice cooldownRemaining
-    /// @param _address _address
     /// @return _uint256 _uint256
     function cooldownRemaining(address) external pure returns (uint256) { return 0; }
     /// @notice setFeePolicy
-    /// @param _uint16 _uint16
-    /// @param _uint16 _uint16
     function setFeePolicy(uint16, uint16) external {}
     /// @notice feePolicy
     /// @return _uint16 _uint16
     /// @return _uint16 _uint16
     function feePolicy() external pure returns (uint16, uint16) { return (0, 0); }
     /// @notice previewTransferFee
-    /// @param _address _address
-    /// @param _uint256 _uint256
     /// @return _uint256 _uint256
     /// @return _uint256 _uint256
     function previewTransferFee(address, uint256) external pure returns (uint256, uint256) { return (0, 0); }
@@ -172,13 +145,8 @@ contract MockEcosystemVaultAdminForOwnerControlPanel {
     }
 
     /// @notice setManager
-    /// @param _address _address
-    /// @param _bool _bool
     function setManager(address, bool) external {}
     /// @notice setAllocations
-    /// @param _uint16 _uint16
-    /// @param _uint16 _uint16
-    /// @param _uint16 _uint16
     function setAllocations(uint16, uint16, uint16) external {}
 
     /// @notice autoSwapEnabled

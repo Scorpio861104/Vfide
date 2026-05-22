@@ -22,7 +22,6 @@ interface IVaultHub_Trust {
 /// @author Vfide
 interface ITokenLike_Trust {
     /// @notice balanceOf
-    /// @param _address _address
     /// @return _uint256 _uint256
     function balanceOf(address) external view returns (uint256);
 }
@@ -1035,7 +1034,6 @@ contract Seer is ReentrancyGuard {
      * @param subject The user address
      * @param badge The badge ID
      * @return active True if badge is active
-     * @return _bool _bool
      */
     function _checkActiveBadge(address subject, bytes32 badge) internal view returns (bool) {
         if (!hasBadge[subject][badge]) return false;

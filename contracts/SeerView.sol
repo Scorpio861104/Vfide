@@ -140,7 +140,6 @@ interface ISeerAutonomousMonitor {
 /// @author Vfide
 interface IEcosystemSchedulerView {
     /// @notice checkUpkeep
-    /// @param _bytes _bytes
     /// @return upkeepNeeded upkeepNeeded
     /// @return performData performData
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);

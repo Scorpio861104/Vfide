@@ -433,7 +433,6 @@ contract CircuitBreaker is VFIDEAccessControl {
 
     /**
      * @notice Update price oracle address
-     * @param _newOracle New oracle address
      */
     /// @notice TL-376 FIX: Propose a price oracle change (24h timelock). (#376)
     function updatePriceOracle(address _newOracle) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {

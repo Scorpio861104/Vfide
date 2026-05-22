@@ -617,7 +617,6 @@ contract AdminMultiSig is ReentrancyGuard {
      * @param _proposalId Proposal ID
      * @param _member Council member address
      * @return bool True if approved
-     * @return _bool _bool
      */
     function hasApproved(uint256 _proposalId, address _member) 
         external 

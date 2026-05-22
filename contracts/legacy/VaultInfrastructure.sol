@@ -524,7 +524,6 @@ contract UserVaultLegacy is ReentrancyGuard {
     /**
      * @notice Get current abnormal transaction threshold based on user preference
      * @return Current threshold amount in wei
-     * @return _uint256 _uint256
      */
     function getAbnormalTransactionThreshold() public view returns (uint256) {
         if (usePercentageThreshold) {
@@ -1621,27 +1620,21 @@ contract VaultInfrastructure is Ownable {
     // ──────────────────────────────────────────────────────────
 
     /// @notice approveForceRecovery
-    /// @param vault vault
-    /// @param newOwner newOwner
     function approveForceRecovery(address /* vault */, address /* newOwner */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice initiateForceRecovery
-    /// @param vault vault
-    /// @param newOwner newOwner
     function initiateForceRecovery(address /* vault */, address /* newOwner */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice finalizeForceRecovery
-    /// @param vault vault
     function finalizeForceRecovery(address /* vault */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice cancelForceRecovery
-    /// @param vault vault
     function cancelForceRecovery(address /* vault */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
