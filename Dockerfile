@@ -36,6 +36,12 @@ COPY . .
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
+# FRONTEND_SELF_CONTAINED=true: tells lib/validateProduction.ts's `prebuild`
+# hook that we are building the frontend bundle without backend secrets
+# (DATABASE_URL, JWT_SECRET, etc.). The postinstall-validate-env.cjs already
+# skips when CI=true; this handles the separate `npm run prebuild` step which
+# runs `tsx lib/validateProduction.ts` before `next build`.
+ENV FRONTEND_SELF_CONTAINED true
 
 # Build application
 RUN npm run build
