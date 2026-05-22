@@ -11,12 +11,19 @@ pragma solidity 0.8.30;
  * - Disbursements are on-chain, tracked per campaign/project
  * - Governed by DAO (charity selection, size, cadence)
  * - All transactions logged in ProofLedger for transparency
- * 
+ *
  * Target split mentioned: e.g., 25% to Sanctum, 75% to burn
  * (exact ratios configurable by DAO)
  */
 
-import { LedgerLogFailed, IProofLedger, IERC20, Ownable, ReentrancyGuard, SafeERC20 } from "./SharedInterfaces.sol";
+import {
+    LedgerLogFailed,
+    IProofLedger,
+    IERC20,
+    Ownable,
+    ReentrancyGuard,
+    SafeERC20
+} from "./SharedInterfaces.sol";
 
 // Seer interface for ProofScore
 /// @notice ISeer_Sanct
@@ -46,7 +53,7 @@ error SANCT_InsufficientBalance();
 /// @author Vfide
 contract SanctumVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    
+
     /// Events
     /// @notice DAOSet
     /// @param dao dao
@@ -78,7 +85,13 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param token token
     /// @param amount amount
     /// @param campaign campaign
-    event DisbursementProposed(uint256 indexed proposalId, address indexed charity, address token, uint256 amount, string campaign);
+    event DisbursementProposed(
+        uint256 indexed proposalId,
+        address indexed charity,
+        address token,
+        uint256 amount,
+        string campaign
+    );
     /// @notice DisbursementApproved
     /// @param proposalId proposalId
     /// @param approver approver
@@ -88,7 +101,12 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param charity charity
     /// @param token token
     /// @param amount amount
-    event DisbursementExecuted(uint256 indexed proposalId, address indexed charity, address token, uint256 amount);
+    event DisbursementExecuted(
+        uint256 indexed proposalId,
+        address indexed charity,
+        address token,
+        uint256 amount
+    );
     /// @notice DisbursementRejected
     /// @param proposalId proposalId
     /// @param reason reason
@@ -120,10 +138,10 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     IProofLedger public ledger;
     /// @notice seer
     ISeer_Sanct public seer;
-    
+
     // ProofScore rewards for charitable actions
     /// @notice DONATION_REWARD
-    uint16 public constant DONATION_REWARD = 10;  // +1.0 per donation
+    uint16 public constant DONATION_REWARD = 10; // +1.0 per donation
     /// @notice MIN_REWARDABLE_DEPOSIT
     uint256 public constant MIN_REWARDABLE_DEPOSIT = 1_000_000; // Ignore dust donations (1 unit at 6 decimals)
     /// @notice lastDonationRewardDay
@@ -144,9 +162,9 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// Disbursement proposals
     struct Disbursement {
         address charity;
-        address token;       // VFIDE or stablecoin
+        address token; // VFIDE or stablecoin
         uint256 amount;
-        string campaign;     // campaign or project description
+        string campaign; // campaign or project description
         string documentation; // IPFS hash or URL to impact report
         uint64 proposedAt;
         uint64 executedAt;
@@ -201,11 +219,12 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         dao = _dao;
         ledger = IProofLedger(_ledger);
         if (_seer != address(0)) seer = ISeer_Sanct(_seer);
-        
+
         // DAO is initial approver
         isApprover[_dao] = true;
-        approverIndex[_dao] = 0;        approvers.push(_dao);
-        
+        approverIndex[_dao] = 0;
+        approvers.push(_dao);
+
         emit DAOSet(_dao);
         if (_ledger != address(0)) emit LedgerSet(_ledger);
     }
@@ -274,7 +293,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         emit LedgerSet(_ledger);
         _log("sanctum_ledger_set");
     }
-    
+
     /// @notice setSeer
     /// @param _seer _seer
     function setSeer(address _seer) external onlyDAO {
@@ -297,7 +316,8 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(!isApprover[_approver], "already approver");
         isApprover[_approver] = true;
         require(approvers.length < 50, "sanctum: approver cap"); // I-11
-        approverIndex[_approver] = approvers.length;        approvers.push(_approver);
+        approverIndex[_approver] = approvers.length;
+        approvers.push(_approver);
         _log("sanctum_approver_added");
     }
 
@@ -307,10 +327,10 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(isApprover[_approver], "not approver");
         require(approvers.length > approvalsRequired, "would violate threshold");
         isApprover[_approver] = false;
-        
+
         uint256 idx = approverIndex[_approver];
         uint256 lastIdx = approvers.length - 1;
-        
+
         if (idx != lastIdx) {
             address lastApprover = approvers[lastIdx];
             approvers[idx] = lastApprover;
@@ -318,7 +338,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         }
         approvers.pop();
         delete approverIndex[_approver];
-        
+
         _log("sanctum_approver_removed");
     }
 
@@ -335,17 +355,17 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     ) external onlyDAO {
         require(charity != address(0), "zero");
         require(!charities[charity].approved, "already approved");
-        
+
         charities[charity] = CharityInfo({
             approved: true,
             name: name,
             category: category,
             approvedAt: uint64(block.timestamp)
         });
-        
+
         require(charityList.length < 200, "sanctum: charity cap"); // I-11
         charityList.push(charity);
-        
+
         emit CharityApproved(charity, name, category);
         _logEv(charity, "charity_approved", 0, category);
     }
@@ -355,9 +375,9 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param reason reason
     function removeCharity(address charity, string calldata reason) external onlyDAO {
         require(charities[charity].approved, "not approved");
-        
+
         charities[charity].approved = false;
-        
+
         uint256 len = charityList.length;
         for (uint256 i = 0; i < len; ++i) {
             if (charityList[i] == charity) {
@@ -366,7 +386,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
                 break;
             }
         }
-        
+
         emit CharityRemoved(charity, reason);
         _logEv(charity, "charity_removed", 0, reason);
     }
@@ -396,16 +416,20 @@ contract SanctumVault is Ownable, ReentrancyGuard {
      */
     function deposit(address token, uint256 amount, string calldata note) external nonReentrant {
         require(token != address(0) && amount > 0, "invalid deposit");
-        
+
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        
+
         // Reward donor with ProofScore boost
         uint256 today = block.timestamp / 1 days;
-        if (address(seer) != address(0) && amount >= MIN_REWARDABLE_DEPOSIT && lastDonationRewardDay[msg.sender] < today) {
+        if (
+            address(seer) != address(0) &&
+            amount >= MIN_REWARDABLE_DEPOSIT &&
+            lastDonationRewardDay[msg.sender] < today
+        ) {
             lastDonationRewardDay[msg.sender] = today;
             try seer.reward(msg.sender, DONATION_REWARD, "charity_donation") {} catch {}
         }
-        
+
         emit Deposit(msg.sender, token, amount, note);
         _logEv(msg.sender, "sanctum_deposit", amount, note);
     }
@@ -459,23 +483,23 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     ) external onlyApprover returns (uint256 proposalId) {
         if (!charities[charity].approved) revert SANCT_NotApproved();
         require(token != address(0) && amount > 0, "invalid proposal");
-        
+
         // Funds may arrive between proposal and execution.
-        
+
         proposalId = ++disbursementCount;
         Disbursement storage d = disbursements[proposalId];
-        
+
         d.charity = charity;
         d.token = token;
         d.amount = amount;
         d.campaign = campaign;
         d.documentation = documentation;
         d.proposedAt = uint64(block.timestamp);
-        
+
         // Proposer automatically approves
         d.approvals[msg.sender] = true;
         d.approvalCount = 1;
-        
+
         emit DisbursementProposed(proposalId, charity, token, amount, campaign);
         _logEv(charity, "disbursement_proposed", amount, campaign);
     }
@@ -489,12 +513,12 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         Disbursement storage d = disbursements[proposalId];
         require(d.proposedAt != 0, "not found");
         require(!d.executed && !d.rejected, "already finalized");
-        
+
         if (d.approvals[msg.sender]) revert SANCT_AlreadyApproved();
-        
+
         d.approvals[msg.sender] = true;
         ++d.approvalCount;
-        
+
         emit DisbursementApproved(proposalId, msg.sender);
         _logEv(msg.sender, "disbursement_approval", proposalId, "");
     }
@@ -512,17 +536,17 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(block.timestamp >= d.proposedAt + 1 days, "SANCT: 24h delay");
         require(block.timestamp <= d.proposedAt + 90 days, "SANCT: proposal expired"); // SV-02
         require(charities[d.charity].approved, "SANCT: charity removed"); // SV-03
-        
+
         // Check balance again
         uint256 balance = IERC20(d.token).balanceOf(address(this));
         if (balance < d.amount) revert SANCT_InsufficientBalance();
-        
+
         d.executed = true;
         d.executedAt = uint64(block.timestamp);
-        
+
         // Execute transfer
         IERC20(d.token).safeTransfer(d.charity, d.amount);
-        
+
         emit DisbursementExecuted(proposalId, d.charity, d.token, d.amount);
         _logEv(d.charity, "disbursement_executed", d.amount, d.campaign);
     }
@@ -537,9 +561,9 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         Disbursement storage d = disbursements[proposalId];
         require(d.proposedAt != 0, "not found");
         require(!d.executed && !d.rejected, "already finalized");
-        
+
         d.rejected = true;
-        
+
         emit DisbursementRejected(proposalId, reason);
         _logEv(d.charity, "disbursement_rejected", proposalId, reason);
     }
@@ -558,18 +582,24 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @return executed executed
     /// @return rejected rejected
     /// @return approvalCount_ approvalCount_
-    function getDisbursement(uint256 proposalId) external view returns (
-        address charity,
-        address token,
-        uint256 amount,
-        string memory campaign,
-        string memory documentation,
-        uint64 proposedAt,
-        uint64 executedAt,
-        bool executed,
-        bool rejected,
-        uint8 approvalCount_
-    ) {
+    function getDisbursement(
+        uint256 proposalId
+    )
+        external
+        view
+        returns (
+            address charity,
+            address token,
+            uint256 amount,
+            string memory campaign,
+            string memory documentation,
+            uint64 proposedAt,
+            uint64 executedAt,
+            bool executed,
+            bool rejected,
+            uint8 approvalCount_
+        )
+    {
         Disbursement storage d = disbursements[proposalId];
         return (
             d.charity,
@@ -606,12 +636,13 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @return name name
     /// @return category category
     /// @return approvedAt approvedAt
-    function getCharityInfo(address charity) external view returns (
-        bool approved,
-        string memory name,
-        string memory category,
-        uint64 approvedAt
-    ) {
+    function getCharityInfo(
+        address charity
+    )
+        external
+        view
+        returns (bool approved, string memory name, string memory category, uint64 approvedAt)
+    {
         CharityInfo storage c = charities[charity];
         return (c.approved, c.name, c.category, c.approvedAt);
     }
@@ -623,7 +654,9 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param action action
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
+                emit LedgerLogFailed(address(this), action);
+            }
         }
     }
 
@@ -633,9 +666,16 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
+    function _logEv(
+        address who,
+        string memory action,
+        uint256 amount,
+        string memory note
+    ) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); }
+            try ledger.logEvent(who, action, amount, note) {} catch {
+                emit LedgerLogFailed(who, action);
+            }
         }
     }
 
@@ -664,7 +704,13 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param to to
     /// @param amount amount
     /// @param reason reason
-    event EmergencyRecoveryRequested(uint256 indexed id, address token, address to, uint256 amount, string reason);
+    event EmergencyRecoveryRequested(
+        uint256 indexed id,
+        address token,
+        address to,
+        uint256 amount,
+        string reason
+    );
     /// @notice EmergencyRecoveryCancelled
     /// @param id id
     /// @param reason reason
@@ -695,7 +741,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(token != address(0), "zero token");
         require(to != address(0), "zero to");
         require(amount > 0, "zero amount");
-        
+
         id = ++emergencyRecoveryCount;
         emergencyRecoveries[id] = EmergencyRecoveryRequest({
             token: token,
@@ -706,7 +752,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
             executed: false,
             cancelled: false
         });
-        
+
         emit EmergencyRecoveryRequested(id, token, to, amount, reason);
     }
 
@@ -721,7 +767,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(req.requestedAt != 0, "not found");
         require(!req.executed, "already executed");
         require(!req.cancelled, "already cancelled");
-        
+
         req.cancelled = true;
         emit EmergencyRecoveryCancelled(id, reason);
     }
@@ -737,11 +783,11 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(!req.executed, "already executed");
         require(!req.cancelled, "cancelled");
         require(block.timestamp >= req.requestedAt + EMERGENCY_TIMELOCK, "timelock not passed");
-        
+
         req.executed = true;
-        
+
         IERC20(req.token).safeTransfer(req.to, req.amount);
-        
+
         _logEv(req.to, "emergency_recovery", req.amount, req.reason);
         emit EmergencyRecoveryExecuted(id, req.token, req.to, req.amount);
     }

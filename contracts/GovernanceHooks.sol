@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard } from "./SharedInterfaces.sol";
+import {ReentrancyGuard} from "./SharedInterfaces.sol";
 
 /**
  * @title GovernanceHooks
  * @notice Callback hooks for DAO events with SeerGuardian integration
- * 
+ *
  * Integrates mutual checks:
  * - Seer can flag/delay suspicious proposals via SeerGuardian
  * - DAO actions are logged and can trigger automatic enforcement
@@ -23,12 +23,12 @@ interface IProofLedger_GH {
 /// @notice ISeer_GH
 /// @title ISeer_GH
 /// @author Vfide
-interface ISeer_GH { 
+interface ISeer_GH {
     /// @notice punish
     /// @param subject subject
     /// @param delta delta
     /// @param reason reason
-    function punish(address subject, uint16 delta, string calldata reason) external; 
+    function punish(address subject, uint16 delta, string calldata reason) external;
     /// @notice reward
     /// @param subject subject
     /// @param delta delta
@@ -54,7 +54,9 @@ interface ISeerGuardian_GH {
     /// @param proposalId proposalId
     /// @return blocked blocked
     /// @return reason reason
-    function isProposalBlocked(uint256 proposalId) external view returns (bool blocked, string memory reason);
+    function isProposalBlocked(
+        uint256 proposalId
+    ) external view returns (bool blocked, string memory reason);
     /// @notice canParticipateInGovernance
     /// @param subject subject
     /// @return _bool _bool
@@ -77,7 +79,7 @@ contract GovernanceHooks is ReentrancyGuard {
     /// @notice ledger
     IProofLedger_GH public ledger; // optional
     /// @notice seer
-    ISeer_GH public seer;          // optional
+    ISeer_GH public seer; // optional
     /// @notice guardian
     ISeerGuardian_GH public guardian; // SeerGuardian for mutual checks
 
@@ -150,21 +152,27 @@ contract GovernanceHooks is ReentrancyGuard {
     bool public hasPendingModules;
 
     /// @notice onlyOwner
-    modifier onlyOwner() { require(msg.sender == owner, "not owner"); _; }
+    modifier onlyOwner() {
+        require(msg.sender == owner, "not owner");
+        _;
+    }
     /// @notice onlyDAO
-    modifier onlyDAO() { if (msg.sender != dao) revert GH_NotAuthorized(); _; }
+    modifier onlyDAO() {
+        if (msg.sender != dao) revert GH_NotAuthorized();
+        _;
+    }
 
     /// @notice constructor
     /// @param _ledger _ledger
     /// @param _seer _seer
     /// @param _dao _dao
-    constructor(address _ledger, address _seer, address _dao) { 
+    constructor(address _ledger, address _seer, address _dao) {
         require(_dao != address(0), "zero dao");
         owner = msg.sender;
         dao = _dao;
-        ledger=IProofLedger_GH(_ledger); 
-        seer=ISeer_GH(_seer); 
-        emit ModulesSet(_ledger,_seer, address(0));
+        ledger = IProofLedger_GH(_ledger);
+        seer = ISeer_GH(_seer);
+        emit ModulesSet(_ledger, _seer, address(0));
         emit DAOSet(_dao);
         emit OwnershipTransferred(address(0), msg.sender);
     }
@@ -182,9 +190,11 @@ contract GovernanceHooks is ReentrancyGuard {
     /// @param _ledger _ledger
     /// @param _seer _seer
     /// @param _guardian _guardian
-    function proposeModules(address _ledger, address _seer, address _guardian)
-        external onlyOwner nonReentrant
-    {
+    function proposeModules(
+        address _ledger,
+        address _seer,
+        address _guardian
+    ) external onlyOwner nonReentrant {
         require(_seer != address(0), "zero seer");
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingModules = PendingModulesChange({
@@ -252,7 +262,7 @@ contract GovernanceHooks is ReentrancyGuard {
      */
     function onProposalCreated(uint256 id, address proposer) external onlyDAO nonReentrant {
         _log("gh_proposal_created");
-        
+
         // Auto-check proposer via SeerGuardian
         if (address(guardian) != address(0)) {
             try guardian.autoCheckProposer(id, proposer) {
@@ -268,9 +278,13 @@ contract GovernanceHooks is ReentrancyGuard {
      * @dev Reverts if proposal is blocked by SeerGuardian
      * @param id id
      */
-    function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO nonReentrant {
+    function onProposalQueued(
+        uint256 id,
+        address /*target*/,
+        uint256 /*value*/
+    ) external onlyDAO nonReentrant {
         _log("gh_queued");
-        
+
         // #470 FIX: Wrap SeerGuardian check in try/catch so a failing guardian cannot brick DAO execution.
         if (address(guardian) != address(0)) {
             try guardian.isProposalBlocked(id) returns (bool blocked, string memory reason) {
@@ -282,15 +296,19 @@ contract GovernanceHooks is ReentrancyGuard {
             }
         }
     }
-    
+
     /**
      * @notice Called when a vote is cast
      * @dev Checks voter restrictions and rewards participation
      * @param voter voter
      */
-    function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO nonReentrant {
+    function onVoteCast(
+        uint256 /*id*/,
+        address voter,
+        bool /*support*/
+    ) external onlyDAO nonReentrant {
         _log("gh_vote");
-        
+
         // #471 FIX: Wrap guardian check in try/catch so guardian failure doesn't block all votes.
         if (address(guardian) != address(0)) {
             try guardian.canParticipateInGovernance(voter) returns (bool allowed) {
@@ -303,41 +321,48 @@ contract GovernanceHooks is ReentrancyGuard {
                 emit VoterRestricted(voter, "guardian_unavailable");
             }
         }
-        
+
         // Reward governance participation
         if (address(seer) != address(0)) {
             try seer.reward(voter, 5, "governance_vote") {} catch {}
         }
     }
-    
+
     /// @notice onFinalized
     /// @param passed passed
     function onFinalized(uint256 /*id*/, bool passed) external onlyDAO nonReentrant {
         _log(passed ? "gh_passed" : "gh_failed");
     }
-    
+
     /**
      * @notice Report a governance abuse for SeerGuardian tracking
      * @param user The abusing user
      * @param description What happened
      */
-    function reportGovernanceAbuse(address user, string calldata description) external onlyDAO nonReentrant {
+    function reportGovernanceAbuse(
+        address user,
+        string calldata description
+    ) external onlyDAO nonReentrant {
         emit GovernanceViolation(user, description);
-        
+
         if (address(guardian) != address(0)) {
             // ViolationType.GovernanceAbuse = 5
             try guardian.recordViolation(user, 5, description) {} catch {}
         }
-        
+
         // Also punish via Seer
         if (address(seer) != address(0)) {
             try seer.punish(user, 50, description) {} catch {}
         }
-        
+
         _log("governance_abuse_reported");
     }
 
     /// @notice _log
     /// @param action action
-    function _log(string memory action) internal { if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} } }
+    function _log(string memory action) internal {
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
+    }
 }

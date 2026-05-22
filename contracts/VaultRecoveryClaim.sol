@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @notice IVaultHubRecovery
 /// @title IVaultHubRecovery
@@ -34,7 +34,7 @@ interface IVaultHubRecovery {
  * @title VaultRecoveryClaim
  * @notice Enables users to claim and recover access to their vault after losing their wallet
  * @dev This is the critical missing piece in crypto UX - wallet recovery without seed phrases
- * 
+ *
  * Recovery Flow:
  * 1. User loses wallet, gets new wallet
  * 2. User searches for their vault using VaultRegistry (by recovery ID, email, phone, username)
@@ -44,7 +44,7 @@ interface IVaultHubRecovery {
  *    b. Time-lock challenge period (7 days) - original wallet can cancel
  *    c. Optional: Identity verification through trusted oracles
  * 5. After verification, vault ownership transfers to new wallet
- * 
+ *
  * Security Layers:
  * - Time-lock prevents immediate theft
  * - Guardian multi-sig provides social recovery
@@ -97,59 +97,59 @@ interface IVaultRegistry {
 /// @author Vfide
 contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     using ECDSA for bytes32;
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice CHALLENGE_PERIOD
-    uint64 public constant CHALLENGE_PERIOD = 7 days;      // Time for original owner to cancel (guardian path)
+    uint64 public constant CHALLENGE_PERIOD = 7 days; // Time for original owner to cancel (guardian path)
     /// @notice FINALIZATION_GRACE_PERIOD
     uint64 public constant FINALIZATION_GRACE_PERIOD = 1 days;
     /// @notice GUARDIAN_VOTE_WINDOW
     uint64 public constant GUARDIAN_VOTE_WINDOW = 14 days; // Time for guardians to vote
     /// @notice CLAIM_EXPIRY
-    uint64 public constant CLAIM_EXPIRY = 30 days;         // Max time for claim process
+    uint64 public constant CLAIM_EXPIRY = 30 days; // Max time for claim process
     /// @notice VERIFIER_CHANGE_DELAY
     uint64 public constant VERIFIER_CHANGE_DELAY = 1 days;
     /// @notice MODULE_CHANGE_DELAY
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
     /// @notice MIN_GUARDIAN_APPROVALS
-    uint8 public constant MIN_GUARDIAN_APPROVALS = 2;      // Minimum guardian approvals needed
+    uint8 public constant MIN_GUARDIAN_APPROVALS = 2; // Minimum guardian approvals needed
     /// @notice MIN_VERIFIER_VOTES
-    uint8 public constant MIN_VERIFIER_VOTES = 3;          // Minimum trusted verifier votes (guardian path)
-    
+    uint8 public constant MIN_VERIFIER_VOTES = 3; // Minimum trusted verifier votes (guardian path)
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // STORAGE
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice vaultHub
     IVaultHubRecovery public vaultHub;
     /// @notice vaultRegistry
     IVaultRegistry public vaultRegistry;
-    
+
     enum ClaimStatus {
         None,
-        Pending,           // Claim submitted, waiting for verification
-        GuardianApproved,  // Guardians approved, in challenge period
-        Challenged,        // Original owner challenged the claim
-        Approved,          // Fully approved, ready to execute
-        Executed,          // Ownership transferred
-        Rejected,          // Claim was rejected
-        Expired            // Claim expired without resolution
+        Pending, // Claim submitted, waiting for verification
+        GuardianApproved, // Guardians approved, in challenge period
+        Challenged, // Original owner challenged the claim
+        Approved, // Fully approved, ready to execute
+        Executed, // Ownership transferred
+        Rejected, // Claim was rejected
+        Expired // Claim expired without resolution
     }
-    
+
     struct RecoveryClaim {
-        address vault;              // The vault being claimed
-        address claimant;           // New wallet claiming ownership
-        address originalOwner;      // Original wallet address (for records)
-        address initiator;          // R-8: who called initiateClaim (claimant for self-init, trustee for guardian-init)
-        uint64 initiatedAt;         // When claim was submitted
-        uint64 challengeEndsAt;     // When challenge period ends
-        uint64 expiresAt;           // When claim expires entirely
+        address vault; // The vault being claimed
+        address claimant; // New wallet claiming ownership
+        address originalOwner; // Original wallet address (for records)
+        address initiator; // R-8: who called initiateClaim (claimant for self-init, trustee for guardian-init)
+        uint64 initiatedAt; // When claim was submitted
+        uint64 challengeEndsAt; // When challenge period ends
+        uint64 expiresAt; // When claim expires entirely
         ClaimStatus status;
-        uint8 guardianApprovals;    // Count of personal guardian approvals
-        uint8 verifierVotes;        // Count of trusted verifier votes
+        uint8 guardianApprovals; // Count of personal guardian approvals
+        uint8 verifierVotes; // Count of trusted verifier votes
         // H-5 FIX: Snapshot guardian count at initiation so runtime removal cannot lower
         // the required-approvals threshold or enable the verifier-fallback path mid-claim.
         uint8 guardianCountSnapshot;
@@ -157,32 +157,32 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // A later setChallengePeriodPreference() call by a compromised owner key
         // CANNOT shrink an active window — the snapshot is what's enforced.
         uint64 challengePeriodSnapshot;
-        bytes32 evidenceHash;       // Hash of identity evidence provided
-        string claimReason;         // User's explanation
+        bytes32 evidenceHash; // Hash of identity evidence provided
+        string claimReason; // User's explanation
     }
-    
+
     // claimId => RecoveryClaim
     /// @notice claims
     mapping(uint256 => RecoveryClaim) public claims;
     /// @notice claimCounter
     uint256 public claimCounter;
-    
+
     // vault => active claimId (only one active claim per vault)
     /// @notice activeClaimForVault
     mapping(address => uint256) public activeClaimForVault;
-    
+
     // claimId => guardian => voted
     /// @notice guardianVoted
     mapping(uint256 => mapping(address => bool)) public guardianVoted;
-    
+
     // claimId => trusted verifier => voted
     /// @notice verifierVoted
     mapping(uint256 => mapping(address => bool)) public verifierVoted;
-    
+
     // claimId => guardian => approved (true) or rejected (false)
     /// @notice guardianApproval
     mapping(uint256 => mapping(address => bool)) public guardianApproval;
-    
+
     // Trusted identity verifiers (oracles)
     /// @notice trustedVerifier
     mapping(address => bool) public trustedVerifier;
@@ -238,11 +238,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     mapping(address => mapping(address => uint64)) public initiatorCooldownUntil; // vault => initiator => timestamp
     /// @notice INITIATOR_COOLDOWN
     uint64 public constant INITIATOR_COOLDOWN = 30 days;
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice ClaimInitiated
     /// @param claimId claimId
     /// @param vault vault
@@ -274,38 +274,25 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         bool approved,
         uint8 totalApprovals
     );
-    
-    
+
     /// @notice ClaimChallenged
     /// @param claimId claimId
     /// @param challenger challenger
     /// @param reason reason
-    event ClaimChallenged(
-        uint256 indexed claimId,
-        address indexed challenger,
-        string reason
-    );
-    
+    event ClaimChallenged(uint256 indexed claimId, address indexed challenger, string reason);
+
     /// @notice ClaimApproved
     /// @param claimId claimId
     /// @param vault vault
     /// @param newOwner newOwner
-    event ClaimApproved(
-        uint256 indexed claimId,
-        address indexed vault,
-        address indexed newOwner
-    );
-    
+    event ClaimApproved(uint256 indexed claimId, address indexed vault, address indexed newOwner);
+
     /// @notice ClaimRejected
     /// @param claimId claimId
     /// @param vault vault
     /// @param reason reason
-    event ClaimRejected(
-        uint256 indexed claimId,
-        address indexed vault,
-        string reason
-    );
-    
+    event ClaimRejected(uint256 indexed claimId, address indexed vault, string reason);
+
     /// @notice ClaimExecuted
     /// @param claimId claimId
     /// @param vault vault
@@ -317,15 +304,12 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         address indexed newOwner,
         address previousOwner
     );
-    
+
     /// @notice ClaimExpired
     /// @param claimId claimId
     /// @param vault vault
-    event ClaimExpired(
-        uint256 indexed claimId,
-        address indexed vault
-    );
-    
+    event ClaimExpired(uint256 indexed claimId, address indexed vault);
+
     /// @notice VerifierSet
     /// @param verifier verifier
     /// @param trusted trusted
@@ -357,15 +341,18 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /// @notice VaultRegistryChangeApplied
     /// @param oldVaultRegistry oldVaultRegistry
     /// @param newVaultRegistry newVaultRegistry
-    event VaultRegistryChangeApplied(address indexed oldVaultRegistry, address indexed newVaultRegistry);
+    event VaultRegistryChangeApplied(
+        address indexed oldVaultRegistry,
+        address indexed newVaultRegistry
+    );
     /// @notice VaultRegistryChangeCancelled
     /// @param pendingVaultRegistry pendingVaultRegistry
     event VaultRegistryChangeCancelled(address indexed pendingVaultRegistry);
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice InvalidVault
     error InvalidVault();
     /// @notice ClaimAlreadyExists
@@ -404,30 +391,27 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error NoPendingModuleChange();
     // R-8 (guardian-initiated recovery)
     /// @notice NotTrustee
-    error NotTrustee();              // initiateClaim caller is not a trustee on the vault
+    error NotTrustee(); // initiateClaim caller is not a trustee on the vault
     /// @notice InitiatorCooldownActive
     error InitiatorCooldownActive(); // initiator was challenged on this vault within the cooldown window
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice constructor
     /// @param _vaultHub _vaultHub
     /// @param _vaultRegistry _vaultRegistry
-    constructor(
-        address _vaultHub,
-        address _vaultRegistry
-    ) {
+    constructor(address _vaultHub, address _vaultRegistry) {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultHubRecovery(_vaultHub);
         vaultRegistry = IVaultRegistry(_vaultRegistry);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // CLAIM INITIATION
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Record vault activity to extend the challenge window on future claims.
      * @dev F-54 FIX: Called by the vault itself (or its admin) on any significant action.
@@ -460,7 +444,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     ) external nonReentrant returns (uint256 claimId) {
         return _initiateClaim(vault, recoveryId, evidenceHash, reason);
     }
-    
+
     /**
      * @notice Internal implementation of claim initiation
      * @param vault vault
@@ -477,26 +461,30 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     ) internal returns (uint256 claimId) {
         // Validate vault exists
         if (!vaultHub.isVault(vault)) revert InvalidVault();
-        
+
         // C-2 FIX: Auto-expire stale claims and check for active ones
         // Also include Challenged status in blocking check
         if (activeClaimForVault[vault] != 0) {
             RecoveryClaim storage existing = claims[activeClaimForVault[vault]];
             // Auto-expire if past expiry time
-            if (block.timestamp > existing.expiresAt && 
-                (existing.status == ClaimStatus.Pending || 
-                 existing.status == ClaimStatus.GuardianApproved ||
-                 existing.status == ClaimStatus.Challenged)) {
+            if (
+                block.timestamp > existing.expiresAt &&
+                (existing.status == ClaimStatus.Pending ||
+                    existing.status == ClaimStatus.GuardianApproved ||
+                    existing.status == ClaimStatus.Challenged)
+            ) {
                 existing.status = ClaimStatus.Expired;
                 activeClaimForVault[vault] = 0;
-            } else if (existing.status == ClaimStatus.Pending || 
+            } else if (
+                existing.status == ClaimStatus.Pending ||
                 existing.status == ClaimStatus.GuardianApproved ||
                 existing.status == ClaimStatus.Approved ||
-                existing.status == ClaimStatus.Challenged) {
+                existing.status == ClaimStatus.Challenged
+            ) {
                 revert ClaimAlreadyExists();
             }
         }
-        
+
         // ─────────────────────────────────────────────────────────────
         // R-8: TRUSTEE GATING ON INITIATION
         // ─────────────────────────────────────────────────────────────
@@ -542,7 +530,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (vaultHub.vaultOf(msg.sender) != address(0)) {
             revert ClaimantAlreadyHasVault();
         }
-        
+
         // Verify recovery ID matches (if vault has one)
         if (address(vaultRegistry) != address(0)) {
             bytes32 storedRecoveryId = vaultRegistry.recoveryIdOfVault(vault);
@@ -551,12 +539,12 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
                 require(providedHash == storedRecoveryId, "Invalid recovery ID");
             }
         }
-        
+
         address originalOwner = vaultHub.ownerOfVault(vault);
-        
+
         // Create claim
         claimId = ++claimCounter;
-        
+
         // F-54 FIX: Extend challenge period to 14 days when vault had activity within 30 days.
         // C-4 FIX: If guardian setup is not yet complete the vault has weaker access controls;
         //           use the extended challenge window to give the owner maximum reaction time.
@@ -569,19 +557,20 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         uint64 baseChallengePeriod;
         if (!setupComplete) {
             // Guardian setup incomplete → use the extended window.
-            baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
-        } else if (vaultLastActivity[vault] != 0 &&
-            block.timestamp - vaultLastActivity[vault] <= VAULT_ACTIVITY_WINDOW) {
-            baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD;  // 14 days
+            baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD; // 14 days
+        } else if (
+            vaultLastActivity[vault] != 0 &&
+            block.timestamp - vaultLastActivity[vault] <= VAULT_ACTIVITY_WINDOW
+        ) {
+            baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD; // 14 days
         } else {
-            baseChallengePeriod = CHALLENGE_PERIOD;               // 7 days
+            baseChallengePeriod = CHALLENGE_PERIOD; // 7 days
         }
 
         // Read user preference (0 means "no preference, use base")
         uint64 userPreference = userVault.challengePeriodPreferenceView();
-        uint64 effectiveChallengePeriod = userPreference > baseChallengePeriod
-            ? userPreference
-            : baseChallengePeriod;
+        uint64 effectiveChallengePeriod =
+            userPreference > baseChallengePeriod ? userPreference : baseChallengePeriod;
 
         claims[claimId] = RecoveryClaim({
             vault: vault,
@@ -603,12 +592,12 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             evidenceHash: evidenceHash,
             claimReason: reason
         });
-        
+
         activeClaimForVault[vault] = claimId;
-        
+
         emit ClaimInitiated(claimId, vault, msg.sender, originalOwner, claims[claimId].expiresAt);
     }
-    
+
     /**
      * @notice Initiate claim using only recovery ID (simplified flow)
      * @param recoveryId The recovery ID the user remembers
@@ -620,18 +609,18 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         string calldata reason
     ) external nonReentrant returns (uint256 claimId) {
         require(address(vaultRegistry) != address(0), "Registry not set");
-        
+
         address vault = vaultRegistry.searchByRecoveryId(recoveryId);
         require(vault != address(0), "Vault not found");
-        
+
         // Use internal function instead of external call to preserve msg.sender
         return _initiateClaim(vault, recoveryId, bytes32(0), reason);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // GUARDIAN VOTING (Personal Guardians)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Personal guardian votes on a recovery claim
      * @dev Only guardians set on the vault can vote
@@ -640,28 +629,28 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function guardianVote(uint256 claimId, bool approve) external nonReentrant {
         RecoveryClaim storage claim = claims[claimId];
-        
+
         if (claim.status != ClaimStatus.Pending) revert ClaimNotPending();
         if (block.timestamp > claim.expiresAt) revert ClaimHasExpired();
         if (guardianVoted[claimId][msg.sender]) revert AlreadyVoted();
-        
+
         // Verify caller is a mature guardian of the vault
         IUserVaultRecovery userVault = IUserVaultRecovery(claim.vault);
         if (!userVault.isGuardian(msg.sender)) revert NotGuardian();
         if (!userVault.isGuardianMature(msg.sender)) revert NotGuardian(); // Must be mature
-        
+
         guardianVoted[claimId][msg.sender] = true;
         guardianApproval[claimId][msg.sender] = approve;
-        
+
         if (approve) {
             ++claim.guardianApprovals;
         }
-        
+
         emit GuardianVoteCast(claimId, msg.sender, approve, claim.guardianApprovals);
-        
+
         // Check if we have enough approvals — use snapshot, not live guardianCount.
         uint8 requiredApprovals = _calculateRequiredApprovals(claim.guardianCountSnapshot);
-        
+
         if (claim.guardianApprovals >= requiredApprovals) {
             claim.status = ClaimStatus.GuardianApproved;
             // R-8: Use the snapshotted challenge period (which already includes the
@@ -671,11 +660,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             claim.challengeEndsAt = uint64(block.timestamp) + claim.challengePeriodSnapshot;
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // TRUSTED VERIFIER VOTING (Community Verification)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Trusted verifier votes on a recovery claim
      * @dev Used when vault has no personal guardians, or as additional verification.
@@ -693,11 +682,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         (claimId, approve);
         revert("VRC: verifier vote disabled");
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // CHALLENGE (Original Owner Defense)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Original owner challenges/cancels a recovery claim
      * @dev If the original wallet isn't actually lost, they can cancel the claim
@@ -706,21 +695,26 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function challengeClaim(uint256 claimId, string calldata reason) external nonReentrant {
         RecoveryClaim storage claim = claims[claimId];
-        
-        if (claim.status == ClaimStatus.None || 
+
+        if (
+            claim.status == ClaimStatus.None ||
             claim.status == ClaimStatus.Executed ||
             claim.status == ClaimStatus.Rejected ||
-            claim.status == ClaimStatus.Expired) {
+            claim.status == ClaimStatus.Expired
+        ) {
             revert NoActiveClaim();
         }
-        
+
         // Only original owner can challenge
         if (msg.sender != claim.originalOwner) revert NotOriginalOwner();
 
-        if (claim.challengeEndsAt != 0 && block.timestamp > claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD) {
+        if (
+            claim.challengeEndsAt != 0 &&
+            block.timestamp > claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD
+        ) {
             revert ChallengePeriodEnded();
         }
-        
+
         claim.status = ClaimStatus.Rejected;
         activeClaimForVault[claim.vault] = 0;
 
@@ -728,16 +722,17 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // other trustees can still help if the original was a genuine mistake
         // and the user is in a real emergency. Punishes harassment without
         // punishing the user.
-        initiatorCooldownUntil[claim.vault][claim.initiator] = uint64(block.timestamp) + INITIATOR_COOLDOWN;
+        initiatorCooldownUntil[claim.vault][claim.initiator] =
+            uint64(block.timestamp) + INITIATOR_COOLDOWN;
 
         emit ClaimChallenged(claimId, msg.sender, reason);
         emit ClaimRejected(claimId, claim.vault, "Challenged by original owner");
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // CLAIM FINALIZATION
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Finalize an approved claim after challenge period
      * @dev Anyone can call this to finalize, but usually the claimant
@@ -745,12 +740,12 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function finalizeClaim(uint256 claimId) external nonReentrant {
         RecoveryClaim storage claim = claims[claimId];
-        
+
         // Check status
         if (claim.status != ClaimStatus.GuardianApproved && claim.status != ClaimStatus.Approved) {
             revert InsufficientApprovals();
         }
-        
+
         // Check expiry
         if (block.timestamp > claim.expiresAt) {
             claim.status = ClaimStatus.Expired;
@@ -758,22 +753,22 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             emit ClaimExpired(claimId, claim.vault);
             revert ClaimHasExpired();
         }
-        
+
         // Give the original owner an additional grace window to challenge without a mempool race.
         if (block.timestamp < claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD) {
             revert ChallengePeriodActive();
         }
-        
+
         // Mark as approved if coming from GuardianApproved
         if (claim.status == ClaimStatus.GuardianApproved) {
             claim.status = ClaimStatus.Approved;
             emit ClaimApproved(claimId, claim.vault, claim.claimant);
         }
-        
+
         // Execute the recovery
         _executeRecovery(claimId);
     }
-    
+
     // slither-disable-next-line reentrancy-no-eth  // internal helper; only called from finalizeClaim (which has nonReentrant guard)
     /**
      * @notice Execute the actual ownership transfer via guardian-approved rotation
@@ -783,35 +778,34 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
-        
+
         vaultHub.executeRecoveryRotation(claim.vault, claim.claimant);
 
         claim.status = ClaimStatus.Executed;
         activeClaimForVault[claim.vault] = 0;
-        
+
         emit ClaimExecuted(claimId, claim.vault, claim.claimant, claim.originalOwner);
     }
-    
+
     /// @notice Legacy finalization — no longer needed. Recovery completes in finalizeClaim.
     /// @param claimId claimId
     function finalizeExecution(uint256 claimId) external view {
         RecoveryClaim storage claim = claims[claimId];
         require(claim.status == ClaimStatus.Executed, "not executed");
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // EXPIRY CLEANUP
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Mark expired claims as expired
      * @param claimId The claim ID to check
      */
     function expireClaim(uint256 claimId) external {
         RecoveryClaim storage claim = claims[claimId];
-        
-        if (claim.status == ClaimStatus.Pending || 
-            claim.status == ClaimStatus.GuardianApproved) {
+
+        if (claim.status == ClaimStatus.Pending || claim.status == ClaimStatus.GuardianApproved) {
             if (block.timestamp > claim.expiresAt) {
                 claim.status = ClaimStatus.Expired;
                 activeClaimForVault[claim.vault] = 0;
@@ -819,11 +813,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
             }
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Get claim details
      * @param claimId claimId
@@ -832,20 +826,22 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     function getClaim(uint256 claimId) external view returns (RecoveryClaim memory) {
         return claims[claimId];
     }
-    
+
     /**
      * @notice Get active claim for a vault
      * @param vault vault
      * @return claimId claimId
      * @return claim claim
      */
-    function getActiveClaimForVault(address vault) external view returns (uint256 claimId, RecoveryClaim memory claim) {
+    function getActiveClaimForVault(
+        address vault
+    ) external view returns (uint256 claimId, RecoveryClaim memory claim) {
         claimId = activeClaimForVault[vault];
         if (claimId != 0) {
             claim = claims[claimId];
         }
     }
-    
+
     /**
      * @notice Check if claim can be finalized
      * @param claimId claimId
@@ -854,7 +850,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      */
     function canFinalize(uint256 claimId) external view returns (bool, string memory reason) {
         RecoveryClaim storage claim = claims[claimId];
-        
+
         if (claim.status == ClaimStatus.None) {
             return (false, "Claim does not exist");
         }
@@ -876,10 +872,10 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (block.timestamp < claim.challengeEndsAt) {
             return (false, "Challenge period still active");
         }
-        
+
         return (true, "Ready to finalize");
     }
-    
+
     /**
      * @notice Calculate time remaining in challenge period
      * @param claimId claimId
@@ -890,11 +886,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (block.timestamp >= claim.challengeEndsAt) return 0;
         return claim.challengeEndsAt - block.timestamp;
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // ADMIN FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice Propose updating vaultHub after a 48h timelock.
     /// @param _vaultHub _vaultHub
     function setVaultHub(address _vaultHub) external onlyOwner {
@@ -960,7 +956,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         delete pendingVaultRegistryChange;
         emit VaultRegistryChangeCancelled(pending.newAddress);
     }
-    
+
     /// @notice setTrustedVerifier
     /// @param verifier verifier
     /// @param trusted trusted
@@ -994,11 +990,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         delete pendingVerifierChange;
         emit VerifierChangeCancelled(pending.verifier, pending.trusted);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // INTERNAL HELPERS
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Calculate required guardian approvals based on total count
      * @dev 2 of 3, 3 of 5, etc. - majority required

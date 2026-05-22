@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ServicePool } from "../ServicePool.sol";
+import {ServicePool} from "../ServicePool.sol";
 
 /// @notice IMerchantPortalVolume
 /// @title IMerchantPortalVolume
@@ -15,7 +15,9 @@ interface IMerchantPortalVolume {
     /// @return txCount txCount
     /// @return avgTxSize avgTxSize
     /// @return trustScore trustScore
-    function getMerchantStats(address merchant)
+    function getMerchantStats(
+        address merchant
+    )
         external
         view
         returns (
@@ -84,7 +86,7 @@ contract MerchantCompetitionPool is ServicePool {
     ) external onlyRole(RECORDER_ROLE) nonReentrant {
         require(address(merchantPortal) != address(0), "Merchant portal not configured");
 
-        (, , uint256 totalVolume,,,) = merchantPortal.getMerchantStats(merchant);
+        (, , uint256 totalVolume, , , ) = merchantPortal.getMerchantStats(merchant);
         uint256 previousTotal = lastRecordedTotalVolume[merchant];
         require(totalVolume >= previousTotal, "Merchant volume decreased");
 
@@ -101,7 +103,12 @@ contract MerchantCompetitionPool is ServicePool {
         merchantVolume[currentPeriod][merchant] += volumeUsd;
         periodTotalVolume[currentPeriod] += volumeUsd;
 
-        emit MerchantTransactionRecorded(currentPeriod, merchant, volumeUsd, periodTotalVolume[currentPeriod]);
+        emit MerchantTransactionRecorded(
+            currentPeriod,
+            merchant,
+            volumeUsd,
+            periodTotalVolume[currentPeriod]
+        );
     }
 
     /// @notice setMinTransactionSize

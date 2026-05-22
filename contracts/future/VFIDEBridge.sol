@@ -1,19 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {OApp, Origin, MessagingFee, MessagingReceipt} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
+import {
+    OApp,
+    Origin,
+    MessagingFee,
+    MessagingReceipt
+} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
 import {OAppOptionsType3} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OAppOptionsType3.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title VFIDEBridge
  * @notice LayerZero OFT implementation for cross-chain VFIDE token transfers
  * @dev Implements lock-on-source, release-on-destination pattern with security controls
- * 
+ *
  * Features:
  * - Omnichain Fungible Token standard
  * - Lock on source, release on destination
@@ -21,7 +26,7 @@ import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
  * - Trusted remotes configuration
  * - Emergency pause capability
  * - Rate limiting and daily caps
- * 
+ *
  * Supported Chains:
  * - Base (Chain ID: 8453)
  * - Polygon (Chain ID: 137)
@@ -211,7 +216,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param dstChainId dstChainId
     /// @param txId txId
     /// @param reason reason
-    event DeliveryConfirmationSkipped(uint32 indexed dstChainId, bytes32 indexed txId, string reason);
+    event DeliveryConfirmationSkipped(
+        uint32 indexed dstChainId,
+        bytes32 indexed txId,
+        string reason
+    );
     /// @notice BridgeDeliveryConfirmed
     /// @param txId txId
     event BridgeDeliveryConfirmed(bytes32 indexed txId);
@@ -276,11 +285,11 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     event BridgeFeeScheduled(uint256 pendingFee, uint64 effectiveAt);
     /// @notice BridgeFeeCancelled
     event BridgeFeeCancelled();
-        /// @notice BridgeRefunded
-        /// @param sender sender
-        /// @param txId txId
-        /// @param amount amount
-        event BridgeRefunded(address indexed sender, bytes32 indexed txId, uint256 amount);
+    /// @notice BridgeRefunded
+    /// @param sender sender
+    /// @param txId txId
+    /// @param amount amount
+    event BridgeRefunded(address indexed sender, bytes32 indexed txId, uint256 amount);
     /// @notice BridgeRefundWindowOpened
     /// @param txId txId
     /// @param refundableAfter refundableAfter
@@ -304,15 +313,15 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param sender sender
     /// @param amount amount
     event StaleBridgeRefundFinalized(bytes32 indexed txId, address indexed sender, uint256 amount);
-        /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
-        /// @notice BRIDGE_REFUND_DELAY
-        uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
-        /// @notice STALE_BRIDGE_REFUND_DELAY
-        uint256 public constant STALE_BRIDGE_REFUND_DELAY = 30 days;
-        /// @notice BRIDGE_REFUND_CLAIM_GRACE
-        uint256 public constant BRIDGE_REFUND_CLAIM_GRACE = 7 days;
-        /// @notice bridgeRefundableAfter
-        mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
+    /// F-25 FIX: Refund window — if destination bridge fails to execute, sender can claim refund after 7 days
+    /// @notice BRIDGE_REFUND_DELAY
+    uint256 public constant BRIDGE_REFUND_DELAY = 7 days;
+    /// @notice STALE_BRIDGE_REFUND_DELAY
+    uint256 public constant STALE_BRIDGE_REFUND_DELAY = 30 days;
+    /// @notice BRIDGE_REFUND_CLAIM_GRACE
+    uint256 public constant BRIDGE_REFUND_CLAIM_GRACE = 7 days;
+    /// @notice bridgeRefundableAfter
+    mapping(bytes32 => uint256) public bridgeRefundableAfter; // txId => timestamp after which refund is claimable
 
     /// H-1 FIX: Timelocked VFIDE emergency recovery — allows owner to rescue locked VFIDE after 30 days
     /// @notice VFIDE_RECOVERY_DELAY
@@ -322,7 +331,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice pendingVFIDERecoveryAmount
     uint256 public pendingVFIDERecoveryAmount;
     /// @notice pendingVFIDERecoveryAt
-    uint64  public pendingVFIDERecoveryAt;
+    uint64 public pendingVFIDERecoveryAt;
     /// @notice VFIDERecoveryScheduled
     /// @param to to
     /// @param amount amount
@@ -487,9 +496,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         emit BridgeSent(msg.sender, _dstChainId, _to, amountAfterFee, fee, txId);
         emit BridgeFeeRecorded(txId, fee, tokenTransferFee);
-    // C-1 FIX: Refund window is NOT opened automatically. Owner must call openBridgeRefundWindow()
-    // after manually verifying non-delivery. Automatic opening allowed a double-spend when
-    // delivery confirmation failed silently (destination released funds, source opened refund window).
+        // C-1 FIX: Refund window is NOT opened automatically. Owner must call openBridgeRefundWindow()
+        // after manually verifying non-delivery. Automatic opening allowed a double-spend when
+        // delivery confirmation failed silently (destination released funds, source opened refund window).
 
         return txId;
     }
@@ -516,7 +525,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param duration duration
     function setExemptCheckBypass(bool active, uint256 duration) external onlyOwner {
         if (active) {
-            require(duration > 0 && duration <= MAX_EXEMPT_CHECK_BYPASS_DURATION, "VFIDEBridge: invalid duration");
+            require(
+                duration > 0 && duration <= MAX_EXEMPT_CHECK_BYPASS_DURATION,
+                "VFIDEBridge: invalid duration"
+            );
             pendingExemptCheckBypassActive = true;
             pendingExemptCheckBypassDuration = duration;
             pendingExemptCheckBypassAt = uint64(block.timestamp) + EXEMPT_CHECK_BYPASS_DELAY;
@@ -534,8 +546,14 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     /// @notice Apply a scheduled exempt check bypass activation after timelock.
     function applyExemptCheckBypass() external onlyOwner {
-        require(pendingExemptCheckBypassAt != 0 && pendingExemptCheckBypassActive, "VFIDEBridge: no pending bypass");
-        require(block.timestamp >= pendingExemptCheckBypassAt, "VFIDEBridge: bypass timelock active");
+        require(
+            pendingExemptCheckBypassAt != 0 && pendingExemptCheckBypassActive,
+            "VFIDEBridge: no pending bypass"
+        );
+        require(
+            block.timestamp >= pendingExemptCheckBypassAt,
+            "VFIDEBridge: bypass timelock active"
+        );
         exemptCheckBypass = true;
         exemptCheckBypassExpiry = block.timestamp + pendingExemptCheckBypassDuration;
         delete pendingExemptCheckBypassActive;
@@ -617,9 +635,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         // Release tokens to receiver from destination bridge liquidity.
         uint256 bridgeBalance = vfideToken.balanceOf(address(this));
-        uint256 availableLiquidity_ = bridgeBalance > pendingOutboundAmount
-            ? bridgeBalance - pendingOutboundAmount
-            : 0;
+        uint256 availableLiquidity_ =
+            bridgeBalance > pendingOutboundAmount ? bridgeBalance - pendingOutboundAmount : 0;
         if (availableLiquidity_ < amount) {
             _sendBridgeFailureNotification(_origin.srcEid, _guid);
             emit BridgeDeliveryFailed(_guid, _origin.srcEid, "insufficient destination liquidity");
@@ -671,16 +688,28 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         bytes calldata _options
     ) external view returns (uint256 nativeFee) {
         bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_TRANSFER, msg.sender, _amount);
-        MessagingFee memory fee = _quote(_dstChainId, payload, combineOptions(_dstChainId, MSG_TYPE_BRIDGE_TRANSFER, _options), false);
+        MessagingFee memory fee = _quote(
+            _dstChainId,
+            payload,
+            combineOptions(_dstChainId, MSG_TYPE_BRIDGE_TRANSFER, _options),
+            false
+        );
         return fee.nativeFee;
     }
 
     /// @notice quoteDeliveryConfirmation
     /// @param _dstChainId _dstChainId
     /// @return nativeFee nativeFee
-    function quoteDeliveryConfirmation(uint32 _dstChainId) external view returns (uint256 nativeFee) {
+    function quoteDeliveryConfirmation(
+        uint32 _dstChainId
+    ) external view returns (uint256 nativeFee) {
         bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_CONFIRMATION, bytes32(0));
-        MessagingFee memory fee = _quote(_dstChainId, payload, enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION], false);
+        MessagingFee memory fee = _quote(
+            _dstChainId,
+            payload,
+            enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION],
+            false
+        );
         return fee.nativeFee;
     }
 
@@ -703,17 +732,21 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @return netFlow        totalOut - totalIn: positive = more locked than released (expected on source chain).
      * @return isHealthy      True if lockedBalance >= (totalOut - totalIn), i.e. contract holds at least what it owes.
      */
-    function getPoolHealth() external view returns (
-        uint256 lockedBalance,
-        uint256 totalOut,
-        uint256 totalIn,
-        int256  netFlow,
-        bool    isHealthy
-    ) {
+    function getPoolHealth()
+        external
+        view
+        returns (
+            uint256 lockedBalance,
+            uint256 totalOut,
+            uint256 totalIn,
+            int256 netFlow,
+            bool isHealthy
+        )
+    {
         lockedBalance = vfideToken.balanceOf(address(this));
-        totalOut      = totalBridgedOut;
-        totalIn       = totalBridgedIn;
-        netFlow       = int256(totalOut) - int256(totalIn);
+        totalOut = totalBridgedOut;
+        totalIn = totalBridgedIn;
+        netFlow = int256(totalOut) - int256(totalIn);
         // Healthy if balance covers the outstanding net outflow.
         // Use explicit branch to avoid ambiguity around uint256-casting a negative int256.
         if (netFlow <= 0) {
@@ -736,7 +769,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      */
     function setTrustedRemote(uint32 _chainId, bytes32 _remote) external onlyOwner {
         uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
-        pendingTrustedRemotes[_chainId] = PendingRemote({remote: _remote, effectiveAt: effectiveAt});
+        pendingTrustedRemotes[_chainId] = PendingRemote({
+            remote: _remote,
+            effectiveAt: effectiveAt
+        });
         emit TrustedRemoteScheduled(_chainId, _remote, effectiveAt);
     }
 
@@ -1123,8 +1159,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      *      Calling this when delivery already succeeded would allow double-spend — use adminMarkBridgeExecuted
      *      when delivery succeeded.
      *
-    *      This call only *proposes* the refund window. The configured cosigner must then
-    *      call approveRefundWindow(txId) to activate it, reducing single-admin trust risk.
+     *      This call only *proposes* the refund window. The configured cosigner must then
+     *      call approveRefundWindow(txId) to activate it, reducing single-admin trust risk.
      *
      * @param txId The bridge transaction ID to open a refund window for.
      */
@@ -1152,7 +1188,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         require(!btx.executed, "VFIDEBridge: already executed");
         require(bridgeRefundableAfter[txId] == 0, "VFIDEBridge: window already open");
         require(!pendingRefundWindowProposal[txId], "VFIDEBridge: proposal already pending");
-        require(block.timestamp >= btx.timestamp + STALE_BRIDGE_REFUND_DELAY, "VFIDEBridge: tx not stale");
+        require(
+            block.timestamp >= btx.timestamp + STALE_BRIDGE_REFUND_DELAY,
+            "VFIDEBridge: tx not stale"
+        );
 
         bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
         emit StaleBridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
@@ -1192,7 +1231,10 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         uint256 refundableAfter = bridgeRefundableAfter[txId];
         require(refundableAfter > 0, "VFIDEBridge: not refundable");
-        require(block.timestamp >= refundableAfter + BRIDGE_REFUND_CLAIM_GRACE, "VFIDEBridge: sender claim grace active");
+        require(
+            block.timestamp >= refundableAfter + BRIDGE_REFUND_CLAIM_GRACE,
+            "VFIDEBridge: sender claim grace active"
+        );
 
         btx.executed = true;
         uint256 amount = btx.amount;
@@ -1210,9 +1252,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     }
 
     /**
-    * @notice Set or clear the refund window cosigner address.
-    * @dev Setting to address(0) disables owner-driven manual refund windows.
-    *      Only callable by owner. No timelock — cosigner is a security enhancement, not a
+     * @notice Set or clear the refund window cosigner address.
+     * @dev Setting to address(0) disables owner-driven manual refund windows.
+     *      Only callable by owner. No timelock — cosigner is a security enhancement, not a
      *      privileged role that can steal funds.
      * @param cosigner cosigner
      */
@@ -1258,8 +1300,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
             return;
         }
 
-        try this.__sendDeliveryConfirmation(_dstChainId, payload, options, fee.nativeFee) {
-        } catch {
+        try this.__sendDeliveryConfirmation(_dstChainId, payload, options, fee.nativeFee) {} catch {
             // slither-disable-next-line reentrancy-events
             emit DeliveryConfirmationSkipped(_dstChainId, txId, "send failed");
         }
@@ -1275,12 +1316,15 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         MessagingFee memory fee = _quote(_dstChainId, payload, options, false);
 
         if (address(this).balance < fee.nativeFee) {
-            emit DeliveryConfirmationSkipped(_dstChainId, txId, "insufficient native fee (failure notify)");
+            emit DeliveryConfirmationSkipped(
+                _dstChainId,
+                txId,
+                "insufficient native fee (failure notify)"
+            );
             return;
         }
 
-        try this.__sendDeliveryConfirmation(_dstChainId, payload, options, fee.nativeFee) {
-        } catch {
+        try this.__sendDeliveryConfirmation(_dstChainId, payload, options, fee.nativeFee) {} catch {
             emit DeliveryConfirmationSkipped(_dstChainId, txId, "failure notify send failed");
         }
     }
@@ -1335,7 +1379,9 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     /// @notice _rollDailyBridgeWindow
     function _rollDailyBridgeWindow() internal {
-        if (dailyBridgeResetTime == 0 || block.timestamp >= uint256(dailyBridgeResetTime) + 1 days) {
+        if (
+            dailyBridgeResetTime == 0 || block.timestamp >= uint256(dailyBridgeResetTime) + 1 days
+        ) {
             dailyBridgeVolume = 0;
             dailyBridgeResetTime = uint64(block.timestamp);
             emit DailyBridgeWindowReset(dailyBridgeResetTime);
@@ -1355,7 +1401,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     function renounceOwnership() public view override onlyOwner {
         revert("VFIDEBridge: renounce disabled");
     }
-
 }
 
 /**

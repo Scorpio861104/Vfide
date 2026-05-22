@@ -116,7 +116,12 @@ contract SystemHandover {
     /// @param minAvgCouncilScore minAvgCouncilScore
     /// @param maxExtensions maxExtensions
     /// @param extensionSpan extensionSpan
-    event ParamsSet(uint64 monthsDelay, uint16 minAvgCouncilScore, uint8 maxExtensions, uint64 extensionSpan);
+    event ParamsSet(
+        uint64 monthsDelay,
+        uint16 minAvgCouncilScore,
+        uint8 maxExtensions,
+        uint64 extensionSpan
+    );
     /// @notice Executed
     /// @param dao dao
     /// @param timelock timelock
@@ -167,15 +172,15 @@ contract SystemHandover {
     /// @notice handoverAt
     uint64 public handoverAt;
     /// @notice monthsDelay
-    uint64 public monthsDelay = 180 days;     // 6 months
+    uint64 public monthsDelay = 180 days; // 6 months
     /// @notice minAvgCouncilScore
-    uint16 public minAvgCouncilScore;         // policy threshold
+    uint16 public minAvgCouncilScore; // policy threshold
     /// @notice maxExtensions
-    uint8  public maxExtensions = 1;          // allow at most one deferral
+    uint8 public maxExtensions = 1; // allow at most one deferral
     /// @notice extensionsUsed
-    uint8  public extensionsUsed;
+    uint8 public extensionsUsed;
     /// @notice extensionSpan
-    uint64 public extensionSpan = 60 days;    // extra time if network trust too low
+    uint64 public extensionSpan = 60 days; // extra time if network trust too low
     /// @notice handoverExecuted
     bool public handoverExecuted;
 
@@ -189,7 +194,7 @@ contract SystemHandover {
     uint8 public constant MAX_DISARMS = 1;
     /// @notice ARM_TIMESTAMP_WINDOW
     uint64 public constant ARM_TIMESTAMP_WINDOW = 7 days;
-    
+
     // F-22 FIX: Ownership audit flag — verification that all Ownable contracts have been transferred to DAO/timelock
     /// @notice ownershipAudited
     bool public ownershipAudited;
@@ -226,9 +231,27 @@ contract SystemHandover {
     /// @param _seer _seer
     /// @param _council _council
     /// @param _ledger _ledger
-    constructor(address _dev, address _dao, address _timelock, address _seer, address _council, address _ledger){
-        if(_dev==address(0)||_dao==address(0)||_timelock==address(0)||_seer==address(0)||_council==address(0)) revert SH_Zero();
-        devMultisig=_dev; dao=IDAO_SH(_dao); timelock=IDAOTimelock_SH(_timelock); seer=ISeer_SH(_seer); councilElection=ICouncilElection_SH(_council); ledger=IProofLedger_SH(_ledger);
+    constructor(
+        address _dev,
+        address _dao,
+        address _timelock,
+        address _seer,
+        address _council,
+        address _ledger
+    ) {
+        if (
+            _dev == address(0) ||
+            _dao == address(0) ||
+            _timelock == address(0) ||
+            _seer == address(0) ||
+            _council == address(0)
+        ) revert SH_Zero();
+        devMultisig = _dev;
+        dao = IDAO_SH(_dao);
+        timelock = IDAOTimelock_SH(_timelock);
+        seer = ISeer_SH(_seer);
+        councilElection = ICouncilElection_SH(_council);
+        ledger = IProofLedger_SH(_ledger);
         minAvgCouncilScore = seer.minForGovernance();
     }
 
@@ -236,8 +259,8 @@ contract SystemHandover {
     /// @notice arm
     /// @param t0 t0
     function arm(uint64 t0) external onlyDev {
-        if (start!=0) return; // idempotent
-        require(t0!=0,"SH: zero timestamp");
+        if (start != 0) return; // idempotent
+        require(t0 != 0, "SH: zero timestamp");
         // H-03 FIX: t0 must be within ±ARM_TIMESTAMP_WINDOW of the current block timestamp.
         // This prevents far-future scheduling (silent indefinite deferral) and far-past
         // scheduling (would make handover immediate, defeating the cooling-off intent).
@@ -247,7 +270,7 @@ contract SystemHandover {
         }
         start = t0;
         handoverAt = start + monthsDelay;
-        emit Armed(start,handoverAt);
+        emit Armed(start, handoverAt);
         _log("handover_armed");
     }
 
@@ -265,8 +288,10 @@ contract SystemHandover {
         uint64 previousHandoverAt = handoverAt;
         start = 0;
         handoverAt = 0;
-        ownershipAudited = false;  // Reset audit flag on disarm
-        unchecked { ++disarmCount; }
+        ownershipAudited = false; // Reset audit flag on disarm
+        unchecked {
+            ++disarmCount;
+        }
         emit Disarmed(previousStart, previousHandoverAt);
         _log("handover_disarmed");
     }
@@ -276,14 +301,22 @@ contract SystemHandover {
     /// @param _minAvg _minAvg
     /// @param _maxExt _maxExt
     /// @param _extSpan _extSpan
-    function setParams(uint64 _monthsDelay, uint16 _minAvg, uint8 _maxExt, uint64 _extSpan) external onlyDev {
-        if (_monthsDelay<90 days) _monthsDelay=90 days;
+    function setParams(
+        uint64 _monthsDelay,
+        uint16 _minAvg,
+        uint8 _maxExt,
+        uint64 _extSpan
+    ) external onlyDev {
+        if (_monthsDelay < 90 days) _monthsDelay = 90 days;
         // M-4 FIX: Once the handover is armed, the delay may only be extended, never shortened.
         // Without this guard the dev team could arm for 6 months then immediately reduce to 90 days.
         if (start != 0) require(_monthsDelay >= monthsDelay, "SH: cannot shorten after arm");
-        monthsDelay=_monthsDelay; minAvgCouncilScore=_minAvg; maxExtensions=_maxExt; extensionSpan=_extSpan;
-        if (start!=0) handoverAt = start + monthsDelay;
-        emit ParamsSet(monthsDelay,minAvgCouncilScore,maxExtensions,extensionSpan);
+        monthsDelay = _monthsDelay;
+        minAvgCouncilScore = _minAvg;
+        maxExtensions = _maxExt;
+        extensionSpan = _extSpan;
+        if (start != 0) handoverAt = start + monthsDelay;
+        emit ParamsSet(monthsDelay, minAvgCouncilScore, maxExtensions, extensionSpan);
         _log("handover_params");
     }
 
@@ -392,11 +425,11 @@ contract SystemHandover {
         if (start == 0) revert SH_NotArmed();
         if (handoverExecuted) revert SH_AlreadyExecuted();
         if (block.timestamp < handoverAt) revert SH_TooEarly();
-        
+
         // F-22 FIX: Require ownership audit before handover to ensure all Ownable contracts
         // have transferred ownership to DAO/timelock
         require(ownershipAudited, "SH: ownership audit required");
-        
+
         if (newAdmin == address(0)) newAdmin = address(dao);
 
         // Burn dev control before crossing external admin-update boundaries.
@@ -410,7 +443,8 @@ contract SystemHandover {
         address actualDAOAdmin = dao.admin();
         address actualTimelockAdmin = timelock.admin();
         if (actualDAOAdmin != newAdmin) revert SH_DAOAdminMismatch(newAdmin, actualDAOAdmin);
-        if (actualTimelockAdmin != address(dao)) revert SH_TimelockAdminMismatch(address(dao), actualTimelockAdmin);
+        if (actualTimelockAdmin != address(dao))
+            revert SH_TimelockAdminMismatch(address(dao), actualTimelockAdmin);
 
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
@@ -418,7 +452,10 @@ contract SystemHandover {
 
     /// @notice setLedger
     /// @param _ledger _ledger
-    function setLedger(address _ledger) external onlyDev notArmed { ledger=IProofLedger_SH(_ledger); emit LedgerSet(_ledger); }
+    function setLedger(address _ledger) external onlyDev notArmed {
+        ledger = IProofLedger_SH(_ledger);
+        emit LedgerSet(_ledger);
+    }
 
     /// @notice N-L36 FIX: Pre-flight dry-run for executeHandover.
     /// @dev    Call this before (or instead of) executeHandover to verify all
@@ -429,7 +466,9 @@ contract SystemHandover {
     /// @param newAdmin The proposed new admin address (pass address(0) to use address(dao)).
     /// @return ok     True if executeHandover would succeed.
     /// @return reason Human-readable failure reason (empty when ok=true).
-    function canExecuteHandover(address newAdmin) external view returns (bool ok, string memory reason) {
+    function canExecuteHandover(
+        address newAdmin
+    ) external view returns (bool ok, string memory reason) {
         if (start == 0) return (false, "handover not armed");
         if (handoverExecuted) return (false, "handover already executed");
         if (block.timestamp < handoverAt) return (false, "handover timelock still active");
@@ -439,11 +478,29 @@ contract SystemHandover {
 
         address actualDAOAdmin = dao.admin();
         if (actualDAOAdmin != effectiveAdmin) {
-            return (false, string(abi.encodePacked("DAO admin mismatch: expected ", _toHex(effectiveAdmin), " got ", _toHex(actualDAOAdmin))));
+            return (
+                false,
+                string(
+                    abi.encodePacked(
+                        "DAO admin mismatch: expected ",
+                        _toHex(effectiveAdmin),
+                        " got ",
+                        _toHex(actualDAOAdmin)
+                    )
+                )
+            );
         }
         address actualTimelockAdmin = timelock.admin();
         if (actualTimelockAdmin != address(dao)) {
-            return (false, string(abi.encodePacked("timelock admin mismatch: expected DAO got ", _toHex(actualTimelockAdmin))));
+            return (
+                false,
+                string(
+                    abi.encodePacked(
+                        "timelock admin mismatch: expected DAO got ",
+                        _toHex(actualTimelockAdmin)
+                    )
+                )
+            );
         }
         return (true, "");
     }
@@ -455,7 +512,8 @@ contract SystemHandover {
         bytes memory b = abi.encodePacked(a);
         bytes memory HEX = "0123456789abcdef";
         bytes memory str = new bytes(42);
-        str[0] = "0"; str[1] = "x";
+        str[0] = "0";
+        str[1] = "x";
         for (uint256 i = 0; i < 20; ++i) {
             str[2 + i * 2] = HEX[uint8(b[i]) >> 4];
             str[3 + i * 2] = HEX[uint8(b[i]) & 0xf];
@@ -467,7 +525,11 @@ contract SystemHandover {
     /// @notice _log
     /// @param action action
     function _log(string memory action) internal {
-        if (address(ledger)!=address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
+                emit LedgerLogFailed(address(this), action);
+            }
+        }
     }
 
     /// @notice _isCouncilMember

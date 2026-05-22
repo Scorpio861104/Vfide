@@ -3,8 +3,8 @@ pragma solidity 0.8.30;
 
 // Moved to contracts/future/ on 2026-05-20 as part of the final mainnet-readiness sweep.
 // Import paths updated: BridgeSecurityModule is now a sibling, VFIDEPriceOracle is one level up.
-import { BridgeSecurityModule } from "./BridgeSecurityModule.sol";
-import { VFIDEPriceOracle } from "../VFIDEPriceOracle.sol";
+import {BridgeSecurityModule} from "./BridgeSecurityModule.sol";
+import {VFIDEPriceOracle} from "../VFIDEPriceOracle.sol";
 
 /// @title DeployPhase3Peripherals
 /// @notice Deploys BSM and VFIDEPriceOracle (SharedInterfaces-based, no OZ).

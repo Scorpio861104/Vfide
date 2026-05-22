@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IVaultHub, IProofLedger } from "../SharedInterfaces.sol";
+import {IVaultHub, IProofLedger} from "../SharedInterfaces.sol";
 
 /**
  * VFIDESecurity.sol  —  Consolidated Security Layer
@@ -114,7 +114,8 @@ contract GuardianRegistry {
     /// @param _dao _dao
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert SEC_Zero();
-        dao = _dao; emit DAOSet(_dao);
+        dao = _dao;
+        emit DAOSet(_dao);
     }
 
     /// @notice addGuardian
@@ -149,7 +150,10 @@ contract GuardianRegistry {
     /// @param guardian The guardian to check
     /// @return canRemove True if removing this guardian won't break threshold requirements
     /// @notice canRemoveGuardian
-    function canRemoveGuardian(address vault, address guardian) external view returns (bool canRemove) {
+    function canRemoveGuardian(
+        address vault,
+        address guardian
+    ) external view returns (bool canRemove) {
         // Can always remove if not a guardian
         if (!isGuardian[vault][guardian]) return true;
         uint8 count = guardianCount[vault];
@@ -226,12 +230,21 @@ contract GuardianLock {
     /// @param oldNonce oldNonce
     /// @param newNonce newNonce
     /// @param reason reason
-    event VotesInvalidated(address indexed vault, uint256 oldNonce, uint256 newNonce, string reason);
+    event VotesInvalidated(
+        address indexed vault,
+        uint256 oldNonce,
+        uint256 newNonce,
+        string reason
+    );
     /// @notice GuardianRemovedDuringVote
     /// @param vault vault
     /// @param guardian guardian
     /// @param remainingApprovals remainingApprovals
-    event GuardianRemovedDuringVote(address indexed vault, address indexed guardian, uint8 remainingApprovals);
+    event GuardianRemovedDuringVote(
+        address indexed vault,
+        address indexed guardian,
+        uint8 remainingApprovals
+    );
 
     /// @notice dao
     address public dao;
@@ -260,9 +273,14 @@ contract GuardianLock {
     mapping(address => uint8) public lockThresholdSnapshot;
 
     /// @notice onlyDAO
-    modifier onlyDAO() { _checkDAOGL(); _; }
+    modifier onlyDAO() {
+        _checkDAOGL();
+        _;
+    }
     /// @notice _checkDAOGL
-    function _checkDAOGL() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
+    function _checkDAOGL() internal view {
+        if (msg.sender != dao) revert SEC_NotDAO();
+    }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -291,7 +309,10 @@ contract GuardianLock {
     /// @param vault vault
     /// @param guardian guardian
     /// @return _bool _bool
-    function wasGuardianRemovedDuringVote(address vault, address guardian) external view returns (bool) {
+    function wasGuardianRemovedDuringVote(
+        address vault,
+        address guardian
+    ) external view returns (bool) {
         uint256 nonce = lockNonce[vault];
         return voted[vault][nonce][guardian] && !registry.isGuardian(vault, guardian);
     }
@@ -382,16 +403,25 @@ contract GuardianLock {
     /// @param action action
     function _log(string memory action) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     /// @notice _logEv
     /// @param who who
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
+    function _logEv(
+        address who,
+        string memory action,
+        uint256 amount,
+        string memory note
+    ) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 }
 
@@ -411,7 +441,11 @@ contract PanicGuard {
     /// @param currentHub currentHub
     /// @param pendingHub pendingHub
     /// @param effectiveAt effectiveAt
-    event HubChangeQueued(address indexed currentHub, address indexed pendingHub, uint64 effectiveAt);
+    event HubChangeQueued(
+        address indexed currentHub,
+        address indexed pendingHub,
+        uint64 effectiveAt
+    );
     /// @notice HubChangeCancelled
     /// @param pendingHub pendingHub
     event HubChangeCancelled(address indexed pendingHub);
@@ -465,7 +499,7 @@ contract PanicGuard {
     mapping(address => uint64) public quarantineUntil;
     /// @notice selfPanicUntil
     mapping(address => uint64) public selfPanicUntil;
-    
+
     // C-10: Self-panic rate limiting
     /// @notice lastSelfPanic
     mapping(address => uint256) public lastSelfPanic;
@@ -473,7 +507,7 @@ contract PanicGuard {
     uint256 public constant SELF_PANIC_COOLDOWN = 1 days;
     /// @notice MIN_VAULT_AGE_FOR_PANIC
     uint256 public constant MIN_VAULT_AGE_FOR_PANIC = 1 hours;
-    
+
     // Track when vaults were created (set by VaultHub integration)
     /// @notice vaultCreationTime
     mapping(address => uint256) public vaultCreationTime;
@@ -491,9 +525,14 @@ contract PanicGuard {
     uint64 public constant ABSOLUTE_MAX_QUARANTINE = 90 days;
 
     /// @notice onlyDAO
-    modifier onlyDAO() { _checkDAOPG(); _; }
+    modifier onlyDAO() {
+        _checkDAOPG();
+        _;
+    }
     /// @notice _checkDAOPG
-    function _checkDAOPG() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
+    function _checkDAOPG() internal view {
+        if (msg.sender != dao) revert SEC_NotDAO();
+    }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -573,7 +612,12 @@ contract PanicGuard {
     /// @param duration duration
     /// @param severity severity
     /// @param reason reason
-    function reportRisk(address vault, uint64 duration, uint8 severity, string calldata reason) external onlyDAO {
+    function reportRisk(
+        address vault,
+        uint64 duration,
+        uint8 severity,
+        string calldata reason
+    ) external onlyDAO {
         _quarantine(vault, duration, severity, reason);
     }
 
@@ -586,13 +630,13 @@ contract PanicGuard {
         address vault = vaultHub.vaultOf(msg.sender);
         require(vault != address(0), "no vault");
         require(vaultCreationTime[vault] > 0, "SEC: vault not registered");
-        
+
         // C-10: Rate limiting - max 1 self-panic per 24 hours
         require(
             block.timestamp >= lastSelfPanic[msg.sender] + SELF_PANIC_COOLDOWN,
             "SEC: panic cooldown active"
         );
-        
+
         // C-10: Require minimum vault age (prevents spam from new vaults)
         uint256 creationTime = vaultCreationTime[vault];
         if (creationTime > 0) {
@@ -601,9 +645,9 @@ contract PanicGuard {
                 "SEC: vault too new for self-panic"
             );
         }
-        
+
         lastSelfPanic[msg.sender] = block.timestamp;
-        
+
         // Track self-panic window so cancelSelfPanic cannot clear DAO-imposed quarantines.
         uint64 appliedDuration = duration;
         if (appliedDuration < minDuration) appliedDuration = minDuration;
@@ -637,7 +681,12 @@ contract PanicGuard {
     /// @param duration duration
     /// @param severity severity
     /// @param reason reason
-    function _quarantine(address vault, uint64 duration, uint8 severity, string memory reason) internal {
+    function _quarantine(
+        address vault,
+        uint64 duration,
+        uint8 severity,
+        string memory reason
+    ) internal {
         if (vault == address(0)) revert SEC_Zero();
         if (duration < minDuration) duration = minDuration;
         if (duration > maxDuration) duration = maxDuration;
@@ -683,7 +732,10 @@ contract PanicGuard {
 
     /// @notice applyGlobalRisk
     function applyGlobalRisk() external onlyDAO {
-        require(pendingGlobalRiskAt != 0 && block.timestamp >= pendingGlobalRiskAt, "SEC: global risk timelock");
+        require(
+            pendingGlobalRiskAt != 0 && block.timestamp >= pendingGlobalRiskAt,
+            "SEC: global risk timelock"
+        );
         globalRisk = true;
         delete pendingGlobalRiskAt;
         emit GlobalRiskSet(true, "applied");
@@ -719,16 +771,25 @@ contract PanicGuard {
     /// @param action action
     function _log(string memory action) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     /// @notice _logEv
     /// @param who who
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
+    function _logEv(
+        address who,
+        string memory action,
+        uint256 amount,
+        string memory note
+    ) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 }
 
@@ -759,7 +820,11 @@ contract EmergencyBreaker {
     /// @param currentDAO currentDAO
     /// @param pendingDAO pendingDAO
     /// @param effectiveAt effectiveAt
-    event DAOChangeQueued(address indexed currentDAO, address indexed pendingDAO, uint64 effectiveAt);
+    event DAOChangeQueued(
+        address indexed currentDAO,
+        address indexed pendingDAO,
+        uint64 effectiveAt
+    );
     /// @notice DAOChangeCancelled
     /// @param pendingDAO pendingDAO
     event DAOChangeCancelled(address indexed pendingDAO);
@@ -788,7 +853,7 @@ contract EmergencyBreaker {
 
     /// @notice halted
     bool public halted;
-    
+
     /// @notice lastToggleTime
     uint64 public lastToggleTime;
     /// @notice toggleCooldown
@@ -804,9 +869,14 @@ contract EmergencyBreaker {
     PendingToggle public pendingToggle;
 
     /// @notice onlyDAO
-    modifier onlyDAO() { _checkDAOEB(); _; }
+    modifier onlyDAO() {
+        _checkDAOEB();
+        _;
+    }
     /// @notice _checkDAOEB
-    function _checkDAOEB() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
+    function _checkDAOEB() internal view {
+        if (msg.sender != dao) revert SEC_NotDAO();
+    }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -829,7 +899,8 @@ contract EmergencyBreaker {
 
     /// @notice applyDAO
     function applyDAO() external onlyDAO {
-        if (pendingDAO == address(0) || pendingDAOAt == 0 || block.timestamp < pendingDAOAt) revert SEC_NotLocked();
+        if (pendingDAO == address(0) || pendingDAOAt == 0 || block.timestamp < pendingDAOAt)
+            revert SEC_NotLocked();
         dao = pendingDAO;
         delete pendingDAO;
         delete pendingDAOAt;
@@ -864,7 +935,7 @@ contract EmergencyBreaker {
         emit LedgerSet(_ledger);
         _log("breaker_ledger_set");
     }
-    
+
     /// @notice Set toggle cooldown (DAO-only)
     /// @dev SEC-05 FIX: Enforce minimum cooldown to prevent rapid toggle abuse
     /// @param _cooldown _cooldown
@@ -885,7 +956,10 @@ contract EmergencyBreaker {
         // its own threshold voting acts as the co-signature layer.
         if (msg.sender == dao && dao.code.length > 0) {
             if (toggleCooldown > 0 && lastToggleTime > 0 && !on) {
-                require(block.timestamp >= lastToggleTime + toggleCooldown, "SEC: toggle cooldown active");
+                require(
+                    block.timestamp >= lastToggleTime + toggleCooldown,
+                    "SEC: toggle cooldown active"
+                );
             }
             halted = on;
             lastToggleTime = uint64(block.timestamp);
@@ -921,7 +995,10 @@ contract EmergencyBreaker {
         if (toggleCooldown > 0 && lastToggleTime > 0 && !on) {
             // Only enforce cooldown when deactivating (turning off)
             // Activation (turning on) is always allowed for emergencies
-            require(block.timestamp >= lastToggleTime + toggleCooldown, "SEC: toggle cooldown active");
+            require(
+                block.timestamp >= lastToggleTime + toggleCooldown,
+                "SEC: toggle cooldown active"
+            );
         }
 
         halted = on;
@@ -936,16 +1013,25 @@ contract EmergencyBreaker {
     /// @param action action
     function _log(string memory action) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     /// @notice _logEv
     /// @param who who
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
+    function _logEv(
+        address who,
+        string memory action,
+        uint256 amount,
+        string memory note
+    ) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 }
 

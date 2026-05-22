@@ -16,9 +16,9 @@
  * spinning up the full inheritance state machine.
  */
 
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -47,24 +47,22 @@ async function deploySubFixture() {
 
   // Need a token with mint capability + a VaultHubStub with isInMemorialState.
   const TokenStub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:MintableTokenStub",
+    'test/contracts/helpers/Stubs.sol:MintableTokenStub'
   );
   const token = await TokenStub.deploy();
   await token.waitForDeployment();
 
-  const Hub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:VaultHubStub",
-  );
+  const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
   const hub = await Hub.deploy();
   await hub.waitForDeployment();
 
   // SubscriptionManager constructor: (vaultHub, dao, seer)
-  const Sub = await ethers.getContractFactory("SubscriptionManager");
+  const Sub = await ethers.getContractFactory('SubscriptionManager');
   const tokenAddr = await token.getAddress();
   const sub = await Sub.connect(dao).deploy(
     await hub.getAddress(),
     dao.address,
-    ethers.ZeroAddress, // no seer
+    ethers.ZeroAddress // no seer
   );
   await sub.waitForDeployment();
 
@@ -75,8 +73,8 @@ async function deploySubFixture() {
   await hub.setVault(merchant.address, merchantVaultAddr);
 
   // Pre-fund subscriber + approve so they can createSubscription.
-  await token.mint(subscriber.address, ethers.parseEther("10000"));
-  await token.connect(subscriber).approve(await sub.getAddress(), ethers.parseEther("10000"));
+  await token.mint(subscriber.address, ethers.parseEther('10000'));
+  await token.connect(subscriber).approve(await sub.getAddress(), ethers.parseEther('10000'));
 
   return {
     ethers,
@@ -97,7 +95,7 @@ async function createSubscription(f: Awaited<ReturnType<typeof deploySubFixture>
   // SubscriptionManager.createSubscription signature varies by version;
   // probe with the most common shape: (merchant, token, amount, interval, memo)
   const tokenAddr = await f.token.getAddress();
-  const amount = f.ethers.parseEther("10");
+  const amount = f.ethers.parseEther('10');
   const interval = 30 * 24 * 60 * 60; // 30 days
   // Cast through `as any` since we don't have full typings.
   await (f.sub.connect(f.subscriber) as any).createSubscription(
@@ -105,12 +103,11 @@ async function createSubscription(f: Awaited<ReturnType<typeof deploySubFixture>
     tokenAddr,
     amount,
     interval,
-    "test plan",
+    'test plan'
   );
 }
 
-describe("R-4 final — SubscriptionManager.settleByInheritance", { concurrency: 1 }, () => {
-
+describe('R-4 final — SubscriptionManager.settleByInheritance', { concurrency: 1 }, () => {
   it("settle reverts when neither party's vault is in MEMORIAL", async () => {
     const f = await deploySubFixture();
     await createSubscription(f);
@@ -129,15 +126,21 @@ describe("R-4 final — SubscriptionManager.settleByInheritance", { concurrency:
     assert.equal(subData.active, false);
     // Both events emitted.
     const cancelled = receipt.logs.find((l: any) => {
-      try { return f.sub.interface.parseLog(l)?.name === "SubscriptionCancelled"; }
-      catch { return false; }
+      try {
+        return f.sub.interface.parseLog(l)?.name === 'SubscriptionCancelled';
+      } catch {
+        return false;
+      }
     });
     const settled = receipt.logs.find((l: any) => {
-      try { return f.sub.interface.parseLog(l)?.name === "SubscriptionSettledByInheritance"; }
-      catch { return false; }
+      try {
+        return f.sub.interface.parseLog(l)?.name === 'SubscriptionSettledByInheritance';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(cancelled, "SubscriptionCancelled expected");
-    assert.ok(settled, "SubscriptionSettledByInheritance expected");
+    assert.ok(cancelled, 'SubscriptionCancelled expected');
+    assert.ok(settled, 'SubscriptionSettledByInheritance expected');
   });
 
   it("settle succeeds when merchant's vault enters MEMORIAL", async () => {
@@ -149,7 +152,7 @@ describe("R-4 final — SubscriptionManager.settleByInheritance", { concurrency:
     assert.equal(subData.active, false);
   });
 
-  it("double-settle reverts (subscription already inactive)", async () => {
+  it('double-settle reverts (subscription already inactive)', async () => {
     const f = await deploySubFixture();
     await createSubscription(f);
     await f.hub.setInMemorialState(f.subscriberVaultAddr, true);
@@ -158,7 +161,7 @@ describe("R-4 final — SubscriptionManager.settleByInheritance", { concurrency:
     await expectRevert(f.sub.connect(f.external).settleByInheritance(0));
   });
 
-  it("settle on a normally-cancelled subscription reverts", async () => {
+  it('settle on a normally-cancelled subscription reverts', async () => {
     const f = await deploySubFixture();
     await createSubscription(f);
     // Subscriber cancels normally.
@@ -168,7 +171,7 @@ describe("R-4 final — SubscriptionManager.settleByInheritance", { concurrency:
     await expectRevert(f.sub.connect(f.external).settleByInheritance(0));
   });
 
-  it("settle reverts when vault is briefly in memorial then reverts to NORMAL", async () => {
+  it('settle reverts when vault is briefly in memorial then reverts to NORMAL', async () => {
     const f = await deploySubFixture();
     await createSubscription(f);
     await f.hub.setInMemorialState(f.subscriberVaultAddr, true);
@@ -194,14 +197,12 @@ async function deployCommerceFixture() {
   const external = signers[4];
 
   const TokenStub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:MintableTokenStub",
+    'test/contracts/helpers/Stubs.sol:MintableTokenStub'
   );
   const token = await TokenStub.deploy();
   await token.waitForDeployment();
 
-  const Hub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:VaultHubStub",
-  );
+  const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
   const hub = await Hub.deploy();
   await hub.waitForDeployment();
 
@@ -214,29 +215,32 @@ async function deployCommerceFixture() {
   };
 }
 
-describe("R-4 final — CommerceEscrow.settleByInheritance (gating verification)", { concurrency: 1 }, () => {
+describe(
+  'R-4 final — CommerceEscrow.settleByInheritance (gating verification)',
+  { concurrency: 1 },
+  () => {
+    it('the contract interface is reachable and rejects calls on a non-existent escrow', async () => {
+      // Even without setting up a full escrow lifecycle, we can verify that the
+      // function exists in the ABI by checking the contract factory.
+      const { ethers } = (await getConnection()) as any;
+      const factory = await ethers.getContractFactory('CommerceEscrow');
+      // The factory.interface should contain the settleByInheritance fragment.
+      const fragment = factory.interface.fragments.find(
+        (f: any) => f.name === 'settleByInheritance'
+      );
+      assert.ok(fragment, 'settleByInheritance must be in CommerceEscrow ABI');
+      assert.equal(fragment.type, 'function');
+      assert.equal(fragment.inputs.length, 1);
+      assert.equal(fragment.inputs[0].type, 'uint256');
+    });
 
-  it("the contract interface is reachable and rejects calls on a non-existent escrow", async () => {
-    // Even without setting up a full escrow lifecycle, we can verify that the
-    // function exists in the ABI by checking the contract factory.
-    const { ethers } = (await getConnection()) as any;
-    const factory = await ethers.getContractFactory("CommerceEscrow");
-    // The factory.interface should contain the settleByInheritance fragment.
-    const fragment = factory.interface.fragments.find(
-      (f: any) => f.name === "settleByInheritance",
-    );
-    assert.ok(fragment, "settleByInheritance must be in CommerceEscrow ABI");
-    assert.equal(fragment.type, "function");
-    assert.equal(fragment.inputs.length, 1);
-    assert.equal(fragment.inputs[0].type, "uint256");
-  });
-
-  it("the COM_NotInheritanceActive error is defined in the ABI", async () => {
-    const { ethers } = (await getConnection()) as any;
-    const factory = await ethers.getContractFactory("CommerceEscrow");
-    const err = factory.interface.fragments.find(
-      (f: any) => f.type === "error" && f.name === "COM_NotInheritanceActive",
-    );
-    assert.ok(err, "COM_NotInheritanceActive error expected in CommerceEscrow ABI");
-  });
-});
+    it('the COM_NotInheritanceActive error is defined in the ABI', async () => {
+      const { ethers } = (await getConnection()) as any;
+      const factory = await ethers.getContractFactory('CommerceEscrow');
+      const err = factory.interface.fragments.find(
+        (f: any) => f.type === 'error' && f.name === 'COM_NotInheritanceActive'
+      );
+      assert.ok(err, 'COM_NotInheritanceActive error expected in CommerceEscrow ABI');
+    });
+  }
+);

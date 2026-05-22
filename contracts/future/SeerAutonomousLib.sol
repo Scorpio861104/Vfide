@@ -26,18 +26,18 @@ library SeerAutonomousLib {
      */
     function getMaxAutonomyProfile() internal pure returns (RateLimitEntry[48] memory entries) {
         // RestrictionLevel.None (0)
-        entries[0]  = RateLimitEntry(0, 0, 300);  // Transfer
-        entries[1]  = RateLimitEntry(0, 1, 300);  // VaultDeposit
-        entries[2]  = RateLimitEntry(0, 2, 300);  // VaultWithdraw
-        entries[3]  = RateLimitEntry(0, 3, 30);   // GovernanceVote
-        entries[4]  = RateLimitEntry(0, 4, 6);    // GovernancePropose
-        entries[5]  = RateLimitEntry(0, 5, 30);   // Endorse
-        entries[6]  = RateLimitEntry(0, 6, 60);   // Stake
-        entries[7]  = RateLimitEntry(0, 7, 300);  // Trade
+        entries[0] = RateLimitEntry(0, 0, 300); // Transfer
+        entries[1] = RateLimitEntry(0, 1, 300); // VaultDeposit
+        entries[2] = RateLimitEntry(0, 2, 300); // VaultWithdraw
+        entries[3] = RateLimitEntry(0, 3, 30); // GovernanceVote
+        entries[4] = RateLimitEntry(0, 4, 6); // GovernancePropose
+        entries[5] = RateLimitEntry(0, 5, 30); // Endorse
+        entries[6] = RateLimitEntry(0, 6, 60); // Stake
+        entries[7] = RateLimitEntry(0, 7, 300); // Trade
 
         // RestrictionLevel.Monitored (1)
-        entries[8]  = RateLimitEntry(1, 0, 40);
-        entries[9]  = RateLimitEntry(1, 1, 40);
+        entries[8] = RateLimitEntry(1, 0, 40);
+        entries[9] = RateLimitEntry(1, 1, 40);
         entries[10] = RateLimitEntry(1, 2, 40);
         entries[11] = RateLimitEntry(1, 3, 15);
         entries[12] = RateLimitEntry(1, 4, 3);
@@ -94,18 +94,18 @@ library SeerAutonomousLib {
      */
     function getDefaultProfile() internal pure returns (RateLimitEntry[48] memory entries) {
         // RestrictionLevel.None (0): unlimited
-        entries[0]  = RateLimitEntry(0, 0, 1000); // Transfer
-        entries[1]  = RateLimitEntry(0, 1, 1000); // VaultDeposit
-        entries[2]  = RateLimitEntry(0, 2, 1000); // VaultWithdraw
-        entries[3]  = RateLimitEntry(0, 3, 100);  // GovernanceVote
-        entries[4]  = RateLimitEntry(0, 4, 20);   // GovernancePropose
-        entries[5]  = RateLimitEntry(0, 5, 100);  // Endorse
-        entries[6]  = RateLimitEntry(0, 6, 200);  // Stake
-        entries[7]  = RateLimitEntry(0, 7, 1000); // Trade
+        entries[0] = RateLimitEntry(0, 0, 1000); // Transfer
+        entries[1] = RateLimitEntry(0, 1, 1000); // VaultDeposit
+        entries[2] = RateLimitEntry(0, 2, 1000); // VaultWithdraw
+        entries[3] = RateLimitEntry(0, 3, 100); // GovernanceVote
+        entries[4] = RateLimitEntry(0, 4, 20); // GovernancePropose
+        entries[5] = RateLimitEntry(0, 5, 100); // Endorse
+        entries[6] = RateLimitEntry(0, 6, 200); // Stake
+        entries[7] = RateLimitEntry(0, 7, 1000); // Trade
 
         // RestrictionLevel.Monitored (1): normal limits
-        entries[8]  = RateLimitEntry(1, 0, 100);
-        entries[9]  = RateLimitEntry(1, 1, 100);
+        entries[8] = RateLimitEntry(1, 0, 100);
+        entries[9] = RateLimitEntry(1, 1, 100);
         entries[10] = RateLimitEntry(1, 2, 100);
         entries[11] = RateLimitEntry(1, 3, 50);
         entries[12] = RateLimitEntry(1, 4, 10);

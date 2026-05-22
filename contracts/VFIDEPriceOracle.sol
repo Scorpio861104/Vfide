@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { AggregatorV3Interface } from "./interfaces/AggregatorV3Interface.sol";
-import { Ownable, Pausable } from "./SharedInterfaces.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
-import { FullMath } from "./libraries/uniswapv3/FullMath.sol";
-import { TickMath } from "./libraries/uniswapv3/TickMath.sol";
+import {AggregatorV3Interface} from "./interfaces/AggregatorV3Interface.sol";
+import {Ownable, Pausable} from "./SharedInterfaces.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {FullMath} from "./libraries/uniswapv3/FullMath.sol";
+import {TickMath} from "./libraries/uniswapv3/TickMath.sol";
 
 /// @notice IUniswapV3PoolLite
 /// @title IUniswapV3PoolLite
@@ -21,10 +21,15 @@ interface IUniswapV3PoolLite {
     /// @param secondsAgos secondsAgos
     /// @return tickCumulatives tickCumulatives
     /// @return secondsPerLiquidityCumulativeX128s secondsPerLiquidityCumulativeX128s
-    function observe(uint32[] calldata secondsAgos)
+    function observe(
+        uint32[] calldata secondsAgos
+    )
         external
         view
-        returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s);
+        returns (
+            int56[] memory tickCumulatives,
+            uint160[] memory secondsPerLiquidityCumulativeX128s
+        );
     /// @notice slot0
     /// @return sqrtPriceX96 sqrtPriceX96
     /// @return tick tick
@@ -60,7 +65,7 @@ interface IERC20DecimalsOracle {
  * @title VFIDEPriceOracle
  * @notice Hybrid oracle system combining Chainlink and Uniswap V3 TWAP
  * @dev Primary: Chainlink price feed, Fallback: Uniswap V3 TWAP
- * 
+ *
  * Features:
  * - Chainlink primary feed
  * - Uniswap V3 TWAP fallback
@@ -126,17 +131,17 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     /// @notice Pending Chainlink feed change
     address public pendingChainlinkFeed;
     /// @notice pendingChainlinkFeedAt
-    uint64  public pendingChainlinkFeedAt;
+    uint64 public pendingChainlinkFeedAt;
 
     /// @notice Pending Uniswap pool change
     address public pendingUniswapPool;
     /// @notice pendingUniswapPoolAt
-    uint64  public pendingUniswapPoolAt;
+    uint64 public pendingUniswapPoolAt;
 
     /// @notice Pending manual price (timelocked) used as last-resort fallback.
     uint256 public pendingManualPrice;
     /// @notice pendingManualPriceAt
-    uint64  public pendingManualPriceAt;
+    uint64 public pendingManualPriceAt;
 
     /// @notice Active manual fallback price and status.
     uint256 public manualPrice;
@@ -167,20 +172,12 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     /// @param price price
     /// @param source source
     /// @param timestamp timestamp
-    event PriceUpdated(
-        uint256 indexed price,
-        PriceSource indexed source,
-        uint256 timestamp
-    );
+    event PriceUpdated(uint256 indexed price, PriceSource indexed source, uint256 timestamp);
     /// @notice CircuitBreakerTriggered
     /// @param oldPrice oldPrice
     /// @param newPrice newPrice
     /// @param deviation deviation
-    event CircuitBreakerTriggered(
-        uint256 oldPrice,
-        uint256 newPrice,
-        uint256 deviation
-    );
+    event CircuitBreakerTriggered(uint256 oldPrice, uint256 newPrice, uint256 deviation);
     /// @notice CircuitBreakerReset
     event CircuitBreakerReset();
     /// @notice ChainlinkFeedUpdated
@@ -238,14 +235,14 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         require(_quoteToken != address(0), "Invalid quote token");
         require(_owner != address(0), "Invalid owner");
         owner = _owner; // H-18: Override default msg.sender
-        
+
         vfideToken = _vfideToken;
         quoteToken = _quoteToken;
-        
+
         if (_chainlinkFeed != address(0)) {
             chainlinkFeed = AggregatorV3Interface(_chainlinkFeed);
         }
-        
+
         if (_uniswapPool != address(0)) {
             uniswapPool = _uniswapPool;
         }
@@ -279,7 +276,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
         // Try Chainlink first
         (price, source) = _getChainlinkPrice();
-        
+
         // Fallback to Uniswap TWAP if Chainlink fails
         if (price == 0) {
             (price, source) = _getUniswapPrice();
@@ -440,23 +437,26 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     /// @param baseToken baseToken
     /// @param quoteToken_ quoteToken_
     /// @return quoteAmount quoteAmount
-    function _getQuoteAtTick(int24 tick, uint128 baseAmount, address baseToken, address quoteToken_)
-        internal
-        pure
-        returns (uint256 quoteAmount)
-    {
+    function _getQuoteAtTick(
+        int24 tick,
+        uint128 baseAmount,
+        address baseToken,
+        address quoteToken_
+    ) internal pure returns (uint256 quoteAmount) {
         uint160 sqrtRatioX96 = TickMath.getSqrtRatioAtTick(tick);
 
         if (sqrtRatioX96 <= type(uint128).max) {
             uint256 ratioX192 = uint256(sqrtRatioX96) * uint256(sqrtRatioX96);
-            quoteAmount = baseToken < quoteToken_
-                ? FullMath.mulDiv(ratioX192, baseAmount, 1 << 192)
-                : FullMath.mulDiv(1 << 192, baseAmount, ratioX192);
+            quoteAmount =
+                baseToken < quoteToken_
+                    ? FullMath.mulDiv(ratioX192, baseAmount, 1 << 192)
+                    : FullMath.mulDiv(1 << 192, baseAmount, ratioX192);
         } else {
             uint256 ratioX128 = FullMath.mulDiv(sqrtRatioX96, sqrtRatioX96, 1 << 64);
-            quoteAmount = baseToken < quoteToken_
-                ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128)
-                : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
+            quoteAmount =
+                baseToken < quoteToken_
+                    ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128)
+                    : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
         }
     }
 
@@ -485,7 +485,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         // Check for price manipulation if we have a previous price
         if (lastPrice > 0) {
             uint256 deviation = _calculateDeviation(lastPrice, newPrice);
-            
+
             if (deviation > MAX_PRICE_DEVIATION) {
                 circuitBreakerActive = true;
                 circuitBreakerTime = block.timestamp;
@@ -529,13 +529,11 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         uint256 oldPrice,
         uint256 newPrice
     ) internal pure returns (uint256 deviation) {
-        uint256 diff = oldPrice > newPrice
-            ? oldPrice - newPrice
-            : newPrice - oldPrice;
+        uint256 diff = oldPrice > newPrice ? oldPrice - newPrice : newPrice - oldPrice;
 
         uint256 referencePrice = oldPrice < newPrice ? oldPrice : newPrice;
         if (referencePrice == 0) return type(uint256).max;
-        
+
         deviation = (diff * 10000) / referencePrice;
         return deviation;
     }
@@ -566,7 +564,10 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      */
     function applyChainlinkFeed() external onlyOwner {
         require(pendingChainlinkFeedAt != 0, "VFIDEPriceOracle: no pending update");
-        require(block.timestamp >= pendingChainlinkFeedAt, "VFIDEPriceOracle: timelock not elapsed");
+        require(
+            block.timestamp >= pendingChainlinkFeedAt,
+            "VFIDEPriceOracle: timelock not elapsed"
+        );
         address oldFeed = address(chainlinkFeed);
         chainlinkFeed = AggregatorV3Interface(pendingChainlinkFeed);
         emit ChainlinkFeedUpdated(oldFeed, pendingChainlinkFeed);
@@ -639,9 +640,8 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      */
     function getHistoricalPrice(uint256 index) external view returns (PricePoint memory) {
         require(index < pricePointCount, "Invalid index");
-        uint256 storageIndex = pricePointCount < MAX_HISTORY
-            ? index
-            : (historyStartIndex + index) % MAX_HISTORY;
+        uint256 storageIndex =
+            pricePointCount < MAX_HISTORY ? index : (historyStartIndex + index) % MAX_HISTORY;
         return historicalPrices[storageIndex];
     }
 
@@ -653,15 +653,16 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     function getRecentPrices(uint256 count) external view returns (PricePoint[] memory prices) {
         uint256 returnCount = count > pricePointCount ? pricePointCount : count;
         prices = new PricePoint[](returnCount);
-        
+
         for (uint256 i = 0; i < returnCount; ++i) {
             uint256 relativeIndex = pricePointCount - returnCount + i;
-            uint256 storageIndex = pricePointCount < MAX_HISTORY
-                ? relativeIndex
-                : (historyStartIndex + relativeIndex) % MAX_HISTORY;
+            uint256 storageIndex =
+                pricePointCount < MAX_HISTORY
+                    ? relativeIndex
+                    : (historyStartIndex + relativeIndex) % MAX_HISTORY;
             prices[i] = historicalPrices[storageIndex];
         }
-        
+
         return prices;
     }
 

@@ -125,13 +125,23 @@ interface IProofLedger {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
+    function logEvent(
+        address who,
+        string calldata action,
+        uint256 amount,
+        string calldata note
+    ) external;
     /// @notice logTransfer
     /// @param from from
     /// @param to to
     /// @param amount amount
     /// @param context context
-    function logTransfer(address from, address to, uint256 amount, string calldata context) external;
+    function logTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        string calldata context
+    ) external;
 }
 
 /// @notice IProofScoreBurnRouterToken
@@ -152,14 +162,17 @@ interface IProofScoreBurnRouterToken {
         address from,
         address to,
         uint256 amount
-    ) external view returns (
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        address sanctumSink,
-        address ecosystemSink,
-        address burnSink
-    );
+    )
+        external
+        view
+        returns (
+            uint256 burnAmount,
+            uint256 sanctumAmount,
+            uint256 ecosystemAmount,
+            address sanctumSink,
+            address ecosystemSink,
+            address burnSink
+        );
 
     /// @notice computeFeesAndReserve
     /// @param from from
@@ -175,14 +188,16 @@ interface IProofScoreBurnRouterToken {
         address from,
         address to,
         uint256 amount
-    ) external returns (
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        address sanctumSink,
-        address ecosystemSink,
-        address burnSink
-    );
+    )
+        external
+        returns (
+            uint256 burnAmount,
+            uint256 sanctumAmount,
+            uint256 ecosystemAmount,
+            address sanctumSink,
+            address ecosystemSink,
+            address burnSink
+        );
 }
 
 /// @notice IProofScoreBurnRouter
@@ -198,7 +213,12 @@ interface IProofScoreBurnRouter {
     /// @param sanctumSink sanctumSink
     /// @param burnSink burnSink
     /// @param ecosystemSink ecosystemSink
-    function setModules(address seer, address sanctumSink, address burnSink, address ecosystemSink) external;
+    function setModules(
+        address seer,
+        address sanctumSink,
+        address burnSink,
+        address ecosystemSink
+    ) external;
     /// @notice minTotalBps
     /// @return _uint16 _uint16
     function minTotalBps() external view returns (uint16);
@@ -209,13 +229,17 @@ interface IProofScoreBurnRouter {
     /// @param score score
     /// @return totalBps totalBps
     /// @return feePercent feePercent
-    function getFeeForScore(uint16 score) external view returns (uint256 totalBps, uint256 feePercent);
+    function getFeeForScore(
+        uint16 score
+    ) external view returns (uint256 totalBps, uint256 feePercent);
     /// @notice getEffectiveBurnRate
     /// @param user user
     /// @return burnBps burnBps
     /// @return sanctumBps sanctumBps
     /// @return ecosystemBps ecosystemBps
-    function getEffectiveBurnRate(address user) external view returns (uint16 burnBps, uint16 sanctumBps, uint16 ecosystemBps);
+    function getEffectiveBurnRate(
+        address user
+    ) external view returns (uint16 burnBps, uint16 sanctumBps, uint16 ecosystemBps);
     /// @notice previewFees
     /// @param user user
     /// @param amount amount
@@ -224,21 +248,43 @@ interface IProofScoreBurnRouter {
     /// @return ecosystemAmount ecosystemAmount
     /// @return netAmount netAmount
     /// @return score score
-    function previewFees(address user, uint256 amount) external view returns (uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint256 netAmount, uint16 score);
-    
+    function previewFees(
+        address user,
+        uint256 amount
+    )
+        external
+        view
+        returns (
+            uint256 burnAmount,
+            uint256 sanctumAmount,
+            uint256 ecosystemAmount,
+            uint256 netAmount,
+            uint16 score
+        );
+
     // Sustainability controls
     /// @notice setSustainability
     /// @param _dailyBurnCap _dailyBurnCap
     /// @param _minimumSupplyFloor _minimumSupplyFloor
     /// @param _ecosystemMinBps _ecosystemMinBps
-    function setSustainability(uint256 _dailyBurnCap, uint256 _minimumSupplyFloor, uint16 _ecosystemMinBps) external;
+    function setSustainability(
+        uint256 _dailyBurnCap,
+        uint256 _minimumSupplyFloor,
+        uint16 _ecosystemMinBps
+    ) external;
     /// @notice setAdaptiveFees
     /// @param lowVolumeThreshold lowVolumeThreshold
     /// @param highVolumeThreshold highVolumeThreshold
     /// @param lowVolMultiplier lowVolMultiplier
     /// @param highVolMultiplier highVolMultiplier
     /// @param enabled enabled
-    function setAdaptiveFees(uint256 lowVolumeThreshold, uint256 highVolumeThreshold, uint16 lowVolMultiplier, uint16 highVolMultiplier, bool enabled) external;
+    function setAdaptiveFees(
+        uint256 lowVolumeThreshold,
+        uint256 highVolumeThreshold,
+        uint16 lowVolMultiplier,
+        uint16 highVolMultiplier,
+        bool enabled
+    ) external;
     /// @notice recordBurn
     /// @param burnAmount burnAmount
     function recordBurn(uint256 burnAmount) external;
@@ -248,7 +294,7 @@ interface IProofScoreBurnRouter {
     /// @notice updateScore
     /// @param user user
     function updateScore(address user) external;
-    
+
     // Sustainability views
     /// @notice dailyBurnCap
     /// @return _uint256 _uint256
@@ -279,15 +325,18 @@ interface IProofScoreBurnRouter {
     /// @return burnsPausedFlag burnsPausedFlag
     /// @return supplyFloor supplyFloor
     /// @return currentSupply currentSupply
-    function getSustainabilityStatus() external view returns (
-        uint256 dailyBurned,
-        uint256 burnCapacity,
-        uint256 dailyVolume,
-        uint16 volumeMultiplier,
-        bool burnsPausedFlag,
-        uint256 supplyFloor,
-        uint256 currentSupply
-    );
+    function getSustainabilityStatus()
+        external
+        view
+        returns (
+            uint256 dailyBurned,
+            uint256 burnCapacity,
+            uint256 dailyVolume,
+            uint16 volumeMultiplier,
+            bool burnsPausedFlag,
+            uint256 supplyFloor,
+            uint256 currentSupply
+        );
 }
 
 /// @notice IStablecoinRegistry
@@ -436,7 +485,7 @@ interface IVFIDEToken is IERC20 {
     /// @notice setFeeBypass
     /// @param active active
     /// @param duration duration
-    function setFeeBypass(bool active, uint256 duration) external;       // H-02 FIX: explicit fee bypass
+    function setFeeBypass(bool active, uint256 duration) external; // H-02 FIX: explicit fee bypass
     // setBlacklist removed — non-custodial
     /// @notice lockPolicy
     function lockPolicy() external;
@@ -464,7 +513,12 @@ interface IVFIDEToken is IERC20 {
     /// @param maxWallet maxWallet
     /// @param dailyLimit dailyLimit
     /// @param cooldown cooldown
-    function setAntiWhale(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown) external;
+    function setAntiWhale(
+        uint256 maxTransfer,
+        uint256 maxWallet,
+        uint256 dailyLimit,
+        uint256 cooldown
+    ) external;
     /// @notice applyAntiWhale
     function applyAntiWhale() external;
     /// @notice setWhaleLimitExempt
@@ -598,14 +652,21 @@ interface IEcosystemVault {
     /// @param reason reason
     /// @return levelsPaid levelsPaid
     /// @return totalAmount totalAmount
-    function claimReferralLevelRewards(uint256 year, string calldata reason) external returns (uint8 levelsPaid, uint256 totalAmount);
+    function claimReferralLevelRewards(
+        uint256 year,
+        string calldata reason
+    ) external returns (uint8 levelsPaid, uint256 totalAmount);
     /// @notice processReferralLevelRewards
     /// @param worker worker
     /// @param year year
     /// @param reason reason
     /// @return levelsPaid levelsPaid
     /// @return totalAmount totalAmount
-    function processReferralLevelRewards(address worker, uint256 year, string calldata reason) external returns (uint8 levelsPaid, uint256 totalAmount);
+    function processReferralLevelRewards(
+        address worker,
+        uint256 year,
+        string calldata reason
+    ) external returns (uint8 levelsPaid, uint256 totalAmount);
     /// @notice burnFunds
     /// @param amount amount
     function burnFunds(uint256 amount) external;
@@ -662,12 +723,15 @@ interface ISwapRouter {
         address to,
         uint256 deadline
     ) external returns (uint256[] memory amounts);
-    
+
     /// @notice getAmountsOut
     /// @param amountIn amountIn
     /// @param path path
     /// @return amounts amounts
-    function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts);
+    function getAmountsOut(
+        uint256 amountIn,
+        address[] calldata path
+    ) external view returns (uint256[] memory amounts);
 }
 
 /// @notice ICouncilElection
@@ -720,7 +784,12 @@ interface IDAOTimelock {
     /// @param data data
     /// @param daoProposalId daoProposalId
     /// @return _bytes32 _bytes32
-    function queueTxFromDAO(address target, uint256 value, bytes calldata data, uint256 daoProposalId) external returns (bytes32);
+    function queueTxFromDAO(
+        address target,
+        uint256 value,
+        bytes calldata data,
+        uint256 daoProposalId
+    ) external returns (bytes32);
     /// @notice execute
     /// @param id id
     /// @return _bytes _bytes
@@ -762,7 +831,12 @@ interface IPanicGuard {
     /// @param duration duration
     /// @param severity severity
     /// @param reason reason
-    function reportRisk(address vault, uint64 duration, uint8 severity, string calldata reason) external;
+    function reportRisk(
+        address vault,
+        uint64 duration,
+        uint8 severity,
+        string calldata reason
+    ) external;
 }
 
 /// ─────────────────────────── Shared Abstracts
@@ -797,14 +871,14 @@ abstract contract Ownable {
     /// @notice emergencyController
     address public emergencyController;
     /// @notice ownershipTransferDeadline
-    uint64  public ownershipTransferDeadline;
+    uint64 public ownershipTransferDeadline;
 
     /// @notice pendingEmergencyController
     address public pendingEmergencyController;
     /// @notice pendingEmergencyControllerAt
-    uint64  public pendingEmergencyControllerAt;
+    uint64 public pendingEmergencyControllerAt;
     /// @notice EMERGENCY_CONTROLLER_DELAY
-    uint64  public constant EMERGENCY_CONTROLLER_DELAY = 48 hours;
+    uint64 public constant EMERGENCY_CONTROLLER_DELAY = 48 hours;
 
     /// @notice constructor
     constructor() {
@@ -813,7 +887,10 @@ abstract contract Ownable {
     }
 
     /// @notice onlyOwner
-    modifier onlyOwner() { _checkOwner(); _; }
+    modifier onlyOwner() {
+        _checkOwner();
+        _;
+    }
 
     /// @notice _checkOwner
     function _checkOwner() internal view {
@@ -970,16 +1047,30 @@ abstract contract Pausable {
     /// @notice _paused
     bool private _paused;
     /// @notice whenNotPaused
-    modifier whenNotPaused() { require(!_paused, "Pausable: paused"); _; }
+    modifier whenNotPaused() {
+        require(!_paused, "Pausable: paused");
+        _;
+    }
     /// @notice whenPaused
-    modifier whenPaused() { require(_paused, "Pausable: not paused"); _; }
+    modifier whenPaused() {
+        require(_paused, "Pausable: not paused");
+        _;
+    }
     /// @notice paused
     /// @return _bool _bool
-    function paused() public view returns (bool) { return _paused; }
+    function paused() public view returns (bool) {
+        return _paused;
+    }
     /// @notice _pause
-    function _pause() internal whenNotPaused { _paused = true; emit Paused(msg.sender); }
+    function _pause() internal whenNotPaused {
+        _paused = true;
+        emit Paused(msg.sender);
+    }
     /// @notice _unpause
-    function _unpause() internal whenPaused { _paused = false; emit Unpaused(msg.sender); }
+    function _unpause() internal whenPaused {
+        _paused = false;
+        emit Unpaused(msg.sender);
+    }
 }
 
 /// @notice AccessControl for role-based permissions (OpenZeppelin-compatible pattern)
@@ -990,13 +1081,13 @@ abstract contract AccessControl {
         mapping(address => bool) members;
         bytes32 adminRole;
     }
-    
+
     /// @notice _roles
     mapping(bytes32 => RoleData) private _roles;
-    
+
     /// @notice DEFAULT_ADMIN_ROLE
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    
+
     /// @notice RoleGranted
     /// @param role role
     /// @param account account
@@ -1011,21 +1102,25 @@ abstract contract AccessControl {
     /// @param role role
     /// @param previousAdminRole previousAdminRole
     /// @param newAdminRole newAdminRole
-    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
-    
+    event RoleAdminChanged(
+        bytes32 indexed role,
+        bytes32 indexed previousAdminRole,
+        bytes32 indexed newAdminRole
+    );
+
     /// @dev Auto-grant DEFAULT_ADMIN_ROLE to deployer to prevent bootstrap deadlock
     /// @notice constructor
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-    
+
     /// @notice onlyRole
     /// @param role role
     modifier onlyRole(bytes32 role) {
         require(hasRole(role, msg.sender), "AC: missing role");
         _;
     }
-    
+
     /// @notice hasRole
     /// @param role role
     /// @param account account
@@ -1033,28 +1128,28 @@ abstract contract AccessControl {
     function hasRole(bytes32 role, address account) public view virtual returns (bool) {
         return _roles[role].members[account];
     }
-    
+
     /// @notice getRoleAdmin
     /// @param role role
     /// @return _bytes32 _bytes32
     function getRoleAdmin(bytes32 role) public view virtual returns (bytes32) {
         return _roles[role].adminRole;
     }
-    
+
     /// @notice grantRole
     /// @param role role
     /// @param account account
     function grantRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {
         _grantRole(role, account);
     }
-    
+
     /// @notice revokeRole
     /// @param role role
     /// @param account account
     function revokeRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {
         _revokeRole(role, account);
     }
-    
+
     /// @notice renounceRole
     /// @param role role
     /// @param account account
@@ -1062,7 +1157,7 @@ abstract contract AccessControl {
         require(account == msg.sender, "AC: can only renounce for self");
         _revokeRole(role, account);
     }
-    
+
     /// @notice _grantRole
     /// @param role role
     /// @param account account
@@ -1072,7 +1167,7 @@ abstract contract AccessControl {
             emit RoleGranted(role, account, msg.sender);
         }
     }
-    
+
     /// @notice _revokeRole
     /// @param role role
     /// @param account account
@@ -1082,7 +1177,7 @@ abstract contract AccessControl {
             emit RoleRevoked(role, account, msg.sender);
         }
     }
-    
+
     /// @notice _setRoleAdmin
     /// @param role role
     /// @param adminRole adminRole
@@ -1106,7 +1201,10 @@ library SafeERC20 {
         (bool success, bytes memory data) = address(token).call(
             abi.encodeWithSelector(token.transfer.selector, to, value)
         );
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transfer failed");
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "SafeERC20: transfer failed"
+        );
     }
 
     /// @notice safeTransferFrom
@@ -1119,9 +1217,12 @@ library SafeERC20 {
         (bool success, bytes memory data) = address(token).call(
             abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
         );
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transferFrom failed");
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "SafeERC20: transferFrom failed"
+        );
     }
-    
+
     /// @notice safeApprove
     /// @param token token
     /// @param spender spender
@@ -1135,16 +1236,27 @@ library SafeERC20 {
     /// @param spender spender
     /// @param value value
     function forceApprove(IERC20 token, address spender, uint256 value) internal {
-        if (_callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value))) {
+        if (
+            _callOptionalReturnBool(
+                token,
+                abi.encodeWithSelector(token.approve.selector, spender, value)
+            )
+        ) {
             return;
         }
 
         require(
-            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, 0)),
+            _callOptionalReturnBool(
+                token,
+                abi.encodeWithSelector(token.approve.selector, spender, 0)
+            ),
             "SafeERC20: approve reset failed"
         );
         require(
-            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value)),
+            _callOptionalReturnBool(
+                token,
+                abi.encodeWithSelector(token.approve.selector, spender, value)
+            ),
             "SafeERC20: approve failed"
         );
     }

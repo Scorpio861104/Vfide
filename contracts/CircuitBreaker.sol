@@ -16,7 +16,9 @@ contract CircuitBreaker {
     /// @notice RECORDER_ROLE
     bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
     /// @notice SUSPICIOUS_ACTIVITY_REPORTER_ROLE
-    bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
+    bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256(
+        "SUSPICIOUS_ACTIVITY_REPORTER_ROLE"
+    );
 
     /// @notice notTriggered
     modifier notTriggered() {
@@ -25,8 +27,8 @@ contract CircuitBreaker {
     }
 
     struct BreakerConfig {
-        uint256 dailyVolumeThreshold;       // % of TVL (0-100)
-        uint256 priceDropThreshold;         // % price drop (0-100)
+        uint256 dailyVolumeThreshold; // % of TVL (0-100)
+        uint256 priceDropThreshold; // % price drop (0-100)
         uint256 suspiciousActivityThreshold; // number of flagged addresses
     }
 
@@ -115,7 +117,11 @@ contract CircuitBreaker {
     }
 
     /// @notice recordSuspiciousActivity
-    function recordSuspiciousActivity() external onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE) notTriggered {
+    function recordSuspiciousActivity()
+        external
+        onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE)
+        notTriggered
+    {
         if (block.timestamp >= monitoring.lastActivityReset + 24 hours) {
             monitoring.suspiciousActivityCount24h = 0;
             monitoring.lastActivityReset = block.timestamp;

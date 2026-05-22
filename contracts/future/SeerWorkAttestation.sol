@@ -7,8 +7,8 @@ pragma solidity 0.8.30;
  * OZ version baseline: 5.1.0. Review OZ advisories on dependency updates.
  */
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 // F-38 FIX: minimal interface used to cross-check the DAO state before recording attestation.
 /// @notice IDAO_WA
@@ -43,7 +43,6 @@ interface IDAO_WA {
 ///      - PROTOCOL_MAINTENANCE: On-chain maintenance tx confirmed
 /// @author Vfide
 contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
-
     /// @notice SEER_CORE_ROLE
     bytes32 public constant SEER_CORE_ROLE = keccak256("SEER_CORE_ROLE");
     /// @notice VERIFIER_ROLE
@@ -56,13 +55,13 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════
 
     struct TaskRecord {
-        address worker;             // Who performed the work
-        uint8 category;             // ServiceCategory enum value
-        bytes32 taskId;             // Unique task identifier
-        bytes32 evidenceHash;       // Hash of on-chain evidence (tx hash, state proof)
-        uint256 completedAt;        // When work was verified as complete
-        bool attested;              // Whether attestation was generated
-        address verifiedBy;         // Which verifier confirmed the work
+        address worker; // Who performed the work
+        uint8 category; // ServiceCategory enum value
+        bytes32 taskId; // Unique task identifier
+        bytes32 evidenceHash; // Hash of on-chain evidence (tx hash, state proof)
+        uint256 completedAt; // When work was verified as complete
+        bool attested; // Whether attestation was generated
+        address verifiedBy; // Which verifier confirmed the work
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -155,20 +154,25 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @notice TaskAttested
     /// @param worker worker
     /// @param taskId taskId
-    event TaskAttested(
-        address indexed worker,
-        bytes32 indexed taskId
-    );
+    event TaskAttested(address indexed worker, bytes32 indexed taskId);
     /// @notice FraudFlagAttestationQueued
     /// @param flagger flagger
     /// @param flagId flagId
     /// @param readyAt readyAt
-    event FraudFlagAttestationQueued(address indexed flagger, bytes32 indexed flagId, uint64 readyAt);
+    event FraudFlagAttestationQueued(
+        address indexed flagger,
+        bytes32 indexed flagId,
+        uint64 readyAt
+    );
     /// @notice FraudFlagAttestationFinalized
     /// @param flagger flagger
     /// @param flagId flagId
     /// @param verifier verifier
-    event FraudFlagAttestationFinalized(address indexed flagger, bytes32 indexed flagId, address indexed verifier);
+    event FraudFlagAttestationFinalized(
+        address indexed flagger,
+        bytes32 indexed flagId,
+        address indexed verifier
+    );
     /// @notice ProtocolContractUpdated
     /// @param name name
     /// @param newAddress newAddress
@@ -274,18 +278,25 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         );
         require(len <= 50, "Batch too large");
 
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i = 0; i < len; ) {
             address worker = workers[i];
             uint8 category = categories[i];
             bytes32 taskId = taskIds[i];
             bytes32 evidenceHash = evidenceHashes[i];
             bytes32 key = keccak256(abi.encodePacked(worker, category, taskId));
 
-            if (!taskExists[key] && worker != address(0) && category < 8 && evidenceHash != bytes32(0)) {
+            if (
+                !taskExists[key] &&
+                worker != address(0) &&
+                category < 8 &&
+                evidenceHash != bytes32(0)
+            ) {
                 _recordTask(key, worker, category, taskId, evidenceHash, msg.sender);
             }
 
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -314,7 +325,9 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param settlementId settlementId
     function onMerchantSettlement(address processor, bytes32 settlementId) external {
         require(msg.sender == merchantPortal, "Only MerchantPortal");
-        bytes32 evidence = keccak256(abi.encodePacked("merchant_settle", settlementId, block.number));
+        bytes32 evidence = keccak256(
+            abi.encodePacked("merchant_settle", settlementId, block.number)
+        );
         _autoVerify(processor, 2, settlementId, evidence);
     }
 
@@ -356,7 +369,9 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @notice Finalize a queued fraud-flag attestation after review delay.
     /// @dev Requires independent verifier role to reduce single-pipeline farming risk.
     /// @param flagId flagId
-    function finalizeFraudFlagAttestation(bytes32 flagId) external nonReentrant onlyRole(VERIFIER_ROLE) {
+    function finalizeFraudFlagAttestation(
+        bytes32 flagId
+    ) external nonReentrant onlyRole(VERIFIER_ROLE) {
         PendingFraudAttestation memory pending = pendingFraudAttestation[flagId];
         require(pending.flagger != address(0), "SWA: no pending fraud attestation");
         require(block.timestamp >= pending.readyAt, "SWA: review delay active");
@@ -471,7 +486,15 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
             workPayment: _workPayment,
             effectiveAt: effectiveAt
         });
-        emit ProtocolContractsChangeProposed(_dao, _merchant, _bridge, _social, _panic, _workPayment, effectiveAt);
+        emit ProtocolContractsChangeProposed(
+            _dao,
+            _merchant,
+            _bridge,
+            _social,
+            _panic,
+            _workPayment,
+            effectiveAt
+        );
     }
 
     /// @notice applyProtocolContracts
@@ -480,12 +503,30 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         if (p.effectiveAt == 0) revert NoPendingChange();
         if (block.timestamp < p.effectiveAt) revert ChangeNotReady();
 
-        if (p.dao != address(0)) { daoContract = p.dao; emit ProtocolContractUpdated("DAO", p.dao); }
-        if (p.merchant != address(0)) { merchantPortal = p.merchant; emit ProtocolContractUpdated("MerchantPortal", p.merchant); }
-        if (p.bridge != address(0)) { bridgeModule = p.bridge; emit ProtocolContractUpdated("BridgeModule", p.bridge); }
-        if (p.social != address(0)) { seerSocial = p.social; emit ProtocolContractUpdated("SeerSocial", p.social); }
-        if (p.panic != address(0)) { panicGuard = p.panic; emit ProtocolContractUpdated("PanicGuard", p.panic); }
-        if (p.workPayment != address(0)) { workPaymentManager = p.workPayment; emit ProtocolContractUpdated("WorkPaymentManager", p.workPayment); }
+        if (p.dao != address(0)) {
+            daoContract = p.dao;
+            emit ProtocolContractUpdated("DAO", p.dao);
+        }
+        if (p.merchant != address(0)) {
+            merchantPortal = p.merchant;
+            emit ProtocolContractUpdated("MerchantPortal", p.merchant);
+        }
+        if (p.bridge != address(0)) {
+            bridgeModule = p.bridge;
+            emit ProtocolContractUpdated("BridgeModule", p.bridge);
+        }
+        if (p.social != address(0)) {
+            seerSocial = p.social;
+            emit ProtocolContractUpdated("SeerSocial", p.social);
+        }
+        if (p.panic != address(0)) {
+            panicGuard = p.panic;
+            emit ProtocolContractUpdated("PanicGuard", p.panic);
+        }
+        if (p.workPayment != address(0)) {
+            workPaymentManager = p.workPayment;
+            emit ProtocolContractUpdated("WorkPaymentManager", p.workPayment);
+        }
 
         delete pendingProtocolContracts;
     }

@@ -91,7 +91,9 @@ contract CardBoundVaultPaymentQueueManager {
     /// @return cancelled cancelled
     /// @return intentNonce intentNonce
     /// @return recipientCodeHashAtQueue recipientCodeHashAtQueue
-    function paymentQueue(uint256 index)
+    function paymentQueue(
+        uint256 index
+    )
         external
         view
         returns (
@@ -170,11 +172,10 @@ contract CardBoundVaultPaymentQueueManager {
     /// @return token token
     /// @return recipient recipient
     /// @return amount amount
-    function executeQueuedPayment(uint256 queueIndex, bool isAdmin)
-        external
-        onlyVault
-        returns (address token, address recipient, uint256 amount)
-    {
+    function executeQueuedPayment(
+        uint256 queueIndex,
+        bool isAdmin
+    ) external onlyVault returns (address token, address recipient, uint256 amount) {
         if (!isAdmin) revert PQM_NotAuthorized();
         if (queueIndex >= _paymentQueue.length) revert PQM_InvalidIndex();
 
@@ -203,11 +204,10 @@ contract CardBoundVaultPaymentQueueManager {
     /// @param authorized authorized
     /// @return requestTime requestTime
     /// @return amount amount
-    function cancelQueuedPayment(uint256 queueIndex, bool authorized)
-        external
-        onlyVault
-        returns (uint64 requestTime, uint256 amount)
-    {
+    function cancelQueuedPayment(
+        uint256 queueIndex,
+        bool authorized
+    ) external onlyVault returns (uint64 requestTime, uint256 amount) {
         if (!authorized) revert PQM_NotAuthorized();
         if (queueIndex >= _paymentQueue.length) revert PQM_InvalidIndex();
 
@@ -227,11 +227,10 @@ contract CardBoundVaultPaymentQueueManager {
     /// @param threshold threshold
     /// @param delay delay
     /// @return executeAfter executeAfter
-    function setLargePaymentThreshold(uint256 threshold, uint64 delay)
-        external
-        onlyVault
-        returns (uint64 executeAfter)
-    {
+    function setLargePaymentThreshold(
+        uint256 threshold,
+        uint64 delay
+    ) external onlyVault returns (uint64 executeAfter) {
         executeAfter = uint64(block.timestamp) + delay;
         pendingLargePaymentThresholdChange = PendingLargePaymentThresholdChange({
             threshold: threshold,

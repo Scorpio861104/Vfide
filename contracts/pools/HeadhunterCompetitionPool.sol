@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ServicePool } from "../ServicePool.sol";
+import {ServicePool} from "../ServicePool.sol";
 
 /// @title HeadhunterCompetitionPool — Monthly competition for user acquisition
 /// @notice Headhunters earn score for verified referrals.
@@ -98,7 +98,10 @@ contract HeadhunterCompetitionPool is ServicePool {
     /// @param period period
     /// @param headhunter headhunter
     /// @return _uint256 _uint256
-    function getPeriodReferrals(uint256 period, address headhunter) external view returns (uint256) {
+    function getPeriodReferrals(
+        uint256 period,
+        address headhunter
+    ) external view returns (uint256) {
         return periodReferrals[period][headhunter];
     }
 }

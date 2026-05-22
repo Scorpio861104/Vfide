@@ -10,7 +10,7 @@ pragma solidity 0.8.30;
  * - Safe against failed transfers (uses try/catch).
  */
 
-import { IERC20, SafeERC20, ReentrancyGuard } from "./SharedInterfaces.sol";
+import {IERC20, SafeERC20, ReentrancyGuard} from "./SharedInterfaces.sol";
 
 /// @notice RevenueSplitter
 /// @title RevenueSplitter
@@ -19,12 +19,12 @@ contract RevenueSplitter is ReentrancyGuard {
     using SafeERC20 for IERC20;
     /// @notice owner
     address public immutable owner;
-    
+
     struct Payee {
         address account;
         uint256 shareBps; // Basis points (100 = 1%)
     }
-    
+
     /// @notice payees
     Payee[] public payees;
     /// @notice totalShares
@@ -35,13 +35,23 @@ contract RevenueSplitter is ReentrancyGuard {
     /// @param totalAmount totalAmount
     /// @param payeesSucceeded payeesSucceeded
     /// @param payeesFailed payeesFailed
-    event Distributed(address indexed token, uint256 totalAmount, uint256 payeesSucceeded, uint256 payeesFailed);
+    event Distributed(
+        address indexed token,
+        uint256 totalAmount,
+        uint256 payeesSucceeded,
+        uint256 payeesFailed
+    );
     /// @notice PayeeDistribution
     /// @param payee payee
     /// @param token token
     /// @param amount amount
     /// @param success success
-    event PayeeDistribution(address indexed payee, address indexed token, uint256 amount, bool success);
+    event PayeeDistribution(
+        address indexed payee,
+        address indexed token,
+        uint256 amount,
+        bool success
+    );
 
     /// @notice constructor
     /// @param _accounts _accounts
@@ -51,7 +61,7 @@ contract RevenueSplitter is ReentrancyGuard {
         require(_accounts.length > 0, "RS: no payees");
         require(msg.sender != address(0), "RS: zero owner");
         owner = msg.sender;
-        
+
         uint256 length = _accounts.length;
         for (uint256 i = 0; i < length; ++i) {
             require(_accounts[i] != address(0), "zero address");
@@ -83,7 +93,7 @@ contract RevenueSplitter is ReentrancyGuard {
             } else {
                 amount = (balance * payees[i].shareBps) / 10000;
             }
-            
+
             if (amount > 0) {
                 // H-29 FIX: Compute amount for last payee BEFORE updating distributed.
                 // Only increment distributed after a successful transfer.
@@ -103,10 +113,10 @@ contract RevenueSplitter is ReentrancyGuard {
                 }
             }
         }
-        
+
         emit Distributed(token, balance, payeesSucceeded, payeesFailed);
     }
-    
+
     /// @notice getPayees
     /// @return _arg _arg
     function getPayees() external view returns (Payee[] memory) {
@@ -167,7 +177,12 @@ contract RevenueSplitter is ReentrancyGuard {
         delete payees;
         totalShares = 0;
         for (uint256 i = 0; i < _pendingPayeesUpdate.accounts.length; ++i) {
-            payees.push(Payee({account: _pendingPayeesUpdate.accounts[i], shareBps: _pendingPayeesUpdate.shares[i]}));
+            payees.push(
+                Payee({
+                    account: _pendingPayeesUpdate.accounts[i],
+                    shareBps: _pendingPayeesUpdate.shares[i]
+                })
+            );
             totalShares += _pendingPayeesUpdate.shares[i];
         }
         hasPendingPayeesUpdate = false;
@@ -182,5 +197,4 @@ contract RevenueSplitter is ReentrancyGuard {
         delete _pendingPayeesUpdate;
         emit PayeesUpdateCancelled();
     }
-
 }

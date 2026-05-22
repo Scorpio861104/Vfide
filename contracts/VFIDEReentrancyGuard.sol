@@ -26,7 +26,10 @@ abstract contract VFIDEReentrancyGuard {
     /// @notice Prevents cross-contract reentrant calls.
     /// @param _contract _contract
     modifier nonReentrantCrossContract(address _contract) {
-        require(_contractStatus[_contract] != _ENTERED, "VFIDEReentrancyGuard: cross-contract reentrant call");
+        require(
+            _contractStatus[_contract] != _ENTERED,
+            "VFIDEReentrancyGuard: cross-contract reentrant call"
+        );
         _contractStatus[_contract] = _ENTERED;
         _;
         _contractStatus[_contract] = _NOT_ENTERED;

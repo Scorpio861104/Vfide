@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -9,13 +9,13 @@ async function getConnection() {
   return connectionPromise;
 }
 
-describe("MainstreamPriceOracle (stale read guard)", () => {
+describe('MainstreamPriceOracle (stale read guard)', () => {
   async function oracleFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao] = await ethers.getSigners();
 
-    const Oracle = await ethers.getContractFactory("MainstreamPriceOracle");
-    const oracle = await Oracle.deploy(dao.address, ethers.parseEther("10"));
+    const Oracle = await ethers.getContractFactory('MainstreamPriceOracle');
+    const oracle = await Oracle.deploy(dao.address, ethers.parseEther('10'));
     await oracle.waitForDeployment();
 
     return { ethers, dao, oracle };
@@ -26,14 +26,14 @@ describe("MainstreamPriceOracle (stale read guard)", () => {
     return networkHelpers.loadFixture(oracleFixture);
   }
 
-  it("allows conversion and preview helpers while the price is fresh", async () => {
+  it('allows conversion and preview helpers while the price is fresh', async () => {
     const { ethers, oracle } = await deployOracleFixture();
 
     const usdAmount = 25_000_000n;
     const vfideAmount = await oracle.usdToVfide(usdAmount);
-    assert.equal(vfideAmount, usdAmount * ethers.parseEther("10") / 1_000_000n);
+    assert.equal(vfideAmount, (usdAmount * ethers.parseEther('10')) / 1_000_000n);
 
-    const usdValue = await oracle.vfideToUsd(ethers.parseEther("50"));
+    const usdValue = await oracle.vfideToUsd(ethers.parseEther('50'));
     assert.equal(usdValue, 5_000_000n);
 
     const vfidePriceUsd = await oracle.getVfidePriceUsd();
@@ -41,37 +41,39 @@ describe("MainstreamPriceOracle (stale read guard)", () => {
 
     const preview = await oracle.previewCheckoutPrice(9_999n);
     assert.equal(preview[1], 99_990_000n);
-    assert.equal(preview[0], 99_990_000n * ethers.parseEther("10") / 1_000_000n);
+    assert.equal(preview[0], (99_990_000n * ethers.parseEther('10')) / 1_000_000n);
     assert.equal(preview[2], preview[0] / 10_000_000_000_000_000n);
   });
 
-  it("marks stale prices in getPrice and rejects stale conversion helpers", async () => {
+  it('marks stale prices in getPrice and rejects stale conversion helpers', async () => {
     const { ethers, oracle } = await deployOracleFixture();
 
     await oracle.setStalenessThreshold(5 * 60);
-    await ethers.provider.send("evm_increaseTime", [5 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [5 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     const priceState = await oracle.getPrice();
     assert.equal(priceState[2], true);
 
     await assert.rejects(() => oracle.usdToVfide(1_000_000n), /PO: price stale/);
-    await assert.rejects(() => oracle.vfideToUsd(ethers.parseEther("1")), /PO: price stale/);
+    await assert.rejects(() => oracle.vfideToUsd(ethers.parseEther('1')), /PO: price stale/);
     await assert.rejects(() => oracle.getVfidePriceUsd(), /PO: price stale/);
     await assert.rejects(() => oracle.previewCheckoutPrice(1_999n), /PO: price stale/);
   });
 });
 
-describe("CardBoundVault (Fix 2)", () => {
-  it("queues admin VFIDE spender approvals", async () => {
+describe('CardBoundVault (Fix 2)', () => {
+  it('queues admin VFIDE spender approvals', async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, spender] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub'
+    );
     const token = await Token.deploy(18);
     await token.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       hub.address,
       await token.getAddress(),
@@ -79,13 +81,13 @@ describe("CardBoundVault (Fix 2)", () => {
       wallet.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
-    const amount = ethers.parseEther("42");
+    const amount = ethers.parseEther('42');
     await vault.connect(admin).approveVFIDE(spender.address, amount);
 
     const pending = await vault.pendingTokenApproval();
@@ -98,18 +100,20 @@ describe("CardBoundVault (Fix 2)", () => {
     assert.equal(allowance, 0n);
   });
 
-  it("rejects approvals above the vault daily transfer limit", async () => {
+  it('rejects approvals above the vault daily transfer limit', async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, spender] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub'
+    );
     const token = await Token.deploy(18);
     await token.waitForDeployment();
 
     const stable = await Token.deploy(18);
     await stable.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       hub.address,
       await token.getAddress(),
@@ -117,30 +121,35 @@ describe("CardBoundVault (Fix 2)", () => {
       wallet.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
-    const amount = ethers.parseEther("301");
+    const amount = ethers.parseEther('301');
     const stableAddress = await stable.getAddress();
-    await assert.rejects(() => vault.connect(admin).approveVFIDE(spender.address, amount), /CBV_TransferLimit|revert/i);
+    await assert.rejects(
+      () => vault.connect(admin).approveVFIDE(spender.address, amount),
+      /CBV_TransferLimit|revert/i
+    );
     await assert.rejects(
       () => vault.connect(admin).approveERC20(stableAddress, spender.address, amount),
       /CBV_TransferLimit|revert/i
     );
   });
 
-  it("reports guardian maturity only after seven days", async () => {
+  it('reports guardian maturity only after seven days', async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub'
+    );
     const token = await Token.deploy(18);
     await token.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       hub.address,
       await token.getAddress(),
@@ -148,33 +157,37 @@ describe("CardBoundVault (Fix 2)", () => {
       wallet.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
     assert.equal(await vault.isGuardianMature(guardian.address), false);
 
-    await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [7 * 24 * 60 * 60]);
+    await ethers.provider.send('evm_mine', []);
 
     assert.equal(await vault.isGuardianMature(guardian.address), true);
   });
 
-  it("queues token approvals once guardian setup is complete", async () => {
+  it('queues token approvals once guardian setup is complete', async () => {
     const { ethers } = (await getConnection()) as any;
     const [, admin, wallet, guardian, spender] = await ethers.getSigners();
 
-    const Hub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianSetupHubStub");
+    const Hub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:GuardianSetupHubStub'
+    );
     const hub = await Hub.deploy();
     await hub.waitForDeployment();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub'
+    );
     const token = await Token.deploy(18);
     await token.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       await hub.getAddress(),
       await token.getAddress(),
@@ -182,15 +195,15 @@ describe("CardBoundVault (Fix 2)", () => {
       wallet.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
     await hub.setGuardianSetupComplete(await vault.getAddress(), true);
 
-    const amount = ethers.parseEther("42");
+    const amount = ethers.parseEther('42');
     await vault.connect(admin).approveVFIDE(spender.address, amount);
 
     const pending = await vault.pendingTokenApproval();
@@ -202,10 +215,10 @@ describe("CardBoundVault (Fix 2)", () => {
 
     await assert.rejects(() => vault.connect(admin).applyTokenApproval(), /locked|revert/i);
 
-    const approvalNow = await ethers.provider.getBlock("latest");
-    const approvalWait = Number((pending.executeAfter - BigInt(approvalNow.timestamp)) + 1n);
-    await ethers.provider.send("evm_increaseTime", [approvalWait]);
-    await ethers.provider.send("evm_mine", []);
+    const approvalNow = await ethers.provider.getBlock('latest');
+    const approvalWait = Number(pending.executeAfter - BigInt(approvalNow.timestamp) + 1n);
+    await ethers.provider.send('evm_increaseTime', [approvalWait]);
+    await ethers.provider.send('evm_mine', []);
 
     await vault.connect(admin).applyTokenApproval();
 
@@ -213,15 +226,17 @@ describe("CardBoundVault (Fix 2)", () => {
     assert.equal(allowance, amount);
   });
 
-  it("timelocks native rescue requests", async () => {
+  it('timelocks native rescue requests', async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, recipient] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       hub.address,
       await token.getAddress(),
@@ -229,13 +244,13 @@ describe("CardBoundVault (Fix 2)", () => {
       wallet.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
-    const amount = ethers.parseEther("1");
+    const amount = ethers.parseEther('1');
     await admin.sendTransaction({ to: await vault.getAddress(), value: amount });
 
     const recipientBalanceBefore = await ethers.provider.getBalance(recipient.address);
@@ -249,26 +264,31 @@ describe("CardBoundVault (Fix 2)", () => {
 
     await assert.rejects(() => vault.connect(admin).applyRescueNative(), /locked|revert/i);
 
-    const nativeNow = await ethers.provider.getBlock("latest");
-    const nativeWait = Number((pending.executeAfter - BigInt(nativeNow.timestamp)) + 1n);
-    await ethers.provider.send("evm_increaseTime", [nativeWait]);
-    await ethers.provider.send("evm_mine", []);
+    const nativeNow = await ethers.provider.getBlock('latest');
+    const nativeWait = Number(pending.executeAfter - BigInt(nativeNow.timestamp) + 1n);
+    await ethers.provider.send('evm_increaseTime', [nativeWait]);
+    await ethers.provider.send('evm_mine', []);
 
     await vault.connect(admin).applyRescueNative();
 
     assert.equal(await ethers.provider.getBalance(await vault.getAddress()), 0n);
-    assert.equal(await ethers.provider.getBalance(recipient.address), recipientBalanceBefore + amount);
+    assert.equal(
+      await ethers.provider.getBalance(recipient.address),
+      recipientBalanceBefore + amount
+    );
   });
 
-  it("applies native rescue to contract recipients without fixed-gas stipend failures", async () => {
+  it('applies native rescue to contract recipients without fixed-gas stipend failures', async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       hub.address,
       await token.getAddress(),
@@ -276,25 +296,25 @@ describe("CardBoundVault (Fix 2)", () => {
       wallet.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
-    const Consumer = await ethers.getContractFactory("NativeGasConsumer");
+    const Consumer = await ethers.getContractFactory('NativeGasConsumer');
     const consumer = await Consumer.deploy();
     await consumer.waitForDeployment();
 
-    const amount = ethers.parseEther("1");
+    const amount = ethers.parseEther('1');
     await admin.sendTransaction({ to: await vault.getAddress(), value: amount });
 
     await vault.connect(admin).rescueNative(await consumer.getAddress(), amount);
     const pending = await vault.pendingNativeRescue();
-    const latest = await ethers.provider.getBlock("latest");
-    const wait = Number((pending.executeAfter - BigInt(latest.timestamp)) + 1n);
-    await ethers.provider.send("evm_increaseTime", [wait]);
-    await ethers.provider.send("evm_mine", []);
+    const latest = await ethers.provider.getBlock('latest');
+    const wait = Number(pending.executeAfter - BigInt(latest.timestamp) + 1n);
+    await ethers.provider.send('evm_increaseTime', [wait]);
+    await ethers.provider.send('evm_mine', []);
 
     await vault.connect(admin).applyRescueNative();
 
@@ -302,18 +322,20 @@ describe("CardBoundVault (Fix 2)", () => {
     assert.equal(await ethers.provider.getBalance(await vault.getAddress()), 0n);
   });
 
-  it("timelocks non-VFIDE ERC20 rescue requests", async () => {
+  it('timelocks non-VFIDE ERC20 rescue requests', async () => {
     const { ethers } = (await getConnection()) as any;
     const [hub, admin, wallet, guardian, recipient] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
     const stable = await Token.deploy();
     await stable.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       hub.address,
       await token.getAddress(),
@@ -321,13 +343,13 @@ describe("CardBoundVault (Fix 2)", () => {
       wallet.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
-    const amount = ethers.parseEther("12");
+    const amount = ethers.parseEther('12');
     await stable.mint(await vault.getAddress(), amount);
 
     await vault.connect(admin).rescueERC20(await stable.getAddress(), recipient.address, amount);
@@ -341,10 +363,10 @@ describe("CardBoundVault (Fix 2)", () => {
 
     await assert.rejects(() => vault.connect(admin).applyRescueERC20(), /locked|revert/i);
 
-    const erc20Now = await ethers.provider.getBlock("latest");
-    const erc20Wait = Number((pending.executeAfter - BigInt(erc20Now.timestamp)) + 1n);
-    await ethers.provider.send("evm_increaseTime", [erc20Wait]);
-    await ethers.provider.send("evm_mine", []);
+    const erc20Now = await ethers.provider.getBlock('latest');
+    const erc20Wait = Number(pending.executeAfter - BigInt(erc20Now.timestamp) + 1n);
+    await ethers.provider.send('evm_increaseTime', [erc20Wait]);
+    await ethers.provider.send('evm_mine', []);
 
     await vault.connect(admin).applyRescueERC20();
 
@@ -352,36 +374,44 @@ describe("CardBoundVault (Fix 2)", () => {
   });
 });
 
-describe("MerchantPortal (Fixes 3 and 5)", { concurrency: 1 }, () => {
+describe('MerchantPortal (Fixes 3 and 5)', { concurrency: 1 }, () => {
   async function merchantPortalFixture() {
     const { ethers } = (await getConnection()) as any;
     const [dao, customer, merchant, feeSink] = await ethers.getSigners();
 
-    const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+    const VaultHubStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:VaultHubStub'
+    );
     const vaultHub = await VaultHubStub.deploy();
     await vaultHub.waitForDeployment();
 
-    const SeerStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:SeerScoreStub");
+    const SeerStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:SeerScoreStub'
+    );
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
     await seer.setScore(customer.address, 5000);
     await seer.setScore(merchant.address, 7000);
 
-    const SecurityHub = await ethers.getContractFactory("test/contracts/mocks/SecurityHubMock.sol:SecurityHubMock");
+    const SecurityHub = await ethers.getContractFactory(
+      'test/contracts/mocks/SecurityHubMock.sol:SecurityHubMock'
+    );
     const securityHub = await SecurityHub.deploy();
     await securityHub.waitForDeployment();
 
-    const Portal = await ethers.getContractFactory("MerchantPortal");
+    const Portal = await ethers.getContractFactory('MerchantPortal');
     const portal = await Portal.deploy(
       dao.address,
       await vaultHub.getAddress(),
       await seer.getAddress(),
       await securityHub.getAddress(),
-      feeSink.address,
+      feeSink.address
     );
     await portal.waitForDeployment();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub'
+    );
     const token = await Token.deploy(18);
     await token.waitForDeployment();
 
@@ -391,7 +421,7 @@ describe("MerchantPortal (Fixes 3 and 5)", { concurrency: 1 }, () => {
     await vaultHub.setVault(customer.address, customer.address);
     await vaultHub.setVault(merchant.address, merchant.address);
 
-    await portal.connect(merchant).registerMerchant("Shop", "retail");
+    await portal.connect(merchant).registerMerchant('Shop', 'retail');
 
     return { ethers, portal, token, seer, customer, merchant, dao };
   }
@@ -400,23 +430,25 @@ describe("MerchantPortal (Fixes 3 and 5)", { concurrency: 1 }, () => {
     return merchantPortalFixture();
   }
 
-  it("rewards merchant and customer on successful pay", async () => {
+  it('rewards merchant and customer on successful pay', async () => {
     const { ethers, portal, token, seer, customer, merchant } = await deployPortalFixture();
 
-    const amount = ethers.parseEther("10");
+    const amount = ethers.parseEther('10');
     await token.mint(customer.address, amount);
     await token.connect(customer).approve(await portal.getAddress(), amount);
 
-    await portal.connect(customer).pay(merchant.address, await token.getAddress(), amount, "order-1");
+    await portal
+      .connect(customer)
+      .pay(merchant.address, await token.getAddress(), amount, 'order-1');
 
     assert.equal(await seer.scores(merchant.address), 7003n);
     assert.equal(await seer.scores(customer.address), 5001n);
   });
 
-  it("calculates gross checkout total from desired item amount", async () => {
+  it('calculates gross checkout total from desired item amount', async () => {
     const { ethers, portal, token, customer, merchant } = await deployPortalFixture();
 
-    const itemAmount = ethers.parseEther("10");
+    const itemAmount = ethers.parseEther('10');
     const [grossAmount, totalFee, protocolFee, networkFee] = await portal.calculateGrossAmount(
       customer.address,
       merchant.address,
@@ -432,11 +464,13 @@ describe("MerchantPortal (Fixes 3 and 5)", { concurrency: 1 }, () => {
     assert.ok(grossAmount > itemAmount);
   });
 
-  it("limits configured swap paths to a single intermediate token", async () => {
+  it('limits configured swap paths to a single intermediate token', async () => {
     const { portal, token, dao } = await deployPortalFixture();
     const { ethers } = (await getConnection()) as any;
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MutableDecimalsTokenStub'
+    );
     const stable = await Token.deploy(18);
     await stable.waitForDeployment();
 
@@ -450,11 +484,7 @@ describe("MerchantPortal (Fixes 3 and 5)", { concurrency: 1 }, () => {
     await portal.connect(dao).setSwapConfig(router, stableAddress);
     assert.equal(await portal.MAX_SWAP_PATH_LENGTH(), 3n);
 
-    await portal.connect(dao).setSwapPath(tokenAddress, [
-      tokenAddress,
-      hopA,
-      stableAddress,
-    ]);
+    await portal.connect(dao).setSwapPath(tokenAddress, [tokenAddress, hopA, stableAddress]);
 
     assert.equal(await portal.tokenSwapPaths(tokenAddress, 0), tokenAddress);
     assert.equal(await portal.tokenSwapPaths(tokenAddress, 1), hopA);
@@ -462,16 +492,26 @@ describe("MerchantPortal (Fixes 3 and 5)", { concurrency: 1 }, () => {
   });
 });
 
-describe("CommerceEscrow (source authorization hardening)", () => {
-  it("rejects markFunded when buyer vault mapping changes after escrow open", async () => {
+describe('CommerceEscrow (source authorization hardening)', () => {
+  it('rejects markFunded when buyer vault mapping changes after escrow open', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, customer, merchant] = await ethers.getSigners();
 
-    const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
-    const GuardianVaultStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianVaultStub");
-    const SeerStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:SeerScoreStub");
-    const TokenStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
-    const Placeholder = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:Placeholder");
+    const VaultHubStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:VaultHubStub'
+    );
+    const GuardianVaultStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:GuardianVaultStub'
+    );
+    const SeerStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:SeerScoreStub'
+    );
+    const TokenStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
+    const Placeholder = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:Placeholder'
+    );
 
     const vaultHub = await VaultHubStub.deploy();
     const buyerVault = await GuardianVaultStub.deploy();
@@ -493,41 +533,42 @@ describe("CommerceEscrow (source authorization hardening)", () => {
     await vaultHub.setVault(merchant.address, await merchantVault.getAddress());
     await seer.setScore(merchant.address, 6000);
 
-    const MerchantRegistry = await ethers.getContractFactory("MerchantRegistry");
+    const MerchantRegistry = await ethers.getContractFactory('MerchantRegistry');
     const registry = await MerchantRegistry.deploy(
       dao.address,
       await token.getAddress(),
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      await ledger.getAddress(),
+      await ledger.getAddress()
     );
     await registry.waitForDeployment();
 
-    await registry.connect(merchant).addMerchant(ethers.keccak256(ethers.toUtf8Bytes("merchant-meta")));
+    await registry
+      .connect(merchant)
+      .addMerchant(ethers.keccak256(ethers.toUtf8Bytes('merchant-meta')));
 
-    const CommerceEscrow = await ethers.getContractFactory("CommerceEscrow");
+    const CommerceEscrow = await ethers.getContractFactory('CommerceEscrow');
     const escrow = await CommerceEscrow.deploy(
       dao.address,
       await token.getAddress(),
       await vaultHub.getAddress(),
-      await registry.getAddress(),
+      await registry.getAddress()
     );
     await escrow.waitForDeployment();
 
-    const amount = ethers.parseEther("50");
+    const amount = ethers.parseEther('50');
     await token.mint(await buyerVault.getAddress(), amount);
     await buyerVault.approve(await token.getAddress(), await escrow.getAddress(), amount);
 
-    await escrow.connect(customer).open(merchant.address, amount, ethers.keccak256(ethers.toUtf8Bytes("escrow")));
+    await escrow
+      .connect(customer)
+      .open(merchant.address, amount, ethers.keccak256(ethers.toUtf8Bytes('escrow')));
 
     // Buyer rotates/remaps vault after open; markFunded must fail closed.
     await vaultHub.setVault(customer.address, await remappedVault.getAddress());
 
-    await assert.rejects(
-      async () => {
-        await escrow.connect(customer).markFunded(1);
-      },
-      /COM_NotAllowed|revert/
-    );
+    await assert.rejects(async () => {
+      await escrow.connect(customer).markFunded(1);
+    }, /COM_NotAllowed|revert/);
   });
 });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { CardBoundVault } from "./CardBoundVault.sol";
+import {CardBoundVault} from "./CardBoundVault.sol";
 
 /// @notice CardBoundVaultDeployer
 /// @title CardBoundVaultDeployer
@@ -72,20 +72,19 @@ contract CardBoundVaultDeployer {
 
         bytes32 salt = _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger);
         bytes32 codeHash = keccak256(
-            _creationCode(hub, vfideToken, owner_, guardianThreshold, maxPerTransfer, dailyLimit, ledger)
+            _creationCode(
+                hub,
+                vfideToken,
+                owner_,
+                guardianThreshold,
+                maxPerTransfer,
+                dailyLimit,
+                ledger
+            )
         );
         predicted = address(
             uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            bytes1(0xff),
-                            address(this),
-                            salt,
-                            codeHash
-                        )
-                    )
-                )
+                uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, codeHash)))
             )
         );
     }
@@ -114,7 +113,9 @@ contract CardBoundVaultDeployer {
         guardians[0] = owner_;
 
         vault = address(
-            new CardBoundVault{salt: _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger)}(
+            new CardBoundVault{
+                salt: _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger)
+            }(
                 hub,
                 vfideToken,
                 owner_,
@@ -149,20 +150,21 @@ contract CardBoundVaultDeployer {
         address[] memory guardians = new address[](1);
         guardians[0] = owner_;
 
-        return abi.encodePacked(
-            type(CardBoundVault).creationCode,
-            abi.encode(
-                hub,
-                vfideToken,
-                owner_,
-                owner_,
-                guardians,
-                guardianThreshold,
-                maxPerTransfer,
-                dailyLimit,
-                ledger
-            )
-        );
+        return
+            abi.encodePacked(
+                type(CardBoundVault).creationCode,
+                abi.encode(
+                    hub,
+                    vfideToken,
+                    owner_,
+                    owner_,
+                    guardians,
+                    guardianThreshold,
+                    maxPerTransfer,
+                    dailyLimit,
+                    ledger
+                )
+            );
     }
 
     /// @notice _salt

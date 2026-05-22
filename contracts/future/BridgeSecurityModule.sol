@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Ownable, ReentrancyGuard, Pausable } from "../SharedInterfaces.sol";
+import {Ownable, ReentrancyGuard, Pausable} from "../SharedInterfaces.sol";
 
 /**
  * @title BridgeSecurityModule
  * @notice Security controls for cross-chain bridge operations
  * @dev Implements rate limiting, daily caps, and suspicious transfer detection
- * 
+ *
  * Features:
  * - Hourly rate limiting (max 100K tokens/hour)
  * - Daily transfer caps (1M tokens/day)
@@ -66,7 +66,6 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     mapping(address => SuspiciousFlags) public suspiciousActivity;
     /// @notice Deprecated legacy field kept for ABI compatibility.
     mapping(address => bool) public blacklist;
-
 
     struct SuspiciousFlags {
         uint256 rapidTransferCount;
@@ -335,7 +334,10 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     function getCurrentHourlyVolume() external view returns (uint256 volume) {
         uint256 currentHour = block.timestamp / 1 hours;
         HourlyVolume memory hourVol = hourlyVolume[currentHour];
-        return (hourVol.timestamp >= currentHour && hourVol.timestamp < currentHour + 1) ? hourVol.amount : 0;
+        return
+            (hourVol.timestamp >= currentHour && hourVol.timestamp < currentHour + 1)
+                ? hourVol.amount
+                : 0;
     }
 
     /**
@@ -345,7 +347,10 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     function getCurrentDailyVolume() external view returns (uint256 volume) {
         uint256 currentDay = block.timestamp / 1 days;
         DailyVolume memory dayVol = dailyVolume[currentDay];
-        return (dayVol.timestamp >= currentDay && dayVol.timestamp < currentDay + 1) ? dayVol.amount : 0;
+        return
+            (dayVol.timestamp >= currentDay && dayVol.timestamp < currentDay + 1)
+                ? dayVol.amount
+                : 0;
     }
 
     /**

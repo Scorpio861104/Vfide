@@ -61,7 +61,10 @@ library EcosystemVaultLib {
     /// @param poolBalance poolBalance
     /// @param reserveBps reserveBps
     /// @return _uint256 _uint256
-    function getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) public pure returns (uint256) {
+    function getSpendablePoolBalance(
+        uint256 poolBalance,
+        uint16 reserveBps
+    ) public pure returns (uint256) {
         if (poolBalance < 1) return 0;
         if (reserveBps == 0) return poolBalance;
         uint256 reserveAmount = (poolBalance * reserveBps) / MAX_BPS;
@@ -135,9 +138,12 @@ library EcosystemVaultLib {
     /// @param amount amount
     /// @param minOutputPerVfide minOutputPerVfide
     /// @return stableAmount stableAmount
-    function vfideToStable(uint256 amount, uint256 minOutputPerVfide) public pure returns (uint256 stableAmount) {
+    function vfideToStable(
+        uint256 amount,
+        uint256 minOutputPerVfide
+    ) public pure returns (uint256 stableAmount) {
         if (minOutputPerVfide == 0) return 0;
-        stableAmount = amount * minOutputPerVfide / 1e18;
+        stableAmount = (amount * minOutputPerVfide) / 1e18;
     }
 
     /// @notice getMerchantTierMultipliers
@@ -149,17 +155,29 @@ library EcosystemVaultLib {
     /// @return tier3Multiplier tier3Multiplier
     /// @return tier4Threshold tier4Threshold
     /// @return tier4Multiplier tier4Multiplier
-    function getMerchantTierMultipliers() internal pure returns (
-        uint16 tier1Threshold, uint16 tier1Multiplier,
-        uint16 tier2Threshold, uint16 tier2Multiplier,
-        uint16 tier3Threshold, uint16 tier3Multiplier,
-        uint16 tier4Threshold, uint16 tier4Multiplier
-    ) {
+    function getMerchantTierMultipliers()
+        internal
+        pure
+        returns (
+            uint16 tier1Threshold,
+            uint16 tier1Multiplier,
+            uint16 tier2Threshold,
+            uint16 tier2Multiplier,
+            uint16 tier3Threshold,
+            uint16 tier3Multiplier,
+            uint16 tier4Threshold,
+            uint16 tier4Multiplier
+        )
+    {
         return (
-            TIER1_THRESHOLD, TIER1_MULTIPLIER,
-            TIER2_THRESHOLD, TIER2_MULTIPLIER,
-            TIER3_THRESHOLD, TIER3_MULTIPLIER,
-            TIER4_THRESHOLD, TIER4_MULTIPLIER
+            TIER1_THRESHOLD,
+            TIER1_MULTIPLIER,
+            TIER2_THRESHOLD,
+            TIER2_MULTIPLIER,
+            TIER3_THRESHOLD,
+            TIER3_MULTIPLIER,
+            TIER4_THRESHOLD,
+            TIER4_MULTIPLIER
         );
     }
 }

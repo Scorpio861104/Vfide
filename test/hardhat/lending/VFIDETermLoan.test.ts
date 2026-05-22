@@ -15,23 +15,24 @@
  *   - DAO administration
  */
 
-import { expect } from "chai";
-import hre from "hardhat";
+import { expect } from 'chai';
+import hre from 'hardhat';
 
 const { ethers } = await hre.network.connect();
 const loadFixture = async <T>(fixture: () => Promise<T>) => fixture();
 
-describe("VFIDETermLoan", function () {
+describe('VFIDETermLoan', function () {
   async function deployFixture() {
-    const [owner, lender, borrower, guarantor1, guarantor2, feeCollector] = await ethers.getSigners();
+    const [owner, lender, borrower, guarantor1, guarantor2, feeCollector] =
+      await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("TestMintableToken");
+    const Token = await ethers.getContractFactory('TestMintableToken');
     const token = await Token.deploy();
     await token.waitForDeployment();
-    await token.mint(owner.address, ethers.parseEther("1000000"));
+    await token.mint(owner.address, ethers.parseEther('1000000'));
 
     // Deploy TermLoan
-    const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+    const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
     const termLoan = await TermLoan.deploy(
       await token.getAddress(),
       owner.address,
@@ -42,56 +43,76 @@ describe("VFIDETermLoan", function () {
     await termLoan.waitForDeployment();
 
     // Fund participants
-    await token.transfer(lender.address, ethers.parseEther("50000"));
-    await token.transfer(borrower.address, ethers.parseEther("10000"));
-    await token.transfer(guarantor1.address, ethers.parseEther("20000"));
-    await token.transfer(guarantor2.address, ethers.parseEther("20000"));
+    await token.transfer(lender.address, ethers.parseEther('50000'));
+    await token.transfer(borrower.address, ethers.parseEther('10000'));
+    await token.transfer(guarantor1.address, ethers.parseEther('20000'));
+    await token.transfer(guarantor2.address, ethers.parseEther('20000'));
 
     const FOURTEEN_DAYS = 14 * 24 * 60 * 60;
     const ONE_DAY = 24 * 60 * 60;
     const THREE_DAYS = 3 * 24 * 60 * 60;
 
-    return { token, termLoan, owner, lender, borrower, guarantor1, guarantor2, feeCollector, FOURTEEN_DAYS, ONE_DAY, THREE_DAYS };
+    return {
+      token,
+      termLoan,
+      owner,
+      lender,
+      borrower,
+      guarantor1,
+      guarantor2,
+      feeCollector,
+      FOURTEEN_DAYS,
+      ONE_DAY,
+      THREE_DAYS,
+    };
   }
 
-  describe("Loan Creation", function () {
-    it("should create loan offer", async function () {
+  describe('Loan Creation', function () {
+    it('should create loan offer', async function () {
       const f = await loadFixture(deployFixture);
 
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("500"));
-      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 500, f.FOURTEEN_DAYS);
+      await f.token
+        .connect(f.lender)
+        .approve(await f.termLoan.getAddress(), ethers.parseEther('500'));
+      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther('500'), 500, f.FOURTEEN_DAYS);
 
       const loan = await f.termLoan.getLoan(1);
       expect(loan.lender).to.equal(f.lender.address);
-      expect(loan.principal).to.equal(ethers.parseEther("500"));
+      expect(loan.principal).to.equal(ethers.parseEther('500'));
       expect(loan.interestBps).to.equal(500);
       expect(loan.state).to.equal(0); // OPEN
     });
 
-    it("should reject interest above 12%", async function () {
+    it('should reject interest above 12%', async function () {
       const f = await loadFixture(deployFixture);
 
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("500"));
+      await f.token
+        .connect(f.lender)
+        .approve(await f.termLoan.getAddress(), ethers.parseEther('500'));
       await expect(
-        f.termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 1500, f.FOURTEEN_DAYS)
-      ).to.be.revertedWithCustomError(f.termLoan, "TL_InvalidTerms");
+        f.termLoan.connect(f.lender).createLoan(ethers.parseEther('500'), 1500, f.FOURTEEN_DAYS)
+      ).to.be.revertedWithCustomError(f.termLoan, 'TL_InvalidTerms');
     });
 
-    it("should reject duration > 30 days", async function () {
+    it('should reject duration > 30 days', async function () {
       const f = await loadFixture(deployFixture);
 
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("500"));
+      await f.token
+        .connect(f.lender)
+        .approve(await f.termLoan.getAddress(), ethers.parseEther('500'));
       await expect(
-        f.termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 500, 31 * 86400)
-      ).to.be.revertedWithCustomError(f.termLoan, "TL_InvalidTerms");
+        f.termLoan.connect(f.lender).createLoan(ethers.parseEther('500'), 500, 31 * 86400)
+      ).to.be.revertedWithCustomError(f.termLoan, 'TL_InvalidTerms');
     });
 
-    it("should allow lender to cancel open offer", async function () {
+    it('should allow lender to cancel open offer', async function () {
       const f = await loadFixture(deployFixture);
 
       const balBefore = await f.token.balanceOf(f.lender.address);
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("500"));
-      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 500, f.FOURTEEN_DAYS);
+      await f.token
+        .connect(f.lender)
+        .approve(await f.termLoan.getAddress(), ethers.parseEther('500'));
+      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther('500'), 500, f.FOURTEEN_DAYS);
       await f.termLoan.connect(f.lender).cancelLoan(1);
 
       const loan = await f.termLoan.getLoan(1);
@@ -100,37 +121,43 @@ describe("VFIDETermLoan", function () {
       expect(balAfter).to.equal(balBefore); // Principal returned
     });
 
-    it("should require a vault when VaultHub integration is enabled", async function () {
+    it('should require a vault when VaultHub integration is enabled', async function () {
       const f = await loadFixture(deployFixture);
 
-      const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+      const VaultHubStub = await ethers.getContractFactory(
+        'test/contracts/helpers/Stubs.sol:VaultHubStub'
+      );
       const vaultHub = await VaultHubStub.deploy();
       await vaultHub.waitForDeployment();
 
-      const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+      const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
       const termLoan = await TermLoan.deploy(
         await f.token.getAddress(),
         f.owner.address,
         ethers.ZeroAddress,
         await vaultHub.getAddress(),
-        f.feeCollector.address,
+        f.feeCollector.address
       );
       await termLoan.waitForDeployment();
 
-      await f.token.connect(f.lender).approve(await termLoan.getAddress(), ethers.parseEther("500"));
+      await f.token
+        .connect(f.lender)
+        .approve(await termLoan.getAddress(), ethers.parseEther('500'));
 
       await expect(
-        termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 500, f.FOURTEEN_DAYS)
-      ).to.be.revertedWithCustomError(termLoan, "TL_NoVault");
+        termLoan.connect(f.lender).createLoan(ethers.parseEther('500'), 500, f.FOURTEEN_DAYS)
+      ).to.be.revertedWithCustomError(termLoan, 'TL_NoVault');
     });
   });
 
-  describe("Loan Acceptance", function () {
-    it("should allow borrower to accept", async function () {
+  describe('Loan Acceptance', function () {
+    it('should allow borrower to accept', async function () {
       const f = await loadFixture(deployFixture);
 
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("100"));
-      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther("100"), 500, f.FOURTEEN_DAYS);
+      await f.token
+        .connect(f.lender)
+        .approve(await f.termLoan.getAddress(), ethers.parseEther('100'));
+      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther('100'), 500, f.FOURTEEN_DAYS);
       await f.termLoan.connect(f.borrower).acceptLoan(1);
 
       const loan = await f.termLoan.getLoan(1);
@@ -138,22 +165,29 @@ describe("VFIDETermLoan", function () {
       expect(loan.state).to.equal(1); // COSIGNING
     });
 
-    it("should reject self-lending", async function () {
+    it('should reject self-lending', async function () {
       const f = await loadFixture(deployFixture);
 
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("500"));
-      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 500, f.FOURTEEN_DAYS);
+      await f.token
+        .connect(f.lender)
+        .approve(await f.termLoan.getAddress(), ethers.parseEther('500'));
+      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther('500'), 500, f.FOURTEEN_DAYS);
 
-      await expect(
-        f.termLoan.connect(f.lender).acceptLoan(1)
-      ).to.be.revertedWithCustomError(f.termLoan, "TL_SelfLoan");
+      await expect(f.termLoan.connect(f.lender).acceptLoan(1)).to.be.revertedWithCustomError(
+        f.termLoan,
+        'TL_SelfLoan'
+      );
     });
 
-    it("should require guarantor allowance to cover aggregate active liabilities", async function () {
+    it('should require guarantor allowance to cover aggregate active liabilities', async function () {
       const f = await loadFixture(deployFixture);
 
-      const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
-      const GuardianVaultStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianVaultStub");
+      const VaultHubStub = await ethers.getContractFactory(
+        'test/contracts/helpers/Stubs.sol:VaultHubStub'
+      );
+      const GuardianVaultStub = await ethers.getContractFactory(
+        'test/contracts/helpers/Stubs.sol:GuardianVaultStub'
+      );
 
       const vaultHub = await VaultHubStub.deploy();
       const lenderVault = await GuardianVaultStub.deploy();
@@ -169,22 +203,30 @@ describe("VFIDETermLoan", function () {
       await vaultHub.setVault(f.guarantor1.address, await guarantorVault.getAddress());
       await borrowerVault.setGuardian(f.guarantor1.address, true);
 
-      const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+      const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
       const termLoan = await TermLoan.deploy(
         await f.token.getAddress(),
         f.owner.address,
         ethers.ZeroAddress,
         await vaultHub.getAddress(),
-        f.feeCollector.address,
+        f.feeCollector.address
       );
       await termLoan.waitForDeployment();
 
-      const principal = ethers.parseEther("100");
-      await f.token.transfer(await lenderVault.getAddress(), ethers.parseEther("300"));
-      await f.token.transfer(await guarantorVault.getAddress(), ethers.parseEther("500"));
+      const principal = ethers.parseEther('100');
+      await f.token.transfer(await lenderVault.getAddress(), ethers.parseEther('300'));
+      await f.token.transfer(await guarantorVault.getAddress(), ethers.parseEther('500'));
 
-      await lenderVault.approve(await f.token.getAddress(), await termLoan.getAddress(), ethers.parseEther("300"));
-      await guarantorVault.approve(await f.token.getAddress(), await termLoan.getAddress(), principal);
+      await lenderVault.approve(
+        await f.token.getAddress(),
+        await termLoan.getAddress(),
+        ethers.parseEther('300')
+      );
+      await guarantorVault.approve(
+        await f.token.getAddress(),
+        await termLoan.getAddress(),
+        principal
+      );
 
       await termLoan.connect(f.lender).createLoan(principal, 500, f.FOURTEEN_DAYS);
       await termLoan.connect(f.borrower).acceptLoan(1);
@@ -193,14 +235,14 @@ describe("VFIDETermLoan", function () {
       await termLoan.connect(f.lender).createLoan(principal, 500, f.FOURTEEN_DAYS);
       await termLoan.connect(f.borrower).acceptLoan(2);
 
-      await expect(
-        termLoan.connect(f.guarantor1).signAsGuarantor(2)
-      ).to.be.revertedWith("TL: guarantor must approve liability first");
+      await expect(termLoan.connect(f.guarantor1).signAsGuarantor(2)).to.be.revertedWith(
+        'TL: guarantor must approve liability first'
+      );
     });
   });
 
-  describe("Default Blocking", function () {
-    it("should block borrower with unresolved default from new loans", async function () {
+  describe('Default Blocking', function () {
+    it('should block borrower with unresolved default from new loans', async function () {
       const f = await loadFixture(deployFixture);
 
       // Simulate: increment unresolvedDefaults manually
@@ -211,26 +253,33 @@ describe("VFIDETermLoan", function () {
     });
   });
 
-  describe("Repayment", function () {
+  describe('Repayment', function () {
     // Note: Full repayment flow requires guarantor signing which
     // requires VaultHub integration. These test the individual functions.
 
-    it("should reject repay on non-active loan", async function () {
+    it('should reject repay on non-active loan', async function () {
       const f = await loadFixture(deployFixture);
 
-      await f.token.connect(f.lender).approve(await f.termLoan.getAddress(), ethers.parseEther("500"));
-      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther("500"), 500, f.FOURTEEN_DAYS);
+      await f.token
+        .connect(f.lender)
+        .approve(await f.termLoan.getAddress(), ethers.parseEther('500'));
+      await f.termLoan.connect(f.lender).createLoan(ethers.parseEther('500'), 500, f.FOURTEEN_DAYS);
 
-      await expect(
-        f.termLoan.connect(f.borrower).repay(1)
-      ).to.be.revertedWithCustomError(f.termLoan, "TL_NotBorrower");
+      await expect(f.termLoan.connect(f.borrower).repay(1)).to.be.revertedWithCustomError(
+        f.termLoan,
+        'TL_NotBorrower'
+      );
     });
 
-    it("should settle loan proceeds and repayments through configured vaults", async function () {
+    it('should settle loan proceeds and repayments through configured vaults', async function () {
       const f = await loadFixture(deployFixture);
 
-      const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
-      const GuardianVaultStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianVaultStub");
+      const VaultHubStub = await ethers.getContractFactory(
+        'test/contracts/helpers/Stubs.sol:VaultHubStub'
+      );
+      const GuardianVaultStub = await ethers.getContractFactory(
+        'test/contracts/helpers/Stubs.sol:GuardianVaultStub'
+      );
 
       const vaultHub = await VaultHubStub.deploy();
       const lenderVault = await GuardianVaultStub.deploy();
@@ -246,32 +295,42 @@ describe("VFIDETermLoan", function () {
       await vaultHub.setVault(f.guarantor1.address, await guarantorVault.getAddress());
       await borrowerVault.setGuardian(f.guarantor1.address, true);
 
-      const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+      const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
       const termLoan = await TermLoan.deploy(
         await f.token.getAddress(),
         f.owner.address,
         ethers.ZeroAddress,
         await vaultHub.getAddress(),
-        f.feeCollector.address,
+        f.feeCollector.address
       );
       await termLoan.waitForDeployment();
 
-      const principal = ethers.parseEther("100");
-      const totalOwed = ethers.parseEther("105");
+      const principal = ethers.parseEther('100');
+      const totalOwed = ethers.parseEther('105');
 
       await f.token.transfer(await lenderVault.getAddress(), principal);
-      await f.token.transfer(await guarantorVault.getAddress(), ethers.parseEther("200"));
+      await f.token.transfer(await guarantorVault.getAddress(), ethers.parseEther('200'));
       await f.token.connect(f.borrower).transfer(await borrowerVault.getAddress(), totalOwed);
 
       await lenderVault.approve(await f.token.getAddress(), await termLoan.getAddress(), principal);
-      await guarantorVault.approve(await f.token.getAddress(), await termLoan.getAddress(), principal);
-      await borrowerVault.approve(await f.token.getAddress(), await termLoan.getAddress(), totalOwed);
+      await guarantorVault.approve(
+        await f.token.getAddress(),
+        await termLoan.getAddress(),
+        principal
+      );
+      await borrowerVault.approve(
+        await f.token.getAddress(),
+        await termLoan.getAddress(),
+        totalOwed
+      );
 
       await termLoan.connect(f.lender).createLoan(principal, 500, f.FOURTEEN_DAYS);
       await termLoan.connect(f.borrower).acceptLoan(1);
       await termLoan.connect(f.guarantor1).signAsGuarantor(1);
 
-      expect(await f.token.balanceOf(await borrowerVault.getAddress())).to.equal(totalOwed + principal);
+      expect(await f.token.balanceOf(await borrowerVault.getAddress())).to.equal(
+        totalOwed + principal
+      );
 
       const lenderWalletBalanceBefore = await f.token.balanceOf(f.lender.address);
       const lenderVaultBalanceBefore = await f.token.balanceOf(await lenderVault.getAddress());
@@ -279,15 +338,21 @@ describe("VFIDETermLoan", function () {
       const lenderWalletBalanceAfter = await f.token.balanceOf(f.lender.address);
       const lenderVaultBalanceAfter = await f.token.balanceOf(await lenderVault.getAddress());
 
-      expect(lenderVaultBalanceAfter - lenderVaultBalanceBefore).to.equal(ethers.parseEther("104.5"));
+      expect(lenderVaultBalanceAfter - lenderVaultBalanceBefore).to.equal(
+        ethers.parseEther('104.5')
+      );
       expect(lenderWalletBalanceAfter).to.equal(lenderWalletBalanceBefore);
     });
 
-    it("skips guarantor extraction when stored source no longer matches guarantor ownership/vault", async function () {
+    it('skips guarantor extraction when stored source no longer matches guarantor ownership/vault', async function () {
       const f = await loadFixture(deployFixture);
 
-      const VaultHubStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
-      const GuardianVaultStub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:GuardianVaultStub");
+      const VaultHubStub = await ethers.getContractFactory(
+        'test/contracts/helpers/Stubs.sol:VaultHubStub'
+      );
+      const GuardianVaultStub = await ethers.getContractFactory(
+        'test/contracts/helpers/Stubs.sol:GuardianVaultStub'
+      );
 
       const vaultHub = await VaultHubStub.deploy();
       const lenderVault = await GuardianVaultStub.deploy();
@@ -303,35 +368,41 @@ describe("VFIDETermLoan", function () {
       await vaultHub.setVault(f.guarantor1.address, await guarantorVault.getAddress());
       await borrowerVault.setGuardian(f.guarantor1.address, true);
 
-      const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+      const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
       const termLoan = await TermLoan.deploy(
         await f.token.getAddress(),
         f.owner.address,
         ethers.ZeroAddress,
         await vaultHub.getAddress(),
-        f.feeCollector.address,
+        f.feeCollector.address
       );
       await termLoan.waitForDeployment();
 
-      const principal = ethers.parseEther("100");
+      const principal = ethers.parseEther('100');
       await f.token.transfer(await lenderVault.getAddress(), principal);
-      await f.token.transfer(await guarantorVault.getAddress(), ethers.parseEther("200"));
+      await f.token.transfer(await guarantorVault.getAddress(), ethers.parseEther('200'));
 
       await lenderVault.approve(await f.token.getAddress(), await termLoan.getAddress(), principal);
-      await guarantorVault.approve(await f.token.getAddress(), await termLoan.getAddress(), principal);
+      await guarantorVault.approve(
+        await f.token.getAddress(),
+        await termLoan.getAddress(),
+        principal
+      );
 
       await termLoan.connect(f.lender).createLoan(principal, 500, f.ONE_DAY);
       await termLoan.connect(f.borrower).acceptLoan(1);
       await termLoan.connect(f.guarantor1).signAsGuarantor(1);
 
-      expect(await termLoan.guarantorVault(1, f.guarantor1.address)).to.equal(await guarantorVault.getAddress());
+      expect(await termLoan.guarantorVault(1, f.guarantor1.address)).to.equal(
+        await guarantorVault.getAddress()
+      );
 
       // Change guarantor's current vault mapping after signing to invalidate the stored source.
       await vaultHub.setVault(f.guarantor1.address, f.guarantor2.address);
       expect(await vaultHub.vaultOf(f.guarantor1.address)).to.equal(f.guarantor2.address);
 
-      await ethers.provider.send("evm_increaseTime", [f.ONE_DAY + 3 * f.ONE_DAY + 1]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [f.ONE_DAY + 3 * f.ONE_DAY + 1]);
+      await ethers.provider.send('evm_mine', []);
 
       await termLoan.connect(f.lender).claimDefault(1);
       const lenderVaultBalanceBefore = await f.token.balanceOf(await lenderVault.getAddress());
@@ -345,16 +416,16 @@ describe("VFIDETermLoan", function () {
     });
   });
 
-  describe("View Functions", function () {
-    it("should return correct max borrowable", async function () {
+  describe('View Functions', function () {
+    it('should return correct max borrowable', async function () {
       const f = await loadFixture(deployFixture);
 
       // Without Seer, returns tier1Limit (100 VFIDE)
       const max = await f.termLoan.maxBorrowable(f.borrower.address);
-      expect(max).to.equal(ethers.parseEther("100"));
+      expect(max).to.equal(ethers.parseEther('100'));
     });
 
-    it("should return protocol stats", async function () {
+    it('should return protocol stats', async function () {
       const f = await loadFixture(deployFixture);
 
       const stats = await f.termLoan.getStats();
@@ -363,27 +434,28 @@ describe("VFIDETermLoan", function () {
     });
   });
 
-  describe("DAO Administration", function () {
-    it("should allow DAO to update score tiers", async function () {
+  describe('DAO Administration', function () {
+    it('should allow DAO to update score tiers', async function () {
       const f = await loadFixture(deployFixture);
 
       await f.termLoan.connect(f.owner).setScoreTiers(
-        ethers.parseEther("200"),  // tier1
-        ethers.parseEther("2000"), // tier2
-        ethers.parseEther("10000"), // tier3
-        ethers.parseEther("50000"), // tier4
+        ethers.parseEther('200'), // tier1
+        ethers.parseEther('2000'), // tier2
+        ethers.parseEther('10000'), // tier3
+        ethers.parseEther('50000') // tier4
       );
 
       const max = await f.termLoan.maxBorrowable(f.borrower.address);
-      expect(max).to.equal(ethers.parseEther("200")); // Updated tier1
+      expect(max).to.equal(ethers.parseEther('200')); // Updated tier1
     });
 
-    it("should reject non-DAO admin calls", async function () {
+    it('should reject non-DAO admin calls', async function () {
       const f = await loadFixture(deployFixture);
 
-      await expect(
-        f.termLoan.connect(f.borrower).setPaused(true)
-      ).to.be.revertedWithCustomError(f.termLoan, "TL_NotDAO");
+      await expect(f.termLoan.connect(f.borrower).setPaused(true)).to.be.revertedWithCustomError(
+        f.termLoan,
+        'TL_NotDAO'
+      );
     });
   });
 });

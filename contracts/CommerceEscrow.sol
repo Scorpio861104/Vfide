@@ -6,8 +6,22 @@ pragma solidity 0.8.30;
 // contract type referenced by `merchants` below.
 // Note: SafeERC20/IERC20 must be imported explicitly because Wave 3's named-import
 // refactor doesn't transitively re-export them through MerchantRegistry.sol.
-import { SafeERC20, IERC20 } from "./SharedInterfaces.sol";
-import { IVaultHub_COM, COM_NotDAO, COM_Zero, COM_NotMerchant, COM_Suspended, COM_Delisted, COM_NotBuyer, COM_NotSeller, COM_BadAmount, COM_BadState, COM_NotAllowed, COM_NotInheritanceActive, MerchantRegistry } from "./MerchantRegistry.sol";
+import {SafeERC20, IERC20} from "./SharedInterfaces.sol";
+import {
+    IVaultHub_COM,
+    COM_NotDAO,
+    COM_Zero,
+    COM_NotMerchant,
+    COM_Suspended,
+    COM_Delisted,
+    COM_NotBuyer,
+    COM_NotSeller,
+    COM_BadAmount,
+    COM_BadState,
+    COM_NotAllowed,
+    COM_NotInheritanceActive,
+    MerchantRegistry
+} from "./MerchantRegistry.sol";
 
 /// @notice Phase 3d Turn 3 — calling interface for atomic escrow funding on CardBoundVault.
 /// @dev Mirrors the ICardBoundVaultPay pattern in MerchantPortal: declare the calling interface
@@ -51,14 +65,22 @@ interface ICardBoundVaultFundEscrow {
 contract CommerceEscrow {
     using SafeERC20 for IERC20;
 
-    enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED }
+    enum State {
+        NONE,
+        OPEN,
+        FUNDED,
+        RELEASED,
+        REFUNDED,
+        DISPUTED,
+        RESOLVED
+    }
 
     /// @notice dao
     address public immutable dao;
     /// @notice token
-    IERC20     public immutable token;
+    IERC20 public immutable token;
     /// @notice vaultHub
-    IVaultHub_COM  public immutable vaultHub;
+    IVaultHub_COM public immutable vaultHub;
     /// @notice merchants
     MerchantRegistry public immutable merchants;
 
@@ -78,11 +100,11 @@ contract CommerceEscrow {
         address buyerVault;
         address sellerVault;
         uint256 amount;
-        State   state;
+        State state;
         bytes32 metaHash;
         // M-COMMERCE-1 FIX: openedAt timestamp lets unfunded OPEN escrows be cancelled
         // after OPEN_ESCROW_EXPIRY without funder action, preventing storage pollution.
-        uint64  openedAt;
+        uint64 openedAt;
     }
 
     // M-COMMERCE-1 FIX: How long an OPEN (unfunded) escrow stays valid before anyone can cancel it.
@@ -156,7 +178,10 @@ contract CommerceEscrow {
     event EscrowResolved(uint256 indexed id, bool buyerWins);
 
     /// @notice onlyDAO
-    modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
+    modifier onlyDAO() {
+        if (msg.sender != dao) revert COM_NotDAO();
+        _;
+    }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -164,8 +189,16 @@ contract CommerceEscrow {
     /// @param _hub _hub
     /// @param _merchants _merchants
     constructor(address _dao, address _token, address _hub, address _merchants) {
-        if (_dao==address(0)||_token==address(0)||_hub==address(0)||_merchants==address(0)) revert COM_Zero();
-        dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); merchants=MerchantRegistry(_merchants);
+        if (
+            _dao == address(0) ||
+            _token == address(0) ||
+            _hub == address(0) ||
+            _merchants == address(0)
+        ) revert COM_Zero();
+        dao = _dao;
+        token = IERC20(_token);
+        vaultHub = IVaultHub_COM(_hub);
+        merchants = MerchantRegistry(_merchants);
     }
 
     /// @notice setMinDisputeAmountForPenalty
@@ -182,7 +215,9 @@ contract CommerceEscrow {
      * @return buyerVault buyerVault
      * @return spender spender
      */
-    function getRequiredApproval(address buyerOwner) external view returns (address buyerVault, address spender) {
+    function getRequiredApproval(
+        address buyerOwner
+    ) external view returns (address buyerVault, address spender) {
         buyerVault = vaultHub.vaultOf(buyerOwner);
         spender = address(this);
     }
@@ -192,7 +227,11 @@ contract CommerceEscrow {
     /// @param amount amount
     /// @param metaHash metaHash
     /// @return id id
-    function open(address merchantOwner, uint256 amount, bytes32 metaHash) external nonReentrant returns (uint256 id) {
+    function open(
+        address merchantOwner,
+        uint256 amount,
+        bytes32 metaHash
+    ) external nonReentrant returns (uint256 id) {
         if (amount == 0) revert COM_BadAmount();
         MerchantRegistry.Merchant memory m = merchants.info(merchantOwner);
         if (m.status == MerchantRegistry.Status.NONE) revert COM_NotMerchant();
@@ -318,7 +357,8 @@ contract CommerceEscrow {
         // Defense in depth: only pull funds from the buyer vault that still belongs
         // to the escrow buyer owner at funding time.
         address currentBuyerVault = vaultHub.vaultOf(e.buyerOwner);
-        if (currentBuyerVault == address(0) || currentBuyerVault != e.buyerVault) revert COM_NotAllowed();
+        if (currentBuyerVault == address(0) || currentBuyerVault != e.buyerVault)
+            revert COM_NotAllowed();
 
         e.state = State.FUNDED;
         escrowDeposited[id] = e.amount;

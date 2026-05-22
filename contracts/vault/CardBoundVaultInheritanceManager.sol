@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20 } from "../SharedInterfaces.sol";
+import {IERC20} from "../SharedInterfaces.sol";
 
 /// @notice ICardBoundVaultInheritanceAccess
 /// @title ICardBoundVaultInheritanceAccess
@@ -155,12 +155,21 @@ contract CardBoundVaultInheritanceManager {
     /// @param heirGuardians heirGuardians
     /// @param heirCommitments heirCommitments
     /// @param effectiveAt effectiveAt
-    event InheritanceConfigProposed(uint64 indexed pendingVersion, address[] heirGuardians, bytes32[] heirCommitments, uint256 effectiveAt);
+    event InheritanceConfigProposed(
+        uint64 indexed pendingVersion,
+        address[] heirGuardians,
+        bytes32[] heirCommitments,
+        uint256 effectiveAt
+    );
     /// @notice InheritanceConfigConfirmed
     /// @param configVersion configVersion
     /// @param heirGuardians heirGuardians
     /// @param heirCommitments heirCommitments
-    event InheritanceConfigConfirmed(uint64 indexed configVersion, address[] heirGuardians, bytes32[] heirCommitments);
+    event InheritanceConfigConfirmed(
+        uint64 indexed configVersion,
+        address[] heirGuardians,
+        bytes32[] heirCommitments
+    );
     /// @notice InheritanceConfigCancelled
     event InheritanceConfigCancelled();
     /// @notice ProofOfLifeWalletSet
@@ -171,7 +180,12 @@ contract CardBoundVaultInheritanceManager {
     /// @param reasonHash reasonHash
     /// @param vetoWindowEnd vetoWindowEnd
     /// @param configVersion configVersion
-    event InheritanceClaimInitiated(address indexed initiatingGuardian, bytes32 reasonHash, uint64 vetoWindowEnd, uint64 configVersion);
+    event InheritanceClaimInitiated(
+        address indexed initiatingGuardian,
+        bytes32 reasonHash,
+        uint64 vetoWindowEnd,
+        uint64 configVersion
+    );
     /// @notice InheritanceClaimVetoed
     /// @param guardian guardian
     /// @param currentVetos currentVetos
@@ -197,7 +211,11 @@ contract CardBoundVaultInheritanceManager {
     /// @param escrowsResolved escrowsResolved
     /// @param loansRepaid loansRepaid
     /// @param subsCancelled subsCancelled
-    event PendingObligationsSettled(uint256 escrowsResolved, uint256 loansRepaid, uint256 subsCancelled);
+    event PendingObligationsSettled(
+        uint256 escrowsResolved,
+        uint256 loansRepaid,
+        uint256 subsCancelled
+    );
     /// @notice VaultEnteredMemorial
     /// @param memorialEnd memorialEnd
     event VaultEnteredMemorial(uint64 memorialEnd);
@@ -211,12 +229,20 @@ contract CardBoundVaultInheritanceManager {
     /// @param pendingVersion pendingVersion
     /// @param guardian guardian
     /// @param currentVotes currentVotes
-    event PendingConfigCancellationVoted(uint64 indexed pendingVersion, address indexed guardian, uint256 currentVotes);
+    event PendingConfigCancellationVoted(
+        uint64 indexed pendingVersion,
+        address indexed guardian,
+        uint256 currentVotes
+    );
     /// @notice R-1 — emitted when guardian-quorum cancellation succeeds and pending state is cleared.
     /// @param pendingVersion pendingVersion
     /// @param finalVotes finalVotes
     /// @param threshold threshold
-    event PendingConfigCancelledByGuardians(uint64 indexed pendingVersion, uint256 finalVotes, uint256 threshold);
+    event PendingConfigCancelledByGuardians(
+        uint64 indexed pendingVersion,
+        uint256 finalVotes,
+        uint256 threshold
+    );
 
     /// @notice INH_NotGuardian
     error INH_NotGuardian();
@@ -317,7 +343,12 @@ contract CardBoundVaultInheritanceManager {
         pendingHeirConfigEffectiveAt = uint64(block.timestamp + INHERITANCE_CONFIG_COOLDOWN);
         pendingConfigHash = keccak256(abi.encode(newVersion, heirGuardians, heirCommitments));
 
-        emit InheritanceConfigProposed(newVersion, heirGuardians, heirCommitments, pendingHeirConfigEffectiveAt);
+        emit InheritanceConfigProposed(
+            newVersion,
+            heirGuardians,
+            heirCommitments,
+            pendingHeirConfigEffectiveAt
+        );
     }
 
     /// @notice confirmInheritanceConfig
@@ -402,7 +433,12 @@ contract CardBoundVaultInheritanceManager {
         pendingConfigVersion = inheritanceConfigVersion + 1;
         pendingHeirConfigEffectiveAt = uint64(block.timestamp + INHERITANCE_CONFIG_COOLDOWN);
         pendingConfigHash = keccak256(abi.encode(pendingConfigVersion, noHeirs, noCommitments));
-        emit InheritanceConfigProposed(pendingConfigVersion, noHeirs, noCommitments, pendingHeirConfigEffectiveAt);
+        emit InheritanceConfigProposed(
+            pendingConfigVersion,
+            noHeirs,
+            noCommitments,
+            pendingHeirConfigEffectiveAt
+        );
     }
 
     // slither-disable-next-line missing-zero-check  // address(0) clears the proof-of-life wallet (intentional)
@@ -520,7 +556,12 @@ contract CardBoundVaultInheritanceManager {
         totalPaidOut = 0;
         withdrawnRevealerCount = 0;
 
-        emit InheritanceClaimInitiated(actor, reasonHash, inheritanceStateWindowEnd, claimConfigVersion);
+        emit InheritanceClaimInitiated(
+            actor,
+            reasonHash,
+            inheritanceStateWindowEnd,
+            claimConfigVersion
+        );
     }
 
     /// @notice vetoInheritanceClaim
@@ -563,7 +604,11 @@ contract CardBoundVaultInheritanceManager {
     /// @param actor actor
     /// @param heirSecret heirSecret
     /// @param basisPoints basisPoints
-    function claimHeirShare(address actor, bytes32 heirSecret, uint256 basisPoints) external onlyVault {
+    function claimHeirShare(
+        address actor,
+        bytes32 heirSecret,
+        uint256 basisPoints
+    ) external onlyVault {
         _rolloverToClaimWindowIfNeeded();
         if (inheritanceStateValue != STATE_CLAIM_WINDOW) {
             revert INH_WrongState(inheritanceStateValue, STATE_CLAIM_WINDOW);
@@ -658,7 +703,8 @@ contract CardBoundVaultInheritanceManager {
         }
 
         distributionFinalized = true;
-        uint256 forfeited = totalRevealed >= TOTAL_BASIS_POINTS ? 0 : TOTAL_BASIS_POINTS - totalRevealed;
+        uint256 forfeited =
+            totalRevealed >= TOTAL_BASIS_POINTS ? 0 : TOTAL_BASIS_POINTS - totalRevealed;
         emit InheritanceDistributionFinalized(totalRevealed, forfeited);
     }
 
@@ -667,14 +713,14 @@ contract CardBoundVaultInheritanceManager {
     /// @return amount amount
     /// @return finalBasisPoints finalBasisPoints
     /// @return completed completed
-    function consumeHeirPayout(address actor)
-        external
-        onlyVault
-        returns (uint256 amount, uint256 finalBasisPoints, bool completed)
-    {
+    function consumeHeirPayout(
+        address actor
+    ) external onlyVault returns (uint256 amount, uint256 finalBasisPoints, bool completed) {
         _rolloverToClaimWindowIfNeeded();
         if (!distributionFinalized) revert INH_DistributionNotFinalized();
-        if (inheritanceStateValue != STATE_CLAIM_WINDOW && inheritanceStateValue != STATE_MEMORIAL) {
+        if (
+            inheritanceStateValue != STATE_CLAIM_WINDOW && inheritanceStateValue != STATE_MEMORIAL
+        ) {
             revert INH_WrongState(inheritanceStateValue, STATE_CLAIM_WINDOW);
         }
 
@@ -747,12 +793,13 @@ contract CardBoundVaultInheritanceManager {
     /// @return finalBps Final basis points after redistribution (0 until finalizeInheritanceDistribution).
     /// @return payoutAmount Final payout amount in vfideToken units (0 until finalized).
     /// @return readyToWithdraw True iff distribution is finalized and the heir hasn't withdrawn yet.
-    function getHeirClaimStatus(address heir) external view returns (
-        uint256 revealedBps,
-        uint256 finalBps,
-        uint256 payoutAmount,
-        bool readyToWithdraw
-    ) {
+    function getHeirClaimStatus(
+        address heir
+    )
+        external
+        view
+        returns (uint256 revealedBps, uint256 finalBps, uint256 payoutAmount, bool readyToWithdraw)
+    {
         uint256 nonce = inheritanceClaimNonce;
         revealedBps = revealedBasisPointsByNonce[nonce][heir];
         finalBps = finalBasisPointsByNonce[nonce][heir];

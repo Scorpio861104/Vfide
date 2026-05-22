@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {MessagingFee, MessagingParams, MessagingReceipt, Origin} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
+import {
+    MessagingFee,
+    MessagingParams,
+    MessagingReceipt,
+    Origin
+} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 
 /// @notice ILayerZeroReceiverForBridgeMock
 /// @title ILayerZeroReceiverForBridgeMock
@@ -75,7 +80,11 @@ contract MockLzEndpointForBridge {
 
         pendingMessages.push(
             PendingMessage({
-                origin: Origin(endpointIds[msg.sender], bytes32(uint256(uint160(msg.sender))), nonce),
+                origin: Origin(
+                    endpointIds[msg.sender],
+                    bytes32(uint256(uint160(msg.sender))),
+                    nonce
+                ),
                 receiver: receiver,
                 guid: guid,
                 message: _params.message

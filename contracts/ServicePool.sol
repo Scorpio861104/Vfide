@@ -7,11 +7,11 @@ pragma solidity 0.8.30;
  * OZ version baseline: 5.1.0. Review OZ advisories on dependency updates.
  */
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // N-M37 FIX: minimal interface so pools can gate score-crediting on SeerWorkAttestation.
 //            When seerAttestation is set (non-zero), _recordContribution requires that
@@ -68,9 +68,9 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @notice periodStartTime
     uint256 public periodStartTime;
     /// @notice maxParticipants
-    uint256 public maxParticipants;     // Cap per pool (e.g. 12 for DAO)
+    uint256 public maxParticipants; // Cap per pool (e.g. 12 for DAO)
     /// @notice maxPayoutPerPeriod
-    uint256 public maxPayoutPerPeriod;  // Safety cap
+    uint256 public maxPayoutPerPeriod; // Safety cap
 
     // ═══════════════════════════════════════════════════════════
     // PER-PERIOD STATE
@@ -111,7 +111,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @notice totalPaidAllTime
     uint256 public totalPaidAllTime;
     /// @notice totalCommitted
-    uint256 public totalCommitted;  // Tokens promised to finalized periods but not yet claimed
+    uint256 public totalCommitted; // Tokens promised to finalized periods but not yet claimed
     /// @notice UNCLAIMED_SWEEP_DELAY
     uint256 public constant UNCLAIMED_SWEEP_DELAY = 180 days;
     /// @notice totalEarnedByWorker
@@ -399,7 +399,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         require(periods.length <= 50, "Batch too large");
         uint256 totalPayment = 0;
 
-        for (uint256 i = 0; i < periods.length;) {
+        for (uint256 i = 0; i < periods.length; ) {
             uint256 period = periods[i];
 
             if (
@@ -409,16 +409,25 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
                 scores[period][msg.sender] > 0 &&
                 periodPool[period] > 0
             ) {
-                uint256 payment = (periodPool[period] * scores[period][msg.sender]) / totalScores[period];
+                uint256 payment =
+                    (periodPool[period] * scores[period][msg.sender]) / totalScores[period];
                 if (payment > 0) {
                     claimed[period][msg.sender] = true;
                     periodClaimedTotal[period] += payment;
                     totalPayment += payment;
-                    emit PaymentClaimed(period, msg.sender, payment, scores[period][msg.sender], totalScores[period]);
+                    emit PaymentClaimed(
+                        period,
+                        msg.sender,
+                        payment,
+                        scores[period][msg.sender],
+                        totalScores[period]
+                    );
                 }
             }
 
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
         if (totalPayment == 0) revert NothingToClaim();
@@ -433,17 +442,16 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @dev Keeps `totalCommitted` aligned with actual outstanding obligations.
     /// @param periods periods
     /// @param to to
-    function sweepUnclaimed(uint256[] calldata periods, address to)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        nonReentrant
-    {
+    function sweepUnclaimed(
+        uint256[] calldata periods,
+        address to
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         if (to == address(0)) revert ZeroAddress();
         require(periods.length <= 100, "Batch too large");
 
         uint256 totalSweep = 0;
 
-        for (uint256 i = 0; i < periods.length;) {
+        for (uint256 i = 0; i < periods.length; ) {
             uint256 period = periods[i];
 
             if (
@@ -465,7 +473,9 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
                 emit UnclaimedSwept(period, outstanding, to);
             }
 
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
 
         if (totalSweep > 0) {
@@ -530,7 +540,9 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         emit PauseCancelled();
     }
     /// @notice unpause
-    function unpause() external onlyRole(ADMIN_ROLE) { _unpause(); }
+    function unpause() external onlyRole(ADMIN_ROLE) {
+        _unpause();
+    }
 
     /// @notice emergencyWithdraw
     /// @param to to
@@ -540,7 +552,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         if (to == address(0)) revert ZeroAddress();
         if (pendingEmergencyWithdraw.readyAt != 0) revert SP_AlreadyQueued();
         uint64 readyAt = uint64(block.timestamp) + EMERGENCY_WITHDRAW_DELAY;
-        pendingEmergencyWithdraw = PendingEmergencyWithdraw({ to: to, readyAt: readyAt });
+        pendingEmergencyWithdraw = PendingEmergencyWithdraw({to: to, readyAt: readyAt});
         uint256 total = vfideToken.balanceOf(address(this));
         uint256 withdrawable = total > totalCommitted ? total - totalCommitted : 0;
         emit EmergencyWithdrawQueued(to, withdrawable, readyAt);

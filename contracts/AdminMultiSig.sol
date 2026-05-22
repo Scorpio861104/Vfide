@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard, IERC20, ISeer } from "./SharedInterfaces.sol";
+import {ReentrancyGuard, IERC20, ISeer} from "./SharedInterfaces.sol";
 
 /**
  * @title AdminMultiSig
@@ -16,7 +16,7 @@ contract AdminMultiSig is ReentrancyGuard {
     uint256 public constant REQUIRED_APPROVALS = 3;
     /// @notice EMERGENCY_APPROVALS
     uint256 public constant EMERGENCY_APPROVALS = 4;
-    
+
     /// @notice CONFIG_DELAY
     uint256 public constant CONFIG_DELAY = 24 hours;
     /// @notice CRITICAL_DELAY
@@ -62,12 +62,12 @@ contract AdminMultiSig is ReentrancyGuard {
     address[COUNCIL_SIZE] public council;
     /// @notice isCouncilMember
     mapping(address => bool) public isCouncilMember;
-    
+
     /// @notice proposalCount
     uint256 public proposalCount;
     /// @notice proposals
     mapping(uint256 => Proposal) public proposals;
-    
+
     /// @notice vetoThreshold
     uint256 public vetoThreshold = 100; // 100 veto votes needed
     // This makes Sybil attacks economically costly — 100 wallets × 10,000 VFIDE = 1M VFIDE locked.
@@ -76,7 +76,7 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @notice vfideToken
     IERC20 public vfideToken; // VFIDE token reference for fallback stake checks
     /// @notice seer
-    ISeer public seer;        // M-6 FIX: ProofScore oracle — primary veto eligibility gate
+    ISeer public seer; // M-6 FIX: ProofScore oracle — primary veto eligibility gate
     /// @notice vetoMinScore
     uint16 public vetoMinScore = 5000; // M-6 FIX: minimum ProofScore (50/100) to cast a veto vote
     /// @notice communityVetos
@@ -97,19 +97,33 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @notice SELECTOR_SET_SEER
     bytes4 private constant SELECTOR_SET_SEER = bytes4(keccak256("setSeer(address)"));
     /// @notice SELECTOR_SET_VETO_MIN_SCORE
-    bytes4 private constant SELECTOR_SET_VETO_MIN_SCORE = bytes4(keccak256("setVetoMinScore(uint16)"));
+    bytes4 private constant SELECTOR_SET_VETO_MIN_SCORE = bytes4(
+        keccak256("setVetoMinScore(uint16)")
+    );
     /// @notice SELECTOR_SET_VETO_MIN_STAKE
-    bytes4 private constant SELECTOR_SET_VETO_MIN_STAKE = bytes4(keccak256("setVetoMinStake(uint256)"));
+    bytes4 private constant SELECTOR_SET_VETO_MIN_STAKE = bytes4(
+        keccak256("setVetoMinStake(uint256)")
+    );
     /// @notice SELECTOR_SET_VETO_THRESHOLD
-    bytes4 private constant SELECTOR_SET_VETO_THRESHOLD = bytes4(keccak256("setVetoThreshold(uint256)"));
+    bytes4 private constant SELECTOR_SET_VETO_THRESHOLD = bytes4(
+        keccak256("setVetoThreshold(uint256)")
+    );
     /// @notice SELECTOR_SET_EXECUTION_GAS_LIMIT
-    bytes4 private constant SELECTOR_SET_EXECUTION_GAS_LIMIT = bytes4(keccak256("setExecutionGasLimit(uint256)"));
+    bytes4 private constant SELECTOR_SET_EXECUTION_GAS_LIMIT = bytes4(
+        keccak256("setExecutionGasLimit(uint256)")
+    );
     /// @notice SELECTOR_UPDATE_COUNCIL_MEMBER
-    bytes4 private constant SELECTOR_UPDATE_COUNCIL_MEMBER = bytes4(keccak256("updateCouncilMember(uint256,address)"));
+    bytes4 private constant SELECTOR_UPDATE_COUNCIL_MEMBER = bytes4(
+        keccak256("updateCouncilMember(uint256,address)")
+    );
     /// @notice SELECTOR_SET_TARGET_ALLOW
-    bytes4 private constant SELECTOR_SET_TARGET_ALLOW = bytes4(keccak256("setProposalTypeTargetAllowed(uint8,address,bool)"));
+    bytes4 private constant SELECTOR_SET_TARGET_ALLOW = bytes4(
+        keccak256("setProposalTypeTargetAllowed(uint8,address,bool)")
+    );
     /// @notice SELECTOR_SET_SELECTOR_ALLOW
-    bytes4 private constant SELECTOR_SET_SELECTOR_ALLOW = bytes4(keccak256("setProposalTypeSelectorAllowed(uint8,bytes4,bool)"));
+    bytes4 private constant SELECTOR_SET_SELECTOR_ALLOW = bytes4(
+        keccak256("setProposalTypeSelectorAllowed(uint8,bytes4,bool)")
+    );
     /// @notice ProposalCreated
     /// @param proposalId proposalId
     /// @param proposer proposer
@@ -123,12 +137,16 @@ contract AdminMultiSig is ReentrancyGuard {
         address target,
         string description
     );
-    
+
     /// @notice ProposalApproved
     /// @param proposalId proposalId
     /// @param approver approver
     /// @param approvalCount approvalCount
-    event ProposalApproved(uint256 indexed proposalId, address indexed approver, uint256 approvalCount);
+    event ProposalApproved(
+        uint256 indexed proposalId,
+        address indexed approver,
+        uint256 approvalCount
+    );
     /// @notice ProposalExecuted
     /// @param proposalId proposalId
     /// @param executor executor
@@ -168,12 +186,20 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @param proposalType proposalType
     /// @param target target
     /// @param allowed allowed
-    event ProposalTypeTargetAllowSet(ProposalType indexed proposalType, address indexed target, bool allowed);
+    event ProposalTypeTargetAllowSet(
+        ProposalType indexed proposalType,
+        address indexed target,
+        bool allowed
+    );
     /// @notice ProposalTypeSelectorAllowSet
     /// @param proposalType proposalType
     /// @param selector selector
     /// @param allowed allowed
-    event ProposalTypeSelectorAllowSet(ProposalType indexed proposalType, bytes4 indexed selector, bool allowed);
+    event ProposalTypeSelectorAllowSet(
+        ProposalType indexed proposalType,
+        bytes4 indexed selector,
+        bool allowed
+    );
 
     /// @notice onlyCouncil
     modifier onlyCouncil() {
@@ -194,8 +220,14 @@ contract AdminMultiSig is ReentrancyGuard {
         require(executingProposalId != NO_ACTIVE_PROPOSAL, "AdminMultiSig: no active execution");
 
         Proposal storage proposal = proposals[executingProposalId];
-        require(proposal.proposalType == ProposalType.EMERGENCY, "AdminMultiSig: requires emergency proposal");
-        require(proposal.approvalCount >= EMERGENCY_APPROVALS, "AdminMultiSig: insufficient emergency approvals");
+        require(
+            proposal.proposalType == ProposalType.EMERGENCY,
+            "AdminMultiSig: requires emergency proposal"
+        );
+        require(
+            proposal.approvalCount >= EMERGENCY_APPROVALS,
+            "AdminMultiSig: insufficient emergency approvals"
+        );
         _;
     }
 
@@ -215,7 +247,7 @@ contract AdminMultiSig is ReentrancyGuard {
         for (uint256 i = 0; i < COUNCIL_SIZE; ++i) {
             require(_council[i] != address(0), "AdminMultiSig: zero address in council");
             require(!isCouncilMember[_council[i]], "AdminMultiSig: duplicate council member");
-            
+
             council[i] = _council[i];
             isCouncilMember[_council[i]] = true;
         }
@@ -303,10 +335,11 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @param _proposalType _proposalType
     /// @param _target _target
     /// @param _allowed _allowed
-    function setProposalTypeTargetAllowed(ProposalType _proposalType, address _target, bool _allowed)
-        external
-        onlyEmergencyProposalExecutionContext
-    {
+    function setProposalTypeTargetAllowed(
+        ProposalType _proposalType,
+        address _target,
+        bool _allowed
+    ) external onlyEmergencyProposalExecutionContext {
         require(_target != address(0), "AdminMultiSig: zero target");
         proposalTypeTargetAllowed[_proposalType][_target] = _allowed;
         emit ProposalTypeTargetAllowSet(_proposalType, _target, _allowed);
@@ -316,10 +349,11 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @param _proposalType _proposalType
     /// @param _selector _selector
     /// @param _allowed _allowed
-    function setProposalTypeSelectorAllowed(ProposalType _proposalType, bytes4 _selector, bool _allowed)
-        external
-        onlyEmergencyProposalExecutionContext
-    {
+    function setProposalTypeSelectorAllowed(
+        ProposalType _proposalType,
+        bytes4 _selector,
+        bool _allowed
+    ) external onlyEmergencyProposalExecutionContext {
         proposalTypeSelectorAllowed[_proposalType][_selector] = _allowed;
         emit ProposalTypeSelectorAllowSet(_proposalType, _selector, _allowed);
     }
@@ -341,17 +375,23 @@ contract AdminMultiSig is ReentrancyGuard {
         require(_target != address(0), "AdminMultiSig: target is zero address");
         require(_data.length > 0, "AdminMultiSig: empty data");
         require(bytes(_description).length > 0, "AdminMultiSig: empty description");
-        require(proposalTypeTargetAllowed[_proposalType][_target], "AdminMultiSig: target not allowed");
+        require(
+            proposalTypeTargetAllowed[_proposalType][_target],
+            "AdminMultiSig: target not allowed"
+        );
 
         bytes4 selector;
         assembly {
             selector := calldataload(_data.offset)
         }
-        require(proposalTypeSelectorAllowed[_proposalType][selector], "AdminMultiSig: selector not allowed");
+        require(
+            proposalTypeSelectorAllowed[_proposalType][selector],
+            "AdminMultiSig: selector not allowed"
+        );
 
         proposalId = proposalCount++;
         Proposal storage proposal = proposals[proposalId];
-        
+
         proposal.id = proposalId;
         proposal.proposer = msg.sender;
         proposal.proposalType = _proposalType;
@@ -360,10 +400,11 @@ contract AdminMultiSig is ReentrancyGuard {
         proposal.target = _target;
         proposal.data = _data;
         proposal.description = _description;
-        
-        uint256 delay = _proposalType == ProposalType.CONFIG
-            ? CONFIG_DELAY
-            : (_proposalType == ProposalType.CRITICAL ? CRITICAL_DELAY : EMERGENCY_DELAY);
+
+        uint256 delay =
+            _proposalType == ProposalType.CONFIG
+                ? CONFIG_DELAY
+                : (_proposalType == ProposalType.CRITICAL ? CRITICAL_DELAY : EMERGENCY_DELAY);
         proposal.executionTime = block.timestamp + delay;
 
         proposal.hasApproved[msg.sender] = true;
@@ -377,16 +418,15 @@ contract AdminMultiSig is ReentrancyGuard {
      * @notice Approve a proposal
      * @param _proposalId ID of the proposal to approve
      */
-    function approveProposal(uint256 _proposalId) 
-        external 
-        onlyCouncil 
-        proposalExists(_proposalId) 
-    {
+    function approveProposal(uint256 _proposalId) external onlyCouncil proposalExists(_proposalId) {
         Proposal storage proposal = proposals[_proposalId];
-        
+
         require(proposal.status == ProposalStatus.Pending, "AdminMultiSig: proposal not pending");
         // #407 FIX: Reject approvals on already-expired proposals to avoid misleading state.
-        require(block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY, "AdminMultiSig: proposal expired");
+        require(
+            block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY,
+            "AdminMultiSig: proposal expired"
+        );
         require(!proposal.hasApproved[msg.sender], "AdminMultiSig: already approved");
 
         proposal.hasApproved[msg.sender] = true;
@@ -394,9 +434,10 @@ contract AdminMultiSig is ReentrancyGuard {
 
         emit ProposalApproved(_proposalId, msg.sender, proposal.approvalCount);
 
-        uint256 requiredApprovals = proposal.proposalType == ProposalType.EMERGENCY 
-            ? EMERGENCY_APPROVALS 
-            : REQUIRED_APPROVALS;
+        uint256 requiredApprovals =
+            proposal.proposalType == ProposalType.EMERGENCY
+                ? EMERGENCY_APPROVALS
+                : REQUIRED_APPROVALS;
 
         if (proposal.approvalCount >= requiredApprovals) {
             proposal.status = ProposalStatus.Approved;
@@ -408,17 +449,17 @@ contract AdminMultiSig is ReentrancyGuard {
      * @notice Execute a proposal
      * @param _proposalId ID of the proposal to execute
      */
-    function executeProposal(uint256 _proposalId) 
-        external 
-        onlyCouncil 
-        nonReentrant
-        proposalExists(_proposalId) 
-    {
+    function executeProposal(
+        uint256 _proposalId
+    ) external onlyCouncil nonReentrant proposalExists(_proposalId) {
         Proposal storage proposal = proposals[_proposalId];
-        
+
         require(proposal.status == ProposalStatus.Approved, "AdminMultiSig: not approved");
         require(block.timestamp >= proposal.executionTime, "AdminMultiSig: too early");
-        require(block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY, "AdminMultiSig: proposal expired");
+        require(
+            block.timestamp <= proposal.createdAt + PROPOSAL_EXPIRY,
+            "AdminMultiSig: proposal expired"
+        );
         require(proposal.vetoCount < vetoThreshold, "AdminMultiSig: community vetoed");
 
         if (proposal.proposalType != ProposalType.EMERGENCY) {
@@ -430,7 +471,10 @@ contract AdminMultiSig is ReentrancyGuard {
 
         require(proposal.target.code.length > 0, "AdminMultiSig: target has no code");
         // #406 FIX: Re-verify target is still allowlisted at execution time.
-        require(proposalTypeTargetAllowed[proposal.proposalType][proposal.target], "AdminMultiSig: target no longer allowed");
+        require(
+            proposalTypeTargetAllowed[proposal.proposalType][proposal.target],
+            "AdminMultiSig: target no longer allowed"
+        );
 
         proposal.status = ProposalStatus.Executed;
         executingProposalId = _proposalId;
@@ -444,7 +488,9 @@ contract AdminMultiSig is ReentrancyGuard {
         // H-09 FIX: Capture return data. If the target returns a single bool (e.g. ERC-20 transfer),
         // verify it is `true` so a soft-fail token transfer cannot pass silently.
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returnData) = proposal.target.call{gas: executionGasLimit}(proposal.data);
+        (bool success, bytes memory returnData) = proposal.target.call{gas: executionGasLimit}(
+            proposal.data
+        );
         require(success, "AdminMultiSig: execution failed");
         if (returnData.length == 32) {
             // Decode as bool; if the low-level call returned a single word, treat it as a bool return.
@@ -459,7 +505,10 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @notice setExecutionGasLimit
     /// @param _gasLimit _gasLimit
     function setExecutionGasLimit(uint256 _gasLimit) external onlyProposalExecutionContext {
-        require(_gasLimit >= 100_000 && _gasLimit <= 10_000_000, "AdminMultiSig: invalid gas limit");
+        require(
+            _gasLimit >= 100_000 && _gasLimit <= 10_000_000,
+            "AdminMultiSig: invalid gas limit"
+        );
         executionGasLimit = _gasLimit;
         emit ExecutionGasLimitSet(_gasLimit);
     }
@@ -468,13 +517,9 @@ contract AdminMultiSig is ReentrancyGuard {
      * @notice Council member veto a proposal
      * @param _proposalId ID of the proposal to veto
      */
-    function vetoProposal(uint256 _proposalId) 
-        external 
-        onlyCouncil 
-        proposalExists(_proposalId) 
-    {
+    function vetoProposal(uint256 _proposalId) external onlyCouncil proposalExists(_proposalId) {
         Proposal storage proposal = proposals[_proposalId];
-        
+
         require(
             proposal.status == ProposalStatus.Pending || proposal.status == ProposalStatus.Approved,
             "AdminMultiSig: invalid status"
@@ -484,9 +529,10 @@ contract AdminMultiSig is ReentrancyGuard {
         proposal.hasVetoed[msg.sender] = true;
         ++proposal.vetoCount;
 
-        uint256 requiredVetos = proposal.proposalType == ProposalType.EMERGENCY
-            ? EMERGENCY_APPROVALS
-            : REQUIRED_APPROVALS;
+        uint256 requiredVetos =
+            proposal.proposalType == ProposalType.EMERGENCY
+                ? EMERGENCY_APPROVALS
+                : REQUIRED_APPROVALS;
 
         if (proposal.vetoCount >= requiredVetos) {
             proposal.status = ProposalStatus.Vetoed;
@@ -503,7 +549,7 @@ contract AdminMultiSig is ReentrancyGuard {
      */
     function communityVeto(uint256 _proposalId) external proposalExists(_proposalId) {
         Proposal storage proposal = proposals[_proposalId];
-        
+
         require(proposal.status == ProposalStatus.Approved, "AdminMultiSig: not approved");
         require(!communityVetos[_proposalId][msg.sender], "AdminMultiSig: already voted");
         require(
@@ -526,7 +572,10 @@ contract AdminMultiSig is ReentrancyGuard {
                 "AdminMultiSig: ProofScore too low to veto"
             );
             if (vetoMinStake > 0) {
-                require(address(vfideToken) != address(0), "AdminMultiSig: VFIDE token not configured");
+                require(
+                    address(vfideToken) != address(0),
+                    "AdminMultiSig: VFIDE token not configured"
+                );
                 require(
                     vfideToken.balanceOf(msg.sender) >= vetoMinStake,
                     "AdminMultiSig: insufficient VFIDE stake to veto"
@@ -555,14 +604,17 @@ contract AdminMultiSig is ReentrancyGuard {
      * @param _index Index of council member to replace
      * @param _newMember New council member address
      */
-    function updateCouncilMember(uint256 _index, address _newMember) external onlyEmergencyProposalExecutionContext {
+    function updateCouncilMember(
+        uint256 _index,
+        address _newMember
+    ) external onlyEmergencyProposalExecutionContext {
         require(_index < COUNCIL_SIZE, "AdminMultiSig: invalid index");
         require(_newMember != address(0), "AdminMultiSig: zero address");
         require(!isCouncilMember[_newMember], "AdminMultiSig: already member");
 
         address oldMember = council[_index];
         isCouncilMember[oldMember] = false;
-        
+
         council[_index] = _newMember;
         isCouncilMember[_newMember] = true;
 
@@ -572,20 +624,22 @@ contract AdminMultiSig is ReentrancyGuard {
     /**
      * @notice Get proposal details
      * @param _proposalId ID of the proposal
-        * @return proposer Proposal proposer
-        * @return proposalType Proposal type
-        * @return status Proposal status
-        * @return createdAt Proposal creation time
-        * @return executionTime Proposal execution time
-        * @return approvalCount Number of approvals
-        * @return vetoCount Number of vetoes
-        * @return target Target address
-        * @return description Proposal description
+     * @return proposer Proposal proposer
+     * @return proposalType Proposal type
+     * @return status Proposal status
+     * @return createdAt Proposal creation time
+     * @return executionTime Proposal execution time
+     * @return approvalCount Number of approvals
+     * @return vetoCount Number of vetoes
+     * @return target Target address
+     * @return description Proposal description
      */
-    function getProposal(uint256 _proposalId) 
-        external 
-        view 
-        proposalExists(_proposalId) 
+    function getProposal(
+        uint256 _proposalId
+    )
+        external
+        view
+        proposalExists(_proposalId)
         returns (
             address proposer,
             ProposalType proposalType,
@@ -596,7 +650,7 @@ contract AdminMultiSig is ReentrancyGuard {
             uint256 vetoCount,
             address target,
             string memory description
-        ) 
+        )
     {
         Proposal storage proposal = proposals[_proposalId];
         return (
@@ -618,12 +672,10 @@ contract AdminMultiSig is ReentrancyGuard {
      * @param _member Council member address
      * @return bool True if approved
      */
-    function hasApproved(uint256 _proposalId, address _member) 
-        external 
-        view 
-        proposalExists(_proposalId) 
-        returns (bool) 
-    {
+    function hasApproved(
+        uint256 _proposalId,
+        address _member
+    ) external view proposalExists(_proposalId) returns (bool) {
         return proposals[_proposalId].hasApproved[_member];
     }
 }

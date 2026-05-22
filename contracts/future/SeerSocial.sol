@@ -3,12 +3,12 @@ pragma solidity 0.8.30;
 
 /**
  * SeerSocial.sol - Extension contract for Seer social features
- * 
+ *
  * This contract handles:
  * - Endorsements (social proof with decay/limits)
  * - Mentorship (peer onboarding and sponsorship)
  * - Appeals and disputes (score review requests)
- * 
+ *
  * Separated from main Seer to stay under 24KB contract size limit.
  */
 
@@ -53,7 +53,12 @@ interface IProofLedgerSocial {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
+    function logEvent(
+        address who,
+        string calldata action,
+        uint256 amount,
+        string calldata note
+    ) external;
     /// @notice logSystemEvent
     /// @param who who
     /// @param action action
@@ -109,13 +114,24 @@ contract SeerSocial {
     /// @param weight weight
     /// @param expiry expiry
     /// @param reason reason
-    event UserEndorsed(address indexed endorser, address indexed subject, uint16 weight, uint64 expiry, string reason);
+    event UserEndorsed(
+        address indexed endorser,
+        address indexed subject,
+        uint16 weight,
+        uint64 expiry,
+        string reason
+    );
     /// @notice EndorsementRevoked
     /// @param endorser endorser
     /// @param subject subject
     /// @param weight weight
     /// @param reason reason
-    event EndorsementRevoked(address indexed endorser, address indexed subject, uint16 weight, string reason);
+    event EndorsementRevoked(
+        address indexed endorser,
+        address indexed subject,
+        uint16 weight,
+        string reason
+    );
     /// @notice MentorRegistered
     /// @param mentor mentor
     event MentorRegistered(address indexed mentor);
@@ -171,7 +187,7 @@ contract SeerSocial {
     // ═══════════════════════════════════════════════════════════════════════
     // STATE
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice seer
     ISeerCore public seer;
     /// @notice policyGuard
@@ -179,18 +195,19 @@ contract SeerSocial {
     /// @notice POLICY_CLASS_CRITICAL
     uint8 private constant POLICY_CLASS_CRITICAL = 0;
     /// @notice SEL_SET_ENDORSEMENT_POLICY
-    bytes4 private constant SEL_SET_ENDORSEMENT_POLICY =
-        bytes4(keccak256("setEndorsementPolicy(uint16,uint16,uint16,uint16,uint16,uint64,uint64,uint16)"));
-        /// @notice PolicyGuardSet
-        /// @param newPolicyGuard newPolicyGuard
-        event PolicyGuardSet(address indexed newPolicyGuard);
+    bytes4 private constant SEL_SET_ENDORSEMENT_POLICY = bytes4(
+        keccak256("setEndorsementPolicy(uint16,uint16,uint16,uint16,uint16,uint64,uint64,uint16)")
+    );
+    /// @notice PolicyGuardSet
+    /// @param newPolicyGuard newPolicyGuard
+    event PolicyGuardSet(address indexed newPolicyGuard);
     /// @notice BATCH-14 FIX: Timelock state for Seer reference changes (48-hour delay).
     address public pendingSeer;
     /// @notice pendingSeerAt
-    uint64  public pendingSeerAt;
+    uint64 public pendingSeerAt;
     /// @notice SEER_CHANGE_DELAY
-    uint64  public constant SEER_CHANGE_DELAY = 48 hours;
-    
+    uint64 public constant SEER_CHANGE_DELAY = 48 hours;
+
     // ═══════════════════════════════════════════════════════════════════════
     // ENDORSEMENTS - Social proof with decay/limits
     // ═══════════════════════════════════════════════════════════════════════
@@ -203,62 +220,62 @@ contract SeerSocial {
     /// @notice endorsements
     mapping(address => mapping(address => Endorsement)) public endorsements; // subject => endorser => endorsement
     /// @notice endorsersOf
-    mapping(address => address[]) private endorsersOf;                       // subject => list of endorsers
+    mapping(address => address[]) private endorsersOf; // subject => list of endorsers
     /// @notice endorsementsReceived
-    mapping(address => uint16) public endorsementsReceived;                 // active endorsements per subject
+    mapping(address => uint16) public endorsementsReceived; // active endorsements per subject
     // F-36 FIX: Incremental cache for endorsement bonus — avoids O(n) SLOADs on every score read.
     /// @notice cachedEndorsementBonus
-    mapping(address => uint256) public cachedEndorsementBonus;  // running total, invalidated by prune
+    mapping(address => uint256) public cachedEndorsementBonus; // running total, invalidated by prune
     /// @notice cachedEndorsementExpiry
-    mapping(address => uint64)  public cachedEndorsementExpiry; // min(expiry) of active endorsements; 0 = dirty
+    mapping(address => uint64) public cachedEndorsementExpiry; // min(expiry) of active endorsements; 0 = dirty
     /// @notice endorsementsGiven
-    mapping(address => uint16) public endorsementsGiven;                    // active endorsements given by user
+    mapping(address => uint16) public endorsementsGiven; // active endorsements given by user
     /// @notice lastEndorseTime
-    mapping(address => uint64) public lastEndorseTime;                      // cooldown tracker per endorser
+    mapping(address => uint64) public lastEndorseTime; // cooldown tracker per endorser
     /// @notice lastActivity
-    mapping(address => uint64) public lastActivity;                         // For decay tracking
+    mapping(address => uint64) public lastActivity; // For decay tracking
     /// @notice endorsedSubjects
-    mapping(address => address[]) private endorsedSubjects;                 // subjects each endorser has endorsed (for cleanup)
+    mapping(address => address[]) private endorsedSubjects; // subjects each endorser has endorsed (for cleanup)
     /// @notice hasEndorsed
-    mapping(address => mapping(address => bool)) public hasEndorsed;       // endorser => subject => tracked in endorsedSubjects
+    mapping(address => mapping(address => bool)) public hasEndorsed; // endorser => subject => tracked in endorsedSubjects
 
     /// @notice endorsementBaseValue
-    uint16 public endorsementBaseValue = 40;        // 0.40% boost per endorsement (10x scale)
+    uint16 public endorsementBaseValue = 40; // 0.40% boost per endorsement (10x scale)
     /// @notice endorsementMaxPerEndorser
-    uint16 public endorsementMaxPerEndorser = 80;   // clamp per endorsement
+    uint16 public endorsementMaxPerEndorser = 80; // clamp per endorsement
     /// @notice endorsementBonusCap
-    uint16 public endorsementBonusCap = 1500;       // total endorsement bonus cap (15% on 10x scale)
+    uint16 public endorsementBonusCap = 1500; // total endorsement bonus cap (15% on 10x scale)
     /// @notice maxEndorsersPerSubject
-    uint16 public maxEndorsersPerSubject = 25;      // keep loops bounded
+    uint16 public maxEndorsersPerSubject = 25; // keep loops bounded
     /// @notice maxActiveGivenPerUser
-    uint16 public maxActiveGivenPerUser = 50;       // prevent spam endorsing
+    uint16 public maxActiveGivenPerUser = 50; // prevent spam endorsing
     /// @notice endorsementValidity
-    uint64 public endorsementValidity = 90 days;    // endorsements expire and must be renewed
+    uint64 public endorsementValidity = 90 days; // endorsements expire and must be renewed
     /// @notice endorsementCooldown
-    uint64 public endorsementCooldown = 1 days;     // per-endorser cooldown
+    uint64 public endorsementCooldown = 1 days; // per-endorser cooldown
     /// @notice minScoreToEndorse
-    uint16 public minScoreToEndorse = 7000;         // high-trust minimum
+    uint16 public minScoreToEndorse = 7000; // high-trust minimum
 
     // ═══════════════════════════════════════════════════════════════════════
     // MENTORSHIP - Peer onboarding and sponsorship
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice mentors
-    mapping(address => bool) public mentors;        // mentor status
+    mapping(address => bool) public mentors; // mentor status
     /// @notice mentorOf
-    mapping(address => address) public mentorOf;    // mentee => mentor
+    mapping(address => address) public mentorOf; // mentee => mentor
     /// @notice menteesOf
     mapping(address => address[]) private menteesOf; // mentor => mentees
 
     /// @notice minScoreToMentor
-    uint16 public minScoreToMentor = 7200;          // default high score requirement
+    uint16 public minScoreToMentor = 7200; // default high score requirement
     /// @notice maxMenteesPerMentor
-    uint16 public maxMenteesPerMentor = 50;         // bound mentee list size
-    
+    uint16 public maxMenteesPerMentor = 50; // bound mentee list size
+
     // ═══════════════════════════════════════════════════════════════════════
     // DISPUTES & APPEALS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     struct ScoreDispute {
         address requester;
         string reason;
@@ -266,7 +283,7 @@ contract SeerSocial {
         bool resolved;
         bool approved;
     }
-    
+
     /// @notice scoreDisputes
     mapping(address => ScoreDispute) public scoreDisputes;
     /// @notice pendingDisputeCount
@@ -289,13 +306,13 @@ contract SeerSocial {
     // ═══════════════════════════════════════════════════════════════════════
     // MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice onlyDAO
     modifier onlyDAO() {
         if (msg.sender != seer.dao()) revert SOCIAL_NotDAO();
         _;
     }
-    
+
     /// @notice onlyNotPaused
     modifier onlyNotPaused() {
         if (seer.paused()) revert SOCIAL_Paused();
@@ -305,7 +322,7 @@ contract SeerSocial {
     // ═══════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice constructor
     /// @param _seer _seer
     constructor(address _seer) {
@@ -374,7 +391,10 @@ contract SeerSocial {
     ) external onlyDAO {
         // F-85 FIX: Require Seer-side timelock consumption for endorsement policy changes.
         if (policyGuard == address(0)) revert SOCIAL_PolicyGuardNotSet();
-        ISeerPolicyGuard_Social(policyGuard).consume(SEL_SET_ENDORSEMENT_POLICY, POLICY_CLASS_CRITICAL);
+        ISeerPolicyGuard_Social(policyGuard).consume(
+            SEL_SET_ENDORSEMENT_POLICY,
+            POLICY_CLASS_CRITICAL
+        );
 
         require(baseValue > 0 && baseValue <= 200, "SOCIAL: base out of range");
         require(maxPerEndorser >= baseValue && maxPerEndorser <= 300, "SOCIAL: max per endorser");
@@ -406,7 +426,10 @@ contract SeerSocial {
 
         // Rate limit endorsers
         if (endorsementCooldown > 0) {
-            require(block.timestamp >= lastEndorseTime[msg.sender] + endorsementCooldown, "SOCIAL: endorse cooldown");
+            require(
+                block.timestamp >= lastEndorseTime[msg.sender] + endorsementCooldown,
+                "SOCIAL: endorse cooldown"
+            );
         }
 
         uint16 endorserScore = seer.getScore(msg.sender);
@@ -446,13 +469,13 @@ contract SeerSocial {
         if (cachedEndorsementExpiry[subject] == 0 || expiry < cachedEndorsementExpiry[subject]) {
             cachedEndorsementExpiry[subject] = expiry;
         }
-        
+
         // F-86 FIX: Track each (endorser, subject) once to prevent duplicate growth.
         if (!hasEndorsed[msg.sender][subject]) {
             endorsedSubjects[msg.sender].push(subject);
             hasEndorsed[msg.sender][subject] = true;
         }
-        
+
         lastEndorseTime[msg.sender] = uint64(block.timestamp);
         lastActivity[subject] = uint64(block.timestamp);
 
@@ -510,7 +533,7 @@ contract SeerSocial {
         for (uint256 i = 0; i < len; ++i) {
             address subject = subjects[i];
             Endorsement storage e = endorsements[subject][msg.sender];
-            
+
             // If endorsement expired, clean it up
             if (e.expiry > 0 && e.expiry <= block.timestamp) {
                 uint16 weight = e.weight;
@@ -530,7 +553,7 @@ contract SeerSocial {
                 ++cleaned;
             }
         }
-        
+
         if (cleaned > 0) {
             emit EndorserPruned(msg.sender, cleaned);
         }
@@ -570,11 +593,13 @@ contract SeerSocial {
     /// @return activeEndorsers activeEndorsers
     /// @return activeBonus activeBonus
     /// @return endorsementsYouGave endorsementsYouGave
-    function getEndorsementStats(address subject) external view returns (
-        uint16 activeEndorsers,
-        uint16 activeBonus,
-        uint16 endorsementsYouGave
-    ) {
+    function getEndorsementStats(
+        address subject
+    )
+        external
+        view
+        returns (uint16 activeEndorsers, uint16 activeBonus, uint16 endorsementsYouGave)
+    {
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
         for (uint256 i = 0; i < len; ++i) {
@@ -593,12 +618,18 @@ contract SeerSocial {
     /// @return weights weights
     /// @return expiries expiries
     /// @return timestamps timestamps
-    function getActiveEndorsements(address subject) external view returns (
-        address[] memory endorsers,
-        uint16[] memory weights,
-        uint64[] memory expiries,
-        uint64[] memory timestamps
-    ) {
+    function getActiveEndorsements(
+        address subject
+    )
+        external
+        view
+        returns (
+            address[] memory endorsers,
+            uint16[] memory weights,
+            uint64[] memory expiries,
+            uint64[] memory timestamps
+        )
+    {
         address[] storage stored = endorsersOf[subject];
         uint256 len = stored.length;
         uint256 activeCount = 0;
@@ -673,7 +704,8 @@ contract SeerSocial {
                 if (newMinExpiry == 0 || pe.expiry < newMinExpiry) newMinExpiry = pe.expiry;
             }
         }
-        cachedEndorsementBonus[subject] = newBonus > endorsementBonusCap ? endorsementBonusCap : newBonus;
+        cachedEndorsementBonus[subject] =
+            newBonus > endorsementBonusCap ? endorsementBonusCap : newBonus;
         cachedEndorsementExpiry[subject] = newMinExpiry;
     }
 
@@ -798,15 +830,21 @@ contract SeerSocial {
     /// @return canBecome canBecome
     /// @return minScore minScore
     /// @return currentScore currentScore
-    function getMentorInfo(address subject) external view returns (
-        bool isMentorUser,
-        address mentor,
-        uint16 menteeCount,
-        bool hasMentor,
-        bool canBecome,
-        uint16 minScore,
-        uint16 currentScore
-    ) {
+    function getMentorInfo(
+        address subject
+    )
+        external
+        view
+        returns (
+            bool isMentorUser,
+            address mentor,
+            uint16 menteeCount,
+            bool hasMentor,
+            bool canBecome,
+            uint16 minScore,
+            uint16 currentScore
+        )
+    {
         currentScore = seer.getScore(subject);
         minScore = minScoreToMentor;
         isMentorUser = mentors[subject];
@@ -823,9 +861,15 @@ contract SeerSocial {
     /// @notice requestScoreReview
     /// @param reason reason
     function requestScoreReview(string calldata reason) external {
-        require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SOCIAL: invalid reason length");
-        require(scoreDisputes[msg.sender].timestamp < 1 || scoreDisputes[msg.sender].resolved, "SOCIAL: dispute pending");
-        
+        require(
+            bytes(reason).length > 0 && bytes(reason).length <= 500,
+            "SOCIAL: invalid reason length"
+        );
+        require(
+            scoreDisputes[msg.sender].timestamp < 1 || scoreDisputes[msg.sender].resolved,
+            "SOCIAL: dispute pending"
+        );
+
         scoreDisputes[msg.sender] = ScoreDispute({
             requester: msg.sender,
             reason: reason,
@@ -833,28 +877,32 @@ contract SeerSocial {
             resolved: false,
             approved: false
         });
-        
+
         ++pendingDisputeCount;
-        
+
         emit ScoreDisputeRequested(msg.sender, reason);
         _logEv(msg.sender, "score_dispute_requested", 0, reason);
     }
-    
+
     /// @notice resolveScoreDispute
     /// @param subject subject
     /// @param approved approved
     /// @param adjustment adjustment
-    function resolveScoreDispute(address subject, bool approved, int16 adjustment) external onlyDAO {
+    function resolveScoreDispute(
+        address subject,
+        bool approved,
+        int16 adjustment
+    ) external onlyDAO {
         ScoreDispute storage dispute = scoreDisputes[subject];
         require(dispute.timestamp > 0, "SOCIAL: no dispute found");
         require(!dispute.resolved, "SOCIAL: already resolved");
-        
+
         dispute.resolved = true;
         dispute.approved = approved;
-        
+
         // Note: Score adjustment must be done via main Seer contract
         // This contract only tracks the dispute status
-        
+
         if (pendingDisputeCount > 0) {
             --pendingDisputeCount;
         }
@@ -866,7 +914,10 @@ contract SeerSocial {
     /// @notice fileAppeal
     /// @param reason reason
     function fileAppeal(string calldata reason) external {
-        require(bytes(reason).length > 0 && bytes(reason).length <= 500, "SOCIAL: invalid reason length");
+        require(
+            bytes(reason).length > 0 && bytes(reason).length <= 500,
+            "SOCIAL: invalid reason length"
+        );
         Appeal storage existing = appeals[msg.sender];
         require(existing.timestamp == 0 || existing.resolved, "SOCIAL: appeal pending");
 
@@ -888,7 +939,11 @@ contract SeerSocial {
     /// @param subject subject
     /// @param approved approved
     /// @param resolution resolution
-    function resolveAppeal(address subject, bool approved, string calldata resolution) external onlyDAO {
+    function resolveAppeal(
+        address subject,
+        bool approved,
+        string calldata resolution
+    ) external onlyDAO {
         Appeal storage appeal = appeals[subject];
         require(appeal.timestamp > 0, "SOCIAL: no appeal");
         require(!appeal.resolved, "SOCIAL: appeal resolved");
@@ -912,13 +967,19 @@ contract SeerSocial {
     /// @return disputeApproved disputeApproved
     /// @return disputeTimestamp disputeTimestamp
     /// @return disputeReason disputeReason
-    function getDisputeInfo(address subject) external view returns (
-        bool hasDispute,
-        bool disputeResolved,
-        bool disputeApproved,
-        uint64 disputeTimestamp,
-        string memory disputeReason
-    ) {
+    function getDisputeInfo(
+        address subject
+    )
+        external
+        view
+        returns (
+            bool hasDispute,
+            bool disputeResolved,
+            bool disputeApproved,
+            uint64 disputeTimestamp,
+            string memory disputeReason
+        )
+    {
         ScoreDispute storage d = scoreDisputes[subject];
         hasDispute = d.timestamp > 0;
         disputeResolved = d.resolved;
@@ -935,14 +996,20 @@ contract SeerSocial {
     /// @return appealTimestamp appealTimestamp
     /// @return appealReason appealReason
     /// @return appealResolution appealResolution
-    function getAppealInfo(address subject) external view returns (
-        bool hasAppeal,
-        bool appealResolved,
-        bool appealApproved,
-        uint64 appealTimestamp,
-        string memory appealReason,
-        string memory appealResolution
-    ) {
+    function getAppealInfo(
+        address subject
+    )
+        external
+        view
+        returns (
+            bool hasAppeal,
+            bool appealResolved,
+            bool appealApproved,
+            uint64 appealTimestamp,
+            string memory appealReason,
+            string memory appealResolution
+        )
+    {
         Appeal storage a = appeals[subject];
         hasAppeal = a.timestamp > 0;
         appealResolved = a.resolved;
@@ -973,7 +1040,9 @@ contract SeerSocial {
     function _logSystem(string memory action) internal {
         address ledgerAddr = seer.ledger();
         if (ledgerAddr != address(0)) {
-            try IProofLedgerSocial(ledgerAddr).logSystemEvent(address(this), action, msg.sender) {} catch {}
+            try
+                IProofLedgerSocial(ledgerAddr).logSystemEvent(address(this), action, msg.sender)
+            {} catch {}
         }
     }
 }

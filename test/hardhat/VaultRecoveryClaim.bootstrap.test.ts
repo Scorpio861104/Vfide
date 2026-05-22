@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -11,25 +11,37 @@ async function getConnection() {
 
 async function trustVerifier(contract: any, verifier: string, ethers: any) {
   await contract.setTrustedVerifier(verifier, true);
-  await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-  await ethers.provider.send("evm_mine", []);
+  await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+  await ethers.provider.send('evm_mine', []);
   await contract.applyTrustedVerifierChange();
 }
 
-describe("VaultRecoveryClaim bootstrap behavior", { concurrency: 1 }, () => {
-  it("does not allow trusted verifiers to finalize claims without guardian approvals", async () => {
+describe('VaultRecoveryClaim bootstrap behavior', { concurrency: 1 }, () => {
+  it('does not allow trusted verifiers to finalize claims without guardian approvals', async () => {
     const { ethers } = (await getConnection()) as any;
-    const [deployer, originalOwner, claimant, guardian, verifierA, verifierB, verifierC, verifierD, verifierE] = await ethers.getSigners();
+    const [
+      deployer,
+      originalOwner,
+      claimant,
+      guardian,
+      verifierA,
+      verifierB,
+      verifierC,
+      verifierD,
+      verifierE,
+    ] = await ethers.getSigners();
 
-    const Hub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+    const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
     const hub = await Hub.deploy();
     await hub.waitForDeployment();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("CardBoundVault");
+    const Vault = await ethers.getContractFactory('CardBoundVault');
     const vault = await Vault.deploy(
       await hub.getAddress(),
       await token.getAddress(),
@@ -37,15 +49,15 @@ describe("VaultRecoveryClaim bootstrap behavior", { concurrency: 1 }, () => {
       originalOwner.address,
       [guardian.address],
       1,
-      ethers.parseEther("100"),
-      ethers.parseEther("300"),
-      ethers.ZeroAddress,
+      ethers.parseEther('100'),
+      ethers.parseEther('300'),
+      ethers.ZeroAddress
     );
     await vault.waitForDeployment();
 
     await hub.setVault(originalOwner.address, await vault.getAddress());
 
-    const Recovery = await ethers.getContractFactory("VaultRecoveryClaim");
+    const Recovery = await ethers.getContractFactory('VaultRecoveryClaim');
     const recovery = await Recovery.deploy(await hub.getAddress(), ethers.ZeroAddress);
     await recovery.waitForDeployment();
 
@@ -55,7 +67,9 @@ describe("VaultRecoveryClaim bootstrap behavior", { concurrency: 1 }, () => {
     await trustVerifier(recovery, verifierD.address, ethers);
     await trustVerifier(recovery, verifierE.address, ethers);
 
-    await recovery.connect(claimant).initiateClaim(await vault.getAddress(), "", ethers.ZeroHash, "lost phone");
+    await recovery
+      .connect(claimant)
+      .initiateClaim(await vault.getAddress(), '', ethers.ZeroHash, 'lost phone');
 
     await recovery.connect(verifierA).verifierVote(1, true);
     await recovery.connect(verifierB).verifierVote(1, true);

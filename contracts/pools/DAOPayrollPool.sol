@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ServicePool } from "../ServicePool.sol";
+import {ServicePool} from "../ServicePool.sol";
 
 /// @title DAOPayrollPool — Monthly governance compensation for DAO members
 /// @notice Each governance action (vote, review, discussion) earns points and
@@ -71,10 +71,12 @@ contract DAOPayrollPool is ServicePool {
 
     /// @notice batchRecordVotes
     /// @param members members
-    function batchRecordVotes(address[] calldata members) external onlyRole(RECORDER_ROLE) nonReentrant {
+    function batchRecordVotes(
+        address[] calldata members
+    ) external onlyRole(RECORDER_ROLE) nonReentrant {
         uint256 len = members.length;
         require(len <= maxParticipants, "Exceeds max members");
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i = 0; i < len; ) {
             if (members[i] != address(0)) {
                 _recordContribution(members[i], 1);
             }
