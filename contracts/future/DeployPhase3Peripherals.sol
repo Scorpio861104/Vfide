@@ -10,15 +10,30 @@ import "../VFIDEPriceOracle.sol";
 /// @notice Deploys BSM and VFIDEPriceOracle (SharedInterfaces-based, no OZ).
 /// @dev Separated from DeployPhases3to6.sol to avoid name collisions with
 ///      VFIDEBridge's OZ imports (H-18 / M-08 / M-29 fix).
+/// @author Vfide
 contract DeployPhase3Peripherals {
+    /// @notice DPP_Zero
     error DPP_Zero();
 
+    /// @notice bsm
     address public bsm;
+    /// @notice oracle
     address public oracle;
 
+    /// @notice PeripheralDeployed
+    /// @param name name
+    /// @param addr addr
     event PeripheralDeployed(bytes32 indexed name, address indexed addr);
 
     // slither-disable-next-line missing-zero-check
+    /// @notice deployPeripherals
+    /// @param vfideToken vfideToken
+    /// @param quoteToken quoteToken
+    /// @param chainlinkFeed chainlinkFeed
+    /// @param uniswapPool uniswapPool
+    /// @param owner owner
+    /// @return bsm_ bsm_
+    /// @return oracle_ oracle_
     function deployPeripherals(
         address vfideToken,
         address quoteToken,

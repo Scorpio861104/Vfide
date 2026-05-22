@@ -3,7 +3,16 @@ pragma solidity 0.8.30;
 
 import {MessagingFee, MessagingParams, MessagingReceipt, Origin} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 
+/// @notice ILayerZeroReceiverForBridgeMock
+/// @title ILayerZeroReceiverForBridgeMock
+/// @author Vfide
 interface ILayerZeroReceiverForBridgeMock {
+    /// @notice lzReceive
+    /// @param _origin _origin
+    /// @param _guid _guid
+    /// @param _message _message
+    /// @param _executor _executor
+    /// @param _extraData _extraData
     function lzReceive(
         Origin calldata _origin,
         bytes32 _guid,
@@ -13,8 +22,13 @@ interface ILayerZeroReceiverForBridgeMock {
     ) external payable;
 }
 
+/// @notice MockLzEndpointForBridge
+/// @title MockLzEndpointForBridge
+/// @author Vfide
 contract MockLzEndpointForBridge {
+    /// @notice delegate
     address public delegate;
+    /// @notice nextNonce
     uint64 public nextNonce = 1;
 
     struct PendingMessage {
@@ -24,21 +38,36 @@ contract MockLzEndpointForBridge {
         bytes message;
     }
 
+    /// @notice pendingMessages
     PendingMessage[] private pendingMessages;
+    /// @notice endpointIds
     mapping(address => uint32) public endpointIds;
 
+    /// @notice setDelegate
+    /// @param _delegate _delegate
     function setDelegate(address _delegate) external {
         delegate = _delegate;
     }
 
+    /// @notice setEndpointId
+    /// @param oapp oapp
+    /// @param eid eid
     function setEndpointId(address oapp, uint32 eid) external {
         endpointIds[oapp] = eid;
     }
 
+    /// @notice quote
+    /// @param _arg _arg
+    /// @param _address _address
+    /// @return _arg _arg
     function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
         return MessagingFee(0, 0);
     }
 
+    /// @notice send
+    /// @param _params _params
+    /// @param _address _address
+    /// @return receipt receipt
     function send(
         MessagingParams calldata _params,
         address
@@ -59,10 +88,13 @@ contract MockLzEndpointForBridge {
         return MessagingReceipt(guid, nonce, MessagingFee(msg.value, 0));
     }
 
+    /// @notice pendingCount
+    /// @return _uint256 _uint256
     function pendingCount() external view returns (uint256) {
         return pendingMessages.length;
     }
 
+    /// @notice deliverNext
     function deliverNext() external {
         require(pendingMessages.length > 0, "MockLzEndpointForBridge: no pending message");
 

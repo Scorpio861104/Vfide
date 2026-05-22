@@ -20,63 +20,94 @@ import "../SharedInterfaces.sol";
  * 5. VFIDEBenefits awards FREE ProofScore to both parties
  */
 // ReentrancyGuard intentionally omitted: this contract records incentives and delegates reward hooks only.
+/// @notice VFIDEBenefits
+/// @title VFIDEBenefits
+/// @author Vfide
 contract VFIDEBenefits {
     // ═══════════════════════════════════════════════════════════════════════
     //                              ERRORS
     // ═══════════════════════════════════════════════════════════════════════
+    /// @notice BEN_NotDAO
     error BEN_NotDAO();
+    /// @notice BEN_NotAuthorized
     error BEN_NotAuthorized();
+    /// @notice BEN_Zero
     error BEN_Zero();
+    /// @notice BEN_InvalidRate
     error BEN_InvalidRate();
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
+    /// @notice BenefitConfigured
+    /// @param buyerScorePerTx buyerScorePerTx
+    /// @param merchantScorePerTx merchantScorePerTx
     event BenefitConfigured(uint16 buyerScorePerTx, uint16 merchantScorePerTx);
+    /// @notice ProofScoreAwarded
+    /// @param user user
+    /// @param points points
+    /// @param reason reason
     event ProofScoreAwarded(address indexed user, uint16 points, string reason);
+    /// @notice AuthorizedCallerSet
+    /// @param caller caller
+    /// @param authorized authorized
     event AuthorizedCallerSet(address indexed caller, bool authorized);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════
+    /// @notice MAX_SCORE_PER_TX
     uint16 public constant MAX_SCORE_PER_TX = 50; // Cap score per transaction
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              STATE
     // ═══════════════════════════════════════════════════════════════════════
+    /// @notice dao
     address public immutable dao;
+    /// @notice seer
     ISeer public immutable seer;
+    /// @notice ledger
     IProofLedger public immutable ledger;
+    /// @notice ecosystemVault
     IEcosystemVault public ecosystemVault;
 
     // Reward rates (FREE ProofScore boosts)
+    /// @notice buyerScorePerTx
     uint16 public buyerScorePerTx = 2;      // Buyer gets +2 ProofScore per completed tx
+    /// @notice merchantScorePerTx
     uint16 public merchantScorePerTx = 5;   // Merchant gets +5 ProofScore per completed tx
 
     // Authorized callers (CommerceEscrow)
+    /// @notice authorizedCallers
     mapping(address => bool) public authorizedCallers;
 
     // Stats tracking
+    /// @notice totalTransactionsRewarded
     uint256 public totalTransactionsRewarded;
+    /// @notice userTransactionCount
     mapping(address => uint256) public userTransactionCount;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
+    /// @notice onlyDAO
     modifier onlyDAO() {
         _checkDAO();
         _;
     }
 
+    /// @notice _checkDAO
     function _checkDAO() internal view {
         if (msg.sender != dao) revert BEN_NotDAO();
     }
 
+    /// @notice onlyAuthorized
     modifier onlyAuthorized() {
         _checkAuthorized();
         _;
     }
 
+    /// @notice _checkAuthorized
     function _checkAuthorized() internal view {
         if (!authorizedCallers[msg.sender] && msg.sender != dao) revert BEN_NotAuthorized();
     }
@@ -84,6 +115,10 @@ contract VFIDEBenefits {
     // ═══════════════════════════════════════════════════════════════════════
     //                              CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _seer _seer
+    /// @param _ledger _ledger
     constructor(
         address _dao,
         address _seer,
@@ -120,6 +155,8 @@ contract VFIDEBenefits {
 
     /**
      * @notice Set authorized caller (CommerceEscrow contract)
+     * @param caller caller
+     * @param authorized authorized
      */
     function setAuthorizedCaller(address caller, bool authorized) external onlyDAO {
         if (caller == address(0)) revert BEN_Zero();
@@ -129,6 +166,7 @@ contract VFIDEBenefits {
 
     /**
      * @notice Set EcosystemVault for merchant bonuses
+     * @param _ecosystemVault _ecosystemVault
      */
     function setEcosystemVault(address _ecosystemVault) external onlyDAO {
         ecosystemVault = IEcosystemVault(_ecosystemVault);
@@ -138,6 +176,7 @@ contract VFIDEBenefits {
     //                    TRANSACTION REWARDS (called by Escrow)
     // ═══════════════════════════════════════════════════════════════════════
     
+    // slither-disable-next-line reentrancy-events
     /**
      * @notice Reward both parties after successful escrow release
      * @dev Called by CommerceEscrow.release()
@@ -145,7 +184,6 @@ contract VFIDEBenefits {
      * @param merchant Merchant address  
      * @param amount Transaction amount (for logging)
      */
-    // slither-disable-next-line reentrancy-events
     function rewardTransaction(
         address buyer,
         address merchant,
@@ -188,6 +226,9 @@ contract VFIDEBenefits {
     
     /**
      * @notice Get user's commerce stats
+     * @param user user
+     * @return transactionCount transactionCount
+     * @return currentScore currentScore
      */
     function getUserStats(address user) external view returns (
         uint256 transactionCount,
@@ -199,6 +240,8 @@ contract VFIDEBenefits {
 
     /**
      * @notice Preview rewards for a transaction
+     * @return buyerScore buyerScore
+     * @return merchantScore merchantScore
      */
     function previewRewards() external view returns (
         uint16 buyerScore,

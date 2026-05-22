@@ -12,7 +12,12 @@ pragma solidity 0.8.30;
 
 import "../VFIDEAccessControl.sol";
 
+/// @notice ITVLSource_CB
+/// @title ITVLSource_CB
+/// @author Vfide
 interface ITVLSource_CB {
+    /// @notice getTotalValueLocked
+    /// @return _uint256 _uint256
     function getTotalValueLocked() external view returns (uint256);
 }
 
@@ -20,10 +25,13 @@ interface ITVLSource_CB {
  * @title CircuitBreaker
  * @notice Auto-pause system based on monitoring key ecosystem metrics
  * @dev Triggers emergency pause when thresholds are exceeded
+ * @author Vfide
  */
 contract CircuitBreaker is VFIDEAccessControl {
+    /// @notice RECORDER_ROLE
     bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
         // F-63 FIX: Renamed from BLACKLIST_MANAGER_ROLE to reflect non-custodial philosophy.
+        /// @notice SUSPICIOUS_ACTIVITY_REPORTER_ROLE
         bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
     
     struct TriggerConfig {
@@ -51,38 +59,65 @@ contract CircuitBreaker is VFIDEAccessControl {
         address triggeredBy;
     }
 
+    /// @notice config
     TriggerConfig public config;
+    /// @notice monitoring
     MonitoringData public monitoring;
     // F-31 FIX: Keep a bounded rolling sample window to avoid single-tick trigger risk.
         // M-4 FIX: Require at least MIN_SAMPLES_FOR_TRIGGER samples before firing the price-drop
         //          circuit breaker so a single oracle spike cannot trip it on its own.
+        /// @notice MIN_SAMPLES_FOR_TRIGGER
         uint8 public constant MIN_SAMPLES_FOR_TRIGGER = 3;
+        /// @notice priceSamples
         uint256[10] public priceSamples;
+    /// @notice priceSampleCount
     uint8 public priceSampleCount;
+    /// @notice priceSampleIndex
     uint8 public priceSampleIndex;
     
+    /// @notice priceOracle
     address public priceOracle;
+    /// @notice emergencyController
     address public emergencyController;
+    /// @notice tvlSource
     address public tvlSource;
     
+    /// @notice circuitBreakerTriggered
     bool public circuitBreakerTriggered;
+    /// @notice lastTriggerTime
     uint256 public lastTriggerTime;
+    /// @notice _guardLock
     uint256 private _guardLock;
+    /// @notice triggerHistoryStart
     uint256 private triggerHistoryStart;
     
+    /// @notice triggerHistory
     TriggerEvent[] public triggerHistory;
+    /// @notice MAX_TRIGGER_HISTORY
     uint256 public constant MAX_TRIGGER_HISTORY = 1000;
     // TL-376 FIX: 24h timelock for price oracle changes (#376)
+    /// @notice ORACLE_CHANGE_DELAY
     uint256 public constant ORACLE_CHANGE_DELAY = 24 hours;
+    /// @notice pendingPriceOracle
     address public pendingPriceOracle;
+    /// @notice pendingPriceOracleAt
     uint256 public pendingPriceOracleAt;
 
+    /// @notice CircuitBreakerConfigured
+    /// @param dailyVolumeThreshold dailyVolumeThreshold
+    /// @param priceDropThreshold priceDropThreshold
+    /// @param suspiciousActivityThreshold suspiciousActivityThreshold
     event CircuitBreakerConfigured(
         uint256 dailyVolumeThreshold,
         uint256 priceDropThreshold,
         uint256 suspiciousActivityThreshold
     );
     
+    /// @notice CircuitBreakerTriggered
+    /// @param reason reason
+    /// @param metricValue metricValue
+    /// @param timestamp timestamp
+    /// @param triggeredBy triggeredBy
     event CircuitBreakerTriggered(
         string reason,
         uint256 metricValue,
@@ -90,21 +125,44 @@ contract CircuitBreaker is VFIDEAccessControl {
         address indexed triggeredBy
     );
     
+    /// @notice CircuitBreakerReset
+    /// @param resetBy resetBy
+    /// @param timestamp timestamp
     event CircuitBreakerReset(address indexed resetBy, uint256 timestamp);
+    /// @notice PriceOracleUpdated
+    /// @param newOracle newOracle
     event PriceOracleUpdated(address indexed newOracle);
+        /// @notice PriceOracleProposed
+        /// @param newOracle newOracle
+        /// @param effectiveAt effectiveAt
         event PriceOracleProposed(address indexed newOracle, uint256 effectiveAt);
+        /// @notice PriceOracleCancelled
         event PriceOracleCancelled();
+    /// @notice EmergencyControllerUpdated
+    /// @param newController newController
     event EmergencyControllerUpdated(address indexed newController);
+    /// @notice VolumeRecorded
+    /// @param amount amount
+    /// @param totalDaily totalDaily
     event VolumeRecorded(uint256 amount, uint256 totalDaily);
+    /// @notice SuspiciousActivityRecorded
+    /// @param count24h count24h
     event SuspiciousActivityRecorded(uint256 count24h);
+    /// @notice TVLUpdated
+    /// @param previousTVL previousTVL
+    /// @param newTVL newTVL
     event TVLUpdated(uint256 previousTVL, uint256 newTVL);
+    /// @notice TVLSourceUpdated
+    /// @param newSource newSource
     event TVLSourceUpdated(address indexed newSource);
 
+    /// @notice notTriggered
     modifier notTriggered() {
         require(!circuitBreakerTriggered, "CircuitBreaker: already triggered");
         _;
     }
 
+    /// @notice nonReentrantCB
     modifier nonReentrantCB() {
         require(_guardLock == 0, "CircuitBreaker: reentrant call");
         _guardLock = 1;
@@ -112,6 +170,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         _guardLock = 0;
     }
 
+    /// @notice onlyEmergencyController
     modifier onlyEmergencyController() {
         require(msg.sender == emergencyController, "CircuitBreaker: not emergency controller");
         _;
@@ -286,6 +345,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     /**
      * @notice Set on-chain TVL source used for authoritative updates.
      * @dev Set to zero address to temporarily re-enable manual TVL writes.
+     * @param _source _source
      */
     function updateTVLSource(address _source) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         tvlSource = _source;
@@ -535,6 +595,8 @@ contract CircuitBreaker is VFIDEAccessControl {
     }
 
     /// @dev Compute median from the current rolling price samples.
+    /// @notice _rollingMedianPrice
+    /// @return _uint256 _uint256
     function _rollingMedianPrice() internal view returns (uint256) {
         uint8 count = priceSampleCount;
         if (count == 0) return 0;

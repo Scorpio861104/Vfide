@@ -23,19 +23,57 @@ import "../SharedInterfaces.sol";
 /// ═══════════════════════════════════════════════════════════════════════════
 ///                              INTERFACES
 /// ═══════════════════════════════════════════════════════════════════════════
+/// @author Vfide
 
 interface ISeer_Guardian {
+    /// @notice getScore
+    /// @param _address _address
+    /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
+    /// @notice punish
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function punish(address subject, uint16 delta, string calldata reason) external;
+    /// @notice reward
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
+    /// @notice lowTrustThreshold
+    /// @return _uint16 _uint16
     function lowTrustThreshold() external view returns (uint16);
+    /// @notice highTrustThreshold
+    /// @return _uint16 _uint16
     function highTrustThreshold() external view returns (uint16);
+    /// @notice minForGovernance
+    /// @return _uint16 _uint16
     function minForGovernance() external view returns (uint16);
 }
 
+/// @notice IDAO_Guardian
+/// @title IDAO_Guardian
+/// @author Vfide
 interface IDAO_Guardian {
+    /// @notice admin
+    /// @return _address _address
     function admin() external view returns (address);
+    /// @notice proposalCount
+    /// @return _uint256 _uint256
     function proposalCount() external view returns (uint256);
+    /// @notice getProposalDetails
+    /// @param id id
+    /// @return proposer proposer
+    /// @return ptype ptype
+    /// @return target target
+    /// @return value value
+    /// @return description description
+    /// @return startTime startTime
+    /// @return endTime endTime
+    /// @return forVotes forVotes
+    /// @return againstVotes againstVotes
+    /// @return executed executed
+    /// @return queued queued
     function getProposalDetails(uint256 id) external view returns (
         address proposer,
         uint8 ptype,
@@ -51,67 +89,160 @@ interface IDAO_Guardian {
     );
 }
 
+/// @notice IProofLedger_Guardian
+/// @title IProofLedger_Guardian
+/// @author Vfide
 interface IProofLedger_Guardian {
+    /// @notice logSystemEvent
+    /// @param who who
+    /// @param action action
+    /// @param by by
     function logSystemEvent(address who, string calldata action, address by) external;
 }
 
+/// @notice IVaultHub_Guardian
+/// @title IVaultHub_Guardian
+/// @author Vfide
 interface IVaultHub_Guardian {
+    /// @notice vaultOf
+    /// @param owner owner
+    /// @return _address _address
     function vaultOf(address owner) external view returns (address);
 }
 
 /// ═══════════════════════════════════════════════════════════════════════════
 ///                                ERRORS
 /// ═══════════════════════════════════════════════════════════════════════════
+/// @notice SG_NotAuthorized
 
 error SG_NotAuthorized();
+/// @notice SG_Zero
 error SG_Zero();
+/// @notice SG_Cooldown
 error SG_Cooldown();
+/// @notice SG_AlreadyOverridden
 error SG_AlreadyOverridden();
+/// @notice SG_NoViolation
 error SG_NoViolation();
+/// @notice SG_InvalidAction
 error SG_InvalidAction();
+/// @notice SG_NoPending
 error SG_NoPending();
+/// @notice SG_TimelockActive
 error SG_TimelockActive();
 
 /// ═══════════════════════════════════════════════════════════════════════════
 ///                           SEER GUARDIAN
 /// ═══════════════════════════════════════════════════════════════════════════
+/// @notice SeerGuardian
+/// @title SeerGuardian
+/// @author Vfide
 
 contract SeerGuardian is ReentrancyGuard {
+    /// @notice RC_AUTO_LOW_SCORE
     uint16 private constant RC_AUTO_LOW_SCORE = 300;
+    /// @notice RC_AUTO_VERY_LOW_SCORE
     uint16 private constant RC_AUTO_VERY_LOW_SCORE = 301;
+    /// @notice RC_AUTO_CRITICAL_SCORE
     uint16 private constant RC_AUTO_CRITICAL_SCORE = 302;
+    /// @notice RC_AUTO_SCORE_RECOVERED
     uint16 private constant RC_AUTO_SCORE_RECOVERED = 303;
+    /// @notice RC_PROPOSER_NEAR_THRESHOLD
     uint16 private constant RC_PROPOSER_NEAR_THRESHOLD = 400;
+    /// @notice RC_PROPOSER_HAS_VIOLATIONS
     uint16 private constant RC_PROPOSER_HAS_VIOLATIONS = 401;
+    /// @notice RC_MANUAL_PROPOSAL_FLAG
     uint16 private constant RC_MANUAL_PROPOSAL_FLAG = 450;
     
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice ModulesSet
+    /// @param seer seer
+    /// @param dao dao
+    /// @param vaultHub vaultHub
+    /// @param ledger ledger
     event ModulesSet(address seer, address dao, address vaultHub, address ledger);
+    /// @notice DAOSet
+    /// @param oldDAO oldDAO
+    /// @param newDAO newDAO
     event DAOSet(address indexed oldDAO, address indexed newDAO);
+    /// @notice DAOChangeQueued
+    /// @param oldDAO oldDAO
+    /// @param newDAO newDAO
+    /// @param executeAfter executeAfter
     event DAOChangeQueued(address indexed oldDAO, address indexed newDAO, uint64 executeAfter);
+    /// @notice DAOChangeCancelled
+    /// @param oldDAO oldDAO
+    /// @param newDAO newDAO
     event DAOChangeCancelled(address indexed oldDAO, address indexed newDAO);
     
     // Automatic enforcement events
     // F-87: consolidated event (single emission with both reason code and reason text).
+    /// @notice AutoRestrictionApplied
+    /// @param subject subject
+    /// @param rtype rtype
+    /// @param reasonCode reasonCode
+    /// @param reason reason
     event AutoRestrictionApplied(address indexed subject, RestrictionType rtype, uint16 indexed reasonCode, string reason);
+    /// @notice AutoRestrictionLifted
+    /// @param subject subject
+    /// @param rtype rtype
+    /// @param reason reason
     event AutoRestrictionLifted(address indexed subject, RestrictionType rtype, string reason);
+    /// @notice ViolationRecorded
+    /// @param subject subject
+    /// @param vtype vtype
+    /// @param count count
     event ViolationRecorded(address indexed subject, ViolationType vtype, uint8 count);
+    /// @notice PenaltyApplied
+    /// @param subject subject
+    /// @param scorePenalty scorePenalty
+    /// @param reason reason
     event PenaltyApplied(address indexed subject, uint16 scorePenalty, string reason);
+    /// @notice PenaltyAppliedCode
+    /// @param subject subject
+    /// @param scorePenalty scorePenalty
+    /// @param reasonCode reasonCode
+    /// @param reason reason
     event PenaltyAppliedCode(address indexed subject, uint16 scorePenalty, uint16 indexed reasonCode, string reason);
     // F-68: Emitted when seer.punish() fails so off-chain tooling can detect state drift.
+    /// @notice PenaltyApplicationFailed
+    /// @param subject subject
+    /// @param scorePenalty scorePenalty
+    /// @param revertReason revertReason
     event PenaltyApplicationFailed(address indexed subject, uint16 scorePenalty, bytes revertReason);
     
     // Override events  
+    /// @notice DAOOverride
+    /// @param subject subject
+    /// @param actionId actionId
+    /// @param reason reason
     event DAOOverride(address indexed subject, bytes32 indexed actionId, string reason);
+    /// @notice SeerFlag
+    /// @param proposalId proposalId
+    /// @param reason reason
+    /// @param delayUntil delayUntil
     event SeerFlag(uint256 indexed proposalId, string reason, uint64 delayUntil);
+    /// @notice SeerFlagCleared
+    /// @param proposalId proposalId
+    /// @param clearedBy clearedBy
     event SeerFlagCleared(uint256 indexed proposalId, address clearedBy);
     
     // Mutual check events
+    /// @notice DAOActionFlagged
+    /// @param proposalId proposalId
+    /// @param concern concern
     event DAOActionFlagged(uint256 indexed proposalId, string concern);
+    /// @notice DAOActionFlaggedCode
+    /// @param proposalId proposalId
+    /// @param reasonCode reasonCode
+    /// @param concern concern
     event DAOActionFlaggedCode(uint256 indexed proposalId, uint16 indexed reasonCode, string concern);
+    /// @notice SeerActionOverridden
+    /// @param actionId actionId
+    /// @param resolution resolution
     event SeerActionOverridden(bytes32 indexed actionId, string resolution);
     
     // ═══════════════════════════════════════════════════════════════════════
@@ -139,55 +270,83 @@ contract SeerGuardian is ReentrancyGuard {
     //                              STATE
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice dao
     address public dao;
+    /// @notice pendingDAO
     address public pendingDAO;
+    /// @notice pendingDAOAt
     uint64 public pendingDAOAt;
+    /// @notice DAO_CHANGE_DELAY
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
+    /// @notice seer
     ISeer_Guardian public seer;
+    /// @notice vaultHub
     IVaultHub_Guardian public vaultHub;
+    /// @notice ledger
     IProofLedger_Guardian public ledger;
     
     // Automatic restriction tracking
+    /// @notice activeRestriction
     mapping(address => RestrictionType) public activeRestriction;
+    /// @notice restrictionExpiry
     mapping(address => uint64) public restrictionExpiry;
+    /// @notice restrictionAppliedAt
     mapping(address => uint64) public restrictionAppliedAt;
+    /// @notice daoOverridden
     mapping(address => bool) public daoOverridden;  // DAO has overridden automatic action
     
     // Violation tracking for escalating penalties
+    /// @notice lastEnforceCheck
     mapping(address => uint64) public lastEnforceCheck;
+    /// @notice violationCount
     mapping(address => mapping(ViolationType => uint8)) public violationCount;
+    /// @notice lastViolationTime
     mapping(address => uint64) public lastViolationTime;
     
     // Seer flags on DAO proposals
+    /// @notice proposalFlagged
     mapping(uint256 => bool) public proposalFlagged;
+    /// @notice proposalDelayUntil
     mapping(uint256 => uint64) public proposalDelayUntil;
+    /// @notice proposalFlagReason
     mapping(uint256 => string) public proposalFlagReason;
     
     // DAO override of Seer actions
+    /// @notice actionOverridden
     mapping(bytes32 => bool) public actionOverridden;
     
     // Configuration (DAO-tunable)
+    /// @notice autoRestrictThreshold
     uint16 public autoRestrictThreshold = 3000;   // Score below 30% triggers auto-restrict
+    /// @notice autoLiftThreshold
     uint16 public autoLiftThreshold = 4500;       // Score above 45% lifts restriction
+    /// @notice violationCooldown
     uint64 public violationCooldown = 1 hours;    // Minimum time between violations
+    /// @notice maxRestrictionDuration
     uint64 public maxRestrictionDuration = 30 days;
     // F-69: Restriction must age before DAO can override it.
+    /// @notice DAO_OVERRIDE_MIN_AGE
     uint64 public constant DAO_OVERRIDE_MIN_AGE = 24 hours;
+    /// @notice proposalFlagDelay
     uint64 public proposalFlagDelay = 2 days;     // Extra delay for flagged proposals
     
     // Escalating penalties
+    /// @notice penaltyScale
     uint16[5] public penaltyScale = [50, 100, 200, 400, 800]; // Increasing penalties
+    /// @notice restrictionDurations
     uint64[5] public restrictionDurations = [1 days, 3 days, 7 days, 14 days, 30 days];
     
     // ═══════════════════════════════════════════════════════════════════════
     //                            MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         if (msg.sender != dao) revert SG_NotAuthorized();
         _;
     }
     
+    /// @notice onlyAuthorized
     modifier onlyAuthorized() {
         // DAO or Seer-related contracts can trigger
         if (msg.sender != dao && msg.sender != address(seer)) revert SG_NotAuthorized();
@@ -198,6 +357,11 @@ contract SeerGuardian is ReentrancyGuard {
     //                          CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _seer _seer
+    /// @param _vaultHub _vaultHub
+    /// @param _ledger _ledger
     constructor(address _dao, address _seer, address _vaultHub, address _ledger) {
         if (_dao == address(0) || _seer == address(0)) revert SG_Zero();
         dao = _dao;
@@ -211,6 +375,10 @@ contract SeerGuardian is ReentrancyGuard {
     //                      DAO CONFIGURATION
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice setModules
+    /// @param _seer _seer
+    /// @param _vaultHub _vaultHub
+    /// @param _ledger _ledger
     function setModules(address _seer, address _vaultHub, address _ledger) external onlyDAO nonReentrant {
         if (_seer == address(0)) revert SG_Zero();
         seer = ISeer_Guardian(_seer);
@@ -219,6 +387,8 @@ contract SeerGuardian is ReentrancyGuard {
         emit ModulesSet(_seer, dao, _vaultHub, _ledger);
     }
     
+    /// @notice setDAO
+    /// @param _newDAO _newDAO
     function setDAO(address _newDAO) external onlyDAO nonReentrant {
         if (_newDAO == address(0)) revert SG_Zero();
         if (pendingDAOAt != 0) revert SG_Cooldown();
@@ -227,6 +397,7 @@ contract SeerGuardian is ReentrancyGuard {
         emit DAOChangeQueued(dao, _newDAO, pendingDAOAt);
     }
 
+    /// @notice applyDAO
     function applyDAO() external onlyDAO nonReentrant {
         if (pendingDAOAt == 0 || pendingDAO == address(0)) revert SG_NoPending();
         if (block.timestamp < pendingDAOAt) revert SG_TimelockActive();
@@ -237,6 +408,7 @@ contract SeerGuardian is ReentrancyGuard {
         emit DAOSet(old, dao);
     }
 
+    /// @notice cancelDAO
     function cancelDAO() external onlyDAO nonReentrant {
         if (pendingDAOAt == 0 || pendingDAO == address(0)) revert SG_NoPending();
         address queued = pendingDAO;
@@ -245,6 +417,12 @@ contract SeerGuardian is ReentrancyGuard {
         emit DAOChangeCancelled(dao, queued);
     }
     
+    /// @notice setThresholds
+    /// @param _autoRestrict _autoRestrict
+    /// @param _autoLift _autoLift
+    /// @param _violationCooldown _violationCooldown
+    /// @param _maxDuration _maxDuration
+    /// @param _flagDelay _flagDelay
     function setThresholds(
         uint16 _autoRestrict,
         uint16 _autoLift,
@@ -264,12 +442,12 @@ contract SeerGuardian is ReentrancyGuard {
     //                    AUTOMATIC ENFORCEMENT (Guardian Role)
     // ═══════════════════════════════════════════════════════════════════════
     
+    // slither-disable-next-line reentrancy-no-eth
     /**
      * @notice Check and auto-enforce restrictions based on current score
      * @dev Anyone can call this to trigger automatic enforcement
      * @param subject The address to check
      */
-    // slither-disable-next-line reentrancy-no-eth
     function checkAndEnforce(address subject) external nonReentrant {
         if (daoOverridden[subject]) return; // DAO has overridden, skip auto-enforcement
 
@@ -368,6 +546,11 @@ contract SeerGuardian is ReentrancyGuard {
         _log("violation_recorded");
     }
     
+    /// @notice _applyAutoRestriction
+    /// @param subject subject
+    /// @param rtype rtype
+    /// @param reason reason
+    /// @param reasonCode reasonCode
     function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason, uint16 reasonCode) internal {
         RestrictionType old = activeRestriction[subject];
         activeRestriction[subject] = rtype;
@@ -382,6 +565,10 @@ contract SeerGuardian is ReentrancyGuard {
         _log("auto_restriction_applied");
     }
     
+    /// @notice _liftRestriction
+    /// @param subject subject
+    /// @param reason reason
+    /// @param clearDaoOverride clearDaoOverride
     function _liftRestriction(address subject, string memory reason, bool clearDaoOverride) internal {
         activeRestriction[subject] = RestrictionType.None;
         restrictionExpiry[subject] = 0;
@@ -559,6 +746,9 @@ contract SeerGuardian is ReentrancyGuard {
         }
     }
 
+    /// @notice _violationReasonCode
+    /// @param vtype vtype
+    /// @return _uint16 _uint16
     function _violationReasonCode(ViolationType vtype) internal pure returns (uint16) {
         if (vtype == ViolationType.SuspiciousTransfer) return 320;
         if (vtype == ViolationType.RapidScoreDrop) return 321;
@@ -590,6 +780,7 @@ contract SeerGuardian is ReentrancyGuard {
     /**
      * @notice Check if address can perform governance actions
      * @param subject The address to check
+     * @return _bool _bool
      */
     function canParticipateInGovernance(address subject) external view returns (bool) {
         RestrictionType r = activeRestriction[subject];
@@ -606,6 +797,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @notice Informational transfer status helper.
      * @dev This contract does not enforce token/vault transfers directly.
      * @param subject The address to check
+     * @return _bool _bool
      */
     function canTransfer(address subject) external view returns (bool) {
         RestrictionType r = activeRestriction[subject];
@@ -619,6 +811,12 @@ contract SeerGuardian is ReentrancyGuard {
     
     /**
      * @notice Get violation count for a user
+     * @param subject subject
+     * @return suspiciousTransfer suspiciousTransfer
+     * @return rapidScoreDrop rapidScoreDrop
+     * @return spamActivity spamActivity
+     * @return failedRecovery failedRecovery
+     * @return governanceAbuse governanceAbuse
      */
     function getViolationCounts(address subject) external view returns (
         uint8 suspiciousTransfer,
@@ -640,6 +838,8 @@ contract SeerGuardian is ReentrancyGuard {
     //                            INTERNAL
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice _log
+    /// @param action action
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
             try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }

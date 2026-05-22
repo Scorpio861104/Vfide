@@ -20,94 +20,201 @@ import "../SharedInterfaces.sol";
  *   - Only authorized operators can trigger claims (prevents direct calls)
  *   - Daily claim cap prevents draining
  *   - Per-claim amount is fixed
+ * @author Vfide
  */
 
 interface IEcosystemVault_Faucet {
+    /// @notice registerUserReferral
+    /// @param referrer referrer
+    /// @param user user
     function registerUserReferral(address referrer, address user) external;
 }
 
+/// @notice Faucet_Zero
 error Faucet_Zero();
+/// @notice Faucet_AlreadyClaimed
 error Faucet_AlreadyClaimed();
+/// @notice Faucet_NotOperator
 error Faucet_NotOperator();
+/// @notice Faucet_DailyCapReached
 error Faucet_DailyCapReached();
+/// @notice Faucet_InsufficientVFIDE
 error Faucet_InsufficientVFIDE();
+/// @notice Faucet_InsufficientETH
 error Faucet_InsufficientETH();
+/// @notice Faucet_ETHTransferFailed
 error Faucet_ETHTransferFailed();
+/// @notice Faucet_UnsupportedChain
 error Faucet_UnsupportedChain();
+/// @notice Faucet_ReferrerNotEligible
 error Faucet_ReferrerNotEligible();
+/// @notice Faucet_OperatorDailyCapReached
 error Faucet_OperatorDailyCapReached();
+/// @notice Faucet_NoPendingWithdraw
 error Faucet_NoPendingWithdraw();
+/// @notice Faucet_WithdrawTimelockActive
 error Faucet_WithdrawTimelockActive();
+/// @notice Faucet_NoPendingOwner
 error Faucet_NoPendingOwner();
+/// @notice Faucet_OwnerTransferTimelockActive
 error Faucet_OwnerTransferTimelockActive();
+/// @notice Faucet_InvalidConfig
 error Faucet_InvalidConfig();
+/// @notice Faucet_NoPendingGasTopUp
 error Faucet_NoPendingGasTopUp();
+/// @notice Faucet_GasRetryFailed
 error Faucet_GasRetryFailed();
+/// @notice Faucet_ReferrerChainTooDeep
 error Faucet_ReferrerChainTooDeep();
 
+/// @notice VFIDETestnetFaucet
+/// @title VFIDETestnetFaucet
+/// @author Vfide
 contract VFIDETestnetFaucet is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
+    /// @notice WITHDRAW_DELAY
     uint64 public constant WITHDRAW_DELAY = 24 hours;
+    /// @notice OWNER_TRANSFER_DELAY
     uint64 public constant OWNER_TRANSFER_DELAY = 7 days;
+    /// @notice MAX_CLAIM_AMOUNT_VFIDE
     uint256 public constant MAX_CLAIM_AMOUNT_VFIDE = 5_000e18;
+    /// @notice MAX_CLAIM_AMOUNT_ETH
     uint256 public constant MAX_CLAIM_AMOUNT_ETH = 0.02 ether;
+    /// @notice MAX_DAILY_CLAIM_CAP
     uint256 public constant MAX_DAILY_CLAIM_CAP = 200;
+    /// @notice MAX_OPERATOR_DAILY_CLAIM_CAP
     uint256 public constant MAX_OPERATOR_DAILY_CLAIM_CAP = 50;
 
+    /// @notice vfideToken
     IERC20 public immutable vfideToken;
     
+    /// @notice owner
     address public owner;
+    /// @notice operators
     mapping(address => bool) public operators;      // Backend wallets that can trigger claims
+    /// @notice hasClaimed
     mapping(address => bool) public hasClaimed;     // One claim per address
+    /// @notice referredBy
     mapping(address => address) public referredBy;   // Who invited this user
+    /// @notice pendingGasTopUp
     mapping(address => uint256) public pendingGasTopUp;
+    /// @notice operatorClaimsToday
     mapping(address => uint256) public operatorClaimsToday;
+    /// @notice operatorDayStart
     mapping(address => uint256) public operatorDayStart;
     
+    /// @notice claimAmountVFIDE
     uint256 public claimAmountVFIDE = 1000e18;      // 1,000 VFIDE per new user
+    /// @notice claimAmountETH
     uint256 public claimAmountETH = 0.005 ether;    // 0.005 ETH for gas (~50 transactions)
     
+    /// @notice dailyClaimCap
     uint256 public dailyClaimCap = 100;             // Max 100 claims per day
+    /// @notice operatorDailyClaimCap
     uint256 public operatorDailyClaimCap = 20;      // Max claims per operator per day
+    /// @notice claimsToday
     uint256 public claimsToday;
+    /// @notice dayStart
     uint256 public dayStart;
     
+    /// @notice totalClaimed
     uint256 public totalClaimed;
+    /// @notice totalUsers
     uint256 public totalUsers;
+    /// @notice ecosystemVault
     address public ecosystemVault;
+    /// @notice pendingWithdrawRecipient
     address public pendingWithdrawRecipient;
+    /// @notice pendingWithdrawAt
     uint64 public pendingWithdrawAt;
+    /// @notice pendingOwner
     address public pendingOwner;
+    /// @notice pendingOwnerAt
     uint64 public pendingOwnerAt;
     
+    /// @notice Claimed
+    /// @param user user
+    /// @param referrer referrer
+    /// @param vfideAmount vfideAmount
+    /// @param ethAmount ethAmount
     event Claimed(address indexed user, address indexed referrer, uint256 vfideAmount, uint256 ethAmount);
+    /// @notice BatchClaimProcessed
+    /// @param user user
+    /// @param referrer referrer
+    /// @param vfideAmount vfideAmount
+    /// @param ethAmount ethAmount
+    /// @param ethTransferFailed ethTransferFailed
     event BatchClaimProcessed(address indexed user, address indexed referrer, uint256 vfideAmount, uint256 ethAmount, bool ethTransferFailed);
+    /// @notice OperatorSet
+    /// @param operator operator
+    /// @param active active
     event OperatorSet(address indexed operator, bool active);
+    /// @notice ClaimAmountsSet
+    /// @param vfide vfide
+    /// @param eth eth
     event ClaimAmountsSet(uint256 vfide, uint256 eth);
+    /// @notice DailyCapSet
+    /// @param cap cap
     event DailyCapSet(uint256 cap);
+    /// @notice OperatorDailyCapSet
+    /// @param cap cap
     event OperatorDailyCapSet(uint256 cap);
+    /// @notice EcosystemVaultSet
+    /// @param ecosystemVault ecosystemVault
     event EcosystemVaultSet(address indexed ecosystemVault);
+    /// @notice ETHDeposited
+    /// @param depositor depositor
+    /// @param amount amount
     event ETHDeposited(address indexed depositor, uint256 amount);
+    /// @notice WithdrawScheduled
+    /// @param recipient recipient
+    /// @param executeAfter executeAfter
     event WithdrawScheduled(address indexed recipient, uint64 executeAfter);
+    /// @notice WithdrawCancelled
+    /// @param recipient recipient
     event WithdrawCancelled(address indexed recipient);
+    /// @notice WithdrawExecuted
+    /// @param recipient recipient
+    /// @param vfideAmount vfideAmount
+    /// @param ethAmount ethAmount
     event WithdrawExecuted(address indexed recipient, uint256 vfideAmount, uint256 ethAmount);
+    /// @notice OwnerTransferProposed
+    /// @param currentOwner currentOwner
+    /// @param pendingOwner pendingOwner
+    /// @param executeAfter executeAfter
     event OwnerTransferProposed(address indexed currentOwner, address indexed pendingOwner, uint64 executeAfter);
+    /// @notice OwnerTransferCancelled
+    /// @param currentOwner currentOwner
+    /// @param pendingOwner pendingOwner
     event OwnerTransferCancelled(address indexed currentOwner, address indexed pendingOwner);
+    /// @notice OwnerTransferred
+    /// @param oldOwner oldOwner
+    /// @param newOwner newOwner
     event OwnerTransferred(address indexed oldOwner, address indexed newOwner);
+    /// @notice BatchClaimGasFailed
+    /// @param user user
     event BatchClaimGasFailed(address indexed user);
+    /// @notice GasTopUpRetried
+    /// @param user user
+    /// @param amount amount
     event GasTopUpRetried(address indexed user, uint256 amount);
     
+    /// @notice onlyOwner
     modifier onlyOwner() {
         require(msg.sender == owner, "Faucet: not owner");
         _;
     }
     
+    /// @notice onlyOperator
     modifier onlyOperator() {
         if (!operators[msg.sender] && msg.sender != owner) revert Faucet_NotOperator();
         _;
     }
     
+    /// @notice constructor
+    /// @param _vfideToken _vfideToken
+    /// @param _owner _owner
     constructor(address _vfideToken, address _owner) {
         if (_vfideToken == address(0) || _owner == address(0)) revert Faucet_Zero();
         if (!_isSupportedTestnetChain(block.chainid)) revert Faucet_UnsupportedChain();
@@ -164,10 +271,10 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         emit Claimed(user, referrer, claimAmountVFIDE, claimAmountETH);
     }
     
+    // slither-disable-next-line reentrancy-benign
     /// @notice Batch claim for multiple users at once
     /// @param users Array of user addresses
     /// @param referrers Array of referrer addresses (same length, address(0) for no referrer)
-    // slither-disable-next-line reentrancy-benign
     function batchClaim(address[] calldata users, address[] calldata referrers) external onlyOperator nonReentrant {
         require(users.length == referrers.length, "Faucet: length mismatch");
         require(users.length <= 50, "Faucet: batch too large");
@@ -209,6 +316,8 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         }
     }
 
+    /// @notice retryGasTopUp
+    /// @param user user
     function retryGasTopUp(address user) external nonReentrant {
         uint256 amount = pendingGasTopUp[user];
         if (amount == 0) revert Faucet_NoPendingGasTopUp();
@@ -226,12 +335,18 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     
     // ── Admin ────────────────────────────────────────────────
     
+    /// @notice setOperator
+    /// @param operator operator
+    /// @param active active
     function setOperator(address operator, bool active) external onlyOwner {
         if (operator == address(0)) revert Faucet_Zero();
         operators[operator] = active;
         emit OperatorSet(operator, active);
     }
     
+    /// @notice setClaimAmounts
+    /// @param _vfide _vfide
+    /// @param _eth _eth
     function setClaimAmounts(uint256 _vfide, uint256 _eth) external onlyOwner {
         require(_vfide > 0, "Faucet: zero VFIDE");
         if (_vfide > MAX_CLAIM_AMOUNT_VFIDE || _eth > MAX_CLAIM_AMOUNT_ETH) revert Faucet_InvalidConfig();
@@ -240,12 +355,16 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         emit ClaimAmountsSet(_vfide, _eth);
     }
     
+    /// @notice setDailyCap
+    /// @param _cap _cap
     function setDailyCap(uint256 _cap) external onlyOwner {
         if (_cap == 0 || _cap > MAX_DAILY_CLAIM_CAP || _cap < operatorDailyClaimCap) revert Faucet_InvalidConfig();
         dailyClaimCap = _cap;
         emit DailyCapSet(_cap);
     }
 
+    /// @notice setOperatorDailyCap
+    /// @param _cap _cap
     function setOperatorDailyCap(uint256 _cap) external onlyOwner {
         require(_cap > 0, "Faucet: zero cap");
         if (_cap > MAX_OPERATOR_DAILY_CLAIM_CAP || _cap > dailyClaimCap) revert Faucet_InvalidConfig();
@@ -254,6 +373,8 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     }
 
     // slither-disable-next-line missing-zero-check
+    /// @notice setEcosystemVault
+    /// @param _ecosystemVault _ecosystemVault
     function setEcosystemVault(address _ecosystemVault) external onlyOwner {
         if (_ecosystemVault == address(0)) revert Faucet_Zero();
         ecosystemVault = _ecosystemVault;
@@ -261,6 +382,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     }
     
     /// @notice Queue a faucet withdrawal behind a short timelock.
+    /// @param to to
     function scheduleWithdraw(address to) external onlyOwner {
         if (to == address(0)) revert Faucet_Zero();
         pendingWithdrawRecipient = to;
@@ -268,6 +390,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         emit WithdrawScheduled(to, pendingWithdrawAt);
     }
 
+    /// @notice cancelWithdraw
     function cancelWithdraw() external onlyOwner {
         address recipient = pendingWithdrawRecipient;
         if (pendingWithdrawAt == 0) revert Faucet_NoPendingWithdraw();
@@ -277,6 +400,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     }
 
     /// @notice Propose a new faucet owner behind a timelock.
+    /// @param newOwner newOwner
     function proposeOwnerTransfer(address newOwner) external onlyOwner {
         if (newOwner == address(0)) revert Faucet_Zero();
         pendingOwner = newOwner;
@@ -307,8 +431,8 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         emit OwnerTransferred(oldOwner, owner);
     }
 
-    /// @notice Withdraw remaining funds (owner only) after the timelock elapses.
     // slither-disable-next-line reentrancy-events
+    /// @notice Withdraw remaining funds (owner only) after the timelock elapses.
     function withdraw() external onlyOwner {
         if (pendingWithdrawAt == 0) revert Faucet_NoPendingWithdraw();
         if (block.timestamp < pendingWithdrawAt) revert Faucet_WithdrawTimelockActive();
@@ -326,12 +450,23 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     
     // ── View ─────────────────────────────────────────────────
     
+    /// @notice getRemainingToday
+    /// @return _uint256 _uint256
     function getRemainingToday() external view returns (uint256) {
         if (block.timestamp >= dayStart + 1 days) return dailyClaimCap;
         if (claimsToday >= dailyClaimCap) return 0;
         return dailyClaimCap - claimsToday;
     }
     
+    /// @notice getFaucetStatus
+    /// @return vfideBalance vfideBalance
+    /// @return ethBalance ethBalance
+    /// @return _totalUsers _totalUsers
+    /// @return _totalClaimed _totalClaimed
+    /// @return _claimsToday _claimsToday
+    /// @return _dailyCap _dailyCap
+    /// @return _claimVFIDE _claimVFIDE
+    /// @return _claimETH _claimETH
     function getFaucetStatus() external view returns (
         uint256 vfideBalance,
         uint256 ethBalance,
@@ -354,6 +489,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         );
     }
     
+    /// @notice _refreshDay
     function _refreshDay() internal {
         if (block.timestamp >= dayStart + 1 days) {
             dayStart = block.timestamp;
@@ -361,6 +497,8 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         }
     }
 
+    /// @notice _refreshOperatorDay
+    /// @param operator operator
     function _refreshOperatorDay(address operator) internal {
         if (block.timestamp >= operatorDayStart[operator] + 1 days) {
             operatorDayStart[operator] = block.timestamp;
@@ -368,6 +506,9 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         }
     }
 
+    /// @notice _registerReferral
+    /// @param referrer referrer
+    /// @param user user
     function _registerReferral(address referrer, address user) internal {
         address vault = ecosystemVault;
         if (vault == address(0)) return;
@@ -377,6 +518,9 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         }
     }
 
+    /// @notice _isSupportedTestnetChain
+    /// @param chainId chainId
+    /// @return _bool _bool
     function _isSupportedTestnetChain(uint256 chainId) internal pure returns (bool) {
         return (
             chainId == 84532 ||   // Base Sepolia
@@ -388,6 +532,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         );
     }
     
+    /// @notice receive
     receive() external payable {
         emit ETHDeposited(msg.sender, msg.value);
     }

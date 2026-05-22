@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+/// @notice CardBoundVaultPaymentQueueManager
+/// @title CardBoundVaultPaymentQueueManager
+/// @author Vfide
 contract CardBoundVaultPaymentQueueManager {
+    /// @notice WITHDRAWAL_DELAY
     uint256 public constant WITHDRAWAL_DELAY = 7 days;
+    /// @notice MAX_QUEUED_PAYMENTS
     uint8 public constant MAX_QUEUED_PAYMENTS = 50;
 
     struct QueuedPayment {
@@ -23,37 +28,69 @@ contract CardBoundVaultPaymentQueueManager {
         uint64 executeAfter;
     }
 
+    /// @notice vault
     address public immutable vault;
+    /// @notice largePaymentThreshold
     uint256 public largePaymentThreshold;
+    /// @notice activeQueuedPayments
     uint8 public activeQueuedPayments;
+    /// @notice _paymentQueue
     QueuedPayment[] private _paymentQueue;
+    /// @notice pendingLargePaymentThresholdChange
     PendingLargePaymentThresholdChange public pendingLargePaymentThresholdChange;
 
+    /// @notice PQM_OnlyVault
     error PQM_OnlyVault();
+    /// @notice PQM_QueueFull
     error PQM_QueueFull();
+    /// @notice PQM_InvalidIndex
     error PQM_InvalidIndex();
+    /// @notice PQM_AlreadyProcessed
     error PQM_AlreadyProcessed();
+    /// @notice PQM_NotReady
     error PQM_NotReady();
+    /// @notice PQM_NotAuthorized
     error PQM_NotAuthorized();
+    /// @notice PQM_NoPending
     error PQM_NoPending();
+    /// @notice PQM_DelayActive
     error PQM_DelayActive();
+    /// @notice PQM_ReceiverChanged
     error PQM_ReceiverChanged();
 
+    /// @notice onlyVault
     modifier onlyVault() {
         if (msg.sender != vault) revert PQM_OnlyVault();
         _;
     }
 
+    /// @notice constructor
+    /// @param vault_ vault_
+    /// @param initialThreshold initialThreshold
     constructor(address vault_, uint256 initialThreshold) {
         require(vault_ != address(0), "CBV-PQM: zero vault");
         vault = vault_;
         largePaymentThreshold = initialThreshold;
     }
 
+    /// @notice queueLength
+    /// @return _uint256 _uint256
     function queueLength() external view returns (uint256) {
         return _paymentQueue.length;
     }
 
+    /// @notice paymentQueue
+    /// @param index index
+    /// @return token token
+    /// @return merchant merchant
+    /// @return recipient recipient
+    /// @return amount amount
+    /// @return requestTime requestTime
+    /// @return executeAfter executeAfter
+    /// @return executed executed
+    /// @return cancelled cancelled
+    /// @return intentNonce intentNonce
+    /// @return recipientCodeHashAtQueue recipientCodeHashAtQueue
     function paymentQueue(uint256 index)
         external
         view
@@ -85,6 +122,14 @@ contract CardBoundVaultPaymentQueueManager {
         );
     }
 
+    /// @notice queuePayment
+    /// @param token token
+    /// @param merchant merchant
+    /// @param recipient recipient
+    /// @param amount amount
+    /// @param intentNonce intentNonce
+    /// @return queueIndex queueIndex
+    /// @return executeAfter executeAfter
     function queuePayment(
         address token,
         address merchant,
@@ -119,6 +164,12 @@ contract CardBoundVaultPaymentQueueManager {
         queueIndex = _paymentQueue.length - 1;
     }
 
+    /// @notice executeQueuedPayment
+    /// @param queueIndex queueIndex
+    /// @param isAdmin isAdmin
+    /// @return token token
+    /// @return recipient recipient
+    /// @return amount amount
     function executeQueuedPayment(uint256 queueIndex, bool isAdmin)
         external
         onlyVault
@@ -147,6 +198,11 @@ contract CardBoundVaultPaymentQueueManager {
         amount = q.amount;
     }
 
+    /// @notice cancelQueuedPayment
+    /// @param queueIndex queueIndex
+    /// @param authorized authorized
+    /// @return requestTime requestTime
+    /// @return amount amount
     function cancelQueuedPayment(uint256 queueIndex, bool authorized)
         external
         onlyVault
@@ -167,6 +223,10 @@ contract CardBoundVaultPaymentQueueManager {
         amount = q.amount;
     }
 
+    /// @notice setLargePaymentThreshold
+    /// @param threshold threshold
+    /// @param delay delay
+    /// @return executeAfter executeAfter
     function setLargePaymentThreshold(uint256 threshold, uint64 delay)
         external
         onlyVault
@@ -179,6 +239,9 @@ contract CardBoundVaultPaymentQueueManager {
         });
     }
 
+    /// @notice applyLargePaymentThreshold
+    /// @return oldThreshold oldThreshold
+    /// @return newThreshold newThreshold
     function applyLargePaymentThreshold()
         external
         onlyVault
@@ -194,6 +257,7 @@ contract CardBoundVaultPaymentQueueManager {
         delete pendingLargePaymentThresholdChange;
     }
 
+    /// @notice clearOnRecovery
     function clearOnRecovery() external onlyVault {
         delete _paymentQueue;
         activeQueuedPayments = 0;
@@ -203,6 +267,8 @@ contract CardBoundVaultPaymentQueueManager {
     /// @notice Cancel a pending large-payment threshold change before it executes.
     /// Backlog fix (R77): Completes the apply+cancel symmetry for all 8 timelocked
     /// pipelines. Previously only applyLargePaymentThreshold existed with no cancel.
+    /// @return threshold threshold
+    /// @return executeAfter executeAfter
     function cancelLargePaymentThreshold()
         external
         onlyVault

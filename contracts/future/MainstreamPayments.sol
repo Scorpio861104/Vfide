@@ -35,14 +35,29 @@ import "../SharedInterfaces.sol";
  * @dev VFIDE never touches fiat or holds tokens during ramp. Users interact
  *      directly with licensed providers (MoonPay, Transak, Ramp Network).
  *      This is purely a discovery and record-keeping layer.
+ * @author Vfide
  */
 contract FiatRampRegistry is ReentrancyGuard {
+    /// @notice RampProviderRegistered
+    /// @param provider provider
+    /// @param name name
+    /// @param licenseInfo licenseInfo
     event RampProviderRegistered(address indexed provider, string name, string licenseInfo);
+    /// @notice RampProviderRemoved
+    /// @param provider provider
     event RampProviderRemoved(address indexed provider);
+    /// @notice RampTransactionRecorded
+    /// @param user user
+    /// @param provider provider
+    /// @param txHash txHash
+    /// @param isOnRamp isOnRamp
     event RampTransactionRecorded(address indexed user, address indexed provider, bytes32 txHash, bool isOnRamp);
     
+    /// @notice dao
     address public dao;
+    /// @notice seer
     ISeer public seer;
+    /// @notice ledger
     IProofLedger public ledger;
     
     struct RampProvider {
@@ -63,31 +78,49 @@ contract FiatRampRegistry is ReentrancyGuard {
         uint64 timestamp;
     }
     
+    /// @notice providers
     mapping(address => RampProvider) public providers;
+    /// @notice providerList
     address[] public providerList;
+    /// @notice rampRecords
     mapping(bytes32 => RampRecord) public rampRecords;
+    /// @notice userRampHistory
     mapping(address => bytes32[]) public userRampHistory;
     
     // Trust score bonuses for verified ramp users
+    /// @notice FIRST_RAMP_BONUS
     uint16 public constant FIRST_RAMP_BONUS = 50;
+    /// @notice RAMP_TX_BONUS
     uint16 public constant RAMP_TX_BONUS = 5;
+    /// @notice MAX_RAMP_REWARDS_PER_PROVIDER_USER
     uint256 public constant MAX_RAMP_REWARDS_PER_PROVIDER_USER = 5;
+    /// @notice MAX_RAMP_REWARDS_PER_USER
     uint256 public constant MAX_RAMP_REWARDS_PER_USER = 5;
+    /// @notice rampRewardCount
     mapping(address => mapping(address => uint256)) public rampRewardCount;
+    /// @notice userRampRewardCount
     mapping(address => uint256) public userRampRewardCount;
+    /// @notice lastRampTime
     mapping(address => mapping(address => uint64)) public lastRampTime;
+    /// @notice RAMP_COOLDOWN
     uint64 public constant RAMP_COOLDOWN = 1 hours;
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "FRR: not DAO");
         _;
     }
     
+    /// @notice onlyProvider
     modifier onlyProvider() {
         require(providers[msg.sender].registered, "FRR: not provider");
         _;
     }
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _seer _seer
+    /// @param _ledger _ledger
     constructor(address _dao, address _seer, address _ledger) {
         require(_dao != address(0), "FRR: zero DAO");
         dao = _dao;
@@ -127,6 +160,7 @@ contract FiatRampRegistry is ReentrancyGuard {
     
     /**
      * @notice Remove a ramp provider
+     * @param provider provider
      */
     function removeProvider(address provider) external onlyDAO nonReentrant {
         require(providers[provider].registered, "FRR: not registered");
@@ -189,10 +223,16 @@ contract FiatRampRegistry is ReentrancyGuard {
     //                           VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice getProviderCount
+    /// @return _uint256 _uint256
     function getProviderCount() external view returns (uint256) {
         return providerList.length;
     }
     
+    /// @notice getActiveProviders
+    /// @return addresses addresses
+    /// @return names names
+    /// @return widgetUrls widgetUrls
     function getActiveProviders() external view returns (
         address[] memory addresses,
         string[] memory names,
@@ -218,10 +258,17 @@ contract FiatRampRegistry is ReentrancyGuard {
         }
     }
     
+    /// @notice getUserRampHistory
+    /// @param user user
+    /// @return _arg _arg
     function getUserRampHistory(address user) external view returns (bytes32[] memory) {
         return userRampHistory[user];
     }
     
+    /// @notice getUserRampCount
+    /// @param user user
+    /// @return onRamps onRamps
+    /// @return offRamps offRamps
     function getUserRampCount(address user) external view returns (uint256 onRamps, uint256 offRamps) {
         bytes32[] memory history = userRampHistory[user];
         for (uint256 i = 0; i < history.length; ++i) {
@@ -237,6 +284,8 @@ contract FiatRampRegistry is ReentrancyGuard {
     //                           INTERNAL
     // ═══════════════════════════════════════════════════════════════════════
     
+    /// @notice _rewardRampUser
+    /// @param user user
     function _rewardRampUser(address user) internal {
         if (address(seer) == address(0)) return;
         if (rampRewardCount[msg.sender][user] >= MAX_RAMP_REWARDS_PER_PROVIDER_USER) return;
@@ -261,32 +310,73 @@ contract FiatRampRegistry is ReentrancyGuard {
  * @title MainstreamPriceOracle
  * @notice Provides VFIDE/USD pricing for fiat display at checkout
  * @dev Supports multiple price sources with fallback
+ * @author Vfide
  */
 contract MainstreamPriceOracle is ReentrancyGuard {
+    /// @notice PriceUpdated
+    /// @param vfidePerUsd vfidePerUsd
+    /// @param timestamp timestamp
+    /// @param updater updater
     event PriceUpdated(uint256 vfidePerUsd, uint256 timestamp, address indexed updater);
+    /// @notice PriceSourceAdded
+    /// @param source source
+    /// @param name name
+    /// @param priority priority
     event PriceSourceAdded(address indexed source, string name, uint8 priority);
+    /// @notice PriceSourceRemoved
+    /// @param source source
     event PriceSourceRemoved(address indexed source);
+    /// @notice PriceSourceReported
+    /// @param source source
+    /// @param price price
+    /// @param timestamp timestamp
     event PriceSourceReported(address indexed source, uint256 price, uint256 timestamp);
+    /// @notice StalenessThresholdUpdated
+    /// @param oldThreshold oldThreshold
+    /// @param newThreshold newThreshold
     event StalenessThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
+    /// @notice UpdaterChangeProposed
+    /// @param updater updater
+    /// @param status status
+    /// @param effectiveAt effectiveAt
     event UpdaterChangeProposed(address indexed updater, bool status, uint256 effectiveAt);
+    /// @notice UpdaterChangeApplied
+    /// @param updater updater
+    /// @param status status
     event UpdaterChangeApplied(address indexed updater, bool status);
+    /// @notice ForcePriceProposed
+    /// @param newPrice newPrice
+    /// @param effectiveAt effectiveAt
     event ForcePriceProposed(uint256 newPrice, uint256 effectiveAt);
     
+    /// @notice dao
     address public dao;
     
     // Price in VFIDE per 1 USD (18 decimals)
     // If VFIDE = $0.10, then vfidePerUsd = 10e18 (10 VFIDE per $1)
+    /// @notice vfidePerUsd
     uint256 public vfidePerUsd;
+    /// @notice lastUpdateTime
     uint256 public lastUpdateTime;
+    /// @notice stalenessThreshold
     uint256 public stalenessThreshold = 1 hours;
+    /// @notice MIN_PRICE_UPDATE_INTERVAL
     uint256 public constant MIN_PRICE_UPDATE_INTERVAL = 5 minutes;
+    /// @notice MIN_UPDATER_UPDATE_INTERVAL
     uint256 public constant MIN_UPDATER_UPDATE_INTERVAL = 15 minutes;
+    /// @notice MIN_ABSOLUTE_VFIDE_PER_USD
     uint256 public constant MIN_ABSOLUTE_VFIDE_PER_USD = 1e12;
+    /// @notice MAX_STANDARD_PRICE_CHANGE_BPS
     uint256 public constant MAX_STANDARD_PRICE_CHANGE_BPS = 5000;
+    /// @notice MAX_FORCE_PRICE_INCREASE_BPS
     uint256 public constant MAX_FORCE_PRICE_INCREASE_BPS = 90000;
+    /// @notice MAX_FORCE_PRICE_DECREASE_BPS
     uint256 public constant MAX_FORCE_PRICE_DECREASE_BPS = 5000;
+    /// @notice MAX_SOURCE_DEVIATION_BPS
     uint256 public constant MAX_SOURCE_DEVIATION_BPS = 5000;
+    /// @notice FORCE_PRICE_DELAY
     uint256 public constant FORCE_PRICE_DELAY = 24 hours;
+    /// @notice UPDATER_CHANGE_DELAY
     uint256 public constant UPDATER_CHANGE_DELAY = 24 hours;
     
     struct PriceSource {
@@ -297,27 +387,40 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         uint256 lastUpdate;
     }
     
+    /// @notice priceSources
     mapping(address => PriceSource) public priceSources;
+    /// @notice sourceList
     address[] public sourceList;
     
     // Authorized updaters (keepers, oracles)
+    /// @notice isUpdater
     mapping(address => bool) public isUpdater;
+    /// @notice lastUpdaterUpdateAt
     mapping(address => uint256) public lastUpdaterUpdateAt;
+    /// @notice pendingUpdaterStatus
     mapping(address => bool) public pendingUpdaterStatus;
+    /// @notice pendingUpdaterAt
     mapping(address => uint256) public pendingUpdaterAt;
+    /// @notice pendingForcePrice
     uint256 public pendingForcePrice;
+    /// @notice pendingForcePriceAt
     uint256 public pendingForcePriceAt;
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "PO: not DAO");
         _;
     }
     
+    /// @notice onlyUpdater
     modifier onlyUpdater() {
         require(isUpdater[msg.sender] || msg.sender == dao, "PO: not updater");
         _;
     }
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param initialPrice initialPrice
     constructor(address _dao, uint256 initialPrice) {
         require(_dao != address(0), "PO: zero DAO");
         _requireValidAbsolutePrice(initialPrice);
@@ -327,10 +430,17 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         isUpdater[_dao] = true;
     }
 
+    /// @notice _requireValidAbsolutePrice
+    /// @param price price
     function _requireValidAbsolutePrice(uint256 price) internal pure {
         require(price >= MIN_ABSOLUTE_VFIDE_PER_USD, "PO: price below minimum");
     }
 
+    /// @notice _validatePriceWindow
+    /// @param currentPrice currentPrice
+    /// @param newPrice newPrice
+    /// @param maxIncreaseBps maxIncreaseBps
+    /// @param maxDecreaseBps maxDecreaseBps
     function _validatePriceWindow(
         uint256 currentPrice,
         uint256 newPrice,
@@ -342,15 +452,19 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         require(newPrice >= minPrice && newPrice <= maxPrice, "PO: price change too large");
     }
 
+    /// @notice _enforceUpdateCooldown
     function _enforceUpdateCooldown() internal view {
         require(block.timestamp >= lastUpdateTime + MIN_PRICE_UPDATE_INTERVAL, "PO: update cooldown active");
     }
 
+    /// @notice _enforceUpdaterCooldown
+    /// @param updater updater
     function _enforceUpdaterCooldown(address updater) internal {
         require(block.timestamp >= lastUpdaterUpdateAt[updater] + MIN_UPDATER_UPDATE_INTERVAL, "PO: updater cooldown active");
         lastUpdaterUpdateAt[updater] = block.timestamp;
     }
 
+    /// @notice _requireFreshPrice
     function _requireFreshPrice() internal view {
         require(vfidePerUsd > 0, "PO: price not set");
         require(block.timestamp <= lastUpdateTime + stalenessThreshold, "PO: price stale");
@@ -374,6 +488,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     /**
      * @notice Queue a force price change (DAO only), applied after delay.
+     * @param newPrice newPrice
      */
     function forceSetPrice(uint256 newPrice) external onlyDAO nonReentrant {
         _requireValidAbsolutePrice(newPrice);
@@ -383,6 +498,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         emit ForcePriceProposed(newPrice, pendingForcePriceAt);
     }
 
+    /// @notice applyForceSetPrice
     function applyForceSetPrice() external onlyDAO nonReentrant {
         require(pendingForcePriceAt > 0, "PO: no pending force price");
         require(block.timestamp >= pendingForcePriceAt, "PO: force price timelocked");
@@ -399,6 +515,9 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     /**
      * @notice Add/update a price source
+     * @param source source
+     * @param name name
+     * @param priority priority
      */
     function setPriceSource(address source, string calldata name, uint8 priority) external onlyDAO nonReentrant {
         require(source != address(0), "PO: zero source");
@@ -420,6 +539,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     /**
      * @notice Remove a price source
+     * @param source source
      */
     function removePriceSource(address source) external onlyDAO nonReentrant {
         require(priceSources[source].active, "PO: source not active");
@@ -439,6 +559,8 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     /**
      * @notice Queue authorized updater change
+     * @param updater updater
+     * @param status status
      */
     function setUpdater(address updater, bool status) external onlyDAO nonReentrant {
         require(updater != address(0), "PO: zero updater");
@@ -447,6 +569,8 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         emit UpdaterChangeProposed(updater, status, pendingUpdaterAt[updater]);
     }
 
+    /// @notice applyUpdater
+    /// @param updater updater
     function applyUpdater(address updater) external onlyDAO nonReentrant {
         uint256 effectiveAt = pendingUpdaterAt[updater];
         require(effectiveAt > 0, "PO: no pending updater");
@@ -460,6 +584,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     /// @notice Fallback — any updater can push a price from a registered source
     /// @dev Reads `lastPrice` from the registered PriceSource and applies it (with sanity check)
+    /// @param source source
     function updatePriceFromSource(address source) external onlyUpdater nonReentrant {
         PriceSource storage ps = priceSources[source];
         require(ps.active, "PO: source not active");
@@ -477,6 +602,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     }
 
     /// @notice Allow a registered price source to push its latest price
+    /// @param price price
     function reportSourcePrice(uint256 price) external nonReentrant {
         PriceSource storage ps = priceSources[msg.sender];
         require(ps.active, "PO: not a source");
@@ -489,6 +615,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
 
     /**
      * @notice Set staleness threshold
+     * @param threshold threshold
      */
     function setStalenessThreshold(uint256 threshold) external onlyDAO nonReentrant {
         require(threshold >= 5 minutes && threshold <= 24 hours, "PO: invalid threshold");
@@ -526,6 +653,9 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     
     /**
      * @notice Get current price with freshness info
+     * @return price price
+     * @return lastUpdate lastUpdate
+     * @return isStale isStale
      */
     function getPrice() external view returns (
         uint256 price,
@@ -580,25 +710,73 @@ contract MainstreamPriceOracle is ReentrancyGuard {
  * @title SessionKeyManager
  * @notice Enables one-tap mobile payments via temporary session keys
  * @dev Session keys can make limited transactions without main wallet signature
+ * @author Vfide
  */
 interface ISeerAutonomous_SKM {
+    /// @notice beforeAction
+    /// @param subject subject
+    /// @param action action
+    /// @param amount amount
+    /// @param counterparty counterparty
+    /// @return _uint8 _uint8
     function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
 }
 
+/// @notice SessionKeyManager
+/// @title SessionKeyManager
+/// @author Vfide
 contract SessionKeyManager is ReentrancyGuard {
+    /// @notice SessionCreated
+    /// @param owner owner
+    /// @param sessionKey sessionKey
+    /// @param spendLimit spendLimit
+    /// @param expiry expiry
     event SessionCreated(address indexed owner, address indexed sessionKey, uint256 spendLimit, uint64 expiry);
+    /// @notice SessionRevoked
+    /// @param owner owner
+    /// @param sessionKey sessionKey
     event SessionRevoked(address indexed owner, address indexed sessionKey);
+    /// @notice SessionUsed
+    /// @param owner owner
+    /// @param sessionKey sessionKey
+    /// @param amount amount
+    /// @param remaining remaining
     event SessionUsed(address indexed owner, address indexed sessionKey, uint256 amount, uint256 remaining);
+    /// @notice DefaultLimitsUpdated
+    /// @param spendLimit spendLimit
+    /// @param duration duration
     event DefaultLimitsUpdated(uint256 spendLimit, uint64 duration);
+    /// @notice DefaultLimitsChangeProposed
+    /// @param spendLimit spendLimit
+    /// @param duration duration
+    /// @param maxPerTx maxPerTx
+    /// @param effectiveAt effectiveAt
     event DefaultLimitsChangeProposed(uint256 spendLimit, uint64 duration, uint256 maxPerTx, uint256 effectiveAt);
+    /// @notice SessionActionDelayed
+    /// @param owner owner
+    /// @param recorder recorder
+    /// @param action action
+    /// @param amount amount
     event SessionActionDelayed(address indexed owner, address indexed recorder, uint8 action, uint256 amount);
+    /// @notice SeerAutonomousSet
+    /// @param seerAutonomous seerAutonomous
     event SeerAutonomousSet(address indexed seerAutonomous);
+    /// @notice SessionRecorderPermissionSet
+    /// @param owner owner
+    /// @param sessionKey sessionKey
+    /// @param recorder recorder
+    /// @param allowed allowed
     event SessionRecorderPermissionSet(address indexed owner, address indexed sessionKey, address indexed recorder, bool allowed);
 
+    /// @notice SKM_ActionBlocked
+    /// @param result result
     error SKM_ActionBlocked(uint8 result);
     
+    /// @notice dao
     address public dao;
+    /// @notice vaultHub
     IVaultHub public vaultHub;
+    /// @notice seerAutonomous
     ISeerAutonomous_SKM public seerAutonomous;
     
     struct Session {
@@ -610,33 +788,50 @@ contract SessionKeyManager is ReentrancyGuard {
         uint256 maxPerTx;        // Max per transaction
     }
     
+    /// @notice sessions
     mapping(address => Session) public sessions;  // sessionKey => Session
+    /// @notice ownerSessions
     mapping(address => address[]) private ownerSessions; // owner => sessionKeys
     
+    /// @notice authorizedSpendRecorders
     mapping(address => bool) public authorizedSpendRecorders;
+    /// @notice sessionRecorderAllowed
     mapping(address => mapping(address => bool)) public sessionRecorderAllowed; // sessionKey => recorder => allowed
     
     // Default limits
+    /// @notice defaultSpendLimit
     uint256 public defaultSpendLimit = 1000 * 1e18;  // 1000 VFIDE
+    /// @notice defaultDuration
     uint64 public defaultDuration = 24 hours;
+    /// @notice defaultMaxPerTx
     uint256 public defaultMaxPerTx = 100 * 1e18;     // 100 VFIDE per tx
 
+    /// @notice pendingDefaultSpendLimit
     uint256 public pendingDefaultSpendLimit;
+    /// @notice pendingDefaultDuration
     uint64 public pendingDefaultDuration;
+    /// @notice pendingDefaultMaxPerTx
     uint256 public pendingDefaultMaxPerTx;
+    /// @notice pendingDefaultLimitsAt
     uint256 public pendingDefaultLimitsAt;
+    /// @notice DEFAULT_LIMITS_DELAY
     uint256 public constant DEFAULT_LIMITS_DELAY = 24 hours;
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "SKM: not DAO");
         _;
     }
     
+    /// @notice onlyAuthorizedRecorder
     modifier onlyAuthorizedRecorder() {
         require(authorizedSpendRecorders[msg.sender], "SKM: not authorized recorder");
         _;
     }
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _vaultHub _vaultHub
     constructor(address _dao, address _vaultHub) {
         require(_dao != address(0) && _vaultHub != address(0), "SKM: zero");
         dao = _dao;
@@ -645,12 +840,16 @@ contract SessionKeyManager is ReentrancyGuard {
     
     /**
      * @notice Set authorized spend recorders (MerchantPortal, etc.)
+     * @param recorder recorder
+     * @param authorized authorized
      */
     function setAuthorizedRecorder(address recorder, bool authorized) external onlyDAO nonReentrant {
         require(recorder != address(0), "SKM: zero address");
         authorizedSpendRecorders[recorder] = authorized;
     }
 
+    /// @notice setSeerAutonomous
+    /// @param _seerAutonomous _seerAutonomous
     function setSeerAutonomous(address _seerAutonomous) external onlyDAO nonReentrant {
         seerAutonomous = ISeerAutonomous_SKM(_seerAutonomous);
         emit SeerAutonomousSet(_seerAutonomous);
@@ -659,6 +858,9 @@ contract SessionKeyManager is ReentrancyGuard {
     /**
      * @notice Allow or revoke a specific authorized recorder for one session key.
      * @dev Session owner must explicitly opt-in each recorder before it can call recordSpend.
+     * @param sessionKey sessionKey
+     * @param recorder recorder
+     * @param allowed allowed
      */
     function setSessionRecorderPermission(address sessionKey, address recorder, bool allowed) external nonReentrant {
         Session storage s = sessions[sessionKey];
@@ -674,6 +876,7 @@ contract SessionKeyManager is ReentrancyGuard {
      * @param spendLimit Maximum VFIDE this session can spend
      * @param duration How long the session is valid
      * @param maxPerTx Maximum per single transaction
+     * @return expiry expiry
      */
     function createSession(
         address sessionKey,
@@ -684,6 +887,13 @@ contract SessionKeyManager is ReentrancyGuard {
         return _createSessionInternal(msg.sender, sessionKey, spendLimit, duration, maxPerTx);
     }
 
+    /// @notice _createSessionInternal
+    /// @param caller caller
+    /// @param sessionKey sessionKey
+    /// @param spendLimit spendLimit
+    /// @param duration duration
+    /// @param maxPerTx maxPerTx
+    /// @return expiry expiry
     function _createSessionInternal(
         address caller,
         address sessionKey,
@@ -723,6 +933,8 @@ contract SessionKeyManager is ReentrancyGuard {
     
     /**
      * @notice Create session with default limits (quick setup)
+     * @param sessionKey sessionKey
+     * @return expiry expiry
      */
     function createQuickSession(address sessionKey) external nonReentrant returns (uint64 expiry) {
         return _createSessionInternal(msg.sender, sessionKey, defaultSpendLimit, defaultDuration, defaultMaxPerTx);
@@ -730,6 +942,7 @@ contract SessionKeyManager is ReentrancyGuard {
     
     /**
      * @notice Revoke a session key
+     * @param sessionKey sessionKey
      */
     function revokeSession(address sessionKey) external nonReentrant {
         Session storage s = sessions[sessionKey];
@@ -756,6 +969,10 @@ contract SessionKeyManager is ReentrancyGuard {
     /**
      * @notice Check if session can spend amount
      * @dev Called by payment contracts before processing
+     * @param sessionKey sessionKey
+     * @param amount amount
+     * @return allowed allowed
+     * @return reason reason
      */
     function canSpend(address sessionKey, uint256 amount) external view returns (bool allowed, string memory reason) {
         Session storage s = sessions[sessionKey];
@@ -772,6 +989,9 @@ contract SessionKeyManager is ReentrancyGuard {
     /**
      * @notice Record spending (called by payment contracts)
      * @dev Only callable by authorized contracts (MerchantPortal, etc.)
+     * @param sessionKey sessionKey
+     * @param amount amount
+     * @return _bool _bool
      */
     function recordSpend(address sessionKey, uint256 amount) external onlyAuthorizedRecorder nonReentrant returns (bool) {
         Session storage s = sessions[sessionKey];
@@ -792,6 +1012,8 @@ contract SessionKeyManager is ReentrancyGuard {
     
     /**
      * @notice Get vault owner for a session key
+     * @param sessionKey sessionKey
+     * @return _address _address
      */
     function getSessionOwner(address sessionKey) external view returns (address) {
         return sessions[sessionKey].owner;
@@ -799,6 +1021,12 @@ contract SessionKeyManager is ReentrancyGuard {
     
     /**
      * @notice Get all sessions for an owner
+     * @param owner owner
+     * @return keys keys
+     * @return spendLimits spendLimits
+     * @return spent spent
+     * @return expiries expiries
+     * @return active active
      */
     function getOwnerSessions(address owner) external view returns (
         address[] memory keys,
@@ -828,6 +1056,12 @@ contract SessionKeyManager is ReentrancyGuard {
     
     /**
      * @notice Get session status
+     * @param sessionKey sessionKey
+     * @return owner owner
+     * @return remaining remaining
+     * @return maxPerTransaction maxPerTransaction
+     * @return expiresAt expiresAt
+     * @return isActive isActive
      */
     function getSessionStatus(address sessionKey) external view returns (
         address owner,
@@ -846,6 +1080,9 @@ contract SessionKeyManager is ReentrancyGuard {
     
     /**
      * @notice DAO can update default limits
+     * @param spendLimit spendLimit
+     * @param duration duration
+     * @param maxPerTx maxPerTx
      */
     function setDefaultLimits(uint256 spendLimit, uint64 duration, uint256 maxPerTx) external onlyDAO nonReentrant {
         require(spendLimit <= 10000 * 1e18, "SKM: limit too high");
@@ -858,6 +1095,7 @@ contract SessionKeyManager is ReentrancyGuard {
         emit DefaultLimitsChangeProposed(spendLimit, duration, maxPerTx, pendingDefaultLimitsAt);
     }
 
+    /// @notice applyDefaultLimits
     function applyDefaultLimits() external onlyDAO nonReentrant {
         require(pendingDefaultLimitsAt > 0, "SKM: no pending limits");
         require(block.timestamp >= pendingDefaultLimitsAt, "SKM: limits timelocked");
@@ -873,6 +1111,11 @@ contract SessionKeyManager is ReentrancyGuard {
         emit DefaultLimitsUpdated(defaultSpendLimit, defaultDuration);
     }
 
+    /// @notice _enforceSeerAction
+    /// @param subject subject
+    /// @param action action
+    /// @param amount amount
+    /// @param counterparty counterparty
     function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
         if (address(seerAutonomous) == address(0)) return;
 
@@ -902,19 +1145,46 @@ contract SessionKeyManager is ReentrancyGuard {
  * @title TerminalRegistry
  * @notice Registry for NFC/POS hardware terminals
  * @dev Terminals can initiate payments on behalf of customers
+ * @author Vfide
  */
 contract TerminalRegistry is ReentrancyGuard {
+    /// @notice TerminalRegistered
+    /// @param terminalId terminalId
+    /// @param merchant merchant
+    /// @param location location
     event TerminalRegistered(bytes32 indexed terminalId, address indexed merchant, string location);
+    /// @notice TerminalDeactivated
+    /// @param terminalId terminalId
     event TerminalDeactivated(bytes32 indexed terminalId);
+    /// @notice TerminalReactivated
+    /// @param terminalId terminalId
     event TerminalReactivated(bytes32 indexed terminalId);
+    /// @notice TerminalPayment
+    /// @param terminalId terminalId
+    /// @param customer customer
+    /// @param amount amount
     event TerminalPayment(bytes32 indexed terminalId, address indexed customer, uint256 amount);
+    /// @notice TerminalLocationUpdated
+    /// @param terminalId terminalId
+    /// @param newLocation newLocation
     event TerminalLocationUpdated(bytes32 indexed terminalId, string newLocation);
+    /// @notice TapLimitUpdated
+    /// @param oldLimit oldLimit
+    /// @param newLimit newLimit
     event TapLimitUpdated(uint256 oldLimit, uint256 newLimit);
+    /// @notice PaymentRecorderSet
+    /// @param recorder recorder
+    /// @param allowed allowed
     event PaymentRecorderSet(address indexed recorder, bool allowed);
+    /// @notice TerminalRegistrarSet
+    /// @param registrar registrar
     event TerminalRegistrarSet(address indexed registrar);
     
+    /// @notice dao
     address public dao;
+    /// @notice vaultHub
     IVaultHub public vaultHub;
+    /// @notice terminalRegistrar
     address public terminalRegistrar;
     
     struct Terminal {
@@ -928,19 +1198,28 @@ contract TerminalRegistry is ReentrancyGuard {
         uint64 lastTxTime;
     }
     
+    /// @notice terminals
     mapping(bytes32 => Terminal) public terminals;
+    /// @notice merchantTerminals
     mapping(address => bytes32[]) private merchantTerminals;
+    /// @notice paymentRecorders
     mapping(address => bool) public paymentRecorders;
+    /// @notice usedRegistrationDigests
     mapping(bytes32 => bool) public usedRegistrationDigests;
     
     // Spending limits for tap-to-pay (no signature required)
+    /// @notice tapLimit
     uint256 public tapLimit = 50 * 1e18;  // 50 VFIDE max for tap (like $50 contactless limit)
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "TR: not DAO");
         _;
     }
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _vaultHub _vaultHub
     constructor(address _dao, address _vaultHub) {
         require(_dao != address(0) && _vaultHub != address(0), "TR: zero");
         dao = _dao;
@@ -1003,6 +1282,8 @@ contract TerminalRegistry is ReentrancyGuard {
         emit TerminalRegistered(terminalId, msg.sender, location);
     }
 
+    /// @notice setTerminalRegistrar
+    /// @param registrar registrar
     function setTerminalRegistrar(address registrar) external onlyDAO nonReentrant {
         require(registrar != address(0), "TR: zero registrar");
         terminalRegistrar = registrar;
@@ -1011,6 +1292,7 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Deactivate a terminal (merchant or DAO)
+     * @param terminalId terminalId
      */
     function deactivateTerminal(bytes32 terminalId) external nonReentrant {
         Terminal storage t = terminals[terminalId];
@@ -1024,6 +1306,7 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Reactivate a terminal (merchant only)
+     * @param terminalId terminalId
      */
     function reactivateTerminal(bytes32 terminalId) external nonReentrant {
         Terminal storage t = terminals[terminalId];
@@ -1040,6 +1323,8 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Update terminal location
+     * @param terminalId terminalId
+     * @param newLocation newLocation
      */
     function updateLocation(bytes32 terminalId, string calldata newLocation) external nonReentrant {
         Terminal storage t = terminals[terminalId];
@@ -1050,6 +1335,9 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Record a terminal payment (called by payment processor)
+     * @param terminalId terminalId
+     * @param customer customer
+     * @param amount amount
      */
     function recordPayment(bytes32 terminalId, address customer, uint256 amount) external nonReentrant {
         Terminal storage t = terminals[terminalId];
@@ -1068,6 +1356,9 @@ contract TerminalRegistry is ReentrancyGuard {
         emit TerminalPayment(terminalId, customer, amount);
     }
 
+    /// @notice setPaymentRecorder
+    /// @param recorder recorder
+    /// @param allowed allowed
     function setPaymentRecorder(address recorder, bool allowed) external onlyDAO nonReentrant {
         require(recorder != address(0), "TR: zero recorder");
         paymentRecorders[recorder] = allowed;
@@ -1076,6 +1367,9 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Check if terminal is valid for payment
+     * @param terminalId terminalId
+     * @return valid valid
+     * @return merchant merchant
      */
     function isValidTerminal(bytes32 terminalId) external view returns (bool valid, address merchant) {
         Terminal storage t = terminals[terminalId];
@@ -1085,6 +1379,8 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Check if amount qualifies for tap-to-pay (no signature)
+     * @param amount amount
+     * @return _bool _bool
      */
     function isTapEligible(uint256 amount) external view returns (bool) {
         return amount <= tapLimit;
@@ -1092,6 +1388,10 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Get merchant's terminals
+     * @param merchant merchant
+     * @return terminalIds terminalIds
+     * @return activeStatus activeStatus
+     * @return volumes volumes
      */
     function getMerchantTerminals(address merchant) external view returns (
         bytes32[] memory terminalIds,
@@ -1112,6 +1412,14 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice Get terminal stats
+     * @param terminalId terminalId
+     * @return merchant merchant
+     * @return active active
+     * @return location location
+     * @return txCount txCount
+     * @return totalVolume totalVolume
+     * @return registeredAt registeredAt
+     * @return lastTxTime lastTxTime
      */
     function getTerminalStats(bytes32 terminalId) external view returns (
         address merchant,
@@ -1128,6 +1436,7 @@ contract TerminalRegistry is ReentrancyGuard {
     
     /**
      * @notice DAO can update tap limit
+     * @param newLimit newLimit
      */
     function setTapLimit(uint256 newLimit) external onlyDAO nonReentrant {
         require(newLimit >= 10 * 1e18 && newLimit <= 500 * 1e18, "TR: invalid limit");
@@ -1136,6 +1445,10 @@ contract TerminalRegistry is ReentrancyGuard {
         emit TapLimitUpdated(oldLimit, newLimit);
     }
 
+    /// @notice _recoverRegistrationSigner
+    /// @param digest digest
+    /// @param signature signature
+    /// @return _address _address
     function _recoverRegistrationSigner(bytes32 digest, bytes calldata signature) internal pure returns (address) {
         if (signature.length != 65) return address(0);
 
@@ -1180,12 +1493,31 @@ contract TerminalRegistry is ReentrancyGuard {
  *      LEGAL: This is a ROUTER not an EXCHANGE. User approves DEX directly,
  *      user calls DEX directly with routing hints from this contract.
  *      VFIDE provides convenience, not custody.
+ * @author Vfide
  */
 contract MultiCurrencyRouter is ReentrancyGuard {
+    /// @notice TokenRouteAdded
+    /// @param token token
+    /// @param symbol symbol
+    /// @param path path
     event TokenRouteAdded(address indexed token, string symbol, address[] path);
+    /// @notice TokenRouteRemoved
+    /// @param token token
     event TokenRouteRemoved(address indexed token);
+    /// @notice SwapRouterUpdated
+    /// @param oldRouter oldRouter
+    /// @param newRouter newRouter
     event SwapRouterUpdated(address indexed oldRouter, address indexed newRouter);
+    /// @notice RecommendedRouterUpdateProposed
+    /// @param newRouter newRouter
+    /// @param effectiveAt effectiveAt
     event RecommendedRouterUpdateProposed(address indexed newRouter, uint256 effectiveAt);
+    /// @notice DirectPaymentRecorded
+    /// @param customer customer
+    /// @param merchant merchant
+    /// @param paymentToken paymentToken
+    /// @param paymentAmount paymentAmount
+    /// @param orderId orderId
     event DirectPaymentRecorded(
         address indexed customer,
         address indexed merchant,
@@ -1194,15 +1526,23 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         string orderId
     );
     
+    /// @notice dao
     address public dao;
+    /// @notice vfideToken
     address public vfideToken;
+    /// @notice priceOracle
     MainstreamPriceOracle public priceOracle;
+    /// @notice authorizedRecorder
     mapping(address => bool) public authorizedRecorder;
     
     // Recommended DEX routers (user chooses which to use)
+    /// @notice recommendedRouter
     address public recommendedRouter;  // e.g., Uniswap V3 Router
+    /// @notice pendingRecommendedRouter
     address public pendingRecommendedRouter;
+    /// @notice pendingRecommendedRouterAt
     uint256 public pendingRecommendedRouterAt;
+    /// @notice RECOMMENDED_ROUTER_DELAY
     uint256 public constant RECOMMENDED_ROUTER_DELAY = 48 hours;
     
     struct TokenRoute {
@@ -1212,14 +1552,22 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         address[] defaultPath;  // Suggested path to VFIDE
     }
     
+    /// @notice routes
     mapping(address => TokenRoute) public routes;
+    /// @notice supportedTokens
     address[] public supportedTokens;
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "MCR: not DAO");
         _;
     }
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _vfide _vfide
+    /// @param _priceOracle _priceOracle
+    /// @param _recommendedRouter _recommendedRouter
     constructor(
         address _dao,
         address _vfide,
@@ -1252,6 +1600,10 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     /**
      * @notice Add a supported token with routing path
      * @dev Path is a SUGGESTION - user executes swap directly on DEX
+     * @param token token
+     * @param symbol symbol
+     * @param decimals decimals
+     * @param path path
      */
     function addTokenRoute(
         address token,
@@ -1275,6 +1627,7 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     
     /**
      * @notice Remove token route
+     * @param token token
      */
     function removeTokenRoute(address token) external onlyDAO nonReentrant {
         routes[token].supported = false;
@@ -1283,6 +1636,7 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     
     /**
      * @notice Queue recommended router update
+     * @param router router
      */
     function setRecommendedRouter(address router) external onlyDAO nonReentrant {
         require(router != address(0), "MCR: zero router");
@@ -1291,6 +1645,7 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         emit RecommendedRouterUpdateProposed(router, pendingRecommendedRouterAt);
     }
 
+    /// @notice applyRecommendedRouter
     function applyRecommendedRouter() external onlyDAO nonReentrant {
         require(pendingRecommendedRouterAt > 0, "MCR: no pending router");
         require(block.timestamp >= pendingRecommendedRouterAt, "MCR: router timelocked");
@@ -1303,6 +1658,9 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         emit SwapRouterUpdated(old, next);
     }
 
+    /// @notice setAuthorizedRecorder
+    /// @param recorder recorder
+    /// @param authorized authorized
     function setAuthorizedRecorder(address recorder, bool authorized) external onlyDAO nonReentrant {
         require(recorder != address(0), "MCR: zero recorder");
         authorizedRecorder[recorder] = authorized;
@@ -1368,6 +1726,10 @@ contract MultiCurrencyRouter is ReentrancyGuard {
      * @notice Record a direct payment (for analytics only, no custody)
      * @dev Called by frontend after user completes DEX swap and sends VFIDE
      *      This is purely for record-keeping and trust scoring
+     * @param merchant merchant
+     * @param paymentToken paymentToken
+     * @param paymentAmount paymentAmount
+     * @param orderId orderId
      */
     function recordDirectPayment(
         address merchant,
@@ -1382,6 +1744,11 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     /**
      * @notice Preview swap quote
      * @dev In production, this would call DEX getAmountsOut()
+     * @param tokenIn tokenIn
+     * @param amountIn amountIn
+     * @return estimatedVfide estimatedVfide
+     * @return usdValue usdValue
+     * @return path path
      */
     function previewSwap(
         address tokenIn,
@@ -1413,6 +1780,9 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     
     /**
      * @notice Get all supported tokens
+     * @return addresses addresses
+     * @return symbols symbols
+     * @return needsSwap needsSwap
      */
     function getSupportedTokens() external view returns (
         address[] memory addresses,

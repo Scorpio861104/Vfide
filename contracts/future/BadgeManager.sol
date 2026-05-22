@@ -13,6 +13,7 @@ import "./BadgeQualificationRules.sol";
  * 
  * Philosophy: Badges are earned through ACTIONS, not purchased.
  * Each badge comes with ProofScore boost, creating a transparent reputation ladder.
+ * @author Vfide
  */
 contract BadgeManager {
     
@@ -20,8 +21,11 @@ contract BadgeManager {
     //                           STATE VARIABLES
     // ════════════════════════════════════════════════════════════════════════
     
+    /// @notice dao
     address public dao;
+    /// @notice seer
     Seer public seer;
+    /// @notice qualificationRules
     IBadgeQualificationRules public qualificationRules;
     
     /// @notice Track user statistics for badge qualification
@@ -43,6 +47,7 @@ contract BadgeManager {
         bool hasTranslated;               // Translated docs
     }
     
+    /// @notice userStats
     mapping(address => UserStats) public userStats;
     
     /// @notice Track badge checks to avoid redundant processing
@@ -53,60 +58,111 @@ contract BadgeManager {
     // H-33 FIX: Per-selector operator authorization.
     // If a selector has ANY per-selector entry, only those explicitly approved may call it.
     // This lets DAO restrict, e.g., an operator to only awardBadge and not awardPioneer.
+    /// @notice selectorOperators
     mapping(bytes4 => mapping(address => bool)) public selectorOperators;
+    /// @notice selectorRestricted
     mapping(bytes4 => bool) public selectorRestricted; // true = use per-selector whitelist
+    /// @notice _guardLock
     uint256 private _guardLock;
     
     /// @notice Pioneer counter (first 10,000 users)
     uint32 public pioneerCount;
+    /// @notice MAX_PIONEERS
     uint32 public constant MAX_PIONEERS = 10_000;
     
     /// @notice Founding member counter (first 1,000 to reach 800+)
     uint32 public foundingMemberCount;
+    /// @notice MAX_FOUNDING_MEMBERS
     uint32 public constant MAX_FOUNDING_MEMBERS = 1_000;
 
+    /// @notice pendingOperatorStatus
     mapping(address => bool) public pendingOperatorStatus;
+    /// @notice pendingOperatorAt
     mapping(address => uint256) public pendingOperatorAt;
+    /// @notice OPERATOR_CHANGE_DELAY
     uint256 public constant OPERATOR_CHANGE_DELAY = 24 hours;
 
+    /// @notice pendingQualificationRules
     address public pendingQualificationRules;
+    /// @notice pendingQualificationRulesAt
     uint256 public pendingQualificationRulesAt;
+    /// @notice QUALIFICATION_RULES_DELAY
     uint256 public constant QUALIFICATION_RULES_DELAY = 48 hours;
     
     // ════════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ════════════════════════════════════════════════════════════════════════
     
+    /// @notice BadgeEarned
+    /// @param user user
+    /// @param badge badge
+    /// @param expiry expiry
+    /// @param scoreBoost scoreBoost
     event BadgeEarned(address indexed user, bytes32 indexed badge, uint256 expiry, uint16 scoreBoost);
+    /// @notice BadgeRevoked
+    /// @param user user
+    /// @param badge badge
+    /// @param reason reason
     event BadgeRevoked(address indexed user, bytes32 indexed badge, string reason);
+    /// @notice BadgeRenewed
+    /// @param user user
+    /// @param badge badge
+    /// @param newExpiry newExpiry
     event BadgeRenewed(address indexed user, bytes32 indexed badge, uint256 newExpiry);
+    /// @notice OperatorSet
+    /// @param operator operator
+    /// @param authorized authorized
     event OperatorSet(address indexed operator, bool authorized);
+    /// @notice OperatorChangeProposed
+    /// @param operator operator
+    /// @param authorized authorized
+    /// @param effectiveAt effectiveAt
     event OperatorChangeProposed(address indexed operator, bool authorized, uint256 effectiveAt);
+    /// @notice StatsUpdated
+    /// @param user user
+    /// @param metric metric
+    /// @param newValue newValue
     event StatsUpdated(address indexed user, string metric, uint32 newValue);
+    /// @notice QualificationRulesSet
+    /// @param oldRules oldRules
+    /// @param newRules newRules
     event QualificationRulesSet(address indexed oldRules, address indexed newRules);
+    /// @notice QualificationRulesChangeProposed
+    /// @param newRules newRules
+    /// @param effectiveAt effectiveAt
     event QualificationRulesChangeProposed(address indexed newRules, uint256 effectiveAt);
     
     // ════════════════════════════════════════════════════════════════════════
     //                              ERRORS
     // ════════════════════════════════════════════════════════════════════════
     
+    /// @notice BM_NotDAO
     error BM_NotDAO();
+    /// @notice BM_NotOperator
     error BM_NotOperator();
+    /// @notice BM_Zero
     error BM_Zero();
+    /// @notice BM_InvalidBadge
     error BM_InvalidBadge();
+    /// @notice BM_ReentrantCall
     error BM_ReentrantCall();
+    /// @notice BM_NotPending
     error BM_NotPending();
+    /// @notice BM_Timelocked
+    /// @param effectiveAt effectiveAt
     error BM_Timelocked(uint256 effectiveAt);
     
     // ════════════════════════════════════════════════════════════════════════
     //                           MODIFIERS
     // ════════════════════════════════════════════════════════════════════════
     
+    /// @notice onlyDAO
     modifier onlyDAO() {
         if (msg.sender != dao) revert BM_NotDAO();
         _;
     }
     
+    /// @notice onlyOperator
     modifier onlyOperator() {
         bytes4 sel = msg.sig;
         if (selectorRestricted[sel]) {
@@ -119,6 +175,7 @@ contract BadgeManager {
         _;
     }
 
+    /// @notice nonReentrantBM
     modifier nonReentrantBM() {
         if (_guardLock != 0) revert BM_ReentrantCall();
         _guardLock = 1;
@@ -130,6 +187,10 @@ contract BadgeManager {
     //                          CONSTRUCTOR
     // ════════════════════════════════════════════════════════════════════════
     
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _seer _seer
+    /// @param _qualificationRules _qualificationRules
     constructor(address _dao, address _seer, address _qualificationRules) {
         if (_dao == address(0) || _seer == address(0) || _qualificationRules == address(0)) revert BM_Zero();
         dao = _dao;
@@ -141,16 +202,23 @@ contract BadgeManager {
     //                          ADMIN FUNCTIONS
     // ════════════════════════════════════════════════════════════════════════
     
+    /// @notice setDAO
+    /// @param newDAO newDAO
     function setDAO(address newDAO) external onlyDAO nonReentrantBM {
         if (newDAO == address(0)) revert BM_Zero();
         dao = newDAO;
     }
     
+    /// @notice setSeer
+    /// @param newSeer newSeer
     function setSeer(address newSeer) external onlyDAO nonReentrantBM {
         if (newSeer == address(0)) revert BM_Zero();
         seer = Seer(newSeer);
     }
     
+    /// @notice setOperator
+    /// @param operator operator
+    /// @param authorized authorized
     function setOperator(address operator, bool authorized) external onlyDAO nonReentrantBM {
         if (operator == address(0)) revert BM_Zero();
         pendingOperatorStatus[operator] = authorized;
@@ -158,6 +226,8 @@ contract BadgeManager {
         emit OperatorChangeProposed(operator, authorized, pendingOperatorAt[operator]);
     }
 
+    /// @notice applyOperator
+    /// @param operator operator
     function applyOperator(address operator) external onlyDAO nonReentrantBM {
         uint256 effectiveAt = pendingOperatorAt[operator];
         if (effectiveAt == 0) revert BM_NotPending();
@@ -170,16 +240,22 @@ contract BadgeManager {
     }
 
     /// @notice H-33 FIX: DAO can restrict a function selector to per-approved operators only.
+    /// @param selector selector
+    /// @param operator operator
+    /// @param authorized authorized
     function setSelectorOperator(bytes4 selector, address operator, bool authorized) external onlyDAO nonReentrantBM {
         selectorOperators[selector][operator] = authorized;
         selectorRestricted[selector] = true; // once any per-selector entry exists, use per-selector mode
     }
 
     /// @notice H-33 FIX: DAO can revert a selector back to global operator mode.
+    /// @param selector selector
     function clearSelectorRestriction(bytes4 selector) external onlyDAO nonReentrantBM {
         selectorRestricted[selector] = false;
     }
 
+    /// @notice setQualificationRules
+    /// @param newRules newRules
     function setQualificationRules(address newRules) external onlyDAO nonReentrantBM {
         if (newRules == address(0)) revert BM_Zero();
         pendingQualificationRules = newRules;
@@ -187,6 +263,7 @@ contract BadgeManager {
         emit QualificationRulesChangeProposed(newRules, pendingQualificationRulesAt);
     }
 
+    /// @notice applyQualificationRules
     function applyQualificationRules() external onlyDAO nonReentrantBM {
         uint256 effectiveAt = pendingQualificationRulesAt;
         if (effectiveAt == 0) revert BM_NotPending();
@@ -204,12 +281,12 @@ contract BadgeManager {
     //                      BADGE AWARDING LOGIC
     // ════════════════════════════════════════════════════════════════════════
     
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     /**
      * @notice Award a badge to a user and boost their ProofScore
      * @param user The user address
      * @param badge The badge ID
      */
-    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function awardBadge(address user, bytes32 badge) public onlyOperator nonReentrantBM {
         // Skip if user already has this badge
         if (seer.hasBadge(user, badge)) {
@@ -239,12 +316,26 @@ contract BadgeManager {
     }
 
     // #497 FIX: badge revocation has a 7-day notice period before score penalty fires.
+    /// @notice REVOKE_NOTICE_DELAY
     uint64 public constant REVOKE_NOTICE_DELAY = 7 days;
+    /// @notice pendingRevocationAt
     mapping(address => mapping(bytes32 => uint64)) public pendingRevocationAt;
+    /// @notice BadgeRevocationQueued
+    /// @param user user
+    /// @param badge badge
+    /// @param effectiveAt effectiveAt
+    /// @param reason reason
     event BadgeRevocationQueued(address indexed user, bytes32 indexed badge, uint64 effectiveAt, string reason);
+    /// @notice BadgeRevocationCancelled
+    /// @param user user
+    /// @param badge badge
     event BadgeRevocationCancelled(address indexed user, bytes32 indexed badge);
 
     // slither-disable-next-line reentrancy-benign,reentrancy-events
+    /// @notice revokeBadge
+    /// @param user user
+    /// @param badge badge
+    /// @param reason reason
     function revokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
         if (!seer.hasBadge(user, badge)) return;
         require(pendingRevocationAt[user][badge] == 0, "BM: revocation already queued");
@@ -253,6 +344,10 @@ contract BadgeManager {
         emit BadgeRevocationQueued(user, badge, effectiveAt, reason);
     }
 
+    /// @notice applyRevokeBadge
+    /// @param user user
+    /// @param badge badge
+    /// @param reason reason
     function applyRevokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
         require(pendingRevocationAt[user][badge] != 0 && block.timestamp >= pendingRevocationAt[user][badge], "BM: notice period");
         delete pendingRevocationAt[user][badge];
@@ -266,6 +361,9 @@ contract BadgeManager {
         } catch {}
     }
 
+    /// @notice cancelRevokeBadge
+    /// @param user user
+    /// @param badge badge
     function cancelRevokeBadge(address user, bytes32 badge) external onlyDAO nonReentrantBM {
         require(pendingRevocationAt[user][badge] != 0, "BM: no pending revocation");
         delete pendingRevocationAt[user][badge];
@@ -293,12 +391,12 @@ contract BadgeManager {
         }
     }
     
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     /**
      * @notice Re-check if user still qualifies for a renewable badge
      * @param user The user address
      * @param badge The badge ID
      */
-    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function _recheckQualification(address user, bytes32 badge) internal {
         bool stillQualified = _checkBadgeQualification(user, badge);
         
@@ -353,12 +451,12 @@ contract BadgeManager {
     //                      STAT TRACKING FUNCTIONS
     // ════════════════════════════════════════════════════════════════════════
     
+    // slither-disable-next-line reentrancy-events
     /**
      * @notice Record a commerce transaction
      * @param user The user address
      * @param successful Whether transaction was successful (no dispute)
      */
-    // slither-disable-next-line reentrancy-events
     function recordCommerceTx(address user, bool successful) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         ++stats.commerceTxCount;
@@ -372,11 +470,11 @@ contract BadgeManager {
         emit StatsUpdated(user, "commerceTx", stats.commerceTxCount);
     }
     
+    // slither-disable-next-line reentrancy-events
     /**
      * @notice Record a governance vote
      * @param user The user address
      */
-    // slither-disable-next-line reentrancy-events
     function recordGovernanceVote(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         ++stats.governanceVotes;
@@ -387,11 +485,11 @@ contract BadgeManager {
         emit StatsUpdated(user, "governanceVotes", stats.governanceVotes);
     }
     
+    // slither-disable-next-line reentrancy-events
     /**
      * @notice Record an endorsement received
      * @param user The user address
      */
-    // slither-disable-next-line reentrancy-events
     function recordEndorsement(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         ++stats.endorsementsReceived;
@@ -401,12 +499,13 @@ contract BadgeManager {
         emit StatsUpdated(user, "endorsements", stats.endorsementsReceived);
     }
     
+    // slither-disable-next-line reentrancy-events
     /**
      * @notice Record a referral
      * @param referrer The referrer address
      * @param qualified Whether referred user reached 600+ score
+     * @param _address _address
      */
-    // slither-disable-next-line reentrancy-events
     function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
         ++stats.referralsMade;
@@ -419,11 +518,11 @@ contract BadgeManager {
         emit StatsUpdated(referrer, "referrals", stats.referralsMade);
     }
     
+    // slither-disable-next-line reentrancy-events
     /**
      * @notice Record fraud report confirmation
      * @param reporter The reporter address
      */
-    // slither-disable-next-line reentrancy-events
     function recordFraudReport(address reporter) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[reporter];
         ++stats.fraudReports;
@@ -433,11 +532,11 @@ contract BadgeManager {
         emit StatsUpdated(reporter, "fraudReports", stats.fraudReports);
     }
     
+    // slither-disable-next-line reentrancy-events
     /**
      * @notice Record educational content creation
      * @param creator The creator address
      */
-    // slither-disable-next-line reentrancy-events
     function recordEducationalContent(address creator) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[creator];
         ++stats.educationalContent;
@@ -559,6 +658,9 @@ contract BadgeManager {
         }
     }
 
+    /// @notice _checkAndAwardBadge
+    /// @param user user
+    /// @param badge badge
     function _checkAndAwardBadge(address user, bytes32 badge) internal {
         if (_checkBadgeQualification(user, badge)) {
             awardBadge(user, badge);
@@ -573,6 +675,7 @@ contract BadgeManager {
      * @notice Get user statistics
      * @param user The user address
      * @return stats The user's statistics
+     * @return _arg _arg
      */
     function getUserStats(address user) external view returns (UserStats memory) {
         return userStats[user];

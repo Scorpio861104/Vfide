@@ -1,49 +1,131 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+/// @notice ISeerViewTarget
+/// @title ISeerViewTarget
+/// @author Vfide
 interface ISeerViewTarget {
+    /// @notice getScore
+    /// @param subject subject
+    /// @return _uint16 _uint16
     function getScore(address subject) external view returns (uint16);
+    /// @notice NEUTRAL
+    /// @return _uint16 _uint16
     function NEUTRAL() external view returns (uint16);
+    /// @notice lowTrustThreshold
+    /// @return _uint16 _uint16
     function lowTrustThreshold() external view returns (uint16);
+    /// @notice highTrustThreshold
+    /// @return _uint16 _uint16
     function highTrustThreshold() external view returns (uint16);
+    /// @notice minForGovernance
+    /// @return _uint16 _uint16
     function minForGovernance() external view returns (uint16);
+    /// @notice minForMerchant
+    /// @return _uint16 _uint16
     function minForMerchant() external view returns (uint16);
 
+    /// @notice mentors
+    /// @param account account
+    /// @return _bool _bool
     function mentors(address account) external view returns (bool);
+    /// @notice mentorOf
+    /// @param account account
+    /// @return _address _address
     function mentorOf(address account) external view returns (address);
+    /// @notice getMentees
+    /// @param mentor mentor
+    /// @return _arg _arg
     function getMentees(address mentor) external view returns (address[] memory);
+    /// @notice minScoreToMentor
+    /// @return _uint16 _uint16
     function minScoreToMentor() external view returns (uint16);
 
+    /// @notice endorsements
+    /// @param subject subject
+    /// @param endorser endorser
+    /// @return expiry expiry
+    /// @return weight weight
+    /// @return timestamp timestamp
     function endorsements(address subject, address endorser) external view returns (
         uint64 expiry,
         uint16 weight,
         uint64 timestamp
     );
+    /// @notice getEndorserCount
+    /// @param subject subject
+    /// @return _uint256 _uint256
     function getEndorserCount(address subject) external view returns (uint256);
+    /// @notice getEndorserAt
+    /// @param subject subject
+    /// @param index index
+    /// @return _address _address
     function getEndorserAt(address subject, uint256 index) external view returns (address);
 }
 
+/// @notice ISeerCoreSocialRef
+/// @title ISeerCoreSocialRef
+/// @author Vfide
 interface ISeerCoreSocialRef {
+    /// @notice seerSocial
+    /// @return _address _address
     function seerSocial() external view returns (address);
 }
 
+/// @notice ISeerSocialViewTarget
+/// @title ISeerSocialViewTarget
+/// @author Vfide
 interface ISeerSocialViewTarget {
+    /// @notice mentors
+    /// @param account account
+    /// @return _bool _bool
     function mentors(address account) external view returns (bool);
+    /// @notice mentorOf
+    /// @param account account
+    /// @return _address _address
     function mentorOf(address account) external view returns (address);
+    /// @notice getMentees
+    /// @param mentor mentor
+    /// @return _arg _arg
     function getMentees(address mentor) external view returns (address[] memory);
+    /// @notice minScoreToMentor
+    /// @return _uint16 _uint16
     function minScoreToMentor() external view returns (uint16);
+    /// @notice endorsements
+    /// @param subject subject
+    /// @param endorser endorser
+    /// @return expiry expiry
+    /// @return weight weight
+    /// @return timestamp timestamp
     function endorsements(address subject, address endorser) external view returns (
         uint64 expiry,
         uint16 weight,
         uint64 timestamp
     );
+    /// @notice getEndorserCount
+    /// @param subject subject
+    /// @return _uint256 _uint256
     function getEndorserCount(address subject) external view returns (uint256);
+    /// @notice getEndorserAt
+    /// @param subject subject
+    /// @param index index
+    /// @return _address _address
     function getEndorserAt(address subject, uint256 index) external view returns (address);
 }
 
 /// @dev Minimal read interface for SeerAutonomous monitoring state.
+/// @notice ISeerAutonomousMonitor
+/// @title ISeerAutonomousMonitor
+/// @author Vfide
 interface ISeerAutonomousMonitor {
+    /// @notice ecosystemVault
+    /// @return _address _address
     function ecosystemVault() external view returns (address);
+    /// @notice getNetworkHealth
+    /// @return totalActions totalActions
+    /// @return totalViolations totalViolations
+    /// @return violationRate violationRate
+    /// @return currentSensitivity currentSensitivity
     function getNetworkHealth() external view returns (
         uint256 totalActions,
         uint256 totalViolations,
@@ -53,12 +135,32 @@ interface ISeerAutonomousMonitor {
 }
 
 /// @dev Minimal read interface for the ecosystem scheduler (EcosystemVault).
+/// @notice IEcosystemSchedulerView
+/// @title IEcosystemSchedulerView
+/// @author Vfide
 interface IEcosystemSchedulerView {
+    /// @notice checkUpkeep
+    /// @param _bytes _bytes
+    /// @return upkeepNeeded upkeepNeeded
+    /// @return performData performData
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
 }
 
 // ReentrancyGuard intentionally omitted: read-only analytics surface over Seer state.
+/// @notice SeerView
+/// @title SeerView
+/// @author Vfide
 contract SeerView {
+    /// @notice getMentorInfo
+    /// @param seer seer
+    /// @param subject subject
+    /// @return isMentorUser isMentorUser
+    /// @return mentor mentor
+    /// @return menteeCount menteeCount
+    /// @return hasMentor hasMentor
+    /// @return canBecome canBecome
+    /// @return minScore minScore
+    /// @return currentScore currentScore
     function getMentorInfo(address seer, address subject) external view returns (
         bool isMentorUser,
         address mentor,
@@ -95,6 +197,13 @@ contract SeerView {
         canBecome = !isMentorUser && currentScore >= minScore;
     }
 
+    /// @notice getActiveEndorsements
+    /// @param seer seer
+    /// @param subject subject
+    /// @return endorsers endorsers
+    /// @return weights weights
+    /// @return expiries expiries
+    /// @return timestamps timestamps
     function getActiveEndorsements(address seer, address subject) external view returns (
         address[] memory endorsers,
         uint16[] memory weights,
@@ -148,6 +257,10 @@ contract SeerView {
         }
     }
 
+    /// @notice getScores
+    /// @param seer seer
+    /// @param subjects subjects
+    /// @return scores scores
     function getScores(address seer, address[] calldata subjects) external view returns (uint16[] memory scores) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         uint256 len = subjects.length;
@@ -158,6 +271,10 @@ contract SeerView {
         }
     }
 
+    /// @notice getScoresBatch
+    /// @param seer seer
+    /// @param subjects subjects
+    /// @return scores scores
     function getScoresBatch(address seer, address[] calldata subjects) external view returns (uint16[] memory scores) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         uint256 len = subjects.length;
@@ -169,6 +286,13 @@ contract SeerView {
         }
     }
 
+    /// @notice getTrustLevel
+    /// @param seer seer
+    /// @param subject subject
+    /// @return level level
+    /// @return levelName levelName
+    /// @return canVote canVote
+    /// @return canBeMerchant canBeMerchant
     function getTrustLevel(address seer, address subject) external view returns (
         uint8 level,
         string memory levelName,

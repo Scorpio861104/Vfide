@@ -57,62 +57,132 @@ import "./lib/ScoringConstants.sol";
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
+/// @notice ISeerTL
+/// @title ISeerTL
+/// @author Vfide
 interface ISeerTL {
+    /// @notice getScore
+    /// @param subject subject
+    /// @return _uint16 _uint16
     function getScore(address subject) external view returns (uint16);
+    /// @notice getCachedScore
+    /// @param subject subject
+    /// @return _uint16 _uint16
     function getCachedScore(address subject) external view returns (uint16);
+    /// @notice reward
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
+    /// @notice punish
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function punish(address subject, uint16 delta, string calldata reason) external;
 }
 
+/// @notice IVaultHubTL
+/// @title IVaultHubTL
+/// @author Vfide
 interface IVaultHubTL {
+    /// @notice vaultOf
+    /// @param owner owner
+    /// @return _address _address
     function vaultOf(address owner) external view returns (address);
     /// @dev R-4 — used by settleLoanByInheritance to gate on either party's vault
     ///      being in MEMORIAL or CLOSED state.
+    /// @notice isInMemorialState
+    /// @param vault vault
+    /// @return _bool _bool
     function isInMemorialState(address vault) external view returns (bool);
 }
 
+/// @notice ICardBoundVaultTL
+/// @title ICardBoundVaultTL
+/// @author Vfide
 interface ICardBoundVaultTL {
+    /// @notice isGuardian
+    /// @param g g
+    /// @return _bool _bool
     function isGuardian(address g) external view returns (bool);
     /// @dev H-26 FIX: maturity check rejects guardians added <7 days ago, blocking
     ///      flash-endorsement attacks where an accomplice is briefly added as a
     ///      guardian only long enough to co-sign as guarantor on a fraudulent loan.
+    /// @notice isGuardianMature
+    /// @param g g
+    /// @return _bool _bool
     function isGuardianMature(address g) external view returns (bool);
+    /// @notice guardianCount
+    /// @return _uint8 _uint8
     function guardianCount() external view returns (uint8);
 }
 
+/// @notice IFraudRegistryTL
+/// @title IFraudRegistryTL
+/// @author Vfide
 interface IFraudRegistryTL {
+    /// @notice isServiceBanned
+    /// @param user user
+    /// @return _bool _bool
     function isServiceBanned(address user) external view returns (bool);
 }
 
 // ── Errors ──────────────────────────────────────────────────────────────────
 
+/// @notice TL_NotDAO
 error TL_NotDAO();
+/// @notice TL_Zero
 error TL_Zero();
+/// @notice TL_InvalidTerms
 error TL_InvalidTerms();
+/// @notice TL_NotLender
 error TL_NotLender();
+/// @notice TL_NotBorrower
 error TL_NotBorrower();
+/// @notice TL_NotGuarantor
 error TL_NotGuarantor();
+/// @notice TL_WrongState
 error TL_WrongState();
+/// @notice TL_ScoreTooLow
 error TL_ScoreTooLow();
+/// @notice TL_ExceedsLimit
 error TL_ExceedsLimit();
+/// @notice TL_GraceNotExpired
 error TL_GraceNotExpired();
+/// @notice TL_Paused
 error TL_Paused();
+/// @notice TL_SelfLoan
 error TL_SelfLoan();
+/// @notice TL_LoanCap
 error TL_LoanCap();
+/// @notice TL_AlreadySigned
 error TL_AlreadySigned();
+/// @notice TL_PlanNotAccepted
 error TL_PlanNotAccepted();
+/// @notice TL_PlanExists
 error TL_PlanExists();
+/// @notice TL_NothingDue
 error TL_NothingDue();
+/// @notice TL_DebtOutstanding
 error TL_DebtOutstanding();
+/// @notice TL_NoVault
 error TL_NoVault();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
 
+/// @notice IFeeDistributor
+/// @title IFeeDistributor
+/// @author Vfide
 interface IFeeDistributor {
+    /// @notice receiveFee
+    /// @param amount amount
     function receiveFee(uint256 amount) external;
 }
 
+/// @notice VFIDETermLoan
+/// @title VFIDETermLoan
+/// @author Vfide
 contract VFIDETermLoan is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -120,19 +190,31 @@ contract VFIDETermLoan is ReentrancyGuard {
     //                              CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice MAX_INTEREST_BPS
     uint256 public constant MAX_INTEREST_BPS = 1200;   // 12% cap
+    /// @notice MAX_DURATION
     uint64  public constant MAX_DURATION = 30 days;
+    /// @notice MIN_DURATION
     uint64  public constant MIN_DURATION = 1 days;
+    /// @notice GRACE_PERIOD
     uint64  public constant GRACE_PERIOD = 3 days;
+    /// @notice PROTOCOL_CUT_PCT
     uint256 public constant PROTOCOL_CUT_PCT = 10;     // 10% of interest → community
+    /// @notice MAX_ACTIVE_LOANS
     uint256 public constant MAX_ACTIVE_LOANS = 10;
+    /// @notice REQUIRED_GUARANTORS
     uint8   public constant REQUIRED_GUARANTORS = 1;   // At least 1 guardian must co-sign
+    /// @notice MAX_PLAN_DURATION
     uint64  public constant MAX_PLAN_DURATION = 90 days;
+    /// @notice MAX_PLAN_INSTALLMENTS
     uint8   public constant MAX_PLAN_INSTALLMENTS = 12;
 
     // Guarantor financial liability
+    /// @notice GUARANTOR_LIABILITY_PCT
     uint256 public constant GUARANTOR_LIABILITY_PCT = 100; // Guarantors collectively cover 100% of principal
+    /// @notice EXTRACTION_INTERVAL
     uint64  public constant EXTRACTION_INTERVAL = 1 days;  // Daily extractions after default
+    /// @notice EXTRACTION_RATE_PCT
     uint256 public constant EXTRACTION_RATE_PCT = 10;      // 10% of their liability per extraction
 
     // F-SC-025 FIX: Bound how long a loan can sit in the COSIGNING state before
@@ -140,25 +222,40 @@ contract VFIDETermLoan is ReentrancyGuard {
     // borrower's guardians never gather signatures the lender's principal was
     // permanently locked in this contract and the borrower's activeLoanCount
     // stayed incremented (preventing them from taking other loans).
+    /// @notice COSIGNING_TIMEOUT
     uint64  public constant COSIGNING_TIMEOUT = 14 days;
 
     // ProofScore thresholds → max loan amount (in token units, 18 decimals)
     // DAO can adjust these via setScoreTiers()
+    /// @notice TIER_1_SCORE
     uint16 public constant TIER_1_SCORE = ScoringConstants.TIER_1;  // 50% – neutral
+    /// @notice TIER_2_SCORE
     uint16 public constant TIER_2_SCORE = ScoringConstants.TIER_2;  // 60%
+    /// @notice TIER_3_SCORE
     uint16 public constant TIER_3_SCORE = ScoringConstants.TIER_3;  // 70%
+    /// @notice TIER_4_SCORE
     uint16 public constant TIER_4_SCORE = ScoringConstants.TIER_4;  // 80% – highly trusted
 
     // Graduated ProofScore adjustments
+    /// @notice REWARD_ONTIME_BORROWER
     uint16 public constant REWARD_ONTIME_BORROWER = 5;      // +0.5
+    /// @notice REWARD_ONTIME_LENDER
     uint16 public constant REWARD_ONTIME_LENDER = 2;        // +0.2
+    /// @notice PENALTY_LATE
     uint16 public constant PENALTY_LATE = 15;                // -1.5
+    /// @notice PENALTY_PLAN_COMPLETED
     uint16 public constant PENALTY_PLAN_COMPLETED = 30;      // -3.0 (good faith acknowledged)
+    /// @notice PENALTY_PLAN_FAILED_1
     uint16 public constant PENALTY_PLAN_FAILED_1 = 100;      // -10.0 (first hit)
+    /// @notice PENALTY_PLAN_FAILED_2
     uint16 public constant PENALTY_PLAN_FAILED_2 = 50;       // -5.0  (second hit, same tx = -15.0 total)
+    /// @notice PENALTY_PLAN_FAILED_GUARANTOR
     uint16 public constant PENALTY_PLAN_FAILED_GUARANTOR = 50; // -5.0 per guarantor
+    /// @notice PENALTY_FULL_DEFAULT_1
     uint16 public constant PENALTY_FULL_DEFAULT_1 = 100;     // -10.0 (first hit)
+    /// @notice PENALTY_FULL_DEFAULT_2
     uint16 public constant PENALTY_FULL_DEFAULT_2 = 100;     // -10.0 (second hit, same tx = -20.0 total)
+    /// @notice PENALTY_DEFAULT_GUARANTOR
     uint16 public constant PENALTY_DEFAULT_GUARANTOR = 100;  // -10.0 per guarantor
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -203,34 +300,58 @@ contract VFIDETermLoan is ReentrancyGuard {
     //                              STATE
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice vfideToken
     IERC20 public immutable vfideToken;
+    /// @notice dao
     address public dao;
+    /// @notice fraudRegistry
     address public fraudRegistry;
+    /// @notice seer
     ISeerTL public seer;
+    /// @notice vaultHub
     IVaultHubTL public vaultHub;
+    /// @notice feeDistributor
     address public feeDistributor;
+    /// @notice paused
     bool public paused;
 
+    /// @notice loans
     mapping(uint256 => Loan) public loans;
+    /// @notice plans
     mapping(uint256 => PaymentPlan) public plans;
+    /// @notice guarantors
     mapping(uint256 => address[]) public guarantors;          // Loan → guarantor addresses
+    /// @notice hasSigned
     mapping(uint256 => mapping(address => bool)) public hasSigned; // Loan → guarantor → signed
+    /// @notice guarantorVault
     mapping(uint256 => mapping(address => address)) public guarantorVault; // Loan → guarantor → approval source
+    /// @notice guarantorCommittedLiability
     mapping(uint256 => mapping(address => uint256)) public guarantorCommittedLiability; // Loan → guarantor → committed liability
+    /// @notice signatureCount
     mapping(uint256 => uint8) public signatureCount;          // Loan → number of guarantor signatures
+    /// @notice guarantorLiabilityEach
     mapping(uint256 => uint256) public guarantorLiabilityEach; // Loan → liability per guarantor
+    /// @notice guarantorExtracted
     mapping(uint256 => mapping(address => uint256)) public guarantorExtracted; // How much pulled from each
     // F-SC-025 FIX: timestamp at which the loan entered COSIGNING. Used by
     // cancelLoanCosigning to enforce COSIGNING_TIMEOUT before either the
     // lender or the borrower can abort and reclaim funds/loan-slots.
+    /// @notice cosigningStartedAt
     mapping(uint256 => uint64) public cosigningStartedAt;
+    /// @notice committedLiability
     mapping(address => uint256) public committedLiability; // Guarantor address → aggregate active liability
+    /// @notice committedLiabilityBySource
     mapping(address => uint256) public committedLiabilityBySource; // Approval source (vault/wallet) → aggregate active liability
+    /// @notice lastExtractionTime
     mapping(uint256 => uint64) public lastExtractionTime;     // When last extraction happened
+    /// @notice totalExtracted
     mapping(uint256 => uint256) public totalExtracted;        // Total extracted across all guarantors
+    /// @notice nextLoanId
     uint256 public nextLoanId = 1;
 
+    /// @notice activeLoanCount
     mapping(address => uint256) public activeLoanCount;
+    /// @notice unresolvedDefaults
     mapping(address => uint256) public unresolvedDefaults;
 
     /// @notice H-25 FIX: Revenue routers authorized to call payFromRevenue on behalf of borrowers.
@@ -238,49 +359,127 @@ contract VFIDETermLoan is ReentrancyGuard {
     mapping(address => bool) public isAuthorizedRevenueRouter;
 
     // ProofScore → max loan tiers (configurable by DAO)
+    /// @notice tier1Limit
     uint256 public tier1Limit = 100e18;     // Score 5000+: 100 VFIDE
+    /// @notice tier2Limit
     uint256 public tier2Limit = 1_000e18;   // Score 6000+: 1,000 VFIDE
+    /// @notice tier3Limit
     uint256 public tier3Limit = 5_000e18;   // Score 7000+: 5,000 VFIDE
+    /// @notice tier4Limit
     uint256 public tier4Limit = 20_000e18;  // Score 8000+: 20,000 VFIDE
 
+    /// @notice totalLoans
     uint256 public totalLoans;
+    /// @notice totalVolume
     uint256 public totalVolume;
+    /// @notice totalDefaults
     uint256 public totalDefaults;
+    /// @notice totalRestructured
     uint256 public totalRestructured;
+    /// @notice totalProtocolFees
     uint256 public totalProtocolFees;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice LoanCreated
+    /// @param id id
+    /// @param lender lender
+    /// @param principal principal
+    /// @param interestBps interestBps
+    /// @param duration duration
     event LoanCreated(uint256 indexed id, address indexed lender, uint256 principal, uint256 interestBps, uint64 duration);
+    /// @notice LoanAccepted
+    /// @param id id
+    /// @param borrower borrower
+    /// @param maxBorrowable maxBorrowable
     event LoanAccepted(uint256 indexed id, address indexed borrower, uint256 maxBorrowable);
+    /// @notice GuarantorSigned
+    /// @param id id
+    /// @param guarantor guarantor
+    /// @param totalSigs totalSigs
     event GuarantorSigned(uint256 indexed id, address indexed guarantor, uint8 totalSigs);
+    /// @notice LoanActivated
+    /// @param id id
+    /// @param deadline deadline
     event LoanActivated(uint256 indexed id, uint64 deadline);
+    /// @notice LoanRepaid
+    /// @param id id
+    /// @param totalPaid totalPaid
+    /// @param late late
     event LoanRepaid(uint256 indexed id, uint256 totalPaid, bool late);
+    /// @notice PaymentPlanProposed
+    /// @param id id
+    /// @param installments installments
+    /// @param intervalDays intervalDays
     event PaymentPlanProposed(uint256 indexed id, uint8 installments, uint64 intervalDays);
+    /// @notice PaymentPlanAccepted
+    /// @param id id
     event PaymentPlanAccepted(uint256 indexed id);
+    /// @notice InstallmentPaid
+    /// @param id id
+    /// @param installmentNumber installmentNumber
+    /// @param amount amount
     event InstallmentPaid(uint256 indexed id, uint8 installmentNumber, uint256 amount);
+    /// @notice PaymentPlanCompleted
+    /// @param id id
     event PaymentPlanCompleted(uint256 indexed id);
+    /// @notice LoanDefaulted
+    /// @param id id
+    /// @param planFailed planFailed
     event LoanDefaulted(uint256 indexed id, bool planFailed);
+    /// @notice GuarantorExtracted
+    /// @param id id
+    /// @param guarantor guarantor
+    /// @param amount amount
+    /// @param totalFromGuarantor totalFromGuarantor
     event GuarantorExtracted(uint256 indexed id, address indexed guarantor, uint256 amount, uint256 totalFromGuarantor);
+    /// @notice GuarantorExtractionSkipped
+    /// @param id id
+    /// @param guarantor guarantor
+    /// @param attemptedAmount attemptedAmount
     event GuarantorExtractionSkipped(uint256 indexed id, address indexed guarantor, uint256 attemptedAmount);
+    /// @notice GuarantorExtractionRound
+    /// @param id id
+    /// @param extracted extracted
+    /// @param skipped skipped
+    /// @param guarantorCount guarantorCount
     event GuarantorExtractionRound(uint256 indexed id, uint256 extracted, uint256 skipped, uint256 guarantorCount);
+    /// @notice GuarantorRelieved
+    /// @param id id
+    /// @param guarantor guarantor
+    /// @param remainingLiability remainingLiability
     event GuarantorRelieved(uint256 indexed id, address indexed guarantor, uint256 remainingLiability);
+    /// @notice LoanCancelled
+    /// @param id id
     event LoanCancelled(uint256 indexed id);
     /// @notice R-4 — emitted when a loan is unwound because one party's vault entered MEMORIAL.
     ///         For OPEN/COSIGNING loans, lender's principal is returned to the lender. For
     ///         ACTIVE/GRACE loans, the loan is marked settled; the lender pursues default-claim
     ///         through the normal flow against the borrower's heir vault.
+    /// @param id id
+    /// @param deceasedParty deceasedParty
+    /// @param priorState priorState
     event LoanSettledByInheritance(uint256 indexed id, address indexed deceasedParty, uint8 priorState);
+    /// @notice RevenueAssignmentSet
+    /// @param id id
+    /// @param enabled enabled
     event RevenueAssignmentSet(uint256 indexed id, bool enabled);
+    /// @notice TiersUpdated
+    /// @param t1 t1
+    /// @param t2 t2
+    /// @param t3 t3
+    /// @param t4 t4
     event TiersUpdated(uint256 t1, uint256 t2, uint256 t3, uint256 t4);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice onlyDAO
     modifier onlyDAO() { if (msg.sender != dao) revert TL_NotDAO(); _; }
+    /// @notice whenNotPaused
     modifier whenNotPaused() { if (paused) revert TL_Paused(); _; }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -288,6 +487,12 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     // slither-disable-next-line missing-zero-check
+    /// @notice constructor
+    /// @param _token _token
+    /// @param _dao _dao
+    /// @param _seer _seer
+    /// @param _vaultHub _vaultHub
+    /// @param _feeDist _feeDist
     constructor(address _token, address _dao, address _seer, address _vaultHub, address _feeDist) {
         if (_token == address(0) || _dao == address(0)) revert TL_Zero();
         vfideToken = IERC20(_token);
@@ -302,6 +507,10 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice Create a loan offer and deposit principal
+    /// @param principal principal
+    /// @param interestBps interestBps
+    /// @param duration duration
+    /// @return id id
     function createLoan(uint256 principal, uint256 interestBps, uint64 duration)
         external nonReentrant whenNotPaused returns (uint256 id)
     {
@@ -327,6 +536,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
 
     /// @notice Cancel open offer (before borrower accepts)
+    /// @param id id
     function cancelLoan(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
@@ -352,6 +562,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     ///      lender's principal returns to them. Already-committed guarantor
     ///      liability is released. The borrower's activeLoanCount is
     ///      decremented so they can take other loans again.
+    /// @param id id
     function cancelLoanCosigning(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.state != LoanState.COSIGNING) revert TL_WrongState();
@@ -410,6 +621,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// VaultHub must be wired for this function to work. Without it, settlement is
     /// disabled (reverts with TL_WrongState). This preserves the contract's behavior
     /// in deployments where the hub isn't connected.
+    /// @param id id
     function settleLoanByInheritance(uint256 id) external nonReentrant {
         if (address(vaultHub) == address(0)) revert TL_WrongState();
         Loan storage l = loans[id];
@@ -470,6 +682,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice Accept a loan offer. ProofScore checked. Needs guarantor co-sign after.
+    /// @param id id
     function acceptLoan(uint256 id) external nonReentrant whenNotPaused {
         if (fraudRegistry != address(0)) {
             try IFraudRegistryTL(fraudRegistry).isServiceBanned(msg.sender) returns (bool banned) {
@@ -521,6 +734,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     ///      attacker can pull up to `liabilityPerGuarantor` minus what's already been
     ///      extracted. The cap is bounded by `GUARANTOR_LIABILITY_PCT` and by the
     ///      `EXTRACTION_RATE_PCT` per-round throttle (see `extractFromGuarantors`).
+    /// @param id id
     function signAsGuarantor(uint256 id) external {
         Loan storage l = loans[id];
         if (l.state != LoanState.COSIGNING) revert TL_WrongState();
@@ -587,6 +801,8 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
 
     // slither-disable-next-line reentrancy-benign,reentrancy-events
+    /// @notice _activateLoan
+    /// @param id id
     function _activateLoan(uint256 id) internal {
         Loan storage l = loans[id];
         // Re-evaluate borrower capacity right before funding to avoid stale score windows.
@@ -605,8 +821,9 @@ contract VFIDETermLoan is ReentrancyGuard {
     //                          3. REPAYMENT (HAPPY PATH)
     // ═══════════════════════════════════════════════════════════════════════
 
-    /// @notice Repay the loan — full principal + interest
     // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
+    /// @notice Repay the loan — full principal + interest
+    /// @param id id
     function repay(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -702,6 +919,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     }
 
     /// @notice Lender accepts the borrower's payment plan
+    /// @param id id
     function acceptPaymentPlan(uint256 id) external {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
@@ -715,8 +933,9 @@ contract VFIDETermLoan is ReentrancyGuard {
         emit PaymentPlanAccepted(id);
     }
 
-    /// @notice Make an installment payment on a restructured loan
     // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
+    /// @notice Make an installment payment on a restructured loan
+    /// @param id id
     function payInstallment(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -891,6 +1110,8 @@ contract VFIDETermLoan is ReentrancyGuard {
     //   continues. Both paths are safer than a plain bool check, which would
     //   silently accept a successful-but-misreporting token.
     // slither-disable-next-line arbitrary-send-erc20,unchecked-transfer,reentrancy-no-eth
+    /// @notice extractFromGuarantors
+    /// @param id id
     function extractFromGuarantors(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();
@@ -965,6 +1186,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         emit GuarantorExtractionRound(id, totalThisRound, skippedThisRound, g.length);
     }
 
+    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     /**
      * @notice Borrower repays a defaulted loan — stops guarantor extraction
      * @param id Loan ID (must be in DEFAULTED state)
@@ -975,7 +1197,6 @@ contract VFIDETermLoan is ReentrancyGuard {
      * Score penalty is reduced from -20.0 to -10.0 (still significant,
      * but acknowledges they eventually did the right thing).
      */
-    // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
     function repayDefaultedLoan(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -1050,6 +1271,8 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     /// @notice Borrower authorizes future merchant payments to auto-deduct toward repayment
     /// @dev External integration: MerchantPortal checks this flag and routes a % to repay
+    /// @param id id
+    /// @param enabled enabled
     function setRevenueAssignment(uint256 id, bool enabled) external {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
@@ -1058,8 +1281,10 @@ contract VFIDETermLoan is ReentrancyGuard {
         emit RevenueAssignmentSet(id, enabled);
     }
 
-    /// @notice Called by MerchantPortal (or authorized contract) to make a payment from revenue
     // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
+    /// @notice Called by MerchantPortal (or authorized contract) to make a payment from revenue
+    /// @param id id
+    /// @param amount amount
     function payFromRevenue(uint256 id, uint256 amount) external nonReentrant {
         Loan storage l = loans[id];
         // H-25 FIX: Restrict callers to the borrower themselves or an allowlisted revenue router
@@ -1111,16 +1336,22 @@ contract VFIDETermLoan is ReentrancyGuard {
     //                          INTERNAL
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice _closeLoan
+    /// @param l l
     function _closeLoan(Loan storage l) internal {
         if (l.borrower != address(0)) --activeLoanCount[l.borrower];
         --activeLoanCount[l.lender];
     }
 
+    /// @notice _notifyFeeDistributor
+    /// @param amount amount
     function _notifyFeeDistributor(uint256 amount) internal {
         vfideToken.safeTransfer(feeDistributor, amount);
         IFeeDistributor(feeDistributor).receiveFee(amount);
     }
 
+    /// @notice _releaseAllGuarantorCommitments
+    /// @param id id
     function _releaseAllGuarantorCommitments(uint256 id) internal {
         address[] storage g = guarantors[id];
         for (uint256 i = 0; i < g.length; ++i) {
@@ -1133,6 +1364,11 @@ contract VFIDETermLoan is ReentrancyGuard {
         }
     }
 
+    /// @notice _releaseGuarantorCommitment
+    /// @param id id
+    /// @param guarantor guarantor
+    /// @param source source
+    /// @param amount amount
     function _releaseGuarantorCommitment(uint256 id, address guarantor, address source, uint256 amount) internal {
         if (amount == 0) return;
 
@@ -1149,11 +1385,16 @@ contract VFIDETermLoan is ReentrancyGuard {
         committedLiabilityBySource[source] = committedForSource - amount;
     }
 
+    /// @notice _requireVaultParticipant
+    /// @param participant participant
     function _requireVaultParticipant(address participant) internal view {
         if (address(vaultHub) == address(0)) return;
         if (vaultHub.vaultOf(participant) == address(0)) revert TL_NoVault();
     }
 
+    /// @notice _settlementSource
+    /// @param participant participant
+    /// @return _address _address
     function _settlementSource(address participant) internal view returns (address) {
         if (address(vaultHub) == address(0)) return participant;
 
@@ -1162,10 +1403,17 @@ contract VFIDETermLoan is ReentrancyGuard {
         return vault;
     }
 
+    /// @notice _settlementRecipient
+    /// @param participant participant
+    /// @return _address _address
     function _settlementRecipient(address participant) internal view returns (address) {
         return _settlementSource(participant);
     }
 
+    /// @notice _isValidGuarantorSource
+    /// @param guarantor guarantor
+    /// @param source source
+    /// @return _bool _bool
     function _isValidGuarantorSource(address guarantor, address source) internal view returns (bool) {
         if (source == guarantor) return true;
         if (address(vaultHub) == address(0) || source == address(0)) return false;
@@ -1180,6 +1428,9 @@ contract VFIDETermLoan is ReentrancyGuard {
         return currentVault != address(0) && currentVault == source;
     }
 
+    /// @notice _maxBorrowable
+    /// @param borrower borrower
+    /// @return _uint256 _uint256
     function _maxBorrowable(address borrower) internal view returns (uint256) {
         if (address(seer) == address(0)) return tier1Limit;
         uint16 score = seer.getCachedScore(borrower);
@@ -1195,12 +1446,29 @@ contract VFIDETermLoan is ReentrancyGuard {
     //                          VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice getLoan
+    /// @param id id
+    /// @return _arg _arg
     function getLoan(uint256 id) external view returns (Loan memory) { return loans[id]; }
+    /// @notice getPlan
+    /// @param id id
+    /// @return _arg _arg
     function getPlan(uint256 id) external view returns (PaymentPlan memory) { return plans[id]; }
+    /// @notice getGuarantors
+    /// @param id id
+    /// @return _arg _arg
     function getGuarantors(uint256 id) external view returns (address[] memory) { return guarantors[id]; }
 
+    /// @notice maxBorrowable
+    /// @param user user
+    /// @return _uint256 _uint256
     function maxBorrowable(address user) external view returns (uint256) { return _maxBorrowable(user); }
 
+    /// @notice amountOwed
+    /// @param id id
+    /// @return remaining remaining
+    /// @return overdue overdue
+    /// @return defaultable defaultable
     function amountOwed(uint256 id) external view returns (uint256 remaining, bool overdue, bool defaultable) {
         Loan storage l = loans[id];
         if (l.state != LoanState.ACTIVE && l.state != LoanState.GRACE && l.state != LoanState.RESTRUCTURED) return (0, false, false);
@@ -1211,6 +1479,12 @@ contract VFIDETermLoan is ReentrancyGuard {
         defaultable = block.timestamp >= l.deadline + GRACE_PERIOD;
     }
 
+    /// @notice getStats
+    /// @return _uint256 _uint256
+    /// @return _uint256 _uint256
+    /// @return _uint256 _uint256
+    /// @return _uint256 _uint256
+    /// @return _uint256 _uint256
     function getStats() external view returns (uint256, uint256, uint256, uint256, uint256) {
         return (totalLoans, totalVolume, totalDefaults, totalRestructured, totalProtocolFees);
     }
@@ -1219,21 +1493,37 @@ contract VFIDETermLoan is ReentrancyGuard {
     //                          DAO ADMINISTRATION
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice setScoreTiers
+    /// @param t1 t1
+    /// @param t2 t2
+    /// @param t3 t3
+    /// @param t4 t4
     function setScoreTiers(uint256 t1, uint256 t2, uint256 t3, uint256 t4) external onlyDAO {
         if (t1 > t2 || t2 > t3 || t3 > t4) revert TL_InvalidTerms();
         tier1Limit = t1; tier2Limit = t2; tier3Limit = t3; tier4Limit = t4;
         emit TiersUpdated(t1, t2, t3, t4);
     }
 
+    /// @notice setPaused
+    /// @param _p _p
     function setPaused(bool _p) external onlyDAO { paused = _p; }
 
     // H-6 FIX: Timelocked DAO rotation to prevent instant governance capture on key compromise
+    /// @notice pendingDAO_TL
     address public pendingDAO_TL;
+    /// @notice pendingDAOAt_TL
     uint64 public pendingDAOAt_TL;
+    /// @notice DAO_CHANGE_DELAY_TL
     uint64 public constant DAO_CHANGE_DELAY_TL = 48 hours;
+    /// @notice DAOChangeProposed_TL
+    /// @param newDAO newDAO
+    /// @param effectiveAt effectiveAt
     event DAOChangeProposed_TL(address indexed newDAO, uint64 effectiveAt);
+    /// @notice DAOChangeCancelled_TL
     event DAOChangeCancelled_TL();
 
+    /// @notice setDAO
+    /// @param _d _d
     function setDAO(address _d) external onlyDAO {
         if (_d == address(0)) revert TL_Zero();
         pendingDAO_TL = _d;
@@ -1241,6 +1531,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         emit DAOChangeProposed_TL(_d, pendingDAOAt_TL);
     }
 
+    /// @notice applyDAO
     function applyDAO() external onlyDAO {
         require(pendingDAOAt_TL != 0 && block.timestamp >= pendingDAOAt_TL, "TL: timelock");
         dao = pendingDAO_TL;
@@ -1248,21 +1539,32 @@ contract VFIDETermLoan is ReentrancyGuard {
         delete pendingDAOAt_TL;
     }
 
+    /// @notice cancelDAOChange
     function cancelDAOChange() external onlyDAO {
         require(pendingDAOAt_TL != 0, "TL: no pending");
         delete pendingDAO_TL;
         delete pendingDAOAt_TL;
         emit DAOChangeCancelled_TL();
     }
+    /// @notice setSeer
+    /// @param _s _s
     function setSeer(address _s) external onlyDAO { seer = ISeerTL(_s); }
+    /// @notice setVaultHub
+    /// @param _v _v
     function setVaultHub(address _v) external onlyDAO { vaultHub = IVaultHubTL(_v); }
     // slither-disable-next-line missing-zero-check
+    /// @notice setFeeDistributor
+    /// @param _f _f
     function setFeeDistributor(address _f) external onlyDAO { feeDistributor = _f; }
     /// @notice H-25 FIX: authorize/deauthorize a revenue router that may call payFromRevenue.
+    /// @param router router
+    /// @param allowed allowed
     function setAuthorizedRevenueRouter(address router, bool allowed) external onlyDAO {
         if (router == address(0)) revert TL_Zero();
         isAuthorizedRevenueRouter[router] = allowed;
     }
     // slither-disable-next-line missing-zero-check
+    /// @notice setFraudRegistry
+    /// @param _fr _fr
     function setFraudRegistry(address _fr) external onlyDAO { fraudRegistry = _fr; }
 }
