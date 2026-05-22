@@ -16,7 +16,12 @@ async function queueTxAndGetId(timelock: any, signer: any, target: string, data:
   return queuedEvent.args[0];
 }
 
-async function queueAndApplyOwnershipAuditor(handover: any, dev: any, auditor: string, ethers: any) {
+async function queueAndApplyOwnershipAuditor(
+  handover: any,
+  dev: any,
+  auditor: string,
+  ethers: any
+) {
   await handover.connect(dev).setOwnershipAuditor(auditor);
   const delay = await handover.OWNERSHIP_AUDITOR_DELAY();
   await ethers.provider.send('evm_increaseTime', [Number(delay) + 1]);
@@ -59,12 +64,9 @@ describe('SystemHandover security hardening', () => {
 
     await handover.connect(dev).setOwnershipAuditor(councilAuditor.address);
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).applyOwnershipAuditor();
-      },
-      /SH: auditor timelock|revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).applyOwnershipAuditor();
+    }, /SH: auditor timelock|revert/);
 
     const delay = await handover.OWNERSHIP_AUDITOR_DELAY();
     await ethers.provider.send('evm_increaseTime', [Number(delay) + 1]);
@@ -112,12 +114,9 @@ describe('SystemHandover security hardening', () => {
     assert.equal(await handover.pendingOwnershipAuditor(), ethers.ZeroAddress);
     assert.equal(await handover.pendingOwnershipAuditorAt(), 0n);
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).applyOwnershipAuditor();
-      },
-      /SH: no pending auditor|revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).applyOwnershipAuditor();
+    }, /SH: no pending auditor|revert/);
   });
 
   it('requires ownership auditor to be an active council member', async () => {
@@ -152,12 +151,9 @@ describe('SystemHandover security hardening', () => {
     );
     await handover.waitForDeployment();
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).setOwnershipAuditor(nonCouncilAuditor.address);
-      },
-      /SH_AuditorNotCouncil|revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).setOwnershipAuditor(nonCouncilAuditor.address);
+    }, /SH_AuditorNotCouncil|revert/);
 
     await queueAndApplyOwnershipAuditor(handover, dev, councilAuditor.address, ethers);
     assert.equal(await handover.ownershipAuditor(), councilAuditor.address);
@@ -205,12 +201,9 @@ describe('SystemHandover security hardening', () => {
     );
     await handover.waitForDeployment();
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(nonDev).setDAO(await replacementDao.getAddress());
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(nonDev).setDAO(await replacementDao.getAddress());
+    }, /revert/);
 
     await handover.connect(dev).setDAO(await replacementDao.getAddress());
     await handover.connect(dev).setTimelock(await replacementTimelock.getAddress());
@@ -258,12 +251,9 @@ describe('SystemHandover security hardening', () => {
 
     await handover.connect(dev).arm(1);
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).setDAO(await replacementDao.getAddress());
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).setDAO(await replacementDao.getAddress());
+    }, /revert/);
   });
 
   it('blocks setLedger after arm while allowing it before arm', async () => {
@@ -308,12 +298,9 @@ describe('SystemHandover security hardening', () => {
 
     await handover.connect(dev).arm(1);
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).setLedger(await ledgerB.getAddress());
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).setLedger(await ledgerB.getAddress());
+    }, /revert/);
     assert.equal(await handover.ledger(), await ledgerA.getAddress());
   });
 
@@ -349,19 +336,13 @@ describe('SystemHandover security hardening', () => {
     );
     await handover.waitForDeployment();
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).executeHandover(ethers.ZeroAddress);
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).executeHandover(ethers.ZeroAddress);
+    }, /revert/);
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(nonDev).arm(1);
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(nonDev).arm(1);
+    }, /revert/);
   });
 
   it('is one-time and burns dev control after execution', async () => {
@@ -409,12 +390,9 @@ describe('SystemHandover security hardening', () => {
     assert.equal(await dao.admin(), newAdmin.address);
     assert.equal(await timelock.admin(), await dao.getAddress());
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).executeHandover(newAdmin.address);
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).executeHandover(newAdmin.address);
+    }, /revert/);
   });
 
   it('supports strict DAO/timelock controls when governance links are preconfigured', async () => {
@@ -496,12 +474,9 @@ describe('SystemHandover security hardening', () => {
 
     await handover.connect(dev).arm(1);
 
-    await assert.rejects(
-      async () => {
-        await handover.connect(dev).executeHandover(newAdmin.address);
-      },
-      /SH_GovernanceNotReady|revert/
-    );
+    await assert.rejects(async () => {
+      await handover.connect(dev).executeHandover(newAdmin.address);
+    }, /SH_GovernanceNotReady|revert/);
   });
 
   it('integrates real DAO council bootstrap before timelock admin handoff', async () => {
@@ -520,7 +495,9 @@ describe('SystemHandover security hardening', () => {
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
 
-    const VaultHubStub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
+    const VaultHubStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:VaultHubStub'
+    );
     const hub = await VaultHubStub.deploy();
     await hub.waitForDeployment();
 
@@ -534,23 +511,49 @@ describe('SystemHandover security hardening', () => {
     );
     await dao.waitForDeployment();
 
-    const CouncilStub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:CouncilStub');
+    const CouncilStub = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:CouncilStub'
+    );
     const council = await CouncilStub.deploy();
     await council.waitForDeployment();
     await council.setCouncilMembers(councilMembers);
 
-    const setCouncilData = dao.interface.encodeFunctionData('setCouncilElection', [await council.getAddress()]);
+    const setCouncilData = dao.interface.encodeFunctionData('setCouncilElection', [
+      await council.getAddress(),
+    ]);
     const syncQuorumData = dao.interface.encodeFunctionData('syncQuorumToCouncil', []);
-    const setCouncilOpId = await queueTxAndGetId(timelock, dev, await dao.getAddress(), setCouncilData);
-    const syncQuorumOpId = await queueTxAndGetId(timelock, dev, await dao.getAddress(), syncQuorumData);
+    const setCouncilOpId = await queueTxAndGetId(
+      timelock,
+      dev,
+      await dao.getAddress(),
+      setCouncilData
+    );
+    const syncQuorumOpId = await queueTxAndGetId(
+      timelock,
+      dev,
+      await dao.getAddress(),
+      syncQuorumData
+    );
 
     // Queue DAO admin change through real timelock (onlyTimelock in DAO).
     const setDaoAdminData = dao.interface.encodeFunctionData('setAdmin', [newAdmin.address]);
-    const daoAdminOpId = await queueTxAndGetId(timelock, dev, await dao.getAddress(), setDaoAdminData);
+    const daoAdminOpId = await queueTxAndGetId(
+      timelock,
+      dev,
+      await dao.getAddress(),
+      setDaoAdminData
+    );
 
     // Queue timelock self-admin change (onlyTimelockSelf in DAOTimelock).
-    const setTimelockAdminData = timelock.interface.encodeFunctionData('setAdmin', [await dao.getAddress()]);
-    const timelockAdminOpId = await queueTxAndGetId(timelock, dev, await timelock.getAddress(), setTimelockAdminData);
+    const setTimelockAdminData = timelock.interface.encodeFunctionData('setAdmin', [
+      await dao.getAddress(),
+    ]);
+    const timelockAdminOpId = await queueTxAndGetId(
+      timelock,
+      dev,
+      await timelock.getAddress(),
+      setTimelockAdminData
+    );
 
     await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
     await ethers.provider.send('evm_mine', []);

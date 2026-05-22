@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -9,84 +9,87 @@ async function getConnection() {
   return connectionPromise;
 }
 
-describe("VFIDEFlashLoan guardrails", () => {
-  it("rejects dust initial registration deposits", async () => {
+describe('VFIDEFlashLoan guardrails', () => {
+  it('rejects dust initial registration deposits', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, lender, feeSink] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:ExemptableMintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:ExemptableMintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const FlashLoan = await ethers.getContractFactory("VFIDEFlashLoan");
+    const FlashLoan = await ethers.getContractFactory('VFIDEFlashLoan');
     const flashLoan = await FlashLoan.deploy(
       await token.getAddress(),
       dao.address,
       ethers.ZeroAddress,
-      feeSink.address,
+      feeSink.address
     );
     await flashLoan.waitForDeployment();
 
     await token.setSystemExempt(await flashLoan.getAddress(), true);
     await flashLoan.connect(dao).confirmSystemExempt();
 
-    await token.mint(lender.address, ethers.parseEther("150"));
-    await token.connect(lender).approve(await flashLoan.getAddress(), ethers.parseEther("150"));
+    await token.mint(lender.address, ethers.parseEther('150'));
+    await token.connect(lender).approve(await flashLoan.getAddress(), ethers.parseEther('150'));
 
     await assert.rejects(
-      () => flashLoan.connect(lender).deposit(ethers.parseEther("99")),
+      () => flashLoan.connect(lender).deposit(ethers.parseEther('99')),
       /FL_MinInitialDeposit|revert/i
     );
 
-    await flashLoan.connect(lender).deposit(ethers.parseEther("100"));
+    await flashLoan.connect(lender).deposit(ethers.parseEther('100'));
     assert.equal(await flashLoan.lenderCount(), 1n);
   });
 
-  it("requires DAO caller for confirmSystemExempt", async () => {
+  it('requires DAO caller for confirmSystemExempt', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, lender, feeSink] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:ExemptableMintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:ExemptableMintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const FlashLoan = await ethers.getContractFactory("VFIDEFlashLoan");
+    const FlashLoan = await ethers.getContractFactory('VFIDEFlashLoan');
     const flashLoan = await FlashLoan.deploy(
       await token.getAddress(),
       dao.address,
       ethers.ZeroAddress,
-      feeSink.address,
+      feeSink.address
     );
     await flashLoan.waitForDeployment();
 
     await token.setSystemExempt(await flashLoan.getAddress(), true);
-    await assert.rejects(
-      () => flashLoan.connect(lender).confirmSystemExempt(),
-      /revert/i
-    );
+    await assert.rejects(() => flashLoan.connect(lender).confirmSystemExempt(), /revert/i);
   });
 
-  it("recycles lender slots after full withdrawal", async () => {
+  it('recycles lender slots after full withdrawal', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, lender, feeSink] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:ExemptableMintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:ExemptableMintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const FlashLoan = await ethers.getContractFactory("VFIDEFlashLoan");
+    const FlashLoan = await ethers.getContractFactory('VFIDEFlashLoan');
     const flashLoan = await FlashLoan.deploy(
       await token.getAddress(),
       dao.address,
       ethers.ZeroAddress,
-      feeSink.address,
+      feeSink.address
     );
     await flashLoan.waitForDeployment();
 
     await token.setSystemExempt(await flashLoan.getAddress(), true);
     await flashLoan.connect(dao).confirmSystemExempt();
 
-    const amount = ethers.parseEther("200");
+    const amount = ethers.parseEther('200');
     await token.mint(lender.address, amount);
     await token.connect(lender).approve(await flashLoan.getAddress(), amount);
     await flashLoan.connect(lender).deposit(amount);
@@ -100,32 +103,34 @@ describe("VFIDEFlashLoan guardrails", () => {
     assert.equal(await flashLoan.lenderCount(), 0n);
   });
 
-  it("rejects fee-on-transfer deposit accounting drift", async () => {
+  it('rejects fee-on-transfer deposit accounting drift', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, lender, feeSink] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:FeeOnTransferMintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:FeeOnTransferMintableTokenStub'
+    );
     const token = await Token.deploy(100); // 1%
     await token.waitForDeployment();
 
-    const FlashLoan = await ethers.getContractFactory("VFIDEFlashLoan");
+    const FlashLoan = await ethers.getContractFactory('VFIDEFlashLoan');
     const flashLoan = await FlashLoan.deploy(
       await token.getAddress(),
       dao.address,
       ethers.ZeroAddress,
-      feeSink.address,
+      feeSink.address
     );
     await flashLoan.waitForDeployment();
 
     await token.setSystemExempt(await flashLoan.getAddress(), true);
     await flashLoan.connect(dao).confirmSystemExempt();
 
-    const amount = ethers.parseEther("150");
+    const amount = ethers.parseEther('150');
     await token.mint(lender.address, amount);
     await token.connect(lender).approve(await flashLoan.getAddress(), amount);
 
     await assert.rejects(
-      () => flashLoan.connect(lender).deposit(ethers.parseEther("100")),
+      () => flashLoan.connect(lender).deposit(ethers.parseEther('100')),
       /FL_UnsupportedTokenBehavior|revert/i
     );
   });

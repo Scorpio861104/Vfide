@@ -334,4 +334,8 @@ jobs:
       - run: npm ci
       - run: npx solhint 'contracts/**/*.sol'
       - run: npx eslint . --ext .ts,.tsx --max-warnings 0
-      - run: npx prettier --check 'contracts/**/*.sol' 'test/**/*.ts'
+      # Prettier checks .ts files only. .sol files are linted by solhint
+      # (above) — adding the prettier-plugin-solidity dependency would let
+      # prettier parse them but is intentionally avoided so the security-
+      # sensitive contract source isn't reformatted by an additional tool.
+      - run: npx prettier --check 'test/**/*.ts'

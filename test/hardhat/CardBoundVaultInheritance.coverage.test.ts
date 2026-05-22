@@ -22,9 +22,9 @@
  * one fresh deployment per test, no shared state.
  */
 
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -40,13 +40,13 @@ function encodeInheritanceCommitment(
   configVersion: bigint,
   heir: string,
   basisPoints: bigint,
-  secret: string,
+  secret: string
 ) {
   const abi = ethers.AbiCoder.defaultAbiCoder();
-  const domain = ethers.keccak256(ethers.toUtf8Bytes("VFIDE_INHERITANCE_V1"));
+  const domain = ethers.keccak256(ethers.toUtf8Bytes('VFIDE_INHERITANCE_V1'));
   const encoded = abi.encode(
-    ["bytes32", "uint256", "address", "uint64", "address", "uint256", "bytes32"],
-    [domain, chainId, vault, configVersion, heir, basisPoints, secret],
+    ['bytes32', 'uint256', 'address', 'uint64', 'address', 'uint256', 'bytes32'],
+    [domain, chainId, vault, configVersion, heir, basisPoints, secret]
   );
   return ethers.keccak256(encoded);
 }
@@ -67,18 +67,16 @@ async function deployFixture(numGuardians = 1, threshold = 1) {
   const external = signers[9];
 
   const Token = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:MintableTokenStub",
+    'test/contracts/helpers/Stubs.sol:MintableTokenStub'
   );
   const token = await Token.deploy();
   await token.waitForDeployment();
 
-  const Hub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:VaultHubStub",
-  );
+  const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
   const hub = await Hub.deploy();
   await hub.waitForDeployment();
 
-  const Vault = await ethers.getContractFactory("CardBoundVault");
+  const Vault = await ethers.getContractFactory('CardBoundVault');
   const vault = await Vault.deploy(
     await hub.getAddress(),
     await token.getAddress(),
@@ -86,17 +84,15 @@ async function deployFixture(numGuardians = 1, threshold = 1) {
     owner.address,
     [owner.address],
     1,
-    ethers.parseEther("1000"),
-    ethers.parseEther("10000"),
-    ethers.ZeroAddress,
+    ethers.parseEther('1000'),
+    ethers.parseEther('10000'),
+    ethers.ZeroAddress
   );
   await vault.waitForDeployment();
   const vaultAddr = await vault.getAddress();
   await hub.setVault(owner.address, vaultAddr);
 
-  const Manager = await ethers.getContractFactory(
-    "CardBoundVaultInheritanceManager",
-  );
+  const Manager = await ethers.getContractFactory('CardBoundVaultInheritanceManager');
   const manager = await Manager.deploy(vaultAddr);
   await manager.waitForDeployment();
   await vault.connect(owner).setInheritanceManager(await manager.getAddress());
@@ -139,14 +135,12 @@ async function setupConfirmedConfig(
   f: Awaited<ReturnType<typeof deployFixture>>,
   heirs: { address: string }[],
   shares: bigint[],
-  secretSalts: string[],
+  secretSalts: string[]
 ) {
   assert.equal(heirs.length, shares.length);
   assert.equal(heirs.length, secretSalts.length);
   const configVersion = (await f.vault.inheritanceConfigVersion()) + 1n;
-  const secrets = secretSalts.map((salt) =>
-    f.ethers.keccak256(f.ethers.toUtf8Bytes(salt)),
-  );
+  const secrets = secretSalts.map((salt) => f.ethers.keccak256(f.ethers.toUtf8Bytes(salt)));
   const commitments = heirs.map((h, i) =>
     encodeInheritanceCommitment(
       f.ethers,
@@ -155,15 +149,13 @@ async function setupConfirmedConfig(
       configVersion,
       h.address,
       shares[i],
-      secrets[i],
-    ),
+      secrets[i]
+    )
   );
-  await f.vault
-    .connect(f.owner)
-    .proposeInheritanceConfig(
-      heirs.map((h) => h.address),
-      commitments,
-    );
+  await f.vault.connect(f.owner).proposeInheritanceConfig(
+    heirs.map((h) => h.address),
+    commitments
+  );
   await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
   await f.vault.connect(f.owner).confirmInheritanceConfig();
   return { configVersion, secrets, commitments };
@@ -177,10 +169,10 @@ async function expectRevert(promise: Promise<unknown>, hint?: string) {
   });
 }
 
-describe("Inheritance — additional threat coverage", { concurrency: 1 }, () => {
+describe('Inheritance — additional threat coverage', { concurrency: 1 }, () => {
   // ── Config validation edge cases ────────────────────────────────────────
 
-  it("T-04: propose with > 5 heirs reverts", async () => {
+  it('T-04: propose with > 5 heirs reverts', async () => {
     const f = await deployFixture(1);
     // Six guardian addresses, all distinct + registered as guardians.
     const extras = [f.heir1, f.heir2, f.heir3, f.guardian2, f.guardian3];
@@ -201,18 +193,18 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
         h.address,
         // bps sum here doesn't matter — the array-length check should fire first.
         BigInt(Math.floor(10_000 / 6)),
-        f.ethers.keccak256(f.ethers.toUtf8Bytes(`t04-${i}`)),
-      ),
+        f.ethers.keccak256(f.ethers.toUtf8Bytes(`t04-${i}`))
+      )
     );
     await expectRevert(
       f.vault.connect(f.owner).proposeInheritanceConfig(
         heirs.map((h) => h.address),
-        commitments,
-      ),
+        commitments
+      )
     );
   });
 
-  it("T-06: propose with mismatched array lengths reverts", async () => {
+  it('T-06: propose with mismatched array lengths reverts', async () => {
     const f = await deployFixture();
     const configVersion = (await f.vault.inheritanceConfigVersion()) + 1n;
     // 1 heir, 2 commitments — mismatch.
@@ -223,7 +215,7 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
       configVersion,
       f.heir1.address,
       10_000n,
-      f.ethers.keccak256(f.ethers.toUtf8Bytes("t06a")),
+      f.ethers.keccak256(f.ethers.toUtf8Bytes('t06a'))
     );
     const c2 = encodeInheritanceCommitment(
       f.ethers,
@@ -232,21 +224,19 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
       configVersion,
       f.heir1.address,
       10_000n,
-      f.ethers.keccak256(f.ethers.toUtf8Bytes("t06b")),
+      f.ethers.keccak256(f.ethers.toUtf8Bytes('t06b'))
     );
     await expectRevert(
-      f.vault.connect(f.owner).proposeInheritanceConfig([f.heir1.address], [c1, c2]),
+      f.vault.connect(f.owner).proposeInheritanceConfig([f.heir1.address], [c1, c2])
     );
   });
 
-  it("T-07: propose with empty heir array reverts", async () => {
+  it('T-07: propose with empty heir array reverts', async () => {
     const f = await deployFixture();
-    await expectRevert(
-      f.vault.connect(f.owner).proposeInheritanceConfig([], []),
-    );
+    await expectRevert(f.vault.connect(f.owner).proposeInheritanceConfig([], []));
   });
 
-  it("T-10: confirm reverts if a heir guardian was removed during the cooldown", async () => {
+  it('T-10: confirm reverts if a heir guardian was removed during the cooldown', async () => {
     const f = await deployFixture(2);
     const configVersion = (await f.vault.inheritanceConfigVersion()) + 1n;
     const c = encodeInheritanceCommitment(
@@ -256,11 +246,9 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
       configVersion,
       f.guardian2.address,
       10_000n,
-      f.ethers.keccak256(f.ethers.toUtf8Bytes("t10")),
+      f.ethers.keccak256(f.ethers.toUtf8Bytes('t10'))
     );
-    await f.vault
-      .connect(f.owner)
-      .proposeInheritanceConfig([f.guardian2.address], [c]);
+    await f.vault.connect(f.owner).proposeInheritanceConfig([f.guardian2.address], [c]);
     // Remove guardian2 during the cooldown.
     await f.vault.connect(f.owner).setGuardian(f.guardian2.address, false);
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
@@ -269,27 +257,23 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
 
   // ── Initiation + state machine edges ────────────────────────────────────
 
-  it("T-22: cannot initiate while vault is paused", async () => {
+  it('T-22: cannot initiate while vault is paused', async () => {
     const f = await deployFixture();
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t22"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t22']);
     await f.vault.connect(f.owner).pause();
     await expectRevert(
       f.vault
         .connect(f.heir1)
-        .initiateInheritanceClaim(
-          f.ethers.keccak256(f.ethers.toUtf8Bytes("blocked-by-pause")),
-        ),
+        .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('blocked-by-pause')))
     );
   });
 
-  it("T-23: re-initiation after a veto rolls state cleanly", async () => {
+  it('T-23: re-initiation after a veto rolls state cleanly', async () => {
     const f = await deployFixture();
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t23"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t23']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("first-init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('first-init')));
     let st = await f.vault.inheritanceState();
     assert.equal(Number(st[0]), 1); // VETO
     // Owner cancels.
@@ -300,23 +284,19 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     // Re-initiate — should succeed.
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("second-init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('second-init')));
     st = await f.vault.inheritanceState();
     assert.equal(Number(st[0]), 1); // VETO again
   });
 
   // ── Veto edges ──────────────────────────────────────────────────────────
 
-  it("T-25: single guardian veto increments count but does not cancel below threshold", async () => {
+  it('T-25: single guardian veto increments count but does not cancel below threshold', async () => {
     const f = await deployFixture(3, 2); // 3 guardians, threshold 2
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t25"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t25']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // One veto — should not yet flip state back.
     await f.vault.connect(f.guardian2).vetoInheritanceClaim();
     const st = await f.vault.inheritanceState();
@@ -325,14 +305,12 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     assert.equal(vetoCount, 1n);
   });
 
-  it("T-26: M-of-N veto cancels the claim", async () => {
+  it('T-26: M-of-N veto cancels the claim', async () => {
     const f = await deployFixture(3, 2);
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t26"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t26']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // First veto from guardian2.
     await f.vault.connect(f.guardian2).vetoInheritanceClaim();
     // Second veto from guardian3 — should trip the threshold of 2.
@@ -341,26 +319,22 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     assert.equal(Number(st[0]), 0); // back to NORMAL
   });
 
-  it("T-28: double-veto from the same guardian reverts", async () => {
+  it('T-28: double-veto from the same guardian reverts', async () => {
     const f = await deployFixture(3, 2);
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t28"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t28']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.vault.connect(f.guardian2).vetoInheritanceClaim();
     await expectRevert(f.vault.connect(f.guardian2).vetoInheritanceClaim());
   });
 
-  it("T-29: veto after VETO_PERIOD window expired reverts", async () => {
+  it('T-29: veto after VETO_PERIOD window expired reverts', async () => {
     const f = await deployFixture(2, 1);
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t29"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t29']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // Advance past 30 days — state auto-rolls to CLAIM_WINDOW on next state-check.
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     // Veto should revert since we're no longer in VETO_PERIOD semantically.
@@ -369,27 +343,23 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
 
   // ── Override edges ──────────────────────────────────────────────────────
 
-  it("T-33: owner override after VETO window expired reverts", async () => {
+  it('T-33: owner override after VETO window expired reverts', async () => {
     const f = await deployFixture();
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t33"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t33']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // Wait past the 30-day window.
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await expectRevert(f.vault.connect(f.owner).ownerOverrideClaim());
   });
 
-  it("T-34: override during CLAIM_WINDOW reverts (override is only for VETO_PERIOD)", async () => {
+  it('T-34: override during CLAIM_WINDOW reverts (override is only for VETO_PERIOD)', async () => {
     const f = await deployFixture();
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t34"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t34']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // Roll through VETO to CLAIM_WINDOW.
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     // Trigger state rollover by reading state (state-aware operations roll forward).
@@ -402,14 +372,14 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
 
   // ── Claim edges ─────────────────────────────────────────────────────────
 
-  it("T-39: reveal with stale (previous-version) commitment reverts", async () => {
+  it('T-39: reveal with stale (previous-version) commitment reverts', async () => {
     const f = await deployFixture();
     // Configure v1, then cancel + propose v2 with DIFFERENT secret. We use the
     // v1 secret to try to reveal — should fail because the commitment binds
     // claimConfigVersion which has incremented.
     // Step 1: First config (will be replaced).
     const v1ConfigVersion = (await f.vault.inheritanceConfigVersion()) + 1n;
-    const v1Secret = f.ethers.keccak256(f.ethers.toUtf8Bytes("v1-secret"));
+    const v1Secret = f.ethers.keccak256(f.ethers.toUtf8Bytes('v1-secret'));
     const v1Commit = encodeInheritanceCommitment(
       f.ethers,
       f.chainId,
@@ -417,11 +387,9 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
       v1ConfigVersion,
       f.heir1.address,
       10_000n,
-      v1Secret,
+      v1Secret
     );
-    await f.vault
-      .connect(f.owner)
-      .proposeInheritanceConfig([f.heir1.address], [v1Commit]);
+    await f.vault.connect(f.owner).proposeInheritanceConfig([f.heir1.address], [v1Commit]);
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.owner).confirmInheritanceConfig();
     // Step 2: Clear heirs (starts another 30-day cooldown).
@@ -430,7 +398,7 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     await f.vault.connect(f.owner).confirmInheritanceConfig();
     // Step 3: Propose v2 with NEW secret + bps.
     const v2ConfigVersion = (await f.vault.inheritanceConfigVersion()) + 1n;
-    const v2Secret = f.ethers.keccak256(f.ethers.toUtf8Bytes("v2-secret"));
+    const v2Secret = f.ethers.keccak256(f.ethers.toUtf8Bytes('v2-secret'));
     const v2Commit = encodeInheritanceCommitment(
       f.ethers,
       f.chainId,
@@ -438,11 +406,9 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
       v2ConfigVersion,
       f.heir1.address,
       10_000n,
-      v2Secret,
+      v2Secret
     );
-    await f.vault
-      .connect(f.owner)
-      .proposeInheritanceConfig([f.heir1.address], [v2Commit]);
+    await f.vault.connect(f.owner).proposeInheritanceConfig([f.heir1.address], [v2Commit]);
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.owner).confirmInheritanceConfig();
 
@@ -451,28 +417,19 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     // reveal — v1Secret hashes differently and fails.
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await expectRevert(f.vault.connect(f.heir1).claimHeirShare(v1Secret, 10_000n));
     // But v2's secret WORKS — sanity check the system is otherwise functional.
     await f.vault.connect(f.heir1).claimHeirShare(v2Secret, 10_000n);
   });
 
-  it("T-42: reveal after CLAIM_WINDOW expired reverts", async () => {
+  it('T-42: reveal after CLAIM_WINDOW expired reverts', async () => {
     const f = await deployFixture();
-    const { secrets } = await setupConfirmedConfig(
-      f,
-      [f.heir1],
-      [10_000n],
-      ["t42"],
-    );
+    const { secrets } = await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t42']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // Advance past both 30d veto + 90d claim.
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 90 * 24 * 60 * 60 + 5);
     // Cause state rollover by calling finalize (zero-reveal case).
@@ -481,40 +438,31 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     await expectRevert(f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 10_000n));
   });
 
-  it("T-43: reveal during VETO_PERIOD reverts (claim window not yet open)", async () => {
+  it('T-43: reveal during VETO_PERIOD reverts (claim window not yet open)', async () => {
     const f = await deployFixture();
-    const { secrets } = await setupConfirmedConfig(
-      f,
-      [f.heir1],
-      [10_000n],
-      ["t43"],
-    );
+    const { secrets } = await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t43']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // We're in VETO_PERIOD. Reveal should revert.
     await expectRevert(f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 10_000n));
   });
 
   // ── Finalize edges ──────────────────────────────────────────────────────
 
-  it("T-45: finalize after all heirs revealed succeeds even before window end", async () => {
+  it('T-45: finalize after all heirs revealed succeeds even before window end', async () => {
     const f = await deployFixture();
     await f.vault.connect(f.owner).setGuardian(f.heir2.address, true);
     const { secrets } = await setupConfirmedConfig(
       f,
       [f.heir1, f.heir2],
       [5_000n, 5_000n],
-      ["t45a", "t45b"],
+      ['t45a', 't45b']
     );
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("100"));
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('100'));
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     // Both heirs reveal — total reaches 10000.
     await f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 5_000n);
@@ -525,64 +473,48 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     assert.equal(finalized, true);
   });
 
-  it("T-47: double-finalize reverts", async () => {
+  it('T-47: double-finalize reverts', async () => {
     const f = await deployFixture();
-    const { secrets } = await setupConfirmedConfig(
-      f,
-      [f.heir1],
-      [10_000n],
-      ["t47"],
-    );
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("100"));
+    const { secrets } = await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t47']);
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('100'));
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 10_000n);
     await f.vault.finalizeInheritanceDistribution();
     await expectRevert(f.vault.finalizeInheritanceDistribution());
   });
 
-  it("T-50: zero-reveal finalize transitions to MEMORIAL with intact balance", async () => {
+  it('T-50: zero-reveal finalize transitions to MEMORIAL with intact balance', async () => {
     const f = await deployFixture();
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["t50"]);
-    const initialBalance = f.ethers.parseEther("250");
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t50']);
+    const initialBalance = f.ethers.parseEther('250');
     await f.token.mint(f.vaultAddr, initialBalance);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // Advance through both windows without anyone revealing.
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 90 * 24 * 60 * 60 + 5);
     await f.vault.finalizeInheritanceDistribution();
     const st = await f.vault.inheritanceState();
     assert.equal(Number(st[0]), 3); // MEMORIAL
     const bal = await f.token.balanceOf(f.vaultAddr);
-    assert.equal(bal, initialBalance, "balance is intact — no heirs claimed");
+    assert.equal(bal, initialBalance, 'balance is intact — no heirs claimed');
   });
 
   // ── Withdraw + heir vault provisioning ──────────────────────────────────
 
-  it("T-54: heir without a vault gets one created at withdraw time", async () => {
+  it('T-54: heir without a vault gets one created at withdraw time', async () => {
     const f = await deployFixture();
-    const { secrets } = await setupConfirmedConfig(
-      f,
-      [f.heir1],
-      [10_000n],
-      ["t54"],
-    );
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("100"));
+    const { secrets } = await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t54']);
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('100'));
     // heir1 has NO vault. Hub's ensureVault should provision one.
     const heirVaultBefore = await f.hub.vaultOf(f.heir1.address);
     assert.equal(heirVaultBefore, f.ethers.ZeroAddress);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 10_000n);
     await f.vault.finalizeInheritanceDistribution();
@@ -590,51 +522,42 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     const heirVaultAfter = await f.hub.vaultOf(f.heir1.address);
     assert.notEqual(heirVaultAfter, f.ethers.ZeroAddress);
     const received = await f.token.balanceOf(heirVaultAfter);
-    assert.equal(received, f.ethers.parseEther("100"));
+    assert.equal(received, f.ethers.parseEther('100'));
   });
 
-  it("T-55: heir with an existing vault has funds routed to it (no new vault created)", async () => {
+  it('T-55: heir with an existing vault has funds routed to it (no new vault created)', async () => {
     const f = await deployFixture();
-    const { secrets } = await setupConfirmedConfig(
-      f,
-      [f.heir1],
-      [10_000n],
-      ["t55"],
-    );
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("100"));
+    const { secrets } = await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t55']);
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('100'));
     // Pre-provision heir's vault with a sentinel address.
     const sentinelVault = (await f.ethers.getSigners())[10];
     await f.hub.setVault(f.heir1.address, sentinelVault.address);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 10_000n);
     await f.vault.finalizeInheritanceDistribution();
     await f.vault.connect(f.heir1).withdrawFinalHeirPayout();
     const after = await f.hub.vaultOf(f.heir1.address);
-    assert.equal(after, sentinelVault.address, "no new vault created");
+    assert.equal(after, sentinelVault.address, 'no new vault created');
     const balOnSentinel = await f.token.balanceOf(sentinelVault.address);
-    assert.equal(balOnSentinel, f.ethers.parseEther("100"));
+    assert.equal(balOnSentinel, f.ethers.parseEther('100'));
   });
 
-  it("T-57: all heirs withdrawing emits InheritanceFullySettled", async () => {
+  it('T-57: all heirs withdrawing emits InheritanceFullySettled', async () => {
     const f = await deployFixture();
     await f.vault.connect(f.owner).setGuardian(f.heir2.address, true);
     const { secrets } = await setupConfirmedConfig(
       f,
       [f.heir1, f.heir2],
       [4_000n, 6_000n],
-      ["t57a", "t57b"],
+      ['t57a', 't57b']
     );
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("100"));
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('100'));
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 4_000n);
     await f.vault.connect(f.heir2).claimHeirShare(secrets[1]!, 6_000n);
@@ -646,30 +569,23 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     const settledLog = receipt.logs.find((l: any) => {
       try {
         const parsed = f.manager.interface.parseLog(l);
-        return parsed && parsed.name === "InheritanceFullySettled";
+        return parsed && parsed.name === 'InheritanceFullySettled';
       } catch {
         return false;
       }
     });
-    assert.ok(settledLog, "InheritanceFullySettled should be emitted after the last withdraw");
+    assert.ok(settledLog, 'InheritanceFullySettled should be emitted after the last withdraw');
   });
 
   // ── Cleanup edges ───────────────────────────────────────────────────────
 
-  it("T-60: cleanup of an already-CLOSED vault reverts", async () => {
+  it('T-60: cleanup of an already-CLOSED vault reverts', async () => {
     const f = await deployFixture();
-    const { secrets } = await setupConfirmedConfig(
-      f,
-      [f.heir1],
-      [10_000n],
-      ["t60"],
-    );
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("100"));
+    const { secrets } = await setupConfirmedConfig(f, [f.heir1], [10_000n], ['t60']);
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('100'));
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.heir1).claimHeirShare(secrets[0]!, 10_000n);
     await f.vault.finalizeInheritanceDistribution();
@@ -680,11 +596,11 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
 
   // ── Properties ──────────────────────────────────────────────────────────
 
-  it("P-01: inheritanceConfigVersion only increases", async () => {
+  it('P-01: inheritanceConfigVersion only increases', async () => {
     const f = await deployFixture();
     const v0 = await f.vault.inheritanceConfigVersion();
     assert.equal(v0, 0n);
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["p01a"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['p01a']);
     const v1 = await f.vault.inheritanceConfigVersion();
     assert.equal(v1, 1n);
     // Clear + cooldown + confirm to bump again.
@@ -693,26 +609,19 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     await f.vault.connect(f.owner).confirmInheritanceConfig();
     const v2 = await f.vault.inheritanceConfigVersion();
     assert.equal(v2, 2n);
-    assert.ok(v2 > v1 && v1 > v0, "monotonic");
+    assert.ok(v2 > v1 && v1 > v0, 'monotonic');
   });
 
-  it("P-02: inheritanceState always in {0,1,2,3,4}", async () => {
+  it('P-02: inheritanceState always in {0,1,2,3,4}', async () => {
     const f = await deployFixture();
     const observed = new Set<number>();
     // State 0 — initial.
     observed.add(Number((await f.vault.inheritanceState())[0]));
-    const { secrets } = await setupConfirmedConfig(
-      f,
-      [f.heir1],
-      [10_000n],
-      ["p02"],
-    );
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("10"));
+    const { secrets } = await setupConfirmedConfig(f, [f.heir1], [10_000n], ['p02']);
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('10'));
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // State 1.
     observed.add(Number((await f.vault.inheritanceState())[0]));
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
@@ -730,13 +639,13 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
       assert.ok(s >= 0 && s <= 4, `state ${s} is out of bounds`);
     }
     // We should have observed all five states across the test.
-    assert.ok(observed.size >= 4, `observed ${[...observed].sort().join(",")}`);
+    assert.ok(observed.size >= 4, `observed ${[...observed].sort().join(',')}`);
   });
 
-  it("P-04: outbound transfers are blocked while inheritance state != NORMAL", async () => {
+  it('P-04: outbound transfers are blocked while inheritance state != NORMAL', async () => {
     const f = await deployFixture();
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["p04"]);
-    await f.token.mint(f.vaultAddr, f.ethers.parseEther("100"));
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['p04']);
+    await f.token.mint(f.vaultAddr, f.ethers.parseEther('100'));
     // Sanity: an outbound call works in NORMAL state.
     // We exercise this via a queue-creation function that hits
     // _requireOperationalForOutboundTransfers. Use a minimal call —
@@ -746,9 +655,7 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     // Move into VETO_PERIOD.
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     // Now any outbound-tagged function should revert. We try executePayMerchant
     // through the facade — it carries the guard. (We can't construct a valid
     // payment intent without complex setup, so we rely on the revert firing
@@ -769,14 +676,12 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
 
   // ── Integration: inheritance blocks recovery (mirror of T-21) ───────────
 
-  it("I-07: an active inheritance claim blocks recovery execution", async () => {
+  it('I-07: an active inheritance claim blocks recovery execution', async () => {
     const f = await deployFixture();
-    await setupConfirmedConfig(f, [f.heir1], [10_000n], ["i07"]);
+    await setupConfirmedConfig(f, [f.heir1], [10_000n], ['i07']);
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('init')));
     const st = await f.vault.inheritanceState();
     assert.equal(Number(st[0]), 1);
     // Attempt to execute a recovery rotation through the hub-facing path.
@@ -785,8 +690,6 @@ describe("Inheritance — additional threat coverage", { concurrency: 1 }, () =>
     // revert because the state check fires before the hub-identity check
     // succeeds (the guard is first in the function body).
     // Use the hub stub's recovery rotation entry, which calls the vault.
-    await expectRevert(
-      f.hub.executeRecoveryRotation(f.vaultAddr, f.heir2.address),
-    );
+    await expectRevert(f.hub.executeRecoveryRotation(f.vaultAddr, f.heir2.address));
   });
 });

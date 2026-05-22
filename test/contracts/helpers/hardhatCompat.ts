@@ -1,7 +1,7 @@
-import { network } from "hardhat";
-import { MaxUint256, Wallet, ZeroAddress, hexlify, parseEther, toUtf8Bytes } from "ethers";
+import { network } from 'hardhat';
+import { MaxUint256, Wallet, ZeroAddress, hexlify, parseEther, toUtf8Bytes } from 'ethers';
 
-type ConnectedEthers = Awaited<ReturnType<typeof network.connect>>["ethers"];
+type ConnectedEthers = Awaited<ReturnType<typeof network.connect>>['ethers'];
 type NetworkConnection = Awaited<ReturnType<typeof network.connect>>;
 
 let connectionPromise: Promise<NetworkConnection> | null = null;
@@ -14,40 +14,44 @@ async function getConnection(): Promise<NetworkConnection> {
 }
 
 const artifactAliases: Record<string, string> = {
-  MockERC20: "test/contracts/mocks/MockContracts.sol:MockERC20",
+  MockERC20: 'test/contracts/mocks/MockContracts.sol:MockERC20',
 };
 
-export type SignerWithAddress = Awaited<ReturnType<ConnectedEthers["getSigners"]>>[number] & {
+export type SignerWithAddress = Awaited<ReturnType<ConnectedEthers['getSigners']>>[number] & {
   address: string;
 };
 
-async function withAddress<T extends { getAddress(): Promise<string> }>(signer: T): Promise<T & { address: string }> {
+async function withAddress<T extends { getAddress(): Promise<string> }>(
+  signer: T
+): Promise<T & { address: string }> {
   const address = await signer.getAddress();
   return Object.assign(signer, { address });
 }
 
-function wrapContract<T extends object>(contract: T): T & { address: string; deployed(): Promise<T> } {
+function wrapContract<T extends object>(
+  contract: T
+): T & { address: string; deployed(): Promise<T> } {
   const proxy = new Proxy(contract as T, {
     get(target, prop, receiver) {
-      if (prop === "address") {
-        const deployedAddress = Reflect.get(target as object, "target", receiver);
-        return typeof deployedAddress === "string" ? deployedAddress : undefined;
+      if (prop === 'address') {
+        const deployedAddress = Reflect.get(target as object, 'target', receiver);
+        return typeof deployedAddress === 'string' ? deployedAddress : undefined;
       }
 
-      if (prop === "deployed") {
+      if (prop === 'deployed') {
         return async () => {
           await (target as { waitForDeployment(): Promise<unknown> }).waitForDeployment();
           return proxy;
         };
       }
 
-      if (prop === "connect") {
+      if (prop === 'connect') {
         return (signer: unknown) =>
           wrapContract((target as { connect(arg: unknown): T }).connect(signer));
       }
 
       const value = Reflect.get(target as object, prop, receiver);
-      return typeof value === "function" ? value.bind(target) : value;
+      return typeof value === 'function' ? value.bind(target) : value;
     },
   }) as T & { address: string; deployed(): Promise<T> };
 
@@ -57,13 +61,15 @@ function wrapContract<T extends object>(contract: T): T & { address: string; dep
 function wrapFactory<T extends object>(factory: T): T {
   return new Proxy(factory, {
     get(target, prop, receiver) {
-      if (prop === "deploy") {
+      if (prop === 'deploy') {
         return async (...args: unknown[]) =>
-          wrapContract(await (target as { deploy(...deployArgs: unknown[]): Promise<object> }).deploy(...args));
+          wrapContract(
+            await (target as { deploy(...deployArgs: unknown[]): Promise<object> }).deploy(...args)
+          );
       }
 
       const value = Reflect.get(target as object, prop, receiver);
-      return typeof value === "function" ? value.bind(target) : value;
+      return typeof value === 'function' ? value.bind(target) : value;
     },
   });
 }

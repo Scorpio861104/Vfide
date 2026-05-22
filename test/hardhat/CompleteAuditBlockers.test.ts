@@ -1,13 +1,13 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
-describe("Complete audit blockers", () => {
-  it("UserVaultLegacy inheritance threshold uses majority for snapshot count >= 3", async () => {
+describe('Complete audit blockers', () => {
+  it('UserVaultLegacy inheritance threshold uses majority for snapshot count >= 3', async () => {
     const { ethers } = (await network.connect()) as any;
     const [owner, g1, g2, g3, g4, nextOfKin] = await ethers.getSigners();
 
-    const Legacy = await ethers.getContractFactory("UserVaultLegacy");
+    const Legacy = await ethers.getContractFactory('UserVaultLegacy');
     const legacy = await Legacy.deploy(
       owner.address,
       owner.address,
@@ -41,27 +41,29 @@ describe("Complete audit blockers", () => {
     assert.equal(statusAfterThree[0], false);
   });
 
-  it("ProofScoreBurnRouter reverse calculator returns net >= desired", async () => {
+  it('ProofScoreBurnRouter reverse calculator returns net >= desired', async () => {
     const { ethers } = (await network.connect()) as any;
     const [owner, user, to, sanctum, burn, ecosystem] = await ethers.getSigners();
     void owner;
 
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+    const SeerStub = await ethers.getContractFactory('SeerScoreStub');
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
     await seer.setScore(user.address, 6500);
 
-    const TokenFactory = await ethers.getContractFactory("test/contracts/mocks/MockERC20.sol:MockERC20");
+    const TokenFactory = await ethers.getContractFactory(
+      'test/contracts/mocks/MockERC20.sol:MockERC20'
+    );
     const token = await TokenFactory.deploy();
     await token.waitForDeployment();
 
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+    const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
     const router = await Router.deploy(
       await seer.getAddress(),
       sanctum.address,
       burn.address,
       ecosystem.address,
-      await token.getAddress(),
+      await token.getAddress()
     );
     await router.waitForDeployment();
 
