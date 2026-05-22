@@ -125,7 +125,45 @@ async function checkIndexer(): Promise<CheckResult> {
   }
 }
 
-export async function GET(_request: NextRequest) {
+/**
+ * Redact a check result for unauthenticated callers in production.
+ *
+ * The unredacted `detail` strings (raw DB driver errors, Redis status codes,
+ * indexer URLs) leak infrastructure topology and library versions to anyone
+ * who hits /api/health/ready. That's a low-severity info-disclosure issue —
+ * helpful for ops, attractive to attackers fingerprinting the stack.
+ *
+ * Strategy: in production, return only `ok` + `ms`. Operators that need the
+ * detail can either tail server logs (where we still log the full failure)
+ * or pass `?token=<HEALTH_DETAIL_TOKEN>` matching the env-configured shared
+ * secret. In dev and test the raw detail is always returned for DX.
+ */
+function redactCheck(check: CheckResult, isAuthorized: boolean): CheckResult {
+  if (isAuthorized) return check;
+  if (process.env.NODE_ENV !== 'production') return check;
+  if (check.ok) {
+    return { ok: true, ms: check.ms };
+  }
+  return { ok: false, detail: 'unhealthy', ms: check.ms };
+}
+
+function isAuthorizedForDetail(request: NextRequest): boolean {
+  const expected = process.env.HEALTH_DETAIL_TOKEN?.trim();
+  if (!expected) return false;
+  const provided =
+    request.nextUrl.searchParams.get('token') ||
+    request.headers.get('x-health-token') ||
+    '';
+  if (!provided || provided.length !== expected.length) return false;
+  // Constant-time comparison.
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+export async function GET(request: NextRequest) {
   const [db, redis, indexer] = await Promise.all([
     checkDb(),
     checkRedis(),
@@ -137,20 +175,24 @@ export async function GET(_request: NextRequest) {
   const summary = criticalFail ? 'unready' : 'ready';
 
   if (criticalFail) {
+    // Always log the full detail server-side for operators, regardless of
+    // whether we redact it on the wire.
     logger.warn('[Readiness] Critical dependency failure', {
       db: db.ok ? 'ok' : db.detail,
       redis: redis.ok ? 'ok' : redis.detail,
     });
   }
 
+  const authorized = isAuthorizedForDetail(request);
+
   return NextResponse.json(
     {
       ok: !criticalFail,
       status: summary,
       checks: {
-        db,
-        redis,
-        indexer,
+        db: redactCheck(db, authorized),
+        redis: redactCheck(redis, authorized),
+        indexer: redactCheck(indexer, authorized),
       },
     },
     { status },

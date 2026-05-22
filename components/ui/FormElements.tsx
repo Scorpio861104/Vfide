@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { ReactNode, useEffect, useRef } from 'react'
+import { ReactNode, useEffect, useId, useRef } from 'react'
 import { X } from 'lucide-react'
 // A11Y FOLLOW-UP FIX: focus trap. The base Modal component is the
 // most-used wrapper in the codebase; getting focus management right
@@ -33,9 +33,11 @@ export function Modal({
 }: ModalProps) {
   // A11Y FOLLOW-UP FIX: ref for focus trap and Escape handling.
   // We generate a stable id per modal instance so aria-labelledby
-  // can point to the visible title heading.
+  // can point to the visible title heading. React.useId() is the
+  // correct primitive here — it's SSR-safe (no hydration mismatch)
+  // and avoids Math.random() on the client.
   const dialogRef = useRef<HTMLDivElement>(null)
-  const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2, 9)}`)
+  const titleId = useId()
   useFocusTrap(dialogRef, isOpen)
 
   // Escape-to-close via the focustrap-escape event the hook dispatches.
@@ -101,14 +103,14 @@ export function Modal({
               // a dialog, just without a programmatic label).
               role="dialog"
               aria-modal="true"
-              aria-labelledby={title ? titleId.current : undefined}
+              aria-labelledby={title ? titleId : undefined}
             >
               {/* Header */}
               {(title || showCloseButton) && (
                 <div className="sticky top-0 flex items-start justify-between p-6 pb-0 bg-gradient-to-b from-zinc-800 to-transparent z-10">
                   <div>
                     {title && (
-                      <h2 id={titleId.current} className="text-2xl font-bold text-zinc-100">{title}</h2>
+                      <h2 id={titleId} className="text-2xl font-bold text-zinc-100">{title}</h2>
                     )}
                     {subtitle && (
                       <p className="text-zinc-400 mt-1">{subtitle}</p>
