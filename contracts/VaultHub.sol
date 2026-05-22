@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
-import "./vault/CardBoundVault.sol";
-import "./vault/CardBoundVaultDeployer.sol";
+import { LedgerLogFailed, IProofLedger, Ownable, ReentrancyGuard, Pausable } from "./SharedInterfaces.sol";
+import { CardBoundVault } from "./vault/CardBoundVault.sol";
+import { CardBoundVaultDeployer } from "./vault/CardBoundVaultDeployer.sol";
 
 /**
  * @title VaultHub

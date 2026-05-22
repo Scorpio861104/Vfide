@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { IGovernanceHooks, Ownable } from "./SharedInterfaces.sol";
 
 /**
  * DutyDistributor — Governance Participation Tracking

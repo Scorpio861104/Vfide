@@ -21,7 +21,7 @@ pragma solidity 0.8.30;
  *    the global breaker toggle.
  */
 
-import "./SharedInterfaces.sol";
+import { LedgerLogFailed, IProofLedger, IEmergencyBreaker, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
 
 /// @notice EC_NotDAO
 error EC_NotDAO();

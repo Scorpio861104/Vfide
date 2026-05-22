@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./interfaces/AggregatorV3Interface.sol";
-import "./SharedInterfaces.sol";
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "./libraries/uniswapv3/FullMath.sol";
-import "./libraries/uniswapv3/TickMath.sol";
+import { AggregatorV3Interface } from "./interfaces/AggregatorV3Interface.sol";
+import { Ownable, Pausable } from "./SharedInterfaces.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { FullMath } from "./libraries/uniswapv3/FullMath.sol";
+import { TickMath } from "./libraries/uniswapv3/TickMath.sol";
 
 /// @notice IUniswapV3PoolLite
 /// @title IUniswapV3PoolLite

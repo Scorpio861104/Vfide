@@ -53,7 +53,7 @@ contract RevenueSplitter is ReentrancyGuard {
         owner = msg.sender;
         
         uint256 length = _accounts.length;
-        for (uint i = 0; i < length; ++i) {
+        for (uint256 i = 0; i < length; ++i) {
             require(_accounts[i] != address(0), "zero address");
             require(_shares[i] > 0, "zero share");
             payees.push(Payee({account: _accounts[i], shareBps: _shares[i]}));
@@ -76,7 +76,7 @@ contract RevenueSplitter is ReentrancyGuard {
         uint256 payeesFailed = 0;
 
         uint256 length = payees.length;
-        for (uint i = 0; i < length; ++i) {
+        for (uint256 i = 0; i < length; ++i) {
             uint256 amount;
             if (i == length - 1) {
                 amount = balance - distributed; // Give remainder to last
@@ -88,6 +88,7 @@ contract RevenueSplitter is ReentrancyGuard {
                 // H-29 FIX: Compute amount for last payee BEFORE updating distributed.
                 // Only increment distributed after a successful transfer.
                 // M-2 FIX: Low-level call for non-standard ERC20s (USDT)
+                // solhint-disable-next-line avoid-low-level-calls
                 (bool callOk, bytes memory returnData) = token.call(
                     abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount)
                 );

@@ -7,8 +7,8 @@ pragma solidity 0.8.30;
  * OZ version baseline: 5.1.0. Review OZ advisories on dependency updates.
  */
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 // F-38 FIX: minimal interface used to cross-check the DAO state before recording attestation.
 /// @notice IDAO_WA

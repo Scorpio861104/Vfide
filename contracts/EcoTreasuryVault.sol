@@ -14,7 +14,7 @@ pragma solidity 0.8.30;
  * - DAO can rescue any accidentally sent tokens
  */
 
-import "./SharedInterfaces.sol";
+import { IProofLedger, IERC20, ReentrancyGuard, SafeERC20 } from "./SharedInterfaces.sol";
 
 /// @notice FI_NotDAO
 error FI_NotDAO();

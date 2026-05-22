@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../ServicePool.sol";
+import { ServicePool } from "../ServicePool.sol";
 
 /// @title HeadhunterCompetitionPool — Monthly competition for user acquisition
 /// @notice Headhunters earn score for verified referrals.

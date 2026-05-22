@@ -2,9 +2,9 @@
 pragma solidity 0.8.30;
 
 // ProofLedger (and the TRUST_NotDAO / TRUST_Zero errors) live in ProofLedger.sol.
-import "./ProofLedger.sol";
-import "./lib/ScoringConstants.sol";
-import "./SharedInterfaces.sol";
+import { TRUST_NotDAO, TRUST_Zero, ProofLedger } from "./ProofLedger.sol";
+import { ScoringConstants } from "./lib/ScoringConstants.sol";
+import { ReentrancyGuard } from "./SharedInterfaces.sol";
 
 /// ────────────────────────── Interfaces
 /// @notice IVaultHub_Trust

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { IVaultHub, IProofScoreBurnRouter, IERC20, IVFIDEToken, ISeer, IPanicGuard, SafeERC20 } from "./SharedInterfaces.sol";
 
 /**
  * OwnerControlPanel - Centralized Admin Interface

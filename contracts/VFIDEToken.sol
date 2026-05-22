@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { LedgerLogFailed, IVaultHub, IProofLedger, IProofScoreBurnRouterToken, IProofScoreBurnRouter, IEmergencyBreaker, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
 
 /// @dev Fraud registry interface for community-driven fraud flagging
 /// @notice IFraudRegistry

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./BadgeRegistry.sol";
+import { BadgeRegistry } from "./BadgeRegistry.sol";
 
 /// @notice IBadgeQualificationRules
 /// @title IBadgeQualificationRules

@@ -443,6 +443,7 @@ contract AdminMultiSig is ReentrancyGuard {
         // while `nonReentrant` prevents nested `executeProposal` entry.
         // H-09 FIX: Capture return data. If the target returns a single bool (e.g. ERC-20 transfer),
         // verify it is `true` so a soft-fail token transfer cannot pass silently.
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returnData) = proposal.target.call{gas: executionGasLimit}(proposal.data);
         require(success, "AdminMultiSig: execution failed");
         if (returnData.length == 32) {

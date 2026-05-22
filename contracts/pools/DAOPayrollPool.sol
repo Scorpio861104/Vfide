@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../ServicePool.sol";
+import { ServicePool } from "../ServicePool.sol";
 
 /// @title DAOPayrollPool — Monthly governance compensation for DAO members
 /// @notice Each governance action (vote, review, discussion) earns points and

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { IERC20 } from "./SharedInterfaces.sol";
 
 // ─── Local-scoped interfaces (the _COM suffix keeps these distinct from the
 //     canonical interfaces under contracts/interfaces/). Imported by

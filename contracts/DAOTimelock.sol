@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { LedgerLogFailed, IProofLedger, IPanicGuard, ReentrancyGuard } from "./SharedInterfaces.sol";
 
 /// @notice TL_NotAdmin
 error TL_NotAdmin();

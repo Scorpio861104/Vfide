@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import { LedgerLogFailed, IVaultHub, IProofLedger, IERC20, ReentrancyGuard, SafeERC20 } from "./SharedInterfaces.sol";
 
 /**
  * DevReserveVestingVault (immutable core; beneficiary-only pause; zkSync-ready)

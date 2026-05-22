@@ -15,8 +15,8 @@ pragma solidity 0.8.30;
  * - All transactions logged for transparency
  */
 
-import "./SharedInterfaces.sol";
-import "./lib/ScoringConstants.sol";
+import { LedgerLogFailed, IVaultHub, IProofLedger, IERC20, ISeer, ISwapRouter, Ownable, ReentrancyGuard, SafeERC20 } from "./SharedInterfaces.sol";
+import { ScoringConstants } from "./lib/ScoringConstants.sol";
 
 /// @notice IVFIDETokenBurnRouterView
 /// @title IVFIDETokenBurnRouterView

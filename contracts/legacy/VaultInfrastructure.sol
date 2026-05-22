@@ -13,7 +13,7 @@ pragma solidity 0.8.30;
 // called by V1 paths. File retained for reference / backward-compat with
 // any pre-existing UserVaultLegacy deployments.
 
-import "../SharedInterfaces.sol";
+import { LedgerLogFailed, IVaultHub, IProofLedger, IERC20, Ownable, ReentrancyGuard, SafeERC20 } from "../SharedInterfaces.sol";
 
 /**
  * VaultInfrastructure (zkSync Era ready) — FINAL
@@ -1623,26 +1623,26 @@ contract VaultInfrastructure is Ownable {
     /// @notice approveForceRecovery
     /// @param vault vault
     /// @param newOwner newOwner
-    function approveForceRecovery(address vault, address newOwner) external {
+    function approveForceRecovery(address /* vault */, address /* newOwner */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice initiateForceRecovery
     /// @param vault vault
     /// @param newOwner newOwner
-    function initiateForceRecovery(address vault, address newOwner) external {
+    function initiateForceRecovery(address /* vault */, address /* newOwner */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice finalizeForceRecovery
     /// @param vault vault
-    function finalizeForceRecovery(address vault) external {
+    function finalizeForceRecovery(address /* vault */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice cancelForceRecovery
     /// @param vault vault
-    function cancelForceRecovery(address vault) external {
+    function cancelForceRecovery(address /* vault */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
     /// @notice _salt

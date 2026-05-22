@@ -7,11 +7,11 @@ pragma solidity 0.8.30;
  * OZ version baseline: 5.1.0. Review OZ advisories on dependency updates.
  */
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @notice IVFIDEBurnable
 /// @title IVFIDEBurnable
@@ -592,6 +592,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @param amount amount
     /// @return _bool _bool
     function _safeTransferOut(address recipient, uint256 amount) private returns (bool) {
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returnData) = address(vfideToken).call(
             abi.encodeCall(IERC20.transfer, (recipient, amount))
         );

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../SharedInterfaces.sol";
-import "./CardBoundVaultPaymentQueueManager.sol";
-import "./CardBoundVaultWithdrawalQueueManager.sol";
-import "./CardBoundVaultInheritanceManager.sol";
-import "./CardBoundVaultAdminManager.sol";
+import { IVaultHub, IProofLedger, IERC20, ReentrancyGuard, SafeERC20 } from "../SharedInterfaces.sol";
+import { CardBoundVaultPaymentQueueManager } from "./CardBoundVaultPaymentQueueManager.sol";
+import { CardBoundVaultWithdrawalQueueManager } from "./CardBoundVaultWithdrawalQueueManager.sol";
+import { CardBoundVaultInheritanceManager } from "./CardBoundVaultInheritanceManager.sol";
+import { CardBoundVaultAdminManager } from "./CardBoundVaultAdminManager.sol";
 
 /// @notice IVaultHubGuardianSetup
 /// @title IVaultHubGuardianSetup

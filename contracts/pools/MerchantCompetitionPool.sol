@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../ServicePool.sol";
+import { ServicePool } from "../ServicePool.sol";
 
 /// @notice IMerchantPortalVolume
 /// @title IMerchantPortalVolume
