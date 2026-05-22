@@ -73,10 +73,10 @@ contract RevenueSplitter is ReentrancyGuard {
                 bool success = callOk && (returnData.length == 0 || abi.decode(returnData, (bool)));
                 if (success) {
                     distributed += amount;
-                    payeesSucceeded++;
+                    ++payeesSucceeded;
                     emit PayeeDistribution(payees[i].account, token, amount, true);
                 } else {
-                    payeesFailed++;
+                    ++payeesFailed;
                     emit PayeeDistribution(payees[i].account, token, amount, false);
                 }
             }
@@ -109,7 +109,7 @@ contract RevenueSplitter is ReentrancyGuard {
         require(_accounts.length == _shares.length, "length mismatch");
         require(_accounts.length > 0, "RS: no payees");
         uint256 totalBps = 0;
-        for (uint256 i = 0; i < _accounts.length; i++) {
+        for (uint256 i = 0; i < _accounts.length; ++i) {
             require(_accounts[i] != address(0), "zero address");
             require(_shares[i] > 0, "zero share");
             totalBps += _shares[i];
@@ -133,7 +133,7 @@ contract RevenueSplitter is ReentrancyGuard {
 
         delete payees;
         totalShares = 0;
-        for (uint256 i = 0; i < _pendingPayeesUpdate.accounts.length; i++) {
+        for (uint256 i = 0; i < _pendingPayeesUpdate.accounts.length; ++i) {
             payees.push(Payee({account: _pendingPayeesUpdate.accounts[i], shareBps: _pendingPayeesUpdate.shares[i]}));
             totalShares += _pendingPayeesUpdate.shares[i];
         }

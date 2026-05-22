@@ -56,7 +56,7 @@ contract DAOPayrollPool is ServicePool {
                 _recordContribution(members[i], 1);
             }
             unchecked {
-                i++;
+                ++i;
             }
         }
     }

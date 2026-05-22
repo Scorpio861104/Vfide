@@ -493,7 +493,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         guardianApproval[claimId][msg.sender] = approve;
         
         if (approve) {
-            claim.guardianApprovals++;
+            ++claim.guardianApprovals;
         }
         
         emit GuardianVoteCast(claimId, msg.sender, approve, claim.guardianApprovals);

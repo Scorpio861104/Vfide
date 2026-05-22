@@ -440,10 +440,10 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         // ── BOOKKEEPING ──────────────────────────────────────────
         info.totalEarned += lenderFee;
         info.totalVolume += amount;
-        info.loanCount++;
+        ++info.loanCount;
         totalProtocolFees += protocolFee;
         totalVolume += amount;
-        totalLoans++;
+        ++totalLoans;
 
         // F-32 FIX: Reward lender only after accumulated volume reaches threshold
         // Prevents ProofScore pump via frequent small flash loans.
@@ -536,7 +536,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         if (end > len) end = len;
         if (end - offset > 100) end = offset + 100;
         result = new address[](end - offset);
-        for (uint256 i = offset; i < end; i++) {
+        for (uint256 i = offset; i < end; ++i) {
             result[i - offset] = lenderList[i];
         }
     }
@@ -564,7 +564,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     function findBestLender(uint256 amount) external view returns (address best, uint256 bestFee) {
         bestFee = type(uint256).max;
         uint256 len = lenderList.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             LenderInfo storage info = lenders[lenderList[i]];
             if (!info.paused && info.balance >= amount && info.feeBps < bestFee) {
                 best = lenderList[i];

@@ -68,7 +68,7 @@ contract MockLzEndpointForBridge {
 
         PendingMessage memory message = pendingMessages[0];
         uint256 remaining = pendingMessages.length - 1;
-        for (uint256 i = 0; i < remaining; i++) {
+        for (uint256 i = 0; i < remaining; ++i) {
             pendingMessages[i] = pendingMessages[i + 1];
         }
         pendingMessages.pop();

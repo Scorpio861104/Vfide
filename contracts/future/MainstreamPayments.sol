@@ -132,7 +132,7 @@ contract FiatRampRegistry is ReentrancyGuard {
         require(providers[provider].registered, "FRR: not registered");
         providers[provider].registered = false;
         // MP-07: keep providerList compact via swap-and-pop.
-        for (uint256 i = 0; i < providerList.length; i++) {
+        for (uint256 i = 0; i < providerList.length; ++i) {
             if (providerList[i] == provider) {
                 providerList[i] = providerList[providerList.length - 1];
                 providerList.pop();
@@ -177,7 +177,7 @@ contract FiatRampRegistry is ReentrancyGuard {
         
         require(userRampHistory[user].length < 1000, "FRR: history full");
         userRampHistory[user].push(recordId);
-        providers[msg.sender].txCount++;
+        ++providers[msg.sender].txCount;
         
         // Reward trust score for completed ramp activity (no on-chain identity tracking)
         _rewardRampUser(user);
@@ -199,8 +199,8 @@ contract FiatRampRegistry is ReentrancyGuard {
         string[] memory widgetUrls
     ) {
         uint256 count = 0;
-        for (uint256 i = 0; i < providerList.length; i++) {
-            if (providers[providerList[i]].registered) count++;
+        for (uint256 i = 0; i < providerList.length; ++i) {
+            if (providers[providerList[i]].registered) ++count;
         }
         
         addresses = new address[](count);
@@ -208,12 +208,12 @@ contract FiatRampRegistry is ReentrancyGuard {
         widgetUrls = new string[](count);
         
         uint256 idx = 0;
-        for (uint256 i = 0; i < providerList.length; i++) {
+        for (uint256 i = 0; i < providerList.length; ++i) {
             if (providers[providerList[i]].registered) {
                 addresses[idx] = providerList[i];
                 names[idx] = providers[providerList[i]].name;
                 widgetUrls[idx] = providers[providerList[i]].widgetUrl;
-                idx++;
+                ++idx;
             }
         }
     }
@@ -224,11 +224,11 @@ contract FiatRampRegistry is ReentrancyGuard {
     
     function getUserRampCount(address user) external view returns (uint256 onRamps, uint256 offRamps) {
         bytes32[] memory history = userRampHistory[user];
-        for (uint256 i = 0; i < history.length; i++) {
+        for (uint256 i = 0; i < history.length; ++i) {
             if (rampRecords[history[i]].isOnRamp) {
-                onRamps++;
+                ++onRamps;
             } else {
-                offRamps++;
+                ++offRamps;
             }
         }
     }
@@ -241,8 +241,8 @@ contract FiatRampRegistry is ReentrancyGuard {
         if (address(seer) == address(0)) return;
         if (rampRewardCount[msg.sender][user] >= MAX_RAMP_REWARDS_PER_PROVIDER_USER) return;
         if (userRampRewardCount[user] >= MAX_RAMP_REWARDS_PER_USER) return;
-        rampRewardCount[msg.sender][user]++;
-        userRampRewardCount[user]++;
+        ++rampRewardCount[msg.sender][user];
+        ++userRampRewardCount[user];
         
         uint16 currentScore = seer.getScore(user);
         if (currentScore < 100) {
@@ -426,7 +426,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         priceSources[source].active = false;
 
         uint256 len = sourceList.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (sourceList[i] == source) {
                 sourceList[i] = sourceList[len - 1];
                 sourceList.pop();
@@ -745,7 +745,7 @@ contract SessionKeyManager is ReentrancyGuard {
      */
     function revokeAllSessions() external nonReentrant {
         address[] memory keys = ownerSessions[msg.sender];
-        for (uint256 i = 0; i < keys.length; i++) {
+        for (uint256 i = 0; i < keys.length; ++i) {
             if (!sessions[keys[i]].revoked) {
                 sessions[keys[i]].revoked = true;
                 emit SessionRevoked(msg.sender, keys[i]);
@@ -816,7 +816,7 @@ contract SessionKeyManager is ReentrancyGuard {
         expiries = new uint64[](count);
         active = new bool[](count);
         
-        for (uint256 i = 0; i < count; i++) {
+        for (uint256 i = 0; i < count; ++i) {
             Session storage s = sessions[allKeys[i]];
             keys[i] = allKeys[i];
             spendLimits[i] = s.spendLimit;
@@ -1061,7 +1061,7 @@ contract TerminalRegistry is ReentrancyGuard {
         require(customer != t.merchant, "TR: self-pay blocked");
         require(vaultHub.vaultOf(customer) != address(0), "TR: customer no vault");
         
-        t.txCount++;
+        ++t.txCount;
         t.totalVolume += amount;
         t.lastTxTime = uint64(block.timestamp);
         
@@ -1103,7 +1103,7 @@ contract TerminalRegistry is ReentrancyGuard {
         activeStatus = new bool[](ids.length);
         volumes = new uint256[](ids.length);
         
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; ++i) {
             Terminal storage t = terminals[ids[i]];
             activeStatus[i] = t.active;
             volumes[i] = t.totalVolume;
@@ -1420,8 +1420,8 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         bool[] memory needsSwap
     ) {
         uint256 count = 0;
-        for (uint256 i = 0; i < supportedTokens.length; i++) {
-            if (routes[supportedTokens[i]].supported) count++;
+        for (uint256 i = 0; i < supportedTokens.length; ++i) {
+            if (routes[supportedTokens[i]].supported) ++count;
         }
         
         addresses = new address[](count);
@@ -1429,12 +1429,12 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         needsSwap = new bool[](count);
         
         uint256 idx = 0;
-        for (uint256 i = 0; i < supportedTokens.length; i++) {
+        for (uint256 i = 0; i < supportedTokens.length; ++i) {
             if (routes[supportedTokens[i]].supported) {
                 addresses[idx] = supportedTokens[i];
                 symbols[idx] = routes[supportedTokens[i]].symbol;
                 needsSwap[idx] = routes[supportedTokens[i]].defaultPath.length > 0;
-                idx++;
+                ++idx;
             }
         }
     }

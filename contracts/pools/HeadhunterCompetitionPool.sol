@@ -52,11 +52,11 @@ contract HeadhunterCompetitionPool is ServicePool {
         if (isQualifiedReferral[newUser]) revert AlreadyQualified();
 
         isQualifiedReferral[newUser] = true;
-        referralCount[headhunter] += 1;
+        ++referralCount[headhunter];
 
         _recordContribution(headhunter, 1);
-        periodReferrals[currentPeriod][headhunter] += 1;
-        periodTotalReferrals[currentPeriod] += 1;
+        ++periodReferrals[currentPeriod][headhunter];
+        ++periodTotalReferrals[currentPeriod];
 
         emit ReferralQualified(currentPeriod, newUser, headhunter);
     }

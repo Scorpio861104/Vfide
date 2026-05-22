@@ -286,7 +286,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
      * @notice Batch settlement for gas efficiency.
      */
     function settleBatch(bytes32[] calldata orderIds) external onlyOracle nonReentrant {
-        for (uint256 i = 0; i < orderIds.length; i++) {
+        for (uint256 i = 0; i < orderIds.length; ++i) {
             _settle(orderIds[i]);
         }
     }

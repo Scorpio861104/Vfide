@@ -130,7 +130,7 @@ contract AdminMultiSig is ReentrancyGuard {
      * @param _council Array of 5 council member addresses
      */
     constructor(address[COUNCIL_SIZE] memory _council, address _vfideToken) {
-        for (uint256 i = 0; i < COUNCIL_SIZE; i++) {
+        for (uint256 i = 0; i < COUNCIL_SIZE; ++i) {
             require(_council[i] != address(0), "AdminMultiSig: zero address in council");
             require(!isCouncilMember[_council[i]], "AdminMultiSig: duplicate council member");
             
@@ -143,7 +143,7 @@ contract AdminMultiSig is ReentrancyGuard {
 
         // Sensible defaults: proposals may target this contract only,
         // and only vetted governance selectors are initially enabled.
-        for (uint8 t = 0; t <= uint8(ProposalType.EMERGENCY); t++) {
+        for (uint8 t = 0; t <= uint8(ProposalType.EMERGENCY); ++t) {
             ProposalType pt = ProposalType(t);
             proposalTypeTargetAllowed[pt][address(this)] = true;
             emit ProposalTypeTargetAllowSet(pt, address(this), true);
@@ -297,7 +297,7 @@ contract AdminMultiSig is ReentrancyGuard {
         require(!proposal.hasApproved[msg.sender], "AdminMultiSig: already approved");
 
         proposal.hasApproved[msg.sender] = true;
-        proposal.approvalCount++;
+        ++proposal.approvalCount;
 
         emit ProposalApproved(_proposalId, msg.sender, proposal.approvalCount);
 
@@ -386,7 +386,7 @@ contract AdminMultiSig is ReentrancyGuard {
         require(!proposal.hasVetoed[msg.sender], "AdminMultiSig: already vetoed");
 
         proposal.hasVetoed[msg.sender] = true;
-        proposal.vetoCount++;
+        ++proposal.vetoCount;
 
         uint256 requiredVetos = proposal.proposalType == ProposalType.EMERGENCY
             ? EMERGENCY_APPROVALS
@@ -445,7 +445,7 @@ contract AdminMultiSig is ReentrancyGuard {
         }
 
         communityVetos[_proposalId][msg.sender] = true;
-        proposal.vetoCount++;
+        ++proposal.vetoCount;
 
         emit CommunityVeto(_proposalId, msg.sender, proposal.vetoCount);
 

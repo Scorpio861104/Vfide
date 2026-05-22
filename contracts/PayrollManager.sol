@@ -256,10 +256,10 @@ contract PayrollManager is ReentrancyGuard {
         // Track streams for both parties (I-11: capped)
         require(activePayerStreamCount[msg.sender] < 200, "PM: payer stream cap");
         payerStreams[msg.sender].push(id);
-        activePayerStreamCount[msg.sender] += 1;
+        ++activePayerStreamCount[msg.sender];
         require(activePayeeStreamCount[payee] < 200, "PM: payee stream cap");
         payeeStreams[payee].push(id);
-        activePayeeStreamCount[payee] += 1;
+        ++activePayeeStreamCount[payee];
 
         emit StreamCreated(id, msg.sender, payee, rate);
 
@@ -414,9 +414,9 @@ contract PayrollManager is ReentrancyGuard {
 
         address oldPayee = s.payee;
         if (activePayeeStreamCount[oldPayee] > 0) {
-            activePayeeStreamCount[oldPayee] -= 1;
+            --activePayeeStreamCount[oldPayee];
         }
-        activePayeeStreamCount[p.newPayee] += 1;
+        ++activePayeeStreamCount[p.newPayee];
         s.payee = p.newPayee;
         delete pendingPayeeUpdates[streamId];
         emit PayeeUpdated(streamId, oldPayee, s.payee);
@@ -635,7 +635,7 @@ contract PayrollManager is ReentrancyGuard {
     // function has nonReentrant guard; per-stream state updates are atomic
     function claimExpiredStreamBatch(uint256[] calldata streamIds) external nonReentrant {
         require(streamIds.length <= 100, "PM: batch too large");
-        for (uint256 i = 0; i < streamIds.length; i++) {
+        for (uint256 i = 0; i < streamIds.length; ++i) {
             uint256 streamId = streamIds[i];
             Stream storage s = streams[streamId];
             if (!s.active) continue;
@@ -735,10 +735,10 @@ contract PayrollManager is ReentrancyGuard {
         uint256 totalClaimable
     ) {
         uint256[] memory ids = payerStreams[payer];
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; ++i) {
             Stream storage s = streams[ids[i]];
             if (s.active) {
-                activeStreamCount++;
+                ++activeStreamCount;
                 if (!s.paused) {
                     totalRatePerSecond += s.ratePerSecond;
                 }
@@ -757,10 +757,10 @@ contract PayrollManager is ReentrancyGuard {
         uint256 totalClaimable
     ) {
         uint256[] memory ids = payeeStreams[payee];
-        for (uint256 i = 0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; ++i) {
             Stream storage s = streams[ids[i]];
             if (s.active) {
-                activeStreamCount++;
+                ++activeStreamCount;
                 if (!s.paused) {
                     totalRatePerSecond += s.ratePerSecond;
                 }
@@ -774,17 +774,17 @@ contract PayrollManager is ReentrancyGuard {
      */
     function getStreamsBatch(uint256[] calldata streamIds) external view returns (Stream[] memory results) {
         results = new Stream[](streamIds.length);
-        for (uint256 i = 0; i < streamIds.length; i++) {
+        for (uint256 i = 0; i < streamIds.length; ++i) {
             results[i] = streams[streamIds[i]];
         }
     }
 
     function _decrementActiveCounts(address payer, address payee) internal {
         if (activePayerStreamCount[payer] > 0) {
-            activePayerStreamCount[payer] -= 1;
+            --activePayerStreamCount[payer];
         }
         if (activePayeeStreamCount[payee] > 0) {
-            activePayeeStreamCount[payee] -= 1;
+            --activePayeeStreamCount[payee];
         }
     }
 }

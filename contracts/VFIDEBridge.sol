@@ -331,7 +331,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         // Update statistics
         userStats[msg.sender].totalSent += amountAfterFee;
         userStats[msg.sender].lastBridgeTime = block.timestamp;
-        userStats[msg.sender].bridgeCount++;
+        ++userStats[msg.sender].bridgeCount;
         totalBridgedOut += amountAfterFee;
         pendingOutboundAmount += amountAfterFee;
 

@@ -47,10 +47,10 @@ contract BadgeQualificationRules is IBadgeQualificationRules {
 
         if (badge == BadgeRegistry.POWER_USER) {
             uint8 activityTypes = 0;
-            if (commerceTxCount > 0) activityTypes++;
-            if (governanceVotes > 0) activityTypes++;
-            if (endorsementsReceived > 0) activityTypes++;
-            if (referralsMade > 0) activityTypes++;
+            if (commerceTxCount > 0) ++activityTypes;
+            if (governanceVotes > 0) ++activityTypes;
+            if (endorsementsReceived > 0) ++activityTypes;
+            if (referralsMade > 0) ++activityTypes;
             return activityTypes >= 3;
         }
 

@@ -527,13 +527,13 @@ contract CardBoundVault is ReentrancyGuard {
         dailyTransferLimit = _dailyTransferLimit;
         dayStart = uint64(block.timestamp);
 
-        for (uint256 i = 0; i < _guardians.length; i++) {
+        for (uint256 i = 0; i < _guardians.length; ++i) {
             address guardian = _guardians[i];
             if (guardian == address(0)) revert CBV_Zero();
             if (!isGuardian[guardian]) {
                 isGuardian[guardian] = true;
                 guardianAddedAt[guardian] = uint64(block.timestamp);
-                guardianCount++;
+                ++guardianCount;
                 emit GuardianSet(guardian, true);
             }
         }
@@ -637,10 +637,10 @@ contract CardBoundVault is ReentrancyGuard {
         if (active) {
             if (guardianCount >= MAX_GUARDIANS) revert CBV_InvalidThreshold();
             guardianAddedAt[guardian] = uint64(block.timestamp);
-            guardianCount++;
+            ++guardianCount;
         } else {
             delete guardianAddedAt[guardian];
-            guardianCount--;
+            --guardianCount;
             if (guardianThreshold > guardianCount) {
                 guardianThreshold = guardianCount;
                 emit GuardianThresholdSet(guardianThreshold);
@@ -767,9 +767,9 @@ contract CardBoundVault is ReentrancyGuard {
         if (trustee && !isGuardian[guardian]) revert CBV_NotGuardian();
         isTrustee[guardian] = trustee;
         if (trustee) {
-            trusteeCount++;
+            ++trusteeCount;
         } else {
-            trusteeCount--;
+            --trusteeCount;
         }
         emit TrusteeRoleSet(guardian, trustee);
     }
@@ -946,7 +946,7 @@ contract CardBoundVault is ReentrancyGuard {
         if (newWallet == address(0)) revert CBV_Zero();
         if (delaySeconds < MIN_ROTATION_DELAY || delaySeconds > MAX_ROTATION_DELAY) revert CBV_RotationNotReady();
 
-        rotationNonce++;
+        ++rotationNonce;
         pendingRotation = WalletRotation({
             newWallet: newWallet,
             activateAt: uint64(block.timestamp + delaySeconds),
@@ -991,7 +991,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         address oldWallet = activeWallet;
         activeWallet = current.newWallet;
-        walletEpoch += 1;
+        ++walletEpoch;
 
         delete pendingRotation;
         emit WalletRotated(oldWallet, activeWallet, walletEpoch);
@@ -1038,7 +1038,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         _enforceSeerAction(admin, 0, amount, intent.toVault);
 
-        nextNonce += 1;
+        ++nextNonce;
 
         // ── Large transfer queueing ─────────────────────────────
         // If a threshold is configured and the amount exceeds it,
@@ -1115,7 +1115,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         _enforceSeerAction(admin, 0, amount, intent.recipient);
 
-        nextNonce += 1;
+        ++nextNonce;
         uint256 paymentThreshold = ICardBoundVaultPaymentQueueManager(paymentQueueManager).largePaymentThreshold();
         if (paymentThreshold > 0 && amount >= paymentThreshold) {
             spentToday += amount;
@@ -1180,7 +1180,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         _enforceSeerAction(admin, 0, amount, intent.escrowContract);
 
-        nextNonce += 1;
+        ++nextNonce;
         spentToday += amount;
         IERC20(intent.token).safeTransfer(intent.escrowContract, amount);
     }
@@ -1584,7 +1584,7 @@ contract CardBoundVault is ReentrancyGuard {
         address oldAdmin = admin;
 
         activeWallet = newWallet;
-        walletEpoch += 1;
+        ++walletEpoch;
         admin = newWallet;
         pendingAdmin = address(0);
         paused = true;

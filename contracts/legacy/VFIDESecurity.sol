@@ -90,7 +90,7 @@ contract GuardianRegistry {
         if (guardian == vault) revert("SEC: vault cannot be own guardian");
         if (isGuardian[vault][guardian]) revert SEC_AlreadyMember();
         isGuardian[vault][guardian] = true;
-        guardianCount[vault] += 1;
+        ++guardianCount[vault];
         emit GuardianAdded(vault, guardian);
         // If threshold unset, keep 0 to auto-calc (ceil(N/2)) at read time
     }
@@ -99,7 +99,7 @@ contract GuardianRegistry {
         if (msg.sender != dao && msg.sender != vault) revert SEC_NotDAO();
         if (!isGuardian[vault][guardian]) revert SEC_NotMember();
         isGuardian[vault][guardian] = false;
-        guardianCount[vault] -= 1;
+        --guardianCount[vault];
         emit GuardianRemoved(vault, guardian);
         // If threshold > count, DAO should reset threshold; we tolerate and clamp on read.
     }
@@ -226,7 +226,7 @@ contract GuardianLock {
             approvals[vault] = 0;
             lockGuardianSnapshot[vault] = 0;
             lockThresholdSnapshot[vault] = 0;
-            lockNonce[vault]++;
+            ++lockNonce[vault];
             _logEv(vault, "guardian_lock", a, reason);
         } else {
             // vote recorded, not yet locked
@@ -243,7 +243,7 @@ contract GuardianLock {
         approvals[vault] = 0;
         lockGuardianSnapshot[vault] = 0;
         lockThresholdSnapshot[vault] = 0;
-        lockNonce[vault]++; // Increment nonce to invalidate previous votes
+        ++lockNonce[vault]; // Increment nonce to invalidate previous votes
         emit Unlocked(vault, msg.sender, reason);
         _logEv(vault, "guardian_unlock", 0, reason);
     }
@@ -253,7 +253,7 @@ contract GuardianLock {
         approvals[vault] = 0;
         lockGuardianSnapshot[vault] = 0;
         lockThresholdSnapshot[vault] = 0;
-        lockNonce[vault]++; // Increment nonce to invalidate previous votes
+        ++lockNonce[vault]; // Increment nonce to invalidate previous votes
         emit Cancelled(vault, msg.sender);
         _logEv(vault, "guardian_cancel", 0, "");
     }

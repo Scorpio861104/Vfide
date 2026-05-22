@@ -447,7 +447,7 @@ contract SubscriptionManager is ReentrancyGuard {
             // Prevents merchants from calling processPayment 3x in the same block to force
             // immediate auto-cancellation.
             if (sub.lastFailedPaymentBlock != block.number) {
-                sub.failedPayments++;
+                ++sub.failedPayments;
                 sub.lastFailedPaymentBlock = block.number;
             }
             
@@ -550,14 +550,14 @@ contract SubscriptionManager is ReentrancyGuard {
     function getUserSubscriptions(address user) external view returns (uint256[] memory) {
         // Count first
         uint256 count = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
-            if (subscriptions[i].subscriber == user) count++;
+        for (uint256 i = 1; i <= subCount; ++i) {
+            if (subscriptions[i].subscriber == user) ++count;
         }
         
         // Collect
         uint256[] memory result = new uint256[](count);
         uint256 idx = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             if (subscriptions[i].subscriber == user) {
                 result[idx++] = i;
             }
@@ -570,13 +570,13 @@ contract SubscriptionManager is ReentrancyGuard {
      */
     function getMerchantSubscriptions(address merchant) external view returns (uint256[] memory) {
         uint256 count = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
-            if (subscriptions[i].merchant == merchant) count++;
+        for (uint256 i = 1; i <= subCount; ++i) {
+            if (subscriptions[i].merchant == merchant) ++count;
         }
         
         uint256[] memory result = new uint256[](count);
         uint256 idx = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             if (subscriptions[i].merchant == merchant) {
                 result[idx++] = i;
             }
@@ -594,15 +594,15 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 totalMRR,  // Monthly Recurring Revenue (assumes 30-day interval)
         uint256 totalValuePerInterval
     ) {
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.merchant == merchant) {
-                totalSubscriptions++;
+                ++totalSubscriptions;
                 if (sub.active) {
                     if (sub.paused) {
-                        pausedCount++;
+                        ++pausedCount;
                     } else {
-                        activeCount++;
+                        ++activeCount;
                         totalValuePerInterval += sub.amount;
                         // Normalize to monthly (30 days)
                         if (sub.interval > 0) {
@@ -625,11 +625,11 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 failed
     ) {
         require(subIds.length <= MAX_BATCH_SIZE, "SM: batch too large");
-        for (uint256 i = 0; i < subIds.length; i++) {
+        for (uint256 i = 0; i < subIds.length; ++i) {
             try this.processPayment(subIds[i]) {
-                processed++;
+                ++processed;
             } catch {
-                failed++;
+                ++failed;
             }
         }
     }
@@ -641,11 +641,11 @@ contract SubscriptionManager is ReentrancyGuard {
     function getReadyForProcessing() external view returns (uint256[] memory ready) {
         // Count first
         uint256 count = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.active && !sub.paused && block.timestamp >= sub.nextPayment) {
                 if (sub.graceEndTime == 0 || block.timestamp <= sub.graceEndTime) {
-                    count++;
+                    ++count;
                 }
             }
         }
@@ -653,7 +653,7 @@ contract SubscriptionManager is ReentrancyGuard {
         // Collect
         ready = new uint256[](count);
         uint256 idx = 0;
-        for (uint256 i = 1; i <= subCount; i++) {
+        for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.active && !sub.paused && block.timestamp >= sub.nextPayment) {
                 if (sub.graceEndTime == 0 || block.timestamp <= sub.graceEndTime) {
@@ -668,7 +668,7 @@ contract SubscriptionManager is ReentrancyGuard {
      */
     function getSubscriptionsBatch(uint256[] calldata subIds) external view returns (Subscription[] memory results) {
         results = new Subscription[](subIds.length);
-        for (uint256 i = 0; i < subIds.length; i++) {
+        for (uint256 i = 0; i < subIds.length; ++i) {
             results[i] = subscriptions[subIds[i]];
         }
     }

@@ -67,7 +67,7 @@ contract SHCouncilElectionStub {
 
     function setMembers(address[] calldata _members) external {
         delete members;
-        for (uint256 i = 0; i < _members.length; i++) {
+        for (uint256 i = 0; i < _members.length; ++i) {
             members.push(_members[i]);
         }
     }

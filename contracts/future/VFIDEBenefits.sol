@@ -153,9 +153,9 @@ contract VFIDEBenefits {
     ) external onlyAuthorized {
         if (buyer == address(0) || merchant == address(0)) revert BEN_Zero();
         // Track stats
-        totalTransactionsRewarded++;
-        userTransactionCount[buyer]++;
-        userTransactionCount[merchant]++;
+        ++totalTransactionsRewarded;
+        ++userTransactionCount[buyer];
+        ++userTransactionCount[merchant];
 
         // Award FREE ProofScore to buyer
         if (buyerScorePerTx > 0) {

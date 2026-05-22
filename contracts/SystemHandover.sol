@@ -123,7 +123,7 @@ contract SystemHandover {
         start = 0;
         handoverAt = 0;
         ownershipAudited = false;  // Reset audit flag on disarm
-        unchecked { disarmCount++; }
+        unchecked { ++disarmCount; }
         emit Disarmed(previousStart, previousHandoverAt);
         _log("handover_disarmed");
     }
@@ -169,7 +169,7 @@ contract SystemHandover {
         uint256 size = councilElection.getActualCouncilSize();
         require(size > 0, "SH: no council");
         uint256 total = 0;
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < size; ++i) {
             address member = councilElection.getCouncilMember(i);
             if (member != address(0)) {
                 total += seer.getCachedScore(member);
@@ -178,7 +178,7 @@ contract SystemHandover {
         uint16 avgScore = uint16(total / size);
         if (avgScore < minAvgCouncilScore) {
             handoverAt += extensionSpan;
-            extensionsUsed += 1;
+            ++extensionsUsed;
             _log("handover_extended");
         }
     }
@@ -297,7 +297,7 @@ contract SystemHandover {
         bytes memory HEX = "0123456789abcdef";
         bytes memory str = new bytes(42);
         str[0] = "0"; str[1] = "x";
-        for (uint256 i = 0; i < 20; i++) {
+        for (uint256 i = 0; i < 20; ++i) {
             str[2 + i * 2] = HEX[uint8(b[i]) >> 4];
             str[3 + i * 2] = HEX[uint8(b[i]) & 0xf];
         }
@@ -311,7 +311,7 @@ contract SystemHandover {
 
     function _isCouncilMember(address candidate) internal view returns (bool) {
         uint256 size = councilElection.getActualCouncilSize();
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < size; ++i) {
             if (councilElection.getCouncilMember(i) == candidate) {
                 return true;
             }

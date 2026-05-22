@@ -255,7 +255,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         charities[charity].approved = false;
         
         uint256 len = charityList.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (charityList[i] == charity) {
                 charityList[i] = charityList[len - 1];
                 charityList.pop();
@@ -374,7 +374,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         if (d.approvals[msg.sender]) revert SANCT_AlreadyApproved();
         
         d.approvals[msg.sender] = true;
-        d.approvalCount++;
+        ++d.approvalCount;
         
         emit DisbursementApproved(proposalId, msg.sender);
         _logEv(msg.sender, "disbursement_approval", proposalId, "");

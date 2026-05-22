@@ -113,7 +113,7 @@ contract SeerView {
             : target.getEndorserCount(subject);
         uint256 activeCount = 0;
 
-        for (uint256 i = 0; i < total; i++) {
+        for (uint256 i = 0; i < total; ++i) {
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
                 : target.getEndorserAt(subject, i);
@@ -121,7 +121,7 @@ contract SeerView {
                 ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
                 : target.endorsements(subject, endorser);
             if (expiry > block.timestamp && weight > 0) {
-                activeCount++;
+                ++activeCount;
             }
         }
 
@@ -131,7 +131,7 @@ contract SeerView {
         timestamps = new uint64[](activeCount);
 
         uint256 idx = 0;
-        for (uint256 i = 0; i < total; i++) {
+        for (uint256 i = 0; i < total; ++i) {
             address endorser = useSocial
                 ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
                 : target.getEndorserAt(subject, i);
@@ -143,7 +143,7 @@ contract SeerView {
                 weights[idx] = weight;
                 expiries[idx] = expiry;
                 timestamps[idx] = ts;
-                idx++;
+                ++idx;
             }
         }
     }
@@ -153,7 +153,7 @@ contract SeerView {
         uint256 len = subjects.length;
 
         scores = new uint16[](len);
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             scores[i] = target.getScore(subjects[i]);
         }
     }
@@ -164,7 +164,7 @@ contract SeerView {
         require(len > 0 && len <= 100, "SEER: invalid batch size");
 
         scores = new uint16[](len);
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             scores[i] = target.getScore(subjects[i]);
         }
     }

@@ -324,7 +324,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             require(vaultsGuardedBy[guardian].length < 100, "VR: guardian cap"); // I-11
             require(guardianCountOfVault[vault] < 20, "VR: max guardians per vault");
             vaultsGuardedBy[guardian].push(vault);
-            guardianCountOfVault[vault]++;
+            ++guardianCountOfVault[vault];
             emit GuardianRegistered(vault, guardian);
         }
     }
@@ -339,12 +339,12 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         if (_isGuardianOf[guardian][vault]) {
             _isGuardianOf[guardian][vault] = false;
             if (guardianCountOfVault[vault] > 0) {
-                guardianCountOfVault[vault]--;
+                --guardianCountOfVault[vault];
             }
             
             // Remove from array (swap and pop)
             address[] storage guardedVaults = vaultsGuardedBy[guardian];
-            for (uint256 i = 0; i < guardedVaults.length; i++) {
+            for (uint256 i = 0; i < guardedVaults.length; ++i) {
                 if (guardedVaults[i] == vault) {
                     guardedVaults[i] = guardedVaults[guardedVaults.length - 1];
                     guardedVaults.pop();
@@ -551,18 +551,18 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         uint256 matchCount = 0;
         uint256 lastChecked = batchEnd;
 
-        for (uint256 i = offset; i < batchEnd && matchCount < limit; i++) {
+        for (uint256 i = offset; i < batchEnd && matchCount < limit; ++i) {
             address vault = allVaults[i];
             uint256 created = vaultCreatedAt[vault];
             if (created >= startTime && created <= endTime) {
                 tmp[matchCount] = getVaultInfo(vault);
-                matchCount++;
+                ++matchCount;
             }
             lastChecked = i + 1;
         }
 
         matches = new VaultInfo[](matchCount);
-        for (uint256 j = 0; j < matchCount; j++) {
+        for (uint256 j = 0; j < matchCount; ++j) {
             matches[j] = tmp[j];
         }
         // nextOffset == total signals caller that the full range has been scanned
@@ -612,18 +612,18 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         uint256 matchCount = 0;
         uint256 lastChecked = batchEnd;
 
-        for (uint256 i = offset; i < batchEnd && matchCount < limit; i++) {
+        for (uint256 i = offset; i < batchEnd && matchCount < limit; ++i) {
             address vault = allVaults[i];
             address vaultOwner = vaultHub.ownerOfVault(vault);
             if (bytes4(bytes20(vaultOwner)) == addressPrefix) {
                 tmp[matchCount] = getVaultInfo(vault);
-                matchCount++;
+                ++matchCount;
             }
             lastChecked = i + 1;
         }
 
         matches = new VaultInfo[](matchCount);
-        for (uint256 j = 0; j < matchCount; j++) {
+        for (uint256 j = 0; j < matchCount; ++j) {
             matches[j] = tmp[j];
         }
         nextOffset = lastChecked < total ? lastChecked : total;
@@ -692,7 +692,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
 
     function _addRecoveryVault(bytes32 hashedId, address vault) internal {
         address[] storage matches = vaultsByRecoveryId[hashedId];
-        for (uint256 i = 0; i < matches.length; i++) {
+        for (uint256 i = 0; i < matches.length; ++i) {
             if (matches[i] == vault) {
                 // Already present: keep primary pointer consistent and return.
                 if (vaultByRecoveryId[hashedId] == address(0)) {
@@ -715,7 +715,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             return;
         }
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (matches[i] == vault) {
                 matches[i] = matches[len - 1];
                 matches.pop();
@@ -732,7 +732,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
 
     function _addEmailVault(bytes32 emailHash, address vault) internal {
         address[] storage matches = vaultsByEmailHash[emailHash];
-        for (uint256 i = 0; i < matches.length; i++) {
+        for (uint256 i = 0; i < matches.length; ++i) {
             if (matches[i] == vault) {
                 if (vaultByEmailHash[emailHash] == address(0)) {
                     vaultByEmailHash[emailHash] = vault;
@@ -755,7 +755,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             return;
         }
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (matches[i] == vault) {
                 matches[i] = matches[len - 1];
                 matches.pop();
@@ -772,7 +772,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
 
     function _addPhoneVault(bytes32 phoneHash, address vault) internal {
         address[] storage matches = vaultsByPhoneHash[phoneHash];
-        for (uint256 i = 0; i < matches.length; i++) {
+        for (uint256 i = 0; i < matches.length; ++i) {
             if (matches[i] == vault) {
                 if (vaultByPhoneHash[phoneHash] == address(0)) {
                     vaultByPhoneHash[phoneHash] = vault;
@@ -795,7 +795,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
             return;
         }
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (matches[i] == vault) {
                 matches[i] = matches[len - 1];
                 matches.pop();
@@ -880,7 +880,7 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
         
-        for (uint256 i = 0; i < bStr.length; i++) {
+        for (uint256 i = 0; i < bStr.length; ++i) {
             if (uint8(bStr[i]) >= 65 && uint8(bStr[i]) <= 90) {
                 bLower[i] = bytes1(uint8(bStr[i]) + 32);
             } else {

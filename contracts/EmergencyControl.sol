@@ -182,7 +182,7 @@ contract EmergencyControl is ReentrancyGuard {
         
         // Clear old members
         uint256 _curLen = currentMembers.length;
-        for (uint256 i = 0; i < _curLen; i++) {
+        for (uint256 i = 0; i < _curLen; ++i) {
             isMember[currentMembers[i]] = false;
         }
         delete currentMembers;
@@ -193,13 +193,13 @@ contract EmergencyControl is ReentrancyGuard {
 
         _resetVotes();
 
-        for (uint256 j = 0; j < members.length; j++) {
+        for (uint256 j = 0; j < members.length; ++j) {
             address m = members[j];
             if (m == address(0)) revert EC_Zero();
             if (isMember[m]) revert EC_AlreadyMember();
             isMember[m] = true;
             currentMembers.push(m);
-            memberCount += 1;
+            ++memberCount;
             emit MemberAdded(m);
         }
         emit CommitteeReset(_threshold, members);
@@ -293,7 +293,7 @@ contract EmergencyControl is ReentrancyGuard {
     function _applyAddMember(address m) internal {
         if (memberCount >= MAX_COMMITTEE_MEMBERS) revert EC_CommitteeCapExceeded();
         isMember[m] = true;
-        memberCount += 1;
+        ++memberCount;
         currentMembers.push(m);
         emit MemberAdded(m);
         _log("ec_member_add");
@@ -301,9 +301,9 @@ contract EmergencyControl is ReentrancyGuard {
 
     function _applyRemoveMember(address m) internal {
         isMember[m] = false;
-        memberCount -= 1;
+        --memberCount;
 
-        for (uint256 i = 0; i < currentMembers.length; i++) {
+        for (uint256 i = 0; i < currentMembers.length; ++i) {
             if (currentMembers[i] == m) {
                 currentMembers[i] = currentMembers[currentMembers.length - 1];
                 currentMembers.pop();
@@ -421,14 +421,14 @@ contract EmergencyControl is ReentrancyGuard {
             if (haltVotingStartTime > 0 && block.timestamp > haltVotingStartTime + voteExpiryPeriod) {
                 approvalsHalt = 0;
                 haltVotingStartTime = uint64(block.timestamp);
-                epoch++; // Expire old votes
+                ++epoch; // Expire old votes
             } else if (haltVotingStartTime < 1) {
                 haltVotingStartTime = uint64(block.timestamp);
             }
             
             if (lastVotedHaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
             lastVotedHaltEpoch[msg.sender] = epoch;
-            approvalsHalt += 1;
+            ++approvalsHalt;
             emit CommitteeVote(msg.sender, true, approvalsHalt, reason);
             if (approvalsHalt >= threshold) {
                 _enforceCooldown();
@@ -443,14 +443,14 @@ contract EmergencyControl is ReentrancyGuard {
             if (unhaltVotingStartTime > 0 && block.timestamp > unhaltVotingStartTime + voteExpiryPeriod) {
                 approvalsUnhalt = 0;
                 unhaltVotingStartTime = uint64(block.timestamp);
-                epoch++; // Expire old votes
+                ++epoch; // Expire old votes
             } else if (unhaltVotingStartTime < 1) {
                 unhaltVotingStartTime = uint64(block.timestamp);
             }
             
             if (lastVotedUnhaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
             lastVotedUnhaltEpoch[msg.sender] = epoch;
-            approvalsUnhalt += 1;
+            ++approvalsUnhalt;
             emit CommitteeVote(msg.sender, false, approvalsUnhalt, reason);
             if (approvalsUnhalt >= threshold) {
                 _enforceCooldown();
@@ -480,7 +480,7 @@ contract EmergencyControl is ReentrancyGuard {
         // Reset counts; per-member flags remain true for this epoch but won't matter
         approvalsHalt = 0;
         approvalsUnhalt = 0;
-        epoch++;
+        ++epoch;
         // M-3 FIX: Reset vote timers
         haltVotingStartTime = 0;
         unhaltVotingStartTime = 0;
@@ -576,7 +576,7 @@ contract EmergencyControl is ReentrancyGuard {
         require(breaker.halted(), "EC: system must be halted");
 
         recoveryVoted[id][msg.sender] = true;
-        p.approvals++;
+        ++p.approvals;
 
         // Supermajority: all members minus 1
         uint8 required = memberCount - 1;

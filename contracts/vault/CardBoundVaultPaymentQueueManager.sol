@@ -115,7 +115,7 @@ contract CardBoundVaultPaymentQueueManager {
                 recipientCodeHashAtQueue: codeHash
             })
         );
-        activeQueuedPayments += 1;
+        ++activeQueuedPayments;
         queueIndex = _paymentQueue.length - 1;
     }
 
@@ -140,7 +140,7 @@ contract CardBoundVaultPaymentQueueManager {
 
         q.executed = true;
         if (activeQueuedPayments > 0) {
-            activeQueuedPayments -= 1;
+            --activeQueuedPayments;
         }
 
         token = q.token;
@@ -160,7 +160,7 @@ contract CardBoundVaultPaymentQueueManager {
 
         q.cancelled = true;
         if (activeQueuedPayments > 0) {
-            activeQueuedPayments -= 1;
+            --activeQueuedPayments;
         }
 
         requestTime = q.requestTime;

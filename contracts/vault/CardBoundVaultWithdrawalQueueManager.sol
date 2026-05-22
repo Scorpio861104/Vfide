@@ -49,8 +49,8 @@ contract CardBoundVaultWithdrawalQueueManager {
     {
         uint256 pendingCount = 0;
         uint256 _wqLen = _withdrawalQueue.length;
-        for (uint256 i = 0; i < _wqLen; i++) {
-            if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) pendingCount++;
+        for (uint256 i = 0; i < _wqLen; ++i) {
+            if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) ++pendingCount;
         }
 
         indices = new uint256[](pendingCount);
@@ -58,12 +58,12 @@ contract CardBoundVaultWithdrawalQueueManager {
         executeAfters = new uint64[](pendingCount);
 
         uint256 idx = 0;
-        for (uint256 i = 0; i < _wqLen; i++) {
+        for (uint256 i = 0; i < _wqLen; ++i) {
             if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) {
                 indices[idx] = i;
                 amounts[idx] = _withdrawalQueue[i].amount;
                 executeAfters[idx] = _withdrawalQueue[i].executeAfter;
-                idx++;
+                ++idx;
             }
         }
     }
@@ -82,8 +82,8 @@ contract CardBoundVaultWithdrawalQueueManager {
         if (end > len) end = len;
 
         uint256 pendingCount = 0;
-        for (uint256 i = start; i < end; i++) {
-            if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) pendingCount++;
+        for (uint256 i = start; i < end; ++i) {
+            if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) ++pendingCount;
         }
 
         indices = new uint256[](pendingCount);
@@ -91,12 +91,12 @@ contract CardBoundVaultWithdrawalQueueManager {
         executeAfters = new uint64[](pendingCount);
 
         uint256 idx = 0;
-        for (uint256 i = start; i < end; i++) {
+        for (uint256 i = start; i < end; ++i) {
             if (!_withdrawalQueue[i].executed && !_withdrawalQueue[i].cancelled) {
                 indices[idx] = i;
                 amounts[idx] = _withdrawalQueue[i].amount;
                 executeAfters[idx] = _withdrawalQueue[i].executeAfter;
-                idx++;
+                ++idx;
             }
         }
     }
@@ -154,7 +154,7 @@ contract CardBoundVaultWithdrawalQueueManager {
                 toVaultCodeHashAtQueue: codeHash
             })
         );
-        activeQueuedWithdrawals += 1;
+        ++activeQueuedWithdrawals;
         queueIndex = _withdrawalQueue.length - 1;
     }
 
@@ -179,7 +179,7 @@ contract CardBoundVaultWithdrawalQueueManager {
 
         w.executed = true;
         if (activeQueuedWithdrawals > 0) {
-            activeQueuedWithdrawals -= 1;
+            --activeQueuedWithdrawals;
         }
 
         amount = w.amount;
@@ -198,7 +198,7 @@ contract CardBoundVaultWithdrawalQueueManager {
 
         w.cancelled = true;
         if (activeQueuedWithdrawals > 0) {
-            activeQueuedWithdrawals -= 1;
+            --activeQueuedWithdrawals;
         }
 
         requestTime = w.requestTime;

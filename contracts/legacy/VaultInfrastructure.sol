@@ -230,14 +230,14 @@ contract UserVaultLegacy is ReentrancyGuard {
             isGuardian[g] = active;
             if (active) {
                 require(guardianCount < MAX_GUARDIANS, "UV: guardian limit reached");
-                guardianCount++;
+                ++guardianCount;
                 guardianAddTime[g] = uint64(block.timestamp); // H-1: Track add time
                 guardianList.push(g); // Track for enumeration
             } else {
-                guardianCount--;
+                --guardianCount;
                 delete guardianAddTime[g]; // H-17: Clear on removal
                 // Remove from list (swap and pop)
-                for (uint256 i = 0; i < guardianList.length; i++) {
+                for (uint256 i = 0; i < guardianList.length; ++i) {
                     if (guardianList[i] == g) {
                         guardianList[i] = guardianList[guardianList.length - 1];
                         guardianList.pop();
@@ -471,7 +471,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (msg.sender == nextOfKin && guardianCount == 0) {
             // Instead of instant recovery, require a 7-day waiting period.
             // With zero guardians, mark one virtual approval so finalize can occur after timelock.
-            _recovery.nonce++;
+            ++_recovery.nonce;
             _recovery.proposedOwner = proposedOwner;
             _recovery.approvals = 1;
             _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
@@ -507,7 +507,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
         if (_recovery.voted[msg.sender][_recovery.nonce]) revert UV_AlreadyVoted();
         _recovery.voted[msg.sender][_recovery.nonce] = true;
-        _recovery.approvals += 1;
+        ++_recovery.approvals;
         emit RecoveryApproved(msg.sender, _recovery.proposedOwner, _recovery.approvals);
         _logEv(msg.sender, "recovery_approval", _recovery.approvals, "");
     }
@@ -593,7 +593,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(block.timestamp <= _inheritance.expiryTime, "UV: inheritance expired");
         
         _inheritance.voted[msg.sender][_inheritance.nonce] = true;
-        _inheritance.approvals++;
+        ++_inheritance.approvals;
         
         emit InheritanceApproved(msg.sender, _inheritance.approvals);
         _logEv(msg.sender, "inheritance_approved", _inheritance.approvals, "");
@@ -636,7 +636,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (_inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce]) revert UV_AlreadyVoted();
         
         _inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce] = true;
-        _inheritanceCancellationApprovals++;
+        ++_inheritanceCancellationApprovals;
         
         // Use guardian snapshot from request time to prevent threshold manipulation
         uint8 snapshotCount = _inheritance.guardianCountSnapshot;
@@ -652,7 +652,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             _inheritance.ownerDenied = false;
             
             // C-1 FIX: Increment nonce to invalidate all previous votes
-            _inheritanceCancellationNonce++;
+            ++_inheritanceCancellationNonce;
             _inheritanceCancellationApprovals = 0;
             
             // forge-lint: disable-next-line(unsafe-typecast)
@@ -839,7 +839,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(targets.length == values.length && values.length == datas.length, "UV:length-mismatch");
 
         uint256 totalValue;
-        for (uint256 i = 0; i < values.length; i++) {
+        for (uint256 i = 0; i < values.length; ++i) {
             totalValue += values[i];
         }
         _consumeDailyTransferLimit(totalValue);
@@ -852,7 +852,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         lastExecuteTime = uint64(block.timestamp);
 
         results = new bytes[](targets.length);
-        for (uint256 i = 0; i < targets.length; i++) {
+        for (uint256 i = 0; i < targets.length; ++i) {
             if (targets[i] == address(0)) revert UV_Zero();
             require(targets[i] != vfideToken, "UV:use-transferVFIDE");
             require(targets[i] != address(this), "UV:self-call");
@@ -1032,9 +1032,9 @@ contract UserVaultLegacy is ReentrancyGuard {
         
         // First pass: count total active pending transactions
         uint256 totalCount = 0;
-        for (uint256 i = 0; i < pendingTxCount; i++) {
+        for (uint256 i = 0; i < pendingTxCount; ++i) {
             if (pendingTransactions[i].amount > 0 && !pendingTransactions[i].executed) {
-                totalCount++;
+                ++totalCount;
             }
         }
         totalPending = totalCount;
@@ -1053,7 +1053,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         // Second pass: collect results starting from offset
         uint256 found = 0;
         uint256 idx = 0;
-        for (uint256 i = 0; i < pendingTxCount && idx < pageSize; i++) {
+        for (uint256 i = 0; i < pendingTxCount && idx < pageSize; ++i) {
             PendingTransaction storage ptx = pendingTransactions[i];
             if (ptx.amount > 0 && !ptx.executed) {
                 if (found >= offset) {
@@ -1063,9 +1063,9 @@ contract UserVaultLegacy is ReentrancyGuard {
                     requestTimes[idx] = ptx.requestTime;
                     approved[idx] = ptx.approved;
                     executed[idx] = ptx.executed;
-                    idx++;
+                    ++idx;
                 }
-                found++;
+                ++found;
             }
         }
     }
@@ -1104,7 +1104,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         addedTimes = new uint64[](guardianList.length);
         mature = new bool[](guardianList.length);
         
-        for (uint256 i = 0; i < guardianList.length; i++) {
+        for (uint256 i = 0; i < guardianList.length; ++i) {
             address g = guardianList[i];
             addresses[i] = g;
             addedTimes[i] = guardianAddTime[g];
@@ -1278,7 +1278,7 @@ contract VaultInfrastructure is Ownable {
         ownerOfVault[vault] = owner_;
         
         // Track vault creation
-        totalVaults++;
+        ++totalVaults;
         vaultCreatedAt[vault] = block.timestamp;
         
         emit VaultCreated(owner_, vault);

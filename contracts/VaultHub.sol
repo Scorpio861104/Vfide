@@ -382,7 +382,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         guardianSetupComplete[vault] = false;
         
         // Track vault creation
-        totalVaults++;
+        ++totalVaults;
         vaultCreatedAt[vault] = block.timestamp;
 
         emit VaultCreated(owner_, vault);
@@ -516,7 +516,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
             recoveryApprovals[vault][msg.sender][nonce] = true;
-            recoveryApprovalCount[vault]++;
+            ++recoveryApprovalCount[vault];
             emit RecoveryRotationApproved(vault, msg.sender, newWallet, recoveryApprovalCount[vault], nonce);
         }
 
@@ -572,8 +572,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     // ——— Internals
     function _hasIndependentGuardian(CardBoundVault vault, address owner_) internal view returns (bool) {
         uint256 reservedGuardians = 0;
-        if (vault.isGuardian(owner_)) reservedGuardians++;
-        if (vault.isGuardian(dao)) reservedGuardians++;
+        if (vault.isGuardian(owner_)) ++reservedGuardians;
+        if (vault.isGuardian(dao)) ++reservedGuardians;
         return vault.guardianCount() > reservedGuardians;
     }
 

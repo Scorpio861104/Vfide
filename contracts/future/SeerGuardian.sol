@@ -333,7 +333,7 @@ contract SeerGuardian is ReentrancyGuard {
         uint8 count = violationCount[subject][vtype];
         if (count < 255) {
             violationCount[subject][vtype] = count + 1;
-            count++;
+            ++count;
         }
         lastViolationTime[subject] = uint64(block.timestamp);
         

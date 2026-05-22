@@ -208,7 +208,7 @@ contract CouncilElection {
         }
         if (electionEndAt != 0 && block.timestamp < electionEndAt) revert CE_ElectionStillActive();
 
-        electionEpoch += 1;
+        ++electionEpoch;
         electionStartAt = uint64(block.timestamp);
         electionEndAt = uint64(block.timestamp + votingWindow);
 
@@ -247,7 +247,7 @@ contract CouncilElection {
     /// @dev Internal helper to remove from candidateList array
     function _removeFromCandidateList(address candidate) internal {
         uint256 len = candidateList.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (candidateList[i] == candidate) {
                 candidateList[i] = candidateList[len - 1];
                 candidateList.pop();
@@ -322,7 +322,7 @@ contract CouncilElection {
             bool isConsecutive = lastTermEndDate[member] > 0 && lastTermEndDate[member] >= block.timestamp - consecutiveThreshold;
             if (isConsecutive) {
                 if (consecutiveTermsServed[member] >= maxConsecutiveTerms) revert CE_TermLimitReached();
-                consecutiveTermsServed[member]++;
+                ++consecutiveTermsServed[member];
             } else {
                 if (lastTermEndDate[member] > 0 && block.timestamp < lastTermEndDate[member] + cooldownPeriod) {
                     if (consecutiveTermsServed[member] >= maxConsecutiveTerms) revert CE_TermLimitReached();
@@ -489,14 +489,14 @@ contract CouncilElection {
         // Count active candidates
     // slither-disable-next-line reentrancy-events
         uint256 count = 0;
-        for (uint256 i = 0; i < candidateList.length; i++) {
-            if (isCandidate[candidateList[i]]) count++;
+        for (uint256 i = 0; i < candidateList.length; ++i) {
+            if (isCandidate[candidateList[i]]) ++count;
         }
         
         // Collect active candidates
         candidates = new address[](count);
         uint256 idx = 0;
-        for (uint256 i = 0; i < candidateList.length; i++) {
+        for (uint256 i = 0; i < candidateList.length; ++i) {
             if (isCandidate[candidateList[i]]) {
                 candidates[idx++] = candidateList[i];
             }
@@ -520,12 +520,12 @@ contract CouncilElection {
         daysRemaining = termEnd > block.timestamp ? (termEnd - block.timestamp) / 1 days : 0;
         
         // Count all candidates and eligible ones
-        for (uint256 i = 0; i < candidateList.length; i++) {
+        for (uint256 i = 0; i < candidateList.length; ++i) {
             address c = candidateList[i];
             if (isCandidate[c]) {
-                candidateCount++;
+                ++candidateCount;
                 if (_eligible(c) && _canServe(c)) {
-                    eligibleCandidateCount++;
+                    ++eligibleCandidateCount;
                 }
             }
         }
@@ -568,7 +568,7 @@ contract CouncilElection {
         if (candidateVotes == 0) return false;
 
         uint256 strictlyBetter = 0;
-        for (uint256 i = 0; i < candidateList.length; i++) {
+        for (uint256 i = 0; i < candidateList.length; ++i) {
             address other = candidateList[i];
             if (!isCandidate[other]) continue;
             if (!_eligibleAt(other, electionStartAt)) continue;
@@ -577,7 +577,7 @@ contract CouncilElection {
             if (other == candidate) continue;
 
             if (otherVotes > candidateVotes || (otherVotes == candidateVotes && other < candidate)) {
-                strictlyBetter++;
+                ++strictlyBetter;
                 if (strictlyBetter >= topN) return false;
             }
         }

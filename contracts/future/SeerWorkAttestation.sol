@@ -211,7 +211,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
                 _recordTask(key, worker, category, taskId, evidenceHash, msg.sender);
             }
 
-            unchecked { i++; }
+            unchecked { ++i; }
         }
     }
 
@@ -323,8 +323,8 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
 
         taskExists[key] = true;
         workerTasks[worker].push(key);
-        totalTasksVerified++;
-        categoryTaskCount[category]++;
+        ++totalTasksVerified;
+        ++categoryTaskCount[category];
 
         emit TaskVerified(worker, category, taskId, evidenceHash, verifier);
     }

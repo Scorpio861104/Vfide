@@ -708,7 +708,7 @@ contract OwnerControlPanel {
      */
     // slither-disable-next-line reentrancy-no-eth
     function token_batchWhaleLimitExempt(address[] calldata addrs, bool exempt) external onlyOwner nonReentrant {
-        for (uint256 i = 0; i < addrs.length; i++) {
+        for (uint256 i = 0; i < addrs.length; ++i) {
             // F-14 FIX: require governance queue per-address before execution
             _consumeQueuedAction(actionId_token_setWhaleLimitExempt(addrs[i], exempt));
             vfideToken.setWhaleLimitExempt(addrs[i], exempt);

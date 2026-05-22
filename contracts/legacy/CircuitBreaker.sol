@@ -211,7 +211,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         // Update rolling sample window first so downstream checks can use a smoother reference.
         priceSamples[priceSampleIndex] = _newPrice;
         if (priceSampleCount < 10) {
-            priceSampleCount++;
+            ++priceSampleCount;
         }
         priceSampleIndex = (priceSampleIndex + 1) % 10;
 
@@ -259,7 +259,7 @@ contract CircuitBreaker is VFIDEAccessControl {
             monitoring.lastBlacklistReset = block.timestamp;
         }
 
-        monitoring.suspiciousActivityCount24h++;
+        ++monitoring.suspiciousActivityCount24h;
 
         emit SuspiciousActivityRecorded(monitoring.suspiciousActivityCount24h);
 
@@ -427,7 +427,7 @@ contract CircuitBreaker is VFIDEAccessControl {
             return history;
         }
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             uint256 index = len < MAX_TRIGGER_HISTORY
                 ? i
                 : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
@@ -495,7 +495,7 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         // Resize array to actual warning count
         warnings = new string[](warningCount);
-        for (uint256 i = 0; i < warningCount; i++) {
+        for (uint256 i = 0; i < warningCount; ++i) {
             warnings[i] = tempWarnings[i];
         }
     }
@@ -540,17 +540,17 @@ contract CircuitBreaker is VFIDEAccessControl {
         if (count == 0) return 0;
 
         uint256[10] memory tmp;
-        for (uint8 i = 0; i < count; i++) {
+        for (uint8 i = 0; i < count; ++i) {
             tmp[i] = priceSamples[i];
         }
 
         // Insertion sort is fine for max N=10.
-        for (uint8 i = 1; i < count; i++) {
+        for (uint8 i = 1; i < count; ++i) {
             uint256 key = tmp[i];
             uint8 j = i;
             while (j > 0 && tmp[j - 1] > key) {
                 tmp[j] = tmp[j - 1];
-                j--;
+                --j;
             }
             tmp[j] = key;
         }

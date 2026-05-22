@@ -99,7 +99,7 @@ contract CouncilSalary {
     
     function startNewTerm() external {
         require(msg.sender == dao, "not dao");
-        currentTerm++;
+        ++currentTerm;
     }
 
     /// @notice N-L31 FIX: Called by CouncilElection.applyCouncil (or DAO) after a new
@@ -110,7 +110,7 @@ contract CouncilSalary {
     ///         each successful applyCouncil() execution.
     function notifyNewCouncil() external {
         require(msg.sender == dao || msg.sender == councilElection, "not dao or election");
-        currentTerm++;
+        ++currentTerm;
     }
 
     // Address of the CouncilElection contract allowed to trigger term advances.
@@ -196,7 +196,7 @@ contract CouncilSalary {
         require(block.timestamp >= lastPayTime + payInterval, "too early");
         
         // C-2 FIX: Increment nonce to prevent replay
-        distributionNonce++;
+        ++distributionNonce;
         
         uint256 balance = token.balanceOf(address(this));
         require(balance > 0, "no funds");
@@ -210,7 +210,7 @@ contract CouncilSalary {
         address[] memory eligible = new address[](size);
         uint256 eligibleCount = 0;
 
-        for (uint256 i = 0; i < size; i++) {
+        for (uint256 i = 0; i < size; ++i) {
             address member = election.getCouncilMember(i);
             if (member == address(0)) continue;
             
@@ -221,7 +221,7 @@ contract CouncilSalary {
             if (seer.getScore(member) < minScoreToPay) continue;
 
             eligible[eligibleCount] = member;
-            eligibleCount++;
+            ++eligibleCount;
         }
 
         // 2. Calculate Share
@@ -234,7 +234,7 @@ contract CouncilSalary {
         
         // 3. Pay — last member receives the dust remainder to avoid stale funds
         uint256 remainder = balance % eligibleCount;
-        for (uint256 i = 0; i < eligibleCount; i++) {
+        for (uint256 i = 0; i < eligibleCount; ++i) {
             uint256 payout = (i == eligibleCount - 1) ? share + remainder : share;
             token.safeTransfer(eligible[i], payout);
         }
@@ -253,7 +253,7 @@ contract CouncilSalary {
         require(!isBlacklisted[target], "already removed");
 
         hasVotedToRemoveInTerm[currentTerm][target][msg.sender] = true;
-        removalVotesInTerm[currentTerm][target]++;
+        ++removalVotesInTerm[currentTerm][target];
 
         uint256 size = election.getActualCouncilSize();
         // If > 50% vote to remove

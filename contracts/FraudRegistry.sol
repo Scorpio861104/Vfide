@@ -203,7 +203,7 @@ contract FraudRegistry is ReentrancyGuard {
             reason: reason,
             timestamp: uint64(block.timestamp)
         }));
-        complaintCount[target]++;
+        ++complaintCount[target];
 
         emit ComplaintFiled(target, msg.sender, reason, complaintCount[target]);
 
@@ -261,7 +261,7 @@ contract FraudRegistry is ReentrancyGuard {
         // Prevents permanent user DoS after 500 historical escrows have released.
         require(userActiveEscrowCount[from] < 500, "FR: escrow limit");
         userEscrowIndices[from].push(escrowIndex);
-        userActiveEscrowCount[from] += 1;
+        ++userActiveEscrowCount[from];
         // H-3 FIX: Track total actively escrowed tokens for O(1) excess calculation
         totalActiveEscrowed += amount;
 
@@ -282,7 +282,7 @@ contract FraudRegistry is ReentrancyGuard {
         totalActiveEscrowed -= e.amount;
         // M5g FIX: decrement per-user active count so the user can keep transacting after release
         if (userActiveEscrowCount[e.from] > 0) {
-            userActiveEscrowCount[e.from] -= 1;
+            --userActiveEscrowCount[e.from];
         }
 
         // Resolve against the snapshot owner captured at escrow time.
@@ -332,7 +332,7 @@ contract FraudRegistry is ReentrancyGuard {
         totalActiveEscrowed -= e.amount;
         // M5g FIX: decrement per-user active count on rescue/cancel
         if (userActiveEscrowCount[e.from] > 0) {
-            userActiveEscrowCount[e.from] -= 1;
+            --userActiveEscrowCount[e.from];
         }
         SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
 
@@ -418,7 +418,7 @@ contract FraudRegistry is ReentrancyGuard {
         complaintCount[target] = 0;
         delete complaints[target];
         dismissedComplaintPenaltyCursor[target] = 0;
-        complaintEpoch[target] += 1;
+        ++complaintEpoch[target];
 
         emit ComplaintsDismissedByDAO(target, msg.sender);
     }
@@ -448,9 +448,9 @@ contract FraudRegistry is ReentrancyGuard {
         Complaint[] storage filed = complaints[target];
         uint256 newCursor = cursor;
 
-        for (uint256 i = cursor; i < stop; i++) {
+        for (uint256 i = cursor; i < stop; ++i) {
             try seer.punish(filed[i].reporter, COMPLAINT_REPORTER_PENALTY, "false_complaint_dismissed") {
-                processed++;
+                ++processed;
                 newCursor = i + 1;
             } catch (bytes memory reason) {
                 emit DismissedComplaintPenaltyFailed(target, filed[i].reporter, reason);
@@ -478,7 +478,7 @@ contract FraudRegistry is ReentrancyGuard {
         complaintCount[target] = 0;
         delete complaints[target];
         dismissedComplaintPenaltyCursor[target] = 0;
-        complaintEpoch[target] += 1;
+        ++complaintEpoch[target];
 
         // N-H1 FIX: Escrow refunds are processed in bounded chunks via
         // processClearFlagEscrowRefunds() to prevent clearFlag gas exhaustion.
@@ -513,7 +513,7 @@ contract FraudRegistry is ReentrancyGuard {
         uint256 stop = cursor + limit;
         if (stop > len) stop = len;
 
-        for (uint256 i = cursor; i < stop; i++) {
+        for (uint256 i = cursor; i < stop; ++i) {
             uint256 escrowIndex = userIndices[i];
             if (escrowIndex >= escrowedTransfers.length) continue;
 
@@ -523,11 +523,11 @@ contract FraudRegistry is ReentrancyGuard {
                 totalActiveEscrowed -= e.amount;
                 // M5g FIX: decrement per-user active count on clear-flag refund cancel
                 if (userActiveEscrowCount[e.from] > 0) {
-                    userActiveEscrowCount[e.from] -= 1;
+                    --userActiveEscrowCount[e.from];
                 }
                 SafeERC20.safeTransfer(vfideToken, e.from, e.amount);
                 emit EscrowCancelledOnClear(escrowIndex, e.from, e.amount);
-                processed++;
+                ++processed;
             }
         }
 
@@ -642,7 +642,7 @@ contract FraudRegistry is ReentrancyGuard {
         reasons = new string[](len);
         timestamps = new uint64[](len);
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             reporters[i] = c[i].reporter;
             reasons[i] = c[i].reason;
             timestamps[i] = c[i].timestamp;
@@ -660,9 +660,9 @@ contract FraudRegistry is ReentrancyGuard {
         uint256 pendingCount = 0;
         uint256 _len = userIndices.length;
 
-        for (uint256 i = 0; i < _len; i++) {
+        for (uint256 i = 0; i < _len; ++i) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) { pendingCount++; }
+            if (!e.released && !e.cancelled) { ++pendingCount; }
         }
 
         indices = new uint256[](pendingCount);
@@ -671,14 +671,14 @@ contract FraudRegistry is ReentrancyGuard {
         releaseAts = new uint64[](pendingCount);
 
         uint256 idx = 0;
-        for (uint256 i = 0; i < _len; i++) {
+        for (uint256 i = 0; i < _len; ++i) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
             if (!e.released && !e.cancelled) {
                 indices[idx] = userIndices[i];
                 recipients[idx] = e.to;
                 amounts[idx] = e.amount;
                 releaseAts[idx] = e.releaseAt;
-                idx++;
+                ++idx;
             }
         }
     }
@@ -710,9 +710,9 @@ contract FraudRegistry is ReentrancyGuard {
         if (stop > len) stop = len;
 
         uint256 pendingCount = 0;
-        for (uint256 i = offset; i < stop; i++) {
+        for (uint256 i = offset; i < stop; ++i) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) pendingCount++;
+            if (!e.released && !e.cancelled) ++pendingCount;
         }
 
         indices = new uint256[](pendingCount);
@@ -721,7 +721,7 @@ contract FraudRegistry is ReentrancyGuard {
         releaseAts = new uint64[](pendingCount);
 
         uint256 idx = 0;
-        for (uint256 i = offset; i < stop; i++) {
+        for (uint256 i = offset; i < stop; ++i) {
             uint256 escrowIndex = userIndices[i];
             EscrowedTransfer storage e = escrowedTransfers[escrowIndex];
             if (!e.released && !e.cancelled) {
@@ -729,7 +729,7 @@ contract FraudRegistry is ReentrancyGuard {
                 recipients[idx] = e.to;
                 amounts[idx] = e.amount;
                 releaseAts[idx] = e.releaseAt;
-                idx++;
+                ++idx;
             }
         }
 
@@ -754,9 +754,9 @@ contract FraudRegistry is ReentrancyGuard {
         // Count pending escrows
         uint256[] storage userIndices = userEscrowIndices[user];
         uint256 _lenUI = userIndices.length;
-        for (uint256 i = 0; i < _lenUI; i++) {
+        for (uint256 i = 0; i < _lenUI; ++i) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) { pendingEscrowCount++; }
+            if (!e.released && !e.cancelled) { ++pendingEscrowCount; }
         }
     }
 

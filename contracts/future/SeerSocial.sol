@@ -290,7 +290,7 @@ contract SeerSocial {
         require(endorsersOf[subject].length < 200, "SOCIAL: endorser cap"); // I-11
         endorsersOf[subject].push(msg.sender);
         endorsementsReceived[subject] = activeReceived + 1;
-        endorsementsGiven[msg.sender] += 1;
+        ++endorsementsGiven[msg.sender];
         // F-36 FIX: Update incremental cache.
         cachedEndorsementBonus[subject] += weight;
         if (cachedEndorsementExpiry[subject] == 0 || expiry < cachedEndorsementExpiry[subject]) {
@@ -320,8 +320,8 @@ contract SeerSocial {
         uint64 expiry = e.expiry;
         delete endorsements[subject][msg.sender];
 
-        if (endorsementsReceived[subject] > 0) endorsementsReceived[subject]--;
-        if (endorsementsGiven[msg.sender] > 0) endorsementsGiven[msg.sender]--;
+        if (endorsementsReceived[subject] > 0) --endorsementsReceived[subject];
+        if (endorsementsGiven[msg.sender] > 0) --endorsementsGiven[msg.sender];
         _removeEndorserFromSubjectList(subject, msg.sender);
 
         // Keep cache coherent for fast-path reads.
@@ -353,7 +353,7 @@ contract SeerSocial {
         address[] storage subjects = endorsedSubjects[msg.sender];
         uint256 len = subjects.length;
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             address subject = subjects[i];
             Endorsement storage e = endorsements[subject][msg.sender];
             
@@ -362,8 +362,8 @@ contract SeerSocial {
                 uint16 weight = e.weight;
                 uint64 expiry = e.expiry;
                 delete endorsements[subject][msg.sender];
-                if (endorsementsReceived[subject] > 0) endorsementsReceived[subject]--;
-                if (endorsementsGiven[msg.sender] > 0) endorsementsGiven[msg.sender]--;
+                if (endorsementsReceived[subject] > 0) --endorsementsReceived[subject];
+                if (endorsementsGiven[msg.sender] > 0) --endorsementsGiven[msg.sender];
                 _removeEndorserFromSubjectList(subject, msg.sender);
                 if (cachedEndorsementBonus[subject] >= weight) {
                     cachedEndorsementBonus[subject] -= weight;
@@ -373,7 +373,7 @@ contract SeerSocial {
                 if (cachedEndorsementExpiry[subject] == expiry) {
                     cachedEndorsementExpiry[subject] = 0;
                 }
-                cleaned++;
+                ++cleaned;
             }
         }
         
@@ -393,7 +393,7 @@ contract SeerSocial {
         // Cache stale: full recompute (also used on first call).
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             address endorser = endorsers[i];
             Endorsement storage e = endorsements[subject][endorser];
             if (e.weight > 0 && e.expiry > block.timestamp) {
@@ -415,10 +415,10 @@ contract SeerSocial {
     ) {
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             Endorsement storage e = endorsements[subject][endorsers[i]];
             if (e.expiry > block.timestamp && e.weight > 0) {
-                activeEndorsers++;
+                ++activeEndorsers;
             }
         }
         activeBonus = uint16(calculateEndorsementBonus(subject));
@@ -435,10 +435,10 @@ contract SeerSocial {
         uint256 len = stored.length;
         uint256 activeCount = 0;
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             Endorsement storage e = endorsements[subject][stored[i]];
             if (e.expiry > block.timestamp && e.weight > 0) {
-                activeCount++;
+                ++activeCount;
             }
         }
 
@@ -448,14 +448,14 @@ contract SeerSocial {
         timestamps = new uint64[](activeCount);
 
         uint256 idx = 0;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             Endorsement storage e = endorsements[subject][stored[i]];
             if (e.expiry > block.timestamp && e.weight > 0) {
                 endorsers[idx] = stored[i];
                 weights[idx] = e.weight;
                 expiries[idx] = e.expiry;
                 timestamps[idx] = e.timestamp;
-                idx++;
+                ++idx;
             }
         }
     }
@@ -476,20 +476,20 @@ contract SeerSocial {
             Endorsement storage e = endorsements[subject][endorser];
             if (e.expiry > 0 && e.expiry <= block.timestamp) {
                 delete endorsements[subject][endorser];
-                if (endorsementsReceived[subject] > 0) endorsementsReceived[subject]--;
-                if (endorsementsGiven[endorser] > 0) endorsementsGiven[endorser]--;
+                if (endorsementsReceived[subject] > 0) --endorsementsReceived[subject];
+                if (endorsementsGiven[endorser] > 0) --endorsementsGiven[endorser];
                 endorsers[i] = endorsers[endorsers.length - 1];
                 endorsers.pop();
                 continue;
             }
-            i++;
+            ++i;
         }
         endorsementsReceived[subject] = uint16(endorsers.length);
         // F-36 FIX: Rebuild incremental cache after prune so next read is O(1).
         uint256 newBonus;
         uint64 newMinExpiry;
         uint256 eLen = endorsers.length;
-        for (uint256 j = 0; j < eLen; j++) {
+        for (uint256 j = 0; j < eLen; ++j) {
             Endorsement storage pe = endorsements[subject][endorsers[j]];
             if (pe.weight > 0 && pe.expiry > block.timestamp) {
                 newBonus += pe.weight;
@@ -503,7 +503,7 @@ contract SeerSocial {
     function _removeEndorserFromSubjectList(address subject, address endorser) internal {
         address[] storage endorsers = endorsersOf[subject];
         uint256 len = endorsers.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (endorsers[i] == endorser) {
                 endorsers[i] = endorsers[len - 1];
                 endorsers.pop();
@@ -573,7 +573,7 @@ contract SeerSocial {
     function _removeMentee(address mentor, address mentee) internal {
         address[] storage list = menteesOf[mentor];
         uint256 len = list.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             if (list[i] == mentee) {
                 list[i] = list[len - 1];
                 list.pop();
@@ -623,7 +623,7 @@ contract SeerSocial {
             approved: false
         });
         
-        pendingDisputeCount++;
+        ++pendingDisputeCount;
         
         emit ScoreDisputeRequested(msg.sender, reason);
         _logEv(msg.sender, "score_dispute_requested", 0, reason);
@@ -641,7 +641,7 @@ contract SeerSocial {
         // This contract only tracks the dispute status
         
         if (pendingDisputeCount > 0) {
-            pendingDisputeCount--;
+            --pendingDisputeCount;
         }
 
         emit ScoreDisputeResolved(subject, approved, adjustment);
@@ -662,7 +662,7 @@ contract SeerSocial {
             resolution: ""
         });
 
-        pendingAppealCount++;
+        ++pendingAppealCount;
         emit AppealFiled(msg.sender, reason);
         _logEv(msg.sender, "appeal_filed", 0, reason);
     }
@@ -677,7 +677,7 @@ contract SeerSocial {
         appeal.resolution = resolution;
 
         if (pendingAppealCount > 0) {
-            pendingAppealCount--;
+            --pendingAppealCount;
         }
 
         emit AppealResolved(subject, approved, resolution);

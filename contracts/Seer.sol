@@ -410,7 +410,7 @@ contract Seer is ReentrancyGuard {
 
     function _activeScoreSourceWeight() internal view returns (uint256 totalWeight) {
         uint256 _ssLen = scoreSources.length;
-        for (uint256 i = 0; i < _ssLen; i++) {
+        for (uint256 i = 0; i < _ssLen; ++i) {
             if (scoreSources[i].active) {
                 totalWeight += scoreSources[i].weight;
             }
@@ -477,8 +477,8 @@ contract Seer is ReentrancyGuard {
         uint256 activeSources = 0;
         uint256 _ssLen2 = scoreSources.length;
         for (uint256 i = 0; i < _ssLen2;) {
-            if (scoreSources[i].active) activeSources++;
-            unchecked { i++; }
+            if (scoreSources[i].active) ++activeSources;
+            unchecked { ++i; }
         }
         if (activeSources > 0 && onChainWeight < MIN_ONCHAIN_WEIGHT_WITH_SOURCES) revert TRUST_Bounds();
         daoScoreWeight = daoWeight;
@@ -510,8 +510,8 @@ contract Seer is ReentrancyGuard {
      */
     function getScoreSourceCount() external view returns (uint256 total, uint256 active) {
         total = scoreSources.length;
-        for (uint256 i = 0; i < total; i++) {
-            if (scoreSources[i].active) active++;
+        for (uint256 i = 0; i < total; ++i) {
+            if (scoreSources[i].active) ++active;
         }
     }
 
@@ -609,7 +609,7 @@ contract Seer is ReentrancyGuard {
             reasonHash: bytes32(0)
         });
 
-        for (uint8 i = 0; i < count; i++) {
+        for (uint8 i = 0; i < count; ++i) {
             uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - i) % MAX_HISTORY_PER_USER);
             ScoreChange memory change = scoreHistory[subject][idx];
             oldest = change;
@@ -638,7 +638,7 @@ contract Seer is ReentrancyGuard {
         
         // Aggregate from registered sources
         uint256 _ssLen3 = scoreSources.length;
-        for (uint256 i = 0; i < _ssLen3; i++) {
+        for (uint256 i = 0; i < _ssLen3; ++i) {
             if (!scoreSources[i].active) continue;
             
             uint8 sourceWeight = scoreSources[i].weight;
@@ -987,7 +987,7 @@ contract Seer is ReentrancyGuard {
         if (len == 0 || len > 100) revert TRUST_Bounds();
         if (active && expiry > 0 && expiry <= block.timestamp) revert TRUST_Bounds();
         
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             address subject = subjects[i];
             if (subject == address(0)) revert TRUST_Zero();
             hasBadge[subject][badge] = active;
@@ -1044,7 +1044,7 @@ contract Seer is ReentrancyGuard {
             approved: false
         });
         
-        pendingDisputeCount++;
+        ++pendingDisputeCount;
         
         emit ScoreDisputeRequested(msg.sender, reason);
         _logEv(msg.sender, 0, reason);
@@ -1080,7 +1080,7 @@ contract Seer is ReentrancyGuard {
         }
         
         if (pendingDisputeCount > 0) {
-            pendingDisputeCount--;
+            --pendingDisputeCount;
         }
 
         emit ScoreDisputeResolved(subject, approved, adjustment);
@@ -1209,7 +1209,7 @@ contract Seer is ReentrancyGuard {
         if (!decayEnabled) revert TRUST_Disabled();
         if (subjects.length == 0 || subjects.length > 50) revert TRUST_Bounds();
         
-        for (uint256 i = 0; i < subjects.length; i++) {
+        for (uint256 i = 0; i < subjects.length; ++i) {
             address subject = subjects[i];
             uint64 lastAct = lastActivity[subject];
             if (lastAct == 0) continue;
@@ -1252,7 +1252,7 @@ contract Seer is ReentrancyGuard {
         
         uint8 head = scoreHistoryHead[subject];
         // Walk backwards from the most-recent slot
-        for (uint256 i = 0; i < returnCount; i++) {
+        for (uint256 i = 0; i < returnCount; ++i) {
             uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - i) % MAX_HISTORY_PER_USER);
             recentChanges[returnCount - 1 - i] = scoreHistory[subject][idx];
         }
@@ -1274,7 +1274,7 @@ contract Seer is ReentrancyGuard {
         uint8 head = scoreHistoryHead[subject];
         
         // S-05 FIX: Search circular buffer from newest to oldest
-        for (uint8 i = 0; i < count; i++) {
+        for (uint8 i = 0; i < count; ++i) {
             uint8 idx = uint8((uint256(head) + MAX_HISTORY_PER_USER - 1 - uint256(i)) % MAX_HISTORY_PER_USER);
             if (scoreHistory[subject][idx].reasonHash == targetHash) {
                 return (true, scoreHistory[subject][idx].timestamp);

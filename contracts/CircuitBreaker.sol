@@ -85,7 +85,7 @@ contract CircuitBreaker {
             monitoring.suspiciousActivityCount24h = 0;
             monitoring.lastActivityReset = block.timestamp;
         }
-        monitoring.suspiciousActivityCount24h++;
+        ++monitoring.suspiciousActivityCount24h;
         emit SuspiciousActivityRecorded(monitoring.suspiciousActivityCount24h);
     }
 

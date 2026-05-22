@@ -447,7 +447,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         // M-1 FIX: Cap iteration at MAX_SCORE_SNAPSHOTS to bound gas regardless of historical
         // array length (e.g. entries written before the cap was introduced).
         uint256 iterLen = len > MAX_SCORE_SNAPSHOTS ? MAX_SCORE_SNAPSHOTS : len;
-        for (uint256 i = 0; i < iterLen; i++) {
+        for (uint256 i = 0; i < iterLen; ++i) {
             uint64 snapshotTime = scoreHistory[user][i].timestamp;
             if (snapshotTime < windowStart) continue;
 
@@ -961,7 +961,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
             (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(from, to, grossAmount);
             totalFee = burnAmount + sanctumAmount + ecosystemAmount;
             netAmount = grossAmount - totalFee;
-            guard++;
+            ++guard;
         }
     }
 

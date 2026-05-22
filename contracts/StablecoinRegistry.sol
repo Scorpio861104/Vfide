@@ -263,7 +263,7 @@ contract StablecoinRegistry is Ownable, Pausable {
         uint256 _slLen = stablecoinList.length;
         infos = new StablecoinInfo[](_slLen);
         
-        for (uint256 i = 0; i < _slLen; i++) {
+        for (uint256 i = 0; i < _slLen; ++i) {
             infos[i] = stablecoins[stablecoinList[i]];
         }
     }
@@ -273,9 +273,9 @@ contract StablecoinRegistry is Ownable, Pausable {
      */
     function allowedCount() external view returns (uint256 count) {
         uint256 _slLen2 = stablecoinList.length;
-        for (uint256 i = 0; i < _slLen2; i++) {
+        for (uint256 i = 0; i < _slLen2; ++i) {
             if (stablecoins[stablecoinList[i]].allowed) {
-                count++;
+                ++count;
             }
         }
     }

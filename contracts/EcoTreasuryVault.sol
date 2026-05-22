@@ -245,7 +245,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
         uint256[] memory balances
     ) {
         balances = new uint256[](tokens.length);
-        for (uint256 i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; ++i) {
             balances[i] = IERC20(tokens[i]).balanceOf(address(this));
         }
     }

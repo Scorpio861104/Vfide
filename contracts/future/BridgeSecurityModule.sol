@@ -176,7 +176,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
         // Check rapid transfers (more than 5 in 5 minutes)
         if (block.timestamp - flags.lastTransferTime < 5 minutes) {
-            flags.rapidTransferCount++;
+            ++flags.rapidTransferCount;
             if (flags.rapidTransferCount > 5 && !flags.flagged) {
                 flags.flagged = true;
                 emit SuspiciousActivityDetected(user, "Rapid transfers detected");
@@ -241,9 +241,9 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
         authorizedOracles[oracle] = authorized;
 
         if (authorized && !wasAuthorized) {
-            oracleCount++;
+            ++oracleCount;
         } else if (!authorized && wasAuthorized) {
-            oracleCount--;
+            --oracleCount;
         }
 
         emit OracleAuthorized(oracle, authorized);

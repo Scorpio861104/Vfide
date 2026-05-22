@@ -103,19 +103,19 @@ contract ProofLedger {
 
     function logSystemEvent(address who, string calldata action, address by) external onlyLogger {
         require(logCountPerBlock[msg.sender][block.number] < MAX_LOGS_PER_BLOCK, "PL: rate limit");
-        logCountPerBlock[msg.sender][block.number]++;
+        ++logCountPerBlock[msg.sender][block.number];
         emit SystemEvent(who, action, by);
     }
 
     function logEvent(address who, string calldata action, uint256 amount, string calldata note) external onlyLogger {
         require(logCountPerBlock[msg.sender][block.number] < MAX_LOGS_PER_BLOCK, "PL: rate limit");
-        logCountPerBlock[msg.sender][block.number]++;
+        ++logCountPerBlock[msg.sender][block.number];
         emit EventLog(who, action, amount, note);
     }
 
     function logTransfer(address from, address to, uint256 amount, string calldata context) external onlyLogger {
         require(logCountPerBlock[msg.sender][block.number] < MAX_LOGS_PER_BLOCK, "PL: rate limit");
-        logCountPerBlock[msg.sender][block.number]++;
+        ++logCountPerBlock[msg.sender][block.number];
         emit TransferLog(from, to, amount, context);
     }
 }

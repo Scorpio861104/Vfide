@@ -139,10 +139,10 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         
         // Mark claimed
         hasClaimed[user] = true;
-        claimsToday++;
-        operatorClaimsToday[msg.sender]++;
+        ++claimsToday;
+        ++operatorClaimsToday[msg.sender];
         totalClaimed += claimAmountVFIDE;
-        totalUsers++;
+        ++totalUsers;
         
         // Record referral
         if (referrer != address(0)) {
@@ -175,7 +175,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         _refreshDay();
         _refreshOperatorDay(msg.sender);
         
-        for (uint256 i = 0; i < users.length; i++) {
+        for (uint256 i = 0; i < users.length; ++i) {
             address user = users[i];
             if (user == address(0) || hasClaimed[user]) continue;
             if (claimsToday >= dailyClaimCap) break;
@@ -186,10 +186,10 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
             if (address(this).balance < claimAmountETH) break;
             
             hasClaimed[user] = true;
-            claimsToday++;
-            operatorClaimsToday[msg.sender]++;
+            ++claimsToday;
+            ++operatorClaimsToday[msg.sender];
             totalClaimed += claimAmountVFIDE;
-            totalUsers++;
+            ++totalUsers;
             
             if (referrers[i] != address(0)) {
                 if (referrers[i] != user && hasClaimed[referrers[i]] && referredBy[referrers[i]] == address(0)) {

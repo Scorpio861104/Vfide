@@ -320,7 +320,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             amountRepaid: 0, revenueAssignment: false,
             state: LoanState.OPEN
         });
-        activeLoanCount[msg.sender]++;
+        ++activeLoanCount[msg.sender];
 
         vfideToken.safeTransferFrom(_settlementSource(msg.sender), address(this), principal);
         emit LoanCreated(id, msg.sender, principal, interestBps, duration);
@@ -332,7 +332,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.lender != msg.sender) revert TL_NotLender();
         if (l.state != LoanState.OPEN) revert TL_WrongState();
         l.state = LoanState.CANCELLED;
-        activeLoanCount[msg.sender]--;
+        --activeLoanCount[msg.sender];
         vfideToken.safeTransfer(_settlementRecipient(msg.sender), l.principal);
         emit LoanCancelled(id);
     }
@@ -364,17 +364,17 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         // Decrement loan counters: both lender and borrower were tracking this.
         if (activeLoanCount[l.lender] > 0) {
-            activeLoanCount[l.lender]--;
+            --activeLoanCount[l.lender];
         }
         if (activeLoanCount[l.borrower] > 0) {
-            activeLoanCount[l.borrower]--;
+            --activeLoanCount[l.borrower];
         }
 
         // Release any guarantor commitments that were made before timeout
         // (signatureCount < REQUIRED_GUARANTORS, otherwise _activateLoan would
         // have transitioned us out of COSIGNING already).
         address[] storage signers = guarantors[id];
-        for (uint256 i = 0; i < signers.length; i++) {
+        for (uint256 i = 0; i < signers.length; ++i) {
             address g = signers[i];
             uint256 committed = guarantorCommittedLiability[id][g];
             if (committed > 0) {
@@ -435,14 +435,14 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (prior == LoanState.OPEN || prior == LoanState.COSIGNING) {
             // Principal is in this contract; refund to lender's settlement recipient.
             l.state = LoanState.CANCELLED;
-            if (activeLoanCount[l.lender] > 0) activeLoanCount[l.lender]--;
+            if (activeLoanCount[l.lender] > 0) --activeLoanCount[l.lender];
             if (prior == LoanState.COSIGNING && activeLoanCount[l.borrower] > 0) {
-                activeLoanCount[l.borrower]--;
+                --activeLoanCount[l.borrower];
             }
             // Release guarantor commitments made during COSIGNING (if any).
             if (prior == LoanState.COSIGNING) {
                 address[] storage signers = guarantors[id];
-                for (uint256 i = 0; i < signers.length; i++) {
+                for (uint256 i = 0; i < signers.length; ++i) {
                     address g = signers[i];
                     uint256 committed = guarantorCommittedLiability[id][g];
                     if (committed > 0) {
@@ -459,7 +459,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             // We do NOT decrement activeLoanCount here — defaulted loans are
             // tracked by `unresolvedDefaults` per existing design.
             l.state = LoanState.DEFAULTED;
-            unresolvedDefaults[l.borrower]++;
+            ++unresolvedDefaults[l.borrower];
         }
 
         emit LoanSettledByInheritance(id, deceasedParty, uint8(prior));
@@ -494,7 +494,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         // F-SC-025 FIX: stamp the moment we entered COSIGNING so cancellation
         // after timeout becomes possible.
         cosigningStartedAt[id] = uint64(block.timestamp);
-        activeLoanCount[msg.sender]++;
+        ++activeLoanCount[msg.sender];
 
         emit LoanAccepted(id, msg.sender, limit);
     }
@@ -573,7 +573,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         guarantorCommittedLiability[id][msg.sender] = liabilityPerGuarantor;
         committedLiability[msg.sender] += liabilityPerGuarantor;
         committedLiabilityBySource[approvalSource] += liabilityPerGuarantor;
-        signatureCount[id]++;
+        ++signatureCount[id];
 
         // Recalculate per-guarantor liability (split evenly)
         guarantorLiabilityEach[id] = (l.principal * GUARANTOR_LIABILITY_PCT) / (100 * uint256(signatureCount[id]));
@@ -636,7 +636,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             _notifyFeeDistributor(protocolFee);
         }
         totalProtocolFees += protocolFee;
-        totalLoans++;
+        ++totalLoans;
         totalVolume += l.principal;
 
         // ProofScore
@@ -710,7 +710,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         plans[id].accepted = true;
         l.state = LoanState.RESTRUCTURED;
-        totalRestructured++;
+        ++totalRestructured;
 
         emit PaymentPlanAccepted(id);
     }
@@ -735,7 +735,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 protocolFee = (amount * PROTOCOL_CUT_PCT) / 100;
         uint256 lenderReceives = amount - protocolFee;
 
-        p.paidInstallments++;
+        ++p.paidInstallments;
         p.nextDue = uint64(block.timestamp) + (p.intervalDays * 1 days);
         l.amountRepaid += amount;
 
@@ -753,7 +753,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             l.state = LoanState.REPAID;
             _closeLoan(l);
             _releaseAllGuarantorCommitments(id);
-            totalLoans++;
+            ++totalLoans;
             totalVolume += l.principal;
 
             if (address(seer) != address(0)) {
@@ -811,12 +811,12 @@ contract VFIDETermLoan is ReentrancyGuard {
         // Release accounting commitments once a loan defaults; extraction can
         // continue from allowances while avoiding stale commitment lockups.
         _releaseAllGuarantorCommitments(id);
-        totalDefaults++;
+        ++totalDefaults;
 
-        unresolvedDefaults[l.borrower]++;
+        ++unresolvedDefaults[l.borrower];
         address[] storage blockedGuarantors = guarantors[id];
-        for (uint256 i = 0; i < blockedGuarantors.length; i++) {
-            unresolvedDefaults[blockedGuarantors[i]]++;
+        for (uint256 i = 0; i < blockedGuarantors.length; ++i) {
+            ++unresolvedDefaults[blockedGuarantors[i]];
         }
 
         // Return any partial repayments to lender
@@ -833,7 +833,7 @@ contract VFIDETermLoan is ReentrancyGuard {
                 try seer.punish(l.borrower, PENALTY_PLAN_FAILED_1, "loan_plan_failed") {} catch {}
                 try seer.punish(l.borrower, PENALTY_PLAN_FAILED_2, "loan_plan_abandoned") {} catch {}
                 address[] storage g = guarantors[id];
-                for (uint256 i = 0; i < g.length; i++) {
+                for (uint256 i = 0; i < g.length; ++i) {
                     try seer.punish(g[i], PENALTY_PLAN_FAILED_GUARANTOR, "guarantor_plan_failed") {} catch {}
                 }
             } else {
@@ -845,7 +845,7 @@ contract VFIDETermLoan is ReentrancyGuard {
                 try seer.punish(l.borrower, PENALTY_FULL_DEFAULT_2, "loan_default_no_effort") {} catch {}
                 // Guarantors: you vouched for this person. -10.0 each.
                 address[] storage g2 = guarantors[id];
-                for (uint256 i = 0; i < g2.length; i++) {
+                for (uint256 i = 0; i < g2.length; ++i) {
                     try seer.punish(g2[i], PENALTY_DEFAULT_GUARANTOR, "guarantor_default") {} catch {}
                 }
             }
@@ -908,7 +908,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         uint256 skippedThisRound = 0;
         address recipient = _settlementRecipient(l.lender);
 
-        for (uint256 i = 0; i < g.length; i++) {
+        for (uint256 i = 0; i < g.length; ++i) {
             uint256 alreadyTaken = guarantorExtracted[id][g[i]];
             if (alreadyTaken >= liabilityPer) continue; // Already fully extracted
 
@@ -925,7 +925,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             // current vault mapping. If the source is no longer valid, skip extraction.
             if (!_isValidGuarantorSource(g[i], source)) {
                 emit GuarantorExtractionSkipped(id, g[i], extractAmount);
-                skippedThisRound++;
+                ++skippedThisRound;
                 continue;
             }
 
@@ -934,7 +934,7 @@ contract VFIDETermLoan is ReentrancyGuard {
                 uint256 received = vfideToken.balanceOf(recipient) - balBefore;
                 if (received == 0) {
                     emit GuarantorExtractionSkipped(id, g[i], extractAmount);
-                    skippedThisRound++;
+                    ++skippedThisRound;
                     continue;
                 }
 
@@ -949,12 +949,12 @@ contract VFIDETermLoan is ReentrancyGuard {
                 totalThisRound += received;
                 // H-25 FIX: if guarantor has now paid their full share, clear their unresolved default.
                 if (nextExtracted >= liabilityPer && unresolvedDefaults[g[i]] > 0) {
-                    unresolvedDefaults[g[i]]--;
+                    --unresolvedDefaults[g[i]];
                 }
                 emit GuarantorExtracted(id, g[i], received, guarantorExtracted[id][g[i]]);
             } catch {
                 emit GuarantorExtractionSkipped(id, g[i], extractAmount);
-                skippedThisRound++;
+                ++skippedThisRound;
             }
         }
 
@@ -1002,12 +1002,12 @@ contract VFIDETermLoan is ReentrancyGuard {
         l.state = LoanState.REPAID;
 
         if (unresolvedDefaults[l.borrower] > 0) {
-            unresolvedDefaults[l.borrower]--;
+            --unresolvedDefaults[l.borrower];
         }
         address[] storage clearedGuarantors = guarantors[id];
-        for (uint256 i = 0; i < clearedGuarantors.length; i++) {
+        for (uint256 i = 0; i < clearedGuarantors.length; ++i) {
             if (unresolvedDefaults[clearedGuarantors[i]] > 0) {
-                unresolvedDefaults[clearedGuarantors[i]]--;
+                --unresolvedDefaults[clearedGuarantors[i]];
             }
         }
 
@@ -1031,7 +1031,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             // covering the default, regardless of whether the borrower
             // contributed any residual).
             address[] storage g = guarantors[id];
-            for (uint256 i = 0; i < g.length; i++) {
+            for (uint256 i = 0; i < g.length; ++i) {
                 try seer.reward(g[i], 50, "guarantor_relieved") {} catch {}
                 uint256 liabilityLeft = guarantorLiabilityEach[id] - guarantorExtracted[id][g[i]];
                 address source = guarantorVault[id][g[i]];
@@ -1097,7 +1097,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             // loans have committedLiability locked permanently. All other repayment paths already
             // call _releaseAllGuarantorCommitments after _closeLoan; this path was missing it.
             _releaseAllGuarantorCommitments(id);
-            totalLoans++;
+            ++totalLoans;
             totalVolume += l.principal;
             if (address(seer) != address(0)) {
                 try seer.reward(l.borrower, REWARD_ONTIME_BORROWER, "loan_revenue_repaid") {} catch {}
@@ -1112,8 +1112,8 @@ contract VFIDETermLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     function _closeLoan(Loan storage l) internal {
-        if (l.borrower != address(0)) activeLoanCount[l.borrower]--;
-        activeLoanCount[l.lender]--;
+        if (l.borrower != address(0)) --activeLoanCount[l.borrower];
+        --activeLoanCount[l.lender];
     }
 
     function _notifyFeeDistributor(uint256 amount) internal {
@@ -1123,7 +1123,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     function _releaseAllGuarantorCommitments(uint256 id) internal {
         address[] storage g = guarantors[id];
-        for (uint256 i = 0; i < g.length; i++) {
+        for (uint256 i = 0; i < g.length; ++i) {
             address guarantor = g[i];
             uint256 remaining = guarantorCommittedLiability[id][guarantor];
             if (remaining == 0) continue;

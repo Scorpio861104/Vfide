@@ -361,9 +361,9 @@ contract BadgeManager {
     // slither-disable-next-line reentrancy-events
     function recordCommerceTx(address user, bool successful) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
-        stats.commerceTxCount++;
+        ++stats.commerceTxCount;
         if (successful) {
-            stats.successfulTrades++;
+            ++stats.successfulTrades;
         }
         
         _updateActivity(user);
@@ -379,7 +379,7 @@ contract BadgeManager {
     // slither-disable-next-line reentrancy-events
     function recordGovernanceVote(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
-        stats.governanceVotes++;
+        ++stats.governanceVotes;
         
         _updateActivity(user);
         _checkBadgeEligibility(user);
@@ -394,7 +394,7 @@ contract BadgeManager {
     // slither-disable-next-line reentrancy-events
     function recordEndorsement(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
-        stats.endorsementsReceived++;
+        ++stats.endorsementsReceived;
         
         _checkBadgeEligibility(user);
 
@@ -409,9 +409,9 @@ contract BadgeManager {
     // slither-disable-next-line reentrancy-events
     function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
-        stats.referralsMade++;
+        ++stats.referralsMade;
         if (qualified) {
-            stats.referralsQualified++;
+            ++stats.referralsQualified;
         }
         
         _checkBadgeEligibility(referrer);
@@ -426,7 +426,7 @@ contract BadgeManager {
     // slither-disable-next-line reentrancy-events
     function recordFraudReport(address reporter) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[reporter];
-        stats.fraudReports++;
+        ++stats.fraudReports;
         
         _checkBadgeEligibility(reporter);
 
@@ -440,7 +440,7 @@ contract BadgeManager {
     // slither-disable-next-line reentrancy-events
     function recordEducationalContent(address creator) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[creator];
-        stats.educationalContent++;
+        ++stats.educationalContent;
         
         _checkBadgeEligibility(creator);
 
@@ -483,7 +483,7 @@ contract BadgeManager {
         if (pioneerCount >= MAX_PIONEERS) return;
         if (seer.hasBadge(user, BadgeRegistry.PIONEER)) return;
         
-        pioneerCount++;
+        ++pioneerCount;
         awardBadge(user, BadgeRegistry.PIONEER);
     }
     
@@ -496,7 +496,7 @@ contract BadgeManager {
         if (seer.hasBadge(user, BadgeRegistry.FOUNDING_MEMBER)) return;
         if (seer.getScore(user) < 8000) return; // 800 on 0-10000 scale
         
-        foundingMemberCount++;
+        ++foundingMemberCount;
         awardBadge(user, BadgeRegistry.FOUNDING_MEMBER);
     }
     
@@ -525,7 +525,7 @@ contract BadgeManager {
             return;
         } else if (currentDay == stats.lastActivityDay + 1) {
             // Consecutive day, increment streak
-            stats.consecutiveDays++;
+            ++stats.consecutiveDays;
             stats.lastActivityDay = currentDay;
         } else {
             // Streak broken
@@ -554,7 +554,7 @@ contract BadgeManager {
             BadgeRegistry.MENTOR
         ];
 
-        for (uint256 i = 0; i < badges.length; i++) {
+        for (uint256 i = 0; i < badges.length; ++i) {
             _checkAndAwardBadge(user, badges[i]);
         }
     }
