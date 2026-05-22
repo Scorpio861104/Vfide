@@ -143,13 +143,7 @@ contract CommerceEscrow {
     /// @param merchant merchant
     /// @param amount amount
     /// @param metaHash metaHash
-    event EscrowOpened(
-        uint256 indexed id,
-        address indexed buyer,
-        address indexed merchant,
-        uint256 amount,
-        bytes32 metaHash
-    );
+    event EscrowOpened(uint256 indexed id, address indexed buyer, address indexed merchant, uint256 amount, bytes32 metaHash);
     /// @notice EscrowFunded
     /// @param id id
     /// @param buyer buyer
@@ -189,12 +183,7 @@ contract CommerceEscrow {
     /// @param _hub _hub
     /// @param _merchants _merchants
     constructor(address _dao, address _token, address _hub, address _merchants) {
-        if (
-            _dao == address(0) ||
-            _token == address(0) ||
-            _hub == address(0) ||
-            _merchants == address(0)
-        ) revert COM_Zero();
+        if (_dao == address(0) || _token == address(0) || _hub == address(0) || _merchants == address(0)) revert COM_Zero();
         dao = _dao;
         token = IERC20(_token);
         vaultHub = IVaultHub_COM(_hub);
@@ -215,9 +204,7 @@ contract CommerceEscrow {
      * @return buyerVault buyerVault
      * @return spender spender
      */
-    function getRequiredApproval(
-        address buyerOwner
-    ) external view returns (address buyerVault, address spender) {
+    function getRequiredApproval(address buyerOwner) external view returns (address buyerVault, address spender) {
         buyerVault = vaultHub.vaultOf(buyerOwner);
         spender = address(this);
     }
@@ -227,11 +214,7 @@ contract CommerceEscrow {
     /// @param amount amount
     /// @param metaHash metaHash
     /// @return id id
-    function open(
-        address merchantOwner,
-        uint256 amount,
-        bytes32 metaHash
-    ) external nonReentrant returns (uint256 id) {
+    function open(address merchantOwner, uint256 amount, bytes32 metaHash) external nonReentrant returns (uint256 id) {
         if (amount == 0) revert COM_BadAmount();
         MerchantRegistry.Merchant memory m = merchants.info(merchantOwner);
         if (m.status == MerchantRegistry.Status.NONE) revert COM_NotMerchant();
@@ -357,8 +340,7 @@ contract CommerceEscrow {
         // Defense in depth: only pull funds from the buyer vault that still belongs
         // to the escrow buyer owner at funding time.
         address currentBuyerVault = vaultHub.vaultOf(e.buyerOwner);
-        if (currentBuyerVault == address(0) || currentBuyerVault != e.buyerVault)
-            revert COM_NotAllowed();
+        if (currentBuyerVault == address(0) || currentBuyerVault != e.buyerVault) revert COM_NotAllowed();
 
         e.state = State.FUNDED;
         escrowDeposited[id] = e.amount;
@@ -436,10 +418,7 @@ contract CommerceEscrow {
 
         address buyerVaultLive = vaultHub.vaultOf(e.buyerOwner);
         address merchantVaultLive = vaultHub.vaultOf(e.merchantOwner);
-        if (
-            !(buyerVaultLive != address(0) && vaultHub.isInMemorialState(buyerVaultLive)) &&
-            !(merchantVaultLive != address(0) && vaultHub.isInMemorialState(merchantVaultLive))
-        ) {
+        if (!(buyerVaultLive != address(0) && vaultHub.isInMemorialState(buyerVaultLive)) && !(merchantVaultLive != address(0) && vaultHub.isInMemorialState(merchantVaultLive))) {
             revert COM_NotInheritanceActive();
         }
 

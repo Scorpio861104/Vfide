@@ -16,9 +16,7 @@ contract CircuitBreaker {
     /// @notice RECORDER_ROLE
     bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
     /// @notice SUSPICIOUS_ACTIVITY_REPORTER_ROLE
-    bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256(
-        "SUSPICIOUS_ACTIVITY_REPORTER_ROLE"
-    );
+    bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
 
     /// @notice notTriggered
     modifier notTriggered() {
@@ -74,22 +72,14 @@ contract CircuitBreaker {
     constructor(address _emergencyController, address _priceOracle) {
         emergencyController = _emergencyController;
         priceOracle = _priceOracle;
-        config = BreakerConfig({
-            dailyVolumeThreshold: 50,
-            priceDropThreshold: 20,
-            suspiciousActivityThreshold: 10
-        });
+        config = BreakerConfig({dailyVolumeThreshold: 50, priceDropThreshold: 20, suspiciousActivityThreshold: 10});
     }
 
     /// @notice configure
     /// @param _dailyVolumeThreshold _dailyVolumeThreshold
     /// @param _priceDropThreshold _priceDropThreshold
     /// @param _suspiciousActivityThreshold _suspiciousActivityThreshold
-    function configure(
-        uint256 _dailyVolumeThreshold,
-        uint256 _priceDropThreshold,
-        uint256 _suspiciousActivityThreshold
-    ) external {
+    function configure(uint256 _dailyVolumeThreshold, uint256 _priceDropThreshold, uint256 _suspiciousActivityThreshold) external {
         require(_dailyVolumeThreshold <= 100, "CircuitBreaker: invalid volume threshold");
         config.dailyVolumeThreshold = _dailyVolumeThreshold;
         config.priceDropThreshold = _priceDropThreshold;
@@ -117,11 +107,7 @@ contract CircuitBreaker {
     }
 
     /// @notice recordSuspiciousActivity
-    function recordSuspiciousActivity()
-        external
-        onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE)
-        notTriggered
-    {
+    function recordSuspiciousActivity() external onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE) notTriggered {
         if (block.timestamp >= monitoring.lastActivityReset + 24 hours) {
             monitoring.suspiciousActivityCount24h = 0;
             monitoring.lastActivityReset = block.timestamp;

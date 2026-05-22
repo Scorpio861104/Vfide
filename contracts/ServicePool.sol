@@ -130,36 +130,20 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @param participant participant
     /// @param addedScore addedScore
     /// @param newTotal newTotal
-    event ContributionRecorded(
-        uint256 indexed period,
-        address indexed participant,
-        uint256 addedScore,
-        uint256 newTotal
-    );
+    event ContributionRecorded(uint256 indexed period, address indexed participant, uint256 addedScore, uint256 newTotal);
     /// @notice PeriodFinalized
     /// @param period period
     /// @param participantCount participantCount
     /// @param totalScore totalScore
     /// @param poolAmount poolAmount
-    event PeriodFinalized(
-        uint256 indexed period,
-        uint256 participantCount,
-        uint256 totalScore,
-        uint256 poolAmount
-    );
+    event PeriodFinalized(uint256 indexed period, uint256 participantCount, uint256 totalScore, uint256 poolAmount);
     /// @notice PaymentClaimed
     /// @param period period
     /// @param participant participant
     /// @param amount amount
     /// @param participantScore participantScore
     /// @param totalScore totalScore
-    event PaymentClaimed(
-        uint256 indexed period,
-        address indexed participant,
-        uint256 amount,
-        uint256 participantScore,
-        uint256 totalScore
-    );
+    event PaymentClaimed(uint256 indexed period, address indexed participant, uint256 amount, uint256 participantScore, uint256 totalScore);
     /// @notice FundingReceived
     /// @param amount amount
     /// @param newBalance newBalance
@@ -256,12 +240,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @param _admin _admin
     /// @param _maxParticipants _maxParticipants
     /// @param _maxPayoutPerPeriod _maxPayoutPerPeriod
-    constructor(
-        address _token,
-        address _admin,
-        uint256 _maxParticipants,
-        uint256 _maxPayoutPerPeriod
-    ) {
+    constructor(address _token, address _admin, uint256 _maxParticipants, uint256 _maxPayoutPerPeriod) {
         if (_token == address(0) || _admin == address(0)) revert ZeroAddress();
 
         vfideToken = IERC20(_token);
@@ -299,8 +278,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
 
         // Register participant if new this period
         if (!_isParticipant[currentPeriod][participant]) {
-            if (_participants[currentPeriod].length >= maxParticipants)
-                revert MaxParticipantsReached();
+            if (_participants[currentPeriod].length >= maxParticipants) revert MaxParticipantsReached();
             _participants[currentPeriod].push(participant);
             _isParticipant[currentPeriod][participant] = true;
         }
@@ -308,12 +286,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         scores[currentPeriod][participant] += score;
         totalScores[currentPeriod] += score;
 
-        emit ContributionRecorded(
-            currentPeriod,
-            participant,
-            score,
-            scores[currentPeriod][participant]
-        );
+        emit ContributionRecorded(currentPeriod, participant, score, scores[currentPeriod][participant]);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -402,26 +375,13 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         for (uint256 i = 0; i < periods.length; ) {
             uint256 period = periods[i];
 
-            if (
-                periodFinalized[period] &&
-                !periodSwept[period] &&
-                !claimed[period][msg.sender] &&
-                scores[period][msg.sender] > 0 &&
-                periodPool[period] > 0
-            ) {
-                uint256 payment =
-                    (periodPool[period] * scores[period][msg.sender]) / totalScores[period];
+            if (periodFinalized[period] && !periodSwept[period] && !claimed[period][msg.sender] && scores[period][msg.sender] > 0 && periodPool[period] > 0) {
+                uint256 payment = (periodPool[period] * scores[period][msg.sender]) / totalScores[period];
                 if (payment > 0) {
                     claimed[period][msg.sender] = true;
                     periodClaimedTotal[period] += payment;
                     totalPayment += payment;
-                    emit PaymentClaimed(
-                        period,
-                        msg.sender,
-                        payment,
-                        scores[period][msg.sender],
-                        totalScores[period]
-                    );
+                    emit PaymentClaimed(period, msg.sender, payment, scores[period][msg.sender], totalScores[period]);
                 }
             }
 
@@ -442,10 +402,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
     /// @dev Keeps `totalCommitted` aligned with actual outstanding obligations.
     /// @param periods periods
     /// @param to to
-    function sweepUnclaimed(
-        uint256[] calldata periods,
-        address to
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
+    function sweepUnclaimed(uint256[] calldata periods, address to) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         if (to == address(0)) revert ZeroAddress();
         require(periods.length <= 100, "Batch too large");
 
@@ -454,12 +411,7 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
         for (uint256 i = 0; i < periods.length; ) {
             uint256 period = periods[i];
 
-            if (
-                periodFinalized[period] &&
-                !periodSwept[period] &&
-                periodFinalizedAt[period] > 0 &&
-                block.timestamp >= periodFinalizedAt[period] + UNCLAIMED_SWEEP_DELAY
-            ) {
+            if (periodFinalized[period] && !periodSwept[period] && periodFinalizedAt[period] > 0 && block.timestamp >= periodFinalizedAt[period] + UNCLAIMED_SWEEP_DELAY) {
                 uint256 pool = periodPool[period];
                 uint256 claimedTotal = periodClaimedTotal[period];
                 uint256 outstanding = pool > claimedTotal ? pool - claimedTotal : 0;

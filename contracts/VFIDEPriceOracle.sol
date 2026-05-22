@@ -21,15 +21,7 @@ interface IUniswapV3PoolLite {
     /// @param secondsAgos secondsAgos
     /// @return tickCumulatives tickCumulatives
     /// @return secondsPerLiquidityCumulativeX128s secondsPerLiquidityCumulativeX128s
-    function observe(
-        uint32[] calldata secondsAgos
-    )
-        external
-        view
-        returns (
-            int56[] memory tickCumulatives,
-            uint160[] memory secondsPerLiquidityCumulativeX128s
-        );
+    function observe(uint32[] calldata secondsAgos) external view returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s);
     /// @notice slot0
     /// @return sqrtPriceX96 sqrtPriceX96
     /// @return tick tick
@@ -41,15 +33,7 @@ interface IUniswapV3PoolLite {
     function slot0()
         external
         view
-        returns (
-            uint160 sqrtPriceX96,
-            int24 tick,
-            uint16 observationIndex,
-            uint16 observationCardinality,
-            uint16 observationCardinalityNext,
-            uint8 feeProtocol,
-            bool unlocked
-        );
+        returns (uint160 sqrtPriceX96, int24 tick, uint16 observationIndex, uint16 observationCardinality, uint16 observationCardinalityNext, uint8 feeProtocol, bool unlocked);
 }
 
 /// @notice IERC20DecimalsOracle
@@ -224,13 +208,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @param _uniswapPool Uniswap V3 pool address
      * @param _owner Owner address
      */
-    constructor(
-        address _vfideToken,
-        address _quoteToken,
-        address _chainlinkFeed,
-        address _uniswapPool,
-        address _owner
-    ) {
+    constructor(address _vfideToken, address _quoteToken, address _chainlinkFeed, address _uniswapPool, address _owner) {
         require(_vfideToken != address(0), "Invalid VFIDE token");
         require(_quoteToken != address(0), "Invalid quote token");
         require(_owner != address(0), "Invalid owner");
@@ -303,13 +281,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             return (0, PriceSource.CHAINLINK);
         }
 
-        try chainlinkFeed.latestRoundData() returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) {
+        try chainlinkFeed.latestRoundData() returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
             // Reject invalid rounds with missing timestamps
             if (startedAt == 0 || updatedAt == 0) {
                 return (0, PriceSource.CHAINLINK);
@@ -387,10 +359,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
         int56[] memory tickCumulatives = new int56[](0);
         // slither-disable-next-line unused-return  // 2nd tuple element (secondsPerLiquidityCumulativeX128) intentionally ignored
-        try pool.observe(secondsAgos) returns (
-            int56[] memory observedTickCumulatives,
-            uint160[] memory
-        ) {
+        try pool.observe(secondsAgos) returns (int56[] memory observedTickCumulatives, uint160[] memory) {
             tickCumulatives = observedTickCumulatives;
         } catch {
             return (0, PriceSource.UNISWAP);
@@ -437,26 +406,15 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     /// @param baseToken baseToken
     /// @param quoteToken_ quoteToken_
     /// @return quoteAmount quoteAmount
-    function _getQuoteAtTick(
-        int24 tick,
-        uint128 baseAmount,
-        address baseToken,
-        address quoteToken_
-    ) internal pure returns (uint256 quoteAmount) {
+    function _getQuoteAtTick(int24 tick, uint128 baseAmount, address baseToken, address quoteToken_) internal pure returns (uint256 quoteAmount) {
         uint160 sqrtRatioX96 = TickMath.getSqrtRatioAtTick(tick);
 
         if (sqrtRatioX96 <= type(uint128).max) {
             uint256 ratioX192 = uint256(sqrtRatioX96) * uint256(sqrtRatioX96);
-            quoteAmount =
-                baseToken < quoteToken_
-                    ? FullMath.mulDiv(ratioX192, baseAmount, 1 << 192)
-                    : FullMath.mulDiv(1 << 192, baseAmount, ratioX192);
+            quoteAmount = baseToken < quoteToken_ ? FullMath.mulDiv(ratioX192, baseAmount, 1 << 192) : FullMath.mulDiv(1 << 192, baseAmount, ratioX192);
         } else {
             uint256 ratioX128 = FullMath.mulDiv(sqrtRatioX96, sqrtRatioX96, 1 << 64);
-            quoteAmount =
-                baseToken < quoteToken_
-                    ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128)
-                    : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
+            quoteAmount = baseToken < quoteToken_ ? FullMath.mulDiv(ratioX128, baseAmount, 1 << 128) : FullMath.mulDiv(1 << 128, baseAmount, ratioX128);
         }
     }
 
@@ -510,11 +468,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
             historyStartIndex = (historyStartIndex + 1) % MAX_HISTORY;
         }
 
-        historicalPrices[writeIndex] = PricePoint({
-            price: newPrice,
-            timestamp: block.timestamp,
-            source: source
-        });
+        historicalPrices[writeIndex] = PricePoint({price: newPrice, timestamp: block.timestamp, source: source});
 
         emit PriceUpdated(newPrice, source, block.timestamp);
     }
@@ -525,10 +479,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @param newPrice New price
      * @return deviation Deviation in basis points
      */
-    function _calculateDeviation(
-        uint256 oldPrice,
-        uint256 newPrice
-    ) internal pure returns (uint256 deviation) {
+    function _calculateDeviation(uint256 oldPrice, uint256 newPrice) internal pure returns (uint256 deviation) {
         uint256 diff = oldPrice > newPrice ? oldPrice - newPrice : newPrice - oldPrice;
 
         uint256 referencePrice = oldPrice < newPrice ? oldPrice : newPrice;
@@ -564,10 +515,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      */
     function applyChainlinkFeed() external onlyOwner {
         require(pendingChainlinkFeedAt != 0, "VFIDEPriceOracle: no pending update");
-        require(
-            block.timestamp >= pendingChainlinkFeedAt,
-            "VFIDEPriceOracle: timelock not elapsed"
-        );
+        require(block.timestamp >= pendingChainlinkFeedAt, "VFIDEPriceOracle: timelock not elapsed");
         address oldFeed = address(chainlinkFeed);
         chainlinkFeed = AggregatorV3Interface(pendingChainlinkFeed);
         emit ChainlinkFeedUpdated(oldFeed, pendingChainlinkFeed);
@@ -640,8 +588,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      */
     function getHistoricalPrice(uint256 index) external view returns (PricePoint memory) {
         require(index < pricePointCount, "Invalid index");
-        uint256 storageIndex =
-            pricePointCount < MAX_HISTORY ? index : (historyStartIndex + index) % MAX_HISTORY;
+        uint256 storageIndex = pricePointCount < MAX_HISTORY ? index : (historyStartIndex + index) % MAX_HISTORY;
         return historicalPrices[storageIndex];
     }
 
@@ -656,10 +603,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
         for (uint256 i = 0; i < returnCount; ++i) {
             uint256 relativeIndex = pricePointCount - returnCount + i;
-            uint256 storageIndex =
-                pricePointCount < MAX_HISTORY
-                    ? relativeIndex
-                    : (historyStartIndex + relativeIndex) % MAX_HISTORY;
+            uint256 storageIndex = pricePointCount < MAX_HISTORY ? relativeIndex : (historyStartIndex + relativeIndex) % MAX_HISTORY;
             prices[i] = historicalPrices[storageIndex];
         }
 

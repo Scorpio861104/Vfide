@@ -51,12 +51,7 @@ interface IProofLedger_COM {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function logEvent(
-        address who,
-        string calldata action,
-        uint256 amount,
-        string calldata note
-    ) external;
+    function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
 }
 
 // ─── File-scope errors. All active errors used by MerchantRegistry AND
@@ -188,8 +183,7 @@ contract MerchantRegistry {
     /// @param _seer _seer
     /// @param _ledger _ledger
     constructor(address _dao, address _token, address _hub, address _seer, address _ledger) {
-        if (_dao == address(0) || _token == address(0) || _hub == address(0) || _seer == address(0))
-            revert COM_Zero();
+        if (_dao == address(0) || _token == address(0) || _hub == address(0) || _seer == address(0)) revert COM_Zero();
         dao = _dao;
         token = IERC20(_token);
         vaultHub = IVaultHub_COM(_hub);
@@ -209,14 +203,7 @@ contract MerchantRegistry {
         uint16 score = seer.getCachedScore(msg.sender);
         if (score < minScore) revert COM_NotAllowed();
 
-        merchants[msg.sender] = Merchant({
-            owner: msg.sender,
-            vault: v,
-            status: Status.ACTIVE,
-            refunds: 0,
-            disputes: 0,
-            metaHash: metaHash
-        });
+        merchants[msg.sender] = Merchant({owner: msg.sender, vault: v, status: Status.ACTIVE, refunds: 0, disputes: 0, metaHash: metaHash});
 
         try ledger.logSystemEvent(msg.sender, "MerchantAdded", msg.sender) {} catch {}
         emit MerchantAdded(msg.sender, v, metaHash);

@@ -61,13 +61,7 @@ interface IERC3156FlashBorrower {
     /// @param fee fee
     /// @param data data
     /// @return _bytes32 _bytes32
-    function onFlashLoan(
-        address initiator,
-        address token,
-        uint256 amount,
-        uint256 fee,
-        bytes calldata data
-    ) external returns (bytes32);
+    function onFlashLoan(address initiator, address token, uint256 amount, uint256 fee, bytes calldata data) external returns (bytes32);
 }
 
 /// @dev External query interface for system exemption checks.
@@ -308,14 +302,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @param amount amount
     /// @param lenderFee lenderFee
     /// @param protocolFee protocolFee
-    event FlashLoanExecuted(
-        address indexed lender,
-        address indexed borrower,
-        address receiver,
-        uint256 amount,
-        uint256 lenderFee,
-        uint256 protocolFee
-    );
+    event FlashLoanExecuted(address indexed lender, address indexed borrower, address receiver, uint256 amount, uint256 lenderFee, uint256 protocolFee);
     /// @notice Paused
     /// @param isPaused isPaused
     event Paused(bool isPaused);
@@ -425,10 +412,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     function confirmSystemExempt() external {
         require(msg.sender == dao, "FL: not DAO");
         require(!systemExemptConfirmed, "FL: already confirmed");
-        require(
-            ISystemExemptQuery(address(vfideToken)).systemExempt(address(this)),
-            "FL: not yet exempt"
-        );
+        require(ISystemExemptQuery(address(vfideToken)).systemExempt(address(this)), "FL: not yet exempt");
         systemExemptConfirmed = true;
         emit SystemExemptConfirmed();
     }
@@ -524,13 +508,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
      * Lender funds are mathematically impossible to lose.
      * @return _bool _bool
      */
-    function flashLoan(
-        address lender,
-        IERC3156FlashBorrower receiver,
-        uint256 amount,
-        uint256 maxFeeBps,
-        bytes calldata data
-    ) external nonReentrant whenNotPaused returns (bool) {
+    function flashLoan(address lender, IERC3156FlashBorrower receiver, uint256 amount, uint256 maxFeeBps, bytes calldata data) external nonReentrant whenNotPaused returns (bool) {
         // SLITHER FALSE POSITIVES (suppressed via slither-disable-start below):
         //
         //   arbitrary-send-erc20:
@@ -564,8 +542,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         if (info.feeBps > maxFeeBps) revert FL_FeeExceeded();
 
         // Anti-spam cooldown
-        if (block.timestamp < lastFlashLoan[msg.sender] + BORROWER_COOLDOWN)
-            revert FL_CooldownActive();
+        if (block.timestamp < lastFlashLoan[msg.sender] + BORROWER_COOLDOWN) revert FL_CooldownActive();
         lastFlashLoan[msg.sender] = block.timestamp;
 
         // Fee calculation: lender's rate applied to loan amount
@@ -582,20 +559,13 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         vfideToken.safeTransfer(address(receiver), amount);
 
         // 2. Callback — borrower executes strategy
-        bytes32 cbResult = receiver.onFlashLoan(
-            msg.sender,
-            address(vfideToken),
-            amount,
-            totalFee,
-            data
-        );
+        bytes32 cbResult = receiver.onFlashLoan(msg.sender, address(vfideToken), amount, totalFee, data);
         if (cbResult != CALLBACK_SUCCESS) revert FL_CallbackFailed();
 
         // 3. Pull repayment
         uint256 balBefore = vfideToken.balanceOf(address(this));
         vfideToken.safeTransferFrom(address(receiver), address(this), amount + totalFee);
-        if (vfideToken.balanceOf(address(this)) < balBefore + amount + totalFee)
-            revert FL_InsufficientRepayment();
+        if (vfideToken.balanceOf(address(this)) < balBefore + amount + totalFee) revert FL_InsufficientRepayment();
 
         // ── SETTLEMENT ───────────────────────────────────────────
 
@@ -632,14 +602,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
             }
         }
 
-        emit FlashLoanExecuted(
-            lender,
-            msg.sender,
-            address(receiver),
-            amount,
-            lenderFee,
-            protocolFee
-        );
+        emit FlashLoanExecuted(lender, msg.sender, address(receiver), amount, lenderFee, protocolFee);
         return true;
         // slither-disable-end arbitrary-send-erc20,reentrancy-balance,reentrancy-no-eth,reentrancy-benign,reentrancy-events
     }
@@ -717,31 +680,9 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @return loans loans
     /// @return isPaused isPaused
     /// @return isRegistered isRegistered
-    function getLenderInfo(
-        address lender
-    )
-        external
-        view
-        returns (
-            uint256 balance,
-            uint256 feeBps,
-            uint256 earned,
-            uint256 volume,
-            uint256 loans,
-            bool isPaused,
-            bool isRegistered
-        )
-    {
+    function getLenderInfo(address lender) external view returns (uint256 balance, uint256 feeBps, uint256 earned, uint256 volume, uint256 loans, bool isPaused, bool isRegistered) {
         LenderInfo storage i = lenders[lender];
-        return (
-            i.balance,
-            i.feeBps,
-            i.totalEarned,
-            i.totalVolume,
-            i.loanCount,
-            i.paused,
-            i.registered
-        );
+        return (i.balance, i.feeBps, i.totalEarned, i.totalVolume, i.loanCount, i.paused, i.registered);
     }
 
     /// @notice Number of registered lenders
@@ -754,10 +695,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     /// @param offset offset
     /// @param limit limit
     /// @return result result
-    function getLenders(
-        uint256 offset,
-        uint256 limit
-    ) external view returns (address[] memory result) {
+    function getLenders(uint256 offset, uint256 limit) external view returns (address[] memory result) {
         uint256 len = lenderList.length;
         if (offset >= len) return new address[](0);
         uint256 end = offset + limit;
@@ -880,10 +818,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     /// @notice Apply a pending feeDistributor change after the 48h timelock.
     function applyFeeDistributor() external onlyDAO {
-        require(
-            pendingFeeDistributorAt != 0 && block.timestamp >= pendingFeeDistributorAt,
-            "FL: timelock"
-        );
+        require(pendingFeeDistributorAt != 0 && block.timestamp >= pendingFeeDistributorAt, "FL: timelock");
         feeDistributor = pendingFeeDistributor;
         emit FeeDistributorSet(pendingFeeDistributor);
         delete pendingFeeDistributor;
@@ -909,10 +844,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     /// @notice applyFraudRegistry
     function applyFraudRegistry() external onlyDAO {
-        require(
-            pendingFraudRegistryAt != 0 && block.timestamp >= pendingFraudRegistryAt,
-            "FL: timelock"
-        );
+        require(pendingFraudRegistryAt != 0 && block.timestamp >= pendingFraudRegistryAt, "FL: timelock");
         fraudRegistry = pendingFraudRegistry;
         delete pendingFraudRegistry;
         delete pendingFraudRegistryAt;

@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {
-    LedgerLogFailed,
-    IVaultHub,
-    IProofLedger,
-    IERC20,
-    ReentrancyGuard,
-    SafeERC20
-} from "./SharedInterfaces.sol";
+import {LedgerLogFailed, IVaultHub, IProofLedger, IERC20, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
 /**
  * DevReserveVestingVault (immutable core; beneficiary-only pause; zkSync-ready)
@@ -128,21 +121,8 @@ contract DevReserveVestingVault is ReentrancyGuard {
     /// @param _ledger _ledger
     /// @param _allocation _allocation
     /// @param _dao _dao
-    constructor(
-        address _vfide,
-        address _beneficiary,
-        address _vaultHub,
-        address _ledger,
-        uint256 _allocation,
-        address _dao
-    ) {
-        if (
-            _vfide == address(0) ||
-            _beneficiary == address(0) ||
-            _vaultHub == address(0) ||
-            _dao == address(0) ||
-            _allocation == 0
-        ) revert DV_Zero();
+    constructor(address _vfide, address _beneficiary, address _vaultHub, address _ledger, uint256 _allocation, address _dao) {
+        if (_vfide == address(0) || _beneficiary == address(0) || _vaultHub == address(0) || _dao == address(0) || _allocation == 0) revert DV_Zero();
         if (_allocation != EXPECTED_ALLOCATION) revert DV_InvalidAllocation();
         VFIDE = _vfide;
         BENEFICIARY = _beneficiary;
@@ -350,11 +330,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
             cumulativeClaimed += amount;
             bool claimed = totalClaimed >= cumulativeClaimed;
 
-            milestones[i] = UnlockMilestone({
-                unlockTime: unlockTime,
-                amount: amount,
-                claimed: claimed
-            });
+            milestones[i] = UnlockMilestone({unlockTime: unlockTime, amount: amount, claimed: claimed});
         }
     }
 
@@ -436,12 +412,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(
-        address who,
-        string memory action,
-        uint256 amount,
-        string memory note
-    ) internal {
+    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (LEDGER != address(0)) {
             try IProofLedger(LEDGER).logEvent(who, action, amount, note) {} catch {
                 emit LedgerLogFailed(who, action);

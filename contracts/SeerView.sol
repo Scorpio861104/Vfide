@@ -47,10 +47,7 @@ interface ISeerViewTarget {
     /// @return expiry expiry
     /// @return weight weight
     /// @return timestamp timestamp
-    function endorsements(
-        address subject,
-        address endorser
-    ) external view returns (uint64 expiry, uint16 weight, uint64 timestamp);
+    function endorsements(address subject, address endorser) external view returns (uint64 expiry, uint16 weight, uint64 timestamp);
     /// @notice getEndorserCount
     /// @param subject subject
     /// @return _uint256 _uint256
@@ -96,10 +93,7 @@ interface ISeerSocialViewTarget {
     /// @return expiry expiry
     /// @return weight weight
     /// @return timestamp timestamp
-    function endorsements(
-        address subject,
-        address endorser
-    ) external view returns (uint64 expiry, uint16 weight, uint64 timestamp);
+    function endorsements(address subject, address endorser) external view returns (uint64 expiry, uint16 weight, uint64 timestamp);
     /// @notice getEndorserCount
     /// @param subject subject
     /// @return _uint256 _uint256
@@ -124,15 +118,7 @@ interface ISeerAutonomousMonitor {
     /// @return totalViolations totalViolations
     /// @return violationRate violationRate
     /// @return currentSensitivity currentSensitivity
-    function getNetworkHealth()
-        external
-        view
-        returns (
-            uint256 totalActions,
-            uint256 totalViolations,
-            uint256 violationRate,
-            uint16 currentSensitivity
-        );
+    function getNetworkHealth() external view returns (uint256 totalActions, uint256 totalViolations, uint256 violationRate, uint16 currentSensitivity);
 }
 
 /// @dev Minimal read interface for the ecosystem scheduler (EcosystemVault).
@@ -143,9 +129,7 @@ interface IEcosystemSchedulerView {
     /// @notice checkUpkeep
     /// @return upkeepNeeded upkeepNeeded
     /// @return performData performData
-    function checkUpkeep(
-        bytes calldata
-    ) external view returns (bool upkeepNeeded, bytes memory performData);
+    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
 }
 
 // ReentrancyGuard intentionally omitted: read-only analytics surface over Seer state.
@@ -166,19 +150,7 @@ contract SeerView {
     function getMentorInfo(
         address seer,
         address subject
-    )
-        external
-        view
-        returns (
-            bool isMentorUser,
-            address mentor,
-            uint16 menteeCount,
-            bool hasMentor,
-            bool canBecome,
-            uint16 minScore,
-            uint16 currentScore
-        )
-    {
+    ) external view returns (bool isMentorUser, address mentor, uint16 menteeCount, bool hasMentor, bool canBecome, uint16 minScore, uint16 currentScore) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         currentScore = target.getScore(subject);
 
@@ -195,15 +167,7 @@ contract SeerView {
             hasMentor = mentor != address(0);
             menteeCount = uint16(socialTarget.getMentees(subject).length);
             canBecome = !isMentorUser && currentScore >= minScore;
-            return (
-                isMentorUser,
-                mentor,
-                menteeCount,
-                hasMentor,
-                canBecome,
-                minScore,
-                currentScore
-            );
+            return (isMentorUser, mentor, menteeCount, hasMentor, canBecome, minScore, currentScore);
         }
 
         minScore = target.minScoreToMentor();
@@ -221,19 +185,7 @@ contract SeerView {
     /// @return weights weights
     /// @return expiries expiries
     /// @return timestamps timestamps
-    function getActiveEndorsements(
-        address seer,
-        address subject
-    )
-        external
-        view
-        returns (
-            address[] memory endorsers,
-            uint16[] memory weights,
-            uint64[] memory expiries,
-            uint64[] memory timestamps
-        )
-    {
+    function getActiveEndorsements(address seer, address subject) external view returns (address[] memory endorsers, uint16[] memory weights, uint64[] memory expiries, uint64[] memory timestamps) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         address social = address(0);
         try ISeerCoreSocialRef(seer).seerSocial() returns (address configuredSocial) {
@@ -241,20 +193,12 @@ contract SeerView {
         } catch {}
 
         bool useSocial = social != address(0);
-        uint256 total =
-            useSocial
-                ? ISeerSocialViewTarget(social).getEndorserCount(subject)
-                : target.getEndorserCount(subject);
+        uint256 total = useSocial ? ISeerSocialViewTarget(social).getEndorserCount(subject) : target.getEndorserCount(subject);
         uint256 activeCount = 0;
 
         for (uint256 i = 0; i < total; ++i) {
-            address endorser =
-                useSocial
-                    ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
-                    : target.getEndorserAt(subject, i);
-            (uint64 expiry, uint16 weight, ) = useSocial
-                ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
-                : target.endorsements(subject, endorser);
+            address endorser = useSocial ? ISeerSocialViewTarget(social).getEndorserAt(subject, i) : target.getEndorserAt(subject, i);
+            (uint64 expiry, uint16 weight, ) = useSocial ? ISeerSocialViewTarget(social).endorsements(subject, endorser) : target.endorsements(subject, endorser);
             if (expiry > block.timestamp && weight > 0) {
                 ++activeCount;
             }
@@ -267,13 +211,8 @@ contract SeerView {
 
         uint256 idx = 0;
         for (uint256 i = 0; i < total; ++i) {
-            address endorser =
-                useSocial
-                    ? ISeerSocialViewTarget(social).getEndorserAt(subject, i)
-                    : target.getEndorserAt(subject, i);
-            (uint64 expiry, uint16 weight, uint64 ts) = useSocial
-                ? ISeerSocialViewTarget(social).endorsements(subject, endorser)
-                : target.endorsements(subject, endorser);
+            address endorser = useSocial ? ISeerSocialViewTarget(social).getEndorserAt(subject, i) : target.getEndorserAt(subject, i);
+            (uint64 expiry, uint16 weight, uint64 ts) = useSocial ? ISeerSocialViewTarget(social).endorsements(subject, endorser) : target.endorsements(subject, endorser);
             if (expiry > block.timestamp && weight > 0) {
                 endorsers[idx] = endorser;
                 weights[idx] = weight;
@@ -288,10 +227,7 @@ contract SeerView {
     /// @param seer seer
     /// @param subjects subjects
     /// @return scores scores
-    function getScores(
-        address seer,
-        address[] calldata subjects
-    ) external view returns (uint16[] memory scores) {
+    function getScores(address seer, address[] calldata subjects) external view returns (uint16[] memory scores) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         uint256 len = subjects.length;
 
@@ -305,10 +241,7 @@ contract SeerView {
     /// @param seer seer
     /// @param subjects subjects
     /// @return scores scores
-    function getScoresBatch(
-        address seer,
-        address[] calldata subjects
-    ) external view returns (uint16[] memory scores) {
+    function getScoresBatch(address seer, address[] calldata subjects) external view returns (uint16[] memory scores) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         uint256 len = subjects.length;
         require(len > 0 && len <= 100, "SEER: invalid batch size");
@@ -326,14 +259,7 @@ contract SeerView {
     /// @return levelName levelName
     /// @return canVote canVote
     /// @return canBeMerchant canBeMerchant
-    function getTrustLevel(
-        address seer,
-        address subject
-    )
-        external
-        view
-        returns (uint8 level, string memory levelName, bool canVote, bool canBeMerchant)
-    {
+    function getTrustLevel(address seer, address subject) external view returns (uint8 level, string memory levelName, bool canVote, bool canBeMerchant) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         uint16 score = target.getScore(subject);
 
@@ -366,30 +292,14 @@ contract SeerView {
      * @return violationRate    Network violation rate (basis points, 0–10000).
      * @return sensitivity      Current pattern-detection sensitivity (0–100).
      */
-    function getMonitorStatus(
-        address seerAutonomous
-    )
-        external
-        view
-        returns (
-            address vault,
-            bool tasksReady,
-            uint8 tasksBitmask,
-            uint256 totalActions,
-            uint256 violationRate,
-            uint16 sensitivity
-        )
-    {
+    function getMonitorStatus(address seerAutonomous) external view returns (address vault, bool tasksReady, uint8 tasksBitmask, uint256 totalActions, uint256 violationRate, uint16 sensitivity) {
         ISeerAutonomousMonitor sa = ISeerAutonomousMonitor(seerAutonomous);
         vault = sa.ecosystemVault();
 
         (totalActions, , violationRate, sensitivity) = sa.getNetworkHealth();
 
         if (vault != address(0)) {
-            try IEcosystemSchedulerView(vault).checkUpkeep("") returns (
-                bool needed,
-                bytes memory performData
-            ) {
+            try IEcosystemSchedulerView(vault).checkUpkeep("") returns (bool needed, bytes memory performData) {
                 tasksReady = needed;
                 if (needed && performData.length >= 32) {
                     tasksBitmask = abi.decode(performData, (uint8));

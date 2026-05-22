@@ -35,23 +35,13 @@ contract RevenueSplitter is ReentrancyGuard {
     /// @param totalAmount totalAmount
     /// @param payeesSucceeded payeesSucceeded
     /// @param payeesFailed payeesFailed
-    event Distributed(
-        address indexed token,
-        uint256 totalAmount,
-        uint256 payeesSucceeded,
-        uint256 payeesFailed
-    );
+    event Distributed(address indexed token, uint256 totalAmount, uint256 payeesSucceeded, uint256 payeesFailed);
     /// @notice PayeeDistribution
     /// @param payee payee
     /// @param token token
     /// @param amount amount
     /// @param success success
-    event PayeeDistribution(
-        address indexed payee,
-        address indexed token,
-        uint256 amount,
-        bool success
-    );
+    event PayeeDistribution(address indexed payee, address indexed token, uint256 amount, bool success);
 
     /// @notice constructor
     /// @param _accounts _accounts
@@ -99,9 +89,7 @@ contract RevenueSplitter is ReentrancyGuard {
                 // Only increment distributed after a successful transfer.
                 // M-2 FIX: Low-level call for non-standard ERC20s (USDT)
                 // solhint-disable-next-line avoid-low-level-calls
-                (bool callOk, bytes memory returnData) = token.call(
-                    abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount)
-                );
+                (bool callOk, bytes memory returnData) = token.call(abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount));
                 bool success = callOk && (returnData.length == 0 || abi.decode(returnData, (bool)));
                 if (success) {
                     distributed += amount;
@@ -159,11 +147,7 @@ contract RevenueSplitter is ReentrancyGuard {
         }
         require(totalBps == 10000, "must equal 100%");
 
-        _pendingPayeesUpdate = PendingPayeesUpdate({
-            accounts: _accounts,
-            shares: _shares,
-            validFrom: block.timestamp + PAYEES_UPDATE_DELAY
-        });
+        _pendingPayeesUpdate = PendingPayeesUpdate({accounts: _accounts, shares: _shares, validFrom: block.timestamp + PAYEES_UPDATE_DELAY});
         hasPendingPayeesUpdate = true;
         emit PayeesUpdateProposed(block.timestamp + PAYEES_UPDATE_DELAY);
     }
@@ -177,12 +161,7 @@ contract RevenueSplitter is ReentrancyGuard {
         delete payees;
         totalShares = 0;
         for (uint256 i = 0; i < _pendingPayeesUpdate.accounts.length; ++i) {
-            payees.push(
-                Payee({
-                    account: _pendingPayeesUpdate.accounts[i],
-                    shareBps: _pendingPayeesUpdate.shares[i]
-                })
-            );
+            payees.push(Payee({account: _pendingPayeesUpdate.accounts[i], shareBps: _pendingPayeesUpdate.shares[i]}));
             totalShares += _pendingPayeesUpdate.shares[i];
         }
         hasPendingPayeesUpdate = false;

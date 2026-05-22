@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {
-    LedgerLogFailed,
-    IProofLedger,
-    Ownable,
-    ReentrancyGuard,
-    Pausable
-} from "./SharedInterfaces.sol";
+import {LedgerLogFailed, IProofLedger, Ownable, ReentrancyGuard, Pausable} from "./SharedInterfaces.sol";
 import {CardBoundVault} from "./vault/CardBoundVault.sol";
 import {CardBoundVaultDeployer} from "./vault/CardBoundVaultDeployer.sol";
 
@@ -196,25 +190,14 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param newWallet newWallet
     /// @param executeAfter executeAfter
     /// @param nonce nonce
-    event RecoveryRotationProposed(
-        address indexed vault,
-        address indexed newWallet,
-        uint64 executeAfter,
-        uint256 nonce
-    );
+    event RecoveryRotationProposed(address indexed vault, address indexed newWallet, uint64 executeAfter, uint256 nonce);
     /// @notice RecoveryRotationApproved
     /// @param vault vault
     /// @param approver approver
     /// @param newWallet newWallet
     /// @param approvals approvals
     /// @param nonce nonce
-    event RecoveryRotationApproved(
-        address indexed vault,
-        address indexed approver,
-        address indexed newWallet,
-        uint8 approvals,
-        uint256 nonce
-    );
+    event RecoveryRotationApproved(address indexed vault, address indexed approver, address indexed newWallet, uint8 approvals, uint256 nonce);
     /// @notice RecoveryRotationAborted
     /// @param vault vault
     /// @param owner owner
@@ -274,11 +257,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param _vfideToken _vfideToken
     /// @param _ledger _ledger
     /// @param _dao _dao
-    function setModules(
-        address _vfideToken,
-        address _ledger,
-        address _dao
-    ) external view onlyOwner {
+    function setModules(address _vfideToken, address _ledger, address _dao) external view onlyOwner {
         _vfideToken;
         _ledger;
         _dao;
@@ -337,8 +316,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Apply pending ProofLedger update after timelock.
     function applyProofLedger() external onlyOwner {
-        if (pendingProofLedgerAt_VH == 0 || block.timestamp < pendingProofLedgerAt_VH)
-            revert VH_Timelock();
+        if (pendingProofLedgerAt_VH == 0 || block.timestamp < pendingProofLedgerAt_VH) revert VH_Timelock();
         ledger = IProofLedger(pendingProofLedger_VH);
         delete pendingProofLedger_VH;
         delete pendingProofLedgerAt_VH;
@@ -410,8 +388,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Apply a pending recovery approver change after the 48-hour timelock.
     function applyRecoveryApprover() external onlyOwner {
-        if (pendingRecoveryApproverAt == 0 || block.timestamp < pendingRecoveryApproverAt)
-            revert VH_Timelock();
+        if (pendingRecoveryApproverAt == 0 || block.timestamp < pendingRecoveryApproverAt) revert VH_Timelock();
         address approver = pendingRecoveryApproverAddr;
         bool status = pendingRecoveryApproverStatus;
         isRecoveryApprover[approver] = status;
@@ -466,15 +443,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @return predicted predicted
     function predictVault(address owner_) public view returns (address predicted) {
         if (owner_ == address(0)) return address(0);
-        predicted = vaultDeployer.predict(
-            address(this),
-            vfideToken,
-            owner_,
-            CARD_GUARDIAN_THRESHOLD,
-            cardDefaultMaxPerTransfer,
-            cardDefaultDailyLimit,
-            address(ledger)
-        );
+        predicted = vaultDeployer.predict(address(this), vfideToken, owner_, CARD_GUARDIAN_THRESHOLD, cardDefaultMaxPerTransfer, cardDefaultDailyLimit, address(ledger));
     }
 
     // ——— Legacy function for compatibility
@@ -517,15 +486,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         vault = vaultOf[owner_];
         if (vault != address(0)) return vault;
 
-        vault = vaultDeployer.deploy(
-            address(this),
-            vfideToken,
-            owner_,
-            CARD_GUARDIAN_THRESHOLD,
-            cardDefaultMaxPerTransfer,
-            cardDefaultDailyLimit,
-            address(ledger)
-        );
+        vault = vaultDeployer.deploy(address(this), vfideToken, owner_, CARD_GUARDIAN_THRESHOLD, cardDefaultMaxPerTransfer, cardDefaultDailyLimit, address(ledger));
 
         vaultOf[owner_] = vault;
         ownerOfVault[vault] = owner_;
@@ -608,11 +569,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param vault vault
     /// @param newWallet newWallet
     /// @param recoveryContract recoveryContract
-    event RecoveryRotationRequested(
-        address indexed vault,
-        address indexed newWallet,
-        address indexed recoveryContract
-    );
+    event RecoveryRotationRequested(address indexed vault, address indexed newWallet, address indexed recoveryContract);
     /// @notice GuardianSetupInvalidated
     /// @param vault vault
     event GuardianSetupInvalidated(address indexed vault);
@@ -632,9 +589,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @return isExpired True if the grace period has elapsed without setup completion.
     /// @return isComplete True if guardian setup has already been completed.
     /// @param vault vault
-    function guardianSetupTimeRemaining(
-        address vault
-    ) external view returns (uint256 remaining, bool isExpired, bool isComplete) {
+    function guardianSetupTimeRemaining(address vault) external view returns (uint256 remaining, bool isExpired, bool isComplete) {
         isComplete = guardianSetupComplete[vault];
         if (isComplete) return (0, false, true);
         uint256 created = vaultCreatedAt[vault];
@@ -662,10 +617,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice executeRecoveryRotation
     /// @param vault vault
     /// @param newWallet newWallet
-    function executeRecoveryRotation(
-        address vault,
-        address newWallet
-    ) external whenNotPaused nonReentrant {
+    function executeRecoveryRotation(address vault, address newWallet) external whenNotPaused nonReentrant {
         if (!isRecoveryApprover[msg.sender]) revert VH_NotRecoveryContract();
         // M-3 FIX: Block recovery if guardian setup grace period has expired without completion.
         // This prevents vaults without proper guardian coverage from silently allowing recovery.
@@ -682,10 +634,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
             recoveryApprovalCount[vault] = 0;
             emit RecoveryRotationProposed(vault, newWallet, recoveryUnlockTime[vault], nonce);
         } else {
-            if (
-                recoveryProposedOwner[vault] != newWallet ||
-                recoveryCandidateForNonce[vault][nonce] != newWallet
-            ) {
+            if (recoveryProposedOwner[vault] != newWallet || recoveryCandidateForNonce[vault][nonce] != newWallet) {
                 revert VH_RecoveryCandidateMismatch();
             }
         }
@@ -693,13 +642,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         if (!recoveryApprovals[vault][msg.sender][nonce]) {
             recoveryApprovals[vault][msg.sender][nonce] = true;
             ++recoveryApprovalCount[vault];
-            emit RecoveryRotationApproved(
-                vault,
-                msg.sender,
-                newWallet,
-                recoveryApprovalCount[vault],
-                nonce
-            );
+            emit RecoveryRotationApproved(vault, msg.sender, newWallet, recoveryApprovalCount[vault], nonce);
         }
 
         if (recoveryApprovalCount[vault] < ROTATION_APPROVALS_REQUIRED) {
@@ -759,10 +702,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param vault vault
     /// @param owner_ owner_
     /// @return _bool _bool
-    function _hasIndependentGuardian(
-        CardBoundVault vault,
-        address owner_
-    ) internal view returns (bool) {
+    function _hasIndependentGuardian(CardBoundVault vault, address owner_) internal view returns (bool) {
         uint256 reservedGuardians = 0;
         if (vault.isGuardian(owner_)) ++reservedGuardians;
         if (vault.isGuardian(dao)) ++reservedGuardians;
@@ -779,8 +719,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
      * @param _dailyLimit     New default daily transfer limit (must be > 0).
      */
     function setCardDefaultLimits(uint256 _maxPerTransfer, uint256 _dailyLimit) external onlyOwner {
-        if (_maxPerTransfer == 0 || _dailyLimit == 0 || _maxPerTransfer > _dailyLimit)
-            revert VH_InvalidLimits();
+        if (_maxPerTransfer == 0 || _dailyLimit == 0 || _maxPerTransfer > _dailyLimit) revert VH_InvalidLimits();
         if (pendingCardLimitsAt != 0) revert VH_PendingExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         pendingCardMaxPerTransfer = _maxPerTransfer;
@@ -824,12 +763,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(
-        address who,
-        string memory action,
-        uint256 amount,
-        string memory note
-    ) internal {
+    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
             try ledger.logEvent(who, action, amount, note) {} catch {
                 emit LedgerLogFailed(who, action);

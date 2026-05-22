@@ -388,13 +388,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param principal principal
     /// @param interestBps interestBps
     /// @param duration duration
-    event LoanCreated(
-        uint256 indexed id,
-        address indexed lender,
-        uint256 principal,
-        uint256 interestBps,
-        uint64 duration
-    );
+    event LoanCreated(uint256 indexed id, address indexed lender, uint256 principal, uint256 interestBps, uint64 duration);
     /// @notice LoanAccepted
     /// @param id id
     /// @param borrower borrower
@@ -439,41 +433,23 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param guarantor guarantor
     /// @param amount amount
     /// @param totalFromGuarantor totalFromGuarantor
-    event GuarantorExtracted(
-        uint256 indexed id,
-        address indexed guarantor,
-        uint256 amount,
-        uint256 totalFromGuarantor
-    );
+    event GuarantorExtracted(uint256 indexed id, address indexed guarantor, uint256 amount, uint256 totalFromGuarantor);
     /// @notice GuarantorExtractionSkipped
     /// @param id id
     /// @param guarantor guarantor
     /// @param attemptedAmount attemptedAmount
-    event GuarantorExtractionSkipped(
-        uint256 indexed id,
-        address indexed guarantor,
-        uint256 attemptedAmount
-    );
+    event GuarantorExtractionSkipped(uint256 indexed id, address indexed guarantor, uint256 attemptedAmount);
     /// @notice GuarantorExtractionRound
     /// @param id id
     /// @param extracted extracted
     /// @param skipped skipped
     /// @param guarantorCount guarantorCount
-    event GuarantorExtractionRound(
-        uint256 indexed id,
-        uint256 extracted,
-        uint256 skipped,
-        uint256 guarantorCount
-    );
+    event GuarantorExtractionRound(uint256 indexed id, uint256 extracted, uint256 skipped, uint256 guarantorCount);
     /// @notice GuarantorRelieved
     /// @param id id
     /// @param guarantor guarantor
     /// @param remainingLiability remainingLiability
-    event GuarantorRelieved(
-        uint256 indexed id,
-        address indexed guarantor,
-        uint256 remainingLiability
-    );
+    event GuarantorRelieved(uint256 indexed id, address indexed guarantor, uint256 remainingLiability);
     /// @notice LoanCancelled
     /// @param id id
     event LoanCancelled(uint256 indexed id);
@@ -484,11 +460,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param id id
     /// @param deceasedParty deceasedParty
     /// @param priorState priorState
-    event LoanSettledByInheritance(
-        uint256 indexed id,
-        address indexed deceasedParty,
-        uint8 priorState
-    );
+    event LoanSettledByInheritance(uint256 indexed id, address indexed deceasedParty, uint8 priorState);
     /// @notice RevenueAssignmentSet
     /// @param id id
     /// @param enabled enabled
@@ -544,11 +516,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param interestBps interestBps
     /// @param duration duration
     /// @return id id
-    function createLoan(
-        uint256 principal,
-        uint256 interestBps,
-        uint64 duration
-    ) external nonReentrant whenNotPaused returns (uint256 id) {
+    function createLoan(uint256 principal, uint256 interestBps, uint64 duration) external nonReentrant whenNotPaused returns (uint256 id) {
         if (principal == 0) revert TL_Zero();
         if (interestBps > MAX_INTEREST_BPS) revert TL_InvalidTerms();
         if (duration < MIN_DURATION || duration > MAX_DURATION) revert TL_InvalidTerms();
@@ -609,10 +577,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (msg.sender != l.lender && msg.sender != l.borrower) revert TL_NotBorrower();
         uint64 startedAt = cosigningStartedAt[id];
         require(startedAt != 0, "TL: cosigning timestamp missing");
-        require(
-            block.timestamp >= uint256(startedAt) + COSIGNING_TIMEOUT,
-            "TL: timeout not elapsed"
-        );
+        require(block.timestamp >= uint256(startedAt) + COSIGNING_TIMEOUT, "TL: timeout not elapsed");
 
         l.state = LoanState.CANCELLED;
 
@@ -671,11 +636,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
         LoanState prior = l.state;
         // Skip already-terminal states.
-        if (
-            prior == LoanState.REPAID ||
-            prior == LoanState.DEFAULTED ||
-            prior == LoanState.CANCELLED
-        ) {
+        if (prior == LoanState.REPAID || prior == LoanState.DEFAULTED || prior == LoanState.CANCELLED) {
             revert TL_WrongState();
         }
 
@@ -822,8 +783,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             }
         }
 
-        uint256 totalCommittedForSource =
-            committedLiabilityBySource[approvalSource] + liabilityPerGuarantor;
+        uint256 totalCommittedForSource = committedLiabilityBySource[approvalSource] + liabilityPerGuarantor;
         uint256 approved = vfideToken.allowance(approvalSource, address(this));
         require(approved >= totalCommittedForSource, "TL: guarantor must approve liability first");
         uint256 balance = vfideToken.balanceOf(approvalSource);
@@ -838,8 +798,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         ++signatureCount[id];
 
         // Recalculate per-guarantor liability (split evenly)
-        guarantorLiabilityEach[id] =
-            (l.principal * GUARANTOR_LIABILITY_PCT) / (100 * uint256(signatureCount[id]));
+        guarantorLiabilityEach[id] = (l.principal * GUARANTOR_LIABILITY_PCT) / (100 * uint256(signatureCount[id]));
 
         emit GuarantorSigned(id, msg.sender, signatureCount[id]);
 
@@ -932,11 +891,7 @@ contract VFIDETermLoan is ReentrancyGuard {
      *  in 4 installments over 2 months." This is good faith. The
      *  protocol recognizes the difference between can't-pay and won't-pay.
      */
-    function proposePaymentPlan(
-        uint256 id,
-        uint8 installments,
-        uint64 intervalDays
-    ) external nonReentrant {
+    function proposePaymentPlan(uint256 id, uint8 installments, uint64 intervalDays) external nonReentrant {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
         // Can propose during GRACE or if lender hasn't claimed default yet
@@ -1028,9 +983,7 @@ contract VFIDETermLoan is ReentrancyGuard {
 
             if (address(seer) != address(0)) {
                 // Moderate penalty — they missed the original deadline but made it right
-                try
-                    seer.punish(l.borrower, PENALTY_PLAN_COMPLETED, "loan_plan_completed")
-                {} catch {}
+                try seer.punish(l.borrower, PENALTY_PLAN_COMPLETED, "loan_plan_completed") {} catch {}
                 try seer.reward(l.lender, REWARD_ONTIME_LENDER, "loan_plan_facilitated") {} catch {}
             }
             emit PaymentPlanCompleted(id);
@@ -1103,14 +1056,10 @@ contract VFIDETermLoan is ReentrancyGuard {
                 // They tried, then stopped. Significant but not maximum.
                 // Two hits: -10.0 + -5.0 = -15.0 total
                 try seer.punish(l.borrower, PENALTY_PLAN_FAILED_1, "loan_plan_failed") {} catch {}
-                try
-                    seer.punish(l.borrower, PENALTY_PLAN_FAILED_2, "loan_plan_abandoned")
-                {} catch {}
+                try seer.punish(l.borrower, PENALTY_PLAN_FAILED_2, "loan_plan_abandoned") {} catch {}
                 address[] storage g = guarantors[id];
                 for (uint256 i = 0; i < g.length; ++i) {
-                    try
-                        seer.punish(g[i], PENALTY_PLAN_FAILED_GUARANTOR, "guarantor_plan_failed")
-                    {} catch {}
+                    try seer.punish(g[i], PENALTY_PLAN_FAILED_GUARANTOR, "guarantor_plan_failed") {} catch {}
                 }
             } else {
                 // Zero effort. Took money and disappeared. Maximum punishment.
@@ -1118,15 +1067,11 @@ contract VFIDETermLoan is ReentrancyGuard {
                 // A score 7,000 user drops to 5,000 (neutral). Years of trust erased.
                 // A score 8,000 user drops to 6,000. Fees quadruple.
                 try seer.punish(l.borrower, PENALTY_FULL_DEFAULT_1, "loan_default") {} catch {}
-                try
-                    seer.punish(l.borrower, PENALTY_FULL_DEFAULT_2, "loan_default_no_effort")
-                {} catch {}
+                try seer.punish(l.borrower, PENALTY_FULL_DEFAULT_2, "loan_default_no_effort") {} catch {}
                 // Guarantors: you vouched for this person. -10.0 each.
                 address[] storage g2 = guarantors[id];
                 for (uint256 i = 0; i < g2.length; ++i) {
-                    try
-                        seer.punish(g2[i], PENALTY_DEFAULT_GUARANTOR, "guarantor_default")
-                    {} catch {}
+                    try seer.punish(g2[i], PENALTY_DEFAULT_GUARANTOR, "guarantor_default") {} catch {}
                 }
             }
         }
@@ -1179,10 +1124,7 @@ contract VFIDETermLoan is ReentrancyGuard {
         if (l.state != LoanState.DEFAULTED) revert TL_WrongState();
 
         // Enforce extraction interval
-        if (
-            lastExtractionTime[id] != 0 &&
-            block.timestamp < lastExtractionTime[id] + EXTRACTION_INTERVAL
-        ) {
+        if (lastExtractionTime[id] != 0 && block.timestamp < lastExtractionTime[id] + EXTRACTION_INTERVAL) {
             revert TL_GraceNotExpired();
         }
 
@@ -1339,8 +1281,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     function setRevenueAssignment(uint256 id, bool enabled) external {
         Loan storage l = loans[id];
         if (l.borrower != msg.sender) revert TL_NotBorrower();
-        if (l.state != LoanState.ACTIVE && l.state != LoanState.RESTRUCTURED)
-            revert TL_WrongState();
+        if (l.state != LoanState.ACTIVE && l.state != LoanState.RESTRUCTURED) revert TL_WrongState();
         l.revenueAssignment = enabled;
         emit RevenueAssignmentSet(id, enabled);
     }
@@ -1353,12 +1294,8 @@ contract VFIDETermLoan is ReentrancyGuard {
         Loan storage l = loans[id];
         // H-25 FIX: Restrict callers to the borrower themselves or an allowlisted revenue router
         // (e.g., MerchantPortal). This prevents ProofScore manipulation via third-party repayment.
-        require(
-            msg.sender == l.borrower || isAuthorizedRevenueRouter[msg.sender],
-            "TL: not authorized"
-        );
-        if (l.state != LoanState.ACTIVE && l.state != LoanState.RESTRUCTURED)
-            revert TL_WrongState();
+        require(msg.sender == l.borrower || isAuthorizedRevenueRouter[msg.sender], "TL: not authorized");
+        if (l.state != LoanState.ACTIVE && l.state != LoanState.RESTRUCTURED) revert TL_WrongState();
         if (!l.revenueAssignment) revert TL_WrongState();
         if (amount == 0) revert TL_Zero();
 
@@ -1390,9 +1327,7 @@ contract VFIDETermLoan is ReentrancyGuard {
             ++totalLoans;
             totalVolume += l.principal;
             if (address(seer) != address(0)) {
-                try
-                    seer.reward(l.borrower, REWARD_ONTIME_BORROWER, "loan_revenue_repaid")
-                {} catch {}
+                try seer.reward(l.borrower, REWARD_ONTIME_BORROWER, "loan_revenue_repaid") {} catch {}
                 try seer.reward(l.lender, REWARD_ONTIME_LENDER, "loan_facilitated") {} catch {}
             }
             emit LoanRepaid(id, l.amountRepaid, false);
@@ -1436,12 +1371,7 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param guarantor guarantor
     /// @param source source
     /// @param amount amount
-    function _releaseGuarantorCommitment(
-        uint256 id,
-        address guarantor,
-        address source,
-        uint256 amount
-    ) internal {
+    function _releaseGuarantorCommitment(uint256 id, address guarantor, address source, uint256 amount) internal {
         if (amount == 0) return;
 
         uint256 committedForLoan = guarantorCommittedLiability[id][guarantor];
@@ -1486,17 +1416,12 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @param guarantor guarantor
     /// @param source source
     /// @return _bool _bool
-    function _isValidGuarantorSource(
-        address guarantor,
-        address source
-    ) internal view returns (bool) {
+    function _isValidGuarantorSource(address guarantor, address source) internal view returns (bool) {
         if (source == guarantor) return true;
         if (address(vaultHub) == address(0) || source == address(0)) return false;
 
         // Use staticcall for fail-closed behavior if a non-conforming vault hub is configured.
-        (bool ok, bytes memory data) = address(vaultHub).staticcall(
-            abi.encodeWithSignature("vaultOf(address)", guarantor)
-        );
+        (bool ok, bytes memory data) = address(vaultHub).staticcall(abi.encodeWithSignature("vaultOf(address)", guarantor));
         if (!ok || data.length < 32) return false;
 
         address currentVault = abi.decode(data, (address));
@@ -1552,15 +1477,9 @@ contract VFIDETermLoan is ReentrancyGuard {
     /// @return remaining remaining
     /// @return overdue overdue
     /// @return defaultable defaultable
-    function amountOwed(
-        uint256 id
-    ) external view returns (uint256 remaining, bool overdue, bool defaultable) {
+    function amountOwed(uint256 id) external view returns (uint256 remaining, bool overdue, bool defaultable) {
         Loan storage l = loans[id];
-        if (
-            l.state != LoanState.ACTIVE &&
-            l.state != LoanState.GRACE &&
-            l.state != LoanState.RESTRUCTURED
-        ) return (0, false, false);
+        if (l.state != LoanState.ACTIVE && l.state != LoanState.GRACE && l.state != LoanState.RESTRUCTURED) return (0, false, false);
         uint256 interest = (l.principal * l.interestBps) / 10000;
         uint256 total = l.principal + interest;
         remaining = total > l.amountRepaid ? total - l.amountRepaid : 0;

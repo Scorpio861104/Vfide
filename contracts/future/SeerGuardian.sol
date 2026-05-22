@@ -189,12 +189,7 @@ contract SeerGuardian is ReentrancyGuard {
     /// @param rtype rtype
     /// @param reasonCode reasonCode
     /// @param reason reason
-    event AutoRestrictionApplied(
-        address indexed subject,
-        RestrictionType rtype,
-        uint16 indexed reasonCode,
-        string reason
-    );
+    event AutoRestrictionApplied(address indexed subject, RestrictionType rtype, uint16 indexed reasonCode, string reason);
     /// @notice AutoRestrictionLifted
     /// @param subject subject
     /// @param rtype rtype
@@ -215,22 +210,13 @@ contract SeerGuardian is ReentrancyGuard {
     /// @param scorePenalty scorePenalty
     /// @param reasonCode reasonCode
     /// @param reason reason
-    event PenaltyAppliedCode(
-        address indexed subject,
-        uint16 scorePenalty,
-        uint16 indexed reasonCode,
-        string reason
-    );
+    event PenaltyAppliedCode(address indexed subject, uint16 scorePenalty, uint16 indexed reasonCode, string reason);
     // F-68: Emitted when seer.punish() fails so off-chain tooling can detect state drift.
     /// @notice PenaltyApplicationFailed
     /// @param subject subject
     /// @param scorePenalty scorePenalty
     /// @param revertReason revertReason
-    event PenaltyApplicationFailed(
-        address indexed subject,
-        uint16 scorePenalty,
-        bytes revertReason
-    );
+    event PenaltyApplicationFailed(address indexed subject, uint16 scorePenalty, bytes revertReason);
 
     // Override events
     /// @notice DAOOverride
@@ -257,11 +243,7 @@ contract SeerGuardian is ReentrancyGuard {
     /// @param proposalId proposalId
     /// @param reasonCode reasonCode
     /// @param concern concern
-    event DAOActionFlaggedCode(
-        uint256 indexed proposalId,
-        uint16 indexed reasonCode,
-        string concern
-    );
+    event DAOActionFlaggedCode(uint256 indexed proposalId, uint16 indexed reasonCode, string concern);
     /// @notice SeerActionOverridden
     /// @param actionId actionId
     /// @param resolution resolution
@@ -401,11 +383,7 @@ contract SeerGuardian is ReentrancyGuard {
     /// @param _seer _seer
     /// @param _vaultHub _vaultHub
     /// @param _ledger _ledger
-    function setModules(
-        address _seer,
-        address _vaultHub,
-        address _ledger
-    ) external onlyDAO nonReentrant {
+    function setModules(address _seer, address _vaultHub, address _ledger) external onlyDAO nonReentrant {
         if (_seer == address(0)) revert SG_Zero();
         seer = ISeer_Guardian(_seer);
         if (_vaultHub != address(0)) vaultHub = IVaultHub_Guardian(_vaultHub);
@@ -449,13 +427,7 @@ contract SeerGuardian is ReentrancyGuard {
     /// @param _violationCooldown _violationCooldown
     /// @param _maxDuration _maxDuration
     /// @param _flagDelay _flagDelay
-    function setThresholds(
-        uint16 _autoRestrict,
-        uint16 _autoLift,
-        uint64 _violationCooldown,
-        uint64 _maxDuration,
-        uint64 _flagDelay
-    ) external onlyDAO nonReentrant {
+    function setThresholds(uint16 _autoRestrict, uint16 _autoLift, uint64 _violationCooldown, uint64 _maxDuration, uint64 _flagDelay) external onlyDAO nonReentrant {
         require(_autoRestrict < _autoLift, "SG: invalid thresholds");
         autoRestrictThreshold = _autoRestrict;
         autoLiftThreshold = _autoLift;
@@ -497,44 +469,23 @@ contract SeerGuardian is ReentrancyGuard {
         // harshest applicable restriction immediately (no multi-call escalation needed).
         // Critical: highest-severity governance ban for dangerous scores (< 1000).
         if (score < 1000 && currentRestriction < RestrictionType.GovernanceFullBan) {
-            _applyAutoRestriction(
-                subject,
-                RestrictionType.GovernanceFullBan,
-                "auto_critical_score",
-                RC_AUTO_CRITICAL_SCORE
-            );
+            _applyAutoRestriction(subject, RestrictionType.GovernanceFullBan, "auto_critical_score", RC_AUTO_CRITICAL_SCORE);
         }
         // More severe restriction for very low scores (< 2000).
         // Do not rely on enum ordering here: GovernanceBan has a larger enum value than
         // TransferLimit, but TransferLimit is stricter for transfer permissions.
-        else if (
-            score < 2000 &&
-            currentRestriction != RestrictionType.GovernanceFullBan &&
-            currentRestriction != RestrictionType.TransferLimit
-        ) {
-            _applyAutoRestriction(
-                subject,
-                RestrictionType.TransferLimit,
-                "auto_very_low_score",
-                RC_AUTO_VERY_LOW_SCORE
-            );
+        else if (score < 2000 && currentRestriction != RestrictionType.GovernanceFullBan && currentRestriction != RestrictionType.TransferLimit) {
+            _applyAutoRestriction(subject, RestrictionType.TransferLimit, "auto_very_low_score", RC_AUTO_VERY_LOW_SCORE);
         }
         // Base governance ban for generally low scores
         else if (score < autoRestrictThreshold && currentRestriction == RestrictionType.None) {
-            _applyAutoRestriction(
-                subject,
-                RestrictionType.GovernanceBan,
-                "auto_low_score",
-                RC_AUTO_LOW_SCORE
-            );
+            _applyAutoRestriction(subject, RestrictionType.GovernanceBan, "auto_low_score", RC_AUTO_LOW_SCORE);
         }
 
         // Auto-lift if score recovered
         if (score >= autoLiftThreshold && currentRestriction != RestrictionType.None) {
             // Only lift if restriction has expired or score is high enough
-            if (
-                block.timestamp >= restrictionExpiry[subject] || score >= seer.highTrustThreshold()
-            ) {
+            if (block.timestamp >= restrictionExpiry[subject] || score >= seer.highTrustThreshold()) {
                 _liftRestriction(subject, "auto_score_recovered", true);
             }
         }
@@ -546,11 +497,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @param vtype Type of violation
      * @param reason Description
      */
-    function recordViolation(
-        address subject,
-        ViolationType vtype,
-        string calldata reason
-    ) external onlyAuthorized nonReentrant {
+    function recordViolation(address subject, ViolationType vtype, string calldata reason) external onlyAuthorized nonReentrant {
         if (block.timestamp < lastViolationTime[subject] + violationCooldown) revert SG_Cooldown();
         if (vtype == ViolationType.None) revert SG_InvalidAction();
 
@@ -570,8 +517,7 @@ contract SeerGuardian is ReentrancyGuard {
 
         // Apply time-based restriction for repeat offenders
         if (count >= 3) {
-            RestrictionType rtype =
-                count >= 5 ? RestrictionType.GovernanceFullBan : RestrictionType.GovernanceBan;
+            RestrictionType rtype = count >= 5 ? RestrictionType.GovernanceFullBan : RestrictionType.GovernanceBan;
             uint64 duration = restrictionDurations[penaltyIndex];
             // H-23 FIX: Never shorten an existing restriction — take the max of remaining and new duration.
             uint64 newExpiry = uint64(block.timestamp) + duration;
@@ -599,12 +545,7 @@ contract SeerGuardian is ReentrancyGuard {
     /// @param rtype rtype
     /// @param reason reason
     /// @param reasonCode reasonCode
-    function _applyAutoRestriction(
-        address subject,
-        RestrictionType rtype,
-        string memory reason,
-        uint16 reasonCode
-    ) internal {
+    function _applyAutoRestriction(address subject, RestrictionType rtype, string memory reason, uint16 reasonCode) internal {
         RestrictionType old = activeRestriction[subject];
         activeRestriction[subject] = rtype;
         restrictionAppliedAt[subject] = uint64(block.timestamp);
@@ -622,11 +563,7 @@ contract SeerGuardian is ReentrancyGuard {
     /// @param subject subject
     /// @param reason reason
     /// @param clearDaoOverride clearDaoOverride
-    function _liftRestriction(
-        address subject,
-        string memory reason,
-        bool clearDaoOverride
-    ) internal {
+    function _liftRestriction(address subject, string memory reason, bool clearDaoOverride) internal {
         activeRestriction[subject] = RestrictionType.None;
         restrictionExpiry[subject] = 0;
         restrictionAppliedAt[subject] = 0;
@@ -646,21 +583,13 @@ contract SeerGuardian is ReentrancyGuard {
      * @param subject The restricted address
      * @param reason Justification for override
      */
-    function daoOverrideRestriction(
-        address subject,
-        string calldata reason
-    ) external onlyDAO nonReentrant {
+    function daoOverrideRestriction(address subject, string calldata reason) external onlyDAO nonReentrant {
         if (activeRestriction[subject] == RestrictionType.None) revert SG_NoViolation();
-        if (
-            restrictionAppliedAt[subject] != 0 &&
-            block.timestamp < uint256(restrictionAppliedAt[subject]) + DAO_OVERRIDE_MIN_AGE
-        ) {
+        if (restrictionAppliedAt[subject] != 0 && block.timestamp < uint256(restrictionAppliedAt[subject]) + DAO_OVERRIDE_MIN_AGE) {
             revert SG_Cooldown();
         }
 
-        bytes32 actionId = keccak256(
-            abi.encode(subject, activeRestriction[subject], block.timestamp)
-        );
+        bytes32 actionId = keccak256(abi.encode(subject, activeRestriction[subject], block.timestamp));
         daoOverridden[subject] = true;
 
         // Lift the restriction
@@ -678,15 +607,8 @@ contract SeerGuardian is ReentrancyGuard {
      * @param isPositive True for reward, false for punish
      * @param reason Justification
      */
-    function daoAdjustScore(
-        address subject,
-        uint16 newDelta,
-        bool isPositive,
-        string calldata reason
-    ) external onlyDAO nonReentrant {
-        bytes32 actionId = keccak256(
-            abi.encode("score_adjust", subject, newDelta, block.timestamp)
-        );
+    function daoAdjustScore(address subject, uint16 newDelta, bool isPositive, string calldata reason) external onlyDAO nonReentrant {
+        bytes32 actionId = keccak256(abi.encode("score_adjust", subject, newDelta, block.timestamp));
         actionOverridden[actionId] = true;
 
         if (isPositive) {
@@ -731,10 +653,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @param proposalId The DAO proposal ID
      * @param concern The security/trust concern
      */
-    function seerFlagProposal(
-        uint256 proposalId,
-        string calldata concern
-    ) external onlyAuthorized nonReentrant {
+    function seerFlagProposal(uint256 proposalId, string calldata concern) external onlyAuthorized nonReentrant {
         require(!proposalFlagged[proposalId], "SG: already flagged");
 
         proposalFlagged[proposalId] = true;
@@ -753,9 +672,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @return blocked True if still under Seer review delay
      * @return reason The flag reason if blocked
      */
-    function isProposalBlocked(
-        uint256 proposalId
-    ) external view returns (bool blocked, string memory reason) {
+    function isProposalBlocked(uint256 proposalId) external view returns (bool blocked, string memory reason) {
         if (!proposalFlagged[proposalId]) {
             return (false, "");
         }
@@ -784,10 +701,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @param proposalId The proposal ID
      * @param proposer The proposer address
      */
-    function autoCheckProposer(
-        uint256 proposalId,
-        address proposer
-    ) external onlyAuthorized nonReentrant {
+    function autoCheckProposer(uint256 proposalId, address proposer) external onlyAuthorized nonReentrant {
         IDAO_Guardian daoRef = IDAO_Guardian(dao);
         require(proposalId > 0 && proposalId <= daoRef.proposalCount(), "SG: invalid proposal");
 
@@ -806,16 +720,8 @@ contract SeerGuardian is ReentrancyGuard {
                 proposalFlagged[proposalId] = true;
                 proposalDelayUntil[proposalId] = uint64(block.timestamp) + (proposalFlagDelay / 2);
                 proposalFlagReason[proposalId] = "Auto: proposer near governance threshold";
-                emit SeerFlag(
-                    proposalId,
-                    "Auto: proposer near threshold",
-                    proposalDelayUntil[proposalId]
-                );
-                emit DAOActionFlaggedCode(
-                    proposalId,
-                    RC_PROPOSER_NEAR_THRESHOLD,
-                    "Auto: proposer near threshold"
-                );
+                emit SeerFlag(proposalId, "Auto: proposer near threshold", proposalDelayUntil[proposalId]);
+                emit DAOActionFlaggedCode(proposalId, RC_PROPOSER_NEAR_THRESHOLD, "Auto: proposer near threshold");
             }
         }
 
@@ -825,16 +731,8 @@ contract SeerGuardian is ReentrancyGuard {
                 proposalFlagged[proposalId] = true;
                 proposalDelayUntil[proposalId] = uint64(block.timestamp) + proposalFlagDelay;
                 proposalFlagReason[proposalId] = "Auto: proposer has governance violations";
-                emit SeerFlag(
-                    proposalId,
-                    "Auto: proposer has violations",
-                    proposalDelayUntil[proposalId]
-                );
-                emit DAOActionFlaggedCode(
-                    proposalId,
-                    RC_PROPOSER_HAS_VIOLATIONS,
-                    "Auto: proposer has violations"
-                );
+                emit SeerFlag(proposalId, "Auto: proposer has violations", proposalDelayUntil[proposalId]);
+                emit DAOActionFlaggedCode(proposalId, RC_PROPOSER_HAS_VIOLATIONS, "Auto: proposer has violations");
             }
         }
     }
@@ -862,9 +760,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @return expiry When the restriction expires
      * @return overridden Whether DAO has overridden
      */
-    function getRestrictionStatus(
-        address subject
-    ) external view returns (RestrictionType rtype, uint64 expiry, bool overridden) {
+    function getRestrictionStatus(address subject) external view returns (RestrictionType rtype, uint64 expiry, bool overridden) {
         return (activeRestriction[subject], restrictionExpiry[subject], daoOverridden[subject]);
     }
 
@@ -909,19 +805,7 @@ contract SeerGuardian is ReentrancyGuard {
      * @return failedRecovery failedRecovery
      * @return governanceAbuse governanceAbuse
      */
-    function getViolationCounts(
-        address subject
-    )
-        external
-        view
-        returns (
-            uint8 suspiciousTransfer,
-            uint8 rapidScoreDrop,
-            uint8 spamActivity,
-            uint8 failedRecovery,
-            uint8 governanceAbuse
-        )
-    {
+    function getViolationCounts(address subject) external view returns (uint8 suspiciousTransfer, uint8 rapidScoreDrop, uint8 spamActivity, uint8 failedRecovery, uint8 governanceAbuse) {
         return (
             violationCount[subject][ViolationType.SuspiciousTransfer],
             violationCount[subject][ViolationType.RapidScoreDrop],

@@ -61,10 +61,7 @@ library EcosystemVaultLib {
     /// @param poolBalance poolBalance
     /// @param reserveBps reserveBps
     /// @return _uint256 _uint256
-    function getSpendablePoolBalance(
-        uint256 poolBalance,
-        uint16 reserveBps
-    ) public pure returns (uint256) {
+    function getSpendablePoolBalance(uint256 poolBalance, uint16 reserveBps) public pure returns (uint256) {
         if (poolBalance < 1) return 0;
         if (reserveBps == 0) return poolBalance;
         uint256 reserveAmount = (poolBalance * reserveBps) / MAX_BPS;
@@ -78,13 +75,7 @@ library EcosystemVaultLib {
     /// @param referralLevel3Points referralLevel3Points
     /// @param referralLevel4Points referralLevel4Points
     /// @return _uint8 _uint8
-    function getReferralWorkLevel(
-        uint16 points,
-        uint16 referralLevel1Points,
-        uint16 referralLevel2Points,
-        uint16 referralLevel3Points,
-        uint16 referralLevel4Points
-    ) public pure returns (uint8) {
+    function getReferralWorkLevel(uint16 points, uint16 referralLevel1Points, uint16 referralLevel2Points, uint16 referralLevel3Points, uint16 referralLevel4Points) public pure returns (uint8) {
         if (points >= referralLevel4Points) return 4;
         if (points >= referralLevel3Points) return 3;
         if (points >= referralLevel2Points) return 2;
@@ -99,13 +90,7 @@ library EcosystemVaultLib {
     /// @param referralLevel3Reward referralLevel3Reward
     /// @param referralLevel4Reward referralLevel4Reward
     /// @return _uint256 _uint256
-    function getReferralLevelReward(
-        uint8 level,
-        uint256 referralLevel1Reward,
-        uint256 referralLevel2Reward,
-        uint256 referralLevel3Reward,
-        uint256 referralLevel4Reward
-    ) public pure returns (uint256) {
+    function getReferralLevelReward(uint8 level, uint256 referralLevel1Reward, uint256 referralLevel2Reward, uint256 referralLevel3Reward, uint256 referralLevel4Reward) public pure returns (uint256) {
         if (level == 1) return referralLevel1Reward;
         if (level == 2) return referralLevel2Reward;
         if (level == 3) return referralLevel3Reward;
@@ -138,10 +123,7 @@ library EcosystemVaultLib {
     /// @param amount amount
     /// @param minOutputPerVfide minOutputPerVfide
     /// @return stableAmount stableAmount
-    function vfideToStable(
-        uint256 amount,
-        uint256 minOutputPerVfide
-    ) public pure returns (uint256 stableAmount) {
+    function vfideToStable(uint256 amount, uint256 minOutputPerVfide) public pure returns (uint256 stableAmount) {
         if (minOutputPerVfide == 0) return 0;
         stableAmount = (amount * minOutputPerVfide) / 1e18;
     }
@@ -169,15 +151,6 @@ library EcosystemVaultLib {
             uint16 tier4Multiplier
         )
     {
-        return (
-            TIER1_THRESHOLD,
-            TIER1_MULTIPLIER,
-            TIER2_THRESHOLD,
-            TIER2_MULTIPLIER,
-            TIER3_THRESHOLD,
-            TIER3_MULTIPLIER,
-            TIER4_THRESHOLD,
-            TIER4_MULTIPLIER
-        );
+        return (TIER1_THRESHOLD, TIER1_MULTIPLIER, TIER2_THRESHOLD, TIER2_MULTIPLIER, TIER3_THRESHOLD, TIER3_MULTIPLIER, TIER4_THRESHOLD, TIER4_MULTIPLIER);
     }
 }

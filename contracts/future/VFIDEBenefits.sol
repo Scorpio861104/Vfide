@@ -177,11 +177,7 @@ contract VFIDEBenefits {
      * @param merchant Merchant address
      * @param amount Transaction amount (for logging)
      */
-    function rewardTransaction(
-        address buyer,
-        address merchant,
-        uint256 amount
-    ) external onlyAuthorized {
+    function rewardTransaction(address buyer, address merchant, uint256 amount) external onlyAuthorized {
         if (buyer == address(0) || merchant == address(0)) revert BEN_Zero();
         // Track stats
         ++totalTransactionsRewarded;
@@ -225,9 +221,7 @@ contract VFIDEBenefits {
      * @return transactionCount transactionCount
      * @return currentScore currentScore
      */
-    function getUserStats(
-        address user
-    ) external view returns (uint256 transactionCount, uint16 currentScore) {
+    function getUserStats(address user) external view returns (uint256 transactionCount, uint16 currentScore) {
         transactionCount = userTransactionCount[user];
         currentScore = seer.getScore(user);
     }

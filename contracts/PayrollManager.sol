@@ -84,12 +84,7 @@ contract PayrollManager is ReentrancyGuard {
     /// @param payer payer
     /// @param payee payee
     /// @param rate rate
-    event StreamCreated(
-        uint256 indexed streamId,
-        address indexed payer,
-        address indexed payee,
-        uint256 rate
-    );
+    event StreamCreated(uint256 indexed streamId, address indexed payer, address indexed payee, uint256 rate);
     /// @notice Withdraw
     /// @param streamId streamId
     /// @param payee payee
@@ -119,11 +114,7 @@ contract PayrollManager is ReentrancyGuard {
     /// @param streamId streamId
     /// @param oldPayee oldPayee
     /// @param newPayee newPayee
-    event PayeeUpdated(
-        uint256 indexed streamId,
-        address indexed oldPayee,
-        address indexed newPayee
-    );
+    event PayeeUpdated(uint256 indexed streamId, address indexed oldPayee, address indexed newPayee);
     /// @notice EmergencyWithdraw
     /// @param streamId streamId
     /// @param to to
@@ -134,12 +125,7 @@ contract PayrollManager is ReentrancyGuard {
     /// @param to to
     /// @param amount amount
     /// @param executeAfter executeAfter
-    event EmergencyWithdrawProposed(
-        uint256 indexed streamId,
-        address indexed to,
-        uint256 amount,
-        uint64 executeAfter
-    );
+    event EmergencyWithdrawProposed(uint256 indexed streamId, address indexed to, uint256 amount, uint64 executeAfter);
     /// @notice EmergencyWithdrawCancelled
     /// @param streamId streamId
     /// @param to to
@@ -347,17 +333,8 @@ contract PayrollManager is ReentrancyGuard {
     /// @param supported supported
     function setSupportedToken(address token, bool supported) external onlyDAO {
         require(token != address(0), "PM: zero token");
-        pendingSupportedTokenChange = PendingSupportedTokenChange({
-            token: token,
-            supported: supported,
-            executeAfter: uint64(block.timestamp) + SUPPORTED_TOKEN_CHANGE_DELAY_PM,
-            exists: true
-        });
-        emit SupportedTokenChangeProposed(
-            token,
-            supported,
-            pendingSupportedTokenChange.executeAfter
-        );
+        pendingSupportedTokenChange = PendingSupportedTokenChange({token: token, supported: supported, executeAfter: uint64(block.timestamp) + SUPPORTED_TOKEN_CHANGE_DELAY_PM, exists: true});
+        emit SupportedTokenChangeProposed(token, supported, pendingSupportedTokenChange.executeAfter);
     }
 
     /// @notice applySupportedToken
@@ -398,12 +375,7 @@ contract PayrollManager is ReentrancyGuard {
      * @notice createStream
      * @return _uint256 _uint256
      */
-    function createStream(
-        address payee,
-        address token,
-        uint256 rate,
-        uint256 initialDeposit
-    ) external nonReentrant returns (uint256) {
+    function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external nonReentrant returns (uint256) {
         if (payee == address(0)) revert PM_InvalidPayee();
         require(supportedTokens[token], "PM: unsupported token");
         if (rate == 0) revert PM_InvalidRate();
@@ -577,10 +549,7 @@ contract PayrollManager is ReentrancyGuard {
         if (newPayee == address(0)) revert PM_InvalidPayee();
 
         // H-27 FIX: Propose with 48h timelock; apply separately.
-        pendingPayeeUpdates[streamId] = PendingPayeeUpdate({
-            newPayee: newPayee,
-            validFrom: block.timestamp + PAYEE_UPDATE_DELAY
-        });
+        pendingPayeeUpdates[streamId] = PendingPayeeUpdate({newPayee: newPayee, validFrom: block.timestamp + PAYEE_UPDATE_DELAY});
         emit PayeeUpdated(streamId, s.payee, newPayee); // emitted at proposal not apply
     }
 
@@ -631,10 +600,7 @@ contract PayrollManager is ReentrancyGuard {
         require(pending.executeAfter == 0, "PM: pending emergency withdraw");
 
         uint64 executeAfter = uint64(block.timestamp) + EMERGENCY_WITHDRAW_DELAY;
-        pendingEmergencyWithdraws[streamId] = PendingEmergencyWithdraw({
-            to: to,
-            executeAfter: executeAfter
-        });
+        pendingEmergencyWithdraws[streamId] = PendingEmergencyWithdraw({to: to, executeAfter: executeAfter});
 
         emit EmergencyWithdrawProposed(streamId, to, s.depositBalance, executeAfter);
     }
@@ -883,20 +849,7 @@ contract PayrollManager is ReentrancyGuard {
      * @return ratePerSecond ratePerSecond
      * @return runwaySeconds runwaySeconds
      */
-    function getStreamStatus(
-        uint256 streamId
-    )
-        external
-        view
-        returns (
-            bool active,
-            bool paused,
-            uint256 currentClaimable,
-            uint256 remainingBalance,
-            uint256 ratePerSecond,
-            uint256 runwaySeconds
-        )
-    {
+    function getStreamStatus(uint256 streamId) external view returns (bool active, bool paused, uint256 currentClaimable, uint256 remainingBalance, uint256 ratePerSecond, uint256 runwaySeconds) {
         Stream storage s = streams[streamId];
         active = s.active;
         paused = s.paused;
@@ -953,18 +906,7 @@ contract PayrollManager is ReentrancyGuard {
      * @return totalDeposited totalDeposited
      * @return totalClaimable totalClaimable
      */
-    function getTotalObligations(
-        address payer
-    )
-        external
-        view
-        returns (
-            uint256 activeStreamCount,
-            uint256 totalRatePerSecond,
-            uint256 totalDeposited,
-            uint256 totalClaimable
-        )
-    {
+    function getTotalObligations(address payer) external view returns (uint256 activeStreamCount, uint256 totalRatePerSecond, uint256 totalDeposited, uint256 totalClaimable) {
         uint256[] memory ids = payerStreams[payer];
         for (uint256 i = 0; i < ids.length; ++i) {
             Stream storage s = streams[ids[i]];
@@ -986,13 +928,7 @@ contract PayrollManager is ReentrancyGuard {
      * @return totalRatePerSecond totalRatePerSecond
      * @return totalClaimable totalClaimable
      */
-    function getTotalEarnings(
-        address payee
-    )
-        external
-        view
-        returns (uint256 activeStreamCount, uint256 totalRatePerSecond, uint256 totalClaimable)
-    {
+    function getTotalEarnings(address payee) external view returns (uint256 activeStreamCount, uint256 totalRatePerSecond, uint256 totalClaimable) {
         uint256[] memory ids = payeeStreams[payee];
         for (uint256 i = 0; i < ids.length; ++i) {
             Stream storage s = streams[ids[i]];
@@ -1011,9 +947,7 @@ contract PayrollManager is ReentrancyGuard {
      * @param streamIds streamIds
      * @return results results
      */
-    function getStreamsBatch(
-        uint256[] calldata streamIds
-    ) external view returns (Stream[] memory results) {
+    function getStreamsBatch(uint256[] calldata streamIds) external view returns (Stream[] memory results) {
         results = new Stream[](streamIds.length);
         for (uint256 i = 0; i < streamIds.length; ++i) {
             results[i] = streams[streamIds[i]];

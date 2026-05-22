@@ -191,10 +191,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @notice emergencyReduceDelay
     /// @param _newDelay _newDelay
     function emergencyReduceDelay(uint64 _newDelay) external onlyAdmin {
-        if (
-            emergencyDelayReduced &&
-            block.timestamp >= lastEmergencyReduceTime + EMERGENCY_REDUCTION_RESET
-        ) {
+        if (emergencyDelayReduced && block.timestamp >= lastEmergencyReduceTime + EMERGENCY_REDUCTION_RESET) {
             emergencyDelayReduced = false;
         }
         require(!emergencyDelayReduced, "TL: emergency reduction already used");
@@ -228,11 +225,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @param value value
     /// @param data data
     /// @return id id
-    function queueTx(
-        address target,
-        uint256 value,
-        bytes calldata data
-    ) external onlyAdmin returns (bytes32 id) {
+    function queueTx(address target, uint256 value, bytes calldata data) external onlyAdmin returns (bytes32 id) {
         id = _queueTracked(target, value, data);
     }
 
@@ -242,12 +235,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @param data data
     /// @param daoProposalId daoProposalId
     /// @return id id
-    function queueTxFromDAO(
-        address target,
-        uint256 value,
-        bytes calldata data,
-        uint256 daoProposalId
-    ) external onlyAdmin returns (bytes32 id) {
+    function queueTxFromDAO(address target, uint256 value, bytes calldata data, uint256 daoProposalId) external onlyAdmin returns (bytes32 id) {
         require(daoProposalId > 0, "TL: daoProposalId=0");
         id = _queueTracked(target, value, data);
         daoProposalForTx[id] = daoProposalId;
@@ -277,10 +265,7 @@ contract DAOTimelock is ReentrancyGuard {
         Op storage op = queue[id];
         if (op.eta == 0) revert TL_NotQueued();
         if (op.done) revert TL_AlreadyExecuted();
-        require(
-            block.timestamp >= op.eta + SECONDARY_EXECUTOR_DELAY,
-            "TL: secondary delay not elapsed"
-        );
+        require(block.timestamp >= op.eta + SECONDARY_EXECUTOR_DELAY, "TL: secondary delay not elapsed");
 
         delete queue[id];
         delete daoProposalForTx[id];
@@ -319,10 +304,7 @@ contract DAOTimelock is ReentrancyGuard {
         // for queued self-admin-rotation calls so the system cannot deadlock if the temporary
         // bootstrap admin key is lost after queueing DAOTimelock.setAdmin(...).
         if (msg.sender != admin) {
-            require(
-                _isPermissionlessSelfAdminRotation(op.target, op.data),
-                "TL: only admin can execute"
-            );
+            require(_isPermissionlessSelfAdminRotation(op.target, op.data), "TL: only admin can execute");
         }
 
         // H-15: Check transaction hasn't expired
@@ -355,10 +337,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @param target target
     /// @param data data
     /// @return _bool _bool
-    function _isPermissionlessSelfAdminRotation(
-        address target,
-        bytes memory data
-    ) internal view returns (bool) {
+    function _isPermissionlessSelfAdminRotation(address target, bytes memory data) internal view returns (bool) {
         if (target != address(this) || data.length < 4) {
             return false;
         }
@@ -403,9 +382,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @notice executeBySecondary
     /// @param id id
     /// @return res res
-    function executeBySecondary(
-        bytes32 id
-    ) external payable nonReentrant returns (bytes memory res) {
+    function executeBySecondary(bytes32 id) external payable nonReentrant returns (bytes memory res) {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");
         require(msg.sender == secondaryExecutor, "TL: not secondary executor");
 
@@ -415,10 +392,7 @@ contract DAOTimelock is ReentrancyGuard {
 
         // H-8 FIX: Use the smaller of fixed 3-day delay and half the expiry window so that
         // short-ETA urgent operations are still reachable by the secondary executor.
-        uint64 effectiveDelay =
-            SECONDARY_EXECUTOR_DELAY < EXPIRY_WINDOW / 2
-                ? SECONDARY_EXECUTOR_DELAY
-                : uint64(EXPIRY_WINDOW / 2);
+        uint64 effectiveDelay = SECONDARY_EXECUTOR_DELAY < EXPIRY_WINDOW / 2 ? SECONDARY_EXECUTOR_DELAY : uint64(EXPIRY_WINDOW / 2);
         require(block.timestamp >= op.eta + effectiveDelay, "TL: secondary delay not elapsed");
         // Transaction must not have expired
         require(block.timestamp <= op.eta + EXPIRY_WINDOW, "TL: transaction expired");
@@ -444,10 +418,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @notice _validateERC20BoolReturn
     /// @param callData callData
     /// @param returnData returnData
-    function _validateERC20BoolReturn(
-        bytes memory callData,
-        bytes memory returnData
-    ) internal pure {
+    function _validateERC20BoolReturn(bytes memory callData, bytes memory returnData) internal pure {
         // Only validate bool return for transfer/transferFrom/approve selectors.
         if (returnData.length == 32 && callData.length >= 4) {
             bytes4 selector;
@@ -489,10 +460,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @notice _revertWithReason
     /// @param returndata returndata
     /// @param fallbackMessage fallbackMessage
-    function _revertWithReason(
-        bytes memory returndata,
-        string memory fallbackMessage
-    ) internal pure {
+    function _revertWithReason(bytes memory returndata, string memory fallbackMessage) internal pure {
         if (returndata.length > 0) {
             assembly {
                 revert(add(returndata, 0x20), mload(returndata))
@@ -536,11 +504,7 @@ contract DAOTimelock is ReentrancyGuard {
      * @param data data
      * @return id id
      */
-    function queueTxWithTracking(
-        address target,
-        uint256 value,
-        bytes calldata data
-    ) external onlyAdmin returns (bytes32 id) {
+    function queueTxWithTracking(address target, uint256 value, bytes calldata data) external onlyAdmin returns (bytes32 id) {
         id = _queueTracked(target, value, data);
     }
 
@@ -549,11 +513,7 @@ contract DAOTimelock is ReentrancyGuard {
     /// @param value value
     /// @param data data
     /// @return id id
-    function _queueTracked(
-        address target,
-        uint256 value,
-        bytes calldata data
-    ) internal returns (bytes32 id) {
+    function _queueTracked(address target, uint256 value, bytes calldata data) internal returns (bytes32 id) {
         require(target != address(0), "TL: target=0");
         uint64 eta = uint64(block.timestamp) + delay;
         uint256 currentNonce = nonce++; // FLOW-5 FIX: Use nonce for uniqueness
@@ -576,18 +536,7 @@ contract DAOTimelock is ReentrancyGuard {
      * @return done done
      * @return expired expired
      */
-    function getQueuedTransactions()
-        external
-        view
-        returns (
-            bytes32[] memory ids,
-            address[] memory targets,
-            uint256[] memory values,
-            uint64[] memory etas,
-            bool[] memory done,
-            bool[] memory expired
-        )
-    {
+    function getQueuedTransactions() external view returns (bytes32[] memory ids, address[] memory targets, uint256[] memory values, uint64[] memory etas, bool[] memory done, bool[] memory expired) {
         uint256 len = queuedIds.length;
         ids = new bytes32[](len);
         targets = new address[](len);
@@ -627,21 +576,7 @@ contract DAOTimelock is ReentrancyGuard {
      * @return timeUntilExecutable timeUntilExecutable
      * @return timeUntilExpiry timeUntilExpiry
      */
-    function getTransactionStatus(
-        bytes32 id
-    )
-        external
-        view
-        returns (
-            bool queued,
-            bool executed,
-            bool expired,
-            bool executable,
-            uint64 eta,
-            uint256 timeUntilExecutable,
-            uint256 timeUntilExpiry
-        )
-    {
+    function getTransactionStatus(bytes32 id) external view returns (bool queued, bool executed, bool expired, bool executable, uint64 eta, uint256 timeUntilExecutable, uint256 timeUntilExpiry) {
         Op storage op = queue[id];
         queued = op.eta > 0;
         executed = op.done;
@@ -654,8 +589,7 @@ contract DAOTimelock is ReentrancyGuard {
             uint64 executableTime = riskDelay ? op.eta + 6 hours : op.eta;
 
             executable = block.timestamp >= executableTime && !expired;
-            timeUntilExecutable =
-                block.timestamp >= executableTime ? 0 : executableTime - block.timestamp;
+            timeUntilExecutable = block.timestamp >= executableTime ? 0 : executableTime - block.timestamp;
             timeUntilExpiry = expired ? 0 : (op.eta + EXPIRY_WINDOW) - block.timestamp;
         }
     }
@@ -755,9 +689,7 @@ contract DAOTimelock is ReentrancyGuard {
     ///         Governance flow: queue setSecondaryExecutor → wait delay → execute →
     ///         run canRotateSecondaryExecutor() to confirm the new address is live.
     /// @param newExecutor newExecutor
-    function canRotateSecondaryExecutor(
-        address newExecutor
-    ) external view returns (bool ok, string memory reason) {
+    function canRotateSecondaryExecutor(address newExecutor) external view returns (bool ok, string memory reason) {
         if (newExecutor == address(0)) {
             return (false, "new executor is zero address");
         }

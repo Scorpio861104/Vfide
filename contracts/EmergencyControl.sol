@@ -21,13 +21,7 @@ pragma solidity 0.8.30;
  *    the global breaker toggle.
  */
 
-import {
-    LedgerLogFailed,
-    IProofLedger,
-    IEmergencyBreaker,
-    Ownable,
-    ReentrancyGuard
-} from "./SharedInterfaces.sol";
+import {LedgerLogFailed, IProofLedger, IEmergencyBreaker, Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
 
 /// @notice EC_NotDAO
 error EC_NotDAO();
@@ -240,11 +234,7 @@ contract EmergencyControl is ReentrancyGuard {
     /// @param _dao _dao
     /// @param _breaker _breaker
     /// @param _ledger _ledger
-    function setModules(
-        address _dao,
-        address _breaker,
-        address _ledger
-    ) external onlyDAO nonReentrant {
+    function setModules(address _dao, address _breaker, address _ledger) external onlyDAO nonReentrant {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
         require(pendingModulesAt == 0, "EC: pending modules");
         pendingModules = PendingModules({dao: _dao, breaker: _breaker, ledger: _ledger});
@@ -269,11 +259,7 @@ contract EmergencyControl is ReentrancyGuard {
     /// @notice cancelModules
     function cancelModules() external onlyDAO nonReentrant {
         require(pendingModulesAt != 0, "EC: no pending modules");
-        emit ModulesChangeCancelled(
-            pendingModules.dao,
-            pendingModules.breaker,
-            pendingModules.ledger
-        );
+        emit ModulesChangeCancelled(pendingModules.dao, pendingModules.breaker, pendingModules.ledger);
         delete pendingModules;
         delete pendingModulesAt;
         _log("ec_modules_cancelled");
@@ -296,10 +282,7 @@ contract EmergencyControl is ReentrancyGuard {
     /// @notice resetCommittee
     /// @param _threshold _threshold
     /// @param members members
-    function resetCommittee(
-        uint8 _threshold,
-        address[] calldata members
-    ) external onlyDAO nonReentrant {
+    function resetCommittee(uint8 _threshold, address[] calldata members) external onlyDAO nonReentrant {
         if (members.length > MAX_COMMITTEE_MEMBERS) revert EC_CommitteeCapExceeded();
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
 
@@ -558,9 +541,7 @@ contract EmergencyControl is ReentrancyGuard {
         if (!isMember[msg.sender]) revert EC_NotMember();
 
         if (halt) {
-            if (
-                haltVotingStartTime > 0 && block.timestamp > haltVotingStartTime + voteExpiryPeriod
-            ) {
+            if (haltVotingStartTime > 0 && block.timestamp > haltVotingStartTime + voteExpiryPeriod) {
                 approvalsHalt = 0;
                 haltVotingStartTime = uint64(block.timestamp);
                 ++epoch; // Expire old votes
@@ -582,10 +563,7 @@ contract EmergencyControl is ReentrancyGuard {
             }
             _logEv(msg.sender, "ec_vote_halt", approvalsHalt, reason);
         } else {
-            if (
-                unhaltVotingStartTime > 0 &&
-                block.timestamp > unhaltVotingStartTime + voteExpiryPeriod
-            ) {
+            if (unhaltVotingStartTime > 0 && block.timestamp > unhaltVotingStartTime + voteExpiryPeriod) {
                 approvalsUnhalt = 0;
                 unhaltVotingStartTime = uint64(block.timestamp);
                 ++epoch; // Expire old votes
@@ -664,12 +642,7 @@ contract EmergencyControl is ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(
-        address who,
-        string memory action,
-        uint256 amount,
-        string memory note
-    ) internal {
+    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
             try ledger.logEvent(who, action, amount, note) {} catch {
                 emit LedgerLogFailed(who, action);
@@ -738,10 +711,7 @@ contract EmergencyControl is ReentrancyGuard {
     /// @param target target
     /// @param newOwner newOwner
     /// @return id id
-    function proposeRecovery(
-        address target,
-        address newOwner
-    ) external nonReentrant returns (bytes32 id) {
+    function proposeRecovery(address target, address newOwner) external nonReentrant returns (bytes32 id) {
         require(isMember[msg.sender], "EC: not member");
         require(target != address(0) && newOwner != address(0), "EC: zero");
         // System must be halted first
@@ -756,14 +726,7 @@ contract EmergencyControl is ReentrancyGuard {
         id = keccak256(abi.encode(target, newOwner, epoch));
         require(recoveryProposals[id].target == address(0), "EC: already proposed");
 
-        recoveryProposals[id] = RecoveryProposal({
-            target: target,
-            newOwner: newOwner,
-            approvals: 1,
-            unlockTime: 0,
-            executed: false,
-            epoch: epoch
-        });
+        recoveryProposals[id] = RecoveryProposal({target: target, newOwner: newOwner, approvals: 1, unlockTime: 0, executed: false, epoch: epoch});
         recoveryVoted[id][msg.sender] = true;
 
         emit RecoveryProposed(id, target, newOwner);

@@ -186,14 +186,7 @@ library SeerAutonomousLib {
      * @param count              actionCountToday[subject][action]
      * @return _uint8 _uint8
      */
-    function evaluateRestriction(
-        uint8 effectiveLevel,
-        uint8 frozenLevel,
-        uint8 restrictedLevel,
-        uint8 suspendedLevel,
-        uint16 limit,
-        uint16 count
-    ) internal pure returns (uint8) {
+    function evaluateRestriction(uint8 effectiveLevel, uint8 frozenLevel, uint8 restrictedLevel, uint8 suspendedLevel, uint16 limit, uint16 count) internal pure returns (uint8) {
         if (effectiveLevel == frozenLevel) return 3; // Blocked
         if (limit == 0) {
             return effectiveLevel >= restrictedLevel ? 3 : 0; // Blocked or Allowed

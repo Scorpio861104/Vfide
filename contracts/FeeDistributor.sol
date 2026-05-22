@@ -154,14 +154,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @param dao dao
     /// @param merchants merchants
     /// @param headhunters headhunters
-    event FeeDistributed(
-        uint256 total,
-        uint256 burned,
-        uint256 sanctum,
-        uint256 dao,
-        uint256 merchants,
-        uint256 headhunters
-    );
+    event FeeDistributed(uint256 total, uint256 burned, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters);
     /// @notice BurnFallbackTransfer
     /// @param amount amount
     /// @param burnAddress burnAddress
@@ -173,14 +166,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @param merchants merchants
     /// @param headhunters headhunters
     /// @param effectiveTime effectiveTime
-    event SplitChangeProposed(
-        uint256 burn,
-        uint256 sanctum,
-        uint256 dao,
-        uint256 merchants,
-        uint256 headhunters,
-        uint256 effectiveTime
-    );
+    event SplitChangeProposed(uint256 burn, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters, uint256 effectiveTime);
     /// @notice SplitChangeExecuted
     event SplitChangeExecuted();
     /// @notice SplitChangeCancelled
@@ -267,17 +253,8 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @param _merchantPool _merchantPool
     /// @param _headhunterPool _headhunterPool
     /// @param _admin _admin
-    constructor(
-        address _token,
-        address _burn,
-        address _sanctum,
-        address _daoPayroll,
-        address _merchantPool,
-        address _headhunterPool,
-        address _admin
-    ) {
-        if (_token == address(0) || _admin == address(0) || _burn == address(0))
-            revert ZeroAddress();
+    constructor(address _token, address _burn, address _sanctum, address _daoPayroll, address _merchantPool, address _headhunterPool, address _admin) {
+        if (_token == address(0) || _admin == address(0) || _burn == address(0)) revert ZeroAddress();
         if (_sanctum == address(0) || _daoPayroll == address(0)) revert ZeroAddress();
         if (_merchantPool == address(0) || _headhunterPool == address(0)) revert ZeroAddress();
 
@@ -291,13 +268,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _grantRole(ADMIN_ROLE, _admin);
 
-        feeSplit = FeeSplit({
-            burnBps: 3500,
-            sanctumBps: 2000,
-            daoPayrollBps: 1500,
-            merchantPoolBps: 2000,
-            headhunterPoolBps: 1000
-        });
+        feeSplit = FeeSplit({burnBps: 3500, sanctumBps: 2000, daoPayrollBps: 1500, merchantPoolBps: 2000, headhunterPoolBps: 1000});
 
         minDistributionAmount = 100 * 1e18;
     }
@@ -309,22 +280,13 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         if (source == address(0)) revert ZeroAddress();
         require(!pendingFeeSourceChange.pending, "FD: change pending");
         uint256 effectiveTime = block.timestamp + FEE_SOURCE_CHANGE_DELAY;
-        pendingFeeSourceChange = PendingFeeSourceChange({
-            source: source,
-            authorized: authorized,
-            effectiveTime: effectiveTime,
-            pending: true
-        });
+        pendingFeeSourceChange = PendingFeeSourceChange({source: source, authorized: authorized, effectiveTime: effectiveTime, pending: true});
         emit FeeSourceChangeProposed(source, authorized, effectiveTime);
     }
 
     /// @notice Apply a pending fee-source change after the 48h timelock.
     function applyFeeSourceChange() external onlyRole(ADMIN_ROLE) {
-        require(
-            pendingFeeSourceChange.pending &&
-                block.timestamp >= pendingFeeSourceChange.effectiveTime,
-            "FD: timelock"
-        );
+        require(pendingFeeSourceChange.pending && block.timestamp >= pendingFeeSourceChange.effectiveTime, "FD: timelock");
         address source = pendingFeeSourceChange.source;
         bool auth = pendingFeeSourceChange.authorized;
         delete pendingFeeSourceChange;
@@ -361,17 +323,13 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @notice Distribute accumulated fees. Callable by anyone.
     function distribute() external nonReentrant whenNotPaused {
         // M-6 FIX: Rate-limit to prevent repeated spam calls before fees accumulate
-        require(
-            block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL,
-            "FD: too soon"
-        );
+        require(block.timestamp >= lastDistributionTime + MIN_DISTRIBUTION_INTERVAL, "FD: too soon");
         uint256 balance = vfideToken.balanceOf(address(this));
         if (balance < minDistributionAmount) revert BelowMinimum();
 
         // F-76 FIX: Reconcile totalReceived with actual token balance so direct transfers
         // (outside receiveFee) are accounted for in cumulative reporting.
-        uint256 accountedBalance =
-            totalReceived >= totalDistributed ? totalReceived - totalDistributed : 0;
+        uint256 accountedBalance = totalReceived >= totalDistributed ? totalReceived - totalDistributed : 0;
         if (balance > accountedBalance) {
             totalReceived += (balance - accountedBalance);
         }
@@ -435,14 +393,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
 
         totalDistributed += distributedThisRun;
         lastDistributionTime = block.timestamp;
-        emit FeeDistributed(
-            distributedThisRun,
-            burnedThisRun,
-            totalToSanctum,
-            totalToDAO,
-            totalToMerchants,
-            totalToHeadhunters
-        );
+        emit FeeDistributed(distributedThisRun, burnedThisRun, totalToSanctum, totalToDAO, totalToMerchants, totalToHeadhunters);
     }
 
     /// @notice Propose a new fee split subject to timelock.
@@ -451,36 +402,13 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @param dao DAO payroll channel basis points.
     /// @param merchants Merchant pool channel basis points.
     /// @param headhunters Headhunter pool channel basis points.
-    function proposeSplitChange(
-        uint256 burn,
-        uint256 sanctum,
-        uint256 dao,
-        uint256 merchants,
-        uint256 headhunters
-    ) external onlyRole(ADMIN_ROLE) {
+    function proposeSplitChange(uint256 burn, uint256 sanctum, uint256 dao, uint256 merchants, uint256 headhunters) external onlyRole(ADMIN_ROLE) {
         if (burn + sanctum + dao + merchants + headhunters != MAX_BPS) revert InvalidSplit();
         if (burn < MIN_BURN_BPS) revert BurnTooLow();
-        if (
-            burn > MAX_SINGLE_BPS ||
-            sanctum > MAX_SINGLE_BPS ||
-            dao > MAX_SINGLE_BPS ||
-            merchants > MAX_SINGLE_BPS ||
-            headhunters > MAX_SINGLE_BPS
-        ) revert SingleSinkTooHigh();
+        if (burn > MAX_SINGLE_BPS || sanctum > MAX_SINGLE_BPS || dao > MAX_SINGLE_BPS || merchants > MAX_SINGLE_BPS || headhunters > MAX_SINGLE_BPS) revert SingleSinkTooHigh();
 
-        pendingSplitChange = PendingSplitChange({
-            newSplit: FeeSplit(burn, sanctum, dao, merchants, headhunters),
-            effectiveTime: block.timestamp + SPLIT_CHANGE_DELAY,
-            pending: true
-        });
-        emit SplitChangeProposed(
-            burn,
-            sanctum,
-            dao,
-            merchants,
-            headhunters,
-            block.timestamp + SPLIT_CHANGE_DELAY
-        );
+        pendingSplitChange = PendingSplitChange({newSplit: FeeSplit(burn, sanctum, dao, merchants, headhunters), effectiveTime: block.timestamp + SPLIT_CHANGE_DELAY, pending: true});
+        emit SplitChangeProposed(burn, sanctum, dao, merchants, headhunters, block.timestamp + SPLIT_CHANGE_DELAY);
     }
 
     /// @notice Apply a pending split change after delay.
@@ -508,12 +436,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         bytes32 h = keccak256(bytes(name));
         _requireKnownDestination(h);
         require(h != keccak256("burn"), "FD: burn destination immutable");
-        pendingDestinationChange = PendingDestinationChange({
-            nameHash: h,
-            addr: addr,
-            effectiveTime: block.timestamp + DESTINATION_CHANGE_DELAY,
-            pending: true
-        });
+        pendingDestinationChange = PendingDestinationChange({nameHash: h, addr: addr, effectiveTime: block.timestamp + DESTINATION_CHANGE_DELAY, pending: true});
         emit DestinationChangeProposed(h, addr, block.timestamp + DESTINATION_CHANGE_DELAY);
     }
 
@@ -559,12 +482,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         uint256 balance = vfideToken.balanceOf(address(this));
         if (amount > balance) revert RescueAmountTooHigh();
 
-        pendingRescue = PendingRescue({
-            to: to,
-            amount: amount,
-            effectiveTime: block.timestamp + DESTINATION_CHANGE_DELAY,
-            pending: true
-        });
+        pendingRescue = PendingRescue({to: to, amount: amount, effectiveTime: block.timestamp + DESTINATION_CHANGE_DELAY, pending: true});
         emit RescueProposed(to, amount, pendingRescue.effectiveTime);
     }
 
@@ -609,18 +527,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @return toDAO Tokens that would be sent to the DAO payroll pool.
     /// @return toMerchants Tokens that would be sent to merchant rewards.
     /// @return toHeadhunters Tokens that would be sent to headhunter rewards.
-    function previewDistribution()
-        external
-        view
-        returns (
-            uint256 total,
-            uint256 toBurn,
-            uint256 toSanctum,
-            uint256 toDAO,
-            uint256 toMerchants,
-            uint256 toHeadhunters
-        )
-    {
+    function previewDistribution() external view returns (uint256 total, uint256 toBurn, uint256 toSanctum, uint256 toDAO, uint256 toMerchants, uint256 toHeadhunters) {
         total = vfideToken.balanceOf(address(this));
         toBurn = (total * feeSplit.burnBps) / MAX_BPS;
         toSanctum = (total * feeSplit.sanctumBps) / MAX_BPS;
@@ -636,25 +543,13 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @return _uint256 _uint256
     /// @return _uint256 _uint256
     function getCurrentSplit() external view returns (uint256, uint256, uint256, uint256, uint256) {
-        return (
-            feeSplit.burnBps,
-            feeSplit.sanctumBps,
-            feeSplit.daoPayrollBps,
-            feeSplit.merchantPoolBps,
-            feeSplit.headhunterPoolBps
-        );
+        return (feeSplit.burnBps, feeSplit.sanctumBps, feeSplit.daoPayrollBps, feeSplit.merchantPoolBps, feeSplit.headhunterPoolBps);
     }
 
     /// @notice _requireKnownDestination
     /// @param h h
     function _requireKnownDestination(bytes32 h) private pure {
-        if (
-            h != keccak256("burn") &&
-            h != keccak256("sanctum") &&
-            h != keccak256("dao") &&
-            h != keccak256("merchants") &&
-            h != keccak256("headhunters")
-        ) revert("Unknown destination");
+        if (h != keccak256("burn") && h != keccak256("sanctum") && h != keccak256("dao") && h != keccak256("merchants") && h != keccak256("headhunters")) revert("Unknown destination");
     }
 
     /// @notice _safeTransferOut
@@ -663,9 +558,7 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @return _bool _bool
     function _safeTransferOut(address recipient, uint256 amount) private returns (bool) {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returnData) = address(vfideToken).call(
-            abi.encodeCall(IERC20.transfer, (recipient, amount))
-        );
+        (bool success, bytes memory returnData) = address(vfideToken).call(abi.encodeCall(IERC20.transfer, (recipient, amount)));
 
         if (!success) {
             return false;

@@ -96,12 +96,7 @@ contract BadgeManager {
     /// @param badge badge
     /// @param expiry expiry
     /// @param scoreBoost scoreBoost
-    event BadgeEarned(
-        address indexed user,
-        bytes32 indexed badge,
-        uint256 expiry,
-        uint16 scoreBoost
-    );
+    event BadgeEarned(address indexed user, bytes32 indexed badge, uint256 expiry, uint16 scoreBoost);
     /// @notice BadgeRevoked
     /// @param user user
     /// @param badge badge
@@ -195,8 +190,7 @@ contract BadgeManager {
     /// @param _seer _seer
     /// @param _qualificationRules _qualificationRules
     constructor(address _dao, address _seer, address _qualificationRules) {
-        if (_dao == address(0) || _seer == address(0) || _qualificationRules == address(0))
-            revert BM_Zero();
+        if (_dao == address(0) || _seer == address(0) || _qualificationRules == address(0)) revert BM_Zero();
         dao = _dao;
         seer = Seer(_seer);
         qualificationRules = IBadgeQualificationRules(_qualificationRules);
@@ -247,11 +241,7 @@ contract BadgeManager {
     /// @param selector selector
     /// @param operator operator
     /// @param authorized authorized
-    function setSelectorOperator(
-        bytes4 selector,
-        address operator,
-        bool authorized
-    ) external onlyDAO nonReentrantBM {
+    function setSelectorOperator(bytes4 selector, address operator, bool authorized) external onlyDAO nonReentrantBM {
         selectorOperators[selector][operator] = authorized;
         selectorRestricted[selector] = true; // once any per-selector entry exists, use per-selector mode
     }
@@ -315,9 +305,7 @@ contract BadgeManager {
             // Boost ProofScore by badge weight
             uint16 scoreBoost = BadgeRegistry.getRecommendedWeight(badge);
             if (scoreBoost > 0) {
-                string memory reason = string(
-                    abi.encodePacked("Badge: ", BadgeRegistry.getName(badge))
-                );
+                string memory reason = string(abi.encodePacked("Badge: ", BadgeRegistry.getName(badge)));
                 try seer.reward(user, scoreBoost, reason) {} catch {}
             }
 
@@ -335,12 +323,7 @@ contract BadgeManager {
     /// @param badge badge
     /// @param effectiveAt effectiveAt
     /// @param reason reason
-    event BadgeRevocationQueued(
-        address indexed user,
-        bytes32 indexed badge,
-        uint64 effectiveAt,
-        string reason
-    );
+    event BadgeRevocationQueued(address indexed user, bytes32 indexed badge, uint64 effectiveAt, string reason);
     /// @notice BadgeRevocationCancelled
     /// @param user user
     /// @param badge badge
@@ -351,11 +334,7 @@ contract BadgeManager {
     /// @param user user
     /// @param badge badge
     /// @param reason reason
-    function revokeBadge(
-        address user,
-        bytes32 badge,
-        string calldata reason
-    ) external onlyDAO nonReentrantBM {
+    function revokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
         if (!seer.hasBadge(user, badge)) return;
         require(pendingRevocationAt[user][badge] == 0, "BM: revocation already queued");
         uint64 effectiveAt = uint64(block.timestamp) + REVOKE_NOTICE_DELAY;
@@ -367,16 +346,8 @@ contract BadgeManager {
     /// @param user user
     /// @param badge badge
     /// @param reason reason
-    function applyRevokeBadge(
-        address user,
-        bytes32 badge,
-        string calldata reason
-    ) external onlyDAO nonReentrantBM {
-        require(
-            pendingRevocationAt[user][badge] != 0 &&
-                block.timestamp >= pendingRevocationAt[user][badge],
-            "BM: notice period"
-        );
+    function applyRevokeBadge(address user, bytes32 badge, string calldata reason) external onlyDAO nonReentrantBM {
+        require(pendingRevocationAt[user][badge] != 0 && block.timestamp >= pendingRevocationAt[user][badge], "BM: notice period");
         delete pendingRevocationAt[user][badge];
         if (!seer.hasBadge(user, badge)) return;
         try seer.setBadge(user, badge, false, 0) {
@@ -440,9 +411,7 @@ contract BadgeManager {
             try seer.setBadge(user, badge, false, 0) {
                 uint16 scorePenalty = BadgeRegistry.getRecommendedWeight(badge);
                 if (scorePenalty > 0) {
-                    try
-                        seer.punish(user, scorePenalty, "Badge expired - not re-qualified")
-                    {} catch {}
+                    try seer.punish(user, scorePenalty, "Badge expired - not re-qualified") {} catch {}
                 }
                 emit BadgeRevoked(user, badge, "Failed to re-qualify");
             } catch {}
@@ -455,10 +424,7 @@ contract BadgeManager {
      * @param badge The badge ID
      * @return qualified True if user meets requirements
      */
-    function _checkBadgeQualification(
-        address user,
-        bytes32 badge
-    ) internal view returns (bool qualified) {
+    function _checkBadgeQualification(address user, bytes32 badge) internal view returns (bool qualified) {
         UserStats memory stats = userStats[user];
         uint16 score = seer.getScore(user);
 
@@ -538,11 +504,7 @@ contract BadgeManager {
      * @param referrer The referrer address
      * @param qualified Whether referred user reached 600+ score
      */
-    function recordReferral(
-        address referrer,
-        address /*referred*/,
-        bool qualified
-    ) external onlyOperator nonReentrantBM {
+    function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
         ++stats.referralsMade;
         if (qualified) {
@@ -722,10 +684,7 @@ contract BadgeManager {
      * @param badge The badge ID
      * @return qualified True if user meets requirements
      */
-    function checkBadgeQualification(
-        address user,
-        bytes32 badge
-    ) external view returns (bool qualified) {
+    function checkBadgeQualification(address user, bytes32 badge) external view returns (bool qualified) {
         return _checkBadgeQualification(user, badge);
     }
 }

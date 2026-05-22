@@ -138,25 +138,14 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     /// @param referrer referrer
     /// @param vfideAmount vfideAmount
     /// @param ethAmount ethAmount
-    event Claimed(
-        address indexed user,
-        address indexed referrer,
-        uint256 vfideAmount,
-        uint256 ethAmount
-    );
+    event Claimed(address indexed user, address indexed referrer, uint256 vfideAmount, uint256 ethAmount);
     /// @notice BatchClaimProcessed
     /// @param user user
     /// @param referrer referrer
     /// @param vfideAmount vfideAmount
     /// @param ethAmount ethAmount
     /// @param ethTransferFailed ethTransferFailed
-    event BatchClaimProcessed(
-        address indexed user,
-        address indexed referrer,
-        uint256 vfideAmount,
-        uint256 ethAmount,
-        bool ethTransferFailed
-    );
+    event BatchClaimProcessed(address indexed user, address indexed referrer, uint256 vfideAmount, uint256 ethAmount, bool ethTransferFailed);
     /// @notice OperatorSet
     /// @param operator operator
     /// @param active active
@@ -194,11 +183,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     /// @param currentOwner currentOwner
     /// @param pendingOwner pendingOwner
     /// @param executeAfter executeAfter
-    event OwnerTransferProposed(
-        address indexed currentOwner,
-        address indexed pendingOwner,
-        uint64 executeAfter
-    );
+    event OwnerTransferProposed(address indexed currentOwner, address indexed pendingOwner, uint64 executeAfter);
     /// @notice OwnerTransferCancelled
     /// @param currentOwner currentOwner
     /// @param pendingOwner pendingOwner
@@ -252,8 +237,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
         _refreshDay();
         _refreshOperatorDay(msg.sender);
         if (claimsToday >= dailyClaimCap) revert Faucet_DailyCapReached();
-        if (operatorClaimsToday[msg.sender] >= operatorDailyClaimCap)
-            revert Faucet_OperatorDailyCapReached();
+        if (operatorClaimsToday[msg.sender] >= operatorDailyClaimCap) revert Faucet_OperatorDailyCapReached();
 
         // Check balances
         uint256 vfideBalance = vfideToken.balanceOf(address(this));
@@ -291,10 +275,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     /// @notice Batch claim for multiple users at once
     /// @param users Array of user addresses
     /// @param referrers Array of referrer addresses (same length, address(0) for no referrer)
-    function batchClaim(
-        address[] calldata users,
-        address[] calldata referrers
-    ) external onlyOperator nonReentrant {
+    function batchClaim(address[] calldata users, address[] calldata referrers) external onlyOperator nonReentrant {
         require(users.length == referrers.length, "Faucet: length mismatch");
         require(users.length <= 50, "Faucet: batch too large");
 
@@ -318,11 +299,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
             ++totalUsers;
 
             if (referrers[i] != address(0)) {
-                if (
-                    referrers[i] != user &&
-                    hasClaimed[referrers[i]] &&
-                    referredBy[referrers[i]] == address(0)
-                ) {
+                if (referrers[i] != user && hasClaimed[referrers[i]] && referredBy[referrers[i]] == address(0)) {
                     referredBy[user] = referrers[i];
                     _registerReferral(referrers[i], user);
                 }
@@ -335,13 +312,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
                 pendingGasTopUp[user] += claimAmountETH;
                 emit BatchClaimGasFailed(user);
             }
-            emit BatchClaimProcessed(
-                user,
-                referrers[i],
-                claimAmountVFIDE,
-                claimAmountETH,
-                gasTransferFailed
-            );
+            emit BatchClaimProcessed(user, referrers[i], claimAmountVFIDE, claimAmountETH, gasTransferFailed);
         }
     }
 
@@ -378,8 +349,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     /// @param _eth _eth
     function setClaimAmounts(uint256 _vfide, uint256 _eth) external onlyOwner {
         require(_vfide > 0, "Faucet: zero VFIDE");
-        if (_vfide > MAX_CLAIM_AMOUNT_VFIDE || _eth > MAX_CLAIM_AMOUNT_ETH)
-            revert Faucet_InvalidConfig();
+        if (_vfide > MAX_CLAIM_AMOUNT_VFIDE || _eth > MAX_CLAIM_AMOUNT_ETH) revert Faucet_InvalidConfig();
         claimAmountVFIDE = _vfide;
         claimAmountETH = _eth;
         emit ClaimAmountsSet(_vfide, _eth);
@@ -388,8 +358,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     /// @notice setDailyCap
     /// @param _cap _cap
     function setDailyCap(uint256 _cap) external onlyOwner {
-        if (_cap == 0 || _cap > MAX_DAILY_CLAIM_CAP || _cap < operatorDailyClaimCap)
-            revert Faucet_InvalidConfig();
+        if (_cap == 0 || _cap > MAX_DAILY_CLAIM_CAP || _cap < operatorDailyClaimCap) revert Faucet_InvalidConfig();
         dailyClaimCap = _cap;
         emit DailyCapSet(_cap);
     }
@@ -398,8 +367,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     /// @param _cap _cap
     function setOperatorDailyCap(uint256 _cap) external onlyOwner {
         require(_cap > 0, "Faucet: zero cap");
-        if (_cap > MAX_OPERATOR_DAILY_CLAIM_CAP || _cap > dailyClaimCap)
-            revert Faucet_InvalidConfig();
+        if (_cap > MAX_OPERATOR_DAILY_CLAIM_CAP || _cap > dailyClaimCap) revert Faucet_InvalidConfig();
         operatorDailyClaimCap = _cap;
         emit OperatorDailyCapSet(_cap);
     }
@@ -505,16 +473,7 @@ contract VFIDETestnetFaucet is ReentrancyGuard {
     function getFaucetStatus()
         external
         view
-        returns (
-            uint256 vfideBalance,
-            uint256 ethBalance,
-            uint256 _totalUsers,
-            uint256 _totalClaimed,
-            uint256 _claimsToday,
-            uint256 _dailyCap,
-            uint256 _claimVFIDE,
-            uint256 _claimETH
-        )
+        returns (uint256 vfideBalance, uint256 ethBalance, uint256 _totalUsers, uint256 _totalClaimed, uint256 _claimsToday, uint256 _dailyCap, uint256 _claimVFIDE, uint256 _claimETH)
     {
         return (
             vfideToken.balanceOf(address(this)),

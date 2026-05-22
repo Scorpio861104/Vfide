@@ -73,13 +73,7 @@ contract CouncilElection {
     /// @param hub hub
     /// @param ledger ledger
     /// @param effectiveAt effectiveAt
-    event ModulesProposed(
-        address dao,
-        address seer,
-        address hub,
-        address ledger,
-        uint64 effectiveAt
-    );
+    event ModulesProposed(address dao, address seer, address hub, address ledger, uint64 effectiveAt);
     /// @notice ModulesChangeCancelled
     event ModulesChangeCancelled();
     /// @notice ParamsSet
@@ -112,12 +106,7 @@ contract CouncilElection {
     /// @param voter voter
     /// @param candidate candidate
     /// @param weight weight
-    event ElectionVoteCast(
-        uint256 indexed epoch,
-        address indexed voter,
-        address indexed candidate,
-        uint256 weight
-    );
+    event ElectionVoteCast(uint256 indexed epoch, address indexed voter, address indexed candidate, uint256 weight);
 
     /// @notice dao
     address public dao;
@@ -239,22 +228,11 @@ contract CouncilElection {
     /// @param _seer _seer
     /// @param _hub _hub
     /// @param _ledger _ledger
-    function setModules(
-        address _dao,
-        address _seer,
-        address _hub,
-        address _ledger
-    ) external onlyDAO {
+    function setModules(address _dao, address _seer, address _hub, address _ledger) external onlyDAO {
         if (_dao == address(0) || _seer == address(0) || _hub == address(0)) revert CE_Zero();
         require(pendingModules.effectiveAt == 0, "CE: pending modules exist");
         uint64 at = uint64(block.timestamp) + MODULES_CHANGE_DELAY;
-        pendingModules = PendingModules({
-            dao: _dao,
-            seer: _seer,
-            hub: _hub,
-            ledger: _ledger,
-            effectiveAt: at
-        });
+        pendingModules = PendingModules({dao: _dao, seer: _seer, hub: _hub, ledger: _ledger, effectiveAt: at});
         emit ModulesProposed(_dao, _seer, _hub, _ledger, at);
         _log("ce_modules_proposed");
     }
@@ -284,21 +262,11 @@ contract CouncilElection {
     /// @param _minScore _minScore
     /// @param _term _term
     /// @param _refresh _refresh
-    function setParams(
-        uint8 _size,
-        uint16 _minScore,
-        uint64 _term,
-        uint64 _refresh
-    ) external onlyDAO {
+    function setParams(uint8 _size, uint16 _minScore, uint64 _term, uint64 _refresh) external onlyDAO {
         if (_size < MIN_COUNCIL_SIZE || _size > MAX_COUNCIL_SIZE) revert CE_BadSize();
         require(_minScore >= 5600 && _minScore <= 10000, "CE: invalid min score");
         require(_term == FIXED_TERM_SECONDS, "CE: term fixed");
-        require(
-            _refresh >= MIN_REFRESH_INTERVAL &&
-                _refresh <= MAX_REFRESH_INTERVAL &&
-                _refresh <= _term,
-            "CE: invalid refresh"
-        );
+        require(_refresh >= MIN_REFRESH_INTERVAL && _refresh <= MAX_REFRESH_INTERVAL && _refresh <= _term, "CE: invalid refresh");
         councilSize = _size;
         minCouncilScore = _minScore;
         termSeconds = _term;
@@ -382,15 +350,10 @@ contract CouncilElection {
     /// @notice vote
     /// @param candidate candidate
     function vote(address candidate) external {
-        if (
-            electionStartAt == 0 ||
-            block.timestamp < electionStartAt ||
-            block.timestamp >= electionEndAt
-        ) {
+        if (electionStartAt == 0 || block.timestamp < electionStartAt || block.timestamp >= electionEndAt) {
             revert CE_NoActiveElection();
         }
-        if (!isCandidate[candidate] || !_eligibleAt(candidate, electionStartAt))
-            revert CE_NotEligible();
+        if (!isCandidate[candidate] || !_eligibleAt(candidate, electionStartAt)) revert CE_NotEligible();
         if (!_eligibleAt(msg.sender, electionStartAt)) revert CE_NotEligible();
         if (_hasVoted[electionEpoch][msg.sender]) revert CE_AlreadyVoted();
 
@@ -447,10 +410,7 @@ contract CouncilElection {
                 revert CE_NotTopVotedCandidate();
             }
         }
-        _pendingCouncil = PendingCouncil({
-            members: members,
-            validFrom: uint64(block.timestamp + COUNCIL_APPOINT_DELAY)
-        });
+        _pendingCouncil = PendingCouncil({members: members, validFrom: uint64(block.timestamp + COUNCIL_APPOINT_DELAY)});
         hasPendingCouncil = true;
         emit CouncilProposed(members, uint64(block.timestamp + COUNCIL_APPOINT_DELAY));
     }
@@ -495,20 +455,13 @@ contract CouncilElection {
             if (!_eligibleAt(member, electionStartAt)) revert CE_NotEligible();
             require(!isCouncil[member], "CE: duplicate member");
 
-            bool isConsecutive =
-                lastTermEndDate[member] > 0 &&
-                    lastTermEndDate[member] >= block.timestamp - consecutiveThreshold;
+            bool isConsecutive = lastTermEndDate[member] > 0 && lastTermEndDate[member] >= block.timestamp - consecutiveThreshold;
             if (isConsecutive) {
-                if (consecutiveTermsServed[member] >= maxConsecutiveTerms)
-                    revert CE_TermLimitReached();
+                if (consecutiveTermsServed[member] >= maxConsecutiveTerms) revert CE_TermLimitReached();
                 ++consecutiveTermsServed[member];
             } else {
-                if (
-                    lastTermEndDate[member] > 0 &&
-                    block.timestamp < lastTermEndDate[member] + cooldownPeriod
-                ) {
-                    if (consecutiveTermsServed[member] >= maxConsecutiveTerms)
-                        revert CE_TermLimitReached();
+                if (lastTermEndDate[member] > 0 && block.timestamp < lastTermEndDate[member] + cooldownPeriod) {
+                    if (consecutiveTermsServed[member] >= maxConsecutiveTerms) revert CE_TermLimitReached();
                 } else {
                     consecutiveTermsServed[member] = 1;
                 }
@@ -579,13 +532,7 @@ contract CouncilElection {
         pendingRemovalAt[member] = uint64(block.timestamp) + MEMBER_REMOVAL_DELAY;
         // Log reason immediately so member can inspect and challenge.
         if (address(ledger) != address(0)) {
-            try
-                ledger.logSystemEvent(
-                    member,
-                    string(abi.encodePacked("removal_proposed:", reason)),
-                    msg.sender
-                )
-            {} catch {}
+            try ledger.logSystemEvent(member, string(abi.encodePacked("removal_proposed:", reason)), msg.sender) {} catch {}
         }
         emit CandidateUnregistered(member); // re-use event to signal pending removal
         _log("ce_member_removal_queued");
@@ -595,10 +542,7 @@ contract CouncilElection {
     /// @param member member
     function applyRemoveCouncilMember(address member) external onlyDAO {
         require(isCouncil[member], "CE: not council member");
-        require(
-            pendingRemovalAt[member] != 0 && block.timestamp >= pendingRemovalAt[member],
-            "CE: removal timelock"
-        );
+        require(pendingRemovalAt[member] != 0 && block.timestamp >= pendingRemovalAt[member], "CE: removal timelock");
         isCouncil[member] = false;
         _removeFromCouncilArray(member);
         lastTermEndDate[member] = uint64(block.timestamp);
@@ -695,9 +639,7 @@ contract CouncilElection {
     /// @return eligible eligible
     /// @return termsServed termsServed
     /// @return cooldownEnds cooldownEnds
-    function canServeNextTerm(
-        address member
-    ) external view returns (bool eligible, uint8 termsServed, uint64 cooldownEnds) {
+    function canServeNextTerm(address member) external view returns (bool eligible, uint8 termsServed, uint64 cooldownEnds) {
         eligible = _eligible(member) && _canServe(member);
         termsServed = consecutiveTermsServed[member];
         cooldownEnds = lastTermEndDate[member] + cooldownPeriod;
@@ -747,14 +689,7 @@ contract CouncilElection {
     function getElectionStatus()
         external
         view
-        returns (
-            uint256 currentCouncilSize,
-            uint256 maxCouncilSize,
-            uint64 termEndTime,
-            uint256 daysRemaining,
-            uint256 candidateCount,
-            uint256 eligibleCandidateCount
-        )
+        returns (uint256 currentCouncilSize, uint256 maxCouncilSize, uint64 termEndTime, uint256 daysRemaining, uint256 candidateCount, uint256 eligibleCandidateCount)
     {
         currentCouncilSize = currentCouncil.length;
         maxCouncilSize = councilSize;
@@ -785,11 +720,7 @@ contract CouncilElection {
     /// @return startAt startAt
     /// @return endAt endAt
     /// @return epoch epoch
-    function getElectionWindow()
-        external
-        view
-        returns (uint64 startAt, uint64 endAt, uint256 epoch)
-    {
+    function getElectionWindow() external view returns (uint64 startAt, uint64 endAt, uint256 epoch) {
         return (electionStartAt, electionEndAt, electionEpoch);
     }
 
@@ -810,19 +741,7 @@ contract CouncilElection {
      * @return requiredScore requiredScore
      * @return canServe canServe
      */
-    function canRegister(
-        address user
-    )
-        external
-        view
-        returns (
-            bool eligible,
-            bool hasVault,
-            uint16 currentScore,
-            uint16 requiredScore,
-            bool canServe
-        )
-    {
+    function canRegister(address user) external view returns (bool eligible, bool hasVault, uint16 currentScore, uint16 requiredScore, bool canServe) {
         hasVault = vaultHub.vaultOf(user) != address(0);
         currentScore = seer.getScore(user);
         requiredScore = minCouncilScore;
@@ -835,11 +754,7 @@ contract CouncilElection {
     /// @param candidate candidate
     /// @param topN topN
     /// @return _bool _bool
-    function _isTopVotedCandidate(
-        uint256 epoch,
-        address candidate,
-        uint8 topN
-    ) internal view returns (bool) {
+    function _isTopVotedCandidate(uint256 epoch, address candidate, uint8 topN) internal view returns (bool) {
         uint256 candidateVotes = _candidateVotes[epoch][candidate];
         if (candidateVotes == 0) return false;
 
@@ -852,9 +767,7 @@ contract CouncilElection {
             uint256 otherVotes = _candidateVotes[epoch][other];
             if (other == candidate) continue;
 
-            if (
-                otherVotes > candidateVotes || (otherVotes == candidateVotes && other < candidate)
-            ) {
+            if (otherVotes > candidateVotes || (otherVotes == candidateVotes && other < candidate)) {
                 ++strictlyBetter;
                 if (strictlyBetter >= topN) return false;
             }

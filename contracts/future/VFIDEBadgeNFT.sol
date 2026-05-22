@@ -70,13 +70,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     /// @param badge badge
     /// @param badgeNumber badgeNumber
     /// @param timestamp timestamp
-    event BadgeNFTMinted(
-        address indexed user,
-        uint256 indexed tokenId,
-        bytes32 indexed badge,
-        uint256 badgeNumber,
-        uint256 timestamp
-    );
+    event BadgeNFTMinted(address indexed user, uint256 indexed tokenId, bytes32 indexed badge, uint256 badgeNumber, uint256 timestamp);
 
     /// @notice Emitted when a badge NFT is burned (badge lost/revoked)
     /// @param user user
@@ -224,11 +218,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @param auth auth
      * @return _address _address
      */
-    function _update(
-        address to,
-        uint256 tokenId,
-        address auth
-    ) internal override(ERC721, ERC721Enumerable) returns (address) {
+    function _update(address to, uint256 tokenId, address auth) internal override(ERC721, ERC721Enumerable) returns (address) {
         address from = _ownerOf(tokenId);
         if (from != address(0) && to != address(0)) {
             revert TokenIsSoulbound();
@@ -242,10 +232,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @param account account
      * @param value value
      */
-    function _increaseBalance(
-        address account,
-        uint128 value
-    ) internal override(ERC721, ERC721Enumerable) {
+    function _increaseBalance(address account, uint128 value) internal override(ERC721, ERC721Enumerable) {
         super._increaseBalance(account, value);
     }
 
@@ -256,24 +243,13 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @param tokenId The token ID
      * @return Full metadata URI
      */
-    function tokenURI(
-        uint256 tokenId
-    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
         _requireOwned(tokenId);
 
         bytes32 badge = tokenBadge[tokenId];
 
         // Build URI: baseURI/BADGE_NAME/tokenId
-        return
-            string(
-                abi.encodePacked(
-                    _baseTokenURI,
-                    _badgeNameToPath(badge),
-                    "/",
-                    _toString(tokenId),
-                    ".json"
-                )
-            );
+        return string(abi.encodePacked(_baseTokenURI, _badgeNameToPath(badge), "/", _toString(tokenId), ".json"));
     }
 
     /**
@@ -332,19 +308,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @return mintTime When it was minted
      * @return number Badge number (e.g., #2847)
      */
-    function getBadgeDetails(
-        uint256 tokenId
-    )
-        external
-        view
-        returns (
-            bytes32 badge,
-            string memory name,
-            string memory category,
-            uint256 mintTime,
-            uint256 number
-        )
-    {
+    function getBadgeDetails(uint256 tokenId) external view returns (bytes32 badge, string memory name, string memory category, uint256 mintTime, uint256 number) {
         _requireOwned(tokenId);
 
         badge = tokenBadge[tokenId];
@@ -363,10 +327,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @return canMint True if user can mint
      * @return reason Reason if cannot mint
      */
-    function canMintBadge(
-        address user,
-        bytes32 badge
-    ) external view returns (bool canMint, string memory reason) {
+    function canMintBadge(address user, bytes32 badge) external view returns (bool canMint, string memory reason) {
         if (userBadgeToken[user][badge] != 0) {
             return (false, "Already minted");
         }
@@ -519,9 +480,7 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     /// @notice supportsInterface
     /// @param interfaceId interfaceId
     /// @return _bool _bool
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC721, ERC721URIStorage, ERC721Enumerable) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721URIStorage, ERC721Enumerable) returns (bool) {
         // ERC-5192 interface ID
         return interfaceId == 0xb45a3c0e || super.supportsInterface(interfaceId);
     }

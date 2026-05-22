@@ -116,12 +116,7 @@ contract SystemHandover {
     /// @param minAvgCouncilScore minAvgCouncilScore
     /// @param maxExtensions maxExtensions
     /// @param extensionSpan extensionSpan
-    event ParamsSet(
-        uint64 monthsDelay,
-        uint16 minAvgCouncilScore,
-        uint8 maxExtensions,
-        uint64 extensionSpan
-    );
+    event ParamsSet(uint64 monthsDelay, uint16 minAvgCouncilScore, uint8 maxExtensions, uint64 extensionSpan);
     /// @notice Executed
     /// @param dao dao
     /// @param timelock timelock
@@ -231,21 +226,8 @@ contract SystemHandover {
     /// @param _seer _seer
     /// @param _council _council
     /// @param _ledger _ledger
-    constructor(
-        address _dev,
-        address _dao,
-        address _timelock,
-        address _seer,
-        address _council,
-        address _ledger
-    ) {
-        if (
-            _dev == address(0) ||
-            _dao == address(0) ||
-            _timelock == address(0) ||
-            _seer == address(0) ||
-            _council == address(0)
-        ) revert SH_Zero();
+    constructor(address _dev, address _dao, address _timelock, address _seer, address _council, address _ledger) {
+        if (_dev == address(0) || _dao == address(0) || _timelock == address(0) || _seer == address(0) || _council == address(0)) revert SH_Zero();
         devMultisig = _dev;
         dao = IDAO_SH(_dao);
         timelock = IDAOTimelock_SH(_timelock);
@@ -301,12 +283,7 @@ contract SystemHandover {
     /// @param _minAvg _minAvg
     /// @param _maxExt _maxExt
     /// @param _extSpan _extSpan
-    function setParams(
-        uint64 _monthsDelay,
-        uint16 _minAvg,
-        uint8 _maxExt,
-        uint64 _extSpan
-    ) external onlyDev {
+    function setParams(uint64 _monthsDelay, uint16 _minAvg, uint8 _maxExt, uint64 _extSpan) external onlyDev {
         if (_monthsDelay < 90 days) _monthsDelay = 90 days;
         // M-4 FIX: Once the handover is armed, the delay may only be extended, never shortened.
         // Without this guard the dev team could arm for 6 months then immediately reduce to 90 days.
@@ -443,8 +420,7 @@ contract SystemHandover {
         address actualDAOAdmin = dao.admin();
         address actualTimelockAdmin = timelock.admin();
         if (actualDAOAdmin != newAdmin) revert SH_DAOAdminMismatch(newAdmin, actualDAOAdmin);
-        if (actualTimelockAdmin != address(dao))
-            revert SH_TimelockAdminMismatch(address(dao), actualTimelockAdmin);
+        if (actualTimelockAdmin != address(dao)) revert SH_TimelockAdminMismatch(address(dao), actualTimelockAdmin);
 
         emit Executed(address(dao), address(timelock), newAdmin, extensionsUsed);
         _log("handover_executed");
@@ -466,9 +442,7 @@ contract SystemHandover {
     /// @param newAdmin The proposed new admin address (pass address(0) to use address(dao)).
     /// @return ok     True if executeHandover would succeed.
     /// @return reason Human-readable failure reason (empty when ok=true).
-    function canExecuteHandover(
-        address newAdmin
-    ) external view returns (bool ok, string memory reason) {
+    function canExecuteHandover(address newAdmin) external view returns (bool ok, string memory reason) {
         if (start == 0) return (false, "handover not armed");
         if (handoverExecuted) return (false, "handover already executed");
         if (block.timestamp < handoverAt) return (false, "handover timelock still active");
@@ -478,29 +452,11 @@ contract SystemHandover {
 
         address actualDAOAdmin = dao.admin();
         if (actualDAOAdmin != effectiveAdmin) {
-            return (
-                false,
-                string(
-                    abi.encodePacked(
-                        "DAO admin mismatch: expected ",
-                        _toHex(effectiveAdmin),
-                        " got ",
-                        _toHex(actualDAOAdmin)
-                    )
-                )
-            );
+            return (false, string(abi.encodePacked("DAO admin mismatch: expected ", _toHex(effectiveAdmin), " got ", _toHex(actualDAOAdmin))));
         }
         address actualTimelockAdmin = timelock.admin();
         if (actualTimelockAdmin != address(dao)) {
-            return (
-                false,
-                string(
-                    abi.encodePacked(
-                        "timelock admin mismatch: expected DAO got ",
-                        _toHex(actualTimelockAdmin)
-                    )
-                )
-            );
+            return (false, string(abi.encodePacked("timelock admin mismatch: expected DAO got ", _toHex(actualTimelockAdmin))));
         }
         return (true, "");
     }

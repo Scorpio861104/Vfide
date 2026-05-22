@@ -249,13 +249,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /// @param claimant claimant
     /// @param originalOwner originalOwner
     /// @param expiresAt expiresAt
-    event ClaimInitiated(
-        uint256 indexed claimId,
-        address indexed vault,
-        address indexed claimant,
-        address originalOwner,
-        uint64 expiresAt
-    );
+    event ClaimInitiated(uint256 indexed claimId, address indexed vault, address indexed claimant, address originalOwner, uint64 expiresAt);
 
     // F-54: Emitted when vault activity is recorded (extends future challenge windows)
     /// @notice VaultActivityRecorded
@@ -268,12 +262,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /// @param guardian guardian
     /// @param approved approved
     /// @param totalApprovals totalApprovals
-    event GuardianVoteCast(
-        uint256 indexed claimId,
-        address indexed guardian,
-        bool approved,
-        uint8 totalApprovals
-    );
+    event GuardianVoteCast(uint256 indexed claimId, address indexed guardian, bool approved, uint8 totalApprovals);
 
     /// @notice ClaimChallenged
     /// @param claimId claimId
@@ -298,12 +287,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /// @param vault vault
     /// @param newOwner newOwner
     /// @param previousOwner previousOwner
-    event ClaimExecuted(
-        uint256 indexed claimId,
-        address indexed vault,
-        address indexed newOwner,
-        address previousOwner
-    );
+    event ClaimExecuted(uint256 indexed claimId, address indexed vault, address indexed newOwner, address previousOwner);
 
     /// @notice ClaimExpired
     /// @param claimId claimId
@@ -341,10 +325,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /// @notice VaultRegistryChangeApplied
     /// @param oldVaultRegistry oldVaultRegistry
     /// @param newVaultRegistry newVaultRegistry
-    event VaultRegistryChangeApplied(
-        address indexed oldVaultRegistry,
-        address indexed newVaultRegistry
-    );
+    event VaultRegistryChangeApplied(address indexed oldVaultRegistry, address indexed newVaultRegistry);
     /// @notice VaultRegistryChangeCancelled
     /// @param pendingVaultRegistry pendingVaultRegistry
     event VaultRegistryChangeCancelled(address indexed pendingVaultRegistry);
@@ -419,10 +400,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @param vault vault
      */
     function recordVaultActivity(address vault) external {
-        require(
-            msg.sender == vault || msg.sender == vaultHub.ownerOfVault(vault),
-            "VaultRecoveryClaim: not vault or owner"
-        );
+        require(msg.sender == vault || msg.sender == vaultHub.ownerOfVault(vault), "VaultRecoveryClaim: not vault or owner");
         vaultLastActivity[vault] = uint64(block.timestamp);
         emit VaultActivityRecorded(vault, uint64(block.timestamp));
     }
@@ -436,12 +414,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @param reason User's explanation of why they're claiming this vault
      * @return claimId claimId
      */
-    function initiateClaim(
-        address vault,
-        string calldata recoveryId,
-        bytes32 evidenceHash,
-        string calldata reason
-    ) external nonReentrant returns (uint256 claimId) {
+    function initiateClaim(address vault, string calldata recoveryId, bytes32 evidenceHash, string calldata reason) external nonReentrant returns (uint256 claimId) {
         return _initiateClaim(vault, recoveryId, evidenceHash, reason);
     }
 
@@ -453,12 +426,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @param reason reason
      * @return claimId claimId
      */
-    function _initiateClaim(
-        address vault,
-        string calldata recoveryId,
-        bytes32 evidenceHash,
-        string calldata reason
-    ) internal returns (uint256 claimId) {
+    function _initiateClaim(address vault, string calldata recoveryId, bytes32 evidenceHash, string calldata reason) internal returns (uint256 claimId) {
         // Validate vault exists
         if (!vaultHub.isVault(vault)) revert InvalidVault();
 
@@ -467,19 +435,11 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (activeClaimForVault[vault] != 0) {
             RecoveryClaim storage existing = claims[activeClaimForVault[vault]];
             // Auto-expire if past expiry time
-            if (
-                block.timestamp > existing.expiresAt &&
-                (existing.status == ClaimStatus.Pending ||
-                    existing.status == ClaimStatus.GuardianApproved ||
-                    existing.status == ClaimStatus.Challenged)
-            ) {
+            if (block.timestamp > existing.expiresAt && (existing.status == ClaimStatus.Pending || existing.status == ClaimStatus.GuardianApproved || existing.status == ClaimStatus.Challenged)) {
                 existing.status = ClaimStatus.Expired;
                 activeClaimForVault[vault] = 0;
             } else if (
-                existing.status == ClaimStatus.Pending ||
-                existing.status == ClaimStatus.GuardianApproved ||
-                existing.status == ClaimStatus.Approved ||
-                existing.status == ClaimStatus.Challenged
+                existing.status == ClaimStatus.Pending || existing.status == ClaimStatus.GuardianApproved || existing.status == ClaimStatus.Approved || existing.status == ClaimStatus.Challenged
             ) {
                 revert ClaimAlreadyExists();
             }
@@ -558,10 +518,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (!setupComplete) {
             // Guardian setup incomplete → use the extended window.
             baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD; // 14 days
-        } else if (
-            vaultLastActivity[vault] != 0 &&
-            block.timestamp - vaultLastActivity[vault] <= VAULT_ACTIVITY_WINDOW
-        ) {
+        } else if (vaultLastActivity[vault] != 0 && block.timestamp - vaultLastActivity[vault] <= VAULT_ACTIVITY_WINDOW) {
             baseChallengePeriod = ACTIVE_VAULT_CHALLENGE_PERIOD; // 14 days
         } else {
             baseChallengePeriod = CHALLENGE_PERIOD; // 7 days
@@ -569,8 +526,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
 
         // Read user preference (0 means "no preference, use base")
         uint64 userPreference = userVault.challengePeriodPreferenceView();
-        uint64 effectiveChallengePeriod =
-            userPreference > baseChallengePeriod ? userPreference : baseChallengePeriod;
+        uint64 effectiveChallengePeriod = userPreference > baseChallengePeriod ? userPreference : baseChallengePeriod;
 
         claims[claimId] = RecoveryClaim({
             vault: vault,
@@ -604,10 +560,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @param reason User's explanation
      * @return claimId claimId
      */
-    function initiateClaimByRecoveryId(
-        string calldata recoveryId,
-        string calldata reason
-    ) external nonReentrant returns (uint256 claimId) {
+    function initiateClaimByRecoveryId(string calldata recoveryId, string calldata reason) external nonReentrant returns (uint256 claimId) {
         require(address(vaultRegistry) != address(0), "Registry not set");
 
         address vault = vaultRegistry.searchByRecoveryId(recoveryId);
@@ -696,22 +649,14 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     function challengeClaim(uint256 claimId, string calldata reason) external nonReentrant {
         RecoveryClaim storage claim = claims[claimId];
 
-        if (
-            claim.status == ClaimStatus.None ||
-            claim.status == ClaimStatus.Executed ||
-            claim.status == ClaimStatus.Rejected ||
-            claim.status == ClaimStatus.Expired
-        ) {
+        if (claim.status == ClaimStatus.None || claim.status == ClaimStatus.Executed || claim.status == ClaimStatus.Rejected || claim.status == ClaimStatus.Expired) {
             revert NoActiveClaim();
         }
 
         // Only original owner can challenge
         if (msg.sender != claim.originalOwner) revert NotOriginalOwner();
 
-        if (
-            claim.challengeEndsAt != 0 &&
-            block.timestamp > claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD
-        ) {
+        if (claim.challengeEndsAt != 0 && block.timestamp > claim.challengeEndsAt + FINALIZATION_GRACE_PERIOD) {
             revert ChallengePeriodEnded();
         }
 
@@ -722,8 +667,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // other trustees can still help if the original was a genuine mistake
         // and the user is in a real emergency. Punishes harassment without
         // punishing the user.
-        initiatorCooldownUntil[claim.vault][claim.initiator] =
-            uint64(block.timestamp) + INITIATOR_COOLDOWN;
+        initiatorCooldownUntil[claim.vault][claim.initiator] = uint64(block.timestamp) + INITIATOR_COOLDOWN;
 
         emit ClaimChallenged(claimId, msg.sender, reason);
         emit ClaimRejected(claimId, claim.vault, "Challenged by original owner");
@@ -833,9 +777,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @return claimId claimId
      * @return claim claim
      */
-    function getActiveClaimForVault(
-        address vault
-    ) external view returns (uint256 claimId, RecoveryClaim memory claim) {
+    function getActiveClaimForVault(address vault) external view returns (uint256 claimId, RecoveryClaim memory claim) {
         claimId = activeClaimForVault[vault];
         if (claimId != 0) {
             claim = claims[claimId];
@@ -897,10 +839,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (_vaultHub == address(0)) revert ZeroAddress();
         if (pendingVaultHubChange.executeAfter != 0) revert ModuleChangePending();
         uint64 executeAfter = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
-        pendingVaultHubChange = PendingModuleChange({
-            newAddress: _vaultHub,
-            executeAfter: executeAfter
-        });
+        pendingVaultHubChange = PendingModuleChange({newAddress: _vaultHub, executeAfter: executeAfter});
         emit VaultHubChangeQueued(_vaultHub, executeAfter);
     }
 
@@ -930,10 +869,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (_vaultRegistry == address(0)) revert ZeroAddress();
         if (pendingVaultRegistryChange.executeAfter != 0) revert ModuleChangePending();
         uint64 executeAfter = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
-        pendingVaultRegistryChange = PendingModuleChange({
-            newAddress: _vaultRegistry,
-            executeAfter: executeAfter
-        });
+        pendingVaultRegistryChange = PendingModuleChange({newAddress: _vaultRegistry, executeAfter: executeAfter});
         emit VaultRegistryChangeQueued(_vaultRegistry, executeAfter);
     }
 
@@ -964,11 +900,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         if (verifier == address(0)) revert ZeroAddress();
 
         uint64 executeAfter = uint64(block.timestamp) + VERIFIER_CHANGE_DELAY;
-        pendingVerifierChange = PendingVerifierChange({
-            verifier: verifier,
-            trusted: trusted,
-            executeAfter: executeAfter
-        });
+        pendingVerifierChange = PendingVerifierChange({verifier: verifier, trusted: trusted, executeAfter: executeAfter});
         emit VerifierChangeQueued(verifier, trusted, executeAfter);
     }
 

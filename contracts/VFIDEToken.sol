@@ -1,16 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {
-    LedgerLogFailed,
-    IVaultHub,
-    IProofLedger,
-    IProofScoreBurnRouterToken,
-    IProofScoreBurnRouter,
-    IEmergencyBreaker,
-    Ownable,
-    ReentrancyGuard
-} from "./SharedInterfaces.sol";
+import {LedgerLogFailed, IVaultHub, IProofLedger, IProofScoreBurnRouterToken, IProofScoreBurnRouter, IEmergencyBreaker, Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
 
 /// @dev Fraud registry interface for community-driven fraud flagging
 /// @notice IFraudRegistry
@@ -49,12 +40,7 @@ interface ISeerAutonomousToken {
     /// @param amount amount
     /// @param counterparty counterparty
     /// @return _uint8 _uint8
-    function beforeAction(
-        address subject,
-        uint8 action,
-        uint256 amount,
-        address counterparty
-    ) external returns (uint8);
+    function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
 }
 
 /**
@@ -99,8 +85,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice DEV_RESERVE_SUPPLY
     uint256 public constant DEV_RESERVE_SUPPLY = 50_000_000e18;
     /// @notice ECDSA_S_UPPER_BOUND
-    uint256 private constant ECDSA_S_UPPER_BOUND =
-        0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
+    uint256 private constant ECDSA_S_UPPER_BOUND = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0;
     /// @notice EMPTY_CODE_HASH
     bytes32 private constant EMPTY_CODE_HASH = keccak256("");
 
@@ -143,25 +128,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param maxWallet maxWallet
     /// @param dailyLimit dailyLimit
     /// @param cooldown cooldown
-    event AntiWhaleSet(
-        uint256 maxTransfer,
-        uint256 maxWallet,
-        uint256 dailyLimit,
-        uint256 cooldown
-    );
+    event AntiWhaleSet(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown);
     /// @notice AntiWhaleProposed
     /// @param maxTransfer maxTransfer
     /// @param maxWallet maxWallet
     /// @param dailyLimit dailyLimit
     /// @param cooldown cooldown
     /// @param effectiveAt effectiveAt
-    event AntiWhaleProposed(
-        uint256 maxTransfer,
-        uint256 maxWallet,
-        uint256 dailyLimit,
-        uint256 cooldown,
-        uint64 effectiveAt
-    );
+    event AntiWhaleProposed(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown, uint64 effectiveAt);
     /// @notice WhaleLimitExemptSet
     /// @param addr addr
     /// @param exempt exempt
@@ -329,8 +303,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     uint256 private _cachedChainId;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     /// @notice PERMIT_TYPEHASH
-    bytes32 public constant PERMIT_TYPEHASH =
-        0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     /// @notice nonces
     mapping(address => uint256) public nonces;
 
@@ -445,15 +418,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param ecosystemAmount ecosystemAmount
     /// @param sanctumSink sanctumSink
     /// @param ecosystemSink ecosystemSink
-    event FeeApplied(
-        address indexed from,
-        address indexed to,
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        address indexed sanctumSink,
-        address ecosystemSink
-    );
+    event FeeApplied(address indexed from, address indexed to, uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address indexed sanctumSink, address ecosystemSink);
     /// @notice Transfer
     /// @param from from
     /// @param to to
@@ -565,15 +530,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // EIP-712 Domain Separator (cached + dynamic)
         _cachedChainId = block.chainid;
         _cachedDomainSeparator = keccak256(
-            abi.encode(
-                keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                ),
-                keccak256(bytes(name)),
-                keccak256(bytes("1")),
-                block.chainid,
-                address(this)
-            )
+            abi.encode(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"), keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this))
         );
 
         // Mint full 200M supply at genesis and distribute
@@ -644,15 +601,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
         return
             keccak256(
-                abi.encode(
-                    keccak256(
-                        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-                    ),
-                    keccak256(bytes(name)),
-                    keccak256(bytes("1")),
-                    block.chainid,
-                    address(this)
-                )
+                abi.encode(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"), keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this))
             );
     }
 
@@ -665,22 +614,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param v v
     /// @param r r
     /// @param s s
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
         if (block.timestamp > deadline) revert VF_PermitExpired();
         // F-01 FIX: Reject malleable signatures (EIP-2 / secp256k1 upper bound on s)
         if (uint256(s) > ECDSA_S_UPPER_BOUND) revert VF_InvalidPermit();
         if (v != 27 && v != 28) revert VF_InvalidPermit();
-        bytes32 structHash = keccak256(
-            abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline)
-        );
+        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline));
         bytes32 hash = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
         address signer = ecrecover(hash, v, r, s);
         if (signer == address(0) || signer != owner) revert VF_InvalidPermit();
@@ -701,11 +640,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param to to
     /// @param amount amount
     /// @return _bool _bool
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external nonReentrant returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) external nonReentrant returns (bool) {
         // System-exempt protocol modules must remain operable even if accidentally sanctioned.
         uint256 cur = _allowances[from][msg.sender];
         if (cur < amount) revert VF_InsufficientAllowance();
@@ -808,8 +743,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     /// @notice Apply a pending seerAutonomous change after the 48h timelock.
     function applySeerAutonomous() external onlyOwner {
-        if (pendingSeerAutonomousAt == 0 || block.timestamp < pendingSeerAutonomousAt)
-            revert VF_Timelock();
+        if (pendingSeerAutonomousAt == 0 || block.timestamp < pendingSeerAutonomousAt) revert VF_Timelock();
         seerAutonomous = ISeerAutonomousToken(pendingSeerAutonomous);
         delete pendingSeerAutonomous;
         delete pendingSeerAutonomousAt;
@@ -1150,12 +1084,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     function setFeeBypass(bool _active, uint256 _duration) external onlyOwner {
         _syncEmergencyFlags();
         if (_active) {
-            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION)
-                revert VF_InvalidDuration();
-            if (
-                feeBypassActivatedAt != 0 &&
-                block.timestamp < feeBypassActivatedAt + FEE_BYPASS_COOLDOWN
-            ) {
+            if (_duration == 0 || _duration > MAX_CIRCUIT_BREAKER_DURATION) revert VF_InvalidDuration();
+            if (feeBypassActivatedAt != 0 && block.timestamp < feeBypassActivatedAt + FEE_BYPASS_COOLDOWN) {
                 revert VF_FeeBypassCooldown();
             }
             // H-6 FIX: Propose activation with 48-hour delay instead of instant enable
@@ -1222,12 +1152,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @param _dailyLimit Max tokens transferred per 24h (0 = disabled)
      * @param _cooldown Seconds between transfers (0 = disabled)
      */
-    function setAntiWhale(
-        uint256 _maxTransfer,
-        uint256 _maxWallet,
-        uint256 _dailyLimit,
-        uint256 _cooldown
-    ) external onlyOwner {
+    function setAntiWhale(uint256 _maxTransfer, uint256 _maxWallet, uint256 _dailyLimit, uint256 _cooldown) external onlyOwner {
         // Once policy is locked, whale limits must remain active (non-zero).
         // Allowing a full disable post-lock would silently remove the anti-whale
         // guarantee that was part of the published policy at lock time.
@@ -1247,13 +1172,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         pendingCooldown = _cooldown;
         pendingAntiWhaleAt = uint64(block.timestamp) + SINK_CHANGE_DELAY;
 
-        emit AntiWhaleProposed(
-            _maxTransfer,
-            _maxWallet,
-            _dailyLimit,
-            _cooldown,
-            pendingAntiWhaleAt
-        );
+        emit AntiWhaleProposed(_maxTransfer, _maxWallet, _dailyLimit, _cooldown, pendingAntiWhaleAt);
         _log("awp");
     }
 
@@ -1356,11 +1275,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
 
         address fraudCheckAddr = scoringFrom;
-        bool escrowTransferRequired =
-            address(fraudRegistry) != address(0) &&
-                !systemExempt[from] &&
-                !systemExempt[logicalTo] &&
-                fraudRegistry.requiresEscrow(fraudCheckAddr);
+        bool escrowTransferRequired = address(fraudRegistry) != address(0) && !systemExempt[from] && !systemExempt[logicalTo] && fraudRegistry.requiresEscrow(fraudCheckAddr);
 
         // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
         // EE-1 GAS FIX: _checkWhaleProtection now returns the daily window state it read from
@@ -1368,28 +1283,16 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // and avoid re-reading the same slots (~2 100–4 200 gas saved per non-exempt transfer).
         uint256 _cachedWindowStart = 0;
         uint256 _cachedStoredUsed = 0;
-        bool _dailyExempt =
-            whaleLimitExempt[from] ||
-                whaleLimitExempt[custodyTo] ||
-                systemExempt[from] ||
-                systemExempt[logicalTo];
+        bool _dailyExempt = whaleLimitExempt[from] || whaleLimitExempt[custodyTo] || systemExempt[from] || systemExempt[logicalTo];
         if (!_dailyExempt) {
-            (_cachedWindowStart, _cachedStoredUsed) = _checkWhaleProtection(
-                from,
-                custodyTo,
-                amount
-            );
+            (_cachedWindowStart, _cachedStoredUsed) = _checkWhaleProtection(from, custodyTo, amount);
         }
 
         // 3. Auto-create vaults if needed (vault-only enforcement)
         if (vaultOnly && address(vaultHub) != address(0)) {
             // 3. Vault-only enforcement
             // FROM must be: mint, system exempt, whitelisted, vault, or owns a vault
-            bool fromOk = (from == address(0) ||
-                systemExempt[from] ||
-                whitelisted[from] ||
-                _isVault(from) ||
-                _hasVault(from));
+            bool fromOk = (from == address(0) || systemExempt[from] || whitelisted[from] || _isVault(from) || _hasVault(from));
 
             // TO must be: burn, sink, system exempt, whitelisted, vault, or owns a vault
             bool toOk = (logicalTo == address(0) ||
@@ -1422,12 +1325,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         uint256 remaining = amount;
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
-        if (
-            !escrowTransferRequired &&
-            address(burnRouter) != address(0) &&
-            !isFeeBypassed() &&
-            !(systemExempt[from] || systemExempt[logicalTo])
-        ) {
+        if (!escrowTransferRequired && address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[logicalTo])) {
             try burnRouter.computeFeesAndReserve(scoringFrom, logicalTo, amount) returns (
                 uint256 _burnAmt,
                 uint256 _sanctumAmt,
@@ -1441,21 +1339,15 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
                 // F-17/C-01 FIX: Validate all returned sink addresses against token-level configuration.
                 if (_sanctumSink != address(0)) {
-                    if (_sanctumSink != sanctumSink && _sanctumSink != treasurySink)
-                        revert VF_InvalidFeeSink();
+                    if (_sanctumSink != sanctumSink && _sanctumSink != treasurySink) revert VF_InvalidFeeSink();
                 }
                 if (_ecoSink != address(0)) {
                     // C-1 FIX: Also accept ecosystemDistributor as a valid eco sink
-                    if (
-                        _ecoSink != treasurySink &&
-                        _ecoSink != sanctumSink &&
-                        _ecoSink != ecosystemDistributor
-                    ) revert VF_InvalidFeeSink();
+                    if (_ecoSink != treasurySink && _ecoSink != sanctumSink && _ecoSink != ecosystemDistributor) revert VF_InvalidFeeSink();
                 }
                 if (_burnSink != address(0)) {
                     // H-8 FIX: ecosystemDistributor must NOT be a valid burn sink; only treasurySink/sanctumSink are valid burn destinations
-                    if (_burnSink != treasurySink && _burnSink != sanctumSink)
-                        revert VF_InvalidFeeSink();
+                    if (_burnSink != treasurySink && _burnSink != sanctumSink) revert VF_InvalidFeeSink();
                 }
 
                 if (_burnAmt > 0) {
@@ -1471,14 +1363,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     remaining -= _sanctumAmt;
                 }
                 if (_ecoAmt > 0) {
-                    address sink3 =
-                        (_ecoSink == address(0))
-                            ? (
-                                ecosystemDistributor != address(0)
-                                    ? ecosystemDistributor
-                                    : treasurySink
-                            )
-                            : _ecoSink;
+                    address sink3 = (_ecoSink == address(0)) ? (ecosystemDistributor != address(0) ? ecosystemDistributor : treasurySink) : _ecoSink;
                     if (sink3 == address(0)) revert VF_InvalidFeeSink();
                     _balances[sink3] += _ecoAmt;
                     emit Transfer(from, sink3, _ecoAmt);
@@ -1486,37 +1371,23 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                     // #311 (cross): FeeDistributor notification must not halt transfers.
                     // Emit telemetry on failures and continue transfer execution.
                     if (sink3 == ecosystemDistributor) {
-                        try IEcosystemDistributor(sink3).receiveFee(_ecoAmt) {} catch (
-                            bytes memory reason
-                        ) {
+                        try IEcosystemDistributor(sink3).receiveFee(_ecoAmt) {} catch (bytes memory reason) {
                             emit ExternalCallFailed("fd", reason);
                         }
                     }
                 }
 
                 if (_burnAmt > 0 || _sanctumAmt > 0 || _ecoAmt > 0) {
-                    emit FeeApplied(
-                        from,
-                        logicalTo,
-                        _burnAmt,
-                        _sanctumAmt,
-                        _ecoAmt,
-                        (_sanctumSink == address(0) ? treasurySink : _sanctumSink),
-                        (_ecoSink == address(0) ? treasurySink : _ecoSink)
-                    );
+                    emit FeeApplied(from, logicalTo, _burnAmt, _sanctumAmt, _ecoAmt, (_sanctumSink == address(0) ? treasurySink : _sanctumSink), (_ecoSink == address(0) ? treasurySink : _ecoSink));
                 }
 
                 // Record volume for adaptive fee tracking (sustainability)
-                try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (
-                    bytes memory reason
-                ) {
+                try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) {
                     emit ExternalCallFailed("rv", reason);
                 }
                 // #353 FIX: Record burn amount for daily cap tracking
                 if (_burnAmt > 0) {
-                    try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch (
-                        bytes memory reason
-                    ) {
+                    try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch (bytes memory reason) {
                         emit ExternalCallFailed("rb", reason);
                     }
                 }
@@ -1571,12 +1442,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param counterparty counterparty
-    function _enforceSeerAction(
-        address subject,
-        uint8 action,
-        uint256 amount,
-        address counterparty
-    ) internal {
+    function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
         if (address(seerAutonomous) == address(0)) return;
         try seerAutonomous.beforeAction(subject, action, amount, counterparty) returns (uint8 r) {
             // NON-CUSTODIAL ALIGNMENT: match DAO._enforceSeerAction semantics.
@@ -1725,26 +1591,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param amount amount
     /// @return ok ok
     /// @return expectedNet expectedNet
-    function _tryExpectedNetAmount(
-        address from,
-        address to,
-        uint256 amount
-    ) internal view returns (bool ok, uint256 expectedNet) {
+    function _tryExpectedNetAmount(address from, address to, uint256 amount) internal view returns (bool ok, uint256 expectedNet) {
         address feeFrom = _resolveFeeScoringAddress(from);
-        (bool success, bytes memory data) = address(burnRouter).staticcall(
-            abi.encodeWithSelector(
-                IProofScoreBurnRouterToken.computeFees.selector,
-                feeFrom,
-                to,
-                amount
-            )
-        );
+        (bool success, bytes memory data) = address(burnRouter).staticcall(abi.encodeWithSelector(IProofScoreBurnRouterToken.computeFees.selector, feeFrom, to, amount));
         if (!success || data.length < 192) return (false, 0);
 
-        (uint256 burnAmt, uint256 sanctumAmt, uint256 ecoAmt, , , ) = abi.decode(
-            data,
-            (uint256, uint256, uint256, address, address, address)
-        );
+        (uint256 burnAmt, uint256 sanctumAmt, uint256 ecoAmt, , , ) = abi.decode(data, (uint256, uint256, uint256, address, address, address));
 
         uint256 totalFees = burnAmt + sanctumAmt + ecoAmt;
         if (totalFees > amount) return (false, 0);
@@ -1770,19 +1622,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @param to to
      * @param amount amount
      */
-    function _checkWhaleProtection(
-        address from,
-        address to,
-        uint256 amount
-    ) internal returns (uint256 cachedWindowStart, uint256 cachedStoredUsed) {
+    function _checkWhaleProtection(address from, address to, uint256 amount) internal returns (uint256 cachedWindowStart, uint256 cachedStoredUsed) {
         uint256 trackedAmount = amount;
 
         // Track recipient impact and daily usage using expected post-fee net amount.
-        if (
-            address(burnRouter) != address(0) &&
-            !isFeeBypassed() &&
-            !(systemExempt[from] || systemExempt[to])
-        ) {
+        if (address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[to])) {
             (bool ok, uint256 expectedNet) = _tryExpectedNetAmount(from, to, amount);
             if (ok) {
                 trackedAmount = expectedNet;
@@ -1813,8 +1657,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // Note: lastTransferTime[from] IS mutated below for the cooldown check.
         // State mutations of dailyTransferred belong solely in _recordActualDailyTransfer.
         cachedWindowStart = dailyResetTime[from];
-        bool windowExpired = (cachedWindowStart == 0 ||
-            block.timestamp >= cachedWindowStart + 1 days);
+        bool windowExpired = (cachedWindowStart == 0 || block.timestamp >= cachedWindowStart + 1 days);
         if (dailyTransferLimit > 0) {
             cachedStoredUsed = windowExpired ? 0 : dailyTransferred[from];
             uint256 projectedTransferred = cachedStoredUsed + trackedAmount;
@@ -1828,10 +1671,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         // 4. Transfer cooldown check (for sender)
         if (transferCooldown > 0) {
-            if (
-                lastTransferTime[from] > 0 &&
-                block.timestamp < lastTransferTime[from] + transferCooldown
-            ) {
+            if (lastTransferTime[from] > 0 && block.timestamp < lastTransferTime[from] + transferCooldown) {
                 revert VF_TransferCooldown();
             }
             lastTransferTime[from] = block.timestamp;
@@ -1849,14 +1689,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      *                          (0 if window was expired or limit disabled at check time).
      * @notice _recordActualDailyTransfer
      */
-    function _recordActualDailyTransfer(
-        address from,
-        uint256 actualAmount,
-        uint256 cachedWindowStart,
-        uint256 cachedStoredUsed
-    ) internal {
-        bool windowExpired = (cachedWindowStart == 0 ||
-            block.timestamp >= cachedWindowStart + 1 days);
+    function _recordActualDailyTransfer(address from, uint256 actualAmount, uint256 cachedWindowStart, uint256 cachedStoredUsed) internal {
+        bool windowExpired = (cachedWindowStart == 0 || block.timestamp >= cachedWindowStart + 1 days);
         if (windowExpired) {
             // EE-1 GAS FIX: Directly assign actualAmount instead of zeroing then incrementing —
             // eliminates the extra SLOAD produced by the old `dailyTransferred[from] += 0;` pattern.
@@ -1873,17 +1707,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param to to
     /// @param amount amount
     /// @return _uint256 _uint256
-    function getExpectedNetAmount(
-        address from,
-        address to,
-        uint256 amount
-    ) public view returns (uint256) {
-        if (
-            address(burnRouter) == address(0) ||
-            isFeeBypassed() ||
-            systemExempt[from] ||
-            systemExempt[to]
-        ) {
+    function getExpectedNetAmount(address from, address to, uint256 amount) public view returns (uint256) {
+        if (address(burnRouter) == address(0) || isFeeBypassed() || systemExempt[from] || systemExempt[to]) {
             return amount; // No fees
         }
 
@@ -1944,12 +1769,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(
-        address who,
-        string memory action,
-        uint256 amount,
-        string memory note
-    ) internal {
+    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
             try ledger.logEvent(who, action, amount, note) {} catch {
                 emit LedgerLogFailed(who, action);
@@ -1969,20 +1789,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @return canDo Whether transfer would succeed
      * @return reason Failure reason if canDo is false
      */
-    function canTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) external view returns (bool canDo, string memory reason) {
+    function canTransfer(address from, address to, uint256 amount) external view returns (bool canDo, string memory reason) {
         if (_balances[from] < amount) return (false, "BALANCE");
 
-        bool exempt =
-            whaleLimitExempt[from] ||
-                whaleLimitExempt[to] ||
-                systemExempt[from] ||
-                systemExempt[to] ||
-                from == address(0) ||
-                to == address(0);
+        bool exempt = whaleLimitExempt[from] || whaleLimitExempt[to] || systemExempt[from] || systemExempt[to] || from == address(0) || to == address(0);
         if (!exempt && maxTransferAmount > 0 && amount > maxTransferAmount) {
             return (false, "MAX_TRANSFER");
         }
@@ -2000,27 +1810,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @return ecosystemAmount Amount sent to ecosystem treasury
      * @return netReceived Net amount recipient would receive
      */
-    function previewTransferFees(
-        address from,
-        address to,
-        uint256 amount
-    )
-        external
-        view
-        returns (
-            uint256 burnAmount,
-            uint256 sanctumAmount,
-            uint256 ecosystemAmount,
-            uint256 netReceived
-        )
-    {
+    function previewTransferFees(address from, address to, uint256 amount) external view returns (uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint256 netReceived) {
         // No fees for exempt addresses or if router not set
-        if (
-            systemExempt[from] ||
-            systemExempt[to] ||
-            address(burnRouter) == address(0) ||
-            isFeeBypassed()
-        ) {
+        if (systemExempt[from] || systemExempt[to] || address(burnRouter) == address(0) || isFeeBypassed()) {
             return (0, 0, 0, amount);
         }
 

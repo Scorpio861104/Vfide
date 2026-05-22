@@ -55,18 +55,11 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @param previousGovernance previousGovernance
     /// @param pendingGovernance pendingGovernance
     /// @param executeAfter executeAfter
-    event GovernanceChangeQueued(
-        address indexed previousGovernance,
-        address indexed pendingGovernance,
-        uint64 executeAfter
-    );
+    event GovernanceChangeQueued(address indexed previousGovernance, address indexed pendingGovernance, uint64 executeAfter);
     /// @notice GovernanceChangeCanceled
     /// @param previousGovernance previousGovernance
     /// @param pendingGovernance pendingGovernance
-    event GovernanceChangeCanceled(
-        address indexed previousGovernance,
-        address indexed pendingGovernance
-    );
+    event GovernanceChangeCanceled(address indexed previousGovernance, address indexed pendingGovernance);
     /// @notice ChangeQueued
     /// @param action action
     /// @param token token
@@ -75,15 +68,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @param symbol symbol
     /// @param treasury treasury
     /// @param executeAfter executeAfter
-    event ChangeQueued(
-        ChangeAction indexed action,
-        address indexed token,
-        bool allowed,
-        uint8 decimals,
-        string symbol,
-        address treasury,
-        uint64 executeAfter
-    );
+    event ChangeQueued(ChangeAction indexed action, address indexed token, bool allowed, uint8 decimals, string symbol, address treasury, uint64 executeAfter);
     /// @notice ChangeApplied
     /// @param action action
     /// @param token token
@@ -91,14 +76,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @param decimals decimals
     /// @param symbol symbol
     /// @param treasury treasury
-    event ChangeApplied(
-        ChangeAction indexed action,
-        address indexed token,
-        bool allowed,
-        uint8 decimals,
-        string symbol,
-        address treasury
-    );
+    event ChangeApplied(ChangeAction indexed action, address indexed token, bool allowed, uint8 decimals, string symbol, address treasury);
     /// @notice ChangeCanceled
     /// @param action action
     /// @param token token
@@ -106,14 +84,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @param decimals decimals
     /// @param symbol symbol
     /// @param treasury treasury
-    event ChangeCanceled(
-        ChangeAction indexed action,
-        address indexed token,
-        bool allowed,
-        uint8 decimals,
-        string symbol,
-        address treasury
-    );
+    event ChangeCanceled(ChangeAction indexed action, address indexed token, bool allowed, uint8 decimals, string symbol, address treasury);
 
     /// @notice SR_Zero
     error SR_Zero();
@@ -205,8 +176,7 @@ contract StablecoinRegistry is Ownable, Pausable {
 
     /// @notice applyGovernance
     function applyGovernance() external onlyGovernance {
-        if (pendingGovernanceAt == 0 || pendingGovernance == address(0))
-            revert SR_NoPendingGovernance();
+        if (pendingGovernanceAt == 0 || pendingGovernance == address(0)) revert SR_NoPendingGovernance();
         if (block.timestamp < pendingGovernanceAt) revert SR_TimelockActive();
 
         address previousGovernance = governance;
@@ -218,8 +188,7 @@ contract StablecoinRegistry is Ownable, Pausable {
 
     /// @notice cancelGovernance
     function cancelGovernance() external onlyGovernance {
-        if (pendingGovernanceAt == 0 || pendingGovernance == address(0))
-            revert SR_NoPendingGovernance();
+        if (pendingGovernanceAt == 0 || pendingGovernance == address(0)) revert SR_NoPendingGovernance();
 
         address queuedGovernance = pendingGovernance;
         delete pendingGovernance;
@@ -233,11 +202,7 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @param decimals Decimals of the token (e.g., 6 for USDC/USDT, 18 for DAI)
      * @param symbol Symbol for reference (e.g., "USDC")
      */
-    function addStablecoin(
-        address token,
-        uint8 decimals,
-        string calldata symbol
-    ) external onlyGovernance whenNotPaused {
+    function addStablecoin(address token, uint8 decimals, string calldata symbol) external onlyGovernance whenNotPaused {
         if (token == address(0)) revert SR_Zero();
         if (stablecoins[token].allowed) revert SR_AlreadyAdded();
         if (decimals < MIN_DECIMALS || decimals > MAX_DECIMALS) revert SR_Bounds();
@@ -319,19 +284,14 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @notice applyQueuedChange
     function applyQueuedChange() external onlyGovernance {
         PendingChange memory pending = pendingChange;
-        if (pending.action == ChangeAction.None || pending.executeAfter == 0)
-            revert SR_NoPendingChange();
+        if (pending.action == ChangeAction.None || pending.executeAfter == 0) revert SR_NoPendingChange();
         if (block.timestamp < pending.executeAfter) revert SR_TimelockActive();
 
         delete pendingChange;
 
         if (pending.action == ChangeAction.AddStablecoin) {
             if (stablecoins[pending.token].allowed) revert SR_AlreadyAdded();
-            stablecoins[pending.token] = StablecoinInfo({
-                allowed: true,
-                decimals: pending.decimals,
-                symbol: pending.symbol
-            });
+            stablecoins[pending.token] = StablecoinInfo({allowed: true, decimals: pending.decimals, symbol: pending.symbol});
             stablecoinList.push(pending.token);
             stablecoinIndexPlusOne[pending.token] = stablecoinList.length;
             emit StablecoinAdded(pending.token, pending.decimals, pending.symbol);
@@ -361,30 +321,15 @@ contract StablecoinRegistry is Ownable, Pausable {
             treasury = pending.treasury;
         }
 
-        emit ChangeApplied(
-            pending.action,
-            pending.token,
-            pending.allowed,
-            pending.decimals,
-            pending.symbol,
-            pending.treasury
-        );
+        emit ChangeApplied(pending.action, pending.token, pending.allowed, pending.decimals, pending.symbol, pending.treasury);
     }
 
     /// @notice cancelQueuedChange
     function cancelQueuedChange() external onlyGovernance {
         PendingChange memory pending = pendingChange;
-        if (pending.action == ChangeAction.None || pending.executeAfter == 0)
-            revert SR_NoPendingChange();
+        if (pending.action == ChangeAction.None || pending.executeAfter == 0) revert SR_NoPendingChange();
         delete pendingChange;
-        emit ChangeCanceled(
-            pending.action,
-            pending.token,
-            pending.allowed,
-            pending.decimals,
-            pending.symbol,
-            pending.treasury
-        );
+        emit ChangeCanceled(pending.action, pending.token, pending.allowed, pending.decimals, pending.symbol, pending.treasury);
     }
 
     /**
@@ -392,11 +337,7 @@ contract StablecoinRegistry is Ownable, Pausable {
      * @return addresses Array of stablecoin addresses
      * @return infos Array of stablecoin info
      */
-    function getAllStablecoins()
-        external
-        view
-        returns (address[] memory addresses, StablecoinInfo[] memory infos)
-    {
+    function getAllStablecoins() external view returns (address[] memory addresses, StablecoinInfo[] memory infos) {
         addresses = stablecoinList;
         uint256 _slLen = stablecoinList.length;
         infos = new StablecoinInfo[](_slLen);
@@ -435,14 +376,7 @@ contract StablecoinRegistry is Ownable, Pausable {
     /// @param decimals decimals
     /// @param symbol symbol
     /// @param treasuryAddress treasuryAddress
-    function _queueChange(
-        ChangeAction action,
-        address token,
-        bool allowed,
-        uint8 decimals,
-        string memory symbol,
-        address treasuryAddress
-    ) internal {
+    function _queueChange(ChangeAction action, address token, bool allowed, uint8 decimals, string memory symbol, address treasuryAddress) internal {
         if (pendingChange.action != ChangeAction.None && pendingChange.executeAfter != 0) {
             revert SR_PendingExists();
         }
@@ -457,14 +391,6 @@ contract StablecoinRegistry is Ownable, Pausable {
             executeAfter: uint64(block.timestamp) + CHANGE_DELAY
         });
 
-        emit ChangeQueued(
-            action,
-            token,
-            allowed,
-            decimals,
-            symbol,
-            treasuryAddress,
-            pendingChange.executeAfter
-        );
+        emit ChangeQueued(action, token, allowed, decimals, symbol, treasuryAddress, pendingChange.executeAfter);
     }
 }

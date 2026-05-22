@@ -107,11 +107,7 @@ contract CardBoundVaultAdminManager {
     /// @param active active
     function proposeGuardianChange(address guardian, bool active) external onlyVault {
         if (pendingGuardianChange.effectiveAt != 0) revert AM_PendingExists();
-        pendingGuardianChange = PendingGuardianChange(
-            guardian,
-            active,
-            uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY
-        );
+        pendingGuardianChange = PendingGuardianChange(guardian, active, uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY);
     }
 
     /// @notice applyGuardianChange
@@ -145,11 +141,7 @@ contract CardBoundVaultAdminManager {
     /// @param trustee trustee
     function proposeTrusteeChange(address guardian, bool trustee) external onlyVault {
         if (pendingTrusteeChange.effectiveAt != 0) revert AM_PendingExists();
-        pendingTrusteeChange = PendingTrusteeChange(
-            guardian,
-            trustee,
-            uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY
-        );
+        pendingTrusteeChange = PendingTrusteeChange(guardian, trustee, uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY);
     }
 
     /// @notice applyTrusteeChange
@@ -176,26 +168,15 @@ contract CardBoundVaultAdminManager {
     /// @notice proposeSpendLimits
     /// @param maxPerTransfer maxPerTransfer
     /// @param dailyTransferLimit dailyTransferLimit
-    function proposeSpendLimits(
-        uint256 maxPerTransfer,
-        uint256 dailyTransferLimit
-    ) external onlyVault {
+    function proposeSpendLimits(uint256 maxPerTransfer, uint256 dailyTransferLimit) external onlyVault {
         if (pendingSpendLimitChange.executeAfter != 0) revert AM_PendingExists();
-        pendingSpendLimitChange = PendingUint256x2(
-            maxPerTransfer,
-            dailyTransferLimit,
-            uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingSpendLimitChange = PendingUint256x2(maxPerTransfer, dailyTransferLimit, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applySpendLimits
     /// @return maxPerTransfer maxPerTransfer
     /// @return dailyTransferLimit dailyTransferLimit
-    function applySpendLimits()
-        external
-        onlyVault
-        returns (uint256 maxPerTransfer, uint256 dailyTransferLimit)
-    {
+    function applySpendLimits() external onlyVault returns (uint256 maxPerTransfer, uint256 dailyTransferLimit) {
         PendingUint256x2 memory p = pendingSpendLimitChange;
         if (p.executeAfter == 0 || block.timestamp < p.executeAfter) revert AM_Locked();
         delete pendingSpendLimitChange;
@@ -213,10 +194,7 @@ contract CardBoundVaultAdminManager {
     /// @param threshold threshold
     function proposeLargeTransferThreshold(uint256 threshold) external onlyVault {
         if (pendingLargeTransferThresholdChange.executeAfter != 0) revert AM_PendingExists();
-        pendingLargeTransferThresholdChange = PendingUint256(
-            threshold,
-            uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingLargeTransferThresholdChange = PendingUint256(threshold, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applyLargeTransferThreshold
@@ -240,11 +218,7 @@ contract CardBoundVaultAdminManager {
     /// @param amount amount
     function proposeNativeRescue(address payable to, uint256 amount) external onlyVault {
         if (pendingNativeRescue.executeAfter != 0) revert AM_PendingExists();
-        pendingNativeRescue = PendingRescue(
-            to,
-            amount,
-            uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingNativeRescue = PendingRescue(to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applyNativeRescue
@@ -274,23 +248,14 @@ contract CardBoundVaultAdminManager {
     /// @param amount amount
     function proposeERC20Rescue(address token, address to, uint256 amount) external onlyVault {
         if (pendingERC20Rescue.executeAfter != 0) revert AM_PendingExists();
-        pendingERC20Rescue = PendingERC20Rescue(
-            token,
-            to,
-            amount,
-            uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingERC20Rescue = PendingERC20Rescue(token, to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applyERC20Rescue
     /// @return token token
     /// @return to to
     /// @return amount amount
-    function applyERC20Rescue()
-        external
-        onlyVault
-        returns (address token, address to, uint256 amount)
-    {
+    function applyERC20Rescue() external onlyVault returns (address token, address to, uint256 amount) {
         PendingERC20Rescue memory p = pendingERC20Rescue;
         if (p.executeAfter == 0 || block.timestamp < p.executeAfter) revert AM_Locked();
         delete pendingERC20Rescue;
@@ -301,11 +266,7 @@ contract CardBoundVaultAdminManager {
     /// @return token token
     /// @return to to
     /// @return amount amount
-    function cancelERC20Rescue()
-        external
-        onlyVault
-        returns (address token, address to, uint256 amount)
-    {
+    function cancelERC20Rescue() external onlyVault returns (address token, address to, uint256 amount) {
         PendingERC20Rescue memory p = pendingERC20Rescue;
         if (p.executeAfter == 0) revert AM_NoPending();
         delete pendingERC20Rescue;
@@ -317,29 +278,16 @@ contract CardBoundVaultAdminManager {
     /// @param token token
     /// @param spender spender
     /// @param amount amount
-    function proposeTokenApproval(
-        address token,
-        address spender,
-        uint256 amount
-    ) external onlyVault {
+    function proposeTokenApproval(address token, address spender, uint256 amount) external onlyVault {
         if (pendingTokenApproval.executeAfter != 0) revert AM_PendingExists();
-        pendingTokenApproval = PendingTokenApproval(
-            token,
-            spender,
-            amount,
-            uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingTokenApproval = PendingTokenApproval(token, spender, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applyTokenApproval
     /// @return token token
     /// @return spender spender
     /// @return amount amount
-    function applyTokenApproval()
-        external
-        onlyVault
-        returns (address token, address spender, uint256 amount)
-    {
+    function applyTokenApproval() external onlyVault returns (address token, address spender, uint256 amount) {
         PendingTokenApproval memory p = pendingTokenApproval;
         if (p.executeAfter == 0 || block.timestamp < p.executeAfter) revert AM_Locked();
         delete pendingTokenApproval;
@@ -350,11 +298,7 @@ contract CardBoundVaultAdminManager {
     /// @return token token
     /// @return spender spender
     /// @return amount amount
-    function cancelTokenApproval()
-        external
-        onlyVault
-        returns (address token, address spender, uint256 amount)
-    {
+    function cancelTokenApproval() external onlyVault returns (address token, address spender, uint256 amount) {
         PendingTokenApproval memory p = pendingTokenApproval;
         if (p.executeAfter == 0) revert AM_NoPending();
         delete pendingTokenApproval;

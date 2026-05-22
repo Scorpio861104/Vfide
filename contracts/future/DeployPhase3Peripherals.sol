@@ -34,13 +34,7 @@ contract DeployPhase3Peripherals {
     /// @param owner owner
     /// @return bsm_ bsm_
     /// @return oracle_ oracle_
-    function deployPeripherals(
-        address vfideToken,
-        address quoteToken,
-        address chainlinkFeed,
-        address uniswapPool,
-        address owner
-    ) external returns (address bsm_, address oracle_) {
+    function deployPeripherals(address vfideToken, address quoteToken, address chainlinkFeed, address uniswapPool, address owner) external returns (address bsm_, address oracle_) {
         if (vfideToken == address(0) || owner == address(0)) revert DPP_Zero();
 
         // BSM requires a non-zero bridge at construction. Use the owner as a temporary
@@ -52,13 +46,7 @@ contract DeployPhase3Peripherals {
         bsm = bsm_;
         emit PeripheralDeployed(bytes32("BSM"), bsm_);
 
-        VFIDEPriceOracle priceOracle = new VFIDEPriceOracle(
-            vfideToken,
-            quoteToken,
-            chainlinkFeed,
-            uniswapPool,
-            owner
-        );
+        VFIDEPriceOracle priceOracle = new VFIDEPriceOracle(vfideToken, quoteToken, chainlinkFeed, uniswapPool, owner);
         oracle_ = address(priceOracle);
         if (oracle_ == address(0)) revert DPP_Zero();
         oracle = oracle_;

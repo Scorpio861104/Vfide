@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {
-    OApp,
-    Origin,
-    MessagingFee,
-    MessagingReceipt
-} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
+import {OApp, Origin, MessagingFee, MessagingReceipt} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/OApp.sol";
 import {OAppOptionsType3} from "@layerzerolabs/lz-evm-oapp-v2/contracts/oapp/libs/OAppOptionsType3.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -187,14 +182,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param amount amount
     /// @param fee fee
     /// @param txId txId
-    event BridgeSent(
-        address indexed sender,
-        uint32 indexed dstChainId,
-        address indexed receiver,
-        uint256 amount,
-        uint256 fee,
-        bytes32 txId
-    );
+    event BridgeSent(address indexed sender, uint32 indexed dstChainId, address indexed receiver, uint256 amount, uint256 fee, bytes32 txId);
     /// @notice BridgeFeeRecorded
     /// @param txId txId
     /// @param bridgeFee bridgeFee
@@ -206,21 +194,12 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param srcChainId srcChainId
     /// @param amount amount
     /// @param txId txId
-    event BridgeReceived(
-        address indexed receiver,
-        uint32 indexed srcChainId,
-        uint256 amount,
-        bytes32 txId
-    );
+    event BridgeReceived(address indexed receiver, uint32 indexed srcChainId, uint256 amount, bytes32 txId);
     /// @notice DeliveryConfirmationSkipped
     /// @param dstChainId dstChainId
     /// @param txId txId
     /// @param reason reason
-    event DeliveryConfirmationSkipped(
-        uint32 indexed dstChainId,
-        bytes32 indexed txId,
-        string reason
-    );
+    event DeliveryConfirmationSkipped(uint32 indexed dstChainId, bytes32 indexed txId, string reason);
     /// @notice BridgeDeliveryConfirmed
     /// @param txId txId
     event BridgeDeliveryConfirmed(bytes32 indexed txId);
@@ -398,11 +377,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _endpoint LayerZero endpoint address
      * @param _owner Contract owner address
      */
-    constructor(
-        address _vfideToken,
-        address _endpoint,
-        address _owner
-    ) OApp(_endpoint, _owner) Ownable(_owner) {
+    constructor(address _vfideToken, address _endpoint, address _owner) OApp(_endpoint, _owner) Ownable(_owner) {
         require(_vfideToken != address(0), "Invalid token");
         require(_endpoint != address(0), "Invalid endpoint");
         require(_owner != address(0), "Invalid owner");
@@ -419,12 +394,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _options LayerZero options
      * @return receipt MessagingReceipt from LayerZero
      */
-    function bridge(
-        uint32 _dstChainId,
-        address _to,
-        uint256 _amount,
-        bytes calldata _options
-    ) external payable nonReentrant whenNotPaused returns (bytes32) {
+    function bridge(uint32 _dstChainId, address _to, uint256 _amount, bytes calldata _options) external payable nonReentrant whenNotPaused returns (bytes32) {
         if (_amount < MIN_BRIDGE_AMOUNT || _amount > maxBridgeAmount) revert InvalidAmount();
         if (_to == address(0)) revert InvalidDestination();
         if (trustedRemotes[_dstChainId] == bytes32(0)) revert InvalidRemote();
@@ -437,10 +407,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         // Check rate limits if security module is set
         if (securityModule != address(0)) {
-            require(
-                IBridgeSecurityModule(securityModule).checkRateLimit(msg.sender, _amount),
-                "Rate limit exceeded"
-            );
+            require(IBridgeSecurityModule(securityModule).checkRateLimit(msg.sender, _amount), "Rate limit exceeded");
         }
 
         // Calculate bridge fee
@@ -464,25 +431,12 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         bytes memory options = combineOptions(_dstChainId, MSG_TYPE_BRIDGE_TRANSFER, _options);
 
         // Send message via LayerZero first so the transaction ID is the real transport GUID.
-        MessagingReceipt memory receipt = _lzSend(
-            _dstChainId,
-            payload,
-            options,
-            MessagingFee(msg.value, 0),
-            payable(msg.sender)
-        );
+        MessagingReceipt memory receipt = _lzSend(_dstChainId, payload, options, MessagingFee(msg.value, 0), payable(msg.sender));
         bytes32 txId = receipt.guid;
         ++bridgeTxNonce;
 
         // Record transaction
-        bridgeTransactions[txId] = BridgeTransaction({
-            sender: msg.sender,
-            receiver: _to,
-            amount: amountAfterFee,
-            dstChainId: _dstChainId,
-            timestamp: block.timestamp,
-            executed: false
-        });
+        bridgeTransactions[txId] = BridgeTransaction({sender: msg.sender, receiver: _to, amount: amountAfterFee, dstChainId: _dstChainId, timestamp: block.timestamp, executed: false});
 
         // Update statistics
         userStats[msg.sender].totalSent += amountAfterFee;
@@ -506,9 +460,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @notice _bridgeIsSystemExempt
     /// @return _bool _bool
     function _bridgeIsSystemExempt() internal view returns (bool) {
-        (bool ok, bytes memory data) = address(vfideToken).staticcall(
-            abi.encodeWithSignature("systemExempt(address)", address(this))
-        );
+        (bool ok, bytes memory data) = address(vfideToken).staticcall(abi.encodeWithSignature("systemExempt(address)", address(this)));
         if (!ok || data.length < 32) {
             // Balanced fail-closed behavior: allow a temporary owner-controlled bypass.
             if (isExemptCheckBypassActive()) {
@@ -525,10 +477,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param duration duration
     function setExemptCheckBypass(bool active, uint256 duration) external onlyOwner {
         if (active) {
-            require(
-                duration > 0 && duration <= MAX_EXEMPT_CHECK_BYPASS_DURATION,
-                "VFIDEBridge: invalid duration"
-            );
+            require(duration > 0 && duration <= MAX_EXEMPT_CHECK_BYPASS_DURATION, "VFIDEBridge: invalid duration");
             pendingExemptCheckBypassActive = true;
             pendingExemptCheckBypassDuration = duration;
             pendingExemptCheckBypassAt = uint64(block.timestamp) + EXEMPT_CHECK_BYPASS_DELAY;
@@ -546,14 +495,8 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     /// @notice Apply a scheduled exempt check bypass activation after timelock.
     function applyExemptCheckBypass() external onlyOwner {
-        require(
-            pendingExemptCheckBypassAt != 0 && pendingExemptCheckBypassActive,
-            "VFIDEBridge: no pending bypass"
-        );
-        require(
-            block.timestamp >= pendingExemptCheckBypassAt,
-            "VFIDEBridge: bypass timelock active"
-        );
+        require(pendingExemptCheckBypassAt != 0 && pendingExemptCheckBypassActive, "VFIDEBridge: no pending bypass");
+        require(block.timestamp >= pendingExemptCheckBypassAt, "VFIDEBridge: bypass timelock active");
         exemptCheckBypass = true;
         exemptCheckBypassExpiry = block.timestamp + pendingExemptCheckBypassDuration;
         delete pendingExemptCheckBypassActive;
@@ -585,13 +528,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _guid Message GUID
      * @param payload Message payload
      */
-    function _lzReceive(
-        Origin calldata _origin,
-        bytes32 _guid,
-        bytes calldata payload,
-        address /*_executor*/,
-        bytes calldata /*_extraData*/
-    ) internal override {
+    function _lzReceive(Origin calldata _origin, bytes32 _guid, bytes calldata payload, address /*_executor*/, bytes calldata /*_extraData*/) internal override {
         // Verify trusted remote
         bytes32 remote = trustedRemotes[_origin.srcEid];
         require(remote != bytes32(0) && remote == _origin.sender, "Invalid remote");
@@ -635,8 +572,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         // Release tokens to receiver from destination bridge liquidity.
         uint256 bridgeBalance = vfideToken.balanceOf(address(this));
-        uint256 availableLiquidity_ =
-            bridgeBalance > pendingOutboundAmount ? bridgeBalance - pendingOutboundAmount : 0;
+        uint256 availableLiquidity_ = bridgeBalance > pendingOutboundAmount ? bridgeBalance - pendingOutboundAmount : 0;
         if (availableLiquidity_ < amount) {
             _sendBridgeFailureNotification(_origin.srcEid, _guid);
             emit BridgeDeliveryFailed(_guid, _origin.srcEid, "insufficient destination liquidity");
@@ -666,9 +602,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param receiver receiver
     /// @return _bool _bool
     function _receiverRequiresEscrow(address receiver) internal view returns (bool) {
-        (bool ok, bytes memory data) = address(vfideToken).staticcall(
-            abi.encodeWithSignature("requiresEscrow(address)", receiver)
-        );
+        (bool ok, bytes memory data) = address(vfideToken).staticcall(abi.encodeWithSignature("requiresEscrow(address)", receiver));
         if (!ok || data.length < 32) {
             return false;
         }
@@ -682,34 +616,18 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _options LayerZero options
      * @return nativeFee Native fee required
      */
-    function quoteBridge(
-        uint32 _dstChainId,
-        uint256 _amount,
-        bytes calldata _options
-    ) external view returns (uint256 nativeFee) {
+    function quoteBridge(uint32 _dstChainId, uint256 _amount, bytes calldata _options) external view returns (uint256 nativeFee) {
         bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_TRANSFER, msg.sender, _amount);
-        MessagingFee memory fee = _quote(
-            _dstChainId,
-            payload,
-            combineOptions(_dstChainId, MSG_TYPE_BRIDGE_TRANSFER, _options),
-            false
-        );
+        MessagingFee memory fee = _quote(_dstChainId, payload, combineOptions(_dstChainId, MSG_TYPE_BRIDGE_TRANSFER, _options), false);
         return fee.nativeFee;
     }
 
     /// @notice quoteDeliveryConfirmation
     /// @param _dstChainId _dstChainId
     /// @return nativeFee nativeFee
-    function quoteDeliveryConfirmation(
-        uint32 _dstChainId
-    ) external view returns (uint256 nativeFee) {
+    function quoteDeliveryConfirmation(uint32 _dstChainId) external view returns (uint256 nativeFee) {
         bytes memory payload = abi.encode(MSG_TYPE_BRIDGE_CONFIRMATION, bytes32(0));
-        MessagingFee memory fee = _quote(
-            _dstChainId,
-            payload,
-            enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION],
-            false
-        );
+        MessagingFee memory fee = _quote(_dstChainId, payload, enforcedOptions[_dstChainId][MSG_TYPE_BRIDGE_CONFIRMATION], false);
         return fee.nativeFee;
     }
 
@@ -732,17 +650,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @return netFlow        totalOut - totalIn: positive = more locked than released (expected on source chain).
      * @return isHealthy      True if lockedBalance >= (totalOut - totalIn), i.e. contract holds at least what it owes.
      */
-    function getPoolHealth()
-        external
-        view
-        returns (
-            uint256 lockedBalance,
-            uint256 totalOut,
-            uint256 totalIn,
-            int256 netFlow,
-            bool isHealthy
-        )
-    {
+    function getPoolHealth() external view returns (uint256 lockedBalance, uint256 totalOut, uint256 totalIn, int256 netFlow, bool isHealthy) {
         lockedBalance = vfideToken.balanceOf(address(this));
         totalOut = totalBridgedOut;
         totalIn = totalBridgedIn;
@@ -769,10 +677,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      */
     function setTrustedRemote(uint32 _chainId, bytes32 _remote) external onlyOwner {
         uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
-        pendingTrustedRemotes[_chainId] = PendingRemote({
-            remote: _remote,
-            effectiveAt: effectiveAt
-        });
+        pendingTrustedRemotes[_chainId] = PendingRemote({remote: _remote, effectiveAt: effectiveAt});
         emit TrustedRemoteScheduled(_chainId, _remote, effectiveAt);
     }
 
@@ -1020,10 +925,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @dev M-04 FIX: Enforces 7-day expiry — pending owner must accept before it lapses.
     function acceptOwnership() external {
         require(msg.sender == _pendingBridgeOwner, "VFIDEBridge: not pending owner");
-        require(
-            block.timestamp <= _pendingOwnerInitiatedAt + OWNERSHIP_TRANSFER_EXPIRY,
-            "VFIDEBridge: ownership transfer expired"
-        );
+        require(block.timestamp <= _pendingOwnerInitiatedAt + OWNERSHIP_TRANSFER_EXPIRY, "VFIDEBridge: ownership transfer expired");
         _transferOwnership(msg.sender);
         _pendingBridgeOwner = address(0);
         _pendingOwnerInitiatedAt = 0;
@@ -1045,11 +947,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         require(_token != address(vfideToken), "VFIDEBridge: cannot withdraw VFIDE");
         require(_amount > 0, "Invalid amount");
         uint64 effectiveAt = uint64(block.timestamp) + CONFIG_TIMELOCK_DELAY;
-        pendingEmergencyWithdraw = PendingEmergencyWithdraw({
-            token: _token,
-            amount: _amount,
-            effectiveAt: effectiveAt
-        });
+        pendingEmergencyWithdraw = PendingEmergencyWithdraw({token: _token, amount: _amount, effectiveAt: effectiveAt});
         emit EmergencyWithdrawScheduled(_token, _amount, effectiveAt);
     }
 
@@ -1188,10 +1086,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         require(!btx.executed, "VFIDEBridge: already executed");
         require(bridgeRefundableAfter[txId] == 0, "VFIDEBridge: window already open");
         require(!pendingRefundWindowProposal[txId], "VFIDEBridge: proposal already pending");
-        require(
-            block.timestamp >= btx.timestamp + STALE_BRIDGE_REFUND_DELAY,
-            "VFIDEBridge: tx not stale"
-        );
+        require(block.timestamp >= btx.timestamp + STALE_BRIDGE_REFUND_DELAY, "VFIDEBridge: tx not stale");
 
         bridgeRefundableAfter[txId] = block.timestamp + BRIDGE_REFUND_DELAY;
         emit StaleBridgeRefundWindowOpened(txId, bridgeRefundableAfter[txId]);
@@ -1231,10 +1126,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
         uint256 refundableAfter = bridgeRefundableAfter[txId];
         require(refundableAfter > 0, "VFIDEBridge: not refundable");
-        require(
-            block.timestamp >= refundableAfter + BRIDGE_REFUND_CLAIM_GRACE,
-            "VFIDEBridge: sender claim grace active"
-        );
+        require(block.timestamp >= refundableAfter + BRIDGE_REFUND_CLAIM_GRACE, "VFIDEBridge: sender claim grace active");
 
         btx.executed = true;
         uint256 amount = btx.amount;
@@ -1316,11 +1208,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
         MessagingFee memory fee = _quote(_dstChainId, payload, options, false);
 
         if (address(this).balance < fee.nativeFee) {
-            emit DeliveryConfirmationSkipped(
-                _dstChainId,
-                txId,
-                "insufficient native fee (failure notify)"
-            );
+            emit DeliveryConfirmationSkipped(_dstChainId, txId, "insufficient native fee (failure notify)");
             return;
         }
 
@@ -1335,12 +1223,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
     /// @param payload payload
     /// @param options options
     /// @param nativeFee nativeFee
-    function __sendDeliveryConfirmation(
-        uint32 _dstChainId,
-        bytes calldata payload,
-        bytes calldata options,
-        uint256 nativeFee
-    ) external {
+    function __sendDeliveryConfirmation(uint32 _dstChainId, bytes calldata payload, bytes calldata options, uint256 nativeFee) external {
         require(msg.sender == address(this), "VFIDEBridge: self only");
         _lzSend(_dstChainId, payload, options, MessagingFee(nativeFee, 0), payable(address(this)));
     }
@@ -1379,9 +1262,7 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
 
     /// @notice _rollDailyBridgeWindow
     function _rollDailyBridgeWindow() internal {
-        if (
-            dailyBridgeResetTime == 0 || block.timestamp >= uint256(dailyBridgeResetTime) + 1 days
-        ) {
+        if (dailyBridgeResetTime == 0 || block.timestamp >= uint256(dailyBridgeResetTime) + 1 days) {
             dailyBridgeVolume = 0;
             dailyBridgeResetTime = uint64(block.timestamp);
             emit DailyBridgeWindowReset(dailyBridgeResetTime);

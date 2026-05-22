@@ -240,8 +240,7 @@ contract LiquidityIncentives is ReentrancyGuard {
             // timestamps are seconds since 1970 (~ 2^31).
             uint256 oldAmount = userStake.amount;
             uint256 oldStakedAt = userStake.stakedAt;
-            uint256 newAnchor =
-                (oldStakedAt * oldAmount + block.timestamp * amount) / (oldAmount + amount);
+            uint256 newAnchor = (oldStakedAt * oldAmount + block.timestamp * amount) / (oldAmount + amount);
             userStake.stakedAt = newAnchor;
         }
 
@@ -291,10 +290,7 @@ contract LiquidityIncentives is ReentrancyGuard {
      * @return stakedAt stakedAt
      * @return stakeDuration stakeDuration
      */
-    function getUserStake(
-        address lpToken,
-        address user
-    ) external view returns (uint256 amount, uint256 stakedAt, uint256 stakeDuration) {
+    function getUserStake(address lpToken, address user) external view returns (uint256 amount, uint256 stakedAt, uint256 stakeDuration) {
         UserStake storage userStake = userStakes[lpToken][user];
         amount = userStake.amount;
         stakedAt = userStake.stakedAt;
@@ -308,9 +304,7 @@ contract LiquidityIncentives is ReentrancyGuard {
      * @return totalStaked totalStaked
      * @return active active
      */
-    function getPoolInfo(
-        address lpToken
-    ) external view returns (string memory name, uint256 totalStaked, bool active) {
+    function getPoolInfo(address lpToken) external view returns (string memory name, uint256 totalStaked, bool active) {
         Pool storage pool = pools[lpToken];
         name = pool.name;
         totalStaked = pool.totalStaked;

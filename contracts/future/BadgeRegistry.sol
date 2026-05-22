@@ -207,59 +207,32 @@ library BadgeRegistry {
         }
 
         // Activity & Participation
-        if (
-            badge == ACTIVE_TRADER ||
-            badge == GOVERNANCE_VOTER ||
-            badge == POWER_USER ||
-            badge == DAILY_CHAMPION
-        ) {
+        if (badge == ACTIVE_TRADER || badge == GOVERNANCE_VOTER || badge == POWER_USER || badge == DAILY_CHAMPION) {
             return "Activity & Participation";
         }
 
         // Trust & Community
-        if (
-            badge == TRUSTED_ENDORSER ||
-            badge == COMMUNITY_BUILDER ||
-            badge == PEACEMAKER ||
-            badge == MENTOR
-        ) {
+        if (badge == TRUSTED_ENDORSER || badge == COMMUNITY_BUILDER || badge == PEACEMAKER || badge == MENTOR) {
             return "Trust & Community";
         }
 
         // Commerce & Merchants
-        if (
-            badge == VERIFIED_MERCHANT ||
-            badge == ELITE_MERCHANT ||
-            badge == INSTANT_SETTLEMENT ||
-            badge == ZERO_DISPUTE
-        ) {
+        if (badge == VERIFIED_MERCHANT || badge == ELITE_MERCHANT || badge == INSTANT_SETTLEMENT || badge == ZERO_DISPUTE) {
             return "Commerce & Merchants";
         }
 
         // Security & Integrity
-        if (
-            badge == FRAUD_HUNTER ||
-            badge == CLEAN_RECORD ||
-            badge == REDEMPTION ||
-            badge == GUARDIAN
-        ) {
+        if (badge == FRAUD_HUNTER || badge == CLEAN_RECORD || badge == REDEMPTION || badge == GUARDIAN) {
             return "Security & Integrity";
         }
 
         // Achievements & Milestones
-        if (
-            badge == ELITE_ACHIEVER ||
-            badge == CENTURY_ENDORSER ||
-            badge == WHALE_SLAYER ||
-            badge == DIVERSIFICATION_MASTER
-        ) {
+        if (badge == ELITE_ACHIEVER || badge == CENTURY_ENDORSER || badge == WHALE_SLAYER || badge == DIVERSIFICATION_MASTER) {
             return "Achievements & Milestones";
         }
 
         // Education & Contribution
-        if (
-            badge == EDUCATOR || badge == CONTRIBUTOR || badge == BUG_BOUNTY || badge == TRANSLATOR
-        ) {
+        if (badge == EDUCATOR || badge == CONTRIBUTOR || badge == BUG_BOUNTY || badge == TRANSLATOR) {
             return "Education & Contribution";
         }
 

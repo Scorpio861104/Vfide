@@ -16,14 +16,7 @@ pragma solidity 0.8.30;
  * (exact ratios configurable by DAO)
  */
 
-import {
-    LedgerLogFailed,
-    IProofLedger,
-    IERC20,
-    Ownable,
-    ReentrancyGuard,
-    SafeERC20
-} from "./SharedInterfaces.sol";
+import {LedgerLogFailed, IProofLedger, IERC20, Ownable, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
 // Seer interface for ProofScore
 /// @notice ISeer_Sanct
@@ -85,13 +78,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param token token
     /// @param amount amount
     /// @param campaign campaign
-    event DisbursementProposed(
-        uint256 indexed proposalId,
-        address indexed charity,
-        address token,
-        uint256 amount,
-        string campaign
-    );
+    event DisbursementProposed(uint256 indexed proposalId, address indexed charity, address token, uint256 amount, string campaign);
     /// @notice DisbursementApproved
     /// @param proposalId proposalId
     /// @param approver approver
@@ -101,12 +88,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param charity charity
     /// @param token token
     /// @param amount amount
-    event DisbursementExecuted(
-        uint256 indexed proposalId,
-        address indexed charity,
-        address token,
-        uint256 amount
-    );
+    event DisbursementExecuted(uint256 indexed proposalId, address indexed charity, address token, uint256 amount);
     /// @notice DisbursementRejected
     /// @param proposalId proposalId
     /// @param reason reason
@@ -348,20 +330,11 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param charity charity
     /// @param name name
     /// @param category category
-    function approveCharity(
-        address charity,
-        string calldata name,
-        string calldata category
-    ) external onlyDAO {
+    function approveCharity(address charity, string calldata name, string calldata category) external onlyDAO {
         require(charity != address(0), "zero");
         require(!charities[charity].approved, "already approved");
 
-        charities[charity] = CharityInfo({
-            approved: true,
-            name: name,
-            category: category,
-            approvedAt: uint64(block.timestamp)
-        });
+        charities[charity] = CharityInfo({approved: true, name: name, category: category, approvedAt: uint64(block.timestamp)});
 
         require(charityList.length < 200, "sanctum: charity cap"); // I-11
         charityList.push(charity);
@@ -421,11 +394,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
         // Reward donor with ProofScore boost
         uint256 today = block.timestamp / 1 days;
-        if (
-            address(seer) != address(0) &&
-            amount >= MIN_REWARDABLE_DEPOSIT &&
-            lastDonationRewardDay[msg.sender] < today
-        ) {
+        if (address(seer) != address(0) && amount >= MIN_REWARDABLE_DEPOSIT && lastDonationRewardDay[msg.sender] < today) {
             lastDonationRewardDay[msg.sender] = today;
             try seer.reward(msg.sender, DONATION_REWARD, "charity_donation") {} catch {}
         }
@@ -474,13 +443,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
      * @notice proposeDisbursement
      * @return proposalId proposalId
      */
-    function proposeDisbursement(
-        address charity,
-        address token,
-        uint256 amount,
-        string calldata campaign,
-        string calldata documentation
-    ) external onlyApprover returns (uint256 proposalId) {
+    function proposeDisbursement(address charity, address token, uint256 amount, string calldata campaign, string calldata documentation) external onlyApprover returns (uint256 proposalId) {
         if (!charities[charity].approved) revert SANCT_NotApproved();
         require(token != address(0) && amount > 0, "invalid proposal");
 
@@ -601,18 +564,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         )
     {
         Disbursement storage d = disbursements[proposalId];
-        return (
-            d.charity,
-            d.token,
-            d.amount,
-            d.campaign,
-            d.documentation,
-            d.proposedAt,
-            d.executedAt,
-            d.executed,
-            d.rejected,
-            d.approvalCount
-        );
+        return (d.charity, d.token, d.amount, d.campaign, d.documentation, d.proposedAt, d.executedAt, d.executed, d.rejected, d.approvalCount);
     }
 
     /// @notice hasApproved
@@ -636,13 +588,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @return name name
     /// @return category category
     /// @return approvedAt approvedAt
-    function getCharityInfo(
-        address charity
-    )
-        external
-        view
-        returns (bool approved, string memory name, string memory category, uint64 approvedAt)
-    {
+    function getCharityInfo(address charity) external view returns (bool approved, string memory name, string memory category, uint64 approvedAt) {
         CharityInfo storage c = charities[charity];
         return (c.approved, c.name, c.category, c.approvedAt);
     }
@@ -666,12 +612,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param note note
-    function _logEv(
-        address who,
-        string memory action,
-        uint256 amount,
-        string memory note
-    ) internal {
+    function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
             try ledger.logEvent(who, action, amount, note) {} catch {
                 emit LedgerLogFailed(who, action);
@@ -704,13 +645,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param to to
     /// @param amount amount
     /// @param reason reason
-    event EmergencyRecoveryRequested(
-        uint256 indexed id,
-        address token,
-        address to,
-        uint256 amount,
-        string reason
-    );
+    event EmergencyRecoveryRequested(uint256 indexed id, address token, address to, uint256 amount, string reason);
     /// @notice EmergencyRecoveryCancelled
     /// @param id id
     /// @param reason reason
@@ -732,26 +667,13 @@ contract SanctumVault is Ownable, ReentrancyGuard {
      * @param reason reason
      * @return id id
      */
-    function requestEmergencyRecovery(
-        address token,
-        address to,
-        uint256 amount,
-        string calldata reason
-    ) external onlyDAO returns (uint256 id) {
+    function requestEmergencyRecovery(address token, address to, uint256 amount, string calldata reason) external onlyDAO returns (uint256 id) {
         require(token != address(0), "zero token");
         require(to != address(0), "zero to");
         require(amount > 0, "zero amount");
 
         id = ++emergencyRecoveryCount;
-        emergencyRecoveries[id] = EmergencyRecoveryRequest({
-            token: token,
-            to: to,
-            amount: amount,
-            reason: reason,
-            requestedAt: block.timestamp,
-            executed: false,
-            cancelled: false
-        });
+        emergencyRecoveries[id] = EmergencyRecoveryRequest({token: token, to: to, amount: amount, reason: reason, requestedAt: block.timestamp, executed: false, cancelled: false});
 
         emit EmergencyRecoveryRequested(id, token, to, amount, reason);
     }

@@ -92,10 +92,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     /// @notice setPointsPerVote
     /// @param _pointsPerVote _pointsPerVote
     function setPointsPerVote(uint256 _pointsPerVote) external onlyDAO {
-        require(
-            _pointsPerVote > 0 && _pointsPerVote <= MAX_POINTS_PER_VOTE,
-            "DD: invalid pointsPerVote"
-        );
+        require(_pointsPerVote > 0 && _pointsPerVote <= MAX_POINTS_PER_VOTE, "DD: invalid pointsPerVote");
         require(_pointsPerVote <= maxPointsPerUser, "DD: pointsPerVote exceeds cap");
         pointsPerVote = _pointsPerVote;
     }
@@ -103,10 +100,7 @@ contract DutyDistributor is Ownable, IGovernanceHooks {
     /// @notice setMaxPointsPerUser
     /// @param _maxPoints _maxPoints
     function setMaxPointsPerUser(uint256 _maxPoints) external onlyDAO {
-        require(
-            _maxPoints >= MIN_POINTS_PER_USER_CAP && _maxPoints <= MAX_POINTS_PER_USER_CAP,
-            "DD: invalid max points"
-        );
+        require(_maxPoints >= MIN_POINTS_PER_USER_CAP && _maxPoints <= MAX_POINTS_PER_USER_CAP, "DD: invalid max points");
         require(_maxPoints >= pointsPerVote, "DD: max points below pointsPerVote");
         maxPointsPerUser = _maxPoints;
     }

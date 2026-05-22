@@ -32,9 +32,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
     // F-63 FIX: Renamed from BLACKLIST_MANAGER_ROLE to reflect non-custodial philosophy.
     /// @notice SUSPICIOUS_ACTIVITY_REPORTER_ROLE
-    bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256(
-        "SUSPICIOUS_ACTIVITY_REPORTER_ROLE"
-    );
+    bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
 
     struct TriggerConfig {
         bool enabled;
@@ -109,23 +107,14 @@ contract CircuitBreaker is VFIDEAccessControl {
     /// @param dailyVolumeThreshold dailyVolumeThreshold
     /// @param priceDropThreshold priceDropThreshold
     /// @param suspiciousActivityThreshold suspiciousActivityThreshold
-    event CircuitBreakerConfigured(
-        uint256 dailyVolumeThreshold,
-        uint256 priceDropThreshold,
-        uint256 suspiciousActivityThreshold
-    );
+    event CircuitBreakerConfigured(uint256 dailyVolumeThreshold, uint256 priceDropThreshold, uint256 suspiciousActivityThreshold);
 
     /// @notice CircuitBreakerTriggered
     /// @param reason reason
     /// @param metricValue metricValue
     /// @param timestamp timestamp
     /// @param triggeredBy triggeredBy
-    event CircuitBreakerTriggered(
-        string reason,
-        uint256 metricValue,
-        uint256 timestamp,
-        address indexed triggeredBy
-    );
+    event CircuitBreakerTriggered(string reason, uint256 metricValue, uint256 timestamp, address indexed triggeredBy);
 
     /// @notice CircuitBreakerReset
     /// @param resetBy resetBy
@@ -184,11 +173,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @param _priceOracle Price oracle address
      * @param _emergencyController Emergency controller address
      */
-    constructor(
-        address _admin,
-        address _priceOracle,
-        address _emergencyController
-    ) VFIDEAccessControl(_admin) {
+    constructor(address _admin, address _priceOracle, address _emergencyController) VFIDEAccessControl(_admin) {
         require(_priceOracle != address(0), "CircuitBreaker: zero oracle address");
         require(_emergencyController != address(0), "CircuitBreaker: zero controller address");
 
@@ -214,11 +199,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @param _priceDropThreshold Price drop threshold %
      * @param _suspiciousActivityThreshold Suspicious activity count threshold in 24h
      */
-    function configure(
-        uint256 _dailyVolumeThreshold,
-        uint256 _priceDropThreshold,
-        uint256 _suspiciousActivityThreshold
-    ) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+    function configure(uint256 _dailyVolumeThreshold, uint256 _priceDropThreshold, uint256 _suspiciousActivityThreshold) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         require(_dailyVolumeThreshold <= 100, "CircuitBreaker: invalid volume threshold");
         require(_priceDropThreshold <= 100, "CircuitBreaker: invalid price threshold");
 
@@ -226,20 +207,14 @@ contract CircuitBreaker is VFIDEAccessControl {
         config.priceDropThreshold = _priceDropThreshold;
         config.suspiciousActivityThreshold = _suspiciousActivityThreshold;
 
-        emit CircuitBreakerConfigured(
-            _dailyVolumeThreshold,
-            _priceDropThreshold,
-            _suspiciousActivityThreshold
-        );
+        emit CircuitBreakerConfigured(_dailyVolumeThreshold, _priceDropThreshold, _suspiciousActivityThreshold);
     }
 
     /**
      * @notice Record transaction volume and check threshold
      * @param _volume Transaction volume to record
      */
-    function recordVolume(
-        uint256 _volume
-    ) external onlyRole(RECORDER_ROLE) notTriggered nonReentrantCB {
+    function recordVolume(uint256 _volume) external onlyRole(RECORDER_ROLE) notTriggered nonReentrantCB {
         if (!config.enabled) return;
 
         // Reset daily volume after 24h
@@ -309,12 +284,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     /**
      * @notice Increment suspicious activity counter and check threshold
      */
-    function recordSuspiciousActivity()
-        external
-        onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE)
-        notTriggered
-        nonReentrantCB
-    {
+    function recordSuspiciousActivity() external onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE) notTriggered nonReentrantCB {
         if (!config.enabled) return;
 
         // Reset counter after 24h
@@ -328,10 +298,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         emit SuspiciousActivityRecorded(monitoring.suspiciousActivityCount24h);
 
         if (monitoring.suspiciousActivityCount24h > config.suspiciousActivityThreshold) {
-            _trigger(
-                "Suspicious activity count exceeded threshold",
-                monitoring.suspiciousActivityCount24h
-            );
+            _trigger("Suspicious activity count exceeded threshold", monitoring.suspiciousActivityCount24h);
         }
     }
 
@@ -352,9 +319,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @dev Set to zero address to temporarily re-enable manual TVL writes.
      * @param _source _source
      */
-    function updateTVLSource(
-        address _source
-    ) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+    function updateTVLSource(address _source) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         tvlSource = _source;
         emit TVLSourceUpdated(_source);
     }
@@ -374,9 +339,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Manual trigger by governance
      * @param _reason Reason for manual trigger
      */
-    function manualTrigger(
-        string calldata _reason
-    ) external onlyRole(EMERGENCY_PAUSER_ROLE) notTriggered nonReentrantCB {
+    function manualTrigger(string calldata _reason) external onlyRole(EMERGENCY_PAUSER_ROLE) notTriggered nonReentrantCB {
         require(bytes(_reason).length > 0, "CircuitBreaker: reason required");
         _trigger(_reason, 0);
     }
@@ -393,8 +356,7 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         // Check daily volume threshold
         if (monitoring.totalValueLocked > 0 && config.dailyVolumeThreshold > 0) {
-            uint256 volumeThreshold =
-                (monitoring.totalValueLocked * config.dailyVolumeThreshold) / 100;
+            uint256 volumeThreshold = (monitoring.totalValueLocked * config.dailyVolumeThreshold) / 100;
             if (monitoring.dailyVolume >= volumeThreshold) {
                 _trigger("auto: daily volume threshold exceeded", monitoring.dailyVolume);
                 return true;
@@ -402,14 +364,8 @@ contract CircuitBreaker is VFIDEAccessControl {
         }
 
         // Check suspicious activity threshold
-        if (
-            config.suspiciousActivityThreshold > 0 &&
-            monitoring.suspiciousActivityCount24h >= config.suspiciousActivityThreshold
-        ) {
-            _trigger(
-                "auto: suspicious activity threshold exceeded",
-                monitoring.suspiciousActivityCount24h
-            );
+        if (config.suspiciousActivityThreshold > 0 && monitoring.suspiciousActivityCount24h >= config.suspiciousActivityThreshold) {
+            _trigger("auto: suspicious activity threshold exceeded", monitoring.suspiciousActivityCount24h);
             return true;
         }
 
@@ -446,9 +402,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Update price oracle address
      */
     /// @notice TL-376 FIX: Propose a price oracle change (24h timelock). (#376)
-    function updatePriceOracle(
-        address _newOracle
-    ) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
+    function updatePriceOracle(address _newOracle) external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
         require(_newOracle != address(0), "CircuitBreaker: zero address");
         require(pendingPriceOracleAt == 0, "CircuitBreaker: oracle change pending");
         pendingPriceOracle = _newOracle;
@@ -458,10 +412,7 @@ contract CircuitBreaker is VFIDEAccessControl {
 
     /// @notice Apply a pending price oracle change after the 24h timelock.
     function applyPriceOracle() external onlyRole(CONFIG_MANAGER_ROLE) nonReentrantCB {
-        require(
-            pendingPriceOracleAt != 0 && block.timestamp >= pendingPriceOracleAt,
-            "CircuitBreaker: timelock"
-        );
+        require(pendingPriceOracleAt != 0 && block.timestamp >= pendingPriceOracleAt, "CircuitBreaker: timelock");
         address newOracle = pendingPriceOracle;
         delete pendingPriceOracle;
         delete pendingPriceOracleAt;
@@ -481,9 +432,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @notice Update emergency controller address
      * @param _newController New controller address
      */
-    function updateEmergencyController(
-        address _newController
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantCB {
+    function updateEmergencyController(address _newController) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantCB {
         require(_newController != address(0), "CircuitBreaker: zero address");
         emergencyController = _newController;
         emit EmergencyControllerUpdated(_newController);
@@ -501,8 +450,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         }
 
         for (uint256 i = 0; i < len; ++i) {
-            uint256 index =
-                len < MAX_TRIGGER_HISTORY ? i : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
+            uint256 index = len < MAX_TRIGGER_HISTORY ? i : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
             history[i] = triggerHistory[index];
         }
     }
@@ -516,18 +464,7 @@ contract CircuitBreaker is VFIDEAccessControl {
      * @return suspiciousActivityCount Suspicious activity count in 24h window
      * @return isTriggered Whether circuit breaker is triggered
      */
-    function getMonitoringStatus()
-        external
-        view
-        returns (
-            uint256 tvl,
-            uint256 dailyVolume,
-            uint256 volumePercent,
-            uint256 currentPrice,
-            uint256 suspiciousActivityCount,
-            bool isTriggered
-        )
-    {
+    function getMonitoringStatus() external view returns (uint256 tvl, uint256 dailyVolume, uint256 volumePercent, uint256 currentPrice, uint256 suspiciousActivityCount, bool isTriggered) {
         tvl = monitoring.totalValueLocked;
         dailyVolume = monitoring.dailyVolume;
         volumePercent = tvl > 0 ? (dailyVolume * 100) / tvl : 0;
@@ -546,8 +483,7 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         // Volume warning (80% of threshold)
         if (monitoring.totalValueLocked > 0) {
-            uint256 warningThreshold =
-                (monitoring.totalValueLocked * config.dailyVolumeThreshold * 80) / 10000;
+            uint256 warningThreshold = (monitoring.totalValueLocked * config.dailyVolumeThreshold * 80) / 10000;
 
             if (monitoring.dailyVolume > warningThreshold) {
                 tempWarnings[warningCount++] = "Volume approaching threshold";
@@ -561,10 +497,7 @@ contract CircuitBreaker is VFIDEAccessControl {
         }
 
         // Price volatility warning
-        if (
-            monitoring.lastPrice > 0 &&
-            block.timestamp <= monitoring.lastPriceUpdate + config.monitoringWindow
-        ) {
+        if (monitoring.lastPrice > 0 && block.timestamp <= monitoring.lastPriceUpdate + config.monitoringWindow) {
             tempWarnings[warningCount++] = "Price monitoring active";
         }
 
@@ -586,22 +519,10 @@ contract CircuitBreaker is VFIDEAccessControl {
 
         // M1 FIX: Ring buffer to prevent unbounded triggerHistory growth
         if (triggerHistory.length >= MAX_TRIGGER_HISTORY) {
-            triggerHistory[triggerHistoryStart] = TriggerEvent({
-                timestamp: block.timestamp,
-                reason: _reason,
-                metricValue: _metricValue,
-                triggeredBy: msg.sender
-            });
+            triggerHistory[triggerHistoryStart] = TriggerEvent({timestamp: block.timestamp, reason: _reason, metricValue: _metricValue, triggeredBy: msg.sender});
             triggerHistoryStart = (triggerHistoryStart + 1) % MAX_TRIGGER_HISTORY;
         } else {
-            triggerHistory.push(
-                TriggerEvent({
-                    timestamp: block.timestamp,
-                    reason: _reason,
-                    metricValue: _metricValue,
-                    triggeredBy: msg.sender
-                })
-            );
+            triggerHistory.push(TriggerEvent({timestamp: block.timestamp, reason: _reason, metricValue: _metricValue, triggeredBy: msg.sender}));
         }
 
         emit CircuitBreakerTriggered(_reason, _metricValue, block.timestamp, msg.sender);

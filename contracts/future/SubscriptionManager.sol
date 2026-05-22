@@ -16,13 +16,7 @@ pragma solidity 0.8.30;
  * - Subscription modification support
  */
 
-import {
-    IVaultHub,
-    IERC20,
-    IEmergencyBreaker,
-    ReentrancyGuard,
-    SafeERC20
-} from "../SharedInterfaces.sol";
+import {IVaultHub, IERC20, IEmergencyBreaker, ReentrancyGuard, SafeERC20} from "../SharedInterfaces.sol";
 
 using SafeERC20 for IERC20;
 
@@ -106,13 +100,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /// @param merchant merchant
     /// @param amount amount
     /// @param interval interval
-    event SubscriptionCreated(
-        uint256 indexed subId,
-        address indexed subscriber,
-        address indexed merchant,
-        uint256 amount,
-        uint256 interval
-    );
+    event SubscriptionCreated(uint256 indexed subId, address indexed subscriber, address indexed merchant, uint256 amount, uint256 interval);
     /// @notice SubscriptionCancelled
     /// @param subId subId
     event SubscriptionCancelled(uint256 indexed subId);
@@ -134,13 +122,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /// @param newAmount newAmount
     /// @param oldInterval oldInterval
     /// @param newInterval newInterval
-    event SubscriptionModified(
-        uint256 indexed subId,
-        uint256 oldAmount,
-        uint256 newAmount,
-        uint256 oldInterval,
-        uint256 newInterval
-    );
+    event SubscriptionModified(uint256 indexed subId, uint256 oldAmount, uint256 newAmount, uint256 oldInterval, uint256 newInterval);
     /// @notice PaymentProcessed
     /// @param subId subId
     /// @param timestamp timestamp
@@ -371,13 +353,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /// @param interval interval
     /// @param memo memo
     /// @return subId subId
-    function createSubscription(
-        address merchant,
-        address token,
-        uint256 amount,
-        uint256 interval,
-        string calldata memo
-    ) external returns (uint256 subId) {
+    function createSubscription(address merchant, address token, uint256 amount, uint256 interval, string calldata memo) external returns (uint256 subId) {
         if (merchant == address(0)) revert SM_InvalidMerchant();
         if (amount == 0) revert SM_InvalidAmount();
         if (interval < 1 hours) revert SM_InvalidInterval();
@@ -549,11 +525,7 @@ contract SubscriptionManager is ReentrancyGuard {
     function applyEmergencyCancel(uint256 subId) external onlyDAO {
         Subscription storage sub = subscriptions[subId];
         require(sub.active, "SM: already inactive");
-        require(
-            pendingEmergencyCancelAt[subId] != 0 &&
-                block.timestamp >= pendingEmergencyCancelAt[subId],
-            "SM: timelock"
-        );
+        require(pendingEmergencyCancelAt[subId] != 0 && block.timestamp >= pendingEmergencyCancelAt[subId], "SM: timelock");
         delete pendingEmergencyCancelAt[subId];
         sub.active = false;
         emit EmergencyCancelled(subId, msg.sender);
@@ -579,10 +551,7 @@ contract SubscriptionManager is ReentrancyGuard {
         if (block.timestamp < sub.nextPayment) revert SM_PaymentTooEarly();
 
         if (address(fraudRegistry) != address(0)) {
-            if (
-                fraudRegistry.isServiceBanned(sub.subscriber) ||
-                fraudRegistry.isServiceBanned(sub.merchant)
-            ) {
+            if (fraudRegistry.isServiceBanned(sub.subscriber) || fraudRegistry.isServiceBanned(sub.merchant)) {
                 revert SM_FraudBlocked();
             }
         }
@@ -645,11 +614,7 @@ contract SubscriptionManager is ReentrancyGuard {
                 emit GracePeriodStarted(subId, sub.graceEndTime);
             }
 
-            emit PaymentFailed(
-                subId,
-                block.timestamp,
-                allowance < sub.amount ? "insufficient allowance" : "insufficient balance"
-            );
+            emit PaymentFailed(subId, block.timestamp, allowance < sub.amount ? "insufficient allowance" : "insufficient balance");
             return;
         }
 
@@ -666,14 +631,10 @@ contract SubscriptionManager is ReentrancyGuard {
 
         // Reward ProofScore for successful subscription payment
         if (address(seer) != address(0)) {
-            try
-                seer.reward(sub.subscriber, SUBSCRIPTION_PAYER_REWARD, "subscription_payment")
-            {} catch {
+            try seer.reward(sub.subscriber, SUBSCRIPTION_PAYER_REWARD, "subscription_payment") {} catch {
                 emit SeerRewardFailed(subId, sub.subscriber, "subscription_payment");
             }
-            try
-                seer.reward(sub.merchant, SUBSCRIPTION_MERCHANT_REWARD, "subscription_received")
-            {} catch {
+            try seer.reward(sub.merchant, SUBSCRIPTION_MERCHANT_REWARD, "subscription_received") {} catch {
                 emit SeerRewardFailed(subId, sub.merchant, "subscription_received");
             }
         }
@@ -704,25 +665,13 @@ contract SubscriptionManager is ReentrancyGuard {
      */
     function getNextPaymentInfo(
         uint256 subId
-    )
-        external
-        view
-        returns (
-            uint256 nextPaymentTime,
-            uint256 amount,
-            bool isPaused,
-            bool isInGracePeriod,
-            uint256 graceTimeRemaining,
-            uint256 failedPaymentCount
-        )
-    {
+    ) external view returns (uint256 nextPaymentTime, uint256 amount, bool isPaused, bool isInGracePeriod, uint256 graceTimeRemaining, uint256 failedPaymentCount) {
         Subscription storage sub = subscriptions[subId];
         nextPaymentTime = sub.nextPayment;
         amount = sub.amount;
         isPaused = sub.paused;
         isInGracePeriod = sub.graceEndTime > 0 && block.timestamp <= sub.graceEndTime;
-        graceTimeRemaining =
-            sub.graceEndTime > block.timestamp ? sub.graceEndTime - block.timestamp : 0;
+        graceTimeRemaining = sub.graceEndTime > block.timestamp ? sub.graceEndTime - block.timestamp : 0;
         failedPaymentCount = sub.failedPayments;
     }
 
@@ -732,16 +681,13 @@ contract SubscriptionManager is ReentrancyGuard {
      * @return processable processable
      * @return reason reason
      */
-    function canProcess(
-        uint256 subId
-    ) external view returns (bool processable, string memory reason) {
+    function canProcess(uint256 subId) external view returns (bool processable, string memory reason) {
         Subscription storage sub = subscriptions[subId];
 
         if (!sub.active) return (false, "inactive");
         if (sub.paused) return (false, "paused");
         if (block.timestamp < sub.nextPayment) return (false, "too early");
-        if (sub.graceEndTime > 0 && block.timestamp > sub.graceEndTime)
-            return (false, "grace expired");
+        if (sub.graceEndTime > 0 && block.timestamp > sub.graceEndTime) return (false, "grace expired");
 
         address userVault = vaultHub.vaultOf(sub.subscriber);
         if (userVault == address(0)) return (false, "no vault");
@@ -847,9 +793,7 @@ contract SubscriptionManager is ReentrancyGuard {
      * @return processed Number of successfully processed payments
      * @return failed Number of failed payments
      */
-    function batchProcessPayments(
-        uint256[] calldata subIds
-    ) external returns (uint256 processed, uint256 failed) {
+    function batchProcessPayments(uint256[] calldata subIds) external returns (uint256 processed, uint256 failed) {
         require(subIds.length <= MAX_BATCH_SIZE, "SM: batch too large");
         for (uint256 i = 0; i < subIds.length; ++i) {
             try this.processPayment(subIds[i]) {
@@ -894,9 +838,7 @@ contract SubscriptionManager is ReentrancyGuard {
      * @param subIds subIds
      * @return results results
      */
-    function getSubscriptionsBatch(
-        uint256[] calldata subIds
-    ) external view returns (Subscription[] memory results) {
+    function getSubscriptionsBatch(uint256[] calldata subIds) external view returns (Subscription[] memory results) {
         results = new Subscription[](subIds.length);
         for (uint256 i = 0; i < subIds.length; ++i) {
             results[i] = subscriptions[subIds[i]];

@@ -60,11 +60,7 @@ contract CouncilSalary {
     /// @param oldElection oldElection
     /// @param newElection newElection
     /// @param executeAfter executeAfter
-    event CouncilElectionChangeQueued(
-        address indexed oldElection,
-        address indexed newElection,
-        uint64 executeAfter
-    );
+    event CouncilElectionChangeQueued(address indexed oldElection, address indexed newElection, uint64 executeAfter);
     /// @notice CouncilElectionChangeApplied
     /// @param oldElection oldElection
     /// @param newElection newElection
@@ -210,10 +206,7 @@ contract CouncilSalary {
     /// @notice applyCouncilElection
     function applyCouncilElection() external {
         require(msg.sender == dao, "not dao");
-        require(
-            pendingCouncilElectionAt != 0 && pendingCouncilElection != address(0),
-            "no pending election"
-        );
+        require(pendingCouncilElectionAt != 0 && pendingCouncilElection != address(0), "no pending election");
         require(block.timestamp >= pendingCouncilElectionAt, "election timelock active");
 
         address oldElection = councilElection;
@@ -227,10 +220,7 @@ contract CouncilSalary {
     /// @notice cancelCouncilElectionChange
     function cancelCouncilElectionChange() external {
         require(msg.sender == dao, "not dao");
-        require(
-            pendingCouncilElectionAt != 0 && pendingCouncilElection != address(0),
-            "no pending election"
-        );
+        require(pendingCouncilElectionAt != 0 && pendingCouncilElection != address(0), "no pending election");
 
         address queued = pendingCouncilElection;
         delete pendingCouncilElection;

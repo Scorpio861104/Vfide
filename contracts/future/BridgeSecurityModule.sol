@@ -144,10 +144,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
      * @param amount Transfer amount
      * @return approved Whether transfer is approved
      */
-    function checkRateLimit(
-        address user,
-        uint256 amount
-    ) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
+    function checkRateLimit(address user, uint256 amount) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
         // BSM-01: Reject flagged users (fail-closed once flagged).
         if (suspiciousActivity[user].flagged) revert SuspiciousActivity();
 
@@ -334,10 +331,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     function getCurrentHourlyVolume() external view returns (uint256 volume) {
         uint256 currentHour = block.timestamp / 1 hours;
         HourlyVolume memory hourVol = hourlyVolume[currentHour];
-        return
-            (hourVol.timestamp >= currentHour && hourVol.timestamp < currentHour + 1)
-                ? hourVol.amount
-                : 0;
+        return (hourVol.timestamp >= currentHour && hourVol.timestamp < currentHour + 1) ? hourVol.amount : 0;
     }
 
     /**
@@ -347,10 +341,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     function getCurrentDailyVolume() external view returns (uint256 volume) {
         uint256 currentDay = block.timestamp / 1 days;
         DailyVolume memory dayVol = dailyVolume[currentDay];
-        return
-            (dayVol.timestamp >= currentDay && dayVol.timestamp < currentDay + 1)
-                ? dayVol.amount
-                : 0;
+        return (dayVol.timestamp >= currentDay && dayVol.timestamp < currentDay + 1) ? dayVol.amount : 0;
     }
 
     /**

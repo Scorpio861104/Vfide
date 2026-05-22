@@ -138,12 +138,7 @@ contract MockEcosystemVaultAdminForOwnerControlPanel {
     /// @param _stablecoin _stablecoin
     /// @param _enabled _enabled
     /// @param _maxSlippageBps _maxSlippageBps
-    function configureAutoSwap(
-        address _router,
-        address _stablecoin,
-        bool _enabled,
-        uint16 _maxSlippageBps
-    ) external {
+    function configureAutoSwap(address _router, address _stablecoin, bool _enabled, uint16 _maxSlippageBps) external {
         router = _router;
         stablecoin = _stablecoin;
         autoswapEnabled = _enabled;
@@ -155,12 +150,7 @@ contract MockEcosystemVaultAdminForOwnerControlPanel {
     /// @param merchantTxReward merchantTxReward
     /// @param merchantReferralReward merchantReferralReward
     /// @param userReferralReward userReferralReward
-    function configureAutoWorkPayout(
-        bool enabled,
-        uint256 merchantTxReward,
-        uint256 merchantReferralReward,
-        uint256 userReferralReward
-    ) external {
+    function configureAutoWorkPayout(bool enabled, uint256 merchantTxReward, uint256 merchantReferralReward, uint256 userReferralReward) external {
         autoWorkEnabled = enabled;
         autoMerchantTx = merchantTxReward;
         autoMerchantReferral = merchantReferralReward;

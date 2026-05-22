@@ -54,9 +54,7 @@ interface ISeerGuardian_GH {
     /// @param proposalId proposalId
     /// @return blocked blocked
     /// @return reason reason
-    function isProposalBlocked(
-        uint256 proposalId
-    ) external view returns (bool blocked, string memory reason);
+    function isProposalBlocked(uint256 proposalId) external view returns (bool blocked, string memory reason);
     /// @notice canParticipateInGovernance
     /// @param subject subject
     /// @return _bool _bool
@@ -190,19 +188,10 @@ contract GovernanceHooks is ReentrancyGuard {
     /// @param _ledger _ledger
     /// @param _seer _seer
     /// @param _guardian _guardian
-    function proposeModules(
-        address _ledger,
-        address _seer,
-        address _guardian
-    ) external onlyOwner nonReentrant {
+    function proposeModules(address _ledger, address _seer, address _guardian) external onlyOwner nonReentrant {
         require(_seer != address(0), "zero seer");
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
-        pendingModules = PendingModulesChange({
-            ledger: _ledger,
-            seer: _seer,
-            guardian: _guardian,
-            effectiveAt: effectiveAt
-        });
+        pendingModules = PendingModulesChange({ledger: _ledger, seer: _seer, guardian: _guardian, effectiveAt: effectiveAt});
         hasPendingModules = true;
         emit ModulesProposed(_ledger, _seer, _guardian, effectiveAt);
     }
@@ -278,11 +267,7 @@ contract GovernanceHooks is ReentrancyGuard {
      * @dev Reverts if proposal is blocked by SeerGuardian
      * @param id id
      */
-    function onProposalQueued(
-        uint256 id,
-        address /*target*/,
-        uint256 /*value*/
-    ) external onlyDAO nonReentrant {
+    function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO nonReentrant {
         _log("gh_queued");
 
         // #470 FIX: Wrap SeerGuardian check in try/catch so a failing guardian cannot brick DAO execution.
@@ -302,11 +287,7 @@ contract GovernanceHooks is ReentrancyGuard {
      * @dev Checks voter restrictions and rewards participation
      * @param voter voter
      */
-    function onVoteCast(
-        uint256 /*id*/,
-        address voter,
-        bool /*support*/
-    ) external onlyDAO nonReentrant {
+    function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO nonReentrant {
         _log("gh_vote");
 
         // #471 FIX: Wrap guardian check in try/catch so guardian failure doesn't block all votes.
@@ -339,10 +320,7 @@ contract GovernanceHooks is ReentrancyGuard {
      * @param user The abusing user
      * @param description What happened
      */
-    function reportGovernanceAbuse(
-        address user,
-        string calldata description
-    ) external onlyDAO nonReentrant {
+    function reportGovernanceAbuse(address user, string calldata description) external onlyDAO nonReentrant {
         emit GovernanceViolation(user, description);
 
         if (address(guardian) != address(0)) {

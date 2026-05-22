@@ -45,32 +45,18 @@ contract VFIDEAccessControl is AccessControl {
     /// @param account account
     /// @param grantor grantor
     /// @param reason reason
-    event RoleGrantedWithReason(
-        bytes32 indexed role,
-        address indexed account,
-        address indexed grantor,
-        string reason
-    );
+    event RoleGrantedWithReason(bytes32 indexed role, address indexed account, address indexed grantor, string reason);
     /// @notice RoleRevokedWithReason
     /// @param role role
     /// @param account account
     /// @param revoker revoker
     /// @param reason reason
-    event RoleRevokedWithReason(
-        bytes32 indexed role,
-        address indexed account,
-        address indexed revoker,
-        string reason
-    );
+    event RoleRevokedWithReason(bytes32 indexed role, address indexed account, address indexed revoker, string reason);
     /// @notice AdminTransferQueued
     /// @param previousAdmin previousAdmin
     /// @param pendingAdmin pendingAdmin
     /// @param executeAfter executeAfter
-    event AdminTransferQueued(
-        address indexed previousAdmin,
-        address indexed pendingAdmin,
-        uint64 executeAfter
-    );
+    event AdminTransferQueued(address indexed previousAdmin, address indexed pendingAdmin, uint64 executeAfter);
     /// @notice AdminTransferApplied
     /// @param previousAdmin previousAdmin
     /// @param newAdmin newAdmin
@@ -149,9 +135,7 @@ contract VFIDEAccessControl is AccessControl {
 
     /// @notice transferAdminRole
     /// @param newAdmin newAdmin
-    function transferAdminRole(
-        address newAdmin
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
+    function transferAdminRole(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(newAdmin != address(0), "VFIDEAccessControl: new admin is zero address");
         require(newAdmin != msg.sender, "VFIDEAccessControl: already admin");
         require(pendingAdminAt == 0, "VFIDEAccessControl: transfer already pending");
@@ -162,10 +146,7 @@ contract VFIDEAccessControl is AccessControl {
 
     /// @notice applyAdminRoleTransfer
     function applyAdminRoleTransfer() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
-        require(
-            pendingAdmin != address(0) && pendingAdminAt != 0,
-            "VFIDEAccessControl: no pending transfer"
-        );
+        require(pendingAdmin != address(0) && pendingAdminAt != 0, "VFIDEAccessControl: no pending transfer");
         require(block.timestamp >= pendingAdminAt, "VFIDEAccessControl: transfer timelock active");
         address prev = msg.sender;
         address next = pendingAdmin;
@@ -180,10 +161,7 @@ contract VFIDEAccessControl is AccessControl {
 
     /// @notice cancelAdminRoleTransfer
     function cancelAdminRoleTransfer() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
-        require(
-            pendingAdmin != address(0) && pendingAdminAt != 0,
-            "VFIDEAccessControl: no pending transfer"
-        );
+        require(pendingAdmin != address(0) && pendingAdminAt != 0, "VFIDEAccessControl: no pending transfer");
         address q = pendingAdmin;
         delete pendingAdmin;
         delete pendingAdminAt;
@@ -194,11 +172,7 @@ contract VFIDEAccessControl is AccessControl {
     /// @param role role
     /// @param account account
     /// @param reason reason
-    function grantRoleWithReason(
-        bytes32 role,
-        address account,
-        string calldata reason
-    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function grantRoleWithReason(bytes32 role, address account, string calldata reason) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         require(account != address(0), "VFIDEAccessControl: account is zero address");
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
         _grantRole(role, account);
@@ -210,11 +184,7 @@ contract VFIDEAccessControl is AccessControl {
     /// @param role role
     /// @param account account
     /// @param reason reason
-    function revokeRoleWithReason(
-        bytes32 role,
-        address account,
-        string calldata reason
-    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function revokeRoleWithReason(bytes32 role, address account, string calldata reason) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
         _revokeRole(role, account);
         _removeMember(role, account);
@@ -232,10 +202,7 @@ contract VFIDEAccessControl is AccessControl {
     /// @notice revokeRole
     /// @param role role
     /// @param account account
-    function revokeRole(
-        bytes32 role,
-        address account
-    ) public override onlyRole(getRoleAdmin(role)) {
+    function revokeRole(bytes32 role, address account) public override onlyRole(getRoleAdmin(role)) {
         super.revokeRole(role, account);
         _removeMember(role, account);
     }
@@ -273,10 +240,7 @@ contract VFIDEAccessControl is AccessControl {
     /// @notice batchGrantRole
     /// @param role role
     /// @param accounts accounts
-    function batchGrantRole(
-        bytes32 role,
-        address[] calldata accounts
-    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function batchGrantRole(bytes32 role, address[] calldata accounts) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         for (uint256 i = 0; i < accounts.length; ++i) {
             require(accounts[i] != address(0), "VFIDEAccessControl: account is zero address");
             _grantRole(role, accounts[i]);
@@ -287,10 +251,7 @@ contract VFIDEAccessControl is AccessControl {
     /// @notice batchRevokeRole
     /// @param role role
     /// @param accounts accounts
-    function batchRevokeRole(
-        bytes32 role,
-        address[] calldata accounts
-    ) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function batchRevokeRole(bytes32 role, address[] calldata accounts) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         for (uint256 i = 0; i < accounts.length; ++i) {
             _revokeRole(role, accounts[i]);
             _removeMember(role, accounts[i]);

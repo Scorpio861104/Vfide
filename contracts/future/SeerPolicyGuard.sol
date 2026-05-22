@@ -82,30 +82,17 @@ contract SeerPolicyGuard {
     /// @param selector selector
     /// @param policyClass policyClass
     /// @param readyAt readyAt
-    event PolicyChangeScheduled(
-        bytes32 indexed changeId,
-        bytes4 indexed selector,
-        uint8 indexed policyClass,
-        uint64 readyAt
-    );
+    event PolicyChangeScheduled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass, uint64 readyAt);
     /// @notice PolicyChangeConsumed
     /// @param changeId changeId
     /// @param selector selector
     /// @param policyClass policyClass
-    event PolicyChangeConsumed(
-        bytes32 indexed changeId,
-        bytes4 indexed selector,
-        uint8 indexed policyClass
-    );
+    event PolicyChangeConsumed(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
     /// @notice PolicyChangeCancelled
     /// @param changeId changeId
     /// @param selector selector
     /// @param policyClass policyClass
-    event PolicyChangeCancelled(
-        bytes32 indexed changeId,
-        bytes4 indexed selector,
-        uint8 indexed policyClass
-    );
+    event PolicyChangeCancelled(bytes32 indexed changeId, bytes4 indexed selector, uint8 indexed policyClass);
 
     /// @notice onlyDAO
     modifier onlyDAO() {
@@ -212,10 +199,7 @@ contract SeerPolicyGuard {
     /// @param pclass pclass
     /// @return changeId changeId
     /// @return readyAt readyAt
-    function schedulePolicyChange(
-        bytes4 selector,
-        uint8 pclass
-    ) external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt) {
+    function schedulePolicyChange(bytes4 selector, uint8 pclass) external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt) {
         if (selector == bytes4(0) || pclass > POLICY_CLASS_OPERATIONAL) revert SPG_InvalidState();
         changeId = getPolicyChangeId(selector, pclass);
         if (policyChangeReadyAt[changeId] != 0) revert SPG_InvalidState();
@@ -271,11 +255,7 @@ contract SeerPolicyGuard {
     /// @param pclass pclass
     /// @param paramHash paramHash
     /// @return _bytes32 _bytes32
-    function getPolicyChangeIdWithHash(
-        bytes4 selector,
-        uint8 pclass,
-        bytes32 paramHash
-    ) public pure returns (bytes32) {
+    function getPolicyChangeIdWithHash(bytes4 selector, uint8 pclass, bytes32 paramHash) public pure returns (bytes32) {
         return keccak256(abi.encode(selector, pclass, paramHash));
     }
 
@@ -285,11 +265,7 @@ contract SeerPolicyGuard {
     /// @param paramHash paramHash
     /// @return changeId changeId
     /// @return readyAt readyAt
-    function schedulePolicyChangeWithParams(
-        bytes4 selector,
-        uint8 pclass,
-        bytes32 paramHash
-    ) external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt) {
+    function schedulePolicyChangeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash) external onlyDAO nonReentrantSPG returns (bytes32 changeId, uint64 readyAt) {
         if (selector == bytes4(0) || pclass > POLICY_CLASS_OPERATIONAL) revert SPG_InvalidState();
         if (paramHash == bytes32(0)) revert SPG_InvalidState();
         changeId = getPolicyChangeIdWithHash(selector, pclass, paramHash);
@@ -303,11 +279,7 @@ contract SeerPolicyGuard {
     /// @param selector selector
     /// @param pclass pclass
     /// @param paramHash paramHash
-    function consumeWithParams(
-        bytes4 selector,
-        uint8 pclass,
-        bytes32 paramHash
-    ) external onlySeer nonReentrantSPG {
+    function consumeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash) external onlySeer nonReentrantSPG {
         if (seerMigrationInProgress) revert SPG_InvalidState();
         bytes32 changeId = getPolicyChangeIdWithHash(selector, pclass, paramHash);
         uint64 readyAt = policyChangeReadyAt[changeId];
@@ -320,11 +292,7 @@ contract SeerPolicyGuard {
     /// @param selector selector
     /// @param pclass pclass
     /// @param paramHash paramHash
-    function cancelPolicyChangeWithParams(
-        bytes4 selector,
-        uint8 pclass,
-        bytes32 paramHash
-    ) external onlyDAO nonReentrantSPG {
+    function cancelPolicyChangeWithParams(bytes4 selector, uint8 pclass, bytes32 paramHash) external onlyDAO nonReentrantSPG {
         bytes32 changeId = getPolicyChangeIdWithHash(selector, pclass, paramHash);
         if (policyChangeReadyAt[changeId] == 0) revert SPG_InvalidState();
         delete policyChangeReadyAt[changeId];

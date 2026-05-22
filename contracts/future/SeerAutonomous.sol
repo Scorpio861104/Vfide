@@ -67,9 +67,7 @@ interface IEcosystemScheduler {
     /// @notice checkUpkeep
     /// @return upkeepNeeded upkeepNeeded
     /// @return performData performData
-    function checkUpkeep(
-        bytes calldata
-    ) external view returns (bool upkeepNeeded, bytes memory performData);
+    function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
     /// @dev Execute the tasks indicated by the bitmask encoded in performData.
     /// @notice performUpkeep
     /// @param performData performData
@@ -202,23 +200,13 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param action action
     /// @param oldLimit oldLimit
     /// @param newLimit newLimit
-    event DAORateLimitUpdated(
-        RestrictionLevel level,
-        ActionType action,
-        uint16 oldLimit,
-        uint16 newLimit
-    );
+    event DAORateLimitUpdated(RestrictionLevel level, ActionType action, uint16 oldLimit, uint16 newLimit);
     /// @notice DAORateLimitChangeQueued
     /// @param level level
     /// @param action action
     /// @param newLimit newLimit
     /// @param executeAfter executeAfter
-    event DAORateLimitChangeQueued(
-        RestrictionLevel level,
-        ActionType action,
-        uint16 newLimit,
-        uint64 executeAfter
-    );
+    event DAORateLimitChangeQueued(RestrictionLevel level, ActionType action, uint16 newLimit, uint64 executeAfter);
     /// @notice DAORateLimitChangeCancelled
     /// @param level level
     /// @param action action
@@ -251,23 +239,13 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param level level
     /// @param duration duration
     /// @param reason reason
-    event RestrictionApplied(
-        address indexed subject,
-        RestrictionLevel level,
-        uint64 duration,
-        string reason
-    );
+    event RestrictionApplied(address indexed subject, RestrictionLevel level, uint64 duration, string reason);
     /// @notice RestrictionAppliedCode
     /// @param subject subject
     /// @param level level
     /// @param reasonCode reasonCode
     /// @param reason reason
-    event RestrictionAppliedCode(
-        address indexed subject,
-        RestrictionLevel level,
-        uint16 indexed reasonCode,
-        string reason
-    );
+    event RestrictionAppliedCode(address indexed subject, RestrictionLevel level, uint16 indexed reasonCode, string reason);
     /// @notice RestrictionLifted
     /// @param subject subject
     /// @param oldLevel oldLevel
@@ -281,12 +259,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param target target
     /// @param deadline deadline
     /// @param reason reason
-    event ChallengeCreated(
-        address indexed subject,
-        RestrictionLevel target,
-        uint64 deadline,
-        string reason
-    );
+    event ChallengeCreated(address indexed subject, RestrictionLevel target, uint64 deadline, string reason);
     /// @notice ChallengeRequested
     /// @param subject subject
     /// @param note note
@@ -301,12 +274,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param upheld upheld
     /// @param reasonCode reasonCode
     /// @param reason reason
-    event ChallengeResolvedCode(
-        address indexed subject,
-        bool upheld,
-        uint16 indexed reasonCode,
-        string reason
-    );
+    event ChallengeResolvedCode(address indexed subject, bool upheld, uint16 indexed reasonCode, string reason);
     /// @notice ExternalCallFailed
     /// @param location location
     /// @param reason reason
@@ -558,9 +526,7 @@ contract SeerAutonomous is ReentrancyGuard {
     function _initializeRateLimits() internal {
         SeerAutonomousLib.RateLimitEntry[48] memory entries = SeerAutonomousLib.getDefaultProfile();
         for (uint256 i = 0; i < 48; ++i) {
-            rateLimits[RestrictionLevel(entries[i].level)][ActionType(entries[i].action)] = entries[
-                i
-            ].limit;
+            rateLimits[RestrictionLevel(entries[i].level)][ActionType(entries[i].action)] = entries[i].limit;
         }
     }
 
@@ -578,12 +544,7 @@ contract SeerAutonomous is ReentrancyGuard {
      * @param counterparty Other party involved (for pattern detection)
      * @return result The enforcement decision
      */
-    function beforeAction(
-        address subject,
-        ActionType action,
-        uint256 amount,
-        address counterparty
-    ) external onlyOperator nonReentrant returns (EnforcementResult result) {
+    function beforeAction(address subject, ActionType action, uint256 amount, address counterparty) external onlyOperator nonReentrant returns (EnforcementResult result) {
         // 1. Check if DAO has overridden - allow if so
         if (daoOverridden[subject]) {
             if (block.timestamp < daoOverrideExpiry[subject]) {
@@ -622,24 +583,10 @@ contract SeerAutonomous is ReentrancyGuard {
                     emit RiskOracleOutOfRange(subject, risk);
                 } else if (risk > 80) {
                     // High risk: escalate to at least Restricted for a short period
-                    _applyRestriction(
-                        subject,
-                        RestrictionLevel.Restricted,
-                        3 days,
-                        "oracle_high_risk",
-                        RC_ORACLE_HIGH_RISK,
-                        false
-                    );
+                    _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK, false);
                     result = EnforcementResult.Delayed;
                 } else if (risk > 50 && restrictionLevel[subject] < RestrictionLevel.Limited) {
-                    _applyRestriction(
-                        subject,
-                        RestrictionLevel.Limited,
-                        1 days,
-                        "oracle_medium_risk",
-                        RC_ORACLE_MEDIUM_RISK,
-                        false
-                    );
+                    _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "oracle_medium_risk", RC_ORACLE_MEDIUM_RISK, false);
                     if (result == EnforcementResult.Allowed) result = EnforcementResult.Warned;
                 }
             } catch (bytes memory reason) {
@@ -671,11 +618,7 @@ contract SeerAutonomous is ReentrancyGuard {
      * @param oldScore Previous score
      * @param newScore New score
      */
-    function onScoreChange(
-        address subject,
-        uint16 oldScore,
-        uint16 newScore
-    ) external onlyOperator nonReentrant {
+    function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external onlyOperator nonReentrant {
         // Immediate restriction adjustment based on new score
         _autoAdjustRestriction(subject);
 
@@ -697,10 +640,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param subject subject
     /// @param action action
     /// @return _arg _arg
-    function _checkRestrictions(
-        address subject,
-        ActionType action
-    ) internal view returns (EnforcementResult) {
+    function _checkRestrictions(address subject, ActionType action) internal view returns (EnforcementResult) {
         RestrictionLevel level = restrictionLevel[subject];
 
         // Check if restriction has expired
@@ -710,14 +650,7 @@ contract SeerAutonomous is ReentrancyGuard {
 
         uint16 limit = rateLimits[level][action];
         uint16 count = actionCountToday[subject][action];
-        uint8 r = SeerAutonomousLib.evaluateRestriction(
-            uint8(level),
-            uint8(RestrictionLevel.Frozen),
-            uint8(RestrictionLevel.Restricted),
-            uint8(RestrictionLevel.Suspended),
-            limit,
-            count
-        );
+        uint8 r = SeerAutonomousLib.evaluateRestriction(uint8(level), uint8(RestrictionLevel.Frozen), uint8(RestrictionLevel.Restricted), uint8(RestrictionLevel.Suspended), limit, count);
         return EnforcementResult(r);
     }
 
@@ -752,12 +685,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param action action
     /// @param amount amount
     /// @param counterparty counterparty
-    function _updateActivityWindow(
-        address subject,
-        ActionType action,
-        uint256 amount,
-        address counterparty
-    ) internal {
+    function _updateActivityWindow(address subject, ActionType action, uint256 amount, address counterparty) internal {
         ActivityWindow storage window = activityWindows[subject];
 
         // Reset window if expired
@@ -799,11 +727,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param action action
     /// @param counterparty counterparty
     /// @return _arg _arg
-    function _detectPatterns(
-        address subject,
-        ActionType action,
-        address counterparty
-    ) internal view returns (PatternType) {
+    function _detectPatterns(address subject, ActionType action, address counterparty) internal view returns (PatternType) {
         ActivityWindow storage window = activityWindows[subject];
         uint16 sensitivity = patternSensitivity;
 
@@ -868,10 +792,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param subject subject
     /// @param pattern pattern
     /// @return _arg _arg
-    function _handlePattern(
-        address subject,
-        PatternType pattern
-    ) internal returns (EnforcementResult) {
+    function _handlePattern(address subject, PatternType pattern) internal returns (EnforcementResult) {
         // Increment violation count
         ++patternViolations[subject][pattern];
         uint8 count = patternViolations[subject][pattern];
@@ -898,44 +819,16 @@ contract SeerAutonomous is ReentrancyGuard {
 
         // Escalating response based on violation count (severity may be updated by oracle blend above)
         if (count >= 5) {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Suspended,
-                7 days,
-                "repeated_pattern_violation",
-                RC_REPEATED_PATTERN,
-                true
-            );
+            _applyRestriction(subject, RestrictionLevel.Suspended, 7 days, "repeated_pattern_violation", RC_REPEATED_PATTERN, true);
             return EnforcementResult.Blocked;
         } else if (count >= 3) {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Restricted,
-                3 days,
-                "pattern_violation",
-                RC_PATTERN_VIOLATION,
-                true
-            );
+            _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "pattern_violation", RC_PATTERN_VIOLATION, true);
             return EnforcementResult.Blocked;
         } else if (count >= 2) {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Limited,
-                1 days,
-                "suspicious_pattern",
-                RC_SUSPICIOUS_PATTERN,
-                false
-            );
+            _applyRestriction(subject, RestrictionLevel.Limited, 1 days, "suspicious_pattern", RC_SUSPICIOUS_PATTERN, false);
             return EnforcementResult.Delayed;
         } else {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Monitored,
-                6 hours,
-                "pattern_detected",
-                RC_PATTERN_DETECTED,
-                false
-            );
+            _applyRestriction(subject, RestrictionLevel.Monitored, 6 hours, "pattern_detected", RC_PATTERN_DETECTED, false);
             return EnforcementResult.Warned;
         }
     }
@@ -981,41 +874,13 @@ contract SeerAutonomous is ReentrancyGuard {
 
         // Score-based automatic adjustment
         if (score < 1000 && current < RestrictionLevel.Frozen) {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Frozen,
-                30 days,
-                "critical_score",
-                RC_CRITICAL_SCORE,
-                false
-            );
+            _applyRestriction(subject, RestrictionLevel.Frozen, 30 days, "critical_score", RC_CRITICAL_SCORE, false);
         } else if (score < 2000 && current < RestrictionLevel.Suspended) {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Suspended,
-                14 days,
-                "very_low_score",
-                RC_VERY_LOW_SCORE,
-                false
-            );
+            _applyRestriction(subject, RestrictionLevel.Suspended, 14 days, "very_low_score", RC_VERY_LOW_SCORE, false);
         } else if (score < autoRestrictThreshold && current < RestrictionLevel.Restricted) {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Restricted,
-                7 days,
-                "low_score",
-                RC_LOW_SCORE,
-                false
-            );
+            _applyRestriction(subject, RestrictionLevel.Restricted, 7 days, "low_score", RC_LOW_SCORE, false);
         } else if (score < rateLimitThreshold && current < RestrictionLevel.Limited) {
-            _applyRestriction(
-                subject,
-                RestrictionLevel.Limited,
-                3 days,
-                "below_rate_threshold",
-                RC_BELOW_RATE_THRESHOLD,
-                false
-            );
+            _applyRestriction(subject, RestrictionLevel.Limited, 3 days, "below_rate_threshold", RC_BELOW_RATE_THRESHOLD, false);
         } else if (score >= autoLiftThreshold && current != RestrictionLevel.None) {
             // Good score - lift restrictions
             _liftRestriction(subject);
@@ -1029,14 +894,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param reason reason
     /// @param reasonCode reasonCode
     /// @param applyPenalty applyPenalty
-    function _applyRestriction(
-        address subject,
-        RestrictionLevel level,
-        uint64 duration,
-        string memory reason,
-        uint16 reasonCode,
-        bool applyPenalty
-    ) internal {
+    function _applyRestriction(address subject, RestrictionLevel level, uint64 duration, string memory reason, uint16 reasonCode, bool applyPenalty) internal {
         // Only escalate, never downgrade automatically
         if (level <= restrictionLevel[subject]) return;
         // Severe restrictions go through a challenge window first
@@ -1314,12 +1172,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param _autoLift _autoLift
     /// @param _rateLimit _rateLimit
     /// @param _sensitivity _sensitivity
-    function daoSetThresholds(
-        uint16 _autoRestrict,
-        uint16 _autoLift,
-        uint16 _rateLimit,
-        uint16 _sensitivity
-    ) external onlyDAO {
+    function daoSetThresholds(uint16 _autoRestrict, uint16 _autoLift, uint16 _rateLimit, uint16 _sensitivity) external onlyDAO {
         if (_autoRestrict >= _autoLift) revert SA_InvalidThresholds();
         if (_sensitivity > 100) revert SA_InvalidSensitivity();
 
@@ -1333,36 +1186,17 @@ contract SeerAutonomous is ReentrancyGuard {
         rateLimitThreshold = _rateLimit;
         patternSensitivity = _sensitivity;
 
-        emit DAOThresholdsUpdated(
-            oldAutoRestrict,
-            _autoRestrict,
-            oldAutoLift,
-            _autoLift,
-            oldRateLimit,
-            _rateLimit,
-            oldSensitivity,
-            _sensitivity
-        );
+        emit DAOThresholdsUpdated(oldAutoRestrict, _autoRestrict, oldAutoLift, _autoLift, oldRateLimit, _rateLimit, oldSensitivity, _sensitivity);
     }
 
     /// @notice daoSetRateLimit
     /// @param level level
     /// @param action action
     /// @param limit limit
-    function daoSetRateLimit(
-        RestrictionLevel level,
-        ActionType action,
-        uint16 limit
-    ) external onlyDAO {
+    function daoSetRateLimit(RestrictionLevel level, ActionType action, uint16 limit) external onlyDAO {
         if (pendingRateLimitChange.exists) revert SA_NotAuthorized();
         uint64 executeAfter = uint64(block.timestamp) + DAO_RATE_LIMIT_DELAY;
-        pendingRateLimitChange = PendingRateLimitChange({
-            level: level,
-            action: action,
-            limit: limit,
-            executeAfter: executeAfter,
-            exists: true
-        });
+        pendingRateLimitChange = PendingRateLimitChange({level: level, action: action, limit: limit, executeAfter: executeAfter, exists: true});
         emit DAORateLimitChangeQueued(level, action, limit, executeAfter);
     }
 
@@ -1397,26 +1231,12 @@ contract SeerAutonomous is ReentrancyGuard {
         rateLimitThreshold = 5200;
         patternSensitivity = 100;
 
-        emit DAOThresholdsUpdated(
-            oldAutoRestrict,
-            autoRestrictThreshold,
-            oldAutoLift,
-            autoLiftThreshold,
-            oldRateLimit,
-            rateLimitThreshold,
-            oldSensitivity,
-            patternSensitivity
-        );
+        emit DAOThresholdsUpdated(oldAutoRestrict, autoRestrictThreshold, oldAutoLift, autoLiftThreshold, oldRateLimit, rateLimitThreshold, oldSensitivity, patternSensitivity);
 
         // Apply rate limits from library-supplied profile table
-        SeerAutonomousLib.RateLimitEntry[48] memory profile = SeerAutonomousLib
-            .getMaxAutonomyProfile();
+        SeerAutonomousLib.RateLimitEntry[48] memory profile = SeerAutonomousLib.getMaxAutonomyProfile();
         for (uint256 i = 0; i < 48; ++i) {
-            _setRateLimitWithEvent(
-                RestrictionLevel(profile[i].level),
-                ActionType(profile[i].action),
-                profile[i].limit
-            );
+            _setRateLimitWithEvent(RestrictionLevel(profile[i].level), ActionType(profile[i].action), profile[i].limit);
         }
 
         emit DAOMaxAutonomyProfileApplied(msg.sender);
@@ -1426,11 +1246,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param level level
     /// @param action action
     /// @param limit limit
-    function _setRateLimitWithEvent(
-        RestrictionLevel level,
-        ActionType action,
-        uint16 limit
-    ) internal {
+    function _setRateLimitWithEvent(RestrictionLevel level, ActionType action, uint16 limit) internal {
         uint16 oldLimit = rateLimits[level][action];
         rateLimits[level][action] = limit;
         if (oldLimit != limit) {
@@ -1491,12 +1307,7 @@ contract SeerAutonomous is ReentrancyGuard {
         if (operator == address(0)) revert SA_Zero();
         if (pendingOperatorChange.exists) revert SA_NotAuthorized();
         uint64 executeAfter = uint64(block.timestamp) + OPERATOR_CHANGE_DELAY;
-        pendingOperatorChange = PendingOperatorChange({
-            operator: operator,
-            authorized: authorized,
-            executeAfter: executeAfter,
-            exists: true
-        });
+        pendingOperatorChange = PendingOperatorChange({operator: operator, authorized: authorized, executeAfter: executeAfter, exists: true});
         emit OperatorChangeQueued(operator, authorized, executeAfter);
     }
 
@@ -1529,10 +1340,7 @@ contract SeerAutonomous is ReentrancyGuard {
      * @return allowed allowed
      * @return reason reason
      */
-    function canPerformAction(
-        address subject,
-        ActionType action
-    ) external view returns (bool allowed, string memory reason) {
+    function canPerformAction(address subject, ActionType action) external view returns (bool allowed, string memory reason) {
         if (daoOverridden[subject]) {
             return (true, "dao_override");
         }
@@ -1546,14 +1354,7 @@ contract SeerAutonomous is ReentrancyGuard {
 
         uint16 limit = rateLimits[level][action];
         uint16 count = actionCountToday[subject][action];
-        uint8 r = SeerAutonomousLib.evaluateRestriction(
-            uint8(level),
-            uint8(RestrictionLevel.Frozen),
-            uint8(RestrictionLevel.Restricted),
-            uint8(RestrictionLevel.Suspended),
-            limit,
-            count
-        );
+        uint8 r = SeerAutonomousLib.evaluateRestriction(uint8(level), uint8(RestrictionLevel.Frozen), uint8(RestrictionLevel.Restricted), uint8(RestrictionLevel.Suspended), limit, count);
         // r: 0=Allowed, 1=Warned (Suspended → still allowed for canPerformAction's bool semantics), 3=Blocked
         if (r == 3) {
             // Distinguish frozen vs other blocked
@@ -1571,26 +1372,8 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @return overridden overridden
     /// @return reason reason
     /// @return violationScore violationScore
-    function getRestrictionInfo(
-        address subject
-    )
-        external
-        view
-        returns (
-            RestrictionLevel level,
-            uint64 expiry,
-            bool overridden,
-            string memory reason,
-            uint16 violationScore
-        )
-    {
-        return (
-            restrictionLevel[subject],
-            restrictionExpiry[subject],
-            daoOverridden[subject],
-            restrictionReason[subject],
-            totalViolationScore[subject]
-        );
+    function getRestrictionInfo(address subject) external view returns (RestrictionLevel level, uint64 expiry, bool overridden, string memory reason, uint16 violationScore) {
+        return (restrictionLevel[subject], restrictionExpiry[subject], daoOverridden[subject], restrictionReason[subject], totalViolationScore[subject]);
     }
 
     /// @notice Get the aggregate violation score for weighting endorsements
@@ -1607,19 +1390,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @return endorseCount endorseCount
     /// @return transferVolume transferVolume
     /// @return windowStart windowStart
-    function getActivitySummary(
-        address subject
-    )
-        external
-        view
-        returns (
-            uint16 transferCount,
-            uint16 voteCount,
-            uint16 endorseCount,
-            uint256 transferVolume,
-            uint64 windowStart
-        )
-    {
+    function getActivitySummary(address subject) external view returns (uint16 transferCount, uint16 voteCount, uint16 endorseCount, uint256 transferVolume, uint64 windowStart) {
         ActivityWindow storage w = activityWindows[subject];
         return (w.transferCount, w.voteCount, w.endorseCount, w.transferVolume, w.windowStart);
     }
@@ -1662,10 +1433,7 @@ contract SeerAutonomous is ReentrancyGuard {
      */
     function _monitorEcosystemVault() internal returns (uint8 ranTasks) {
         if (ecosystemVault == address(0)) return 0;
-        try IEcosystemScheduler(ecosystemVault).checkUpkeep("") returns (
-            bool needed,
-            bytes memory performData
-        ) {
+        try IEcosystemScheduler(ecosystemVault).checkUpkeep("") returns (bool needed, bytes memory performData) {
             if (!needed) return 0;
             IEcosystemScheduler(ecosystemVault).performUpkeep(performData);
             // performData is abi.encode(uint8 bitmask) — decode to report which tasks ran.
