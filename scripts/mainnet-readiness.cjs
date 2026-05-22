@@ -31,7 +31,7 @@ const { execSync } = require("child_process");
 
 const ROOT = path.resolve(__dirname, "..");
 let failures = 0;
-const log = (msg) => console.log(msg);
+const _log = (msg) => console.log(msg);
 const fail = (msg) => {
   console.error(`❌ ${msg}`);
   failures++;
@@ -55,7 +55,7 @@ try {
     stdio: "inherit",
   });
   pass("All manual constants align with source");
-} catch (e) {
+} catch (_e) {
   fail("Manual parity verification failed (see output above)");
 }
 

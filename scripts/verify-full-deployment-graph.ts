@@ -118,7 +118,7 @@ function loadManifest(path: string): DeploymentManifest {
   return JSON.parse(raw) as DeploymentManifest;
 }
 
-function requireAddress(book: AddressBook, key: string): string {
+function _requireAddress(book: AddressBook, key: string): string {
   const value = book[key];
   if (!value || !isAddress(value)) {
     throw new Error(`Missing or invalid address for key "${key}" in manifest`);

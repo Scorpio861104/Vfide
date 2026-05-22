@@ -25,11 +25,10 @@
  */
 
 import { useState } from 'react';
-import { useAccount, useReadContract, useReadContracts } from 'wagmi';
+import { useAccount, useReadContracts } from 'wagmi';
 import type { Address } from 'viem';
-import { Shield, Users, Clock, Heart, AlertCircle, Check, ChevronRight, ExternalLink } from 'lucide-react';
+import { Shield, AlertCircle, Check, ChevronRight, ExternalLink } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { useContractAddresses } from '@/hooks/useContractAddresses';
 
 // ─────────────────────────────────────────────────────────────────
 // Vault ABI — we only need the views to read safety state
@@ -74,7 +73,7 @@ function describeChallengePeriod(seconds: bigint): string {
 }
 
 export function VaultSafetyPanel({ vaultAddress, compact = false }: Props) {
-  const { address: userAddress } = useAccount();
+  const { address: _userAddress } = useAccount();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const { data: safetyData, isLoading } = useReadContracts({

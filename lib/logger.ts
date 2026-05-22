@@ -42,7 +42,7 @@ function scrubValue(value: unknown): unknown {
   return value;
 }
 
-function toSentryExtras(value: unknown): Record<string, unknown> | undefined {
+function _toSentryExtras(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
   }

@@ -97,7 +97,7 @@ function findSubNav(pathname: string): { title: string; items: SubNavItem[] } | 
   if (SUB_NAVS[pathname]) return SUB_NAVS[pathname];
 
   // Find which sub-nav contains this path
-  for (const [key, nav] of Object.entries(SUB_NAVS)) {
+  for (const [_key, nav] of Object.entries(SUB_NAVS)) {
     if (nav.items.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))) {
       return nav;
     }

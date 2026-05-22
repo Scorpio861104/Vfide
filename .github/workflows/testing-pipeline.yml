@@ -233,18 +233,13 @@ jobs:
         run: npm run migrate:up
         env:
           DATABASE_URL: postgres://test:test@localhost:5432/vfide_test
-      - name: Start API server
-        run: npm run dev &
+      - name: Run API tests
+        run: npx jest __tests__/api/ --runInBand --forceExit --detectOpenHandles
         env:
           DATABASE_URL: postgres://test:test@localhost:5432/vfide_test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-jwt-secret-for-ci
           NODE_ENV: test
-      - name: Wait for server
-        run: npx wait-on http-get://localhost:3000/api/health -t 30000
-      - name: Run API tests
-        run: npx jest __tests__/api/ --runInBand --forceExit --detectOpenHandles
-        env:
           TEST_API_URL: http://localhost:3000
 
   # ───────────────────────────────────────────

@@ -15,8 +15,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Sparkles, Check, Edit3, RefreshCw, ShoppingCart, Tag, X } from 'lucide-react';
+import { Camera, Sparkles, Check, Edit3, RefreshCw, Tag, X } from 'lucide-react';
 
 interface GeneratedListing {
   name: string;

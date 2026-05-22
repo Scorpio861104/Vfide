@@ -23,7 +23,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingDown, DollarSign, Shield, Calculator, ArrowRight } from 'lucide-react';
+import { TrendingDown, Shield } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 // ── Competitor Rates ────────────────────────────────────────────────────────

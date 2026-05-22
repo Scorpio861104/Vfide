@@ -50,7 +50,7 @@
 
 import { useCallback } from 'react';
 import { useAccount, usePublicClient, useReadContract, useWriteContract } from 'wagmi';
-import { type Abi, type Address, parseUnits } from 'viem';
+import { type Abi, type Address } from 'viem';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { MerchantPortalABI } from '@/lib/abis';
 

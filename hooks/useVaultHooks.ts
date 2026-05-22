@@ -28,7 +28,6 @@ import { ACTIVE_VAULT_IMPLEMENTATION, isConfiguredContractAddress } from '../lib
 import { useContractAddresses } from './useContractAddresses'
 import { ZERO_ADDRESS } from '../lib/constants'
 import { VaultHubABI, VFIDETokenABI, CardBoundVaultABI } from '../lib/abis'
-import { isCardBoundVaultMode } from '../lib/contracts'
 import { useAppStore } from '@/lib/store/appStore';
 
 const HUB_ABI = VaultHubABI

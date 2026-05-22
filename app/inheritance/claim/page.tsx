@@ -29,7 +29,6 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAccount, useChainId } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Key,
   Shield,

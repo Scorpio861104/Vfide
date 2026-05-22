@@ -1,11 +1,11 @@
 'use client';
-import { useState, useMemo } from 'react';
-import { RefreshCw, Plus, Clock, Check, Pause, Play, X } from 'lucide-react';
+import { useMemo } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export interface Subscription { id: string; customerName: string; customerAddress: string; amount: number; interval: 'weekly'|'biweekly'|'monthly'; description: string; status: 'active'|'paused'|'cancelled'; nextBillingAt: number; createdAt: number; }
 
-export function RecurringBilling({ subscriptions = [], onPause, onResume, onCancel }: { subscriptions: Subscription[]; onPause?: (id: string) => void; onResume?: (id: string) => void; onCancel?: (id: string) => void; }) {
+export function RecurringBilling({ subscriptions = [], onPause, onResume, onCancel: _onCancel }: { subscriptions: Subscription[]; onPause?: (id: string) => void; onResume?: (id: string) => void; onCancel?: (id: string) => void; }) {
   const { formatCurrency, formatDate } = useLocale();
   const stats = useMemo(() => ({ active: subscriptions.filter(s=>s.status==='active').length, mrr: subscriptions.filter(s=>s.status==='active').reduce((s,sub)=>s+sub.amount*(sub.interval==='weekly'?4:sub.interval==='biweekly'?2:1),0) }), [subscriptions]);
   return (<div className="space-y-6">

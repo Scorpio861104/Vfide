@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { type Address, createPublicClient, http, parseAbiItem, type Log } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
-import { CONTRACT_ADDRESSES, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { query } from '@/lib/db';
 
 const CHAIN = process.env.NEXT_PUBLIC_CHAIN_ID === '8453' ? base : baseSepolia;

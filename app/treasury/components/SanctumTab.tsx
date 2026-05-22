@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Heart, AlertTriangle, ExternalLink, Loader2 } from 'lucide-react';
+import { Heart, AlertTriangle, ExternalLink } from 'lucide-react';
 import { formatEther } from 'viem';
 import { useSanctumVault, deriveDisbursementStatus } from '@/hooks/useSanctumVault';
 
