@@ -119,8 +119,7 @@ export function Modal({
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
-                      className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-zinc-100 transition-colors"
-                    >
+                      className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-zinc-100 transition-colors" aria-label="Close">
                       <X size={20} />
                     </motion.button>
                   )}
@@ -543,8 +542,7 @@ export function Alert({
         {dismissible && (
           <button
             onClick={onDismiss}
-            className="shrink-0 p-1 hover:bg-white/10 rounded transition-colors"
-          >
+            className="shrink-0 p-1 hover:bg-white/10 rounded transition-colors" aria-label="Close">
             <X size={16} />
           </button>
         )}

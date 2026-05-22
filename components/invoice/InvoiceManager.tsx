@@ -190,7 +190,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-white">New Invoice</h2>
-        <button onClick={onCancel} className="text-gray-400 hover:text-white"><X size={20} /></button>
+        <button onClick={onCancel} className="text-gray-400 hover:text-white" aria-label="Close"><X size={20} /></button>
       </div>
 
       {/* Customer */}
@@ -200,6 +200,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
           <input type="text" value={customerName} onChange={e =>  setCustomerName(e.target.value)}
             className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
           <input type="tel" value={customerPhone} onChange={e =>  setCustomerPhone(e.target.value)}
+            autoComplete="tel" inputMode="tel"
             className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
         </div>
       </div>

@@ -27,7 +27,7 @@ export function SessionKeyManager({ targetContracts = [], className = '' }: Sess
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={refresh} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+          <button onClick={refresh} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" aria-label="Refresh">
             <RefreshCcw className="w-4 h-4 text-gray-400" />
           </button>
           <button onClick={() => setShowCreateDialog(true)}

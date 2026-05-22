@@ -141,8 +141,7 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-300 transition-colors"
-        >
+          className="text-gray-400 hover:text-gray-300 transition-colors" aria-label="Close">
           <X className="w-4 h-4" />
         </button>
       </div>

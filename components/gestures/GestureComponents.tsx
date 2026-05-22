@@ -353,8 +353,7 @@ export function BottomSheet({
                 <h3 className="text-lg font-bold text-white">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-                >
+                  className="p-2 hover:bg-zinc-800 rounded-lg transition-colors" aria-label="Close">
                   <X className="w-5 h-5 text-zinc-400" />
                 </button>
               </div>

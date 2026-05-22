@@ -287,11 +287,18 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
   }, [canSubmit, name, description, amount, interval, trialDays, maxSubs, token, onCreated, onError]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      tabIndex={-1}
+    >
       <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 max-w-md w-full my-8" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-xl font-bold">New subscription plan</h2>
-          <button onClick={onClose} className="text-zinc-400 hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white" aria-label="Close"><X size={20} /></button>
         </div>
 
         <div className="space-y-4">

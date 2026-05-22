@@ -198,8 +198,7 @@ export function AvatarUpload({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   onClick={handleCancel}
-                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                >
+                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors" aria-label="Close">
                   <X className="w-4 h-4" />
                 </motion.button>
               )}
