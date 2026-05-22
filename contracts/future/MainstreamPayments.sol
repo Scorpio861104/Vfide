@@ -52,7 +52,7 @@ contract FiatRampRegistry is ReentrancyGuard {
     /// @param txHash txHash
     /// @param isOnRamp isOnRamp
     event RampTransactionRecorded(address indexed user, address indexed provider, bytes32 txHash, bool isOnRamp);
-
+    
     /// @notice dao
     address public dao;
     /// @notice seer
@@ -77,7 +77,7 @@ contract FiatRampRegistry is ReentrancyGuard {
         bool isOnRamp; // true = fiat→crypto, false = crypto→fiat
         uint64 timestamp;
     }
-
+    
     /// @notice providers
     mapping(address => RampProvider) public providers;
     /// @notice providerList
@@ -104,19 +104,19 @@ contract FiatRampRegistry is ReentrancyGuard {
     mapping(address => mapping(address => uint64)) public lastRampTime;
     /// @notice RAMP_COOLDOWN
     uint64 public constant RAMP_COOLDOWN = 1 hours;
-
+    
     /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "FRR: not DAO");
         _;
     }
-
+    
     /// @notice onlyProvider
     modifier onlyProvider() {
         require(providers[msg.sender].registered, "FRR: not provider");
         _;
     }
-
+    
     /// @notice constructor
     /// @param _dao _dao
     /// @param _seer _seer
@@ -197,18 +197,22 @@ contract FiatRampRegistry is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                           VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice getProviderCount
     /// @return _uint256 _uint256
     function getProviderCount() external view returns (uint256) {
         return providerList.length;
     }
-
+    
     /// @notice getActiveProviders
     /// @return addresses addresses
     /// @return names names
     /// @return widgetUrls widgetUrls
-    function getActiveProviders() external view returns (address[] memory addresses, string[] memory names, string[] memory widgetUrls) {
+    function getActiveProviders() external view returns (
+        address[] memory addresses,
+        string[] memory names,
+        string[] memory widgetUrls
+    ) {
         uint256 count = 0;
         for (uint256 i = 0; i < providerList.length; ++i) {
             if (providers[providerList[i]].registered) ++count;
@@ -228,14 +232,14 @@ contract FiatRampRegistry is ReentrancyGuard {
             }
         }
     }
-
+    
     /// @notice getUserRampHistory
     /// @param user user
     /// @return _arg _arg
     function getUserRampHistory(address user) external view returns (bytes32[] memory) {
         return userRampHistory[user];
     }
-
+    
     /// @notice getUserRampCount
     /// @param user user
     /// @return onRamps onRamps
@@ -254,7 +258,7 @@ contract FiatRampRegistry is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                           INTERNAL
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice _rewardRampUser
     /// @param user user
     function _rewardRampUser(address user) internal {
@@ -319,7 +323,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     /// @param newPrice newPrice
     /// @param effectiveAt effectiveAt
     event ForcePriceProposed(uint256 newPrice, uint256 effectiveAt);
-
+    
     /// @notice dao
     address public dao;
 
@@ -357,7 +361,7 @@ contract MainstreamPriceOracle is ReentrancyGuard {
         uint256 lastPrice;
         uint256 lastUpdate;
     }
-
+    
     /// @notice priceSources
     mapping(address => PriceSource) public priceSources;
     /// @notice sourceList
@@ -376,19 +380,19 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     uint256 public pendingForcePrice;
     /// @notice pendingForcePriceAt
     uint256 public pendingForcePriceAt;
-
+    
     /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "PO: not DAO");
         _;
     }
-
+    
     /// @notice onlyUpdater
     modifier onlyUpdater() {
         require(isUpdater[msg.sender] || msg.sender == dao, "PO: not updater");
         _;
     }
-
+    
     /// @notice constructor
     /// @param _dao _dao
     /// @param initialPrice initialPrice
@@ -412,7 +416,12 @@ contract MainstreamPriceOracle is ReentrancyGuard {
     /// @param newPrice newPrice
     /// @param maxIncreaseBps maxIncreaseBps
     /// @param maxDecreaseBps maxDecreaseBps
-    function _validatePriceWindow(uint256 currentPrice, uint256 newPrice, uint256 maxIncreaseBps, uint256 maxDecreaseBps) internal pure {
+    function _validatePriceWindow(
+        uint256 currentPrice,
+        uint256 newPrice,
+        uint256 maxIncreaseBps,
+        uint256 maxDecreaseBps
+    ) internal pure {
         uint256 minPrice = (currentPrice * (10_000 - maxDecreaseBps)) / 10_000;
         uint256 maxPrice = (currentPrice * (10_000 + maxIncreaseBps)) / 10_000;
         require(newPrice >= minPrice && newPrice <= maxPrice, "PO: price change too large");
@@ -723,40 +732,40 @@ contract SessionKeyManager is ReentrancyGuard {
     /// @notice SKM_ActionBlocked
     /// @param result result
     error SKM_ActionBlocked(uint8 result);
-
+    
     /// @notice dao
     address public dao;
     /// @notice vaultHub
     IVaultHub public vaultHub;
     /// @notice seerAutonomous
     ISeerAutonomous_SKM public seerAutonomous;
-
+    
     struct Session {
-        address owner; // Vault owner who created session
-        uint256 spendLimit; // Max VFIDE per session
-        uint256 spent; // Amount already spent
-        uint64 expiry; // Session expiry time
-        bool revoked; // Manually revoked
-        uint256 maxPerTx; // Max per transaction
+        address owner;           // Vault owner who created session
+        uint256 spendLimit;      // Max VFIDE per session
+        uint256 spent;           // Amount already spent
+        uint64 expiry;           // Session expiry time
+        bool revoked;            // Manually revoked
+        uint256 maxPerTx;        // Max per transaction
     }
-
+    
     /// @notice sessions
-    mapping(address => Session) public sessions; // sessionKey => Session
+    mapping(address => Session) public sessions;  // sessionKey => Session
     /// @notice ownerSessions
     mapping(address => address[]) private ownerSessions; // owner => sessionKeys
-
+    
     /// @notice authorizedSpendRecorders
     mapping(address => bool) public authorizedSpendRecorders;
     /// @notice sessionRecorderAllowed
     mapping(address => mapping(address => bool)) public sessionRecorderAllowed; // sessionKey => recorder => allowed
-
+    
     // Default limits
     /// @notice defaultSpendLimit
-    uint256 public defaultSpendLimit = 1000 * 1e18; // 1000 VFIDE
+    uint256 public defaultSpendLimit = 1000 * 1e18;  // 1000 VFIDE
     /// @notice defaultDuration
     uint64 public defaultDuration = 24 hours;
     /// @notice defaultMaxPerTx
-    uint256 public defaultMaxPerTx = 100 * 1e18; // 100 VFIDE per tx
+    uint256 public defaultMaxPerTx = 100 * 1e18;     // 100 VFIDE per tx
 
     /// @notice pendingDefaultSpendLimit
     uint256 public pendingDefaultSpendLimit;
@@ -768,19 +777,19 @@ contract SessionKeyManager is ReentrancyGuard {
     uint256 public pendingDefaultLimitsAt;
     /// @notice DEFAULT_LIMITS_DELAY
     uint256 public constant DEFAULT_LIMITS_DELAY = 24 hours;
-
+    
     /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "SKM: not DAO");
         _;
     }
-
+    
     /// @notice onlyAuthorizedRecorder
     modifier onlyAuthorizedRecorder() {
         require(authorizedSpendRecorders[msg.sender], "SKM: not authorized recorder");
         _;
     }
-
+    
     /// @notice constructor
     /// @param _dao _dao
     /// @param _vaultHub _vaultHub
@@ -841,7 +850,13 @@ contract SessionKeyManager is ReentrancyGuard {
     /// @param duration duration
     /// @param maxPerTx maxPerTx
     /// @return expiry expiry
-    function _createSessionInternal(address caller, address sessionKey, uint256 spendLimit, uint64 duration, uint256 maxPerTx) internal returns (uint64 expiry) {
+    function _createSessionInternal(
+        address caller,
+        address sessionKey,
+        uint256 spendLimit,
+        uint64 duration,
+        uint256 maxPerTx
+    ) internal returns (uint64 expiry) {
         require(sessionKey != address(0), "SKM: zero key");
         require(sessionKey != caller, "SKM: cannot be self");
         require(sessions[sessionKey].owner == address(0), "SKM: key already used");
@@ -1101,7 +1116,7 @@ contract TerminalRegistry is ReentrancyGuard {
     /// @notice TerminalRegistrarSet
     /// @param registrar registrar
     event TerminalRegistrarSet(address indexed registrar);
-
+    
     /// @notice dao
     address public dao;
     /// @notice vaultHub
@@ -1119,7 +1134,7 @@ contract TerminalRegistry is ReentrancyGuard {
         uint64 registeredAt;
         uint64 lastTxTime;
     }
-
+    
     /// @notice terminals
     mapping(bytes32 => Terminal) public terminals;
     /// @notice merchantTerminals
@@ -1131,14 +1146,14 @@ contract TerminalRegistry is ReentrancyGuard {
 
     // Spending limits for tap-to-pay (no signature required)
     /// @notice tapLimit
-    uint256 public tapLimit = 50 * 1e18; // 50 VFIDE max for tap (like $50 contactless limit)
-
+    uint256 public tapLimit = 50 * 1e18;  // 50 VFIDE max for tap (like $50 contactless limit)
+    
     /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "TR: not DAO");
         _;
     }
-
+    
     /// @notice constructor
     /// @param _dao _dao
     /// @param _vaultHub _vaultHub
@@ -1413,8 +1428,14 @@ contract MultiCurrencyRouter is ReentrancyGuard {
     /// @param paymentToken paymentToken
     /// @param paymentAmount paymentAmount
     /// @param orderId orderId
-    event DirectPaymentRecorded(address indexed customer, address indexed merchant, address paymentToken, uint256 paymentAmount, string orderId);
-
+    event DirectPaymentRecorded(
+        address indexed customer,
+        address indexed merchant,
+        address paymentToken,
+        uint256 paymentAmount,
+        string orderId
+    );
+    
     /// @notice dao
     address public dao;
     /// @notice vfideToken
@@ -1426,7 +1447,7 @@ contract MultiCurrencyRouter is ReentrancyGuard {
 
     // Recommended DEX routers (user chooses which to use)
     /// @notice recommendedRouter
-    address public recommendedRouter; // e.g., Uniswap V3 Router
+    address public recommendedRouter;  // e.g., Uniswap V3 Router
     /// @notice pendingRecommendedRouter
     address public pendingRecommendedRouter;
     /// @notice pendingRecommendedRouterAt
@@ -1440,25 +1461,36 @@ contract MultiCurrencyRouter is ReentrancyGuard {
         uint8 decimals;
         address[] defaultPath; // Suggested path to VFIDE
     }
-
+    
     /// @notice routes
     mapping(address => TokenRoute) public routes;
     /// @notice supportedTokens
     address[] public supportedTokens;
-
+    
     /// @notice onlyDAO
     modifier onlyDAO() {
         require(msg.sender == dao, "MCR: not DAO");
         _;
     }
-
+    
     /// @notice constructor
     /// @param _dao _dao
     /// @param _vfide _vfide
     /// @param _priceOracle _priceOracle
     /// @param _recommendedRouter _recommendedRouter
-    constructor(address _dao, address _vfide, address _priceOracle, address _recommendedRouter) {
-        require(_dao != address(0) && _vfide != address(0) && _priceOracle != address(0) && _recommendedRouter != address(0), "MCR: zero");
+    constructor(
+        address _dao,
+        address _vfide,
+        address _priceOracle,
+        address _recommendedRouter
+    ) {
+        require(
+            _dao != address(0) &&
+            _vfide != address(0) &&
+            _priceOracle != address(0) &&
+            _recommendedRouter != address(0),
+            "MCR: zero"
+        );
         dao = _dao;
         vfideToken = _vfide;
         priceOracle = MainstreamPriceOracle(_priceOracle);

@@ -138,30 +138,30 @@ contract CouncilElection {
     mapping(address => uint16) public councilTermScoreSnapshot;
     /// @notice currentCouncil
     address[] public currentCouncil;
-    // H-34/H-35 FIX: Two-step council appointment with 72h delay for governance veto.
-    // The DAO proposes a council; it is automatically applied after COUNCIL_APPOINT_DELAY
-    // if no governance cancelation occurs.  This replaces the instant `setCouncil` path with
-    // a transparent delay allowing token-holders to raise an alarm via DAO governance.
-    struct PendingCouncil {
-        address[] members;
-        uint64 validFrom;
-    }
-    /// @notice _pendingCouncil
-    PendingCouncil private _pendingCouncil;
-    /// @notice hasPendingCouncil
-    bool public hasPendingCouncil;
-    /// @notice COUNCIL_APPOINT_DELAY
-    uint256 public constant COUNCIL_APPOINT_DELAY = 72 hours;
-    /// @notice CouncilProposed
-    /// @param members members
-    /// @param validFrom validFrom
-    event CouncilProposed(address[] members, uint64 validFrom);
-    /// @notice CouncilApplied
-    /// @param members members
-    /// @param termEnd termEnd
-    event CouncilApplied(address[] members, uint64 termEnd);
-    /// @notice CouncilProposalCancelled
-    event CouncilProposalCancelled();
+        // H-34/H-35 FIX: Two-step council appointment with 72h delay for governance veto.
+        // The DAO proposes a council; it is automatically applied after COUNCIL_APPOINT_DELAY
+        // if no governance cancelation occurs.  This replaces the instant `setCouncil` path with
+        // a transparent delay allowing token-holders to raise an alarm via DAO governance.
+        struct PendingCouncil {
+            address[] members;
+            uint64 validFrom;
+        }
+        /// @notice _pendingCouncil
+        PendingCouncil private _pendingCouncil;
+        /// @notice hasPendingCouncil
+        bool public hasPendingCouncil;
+        /// @notice COUNCIL_APPOINT_DELAY
+        uint256 public constant COUNCIL_APPOINT_DELAY = 72 hours;
+        /// @notice CouncilProposed
+        /// @param members members
+        /// @param validFrom validFrom
+        event CouncilProposed(address[] members, uint64 validFrom);
+        /// @notice CouncilApplied
+        /// @param members members
+        /// @param termEnd termEnd
+        event CouncilApplied(address[] members, uint64 termEnd);
+        /// @notice CouncilProposalCancelled
+        event CouncilProposalCancelled();
 
     /// @notice electionEpoch
     uint256 public electionEpoch;
@@ -187,9 +187,9 @@ contract CouncilElection {
     uint64 public cooldownPeriod = FIXED_REELECTION_COOLDOWN; // Fixed policy: must wait 1 year before re-eligibility
 
     /// @notice councilSize
-    uint8 public councilSize = 12; // Start with 12 seats; DAO can grow toward the long-term cap.
+    uint8  public councilSize = 12; // Start with 12 seats; DAO can grow toward the long-term cap.
     /// @notice minCouncilScore
-    uint16 public minCouncilScore; // default from Seer
+    uint16 public minCouncilScore;       // default from Seer
     /// @notice termSeconds
     uint64 public termSeconds = FIXED_TERM_SECONDS; // Fixed policy: 1 year term
     /// @notice refreshInterval

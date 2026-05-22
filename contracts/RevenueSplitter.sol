@@ -12,8 +12,12 @@ pragma solidity 0.8.30;
 
 import { IERC20, SafeERC20, ReentrancyGuard } from "./SharedInterfaces.sol";
 
+/// @notice RevenueSplitter
+/// @title RevenueSplitter
+/// @author Vfide
 contract RevenueSplitter is ReentrancyGuard {
     using SafeERC20 for IERC20;
+    /// @notice owner
     address public immutable owner;
     
     struct Payee {
@@ -21,12 +25,27 @@ contract RevenueSplitter is ReentrancyGuard {
         uint256 shareBps; // Basis points (100 = 1%)
     }
     
+    /// @notice payees
     Payee[] public payees;
+    /// @notice totalShares
     uint256 public totalShares;
 
+    /// @notice Distributed
+    /// @param token token
+    /// @param totalAmount totalAmount
+    /// @param payeesSucceeded payeesSucceeded
+    /// @param payeesFailed payeesFailed
     event Distributed(address indexed token, uint256 totalAmount, uint256 payeesSucceeded, uint256 payeesFailed);
+    /// @notice PayeeDistribution
+    /// @param payee payee
+    /// @param token token
+    /// @param amount amount
+    /// @param success success
     event PayeeDistribution(address indexed payee, address indexed token, uint256 amount, bool success);
 
+    /// @notice constructor
+    /// @param _accounts _accounts
+    /// @param _shares _shares
     constructor(address[] memory _accounts, uint256[] memory _shares) {
         require(_accounts.length == _shares.length, "length mismatch");
         require(_accounts.length > 0, "RS: no payees");
@@ -44,6 +63,8 @@ contract RevenueSplitter is ReentrancyGuard {
     }
 
     // Anyone can trigger distribution of held tokens
+    /// @notice distribute
+    /// @param token token
     function distribute(address token) external nonReentrant {
         require(token != address(0), "RS: zero token");
         uint256 balance = IERC20(token).balanceOf(address(this));
@@ -85,6 +106,8 @@ contract RevenueSplitter is ReentrancyGuard {
         emit Distributed(token, balance, payeesSucceeded, payeesFailed);
     }
     
+    /// @notice getPayees
+    /// @return _arg _arg
     function getPayees() external view returns (Payee[] memory) {
         return payees;
     }
@@ -95,15 +118,24 @@ contract RevenueSplitter is ReentrancyGuard {
         uint256[] shares;
         uint256 validFrom;
     }
+    /// @notice _pendingPayeesUpdate
     PendingPayeesUpdate private _pendingPayeesUpdate;
+    /// @notice hasPendingPayeesUpdate
     bool public hasPendingPayeesUpdate;
+    /// @notice PAYEES_UPDATE_DELAY
     uint256 public constant PAYEES_UPDATE_DELAY = 48 hours;
 
+    /// @notice PayeesUpdateProposed
+    /// @param validFrom validFrom
     event PayeesUpdateProposed(uint256 validFrom);
+    /// @notice PayeesUpdateApplied
     event PayeesUpdateApplied();
+    /// @notice PayeesUpdateCancelled
     event PayeesUpdateCancelled();
 
     /// @notice Propose a new payee configuration; takes effect 48h later.
+    /// @param _accounts _accounts
+    /// @param _shares _shares
     function updatePayees(address[] calldata _accounts, uint256[] calldata _shares) external {
         require(msg.sender == owner, "RS: not owner");
         require(_accounts.length == _shares.length, "length mismatch");

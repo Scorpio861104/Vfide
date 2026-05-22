@@ -3,51 +3,103 @@ pragma solidity 0.8.30;
 
 import "./SharedInterfaces.sol";
 
+/// @notice TL_NotAdmin
 error TL_NotAdmin();
+/// @notice TL_AlreadyQueued
 error TL_AlreadyQueued();
+/// @notice TL_NotQueued
 error TL_NotQueued();
+/// @notice TL_AlreadyExecuted
 error TL_AlreadyExecuted(); // TL-02 FIX: distinct error for already-executed ops
+/// @notice TL_OnlyTimelock
 error TL_OnlyTimelock();
 
+/// @notice IDAOExecutionTracker
+/// @title IDAOExecutionTracker
+/// @author Vfide
 interface IDAOExecutionTracker {
+    /// @notice markExecuted
+    /// @param id id
     function markExecuted(uint256 id) external;
 }
 
 /// @dev #454/#455: Interface for notifying DAO of cancellation/expiry
+/// @notice IDAOCancellationTracker
+/// @title IDAOCancellationTracker
+/// @author Vfide
 interface IDAOCancellationTracker {
+    /// @notice expireQueuedProposal
+    /// @param id id
     function expireQueuedProposal(uint256 id) external;
 }
 
+/// @notice DAOTimelock
+/// @title DAOTimelock
+/// @author Vfide
 contract DAOTimelock is ReentrancyGuard {
+    /// @notice AdminSet
+    /// @param admin admin
     event AdminSet(address admin);
+    /// @notice DelaySet
+    /// @param delay delay
     event DelaySet(uint64 delay);
+    /// @notice LedgerSet
+    /// @param ledger ledger
     event LedgerSet(address ledger);
+    /// @notice PanicGuardSet
+    /// @param panicGuard panicGuard
     event PanicGuardSet(address panicGuard);
+    /// @notice Queued
+    /// @param id id
+    /// @param target target
+    /// @param value value
+    /// @param data data
+    /// @param eta eta
     event Queued(bytes32 id, address target, uint256 value, bytes data, uint64 eta);
+    /// @notice Cancelled
+    /// @param id id
     event Cancelled(bytes32 id);
+    /// @notice CancelledBySecondary
+    /// @param id id
     event CancelledBySecondary(bytes32 indexed id);
+    /// @notice Executed
+    /// @param id id
     event Executed(bytes32 id);
     /// @notice TL-02 FIX: Events for secondary executor role
+    /// @param executor executor
     event SecondaryExecutorSet(address indexed executor);
+    /// @notice SecondaryExecutorEOAWarning
+    /// @param executor executor
     event SecondaryExecutorEOAWarning(address indexed executor);
+    /// @notice ExecutedBySecondary
+    /// @param id id
     event ExecutedBySecondary(bytes32 indexed id);
 
+    /// @notice admin
     address public admin;
     /// @notice TL-02 FIX: Secondary executor that can execute txs after an extended grace period.
     ///         This provides a backup execution path if the primary admin is unable to execute.
     address public secondaryExecutor;
     /// @notice TL-02 FIX: Additional delay on top of ETA before secondary executor can act.
     uint64  public constant SECONDARY_EXECUTOR_DELAY = 3 days;
+    /// @notice delay
     uint64  public delay = 48 hours;
+    /// @notice EXPIRY_WINDOW
     uint64  public constant EXPIRY_WINDOW = 7 days; // H-15: Transactions expire 7 days after ETA
+    /// @notice ledger
     IProofLedger public ledger;      // optional
+    /// @notice panicGuard
     IPanicGuard  public panicGuard;  // optional
 
     struct Op { address target; uint256 value; bytes data; uint64 eta; bool done; }
+    /// @notice queue
     mapping(bytes32 => Op) public queue;
+    /// @notice daoProposalForTx
     mapping(bytes32 => uint256) public daoProposalForTx;
+    /// @notice nonce
     uint256 public nonce; // Nonce to ensure unique transaction IDs
 
+    /// @notice onlyAdmin
     modifier onlyAdmin() {
         _checkAdmin();
         _;
@@ -57,28 +109,38 @@ contract DAOTimelock is ReentrancyGuard {
     ///      itself (i.e. via a governance-queued call routed through execute/executeBySecondary).
     ///      Without this, post-rotation DAO-as-admin cannot cancel timelock ops through its own
     ///      proposal flow because the inner call arrives as msg.sender == address(this).
+    /// @notice onlyAdminOrSelf
     modifier onlyAdminOrSelf() {
         if (msg.sender != admin && msg.sender != address(this)) revert TL_NotAdmin();
         _;
     }
 
+    /// @notice onlyTimelockSelf
     modifier onlyTimelockSelf() {
         if (msg.sender != address(this)) revert TL_OnlyTimelock();
         _;
     }
 
+    /// @notice _checkAdmin
     function _checkAdmin() internal view {
         if (msg.sender != admin) revert TL_NotAdmin();
     }
 
+    /// @notice constructor
+    /// @param _admin _admin
     constructor(address _admin){ require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); }
 
     // AUDIT: Minimum delay to prevent timelock bypass
+    /// @notice MIN_DELAY
     uint64 public constant MIN_DELAY = 12 hours;
+    /// @notice MAX_DELAY
     uint64 public constant MAX_DELAY = 30 days;
     
+    /// @notice setAdmin
+    /// @param _admin _admin
     function setAdmin(address _admin) external onlyTimelockSelf { require(_admin!=address(0),"admin=0"); admin=_admin; emit AdminSet(_admin); _log("tl_admin_set"); }
     /// @notice TL-02 FIX: Set or remove the secondary executor (backup execution role).
+    /// @param _executor _executor
     function setSecondaryExecutor(address _executor) external onlyTimelockSelf {
         // F-78 FIX: warn (do not block) if executor is an EOA.
         if (_executor != address(0) && _executor.code.length == 0) {
@@ -88,6 +150,8 @@ contract DAOTimelock is ReentrancyGuard {
         emit SecondaryExecutorSet(_executor);
         _log("tl_secondary_executor_set");
     }
+    /// @notice setDelay
+    /// @param _delay _delay
     function setDelay(uint64 _delay) external onlyTimelockSelf { 
         // C-1 FIX: Enforce minimum and maximum delay to prevent timelock bypass
         require(_delay >= MIN_DELAY, "TL: delay below minimum");
@@ -102,10 +166,15 @@ contract DAOTimelock is ReentrancyGuard {
     /// @notice Emergency delay reduction — admin can reduce delay directly without timelock
     /// @dev Can only REDUCE delay (never increase), bounded by MIN_DELAY, max 50% reduction per call
     uint64 public lastEmergencyReduceTime;
+    /// @notice ABSOLUTE_MIN_DELAY
     uint64 public constant ABSOLUTE_MIN_DELAY = 24 hours;
+    /// @notice EMERGENCY_REDUCTION_RESET
     uint64 public constant EMERGENCY_REDUCTION_RESET = 30 days;
+    /// @notice emergencyDelayReduced
     bool public emergencyDelayReduced;
 
+    /// @notice emergencyReduceDelay
+    /// @param _newDelay _newDelay
     function emergencyReduceDelay(uint64 _newDelay) external onlyAdmin {
         if (emergencyDelayReduced && block.timestamp >= lastEmergencyReduceTime + EMERGENCY_REDUCTION_RESET) {
             emergencyDelayReduced = false;
@@ -121,14 +190,28 @@ contract DAOTimelock is ReentrancyGuard {
         emit DelaySet(_newDelay);
         _log("tl_emergency_delay_reduce");
     }
+    /// @notice setLedger
+    /// @param _ledger _ledger
     function setLedger(address _ledger) external onlyTimelockSelf { ledger=IProofLedger(_ledger); emit LedgerSet(_ledger); _log("tl_ledger_set"); }
+    /// @notice setPanicGuard
+    /// @param _pg _pg
     function setPanicGuard(address _pg) external onlyTimelockSelf { panicGuard=IPanicGuard(_pg); emit PanicGuardSet(_pg); _log("tl_panicguard_set"); }
 
+    /// @notice queueTx
+    /// @param target target
+    /// @param value value
+    /// @param data data
+    /// @return id id
     function queueTx(address target,uint256 value,bytes calldata data) external onlyAdmin returns(bytes32 id){
         id = _queueTracked(target, value, data);
     }
 
     /// @notice N-C6 FIX: Queue a tx linked to a DAO proposal id so execute() can mark it executed.
+    /// @param target target
+    /// @param value value
+    /// @param data data
+    /// @param daoProposalId daoProposalId
+    /// @return id id
     function queueTxFromDAO(address target, uint256 value, bytes calldata data, uint256 daoProposalId)
         external
         onlyAdmin
@@ -140,6 +223,8 @@ contract DAOTimelock is ReentrancyGuard {
     }
 
     // slither-disable-start reentrancy-no-eth
+    /// @notice cancel
+    /// @param id id
     function cancel(bytes32 id) external onlyAdminOrSelf nonReentrant {
         if(queue[id].eta==0) revert TL_NotQueued();
         // #454 FIX: notify DAO of cancellation so proposal doesn't stay stuck in "queued" state
@@ -152,6 +237,8 @@ contract DAOTimelock is ReentrancyGuard {
     }
     // slither-disable-end reentrancy-no-eth
 
+    /// @notice cancelBySecondary
+    /// @param id id
     function cancelBySecondary(bytes32 id) external {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");
         require(msg.sender == secondaryExecutor, "TL: not secondary executor");
@@ -186,6 +273,9 @@ contract DAOTimelock is ReentrancyGuard {
     //       contract); admin is trusted by construction.
     //   The post-call `delete` is harmless cleanup of a tracking mapping.
     // slither-disable-next-line reentrancy-eth,reentrancy-no-eth,reentrancy-benign
+    /// @notice execute
+    /// @param id id
+    /// @return res res
     function execute(bytes32 id) external payable nonReentrant returns(bytes memory res){
         Op storage op=queue[id];
         if(op.eta==0) revert TL_NotQueued();
@@ -223,6 +313,10 @@ contract DAOTimelock is ReentrancyGuard {
         return r;
     }
 
+    /// @notice _isPermissionlessSelfAdminRotation
+    /// @param target target
+    /// @param data data
+    /// @return _bool _bool
     function _isPermissionlessSelfAdminRotation(address target, bytes memory data) internal view returns (bool) {
         if (target != address(this) || data.length < 4) {
             return false;
@@ -237,6 +331,8 @@ contract DAOTimelock is ReentrancyGuard {
         return selector == this.setAdmin.selector;
     }
 
+    /// @notice _globalRiskActive
+    /// @return _bool _bool
     function _globalRiskActive() internal view returns (bool) {
         if (address(panicGuard) == address(0)) {
             return false;
@@ -264,6 +360,9 @@ contract DAOTimelock is ReentrancyGuard {
     //   admin-gated; the post-call `delete daoProposalForTx[id]` is
     //   harmless cleanup.
     // slither-disable-next-line reentrancy-eth,reentrancy-no-eth,reentrancy-benign
+    /// @notice executeBySecondary
+    /// @param id id
+    /// @return res res
     function executeBySecondary(bytes32 id) external payable nonReentrant returns (bytes memory res) {
         require(secondaryExecutor != address(0), "TL: secondary executor not set");
         require(msg.sender == secondaryExecutor, "TL: not secondary executor");
@@ -299,6 +398,9 @@ contract DAOTimelock is ReentrancyGuard {
         return r;
     }
 
+    /// @notice _validateERC20BoolReturn
+    /// @param callData callData
+    /// @param returnData returnData
     function _validateERC20BoolReturn(bytes memory callData, bytes memory returnData) internal pure {
         // Only validate bool return for transfer/transferFrom/approve selectors.
         if (returnData.length == 32 && callData.length >= 4) {
@@ -318,6 +420,8 @@ contract DAOTimelock is ReentrancyGuard {
         }
     }
 
+    /// @notice _markDaoExecutedIfTracked
+    /// @param id id
     function _markDaoExecutedIfTracked(bytes32 id) internal {
         uint256 daoProposalId = daoProposalForTx[id];
         if (daoProposalId == 0) return;
@@ -327,6 +431,8 @@ contract DAOTimelock is ReentrancyGuard {
     /// @dev #454/#455 FIX: When a linked tx is cancelled/expired, expire the DAO proposal
     ///      so it doesn't stay permanently stuck in "queued" state. Uses DAO.expireQueuedProposal()
     ///      if available; fails silently to not block cancellation.
+    /// @notice _notifyDaoCancelledIfTracked
+    /// @param id id
     function _notifyDaoCancelledIfTracked(bytes32 id) internal {
         uint256 daoProposalId = daoProposalForTx[id];
         if (daoProposalId == 0) return;
@@ -335,6 +441,9 @@ contract DAOTimelock is ReentrancyGuard {
         try IDAOCancellationTracker(admin).expireQueuedProposal(daoProposalId) {} catch {}
     }
 
+    /// @notice _revertWithReason
+    /// @param returndata returndata
+    /// @param fallbackMessage fallbackMessage
     function _revertWithReason(bytes memory returndata, string memory fallbackMessage) internal pure {
         if (returndata.length > 0) {
             // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
@@ -346,6 +455,8 @@ contract DAOTimelock is ReentrancyGuard {
         revert(fallbackMessage);
     }
 
+    /// @notice _log
+    /// @param action action
     function _log(string memory action) internal {
         if(address(ledger)!=address(0)){ try ledger.logSystemEvent(address(this),action,msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
@@ -369,11 +480,20 @@ contract DAOTimelock is ReentrancyGuard {
     /**
      * @notice Queue transaction with tracking
      * FLOW-5 FIX: Use nonce for unique ID (consistent with queueTx)
+     * @param target target
+     * @param value value
+     * @param data data
+     * @return id id
      */
     function queueTxWithTracking(address target, uint256 value, bytes calldata data) external onlyAdmin returns(bytes32 id) {
         id = _queueTracked(target, value, data);
     }
 
+    /// @notice _queueTracked
+    /// @param target target
+    /// @param value value
+    /// @param data data
+    /// @return id id
     function _queueTracked(address target, uint256 value, bytes calldata data) internal returns (bytes32 id) {
         require(target != address(0), "TL: target=0");
         uint64 eta = uint64(block.timestamp) + delay;
@@ -390,6 +510,12 @@ contract DAOTimelock is ReentrancyGuard {
     
     /**
      * @notice Get all queued transactions
+     * @return ids ids
+     * @return targets targets
+     * @return values values
+     * @return etas etas
+     * @return done done
+     * @return expired expired
      */
     function getQueuedTransactions() external view returns (
         bytes32[] memory ids,
@@ -421,6 +547,7 @@ contract DAOTimelock is ReentrancyGuard {
     
     /**
      * @notice Preview ETA for a new transaction
+     * @return _uint64 _uint64
      */
     function previewETA() external view returns (uint64) {
         return uint64(block.timestamp) + delay;
@@ -428,6 +555,14 @@ contract DAOTimelock is ReentrancyGuard {
     
     /**
      * @notice Get transaction status
+     * @param id id
+     * @return queued queued
+     * @return executed executed
+     * @return expired expired
+     * @return executable executable
+     * @return eta eta
+     * @return timeUntilExecutable timeUntilExecutable
+     * @return timeUntilExpiry timeUntilExpiry
      */
     function getTransactionStatus(bytes32 id) external view returns (
         bool queued,
@@ -455,11 +590,11 @@ contract DAOTimelock is ReentrancyGuard {
         }
     }
     
+    // slither-disable-start reentrancy-no-eth
     /**
      * @notice Clean up expired transaction (anyone can call to free storage)
      * @param id Transaction ID to clean up
      */
-    // slither-disable-start reentrancy-no-eth
     function cleanupExpired(bytes32 id) external onlyAdminOrSelf nonReentrant { // TL-03 + #455 FIX: also callable by self (DAO proposal flow)
         Op storage op = queue[id];
         require(op.eta > 0, "TL: not queued");
@@ -479,6 +614,7 @@ contract DAOTimelock is ReentrancyGuard {
      * @notice Re-queue an expired transaction with new ETA
      * @param oldId The expired transaction ID
      * FLOW-4 FIX: Use nonce in new ID to prevent hash collisions
+     * @return newId newId
      */
     function requeueExpired(bytes32 oldId) external onlyAdmin returns (bytes32 newId) {
         Op storage op = queue[oldId];
@@ -519,6 +655,7 @@ contract DAOTimelock is ReentrancyGuard {
      * @notice Remove an ID from the queuedIds tracking array in O(1) using swap-and-pop.
      * @dev    Uses queuedIdIndex to locate the element directly.
      *         Safe to call with IDs not in the array (no-op).
+     * @param id id
      */
     function _removeFromQueuedIds(bytes32 id) internal {
         uint256 idx = queuedIdIndex[id];
@@ -546,6 +683,7 @@ contract DAOTimelock is ReentrancyGuard {
     ///         and the current secondary slot is already filled (preventing accidental clear).
     ///         Governance flow: queue setSecondaryExecutor → wait delay → execute →
     ///         run canRotateSecondaryExecutor() to confirm the new address is live.
+    /// @param newExecutor newExecutor
     function canRotateSecondaryExecutor(address newExecutor)
         external
         view

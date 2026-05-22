@@ -27,7 +27,15 @@ contract CardBoundVaultDeployer {
     /// @param dailyLimit dailyLimit
     /// @param ledger ledger
     /// @return predicted predicted
-    function predict(address hub, address vfideToken, address owner_, uint8 guardianThreshold, uint256 maxPerTransfer, uint256 dailyLimit, address ledger) external view returns (address predicted) {
+    function predict(
+        address hub,
+        address vfideToken,
+        address owner_,
+        uint8 guardianThreshold,
+        uint256 maxPerTransfer,
+        uint256 dailyLimit,
+        address ledger
+    ) external view returns (address predicted) {
         // XCHAIN-4 FIX: chain-aware CREATE2 prediction.
         //
         // Standard EVM (Base, Polygon, Optimism, Arbitrum, Mainnet)
@@ -76,7 +84,15 @@ contract CardBoundVaultDeployer {
     /// @param dailyLimit dailyLimit
     /// @param ledger ledger
     /// @return vault vault
-    function deploy(address hub, address vfideToken, address owner_, uint8 guardianThreshold, uint256 maxPerTransfer, uint256 dailyLimit, address ledger) external returns (address vault) {
+    function deploy(
+        address hub,
+        address vfideToken,
+        address owner_,
+        uint8 guardianThreshold,
+        uint256 maxPerTransfer,
+        uint256 dailyLimit,
+        address ledger
+    ) external returns (address vault) {
         if (msg.sender != vaultHub) revert CBD_OnlyHub();
 
         address[] memory guardians = new address[](1);
@@ -106,7 +122,15 @@ contract CardBoundVaultDeployer {
     /// @param dailyLimit dailyLimit
     /// @param ledger ledger
     /// @return _bytes _bytes
-    function _creationCode(address hub, address vfideToken, address owner_, uint8 guardianThreshold, uint256 maxPerTransfer, uint256 dailyLimit, address ledger) internal pure returns (bytes memory) {
+    function _creationCode(
+        address hub,
+        address vfideToken,
+        address owner_,
+        uint8 guardianThreshold,
+        uint256 maxPerTransfer,
+        uint256 dailyLimit,
+        address ledger
+    ) internal pure returns (bytes memory) {
         address[] memory guardians = new address[](1);
         guardians[0] = owner_;
 
@@ -121,7 +145,14 @@ contract CardBoundVaultDeployer {
     /// @param dailyLimit dailyLimit
     /// @param ledger ledger
     /// @return _bytes32 _bytes32
-    function _salt(address owner_, address hub, address token, uint256 maxPerTransfer, uint256 dailyLimit, address ledger) internal pure returns (bytes32) {
+    function _salt(
+        address owner_,
+        address hub,
+        address token,
+        uint256 maxPerTransfer,
+        uint256 dailyLimit,
+        address ledger
+    ) internal pure returns (bytes32) {
         // F-04 FIX: Include configuration in salt so prefunded vault predictions remain reachable
         // even if VaultHub defaults are updated. Each (owner, hub, token, limits, ledger) gets unique salt.
         return keccak256(abi.encodePacked(owner_, hub, token, maxPerTransfer, dailyLimit, ledger));

@@ -4,118 +4,287 @@ pragma solidity 0.8.30;
 import "./SharedInterfaces.sol";
 
 /// @notice SeerGuardian interface for mutual DAO/Seer oversight
+/// @title ISeerGuardian_DAO
+/// @author Vfide
 interface ISeerGuardian_DAO {
+    /// @notice isProposalBlocked
+    /// @param proposalId proposalId
+    /// @return blocked blocked
+    /// @return reason reason
     function isProposalBlocked(uint256 proposalId) external view returns (bool blocked, string memory reason);
+    /// @notice canParticipateInGovernance
+    /// @param subject subject
+    /// @return _bool _bool
     function canParticipateInGovernance(address subject) external view returns (bool);
+    /// @notice autoCheckProposer
+    /// @param proposalId proposalId
+    /// @param proposer proposer
     function autoCheckProposer(uint256 proposalId, address proposer) external;
 }
 
+/// @notice ISeerAutonomous_DAO
+/// @title ISeerAutonomous_DAO
+/// @author Vfide
 interface ISeerAutonomous_DAO {
+    /// @notice beforeAction
+    /// @param subject subject
+    /// @param action action
+    /// @param amount amount
+    /// @param counterparty counterparty
+    /// @return _uint8 _uint8
     function beforeAction(address subject, uint8 action, uint256 amount, address counterparty) external returns (uint8);
 }
 
+/// @notice DAO_NotAdmin
 error DAO_NotAdmin();
+/// @notice DAO_NotTimelock
 error DAO_NotTimelock();
+/// @notice DAO_NotEligible
 error DAO_NotEligible();
+/// @notice DAO_UnknownProposal
 error DAO_UnknownProposal();
+/// @notice DAO_AlreadyVoted
 error DAO_AlreadyVoted();
+/// @notice DAO_VoteEnded
 error DAO_VoteEnded();
+/// @notice DAO_VoteNotStarted
 error DAO_VoteNotStarted();
+/// @notice DAO_ProposalFlagged
+/// @param reason reason
 error DAO_ProposalFlagged(string reason);
+/// @notice DAO_ProposalCooldownActive
+/// @param readyAt readyAt
 error DAO_ProposalCooldownActive(uint256 readyAt);
+/// @notice DAO_ProposalTargetNotAllowed
+/// @param ptype ptype
+/// @param target target
 error DAO_ProposalTargetNotAllowed(uint8 ptype, address target);
+/// @notice DAO_ProposalSelectorNotAllowed
+/// @param ptype ptype
+/// @param selector selector
 error DAO_ProposalSelectorNotAllowed(uint8 ptype, bytes4 selector);
+/// @notice DAO_ActionBlocked
+/// @param result result
 error DAO_ActionBlocked(uint8 result);
+/// @notice DAO_NotPendingAdmin
 error DAO_NotPendingAdmin();
 
+/// @notice DAO
+/// @title DAO
+/// @author Vfide
 contract DAO is ReentrancyGuard {
     enum ProposalType { Generic, Financial, ProtocolChange, SecurityAction }
 
+    /// @notice ModulesSet
+    /// @param timelock timelock
+    /// @param seer seer
+    /// @param hub hub
+    /// @param hooks hooks
+    /// @param council council
     event ModulesSet(address timelock, address seer, address hub, address hooks, address council);
+    /// @notice AdminSet
+    /// @param admin admin
     event AdminSet(address admin);
+    /// @notice AdminTransferProposed
+    /// @param pendingAdmin pendingAdmin
     event AdminTransferProposed(address indexed pendingAdmin);
+    /// @notice AdminTransferCancelled
     event AdminTransferCancelled();
+    /// @notice ParamsSet
+    /// @param votingPeriod votingPeriod
+    /// @param minVotesRequired minVotesRequired
     event ParamsSet(uint64 votingPeriod, uint256 minVotesRequired);
+    /// @notice MinParticipationSet
+    /// @param minParticipation minParticipation
     event MinParticipationSet(uint256 minParticipation);
+    /// @notice CouncilElectionSet
+    /// @param councilElection councilElection
     event CouncilElectionSet(address councilElection);
+    /// @notice QuorumProfileSynced
+    /// @param councilSize councilSize
+    /// @param minVotesRequired minVotesRequired
+    /// @param minParticipation minParticipation
     event QuorumProfileSynced(uint256 councilSize, uint256 minVotesRequired, uint256 minParticipation);
+    /// @notice ProposalCreated
+    /// @param id id
+    /// @param proposer proposer
+    /// @param ptype ptype
+    /// @param target target
+    /// @param value value
+    /// @param data data
+    /// @param description description
     event ProposalCreated(uint256 id, address proposer, ProposalType ptype, address target, uint256 value, bytes data, string description);
+    /// @notice Voted
+    /// @param id id
+    /// @param voter voter
+    /// @param support support
     event Voted(uint256 id, address voter, bool support);
+    /// @notice Finalized
+    /// @param id id
+    /// @param passed passed
     event Finalized(uint256 id, bool passed);
+    /// @notice Queued
+    /// @param id id
+    /// @param timelockId timelockId
     event Queued(uint256 id, bytes32 timelockId);
+    /// @notice Executed
+    /// @param id id
     event Executed(uint256 id);
+    /// @notice ProposalStateChanged
+    /// @param id id
+    /// @param oldState oldState
+    /// @param newState newState
     event ProposalStateChanged(uint256 indexed id, string oldState, string newState);
+    /// @notice DisputeFlagged
+    /// @param user user
+    /// @param caller caller
+    /// @param reason reason
     event DisputeFlagged(address indexed user, address indexed caller, string reason);
+    /// @notice ProposalWithdrawn
+    /// @param id id
+    /// @param proposer proposer
     event ProposalWithdrawn(uint256 id, address indexed proposer);
+    /// @notice ProposalCooldownSet
+    /// @param cooldown cooldown
     event ProposalCooldownSet(uint64 cooldown);
+    /// @notice ProposalTypeTargetPolicySet
+    /// @param ptype ptype
+    /// @param target target
+    /// @param allowed allowed
     event ProposalTypeTargetPolicySet(ProposalType indexed ptype, address indexed target, bool allowed);
+    /// @notice ProposalTypeSelectorPolicySet
+    /// @param ptype ptype
+    /// @param selector selector
+    /// @param allowed allowed
     event ProposalTypeSelectorPolicySet(ProposalType indexed ptype, bytes4 indexed selector, bool allowed);
+    /// @notice SeerAutonomousSet
+    /// @param seerAutonomous seerAutonomous
     event SeerAutonomousSet(address seerAutonomous);
+    /// @notice ExternalCallFailed
+    /// @param context context
+    /// @param reason reason
     event ExternalCallFailed(string indexed context, bytes reason);
+    /// @notice RequireProposalPoliciesSet
+    /// @param required required
     event RequireProposalPoliciesSet(bool required);
+    /// @notice EmergencyQuorumRescueInitiated
+    /// @param readyAt readyAt
     event EmergencyQuorumRescueInitiated(uint256 readyAt);
+    /// @notice EmergencyQuorumRescueApproved
     event EmergencyQuorumRescueApproved(); // DAO-03 FIX: Track secondary approval
+    /// @notice EmergencyQuorumRescueExecuted
+    /// @param newMinVotes newMinVotes
+    /// @param newMinParticipation newMinParticipation
     event EmergencyQuorumRescueExecuted(uint256 newMinVotes, uint256 newMinParticipation);
+    /// @notice EmergencyQuorumRescueCancelled
     event EmergencyQuorumRescueCancelled();
+    /// @notice EmergencyTimelockReplacementProposed
+    /// @param newTimelock newTimelock
+    /// @param readyAt readyAt
     event EmergencyTimelockReplacementProposed(address indexed newTimelock, uint64 readyAt);
+    /// @notice EmergencyTimelockReplacementApproved
     event EmergencyTimelockReplacementApproved(); // DAO-03 FIX: Track secondary approval
+    /// @notice EmergencyTimelockReplacementExecuted
+    /// @param newTimelock newTimelock
     event EmergencyTimelockReplacementExecuted(address indexed newTimelock);
+    /// @notice EmergencyTimelockReplacementCancelled
     event EmergencyTimelockReplacementCancelled();
+    /// @notice VoterHistoryPruned
+    /// @param voter voter
+    /// @param removedCount removedCount
     event VoterHistoryPruned(address indexed voter, uint256 removedCount);
 
+    /// @notice admin
     address public admin;
+    /// @notice pendingAdmin
     address public pendingAdmin;
     /// @notice DAO-03 FIX: Secondary admin required to co-approve emergency actions (prevent sole admin bypass)
     address public emergencyApprover;
     // H-4 FIX: Break-glass admin that can replace DAO admin with a 7-day delay, bypassing a
     // potentially compromised timelock and resolving DAO/DAOTimelock circular deadlock.
+    /// @notice breakGlassAdmin
     address public breakGlassAdmin;
+    /// @notice pendingBreakGlassAdmin
     address public pendingBreakGlassAdmin;
+    /// @notice breakGlassAdminReadyAt
     uint64  public breakGlassAdminReadyAt;
+    /// @notice BREAK_GLASS_DELAY
     uint64  public constant BREAK_GLASS_DELAY = 7 days;
+    /// @notice timelock
     IDAOTimelock public timelock;
+    /// @notice seer
     ISeer public seer;
+    /// @notice vaultHub
     IVaultHub public vaultHub;
+    /// @notice hooks
     IGovernanceHooks public hooks; // optional callbacks (logs/penalties)
     // Optional ledger module wired via GovernanceHooks; declared here so external consumers
     // and the upgrade plumbing can discover it via the public getter. Cannot be `constant`
     // (interface type — Solidity only allows constants for value types), and cannot be
     // `immutable` (set after deployment by the hooks contract). Suppress Slither here.
     // slither-disable-next-line constable-states
+    /// @notice ledger
     IProofLedger public ledger;
+    /// @notice guardian
     ISeerGuardian_DAO public guardian; // SeerGuardian for mutual oversight
+    /// @notice seerAutonomous
     ISeerAutonomous_DAO public seerAutonomous; // optional proactive Seer automation checks
 
+    /// @notice votingPeriod
     uint64 public votingPeriod = 7 days;
+    /// @notice MIN_VOTING_PERIOD
     uint64 public constant MIN_VOTING_PERIOD = 1 hours;
+    /// @notice MAX_VOTING_PERIOD
     uint64 public constant MAX_VOTING_PERIOD = 30 days;
+    /// @notice votingDelay
     uint64 public constant votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
+    /// @notice VOTE_GRACE_PERIOD
     uint64 public constant VOTE_GRACE_PERIOD = 30 minutes; // Anti-front-running: voting closes early
+    /// @notice proposalCooldown
     uint64 public proposalCooldown = 1 hours;
+    /// @notice minVotesRequired
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
+    /// @notice minParticipation
     uint256 public minParticipation = 10;
+    /// @notice councilElection
     ICouncilElection public councilElection; // Added councilElection variable
     
     /// @notice Emergency quorum rescue — breaks governance deadlock when quorum is unreachable
     uint256 public constant EMERGENCY_RESCUE_DELAY = 14 days;
     /// @notice Absolute minimum quorum to prevent cascading reduction (DAO-02 FIX)
     uint256 public constant ABSOLUTE_MIN_QUORUM = 500;
+    /// @notice BASE_MIN_VOTES_REQUIRED
     uint256 public constant BASE_MIN_VOTES_REQUIRED = 5000;
+    /// @notice BASE_MIN_PARTICIPATION
     uint256 public constant BASE_MIN_PARTICIPATION = 10;
+    /// @notice emergencyRescueReadyAt
     uint64 public emergencyRescueReadyAt; // 0 = not initiated
+    /// @notice emergencyRescueApproved
     bool public emergencyRescueApproved; // DAO-03 FIX: Track secondary approval
+    /// @notice emergencyRescueInitiator
     address public emergencyRescueInitiator; // DAO-03 hardening: initiator cannot self-approve
     // F-22 FIX: Emergency timelock replacement for DAO circular dependency recovery
+    /// @notice EMERGENCY_TIMELOCK_DELAY
     uint256 public constant EMERGENCY_TIMELOCK_DELAY = 30 days;
+    /// @notice pendingEmergencyTimelock
     address public pendingEmergencyTimelock;
+    /// @notice emergencyTimelockReadyAt
     uint64  public emergencyTimelockReadyAt;
+    /// @notice emergencyTimelockApproved
     bool public emergencyTimelockApproved; // DAO-03 FIX: Track secondary approval for timelock replacement
+    /// @notice emergencyTimelockInitiator
     address public emergencyTimelockInitiator; // DAO-03 hardening: initiator cannot self-approve
+    /// @notice lastVoteRewardDay
     mapping(address => uint256) public lastVoteRewardDay;
+    /// @notice lastProposalAt
     mapping(address => uint64) public lastProposalAt;
+    /// @notice proposalTypeTargetAllowed
     mapping(ProposalType => mapping(address => bool)) public proposalTypeTargetAllowed;
+    /// @notice proposalTypeTargetPolicyCount
     mapping(ProposalType => uint256) public proposalTypeTargetPolicyCount;
+    /// @notice proposalTypeSelectorAllowed
     mapping(ProposalType => mapping(bytes4 => bool)) public proposalTypeSelectorAllowed;
+    /// @notice proposalTypeSelectorPolicyCount
     mapping(ProposalType => uint256) public proposalTypeSelectorPolicyCount;
 
     /// @notice H-3 FIX: When true, proposals are fail-closed — types without any configured policy are rejected.
@@ -126,6 +295,7 @@ contract DAO is ReentrancyGuard {
     uint256 public constant MAX_PROPOSALS = 200;
     /// @notice DAO-12 FIX: Queued proposals expire after 30 days if not executed
     uint256 public constant QUEUE_EXPIRY = 30 days;
+    /// @notice VOTER_HISTORY_SOFT_CAP
     uint256 public constant VOTER_HISTORY_SOFT_CAP = 500;
 
     struct Proposal {
@@ -147,12 +317,17 @@ contract DAO is ReentrancyGuard {
         mapping(address => bool) hasVoted;
         mapping(address => uint256) scoreSnapshot;
     }
+    /// @notice proposalCount
     uint256 public proposalCount;
+    /// @notice activeProposalCount
     uint256 public activeProposalCount;
+    /// @notice proposals
     mapping(uint256 => Proposal) public proposals;
     
     //           so identical proposals can be re-submitted after the cooldown window elapses.
+    /// @notice withdrawnHashCooldown
     uint64 public withdrawnHashCooldown = 7 days;
+    /// @notice withdrawnProposalHashes
     mapping(bytes32 => uint64) public withdrawnProposalHashes; // stores block.timestamp when withdrawn
 
     /**
@@ -162,27 +337,39 @@ contract DAO is ReentrancyGuard {
         uint256 lastVoteTime;
         uint256 fatigue; // Accumulated fatigue (percentage points)
     }
+    /// @notice voterInfo
     mapping(address => VoterInfo) public voterInfo;
+    /// @notice FATIGUE_RECOVERY_RATE
     uint256 public constant FATIGUE_RECOVERY_RATE = 1 days; // Recover 5% per day
+    /// @notice FATIGUE_PER_VOTE
     uint256 public constant FATIGUE_PER_VOTE = 5; // 5% fatigue per vote
     /// @notice DAO-05 FIX: Score must have been established at least 2 days before proposal creation
     /// @dev Prevents last-minute ProofScore pumping just before a proposal is submitted
     uint256 public constant SCORE_SETTLEMENT_WINDOW = 2 days;
 
+    /// @notice onlyAdmin
     modifier onlyAdmin() {
         _checkAdmin();
         _;
     }
 
+    /// @notice onlyTimelock
     modifier onlyTimelock() {
         if (msg.sender != address(timelock)) revert DAO_NotTimelock();
         _;
     }
 
+    /// @notice _checkAdmin
     function _checkAdmin() internal view {
         if (msg.sender != admin) revert DAO_NotAdmin();
     }
 
+    /// @notice constructor
+    /// @param _admin _admin
+    /// @param _timelock _timelock
+    /// @param _seer _seer
+    /// @param _hub _hub
+    /// @param _hooks _hooks
     constructor(address _admin, address _timelock, address _seer, address _hub, address _hooks) {
         require(_admin!=address(0) && _timelock!=address(0) && _seer!=address(0) && _hub!=address(0), "zero");
         admin=_admin; timelock=IDAOTimelock(_timelock); seer=ISeer(_seer); vaultHub=IVaultHub(_hub); hooks=IGovernanceHooks(_hooks);
@@ -196,6 +383,11 @@ contract DAO is ReentrancyGuard {
         emit ModulesSet(_timelock,_seer,_hub,_hooks,address(0)); emit AdminSet(_admin); emit RequireProposalPoliciesSet(true);
     }
 
+    /// @notice setModules
+    /// @param _timelock _timelock
+    /// @param _seer _seer
+    /// @param _hub _hub
+    /// @param _hooks _hooks
     function setModules(address _timelock, address _seer, address _hub, address _hooks) external onlyTimelock {
         require(_timelock!=address(0)&&_seer!=address(0)&&_hub!=address(0),"zero");
         timelock=IDAOTimelock(_timelock); seer=ISeer(_seer); vaultHub=IVaultHub(_hub); hooks=IGovernanceHooks(_hooks);
@@ -203,6 +395,7 @@ contract DAO is ReentrancyGuard {
     }
 
     /// @notice Set the council election module used for quorum-profile syncing.
+    /// @param _councilElection _councilElection
     function setCouncilElection(address _councilElection) external onlyTimelock {
         require(_councilElection != address(0), "zero");
         councilElection = ICouncilElection(_councilElection);
@@ -211,29 +404,35 @@ contract DAO is ReentrancyGuard {
     }
     
     /// @notice Set the SeerGuardian for mutual DAO/Seer oversight
+    /// @param _guardian _guardian
     function setGuardian(address _guardian) external onlyTimelock {
         require(_guardian != address(0), "zero");
         guardian = ISeerGuardian_DAO(_guardian);
     }
 
     /// @notice Set SeerAutonomous for proactive pre-action governance enforcement
+    /// @param _seerAutonomous _seerAutonomous
     function setSeerAutonomous(address _seerAutonomous) external onlyTimelock {
         require(_seerAutonomous != address(0), "zero");
         seerAutonomous = ISeerAutonomous_DAO(_seerAutonomous);
         emit SeerAutonomousSet(_seerAutonomous);
     }
 
+    /// @notice setAdmin
+    /// @param _admin _admin
     function setAdmin(address _admin) external onlyTimelock { 
         require(_admin!=address(0),"zero");
         pendingAdmin = _admin;
         emit AdminTransferProposed(_admin);
     }
 
+    /// @notice cancelPendingAdmin
     function cancelPendingAdmin() external onlyTimelock {
         pendingAdmin = address(0);
         emit AdminTransferCancelled();
     }
 
+    /// @notice acceptAdmin
     function acceptAdmin() external {
         if (msg.sender != pendingAdmin) revert DAO_NotPendingAdmin();
         admin = msg.sender;
@@ -242,6 +441,7 @@ contract DAO is ReentrancyGuard {
     }
     
     /// @notice DAO-03 FIX: Set emergency approver (secondary check for emergency actions)
+    /// @param _approver _approver
     function setEmergencyApprover(address _approver) external onlyTimelock {
         require(_approver != address(0), "zero");
         emergencyApprover = _approver;
@@ -252,6 +452,7 @@ contract DAO is ReentrancyGuard {
     /// @notice Queue a break-glass admin rotation. Only current breakGlassAdmin can call.
     ///         Completes after BREAK_GLASS_DELAY (7 days) without requiring the timelock.
     ///         Intended ONLY to recover from a DAOTimelock deadlock.
+    /// @param _newAdmin _newAdmin
     function proposeBreakGlassAdmin(address _newAdmin) external {
         require(msg.sender == breakGlassAdmin, "DAO: not breakGlassAdmin");
         require(_newAdmin != address(0), "zero");
@@ -272,10 +473,14 @@ contract DAO is ReentrancyGuard {
     }
 
     /// @notice Update the breakGlassAdmin address itself (requires timelock when timelock is healthy).
+    /// @param _bga _bga
     function setBreakGlassAdmin(address _bga) external onlyTimelock {
         require(_bga != address(0), "zero");
         breakGlassAdmin = _bga;
     }
+    /// @notice setParams
+    /// @param _period _period
+    /// @param _minVotes _minVotes
     function setParams(uint64 _period, uint256 _minVotes) external onlyTimelock {
         require(_period >= MIN_VOTING_PERIOD, "DAO: voting period too short");
         require(_period <= MAX_VOTING_PERIOD, "DAO: voting period too long");
@@ -295,6 +500,7 @@ contract DAO is ReentrancyGuard {
 
     /// @notice F-56 FIX: Effective participation floor scales with active voter population.
     /// @dev Returns max(configured minimum, 1% of active voters).
+    /// @return _uint256 _uint256
     function effectiveMinParticipation() public view returns (uint256) {
         uint256 dynamicFloor = totalActiveVoters / 100;
         return dynamicFloor > minParticipation ? dynamicFloor : minParticipation;
@@ -302,6 +508,9 @@ contract DAO is ReentrancyGuard {
 
     /// @notice Recommend quorum thresholds for the current governance scale.
     /// @dev Uses council-size bands as a governance participation proxy. Raw user counts are too sybil-prone.
+    /// @param _councilSize _councilSize
+    /// @return recommendedMinVotes recommendedMinVotes
+    /// @return recommendedMinParticipation recommendedMinParticipation
     function recommendedQuorumForCouncilSize(uint256 _councilSize) public pure returns (uint256 recommendedMinVotes, uint256 recommendedMinParticipation) {
         require(_councilSize > 0 && _councilSize <= 21, "DAO: invalid council size");
 
@@ -403,6 +612,7 @@ contract DAO is ReentrancyGuard {
     /// @notice F-22 FIX: Propose a new timelock address for emergency replacement (30-day delay)
     /// @dev Required when the timelock contract has a bug or key compromise and DAO cannot govern itself.
     /// @dev DAO-03 FIX: Requires approval from both admin and emergencyApprover
+    /// @param newTimelock newTimelock
     function proposeEmergencyTimelockReplacement(address newTimelock) external {
         require(msg.sender == admin || msg.sender == emergencyApprover, "DAO: not authorized");
         require(emergencyApprover != address(0), "DAO: emergency approver not set");
@@ -456,6 +666,7 @@ contract DAO is ReentrancyGuard {
     }
 
     /// @notice Set minimum spacing between proposals by the same proposer
+    /// @param _cooldown _cooldown
     function setProposalCooldown(uint64 _cooldown) external onlyTimelock {
         require(_cooldown <= 30 days, "DAO: cooldown too long");
         proposalCooldown = _cooldown;
@@ -465,12 +676,16 @@ contract DAO is ReentrancyGuard {
     /// @notice Set cooldown before a withdrawn proposal can be re-submitted.
     /// @dev Capped at 90 days — beyond that proposals lose political relevance and
     ///      community members should be free to re-introduce them without restriction.
+    /// @param _cooldown _cooldown
     function setWithdrawnHashCooldown(uint64 _cooldown) external onlyTimelock {
         require(_cooldown <= 90 days, "DAO: cooldown too long");
         withdrawnHashCooldown = _cooldown;
     }
 
     /// @notice Configure allowlist policy for proposal type targets
+    /// @param ptype ptype
+    /// @param target target
+    /// @param allowed allowed
     function setProposalTypeTargetPolicy(ProposalType ptype, address target, bool allowed) external onlyTimelock {
         require(target != address(0), "DAO: invalid target policy");
         bool current = proposalTypeTargetAllowed[ptype][target];
@@ -488,6 +703,9 @@ contract DAO is ReentrancyGuard {
 
     /// @notice Configure allowlist policy for proposal type function selectors.
     /// @dev bytes4(0) is valid and explicitly represents short calldata / fallback-style proposals.
+    /// @param ptype ptype
+    /// @param selector selector
+    /// @param allowed allowed
     function setProposalTypeSelectorPolicy(ProposalType ptype, bytes4 selector, bool allowed) external onlyTimelock {
         bool current = proposalTypeSelectorAllowed[ptype][selector];
         if (current == allowed) return;
@@ -505,11 +723,15 @@ contract DAO is ReentrancyGuard {
     /// @notice H-3 FIX: Set fail-closed mode for proposal policies.
     /// @dev When true, any proposal type that has no configured target or selector policy is rejected.
     ///      Enable only after all required policies have been configured via governance.
+    /// @param required required
     function setRequireProposalPolicies(bool required) external onlyTimelock {
         requireProposalPolicies = required;
         emit RequireProposalPoliciesSet(required);
     }
 
+    /// @notice _selector
+    /// @param data data
+    /// @return selector selector
     function _selector(bytes calldata data) internal pure returns (bytes4 selector) {
         if (data.length < 4) return bytes4(0);
         // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
@@ -518,6 +740,9 @@ contract DAO is ReentrancyGuard {
         }
     }
 
+    /// @notice _eligible
+    /// @param a a
+    /// @return _bool _bool
     function _eligible(address a) internal view returns (bool) {
         address vault = vaultHub.vaultOf(a);
         if (vault == address(0)) return false;
@@ -531,6 +756,9 @@ contract DAO is ReentrancyGuard {
         return seer.getScoreAt(a, scoreTimestamp) >= seer.minForGovernance();
     }
 
+    /// @notice _canPruneVoterHistoryEntry
+    /// @param proposalId proposalId
+    /// @return _bool _bool
     function _canPruneVoterHistoryEntry(uint256 proposalId) internal view returns (bool) {
         Proposal storage proposal = proposals[proposalId];
         if (proposal.start == 0 && proposal.end == 0) {
@@ -548,6 +776,10 @@ contract DAO is ReentrancyGuard {
         return false;
     }
 
+    /// @notice _pruneVoterHistory
+    /// @param voter voter
+    /// @param maxRemovals maxRemovals
+    /// @return removed removed
     function _pruneVoterHistory(address voter, uint256 maxRemovals) internal returns (uint256 removed) {
         uint256[] storage all = voterProposals[voter];
         uint256 writeIndex = 0;
@@ -569,6 +801,13 @@ contract DAO is ReentrancyGuard {
         }
     }
 
+    /// @notice propose
+    /// @param ptype ptype
+    /// @param target target
+    /// @param value value
+    /// @param data data
+    /// @param description description
+    /// @return id id
     function propose(ProposalType ptype, address target, uint256 value, bytes calldata data, string calldata description) external returns (uint256 id) {
         if(!_eligible(msg.sender)) revert DAO_NotEligible();
         require(target != address(0), "DAO: invalid target");
@@ -641,6 +880,9 @@ contract DAO is ReentrancyGuard {
     }
 
     // slither-disable-next-line reentrancy-benign
+    /// @notice vote
+    /// @param id id
+    /// @param support support
     function vote(uint256 id, bool support) external nonReentrant {
         address voter = msg.sender;
         Proposal storage p = proposals[id];
@@ -740,6 +982,8 @@ contract DAO is ReentrancyGuard {
         }
     }
 
+    /// @notice finalize
+    /// @param id id
     function finalize(uint256 id) external nonReentrant {
         Proposal storage p=proposals[id];
         // FLOW-3 FIX: Check proposal exists (both start and end must be set)
@@ -775,6 +1019,7 @@ contract DAO is ReentrancyGuard {
     }
 
     /// @notice DAO-07 FIX: Only timelock can mark proposals executed (prevents admin soft veto)
+    /// @param id id
     function markExecuted(uint256 id) external {
         require(msg.sender == address(timelock), "DAO: only timelock can mark executed");
         Proposal storage p=proposals[id];
@@ -786,6 +1031,7 @@ contract DAO is ReentrancyGuard {
 
     /// @notice DAO-12 FIX: Expire stale queued proposals that were never executed
     /// @dev Anyone can call — this reclaims proposal slot when timelock fails to execute
+    /// @param id id
     function expireQueuedProposal(uint256 id) external {
         Proposal storage p = proposals[id];
         require(p.queued && !p.executed, "DAO: not queued or already executed");
@@ -811,6 +1057,8 @@ contract DAO is ReentrancyGuard {
         timelock.execute(timelockId);
     }
 
+    /// @notice withdrawProposal
+    /// @param id id
     function withdrawProposal(uint256 id) external {
         Proposal storage p = proposals[id];
         require(p.proposer == msg.sender, "Not proposer");
@@ -847,6 +1095,9 @@ contract DAO is ReentrancyGuard {
         emit ProposalWithdrawn(id, msg.sender);
     }
 
+    /// @notice disputeFlag
+    /// @param user user
+    /// @param reason reason
     function disputeFlag(address user, string calldata reason) external {
         require(msg.sender != address(0), "Invalid caller");
         // DAO-09 FIX: Require minimum ProofScore to prevent spam dispute flooding
@@ -883,6 +1134,7 @@ contract DAO is ReentrancyGuard {
     }
 
     /// @notice Legacy convenience alias — returns first 100 active proposals
+    /// @return _arg _arg
     function getActiveProposals() external view returns (uint256[] memory) {
         return getActiveProposals(0, 100);
     }
@@ -890,6 +1142,17 @@ contract DAO is ReentrancyGuard {
     /**
      * @notice Get proposal details
      * @param id Proposal ID
+     * @return proposer proposer
+     * @return ptype ptype
+     * @return target target
+     * @return value value
+     * @return description description
+     * @return startTime startTime
+     * @return endTime endTime
+     * @return forVotes forVotes
+     * @return againstVotes againstVotes
+     * @return executed executed
+     * @return queued queued
      */
     function getProposalDetails(uint256 id) external view returns (
         address proposer,
@@ -920,6 +1183,9 @@ contract DAO is ReentrancyGuard {
     
     /**
      * @notice Check if user has voted on a proposal
+     * @param id id
+     * @param voter voter
+     * @return _bool _bool
      */
     function hasVoted(uint256 id, address voter) external view returns (bool) {
         return proposals[id].hasVoted[voter];
@@ -993,6 +1259,8 @@ contract DAO is ReentrancyGuard {
     
     /**
      * @notice Check if user is eligible to vote/propose
+     * @param user user
+     * @return _bool _bool
      */
     function isEligible(address user) external view returns (bool) {
         return _eligible(user);
@@ -1000,6 +1268,11 @@ contract DAO is ReentrancyGuard {
     
     /**
      * @notice Get proposal outcome prediction
+     * @param id id
+     * @return status status
+     * @return quorumMet quorumMet
+     * @return passing passing
+     * @return timeRemaining timeRemaining
      */
     function getProposalStatus(uint256 id) external view returns (
         string memory status,
@@ -1030,8 +1303,11 @@ contract DAO is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     
     // Track proposals voted on by each voter
+    /// @notice voterProposals
     mapping(address => uint256[]) private voterProposals;
+    /// @notice hasVotedAnyProposal
     mapping(address => bool) public hasVotedAnyProposal;
+    /// @notice totalActiveVoters
     uint256 public totalActiveVoters;
     
     /**
@@ -1054,6 +1330,8 @@ contract DAO is ReentrancyGuard {
     }
 
     /// @notice Legacy alias — returns first 200 voter proposals
+    /// @param voter voter
+    /// @return _arg _arg
     function getVoterHistory(address voter) external view returns (uint256[] memory) {
         return getVoterHistory(voter, 0, 200);
     }
@@ -1085,6 +1363,9 @@ contract DAO is ReentrancyGuard {
         }
     }
 
+    /// @notice pruneVoterHistory
+    /// @param maxRemovals maxRemovals
+    /// @return removed removed
     function pruneVoterHistory(uint256 maxRemovals) external returns (uint256 removed) {
         uint256 removals = maxRemovals == 0 ? VOTER_HISTORY_SOFT_CAP : maxRemovals;
         removed = _pruneVoterHistory(msg.sender, removals);
@@ -1093,6 +1374,11 @@ contract DAO is ReentrancyGuard {
     
     /**
      * @notice Get batch of proposal details
+     * @param ids ids
+     * @return forVotesCounts forVotesCounts
+     * @return againstVotesCounts againstVotesCounts
+     * @return executedFlags executedFlags
+     * @return queuedFlags queuedFlags
      */
     function getProposalsBatch(uint256[] calldata ids) external view returns (
         uint256[] memory forVotesCounts,
@@ -1114,6 +1400,11 @@ contract DAO is ReentrancyGuard {
         }
     }
 
+    /// @notice _enforceSeerAction
+    /// @param subject subject
+    /// @param action action
+    /// @param amount amount
+    /// @param counterparty counterparty
     function _enforceSeerAction(address subject, uint8 action, uint256 amount, address counterparty) internal {
         address sa = address(seerAutonomous);
         if (sa == address(0)) return;

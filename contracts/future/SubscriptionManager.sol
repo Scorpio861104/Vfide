@@ -233,7 +233,7 @@ contract SubscriptionManager is ReentrancyGuard {
     uint64 public pendingFraudRegistryAt;
     /// @notice FRAUD_REGISTRY_CHANGE_DELAY
     uint64 public constant FRAUD_REGISTRY_CHANGE_DELAY = 24 hours;
-
+    
     /// @notice vaultHub
     IVaultHub public vaultHub;
 
@@ -243,7 +243,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /// @notice fraudRegistry
     IFraudRegistry_SM public fraudRegistry;
     /// @notice SUBSCRIPTION_PAYER_REWARD
-    uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2; // +0.2 per payment
+    uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2;    // +0.2 per payment
     /// @notice SUBSCRIPTION_MERCHANT_REWARD
     uint16 public constant SUBSCRIPTION_MERCHANT_REWARD = 3; // +0.3 per payment
 
@@ -353,7 +353,13 @@ contract SubscriptionManager is ReentrancyGuard {
     /// @param interval interval
     /// @param memo memo
     /// @return subId subId
-    function createSubscription(address merchant, address token, uint256 amount, uint256 interval, string calldata memo) external returns (uint256 subId) {
+    function createSubscription(
+        address merchant,
+        address token,
+        uint256 amount,
+        uint256 interval,
+        string calldata memo
+    ) external returns (uint256 subId) {
         if (merchant == address(0)) revert SM_InvalidMerchant();
         if (amount == 0) revert SM_InvalidAmount();
         if (interval < 1 hours) revert SM_InvalidInterval();
@@ -645,7 +651,7 @@ contract SubscriptionManager is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                              VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice getSubscription
     /// @param subId subId
     /// @return _arg _arg

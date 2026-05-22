@@ -261,14 +261,9 @@ contract GuardianLock {
     mapping(address => uint8) public lockThresholdSnapshot;
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        _checkDAOGL();
-        _;
-    }
+    modifier onlyDAO() { _checkDAOGL(); _; }
     /// @notice _checkDAOGL
-    function _checkDAOGL() internal view {
-        if (msg.sender != dao) revert SEC_NotDAO();
-    }
+    function _checkDAOGL() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -501,14 +496,9 @@ contract PanicGuard {
     uint64 public constant ABSOLUTE_MAX_QUARANTINE = 90 days;
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        _checkDAOPG();
-        _;
-    }
+    modifier onlyDAO() { _checkDAOPG(); _; }
     /// @notice _checkDAOPG
-    function _checkDAOPG() internal view {
-        if (msg.sender != dao) revert SEC_NotDAO();
-    }
+    function _checkDAOPG() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -801,7 +791,7 @@ contract EmergencyBreaker {
 
     /// @notice halted
     bool public halted;
-
+    
     /// @notice lastToggleTime
     uint64 public lastToggleTime;
     /// @notice toggleCooldown
@@ -817,14 +807,9 @@ contract EmergencyBreaker {
     PendingToggle public pendingToggle;
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        _checkDAOEB();
-        _;
-    }
+    modifier onlyDAO() { _checkDAOEB(); _; }
     /// @notice _checkDAOEB
-    function _checkDAOEB() internal view {
-        if (msg.sender != dao) revert SEC_NotDAO();
-    }
+    function _checkDAOEB() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
 
     /// @notice constructor
     /// @param _dao _dao

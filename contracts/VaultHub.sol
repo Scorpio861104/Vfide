@@ -17,9 +17,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice vfideToken
     address public vfideToken;
     /// @notice ledger
-    IProofLedger public ledger; // optional ledger
+    IProofLedger public ledger;       // optional ledger
     /// @notice dao
-    address public dao; // DAO can force recover
+    address public dao;               // DAO can force recover
 
     /// @notice CARD_GUARDIAN_THRESHOLD
     uint8 public constant CARD_GUARDIAN_THRESHOLD = 1;
@@ -68,8 +68,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint256) public recoveryNonce;
     /// @notice RECOVERY_DELAY
     uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
-    /// @notice DAO_RECOVERY_DELAY
-    uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
+        /// @notice DAO_RECOVERY_DELAY
+        uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
     /// @notice RECOVERY_APPROVALS_REQUIRED
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     /// @notice RECOVERY_CHALLENGE_DELAY
@@ -119,13 +119,13 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice pendingRecoveryApproverAddr
     address public pendingRecoveryApproverAddr;
     /// @notice pendingRecoveryApproverStatus
-    bool public pendingRecoveryApproverStatus;
+    bool    public pendingRecoveryApproverStatus;
     /// @notice pendingRecoveryApproverAt
-    uint64 public pendingRecoveryApproverAt;
+    uint64  public pendingRecoveryApproverAt;
     /// @notice pendingCouncil
     address public pendingCouncil;
     /// @notice pendingCouncilAt
-    uint64 public pendingCouncilAt;
+    uint64  public pendingCouncilAt;
 
     /// Events
     /// @notice VFIDEScheduled_VH
@@ -589,7 +589,11 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @return isExpired True if the grace period has elapsed without setup completion.
     /// @return isComplete True if guardian setup has already been completed.
     /// @param vault vault
-    function guardianSetupTimeRemaining(address vault) external view returns (uint256 remaining, bool isExpired, bool isComplete) {
+    function guardianSetupTimeRemaining(address vault)
+        external
+        view
+        returns (uint256 remaining, bool isExpired, bool isComplete)
+    {
         isComplete = guardianSetupComplete[vault];
         if (isComplete) return (0, false, true);
         uint256 created = vaultCreatedAt[vault];

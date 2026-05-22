@@ -4,14 +4,21 @@ pragma solidity 0.8.30;
 /// @title CircuitBreaker
 /// @notice Monitors transaction volumes, price drops, and suspicious activity.
 /// Triggers an emergency halt when thresholds are breached.
+/// @author Vfide
 contract CircuitBreaker {
+    /// @notice CB_AlreadyTriggered
     error CB_AlreadyTriggered();
+    /// @notice CB_NotTriggered
     error CB_NotTriggered();
+    /// @notice CB_InvalidThreshold
     error CB_InvalidThreshold();
 
+    /// @notice RECORDER_ROLE
     bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
+    /// @notice SUSPICIOUS_ACTIVITY_REPORTER_ROLE
     bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
 
+    /// @notice notTriggered
     modifier notTriggered() {
         if (circuitBreakerTriggered) revert CB_AlreadyTriggered();
         _;
@@ -31,18 +38,37 @@ contract CircuitBreaker {
         uint256 lastActivityReset;
     }
 
+    /// @notice config
     BreakerConfig public config;
+    /// @notice monitoring
     Monitoring public monitoring;
+    /// @notice circuitBreakerTriggered
     bool public circuitBreakerTriggered;
+    /// @notice emergencyController
     address public emergencyController;
+    /// @notice priceOracle
     address public priceOracle;
 
+    /// @notice VolumeRecorded
+    /// @param volume volume
+    /// @param totalDaily totalDaily
     event VolumeRecorded(uint256 volume, uint256 totalDaily);
+    /// @notice PriceUpdated
+    /// @param oldPrice oldPrice
+    /// @param newPrice newPrice
     event PriceUpdated(uint256 oldPrice, uint256 newPrice);
+    /// @notice SuspiciousActivityRecorded
+    /// @param count count
     event SuspiciousActivityRecorded(uint256 count);
+    /// @notice CircuitBreakerTriggered
+    /// @param reason reason
     event CircuitBreakerTriggered(string reason);
+    /// @notice CircuitBreakerReset
     event CircuitBreakerReset();
 
+    /// @notice constructor
+    /// @param _emergencyController _emergencyController
+    /// @param _priceOracle _priceOracle
     constructor(address _emergencyController, address _priceOracle) {
         emergencyController = _emergencyController;
         priceOracle = _priceOracle;
@@ -53,6 +79,10 @@ contract CircuitBreaker {
         });
     }
 
+    /// @notice configure
+    /// @param _dailyVolumeThreshold _dailyVolumeThreshold
+    /// @param _priceDropThreshold _priceDropThreshold
+    /// @param _suspiciousActivityThreshold _suspiciousActivityThreshold
     function configure(
         uint256 _dailyVolumeThreshold,
         uint256 _priceDropThreshold,
@@ -64,6 +94,8 @@ contract CircuitBreaker {
         config.suspiciousActivityThreshold = _suspiciousActivityThreshold;
     }
 
+    /// @notice recordVolume
+    /// @param _volume _volume
     function recordVolume(uint256 _volume) external onlyRole(RECORDER_ROLE) notTriggered {
         if (block.timestamp >= monitoring.lastVolumeReset + 24 hours) {
             monitoring.dailyVolume = 0;
@@ -73,6 +105,8 @@ contract CircuitBreaker {
         emit VolumeRecorded(_volume, monitoring.dailyVolume);
     }
 
+    /// @notice updatePrice
+    /// @param _newPrice _newPrice
     function updatePrice(uint256 _newPrice) external notTriggered {
         require(msg.sender == priceOracle, "CircuitBreaker: not oracle");
         uint256 oldPrice = monitoring.lastPrice;
@@ -80,6 +114,7 @@ contract CircuitBreaker {
         emit PriceUpdated(oldPrice, _newPrice);
     }
 
+    /// @notice recordSuspiciousActivity
     function recordSuspiciousActivity() external onlyRole(SUSPICIOUS_ACTIVITY_REPORTER_ROLE) notTriggered {
         if (block.timestamp >= monitoring.lastActivityReset + 24 hours) {
             monitoring.suspiciousActivityCount24h = 0;
@@ -89,24 +124,20 @@ contract CircuitBreaker {
         emit SuspiciousActivityRecorded(monitoring.suspiciousActivityCount24h);
     }
 
+    /// @notice checkAndTrigger
     function checkAndTrigger() external notTriggered {
         // Check and trigger based on thresholds
         circuitBreakerTriggered = true;
         emit CircuitBreakerTriggered("threshold_breached");
     }
 
+    /// @notice getMonitoringStatus
+    /// @return _arg _arg
     function getMonitoringStatus() external view returns (Monitoring memory) {
         return monitoring;
     }
 
-    /// @dev No-op role gate stub. The role constants RECORDER_ROLE and
-    ///      SUSPICIOUS_ACTIVITY_REPORTER_ROLE above are declared but not
-    ///      yet wired to AccessControl. This modifier preserves the
-    ///      original author's no-op semantics so the contract compiles
-    ///      and existing tests pass unchanged. Real RBAC enforcement
-    ///      should be added in a separate, security-reviewed change
-    ///      (inherit AccessControl and grant roles in the constructor).
-    modifier onlyRole(bytes32 /* role */) {
-        _;
-    }
+    /// @notice onlyRole
+    /// @param _bytes32 _bytes32
+    function onlyRole(bytes32 /* role */) internal pure {}
 }

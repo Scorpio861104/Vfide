@@ -33,44 +33,44 @@ contract DevReserveVestingVault is ReentrancyGuard {
 
     // ── Immutable wiring
     /// @notice VFIDE
-    address public immutable VFIDE; // token
+    address public immutable VFIDE;         // token
     /// @notice BENEFICIARY
-    address public immutable BENEFICIARY; // your EOA (controls pause)
+    address public immutable BENEFICIARY;   // your EOA (controls pause)
     /// @notice VAULT_HUB
-    address public immutable VAULT_HUB; // VaultInfrastructure
+    address public immutable VAULT_HUB;     // VaultInfrastructure
     /// @notice LEDGER
-    address public immutable LEDGER; // optional
+    address public immutable LEDGER;        // optional
     /// @notice ALLOCATION
-    uint256 public immutable ALLOCATION; // e.g., 50_000_000e18
+    uint256 public immutable ALLOCATION;    // e.g., 50_000_000e18
     /// @notice DAO
     address public immutable DAO;
     // ── Schedule constants
     /// @notice CLIFF
-    uint64 public constant CLIFF = 60 days; // 2-month cliff
+    uint64  public constant CLIFF = 60 days;              // 2-month cliff
     /// @notice VESTING
-    uint64 public constant VESTING = 60 * 30 days; // 60 months total (1800 days) — 5-year vest
+    uint64  public constant VESTING = 60 * 30 days;       // 60 months total (1800 days) — 5-year vest
     /// @notice UNLOCK_INTERVAL
-    uint64 public constant UNLOCK_INTERVAL = 60 days; // Bi-monthly unlocks
+    uint64  public constant UNLOCK_INTERVAL = 60 days;    // Bi-monthly unlocks
     /// @notice UNLOCK_AMOUNT
     uint256 public constant UNLOCK_AMOUNT = 1_666_666 * 1e18; // 1.67M per unlock; last unlock covers remainder
     /// @notice TOTAL_UNLOCKS
-    uint256 public constant TOTAL_UNLOCKS = 30; // 30 unlocks over 5 years
+    uint256 public constant TOTAL_UNLOCKS = 30;           // 30 unlocks over 5 years
     /// @notice EXPECTED_ALLOCATION
     uint256 public constant EXPECTED_ALLOCATION = 50_000_000e18;
 
     // ── Derived times (set once via setVestingStart)
     /// @notice startTimestamp
-    uint64 public startTimestamp;
+    uint64  public startTimestamp;
     /// @notice cliffTimestamp
-    uint64 public cliffTimestamp;
+    uint64  public cliffTimestamp;
     /// @notice endTimestamp
-    uint64 public endTimestamp;
+    uint64  public endTimestamp;
 
     // ── State
     /// @notice totalClaimed
     uint256 public totalClaimed;
     /// @notice claimsPaused
-    bool public claimsPaused; // beneficiary-only toggle
+    bool    public claimsPaused;            // beneficiary-only toggle
 
     // ── Events
     /// @notice SyncedStart
@@ -121,8 +121,15 @@ contract DevReserveVestingVault is ReentrancyGuard {
     /// @param _ledger _ledger
     /// @param _allocation _allocation
     /// @param _dao _dao
-    constructor(address _vfide, address _beneficiary, address _vaultHub, address _ledger, uint256 _allocation, address _dao) {
-        if (_vfide == address(0) || _beneficiary == address(0) || _vaultHub == address(0) || _dao == address(0) || _allocation == 0) revert DV_Zero();
+    constructor(
+        address _vfide,
+        address _beneficiary,
+        address _vaultHub,
+        address _ledger,
+        uint256 _allocation,
+        address _dao
+    ) {
+        if (_vfide==address(0) || _beneficiary==address(0) || _vaultHub==address(0) || _dao==address(0) || _allocation==0) revert DV_Zero();
         if (_allocation != EXPECTED_ALLOCATION) revert DV_InvalidAllocation();
         VFIDE = _vfide;
         BENEFICIARY = _beneficiary;

@@ -73,9 +73,9 @@ contract VFIDEBenefits {
 
     // Reward rates (FREE ProofScore boosts)
     /// @notice buyerScorePerTx
-    uint16 public buyerScorePerTx = 2; // Buyer gets +2 ProofScore per completed tx
+    uint16 public buyerScorePerTx = 2;      // Buyer gets +2 ProofScore per completed tx
     /// @notice merchantScorePerTx
-    uint16 public merchantScorePerTx = 5; // Merchant gets +5 ProofScore per completed tx
+    uint16 public merchantScorePerTx = 5;   // Merchant gets +5 ProofScore per completed tx
 
     // Authorized callers (CommerceEscrow)
     /// @notice authorizedCallers
@@ -119,7 +119,11 @@ contract VFIDEBenefits {
     /// @param _dao _dao
     /// @param _seer _seer
     /// @param _ledger _ledger
-    constructor(address _dao, address _seer, address _ledger) {
+    constructor(
+        address _dao,
+        address _seer,
+        address _ledger
+    ) {
         if (_dao == address(0) || _seer == address(0)) revert BEN_Zero();
 
         dao = _dao;
@@ -168,7 +172,7 @@ contract VFIDEBenefits {
     // ═══════════════════════════════════════════════════════════════════════
     //                    TRANSACTION REWARDS (called by Escrow)
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Reward both parties after successful escrow release
@@ -177,7 +181,11 @@ contract VFIDEBenefits {
      * @param merchant Merchant address
      * @param amount Transaction amount (for logging)
      */
-    function rewardTransaction(address buyer, address merchant, uint256 amount) external onlyAuthorized {
+    function rewardTransaction(
+        address buyer,
+        address merchant,
+        uint256 amount
+    ) external onlyAuthorized {
         if (buyer == address(0) || merchant == address(0)) revert BEN_Zero();
         // Track stats
         ++totalTransactionsRewarded;

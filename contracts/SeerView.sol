@@ -47,7 +47,11 @@ interface ISeerViewTarget {
     /// @return expiry expiry
     /// @return weight weight
     /// @return timestamp timestamp
-    function endorsements(address subject, address endorser) external view returns (uint64 expiry, uint16 weight, uint64 timestamp);
+    function endorsements(address subject, address endorser) external view returns (
+        uint64 expiry,
+        uint16 weight,
+        uint64 timestamp
+    );
     /// @notice getEndorserCount
     /// @param subject subject
     /// @return _uint256 _uint256
@@ -93,7 +97,11 @@ interface ISeerSocialViewTarget {
     /// @return expiry expiry
     /// @return weight weight
     /// @return timestamp timestamp
-    function endorsements(address subject, address endorser) external view returns (uint64 expiry, uint16 weight, uint64 timestamp);
+    function endorsements(address subject, address endorser) external view returns (
+        uint64 expiry,
+        uint16 weight,
+        uint64 timestamp
+    );
     /// @notice getEndorserCount
     /// @param subject subject
     /// @return _uint256 _uint256
@@ -118,7 +126,12 @@ interface ISeerAutonomousMonitor {
     /// @return totalViolations totalViolations
     /// @return violationRate violationRate
     /// @return currentSensitivity currentSensitivity
-    function getNetworkHealth() external view returns (uint256 totalActions, uint256 totalViolations, uint256 violationRate, uint16 currentSensitivity);
+    function getNetworkHealth() external view returns (
+        uint256 totalActions,
+        uint256 totalViolations,
+        uint256 violationRate,
+        uint16 currentSensitivity
+    );
 }
 
 /// @dev Minimal read interface for the ecosystem scheduler (EcosystemVault).
@@ -127,6 +140,7 @@ interface ISeerAutonomousMonitor {
 /// @author Vfide
 interface IEcosystemSchedulerView {
     /// @notice checkUpkeep
+    /// @param _bytes _bytes
     /// @return upkeepNeeded upkeepNeeded
     /// @return performData performData
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
@@ -147,10 +161,15 @@ contract SeerView {
     /// @return canBecome canBecome
     /// @return minScore minScore
     /// @return currentScore currentScore
-    function getMentorInfo(
-        address seer,
-        address subject
-    ) external view returns (bool isMentorUser, address mentor, uint16 menteeCount, bool hasMentor, bool canBecome, uint16 minScore, uint16 currentScore) {
+    function getMentorInfo(address seer, address subject) external view returns (
+        bool isMentorUser,
+        address mentor,
+        uint16 menteeCount,
+        bool hasMentor,
+        bool canBecome,
+        uint16 minScore,
+        uint16 currentScore
+    ) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         currentScore = target.getScore(subject);
 
@@ -185,7 +204,12 @@ contract SeerView {
     /// @return weights weights
     /// @return expiries expiries
     /// @return timestamps timestamps
-    function getActiveEndorsements(address seer, address subject) external view returns (address[] memory endorsers, uint16[] memory weights, uint64[] memory expiries, uint64[] memory timestamps) {
+    function getActiveEndorsements(address seer, address subject) external view returns (
+        address[] memory endorsers,
+        uint16[] memory weights,
+        uint64[] memory expiries,
+        uint64[] memory timestamps
+    ) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         address social = address(0);
         try ISeerCoreSocialRef(seer).seerSocial() returns (address configuredSocial) {
@@ -267,7 +291,12 @@ contract SeerView {
     /// @return levelName levelName
     /// @return canVote canVote
     /// @return canBeMerchant canBeMerchant
-    function getTrustLevel(address seer, address subject) external view returns (uint8 level, string memory levelName, bool canVote, bool canBeMerchant) {
+    function getTrustLevel(address seer, address subject) external view returns (
+        uint8 level,
+        string memory levelName,
+        bool canVote,
+        bool canBeMerchant
+    ) {
         ISeerViewTarget target = ISeerViewTarget(seer);
         uint16 score = target.getScore(subject);
 

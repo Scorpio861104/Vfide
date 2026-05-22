@@ -121,7 +121,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     address public pendingOracle;
     /// @notice pendingOracleAt
     uint64 public pendingOracleAt;
-
+    
     /// @notice token
     IERC20 public token;
     /// @notice seer
@@ -163,8 +163,22 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     /// @param _vaultHub _vaultHub
     /// @param _oracle _oracle
     /// @param _merchantWallet _merchantWallet
-    constructor(address _dao, address _token, address _seer, address _vaultHub, address _oracle, address _merchantWallet) {
-        if (_dao == address(0) || _token == address(0) || _seer == address(0) || _vaultHub == address(0) || _oracle == address(0) || _merchantWallet == address(0)) {
+    constructor(
+        address _dao,
+        address _token,
+        address _seer,
+        address _vaultHub,
+        address _oracle,
+        address _merchantWallet
+    ) {
+        if (
+            _dao == address(0)
+                || _token == address(0)
+                || _seer == address(0)
+                || _vaultHub == address(0)
+                || _oracle == address(0)
+                || _merchantWallet == address(0)
+        ) {
             revert ENT_Zero();
         }
         require(_oracle != _dao, "ENT: oracle must differ from DAO");
@@ -281,7 +295,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                    STABLECOIN SETTLEMENT (FOR MERCHANTS)
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice StableSettlementConfigured
     /// @param swapRouter swapRouter
     /// @param stablecoin stablecoin
@@ -308,11 +322,11 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     /// @notice swapRouter
     address public swapRouter;
     /// @notice settlementStablecoin
-    address public settlementStablecoin; // e.g., USDC
+    address public settlementStablecoin;  // e.g., USDC
     /// @notice stableSettlementEnabled
     bool public stableSettlementEnabled;
     /// @notice maxSlippageBps
-    uint16 public maxSlippageBps = 100; // 1% max slippage
+    uint16 public maxSlippageBps = 100;   // 1% max slippage
     // H-37 FIX: External reference price floor (DAO-set from off-chain oracle / Chainlink feed).
     // Represents the minimum acceptable stablecoin amount per 1e18 VFIDE (18 decimals).
     // Prevents tautological slippage where getAmountsOut + swap both use the same manipulated AMM state.
@@ -485,7 +499,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
             return 0;
         }
     }
-
+    
     /// @notice _getSwapPath
     /// @return _arg _arg
     function _getSwapPath() internal view returns (address[] memory) {

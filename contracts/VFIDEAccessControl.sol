@@ -18,25 +18,25 @@ import {AccessControl} from "./SharedInterfaces.sol";
  */
 contract VFIDEAccessControl is AccessControl {
     /// @notice EMERGENCY_PAUSER_ROLE
-    bytes32 public constant EMERGENCY_PAUSER_ROLE = keccak256("EMERGENCY_PAUSER_ROLE");
+    bytes32 public constant EMERGENCY_PAUSER_ROLE  = keccak256("EMERGENCY_PAUSER_ROLE");
     /// @notice CONFIG_MANAGER_ROLE
-    bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
+    bytes32 public constant CONFIG_MANAGER_ROLE    = keccak256("CONFIG_MANAGER_ROLE");
     /// @notice TREASURY_MANAGER_ROLE
-    bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER_ROLE");
+    bytes32 public constant TREASURY_MANAGER_ROLE  = keccak256("TREASURY_MANAGER_ROLE");
 
     /// @notice ADMIN_TRANSFER_DELAY
-    uint64 public constant ADMIN_TRANSFER_DELAY = 48 hours;
+    uint64  public constant ADMIN_TRANSFER_DELAY = 48 hours;
 
     /// @notice _reentrancyLock
     uint256 private _reentrancyLock;
     /// @notice pendingAdmin
-    address public pendingAdmin;
+    address public  pendingAdmin;
     /// @notice pendingAdminAt
-    uint64 public pendingAdminAt;
+    uint64  public  pendingAdminAt;
 
     // Enumerable member tracking (mirrors OZ AccessControlEnumerable without OZ dep)
     /// @notice _roleMembers
-    mapping(bytes32 => address[]) private _roleMembers;
+    mapping(bytes32 => address[])                   private _roleMembers;
     /// @notice _roleMemberIndex
     mapping(bytes32 => mapping(address => uint256)) private _roleMemberIndex; // 1-based
 
@@ -172,7 +172,9 @@ contract VFIDEAccessControl is AccessControl {
     /// @param role role
     /// @param account account
     /// @param reason reason
-    function grantRoleWithReason(bytes32 role, address account, string calldata reason) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function grantRoleWithReason(bytes32 role, address account, string calldata reason)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
+    {
         require(account != address(0), "VFIDEAccessControl: account is zero address");
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
         _grantRole(role, account);
@@ -184,7 +186,9 @@ contract VFIDEAccessControl is AccessControl {
     /// @param role role
     /// @param account account
     /// @param reason reason
-    function revokeRoleWithReason(bytes32 role, address account, string calldata reason) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
+    function revokeRoleWithReason(bytes32 role, address account, string calldata reason)
+        external onlyRole(getRoleAdmin(role)) nonReentrantAC
+    {
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
         _revokeRole(role, account);
         _removeMember(role, account);
@@ -237,6 +241,9 @@ contract VFIDEAccessControl is AccessControl {
         return true;
     }
 
+    /// @notice batchGrantRole
+    /// @param role role
+    /// @param accounts accounts
     function batchGrantRole(bytes32 role, address[] calldata accounts)
         external onlyRole(getRoleAdmin(role)) nonReentrantAC
     {
@@ -247,6 +254,9 @@ contract VFIDEAccessControl is AccessControl {
         }
     }
 
+    /// @notice batchRevokeRole
+    /// @param role role
+    /// @param accounts accounts
     function batchRevokeRole(bytes32 role, address[] calldata accounts)
         external onlyRole(getRoleAdmin(role)) nonReentrantAC
     {

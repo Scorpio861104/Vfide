@@ -23,8 +23,16 @@ contract DAOPayrollPool is ServicePool {
     /// @param _admin _admin
     /// @param _initialMaxMembers _initialMaxMembers
     /// @param _maxPayoutPerPeriod _maxPayoutPerPeriod
-    constructor(address _token, address _admin, uint256 _initialMaxMembers, uint256 _maxPayoutPerPeriod) ServicePool(_token, _admin, _initialMaxMembers, _maxPayoutPerPeriod) {
-        require(_initialMaxMembers >= MIN_DAO_MEMBERS_CAP && _initialMaxMembers <= MAX_DAO_MEMBERS_CAP, "DAOPayrollPool: initial cap out of bounds");
+    constructor(
+        address _token,
+        address _admin,
+        uint256 _initialMaxMembers,
+        uint256 _maxPayoutPerPeriod
+    ) ServicePool(_token, _admin, _initialMaxMembers, _maxPayoutPerPeriod) {
+        require(
+            _initialMaxMembers >= MIN_DAO_MEMBERS_CAP && _initialMaxMembers <= MAX_DAO_MEMBERS_CAP,
+            "DAOPayrollPool: initial cap out of bounds"
+        );
     }
 
     /// @notice setMaxParticipants

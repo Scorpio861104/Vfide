@@ -12,7 +12,7 @@ contract CardBoundVaultAdminManager {
     /// @notice SENSITIVE_ADMIN_DELAY
     uint64 public constant SENSITIVE_ADMIN_DELAY = 7 days;
     /// @notice GUARDIAN_CHANGE_DELAY
-    uint64 public constant GUARDIAN_CHANGE_DELAY = 1 days;
+    uint64 public constant GUARDIAN_CHANGE_DELAY  = 1 days;
 
     struct PendingGuardianChange {
         address guardian;
@@ -65,19 +65,19 @@ contract CardBoundVaultAdminManager {
     address public immutable vault;
 
     /// @notice pendingGuardianChange
-    PendingGuardianChange public pendingGuardianChange;
+    PendingGuardianChange  public pendingGuardianChange;
     /// @notice pendingTrusteeChange
-    PendingTrusteeChange public pendingTrusteeChange;
+    PendingTrusteeChange   public pendingTrusteeChange;
     /// @notice pendingSpendLimitChange
-    PendingUint256x2 public pendingSpendLimitChange;
+    PendingUint256x2       public pendingSpendLimitChange;
     /// @notice pendingLargeTransferThresholdChange
-    PendingUint256 public pendingLargeTransferThresholdChange;
+    PendingUint256         public pendingLargeTransferThresholdChange;
     /// @notice pendingNativeRescue
-    PendingRescue public pendingNativeRescue;
+    PendingRescue          public pendingNativeRescue;
     /// @notice pendingERC20Rescue
-    PendingERC20Rescue public pendingERC20Rescue;
+    PendingERC20Rescue     public pendingERC20Rescue;
     /// @notice pendingTokenApproval
-    PendingTokenApproval public pendingTokenApproval;
+    PendingTokenApproval   public pendingTokenApproval;
 
     /// @notice AM_OnlyVault
     error AM_OnlyVault();

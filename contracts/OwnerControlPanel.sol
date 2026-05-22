@@ -114,7 +114,7 @@ contract OwnerControlPanel {
 
     /// @notice _reentrancyLock
     uint256 private _reentrancyLock;
-
+    
     /// @notice owner
     address public owner;
     /// @notice pendingOwner
@@ -130,7 +130,7 @@ contract OwnerControlPanel {
     /// @param previousOwner previousOwner
     /// @param newOwner newOwner
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
+    
     /// @notice vfideToken
     IVFIDEToken public vfideToken;
     /// @notice vaultHub
@@ -177,7 +177,7 @@ contract OwnerControlPanel {
 
     /// @notice queuedActionEta
     mapping(bytes32 => uint256) public queuedActionEta;
-
+    
     /// @notice ContractsUpdated
     /// @param token token
     /// @param vaultHub vaultHub
@@ -236,7 +236,7 @@ contract OwnerControlPanel {
     /// @param previousVault previousVault
     /// @param newVault newVault
     event DevReserveVaultUpdated(address indexed previousVault, address indexed newVault);
-
+    
     /// @notice OCP_NotOwner
     error OCP_NotOwner();
     /// @notice OCP_NotPendingOwner
@@ -259,17 +259,17 @@ contract OwnerControlPanel {
     error OCP_OwnershipTransferExpired();
     /// @notice OCP_SlippageTooHigh
     error OCP_SlippageTooHigh();
-    /// @notice OCP_CooldownActive
-    error OCP_CooldownActive();
-    /// @notice OCP_ReduceTooLarge
-    error OCP_ReduceTooLarge();
-    /// @notice OCP_PanicGuardNotSet
-    error OCP_PanicGuardNotSet();
-    /// @notice OCP_ETHTransferFailed
-    error OCP_ETHTransferFailed();
-    /// @notice OCP_DeprecatedView
-    error OCP_DeprecatedView();
-
+        /// @notice OCP_CooldownActive
+        error OCP_CooldownActive();
+        /// @notice OCP_ReduceTooLarge
+        error OCP_ReduceTooLarge();
+        /// @notice OCP_PanicGuardNotSet
+        error OCP_PanicGuardNotSet();
+        /// @notice OCP_ETHTransferFailed
+        error OCP_ETHTransferFailed();
+            /// @notice OCP_DeprecatedView
+            error OCP_DeprecatedView();
+    
     /// @notice onlyOwner
     modifier onlyOwner() {
         if (msg.sender != owner) revert OCP_NotOwner();
@@ -337,14 +337,20 @@ contract OwnerControlPanel {
         queuedActionEta[actionId] = eta;
         emit GovernanceActionQueued(actionId, eta);
     }
-
+    
     /// @notice constructor
     /// @param _owner _owner
     /// @param _token _token
     /// @param _vaultHub _vaultHub
     /// @param _burnRouter _burnRouter
     /// @param _seer _seer
-    constructor(address _owner, address _token, address _vaultHub, address _burnRouter, address _seer) {
+    constructor(
+        address _owner,
+        address _token,
+        address _vaultHub,
+        address _burnRouter,
+        address _seer
+    ) {
         if (_owner == address(0)) revert OCP_Zero();
         owner = _owner;
 
@@ -465,7 +471,12 @@ contract OwnerControlPanel {
     /// @param enabled enabled
     /// @param maxSlippageBps maxSlippageBps
     /// @return _bytes32 _bytes32
-    function actionId_autoSwap_configure(address router, address stablecoin, bool enabled, uint16 maxSlippageBps) private pure returns (bytes32) {
+    function actionId_autoSwap_configure(
+        address router,
+        address stablecoin,
+        bool enabled,
+        uint16 maxSlippageBps
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("autoSwap_configure", router, stablecoin, enabled, maxSlippageBps));
     }
 
@@ -505,7 +516,11 @@ contract OwnerControlPanel {
     /// @param ledger ledger
     /// @param router router
     /// @return _bytes32 _bytes32
-    function actionId_token_setModules(address hub, address ledger, address router) private pure returns (bytes32) {
+    function actionId_token_setModules(
+        address hub,
+        address ledger,
+        address router
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("token_setModules", hub, ledger, router));
     }
 
@@ -566,8 +581,14 @@ contract OwnerControlPanel {
     /// @param minimumSupplyFloor minimumSupplyFloor
     /// @param ecosystemMinBps ecosystemMinBps
     /// @return _bytes32 _bytes32
-    function actionId_sustainability_setBurnLimits(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps) private pure returns (bytes32) {
-        return keccak256(abi.encode("sustainability_setBurnLimits", dailyBurnCap, minimumSupplyFloor, ecosystemMinBps));
+    function actionId_sustainability_setBurnLimits(
+        uint256 dailyBurnCap,
+        uint256 minimumSupplyFloor,
+        uint16 ecosystemMinBps
+    ) private pure returns (bytes32) {
+        return keccak256(
+            abi.encode("sustainability_setBurnLimits", dailyBurnCap, minimumSupplyFloor, ecosystemMinBps)
+        );
     }
 
     /// @notice actionId_sustainability_setAdaptiveFees
@@ -593,7 +614,12 @@ contract OwnerControlPanel {
     /// @param minGovernance minGovernance
     /// @param minMerchant minMerchant
     /// @return _bytes32 _bytes32
-    function actionId_seer_setThresholds(uint16 lowTrust, uint16 highTrust, uint16 minGovernance, uint16 minMerchant) private pure returns (bytes32) {
+    function actionId_seer_setThresholds(
+        uint16 lowTrust,
+        uint16 highTrust,
+        uint16 minGovernance,
+        uint16 minMerchant
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("seer_setThresholds", lowTrust, highTrust, minGovernance, minMerchant));
     }
 
@@ -686,7 +712,11 @@ contract OwnerControlPanel {
     /// @param merchantBps merchantBps
     /// @param headhunterBps headhunterBps
     /// @return _bytes32 _bytes32
-    function actionId_ecosystem_setAllocations(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps) private pure returns (bytes32) {
+    function actionId_ecosystem_setAllocations(
+        uint16 councilBps,
+        uint16 merchantBps,
+        uint16 headhunterBps
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("ecosystem_setAllocations", councilBps, merchantBps, headhunterBps));
     }
 
@@ -696,8 +726,21 @@ contract OwnerControlPanel {
     /// @param merchantReferralReward merchantReferralReward
     /// @param userReferralReward userReferralReward
     /// @return _bytes32 _bytes32
-    function actionId_ecosystem_configureAutoWorkPayout(bool enabled, uint256 merchantTxReward, uint256 merchantReferralReward, uint256 userReferralReward) private pure returns (bytes32) {
-        return keccak256(abi.encode("ecosystem_configureAutoWorkPayout", enabled, merchantTxReward, merchantReferralReward, userReferralReward));
+    function actionId_ecosystem_configureAutoWorkPayout(
+        bool enabled,
+        uint256 merchantTxReward,
+        uint256 merchantReferralReward,
+        uint256 userReferralReward
+    ) private pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                "ecosystem_configureAutoWorkPayout",
+                enabled,
+                merchantTxReward,
+                merchantReferralReward,
+                userReferralReward
+            )
+        );
     }
 
     /// @notice actionId_emergency_recoverETH
@@ -712,7 +755,11 @@ contract OwnerControlPanel {
     /// @param recipient recipient
     /// @param amount amount
     /// @return _bytes32 _bytes32
-    function actionId_emergency_recoverTokens(address token, address recipient, uint256 amount) private pure returns (bytes32) {
+    function actionId_emergency_recoverTokens(
+        address token,
+        address recipient,
+        uint256 amount
+    ) private pure returns (bytes32) {
         return keccak256(abi.encode("emergency_recoverTokens", token, recipient, amount));
     }
 
@@ -950,7 +997,12 @@ contract OwnerControlPanel {
     /// @param maxWallet maxWallet
     /// @param dailyLimit dailyLimit
     /// @param cooldown cooldown
-    function token_setAntiWhale(uint256 maxTransfer, uint256 maxWallet, uint256 dailyLimit, uint256 cooldown) external onlyOwner nonReentrant {
+    function token_setAntiWhale(
+        uint256 maxTransfer,
+        uint256 maxWallet,
+        uint256 dailyLimit,
+        uint256 cooldown
+    ) external onlyOwner nonReentrant {
         // F-14 FIX: require governance queue before execution
         _consumeQueuedAction(actionId_token_setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown));
         vfideToken.setAntiWhale(maxTransfer, maxWallet, dailyLimit, cooldown);
@@ -968,7 +1020,7 @@ contract OwnerControlPanel {
         vfideToken.setWhaleLimitExempt(addr, exempt);
         emit EmergencyAction(exempt ? "weo" : "wef", addr);
     }
-
+    
     // slither-disable-next-line reentrancy-no-eth
     /**
      * @notice Batch exempt multiple addresses from whale limits
@@ -1030,7 +1082,7 @@ contract OwnerControlPanel {
     // ═══════════════════════════════════════════════════════════════════════
     //                      SUSTAINABILITY CONTROLS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /// @notice SustainabilityUpdated
     /// @param dailyBurnCap dailyBurnCap
     /// @param supplyFloor supplyFloor
@@ -1154,7 +1206,11 @@ contract OwnerControlPanel {
     /// @param duration duration
     /// @param severity severity
     /// @param reason reason
-    function vault_reportRisk(address vault, uint64 duration, uint8 severity, string calldata reason) external onlyOwner nonReentrant {
+    function vault_reportRisk(address vault, uint64 duration, uint8 severity, string calldata reason)
+        external
+        onlyOwner
+        nonReentrant
+    {
         _consumeQueuedAction(keccak256(abi.encode("vault_reportRisk", vault, duration, severity, reason)));
         if (address(panicGuard) == address(0)) revert OCP_PanicGuardNotSet();
         panicGuard.reportRisk(vault, duration, severity, reason);
@@ -1457,7 +1513,7 @@ contract OwnerControlPanel {
     // ═══════════════════════════════════════════════════════════════════════
     //                          EMERGENCY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Emergency pause all systems
@@ -1484,7 +1540,7 @@ contract OwnerControlPanel {
 
         emit EmergencyAction("sys_paused", address(this));
     }
-
+    
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Resume all systems

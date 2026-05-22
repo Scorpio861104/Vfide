@@ -7,6 +7,9 @@ pragma solidity 0.8.30;
  *
  * Contains the rate-limit profile tables that generate high bytecode volume
  * due to repeated storage writes across 6 restriction levels × 8 action types.
+ * @notice SeerAutonomousLib
+ * @title SeerAutonomousLib
+ * @author Vfide
  */
 library SeerAutonomousLib {
     /// @dev Packed (level, action, limit) tuple for batch initialization.
@@ -19,6 +22,7 @@ library SeerAutonomousLib {
     /**
      * @notice Returns the full max-autonomy rate-limit profile as an array.
      * @dev Looping over the returned array in the caller replaces 48 inline calls.
+     * @return entries entries
      */
     function getMaxAutonomyProfile() internal pure returns (RateLimitEntry[48] memory entries) {
         // RestrictionLevel.None (0)
@@ -86,6 +90,7 @@ library SeerAutonomousLib {
      * @notice Returns the default rate-limit profile used by SeerAutonomous._initializeRateLimits.
      * @dev Looping over the returned array in the caller replaces 48 inline storage writes.
      *      Layout: 6 RestrictionLevels (None..Frozen) x 8 ActionTypes (Transfer..Trade).
+     * @return entries entries
      */
     function getDefaultProfile() internal pure returns (RateLimitEntry[48] memory entries) {
         // RestrictionLevel.None (0): unlimited
@@ -155,6 +160,8 @@ library SeerAutonomousLib {
      *         PatternType layout (matches contract enum):
      *         0=None, 1=RapidTransfers, 2=CircularTransfers, 3=SelfEndorsement,
      *         4=VoteManipulation, 5=WashTrading, 6=SybilActivity
+     * @param patternIndex patternIndex
+     * @return _uint16 _uint16
      */
     function severityFor(uint8 patternIndex) internal pure returns (uint16) {
         if (patternIndex == 1) return 10;
@@ -177,6 +184,7 @@ library SeerAutonomousLib {
      * @param suspendedLevel     Numeric value of RestrictionLevel.Suspended (4).
      * @param limit              rateLimits[level][action]
      * @param count              actionCountToday[subject][action]
+     * @return _uint8 _uint8
      */
     function evaluateRestriction(
         uint8 effectiveLevel,
