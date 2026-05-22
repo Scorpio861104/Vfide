@@ -95,7 +95,7 @@ self.addEventListener('push', (event) => {
         vibrate: [200, 100, 200],
       })
     );
-  } catch (e) {
+  } catch (_e) {
     // Ignore malformed push
   }
 });

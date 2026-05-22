@@ -82,7 +82,7 @@ while ((m = reexportRe.exec(contractsSrc))) {
 const reexportFromImportRe = /export\s+\{\s*([\w,\s]+)\s*\}\s*from\s*['"][^'"]+['"]/g;
 while ((m = reexportFromImportRe.exec(contractsSrc))) {
   const names = m[1].split(',').map((n) => n.trim()).filter(Boolean);
-  for (const n of names) {
+  for (const _n of names) {
     // pass-through; already named the same
   }
 }

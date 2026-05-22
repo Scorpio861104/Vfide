@@ -20,7 +20,7 @@
 
 import hre from "hardhat";
 
-const SET_ADMIN_SELECTOR = "0x7919b2a0"; // setAdmin(address) selector
+const _SET_ADMIN_SELECTOR = "0x7919b2a0"; // setAdmin(address) selector
 
 async function main() {
   const { ethers } = (await (hre as any).network.connect()) as any;

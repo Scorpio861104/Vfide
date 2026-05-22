@@ -13,8 +13,8 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Clock, MapPin, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Clock, MapPin, Shield, RotateCcw, Check, Sparkles } from 'lucide-react';
 
 interface VibePost {
   id: string;
@@ -34,13 +34,13 @@ interface MarketVibesCaptureProps {
   timeRemaining: number;
 }
 
-export function MarketVibesCapture({ promptTime, onCapture, timeRemaining }: MarketVibesCaptureProps) {
+export function MarketVibesCapture({ promptTime: _promptTime, onCapture, timeRemaining }: MarketVibesCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [frontImage, setFrontImage] = useState<Blob | null>(null);
   const [backImage, setBackImage] = useState<Blob | null>(null);
   const [caption, setCaption] = useState('');
-  const [capturing, setCapturing] = useState(false);
+  const [_capturing, _setCapturing] = useState(false);
   const streamRef = useRef<MediaStream | null>(null);
 
   const startCamera = useCallback(async (facing: 'user' | 'environment') => {

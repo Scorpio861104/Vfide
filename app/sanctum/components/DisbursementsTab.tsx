@@ -296,7 +296,7 @@ function ApproverActions({
   d,
   status,
   approvalsRequired,
-  connectedAddress,
+  connectedAddress: _connectedAddress,
   pending,
   onApprove,
   onExecute,
