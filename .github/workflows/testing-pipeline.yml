@@ -24,7 +24,9 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npx hardhat compile
-      - run: npx hardhat test --parallel
+      # Hardhat 3 dropped the `--parallel` flag from its test task (it was a
+      # Hardhat 2 mocha-plugin feature). Tests run sequentially.
+      - run: npx hardhat test
         env:
           REPORT_GAS: true
       - name: Upload gas report

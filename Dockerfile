@@ -17,7 +17,12 @@ WORKDIR /app
 # @layerzerolabs/lz-evm-oapp-v2 transitively requires ethers ^5 (via
 # @eth-optimism/contracts), while the root project uses ethers ^6. Without
 # this, `npm ci` fails with ERESOLVE in the Docker build context.
+#
+# We also need the postinstall-validate-env script because package.json's
+# `postinstall` hook runs it during `npm ci`. .dockerignore excludes the
+# rest of scripts/, but this single file must be present.
 COPY package.json package-lock.json .npmrc ./
+COPY scripts/postinstall-validate-env.cjs ./scripts/postinstall-validate-env.cjs
 RUN npm ci && npm cache clean --force
 
 # Rebuild the source code only when needed
