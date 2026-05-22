@@ -23,7 +23,9 @@ WORKDIR /app
 # rest of scripts/, but this single file must be present.
 COPY package.json package-lock.json .npmrc ./
 COPY scripts/postinstall-validate-env.cjs ./scripts/postinstall-validate-env.cjs
-RUN npm ci && npm cache clean --force
+# Set CI=true so postinstall-validate-env.cjs takes the CI shortcut and
+# skips `npm run validate:env` (which expects developer-machine env vars).
+RUN CI=true npm ci && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder

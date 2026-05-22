@@ -145,7 +145,7 @@ jobs:
       # @layerzerolabs/lz-evm-oapp-v2 transitive ethers v5/v6 conflict.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
       - name: Install JS deps (with legacy-peer-deps)
         run: npm ci --legacy-peer-deps
