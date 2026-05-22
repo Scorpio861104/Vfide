@@ -245,7 +245,7 @@ export const PATCH = withAuth(patchHandler);
  * Subscribe a customer to a plan.
  * Called internally when a customer subscribes via the checkout page.
  */
-async function subscribeCustomer(
+async function _subscribeCustomer(
   userId: number,
   planId: number,
   merchantAddress: string,
