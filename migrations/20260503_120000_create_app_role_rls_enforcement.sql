@@ -3,7 +3,13 @@
 -- When: Application migration to dedicated service account
 
 -- Create the dedicated application role if it doesn't exist
-CREATE ROLE vfide_app WITH LOGIN;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'vfide_app') THEN
+    CREATE ROLE vfide_app WITH LOGIN;
+  END IF;
+END;
+$$;
 
 -- Revoke dangerous privileges explicitly
 ALTER ROLE vfide_app NOBYPASSRLS;
