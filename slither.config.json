@@ -5,6 +5,7 @@
   "exclude_low": false,
   "exclude_medium": false,
   "exclude_high": false,
+  "solc": "0.8.30",
   "solc_remaps": [
     "@openzeppelin=node_modules/@openzeppelin",
     "@chainlink=node_modules/@chainlink",
