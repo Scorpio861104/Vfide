@@ -262,8 +262,6 @@ contract GovernanceHooks is ReentrancyGuard {
      * @notice Called before proposal execution - checks Seer flags
      * @dev Reverts if proposal is blocked by SeerGuardian
      * @param id id
-     * @param _address _address
-     * @param _uint256 _uint256
      */
     function onProposalQueued(uint256 id, address /*target*/, uint256 /*value*/) external onlyDAO nonReentrant {
         _log("gh_queued");
@@ -283,9 +281,7 @@ contract GovernanceHooks is ReentrancyGuard {
     /**
      * @notice Called when a vote is cast
      * @dev Checks voter restrictions and rewards participation
-     * @param _uint256 _uint256
      * @param voter voter
-     * @param _bool _bool
      */
     function onVoteCast(uint256 /*id*/, address voter, bool /*support*/) external onlyDAO nonReentrant {
         _log("gh_vote");
