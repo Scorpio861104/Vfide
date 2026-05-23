@@ -547,7 +547,6 @@ contract DAOTimelock is ReentrancyGuard {
     
     /**
      * @notice Preview ETA for a new transaction
-     * @return _uint64 _uint64
      */
     function previewETA() external view returns (uint64) {
         return uint64(block.timestamp) + delay;
