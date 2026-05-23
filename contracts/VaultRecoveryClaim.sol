@@ -822,7 +822,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /**
      * @notice Check if claim can be finalized
      * @param claimId claimId
-     * @return _bool _bool
      * @return reason reason
      */
     function canFinalize(uint256 claimId) external view returns (bool, string memory reason) {
@@ -856,7 +855,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /**
      * @notice Calculate time remaining in challenge period
      * @param claimId claimId
-     * @return _uint256 _uint256
      */
     function challengeTimeRemaining(uint256 claimId) external view returns (uint256) {
         RecoveryClaim storage claim = claims[claimId];
@@ -966,7 +964,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      * @notice Calculate required guardian approvals based on total count
      * @dev 2 of 3, 3 of 5, etc. - majority required
      * @param guardianCount guardianCount
-     * @return _uint8 _uint8
      */
     function _calculateRequiredApprovals(uint8 guardianCount) internal pure returns (uint8) {
         if (guardianCount == 0) return 0;
