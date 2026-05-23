@@ -230,8 +230,7 @@ function scanFile(absPath, rel) {
     let i = tagStart;
     let d = 0;
     let tagEnd = -1;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let selfClose = false;
+    let _selfClose = false;
     while (i < src.length) {
       const c = src[i];
       if (c === '{') d++;
@@ -246,7 +245,7 @@ function scanFile(absPath, rel) {
         }
       } else if (c === '>' && d === 0) {
         tagEnd = i;
-        if (src[i - 1] === '/') selfClose = true;
+        if (src[i - 1] === '/') _selfClose = true;
         break;
       }
       i++;
