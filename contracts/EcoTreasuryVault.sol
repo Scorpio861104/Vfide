@@ -279,7 +279,6 @@ contract EcoTreasuryVault is ReentrancyGuard {
 
     /**
      * @notice Get current VFIDE balance
-     * @return _uint256 _uint256
      */
     function vfideBalance() external view returns (uint256) {
         return vfideToken.balanceOf(address(this));
@@ -288,7 +287,6 @@ contract EcoTreasuryVault is ReentrancyGuard {
     /**
      * @notice Get balance of any token (for rescue operations)
      * @param token token
-     * @return _uint256 _uint256
      */
     function balanceOf(address token) external view returns (uint256) {
         return IERC20(token).balanceOf(address(this));
