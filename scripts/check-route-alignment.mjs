@@ -11,7 +11,7 @@ const FILE_EXT_RE = /\.(ts|tsx|js|jsx)$/
 const PAGE_FILE_RE = /\/page\.(ts|tsx|js|jsx)$/
 const TEST_FILE_RE = /\.(test|spec)\.(ts|tsx|js|jsx)$/
 
-const REF_RE = /\bhref\s*=\s*['"]([^'"]+)['"]|\b(?:href|path)\s*:\s*['"]([^'"]+)['"]|\b(?:navigate|push|replace)\(\s*['"]([^'"]+)['"]\s*\)/g
+const REF_RE = /href\s*=\s*['"]([^'"]+)['"]|(?:href|path)\s*:\s*['"]([^'"]+)['"]|(?:navigate|push|replace)\(\s*['"]([^'"]+)['"]\s*\)/g
 
 const ALLOWED_PREFIXES = ['/api/', '/v1/']
 const ALLOWED_ASSET_PATHS = new Set([
@@ -21,6 +21,9 @@ const ALLOWED_ASSET_PATHS = new Set([
   '/robots.txt',
   '/sitemap.xml',
   '/manifest.json',
+  // Static PDF assets served from public/whitepaper/ — not Next.js app/ routes
+  '/whitepaper/vfide-whitepaper.pdf',
+  '/whitepaper/vfide-executive-summary.pdf',
 ])
 
 function walk(dir, out = []) {
@@ -40,16 +43,16 @@ function walk(dir, out = []) {
 }
 
 function normalizeRoute(filePath) {
-  const rel = path.relative(APP_DIR, filePath).replace(/\\/g, '/').replace(PAGE_FILE_RE, '')
+  const rel = path.relative(APP_DIR, filePath).replace(/\/g, '/').replace(PAGE_FILE_RE, '')
   if (!rel) return '/'
   return `/${rel.replace(/\/index$/, '')}`
 }
 
 function routeToRegex(route) {
   const escaped = route
-    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    .replace(/\\\[\.\.\.[^/\]]+\\\]/g, '.+')
-    .replace(/\\\[[^/\]]+\\\]/g, '[^/]+')
+    .replace(/[.*+?^${}()|[\]\]/g, '\$&')
+    .replace(/\\[\.\.\.[^/\]]+\\]/g, '.+')
+    .replace(/\\[[^/\]]+\\]/g, '[^/]+')
   return new RegExp(`^${escaped}$`)
 }
 
@@ -90,7 +93,7 @@ function collectRefs() {
       if (shouldIgnore(cleaned)) continue
 
       refs.push({
-        file: path.relative(ROOT, file).replace(/\\/g, '/'),
+        file: path.relative(ROOT, file).replace(/\/g, '/'),
         ref: cleaned,
       })
     }
