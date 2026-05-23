@@ -781,7 +781,6 @@ contract SeerGuardian is ReentrancyGuard {
     /**
      * @notice Check if address can perform governance actions
      * @param subject The address to check
-     * @return _bool _bool
      */
     function canParticipateInGovernance(address subject) external view returns (bool) {
         RestrictionType r = activeRestriction[subject];
@@ -798,7 +797,6 @@ contract SeerGuardian is ReentrancyGuard {
      * @notice Informational transfer status helper.
      * @dev This contract does not enforce token/vault transfers directly.
      * @param subject The address to check
-     * @return _bool _bool
      */
     function canTransfer(address subject) external view returns (bool) {
         RestrictionType r = activeRestriction[subject];
