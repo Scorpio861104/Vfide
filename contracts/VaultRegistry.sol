@@ -691,9 +691,9 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @param addressPrefix First bytes of the address they remember (e.g., "0x1234")
      * @param limit Maximum results to return
      * @return matches Array of matching vault info
+     * @param offset Start index into allVaults for pagination (0 = beginning).
+     * @return nextOffset Next pagination offset; equals total length when scan is complete.
      */
-    /// @param offset Start index into allVaults for pagination (0 = beginning).
-    /// @return nextOffset nextOffset
     function searchByAddressPrefix(
         bytes4 addressPrefix,
         uint256 limit,
