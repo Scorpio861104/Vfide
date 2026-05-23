@@ -219,7 +219,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     /**
      * @notice Check if token is locked (soulbound)
      * @dev All VFIDE badges are permanently locked
-     * @return _bool _bool
      */
     function locked(uint256 /* tokenId */) external pure returns (bool) {
         return true;
@@ -230,7 +229,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @param to to
      * @param tokenId tokenId
      * @param auth auth
-     * @return _address _address
      */
     function _update(
         address to,
@@ -260,7 +258,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @notice Get token URI with metadata
      * @param tokenId The token ID
      * @return Full metadata URI
-     * @return _string _string
      */
     function tokenURI(uint256 tokenId)
         public
@@ -387,7 +384,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @notice Get total minted count for a badge type
      * @param badge The badge ID
      * @return count Total minted
-     * @return _uint256 _uint256
      */
     function getBadgeMintCount(bytes32 badge) external view returns (uint256) {
         return badgeMintCount[badge];
