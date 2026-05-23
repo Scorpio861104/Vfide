@@ -25,7 +25,6 @@ import "./interfaces/IVaultInfrastructure.sol";
 interface IBadgeManager {
     /// @notice getUserBadges
     /// @param user user
-    /// @return _arg _arg
     function getUserBadges(address user) external view returns (uint256[] memory);
 }
 
