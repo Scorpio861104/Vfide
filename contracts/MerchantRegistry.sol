@@ -373,6 +373,5 @@ contract MerchantRegistry {
 
     /// @notice info
     /// @param owner owner
-    /// @return _arg _arg
     function info(address owner) external view returns (Merchant memory) { return merchants[owner]; }
 }
