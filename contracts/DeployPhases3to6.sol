@@ -23,12 +23,7 @@ contract DeployPhase3 {
     /// @param preDeployedBSM   Pre-deployed BridgeSecurityModule address (must be non-zero)
     /// @param preDeployedOracle Pre-deployed VFIDEPriceOracle address (must be non-zero)
     /// @param owner            Owner address for deployed contracts (must be non-zero)
-    function deployAll(
-        address vfideToken,
-        address preDeployedBSM,
-        address preDeployedOracle,
-        address owner
-    ) external {
+    function deployAll(address vfideToken, address preDeployedBSM, address preDeployedOracle, address owner) external {
         if (vfideToken == address(0)) revert DP3_Zero();
         if (preDeployedBSM == address(0)) revert DP3_Zero();
         if (preDeployedOracle == address(0)) revert DP3_Zero();

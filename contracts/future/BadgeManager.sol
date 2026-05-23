@@ -1,57 +1,56 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Seer } from "../Seer.sol";
-import { BadgeRegistry } from "./BadgeRegistry.sol";
-import { IBadgeQualificationRules } from "./BadgeQualificationRules.sol";
+import {Seer} from "../Seer.sol";
+import {BadgeRegistry} from "./BadgeRegistry.sol";
+import {IBadgeQualificationRules} from "./BadgeQualificationRules.sol";
 
 /**
  * @title BadgeManager
  * @notice Automatic badge awarding based on user actions
  * @dev Integrates with Seer to grant badges and boost ProofScore automatically
- * 
+ *
  * Philosophy: Badges are earned through ACTIONS, not purchased.
  * Each badge comes with ProofScore boost, creating a transparent reputation ladder.
  * @author Vfide
  */
 contract BadgeManager {
-    
     // ════════════════════════════════════════════════════════════════════════
     //                           STATE VARIABLES
     // ════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice dao
     address public dao;
     /// @notice seer
     Seer public seer;
     /// @notice qualificationRules
     IBadgeQualificationRules public qualificationRules;
-    
+
     /// @notice Track user statistics for badge qualification
     struct UserStats {
-        uint32 commerceTxCount;           // Total commerce transactions
-        uint32 consecutiveDays;           // Current streak of daily activity
-        uint32 governanceVotes;           // Total governance votes cast
-        uint32 successfulTrades;          // Successful (non-disputed) trades
-        uint32 endorsementsReceived;      // Endorsements from others
-        uint32 referralsMade;             // Users referred
-        uint32 referralsQualified;        // Referred users who reached 600+ score
-        uint32 disputesMediated;          // Disputes resolved through mediation
-        uint32 fraudReports;              // Confirmed fraud reports
-        uint32 educationalContent;        // Educational pieces created
-        uint64 lastActivityDay;           // Last day of activity (for streak tracking)
-        uint64 firstActivity;             // First interaction timestamp
-        uint64 lastScoreDropBelow700;     // Last time score dropped below 700
-        bool hasContributed;              // Made code/design contribution
-        bool hasTranslated;               // Translated docs
+        uint32 commerceTxCount; // Total commerce transactions
+        uint32 consecutiveDays; // Current streak of daily activity
+        uint32 governanceVotes; // Total governance votes cast
+        uint32 successfulTrades; // Successful (non-disputed) trades
+        uint32 endorsementsReceived; // Endorsements from others
+        uint32 referralsMade; // Users referred
+        uint32 referralsQualified; // Referred users who reached 600+ score
+        uint32 disputesMediated; // Disputes resolved through mediation
+        uint32 fraudReports; // Confirmed fraud reports
+        uint32 educationalContent; // Educational pieces created
+        uint64 lastActivityDay; // Last day of activity (for streak tracking)
+        uint64 firstActivity; // First interaction timestamp
+        uint64 lastScoreDropBelow700; // Last time score dropped below 700
+        bool hasContributed; // Made code/design contribution
+        bool hasTranslated; // Translated docs
     }
-    
+
     /// @notice userStats
     mapping(address => UserStats) public userStats;
-    
+
     /// @notice Track badge checks to avoid redundant processing
     mapping(address => mapping(bytes32 => uint64)) public lastBadgeCheck;
-    
+
     /// @notice Authorized callers (Commerce, DAO, etc.)
     mapping(address => bool) public operators;
     // H-33 FIX: Per-selector operator authorization.
@@ -63,12 +62,12 @@ contract BadgeManager {
     mapping(bytes4 => bool) public selectorRestricted; // true = use per-selector whitelist
     /// @notice _guardLock
     uint256 private _guardLock;
-    
+
     /// @notice Pioneer counter (first 10,000 users)
     uint32 public pioneerCount;
     /// @notice MAX_PIONEERS
     uint32 public constant MAX_PIONEERS = 10_000;
-    
+
     /// @notice Founding member counter (first 1,000 to reach 800+)
     uint32 public foundingMemberCount;
     /// @notice MAX_FOUNDING_MEMBERS
@@ -87,11 +86,11 @@ contract BadgeManager {
     uint256 public pendingQualificationRulesAt;
     /// @notice QUALIFICATION_RULES_DELAY
     uint256 public constant QUALIFICATION_RULES_DELAY = 48 hours;
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice BadgeEarned
     /// @param user user
     /// @param badge badge
@@ -130,11 +129,11 @@ contract BadgeManager {
     /// @param newRules newRules
     /// @param effectiveAt effectiveAt
     event QualificationRulesChangeProposed(address indexed newRules, uint256 effectiveAt);
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                              ERRORS
     // ════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice BM_NotDAO
     error BM_NotDAO();
     /// @notice BM_NotOperator
@@ -150,17 +149,17 @@ contract BadgeManager {
     /// @notice BM_Timelocked
     /// @param effectiveAt effectiveAt
     error BM_Timelocked(uint256 effectiveAt);
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                           MODIFIERS
     // ════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice onlyDAO
     modifier onlyDAO() {
         if (msg.sender != dao) revert BM_NotDAO();
         _;
     }
-    
+
     /// @notice onlyOperator
     modifier onlyOperator() {
         bytes4 sel = msg.sig;
@@ -181,11 +180,11 @@ contract BadgeManager {
         _;
         _guardLock = 0;
     }
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                          CONSTRUCTOR
     // ════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice constructor
     /// @param _dao _dao
     /// @param _seer _seer
@@ -196,25 +195,25 @@ contract BadgeManager {
         seer = Seer(_seer);
         qualificationRules = IBadgeQualificationRules(_qualificationRules);
     }
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                          ADMIN FUNCTIONS
     // ════════════════════════════════════════════════════════════════════════
-    
+
     /// @notice setDAO
     /// @param newDAO newDAO
     function setDAO(address newDAO) external onlyDAO nonReentrantBM {
         if (newDAO == address(0)) revert BM_Zero();
         dao = newDAO;
     }
-    
+
     /// @notice setSeer
     /// @param newSeer newSeer
     function setSeer(address newSeer) external onlyDAO nonReentrantBM {
         if (newSeer == address(0)) revert BM_Zero();
         seer = Seer(newSeer);
     }
-    
+
     /// @notice setOperator
     /// @param operator operator
     /// @param authorized authorized
@@ -275,11 +274,11 @@ contract BadgeManager {
         pendingQualificationRulesAt = 0;
         emit QualificationRulesSet(oldRules, newRules);
     }
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                      BADGE AWARDING LOGIC
     // ════════════════════════════════════════════════════════════════════════
-    
+
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     /**
      * @notice Award a badge to a user and boost their ProofScore
@@ -293,14 +292,14 @@ contract BadgeManager {
             _checkRenewal(user, badge);
             return;
         }
-        
+
         // Determine expiry (0 = permanent)
         uint256 expiry = 0;
         if (!BadgeRegistry.isPermanent(badge)) {
             uint256 duration = BadgeRegistry.getRecommendedDuration(badge);
             expiry = block.timestamp + duration;
         }
-        
+
         // Award badge in Seer
         try seer.setBadge(user, badge, true, expiry) {
             // Boost ProofScore by badge weight
@@ -368,7 +367,7 @@ contract BadgeManager {
         delete pendingRevocationAt[user][badge];
         emit BadgeRevocationCancelled(user, badge);
     }
-    
+
     /**
      * @notice Check and renew renewable badges if still qualified
      * @param user The user address
@@ -377,9 +376,9 @@ contract BadgeManager {
     function _checkRenewal(address user, bytes32 badge) internal {
         // Skip if badge is permanent
         if (BadgeRegistry.isPermanent(badge)) return;
-        
+
         uint256 expiry = seer.badgeExpiry(user, badge);
-        
+
         // Check if expired
         if (expiry > 0 && block.timestamp > expiry) {
             // User needs to re-qualify
@@ -389,7 +388,7 @@ contract BadgeManager {
             _recheckQualification(user, badge);
         }
     }
-    
+
     // slither-disable-next-line reentrancy-benign,reentrancy-events
     /**
      * @notice Re-check if user still qualifies for a renewable badge
@@ -398,12 +397,12 @@ contract BadgeManager {
      */
     function _recheckQualification(address user, bytes32 badge) internal {
         bool stillQualified = _checkBadgeQualification(user, badge);
-        
+
         if (stillQualified) {
             // Renew badge
             uint256 duration = BadgeRegistry.getRecommendedDuration(badge);
             uint256 newExpiry = block.timestamp + duration;
-            
+
             try seer.setBadge(user, badge, true, newExpiry) {
                 emit BadgeRenewed(user, badge, newExpiry);
             } catch {}
@@ -418,7 +417,7 @@ contract BadgeManager {
             } catch {}
         }
     }
-    
+
     /**
      * @notice Check if user qualifies for a specific badge
      * @param user The user address
@@ -429,27 +428,28 @@ contract BadgeManager {
         UserStats memory stats = userStats[user];
         uint16 score = seer.getScore(user);
 
-        return qualificationRules.checkQualification(
-            stats.commerceTxCount,
-            stats.consecutiveDays,
-            stats.governanceVotes,
-            stats.successfulTrades,
-            stats.endorsementsReceived,
-            stats.referralsMade,
-            stats.referralsQualified,
-            stats.fraudReports,
-            stats.educationalContent,
-            stats.lastScoreDropBelow700,
-            score,
-            badge,
-            block.timestamp
-        );
+        return
+            qualificationRules.checkQualification(
+                stats.commerceTxCount,
+                stats.consecutiveDays,
+                stats.governanceVotes,
+                stats.successfulTrades,
+                stats.endorsementsReceived,
+                stats.referralsMade,
+                stats.referralsQualified,
+                stats.fraudReports,
+                stats.educationalContent,
+                stats.lastScoreDropBelow700,
+                score,
+                badge,
+                block.timestamp
+            );
     }
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                      STAT TRACKING FUNCTIONS
     // ════════════════════════════════════════════════════════════════════════
-    
+
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Record a commerce transaction
@@ -462,13 +462,13 @@ contract BadgeManager {
         if (successful) {
             ++stats.successfulTrades;
         }
-        
+
         _updateActivity(user);
         _checkBadgeEligibility(user);
 
         emit StatsUpdated(user, "commerceTx", stats.commerceTxCount);
     }
-    
+
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Record a governance vote
@@ -477,13 +477,13 @@ contract BadgeManager {
     function recordGovernanceVote(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         ++stats.governanceVotes;
-        
+
         _updateActivity(user);
         _checkBadgeEligibility(user);
 
         emit StatsUpdated(user, "governanceVotes", stats.governanceVotes);
     }
-    
+
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Record an endorsement received
@@ -492,18 +492,17 @@ contract BadgeManager {
     function recordEndorsement(address user) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[user];
         ++stats.endorsementsReceived;
-        
+
         _checkBadgeEligibility(user);
 
         emit StatsUpdated(user, "endorsements", stats.endorsementsReceived);
     }
-    
+
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Record a referral
      * @param referrer The referrer address
      * @param qualified Whether referred user reached 600+ score
-     * @param _address _address
      */
     function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
@@ -511,12 +510,12 @@ contract BadgeManager {
         if (qualified) {
             ++stats.referralsQualified;
         }
-        
+
         _checkBadgeEligibility(referrer);
 
         emit StatsUpdated(referrer, "referrals", stats.referralsMade);
     }
-    
+
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Record fraud report confirmation
@@ -525,12 +524,12 @@ contract BadgeManager {
     function recordFraudReport(address reporter) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[reporter];
         ++stats.fraudReports;
-        
+
         _checkBadgeEligibility(reporter);
 
         emit StatsUpdated(reporter, "fraudReports", stats.fraudReports);
     }
-    
+
     // slither-disable-next-line reentrancy-events
     /**
      * @notice Record educational content creation
@@ -539,12 +538,12 @@ contract BadgeManager {
     function recordEducationalContent(address creator) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[creator];
         ++stats.educationalContent;
-        
+
         _checkBadgeEligibility(creator);
 
         emit StatsUpdated(creator, "education", stats.educationalContent);
     }
-    
+
     /**
      * @notice Record contribution (code/design/content)
      * @param contributor The contributor address
@@ -553,12 +552,12 @@ contract BadgeManager {
         UserStats storage stats = userStats[contributor];
         if (!stats.hasContributed) {
             stats.hasContributed = true;
-            
+
             // Auto-award Contributor badge
             awardBadge(contributor, BadgeRegistry.CONTRIBUTOR);
         }
     }
-    
+
     /**
      * @notice Record translation work
      * @param translator The translator address
@@ -567,12 +566,12 @@ contract BadgeManager {
         UserStats storage stats = userStats[translator];
         if (!stats.hasTranslated) {
             stats.hasTranslated = true;
-            
+
             // Auto-award Translator badge
             awardBadge(translator, BadgeRegistry.TRANSLATOR);
         }
     }
-    
+
     /**
      * @notice Award Pioneer badge (first 10,000 users)
      * @param user The user address
@@ -580,11 +579,11 @@ contract BadgeManager {
     function awardPioneer(address user) external onlyOperator nonReentrantBM {
         if (pioneerCount >= MAX_PIONEERS) return;
         if (seer.hasBadge(user, BadgeRegistry.PIONEER)) return;
-        
+
         ++pioneerCount;
         awardBadge(user, BadgeRegistry.PIONEER);
     }
-    
+
     /**
      * @notice Award Founding Member badge (first 1,000 to reach 800+)
      * @param user The user address
@@ -593,26 +592,26 @@ contract BadgeManager {
         if (foundingMemberCount >= MAX_FOUNDING_MEMBERS) return;
         if (seer.hasBadge(user, BadgeRegistry.FOUNDING_MEMBER)) return;
         if (seer.getScore(user) < 8000) return; // 800 on 0-10000 scale
-        
+
         ++foundingMemberCount;
         awardBadge(user, BadgeRegistry.FOUNDING_MEMBER);
     }
-    
+
     /**
      * @notice Update daily activity streak
      * @param user The user address
      */
     function _updateActivity(address user) internal {
         UserStats storage stats = userStats[user];
-        
+
         // Initialize first activity
         if (stats.firstActivity == 0) {
             stats.firstActivity = uint64(block.timestamp);
         }
-        
+
         // Calculate current day
         uint64 currentDay = uint64(block.timestamp / 1 days);
-        
+
         // Check if this is a new day
         if (stats.lastActivityDay == 0) {
             // First activity
@@ -630,10 +629,10 @@ contract BadgeManager {
             stats.consecutiveDays = 1;
             stats.lastActivityDay = currentDay;
         }
-        
+
         emit StatsUpdated(user, "consecutiveDays", stats.consecutiveDays);
     }
-    
+
     /**
      * @notice Check all badge eligibility after stat update
      * @param user The user address
@@ -665,16 +664,15 @@ contract BadgeManager {
             awardBadge(user, badge);
         }
     }
-    
+
     // ════════════════════════════════════════════════════════════════════════
     //                          VIEW FUNCTIONS
     // ════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Get user statistics
      * @param user The user address
      * @return stats The user's statistics
-     * @return _arg _arg
      */
     function getUserStats(address user) external view returns (UserStats memory) {
         return userStats[user];
@@ -689,5 +687,4 @@ contract BadgeManager {
     function checkBadgeQualification(address user, bytes32 badge) external view returns (bool qualified) {
         return _checkBadgeQualification(user, badge);
     }
-    
 }

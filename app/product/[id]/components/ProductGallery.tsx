@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
 
 interface ProductImage { url: string; alt?: string }
 

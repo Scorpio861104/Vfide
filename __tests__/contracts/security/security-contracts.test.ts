@@ -175,7 +175,11 @@ describe('VFIDE Security Contracts - Phase 1', () => {
         const source = readContract('AdminMultiSig.sol');
         expect(source).toContain('function approveProposal(uint256 _proposalId)');
         expect(source).toContain('proposal.hasApproved[msg.sender] = true;');
-        expect(source).toContain('proposal.approvalCount++;');
+        // Accept both prefix (++x, used post-refactor) and postfix (x++) forms.
+        const hasApprovalIncrement =
+          source.includes('proposal.approvalCount++;') ||
+          source.includes('++proposal.approvalCount;');
+        expect(hasApprovalIncrement).toBe(true);
       });
 
       it('should prevent double approval', () => {
@@ -230,7 +234,11 @@ describe('VFIDE Security Contracts - Phase 1', () => {
       it('should allow council member veto', () => {
         const source = readContract('AdminMultiSig.sol');
         expect(source).toContain('function communityVeto(uint256 _proposalId)');
-        expect(source).toContain('proposal.vetoCount++;');
+        // Accept both prefix (++x, used post-refactor) and postfix (x++) forms.
+        const hasVetoIncrement =
+          source.includes('proposal.vetoCount++;') ||
+          source.includes('++proposal.vetoCount;');
+        expect(hasVetoIncrement).toBe(true);
         expect(source).toContain('emit CommunityVeto(_proposalId, msg.sender, proposal.vetoCount);');
       });
 

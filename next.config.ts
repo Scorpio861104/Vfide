@@ -8,6 +8,12 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig: NextConfig = {
+  // Standalone output mode required for Docker builds.
+  // The Dockerfile copies from /app/.next/standalone in the runner stage;
+  // without this setting Next.js does not generate that directory and the
+  // Docker build fails with "COPY failed: ... not found".
+  output: 'standalone',
+
   // Fix for pino/thread-stream compatibility
   serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
 

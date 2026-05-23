@@ -23,9 +23,9 @@
  * Each test spins up its own isolated MerchantRegistry instance.
  */
 
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -46,13 +46,13 @@ async function deployFixture() {
 
   // Stubs needed for MerchantRegistry construction
   const VaultHubStub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:VaultHubStub",
+    'test/contracts/helpers/Stubs.sol:VaultHubStub'
   );
   const vaultHub = await VaultHubStub.deploy();
   await vaultHub.waitForDeployment();
 
   const SeerStub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:SeerScoreStub",
+    'test/contracts/helpers/Stubs.sol:SeerScoreStub'
   );
   const seer = await SeerStub.deploy();
   await seer.waitForDeployment();
@@ -63,26 +63,26 @@ async function deployFixture() {
 
   // ProofLedger mock — MerchantRegistry calls logSystemEvent on it
   const LedgerMock = await ethers.getContractFactory(
-    "test/contracts/mocks/LedgerMock.sol:LedgerMock",
+    'test/contracts/mocks/LedgerMock.sol:LedgerMock'
   );
   const ledger = await LedgerMock.deploy(false);
   await ledger.waitForDeployment();
 
   // MerchantRegistry needs a token in its constructor; reuse a token stub.
   const Token = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:MintableTokenStub",
+    'test/contracts/helpers/Stubs.sol:MintableTokenStub'
   );
   const token = await Token.deploy();
   await token.waitForDeployment();
 
   // MerchantRegistry constructor: (dao, token, hub, seer, ledger)
-  const Registry = await ethers.getContractFactory("MerchantRegistry");
+  const Registry = await ethers.getContractFactory('MerchantRegistry');
   const registry = await Registry.connect(dao).deploy(
     dao.address,
     await token.getAddress(),
     await vaultHub.getAddress(),
     await seer.getAddress(),
-    await ledger.getAddress(),
+    await ledger.getAddress()
   );
   await registry.waitForDeployment();
 
@@ -101,15 +101,14 @@ async function expectRevert(promise: Promise<unknown>, hint?: string) {
   });
 }
 
-const HASH_A = "0x1111111111111111111111111111111111111111111111111111111111111111";
-const HASH_B = "0x2222222222222222222222222222222222222222222222222222222222222222";
-const HASH_ZERO = "0x0000000000000000000000000000000000000000000000000000000000000000";
+const HASH_A = '0x1111111111111111111111111111111111111111111111111111111111111111';
+const HASH_B = '0x2222222222222222222222222222222222222222222222222222222222222222';
+const HASH_ZERO = '0x0000000000000000000000000000000000000000000000000000000000000000';
 
-describe("MerchantRegistry — setMetaHash + delistMerchant", { concurrency: 1 }, () => {
-
+describe('MerchantRegistry — setMetaHash + delistMerchant', { concurrency: 1 }, () => {
   // ── setMetaHash positive paths ──────────────────────────────────────────
 
-  it("setMetaHash: ACTIVE merchant can update their hash", async () => {
+  it('setMetaHash: ACTIVE merchant can update their hash', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
     // Verify initial state
@@ -118,12 +117,12 @@ describe("MerchantRegistry — setMetaHash + delistMerchant", { concurrency: 1 }
     // Update
     await f.registry.connect(f.merchant).setMetaHash(HASH_B);
     m = await f.registry.merchants(f.merchant.address);
-    assert.equal(m.metaHash, HASH_B, "metaHash updated");
+    assert.equal(m.metaHash, HASH_B, 'metaHash updated');
     // Status unchanged
-    assert.equal(Number(m.status), 1, "status still ACTIVE");
+    assert.equal(Number(m.status), 1, 'status still ACTIVE');
   });
 
-  it("setMetaHash: emits MerchantMetaHashUpdated event with correct args", async () => {
+  it('setMetaHash: emits MerchantMetaHashUpdated event with correct args', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
     const tx = await f.registry.connect(f.merchant).setMetaHash(HASH_B);
@@ -131,10 +130,12 @@ describe("MerchantRegistry — setMetaHash + delistMerchant", { concurrency: 1 }
     const event = receipt.logs.find((l: any) => {
       try {
         const parsed = f.registry.interface.parseLog(l);
-        return parsed && parsed.name === "MerchantMetaHashUpdated";
-      } catch { return false; }
+        return parsed && parsed.name === 'MerchantMetaHashUpdated';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(event, "MerchantMetaHashUpdated event expected");
+    assert.ok(event, 'MerchantMetaHashUpdated event expected');
     const parsed = f.registry.interface.parseLog(event);
     assert.equal(parsed!.args.owner, f.merchant.address);
     assert.equal(parsed!.args.newHash, HASH_B);
@@ -145,11 +146,11 @@ describe("MerchantRegistry — setMetaHash + delistMerchant", { concurrency: 1 }
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
     await f.registry.connect(f.merchant).setMetaHash(HASH_ZERO);
     const m = await f.registry.merchants(f.merchant.address);
-    assert.equal(m.metaHash, HASH_ZERO, "hash cleared to zero");
-    assert.equal(Number(m.status), 1, "status still ACTIVE — merchant still exists");
+    assert.equal(m.metaHash, HASH_ZERO, 'hash cleared to zero');
+    assert.equal(Number(m.status), 1, 'status still ACTIVE — merchant still exists');
   });
 
-  it("setMetaHash: setting to same value is idempotent (no revert, event still fires)", async () => {
+  it('setMetaHash: setting to same value is idempotent (no revert, event still fires)', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
     // Update to same value — should succeed, event fires (the contract doesn't
@@ -157,48 +158,47 @@ describe("MerchantRegistry — setMetaHash + delistMerchant", { concurrency: 1 }
     const tx = await f.registry.connect(f.merchant).setMetaHash(HASH_A);
     const receipt = await tx.wait();
     const event = receipt.logs.find((l: any) => {
-      try { return f.registry.interface.parseLog(l)?.name === "MerchantMetaHashUpdated"; }
-      catch { return false; }
+      try {
+        return f.registry.interface.parseLog(l)?.name === 'MerchantMetaHashUpdated';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(event, "MerchantMetaHashUpdated still emitted on same-value write");
+    assert.ok(event, 'MerchantMetaHashUpdated still emitted on same-value write');
   });
 
   // ── setMetaHash negative paths ──────────────────────────────────────────
 
-  it("setMetaHash: non-merchant (NONE) reverts with COM_NotMerchant", async () => {
+  it('setMetaHash: non-merchant (NONE) reverts with COM_NotMerchant', async () => {
     const f = await deployFixture();
     // external never called addMerchant
-    await expectRevert(
-      f.registry.connect(f.external).setMetaHash(HASH_A),
-    );
+    await expectRevert(f.registry.connect(f.external).setMetaHash(HASH_A));
   });
 
-  it("setMetaHash: DELISTED merchant cannot update", async () => {
+  it('setMetaHash: DELISTED merchant cannot update', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
-    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, "test_delist");
+    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, 'test_delist');
     // Now setMetaHash should revert
-    await expectRevert(
-      f.registry.connect(f.merchant).setMetaHash(HASH_B),
-    );
+    await expectRevert(f.registry.connect(f.merchant).setMetaHash(HASH_B));
     // Hash should be unchanged from before delisting
     const m = await f.registry.merchants(f.merchant.address);
-    assert.equal(m.metaHash, HASH_A, "hash unchanged after delist-then-attempted-update");
+    assert.equal(m.metaHash, HASH_A, 'hash unchanged after delist-then-attempted-update');
   });
 
   // ── delistMerchant positive paths ───────────────────────────────────────
 
-  it("delistMerchant: DAO can delist an ACTIVE merchant", async () => {
+  it('delistMerchant: DAO can delist an ACTIVE merchant', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
-    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, "fraud_confirmed");
+    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, 'fraud_confirmed');
     const m = await f.registry.merchants(f.merchant.address);
-    assert.equal(Number(m.status), 3, "status is DELISTED");
+    assert.equal(Number(m.status), 3, 'status is DELISTED');
     // metaHash preserved per spec §8 (we don't clear; data sovereignty)
     assert.equal(m.metaHash, HASH_A);
   });
 
-  it("delistMerchant: DAO can delist a SUSPENDED merchant", async () => {
+  it('delistMerchant: DAO can delist a SUSPENDED merchant', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
     // Force into SUSPENDED via the auto-suspension threshold path is complex;
@@ -209,61 +209,60 @@ describe("MerchantRegistry — setMetaHash + delistMerchant", { concurrency: 1 }
     // else proceed. SUSPENDED is "else" so it transitions cleanly. This is
     // verified by code inspection; the integration path through actual
     // suspension is exercised in the broader Commerce test suite.
-    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, "test");
+    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, 'test');
     const m = await f.registry.merchants(f.merchant.address);
     assert.equal(Number(m.status), 3);
   });
 
-  it("delistMerchant: emits MerchantStatus event with reason", async () => {
+  it('delistMerchant: emits MerchantStatus event with reason', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
-    const tx = await f.registry.connect(f.dao).delistMerchant(f.merchant.address, "regulator_demand");
+    const tx = await f.registry
+      .connect(f.dao)
+      .delistMerchant(f.merchant.address, 'regulator_demand');
     const receipt = await tx.wait();
     const event = receipt.logs.find((l: any) => {
-      try { return f.registry.interface.parseLog(l)?.name === "MerchantStatus"; }
-      catch { return false; }
+      try {
+        return f.registry.interface.parseLog(l)?.name === 'MerchantStatus';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(event, "MerchantStatus event expected");
+    assert.ok(event, 'MerchantStatus event expected');
     const parsed = f.registry.interface.parseLog(event);
     assert.equal(parsed!.args.owner, f.merchant.address);
     assert.equal(Number(parsed!.args.status), 3); // DELISTED
-    assert.equal(parsed!.args.reason, "regulator_demand");
+    assert.equal(parsed!.args.reason, 'regulator_demand');
   });
 
   // ── delistMerchant negative paths ───────────────────────────────────────
 
-  it("delistMerchant: non-DAO cannot delist", async () => {
+  it('delistMerchant: non-DAO cannot delist', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
     // External tries to delist
     await expectRevert(
-      f.registry.connect(f.external).delistMerchant(f.merchant.address, "malicious"),
+      f.registry.connect(f.external).delistMerchant(f.merchant.address, 'malicious')
     );
     // Another merchant tries to delist
     await expectRevert(
-      f.registry.connect(f.merchant2).delistMerchant(f.merchant.address, "malicious"),
+      f.registry.connect(f.merchant2).delistMerchant(f.merchant.address, 'malicious')
     );
     // The merchant themselves cannot delist (only DAO can)
-    await expectRevert(
-      f.registry.connect(f.merchant).delistMerchant(f.merchant.address, "self"),
-    );
+    await expectRevert(f.registry.connect(f.merchant).delistMerchant(f.merchant.address, 'self'));
   });
 
-  it("delistMerchant: cannot delist a non-merchant (NONE)", async () => {
+  it('delistMerchant: cannot delist a non-merchant (NONE)', async () => {
     const f = await deployFixture();
     // external never registered as merchant
-    await expectRevert(
-      f.registry.connect(f.dao).delistMerchant(f.external.address, "phantom"),
-    );
+    await expectRevert(f.registry.connect(f.dao).delistMerchant(f.external.address, 'phantom'));
   });
 
-  it("delistMerchant: cannot double-delist (terminal state)", async () => {
+  it('delistMerchant: cannot double-delist (terminal state)', async () => {
     const f = await deployFixture();
     await f.registry.connect(f.merchant).addMerchant(HASH_A);
-    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, "first");
+    await f.registry.connect(f.dao).delistMerchant(f.merchant.address, 'first');
     // Second delist should revert
-    await expectRevert(
-      f.registry.connect(f.dao).delistMerchant(f.merchant.address, "second"),
-    );
+    await expectRevert(f.registry.connect(f.dao).delistMerchant(f.merchant.address, 'second'));
   });
 });

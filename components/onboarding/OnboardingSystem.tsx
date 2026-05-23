@@ -19,8 +19,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Store, ArrowRight, Check, X, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ShoppingCart, Store, Check, X, Sparkles } from 'lucide-react';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -214,7 +214,7 @@ export function OnboardingPathChooser() {
 // ── Progress Bar (persistent, top of page) ──────────────────────────────────
 
 export function OnboardingProgressBar() {
-  const { isOnboarding, steps, progress, dismiss } = useOnboarding();
+  const { isOnboarding, steps, progress: _progress, dismiss } = useOnboarding();
 
   if (!isOnboarding) return null;
 

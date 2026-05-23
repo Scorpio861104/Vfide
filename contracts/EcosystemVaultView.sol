@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20 } from "./SharedInterfaces.sol";
+import {IERC20} from "./SharedInterfaces.sol";
 
 /**
  * EcosystemVaultView — Read-only companion for EcosystemVault.
@@ -56,73 +56,48 @@ interface IEcosystemVaultView {
     /// @return _uint256 _uint256
     function totalExpensesPaid() external view returns (uint256);
     /// @notice periodMerchantTxCount
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint256 _uint256
     function periodMerchantTxCount(uint256, address) external view returns (uint256);
     /// @notice periodMerchantTier
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint16 _uint16
     function periodMerchantTier(uint256, address) external view returns (uint16);
     /// @notice merchantPeriodClaimed
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _bool _bool
     function merchantPeriodClaimed(uint256, address) external view returns (bool);
     /// @notice merchantPeriodEnded
-    /// @param _uint256 _uint256
     /// @return _bool _bool
     function merchantPeriodEnded(uint256) external view returns (bool);
     /// @notice merchantPeriodPoolSnapshot
-    /// @param _uint256 _uint256
     /// @return _uint256 _uint256
     function merchantPeriodPoolSnapshot(uint256) external view returns (uint256);
     /// @notice yearPoints
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint16 _uint16
     function yearPoints(uint256, address) external view returns (uint16);
     /// @notice quarterClaimed
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _bool _bool
     function quarterClaimed(uint256, uint256, address) external view returns (bool);
     /// @notice quarterEnded
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _bool _bool
     function quarterEnded(uint256, uint256) external view returns (bool);
     /// @notice quarterPoolSnapshot
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _uint256 _uint256
     function quarterPoolSnapshot(uint256, uint256) external view returns (uint256);
     /// @notice pendingMerchantReferrer
-    /// @param _address _address
     /// @return _address _address
     function pendingMerchantReferrer(address) external view returns (address);
     /// @notice pendingUserReferrer
-    /// @param _address _address
     /// @return _address _address
     function pendingUserReferrer(address) external view returns (address);
     /// @notice referralCredited
-    /// @param _address _address
     /// @return _bool _bool
     function referralCredited(address) external view returns (bool);
     /// @notice totalMerchantBonusesPaid
-    /// @param _address _address
     /// @return _uint256 _uint256
     function totalMerchantBonusesPaid(address) external view returns (uint256);
     /// @notice periodMerchants
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _address _address
     function periodMerchants(uint256, uint256) external view returns (address);
     /// @notice yearReferrers
-    /// @param _uint256 _uint256
-    /// @param _uint256 _uint256
     /// @return _address _address
     function yearReferrers(uint256, uint256) external view returns (address);
     /// @notice operationsWallet
@@ -135,8 +110,6 @@ interface IEcosystemVaultView {
     /// @return _uint256 _uint256
     function operationsWithdrawalCooldown() external view returns (uint256);
     /// @notice referralLevelPaid
-    /// @param _uint256 _uint256
-    /// @param _address _address
     /// @return _uint8 _uint8
     function referralLevelPaid(uint256, address) external view returns (uint8);
     /// @notice referralLevel1Points
@@ -171,7 +144,6 @@ interface IEcosystemVaultView {
 /// @author Vfide
 interface ISeerView {
     /// @notice getScore
-    /// @param _address _address
     /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
 }
@@ -224,9 +196,7 @@ contract EcosystemVaultView {
     /// @return merchant merchant
     /// @return headhunter headhunter
     /// @return total total
-    function getPoolBalances() external view returns (
-        uint256 council, uint256 merchant, uint256 headhunter, uint256 total
-    ) {
+    function getPoolBalances() external view returns (uint256 council, uint256 merchant, uint256 headhunter, uint256 total) {
         council = vault.councilPool();
         merchant = vault.merchantPool();
         headhunter = vault.headhunterPool();
@@ -239,9 +209,7 @@ contract EcosystemVaultView {
     /// @return bonusesPaid bonusesPaid
     /// @return currentTier currentTier
     /// @return currentPeriodRank currentPeriodRank
-    function getMerchantStats(address merchant) external view returns (
-        uint256 txCount, uint256 bonusesPaid, uint16 currentTier, uint8 currentPeriodRank
-    ) {
+    function getMerchantStats(address merchant) external view returns (uint256 txCount, uint256 bonusesPaid, uint16 currentTier, uint8 currentPeriodRank) {
         uint256 period = vault.currentMerchantPeriod();
         txCount = vault.periodMerchantTxCount(period, merchant);
         bonusesPaid = vault.totalMerchantBonusesPaid(merchant);
@@ -256,10 +224,9 @@ contract EcosystemVaultView {
     /// @return currentYearNumber currentYearNumber
     /// @return currentQuarterNumber currentQuarterNumber
     /// @return quarterEndsAt quarterEndsAt
-    function getHeadhunterStats(address referrer) external view returns (
-        uint16 currentYearPoints, uint8 estimatedRank,
-        uint256 currentYearNumber, uint256 currentQuarterNumber, uint256 quarterEndsAt
-    ) {
+    function getHeadhunterStats(
+        address referrer
+    ) external view returns (uint16 currentYearPoints, uint8 estimatedRank, uint256 currentYearNumber, uint256 currentQuarterNumber, uint256 quarterEndsAt) {
         uint256 year = vault.currentYear();
         uint256 qtr = vault.currentQuarter();
         currentYearPoints = vault.yearPoints(year, referrer);
@@ -278,10 +245,10 @@ contract EcosystemVaultView {
     /// @return nextLevel nextLevel
     /// @return nextLevelRequiredPoints nextLevelRequiredPoints
     /// @return nextLevelReward nextLevelReward
-    function getReferralLevelStatus(address referrer, uint256 year) external view returns (
-        uint16 points, uint8 unlockedLevel, uint8 highestPaidLevel,
-        uint8 nextLevel, uint16 nextLevelRequiredPoints, uint256 nextLevelReward
-    ) {
+    function getReferralLevelStatus(
+        address referrer,
+        uint256 year
+    ) external view returns (uint16 points, uint8 unlockedLevel, uint8 highestPaidLevel, uint8 nextLevel, uint16 nextLevelRequiredPoints, uint256 nextLevelReward) {
         points = vault.yearPoints(year, referrer);
         unlockedLevel = _getReferralWorkLevel(points);
         highestPaidLevel = vault.referralLevelPaid(year, referrer);
@@ -295,9 +262,7 @@ contract EcosystemVaultView {
     /// @return merchantReferrer merchantReferrer
     /// @return userReferrer userReferrer
     /// @return credited credited
-    function getPendingReferral(address referred) external view returns (
-        address merchantReferrer, address userReferrer, bool credited
-    ) {
+    function getPendingReferral(address referred) external view returns (address merchantReferrer, address userReferrer, bool credited) {
         merchantReferrer = vault.pendingMerchantReferrer(referred);
         userReferrer = vault.pendingUserReferrer(referred);
         credited = vault.referralCredited(referred);
@@ -310,10 +275,7 @@ contract EcosystemVaultView {
     /// @return burnedTotal burnedTotal
     /// @return expensesTotal expensesTotal
     /// @return grandTotal grandTotal
-    function getSpendingSummary() external view returns (
-        uint256 councilTotal, uint256 merchantTotal, uint256 headhunterTotal,
-        uint256 burnedTotal, uint256 expensesTotal, uint256 grandTotal
-    ) {
+    function getSpendingSummary() external view returns (uint256 councilTotal, uint256 merchantTotal, uint256 headhunterTotal, uint256 burnedTotal, uint256 expensesTotal, uint256 grandTotal) {
         councilTotal = vault.totalCouncilPaid();
         merchantTotal = vault.totalMerchantBonusPaid();
         headhunterTotal = vault.totalHeadhunterPaid();
@@ -329,10 +291,11 @@ contract EcosystemVaultView {
     /// @return councilPoolBalance councilPoolBalance
     /// @return merchantPoolBalance merchantPoolBalance
     /// @return headhunterPoolBalance headhunterPoolBalance
-    function getVaultHealth() external view returns (
-        uint256 currentBalance, uint256 totalIn, uint256 totalOut,
-        uint256 councilPoolBalance, uint256 merchantPoolBalance, uint256 headhunterPoolBalance
-    ) {
+    function getVaultHealth()
+        external
+        view
+        returns (uint256 currentBalance, uint256 totalIn, uint256 totalOut, uint256 councilPoolBalance, uint256 merchantPoolBalance, uint256 headhunterPoolBalance)
+    {
         currentBalance = vault.rewardToken().balanceOf(address(vault));
         uint256 cp = vault.councilPool();
         uint256 mp = vault.merchantPool();
@@ -358,9 +321,7 @@ contract EcosystemVaultView {
     /// @return claimed claimed
     /// @return periodEnded periodEnded
     /// @return poolSnapshot poolSnapshot
-    function previewMerchantReward(uint256 period, address merchant) external view returns (
-        uint256 txCount, uint16 bestTier, bool claimed, bool periodEnded, uint256 poolSnapshot
-    ) {
+    function previewMerchantReward(uint256 period, address merchant) external view returns (uint256 txCount, uint16 bestTier, bool claimed, bool periodEnded, uint256 poolSnapshot) {
         txCount = vault.periodMerchantTxCount(period, merchant);
         bestTier = vault.periodMerchantTier(period, merchant);
         claimed = vault.merchantPeriodClaimed(period, merchant);
@@ -376,9 +337,7 @@ contract EcosystemVaultView {
     /// @return claimed claimed
     /// @return quarterEndedFlag quarterEndedFlag
     /// @return poolSnapshot poolSnapshot
-    function previewHeadhunterReward(uint256 year, uint256 quarter, address referrer) external view returns (
-        uint16 referrerPoints, bool claimed, bool quarterEndedFlag, uint256 poolSnapshot
-    ) {
+    function previewHeadhunterReward(uint256 year, uint256 quarter, address referrer) external view returns (uint16 referrerPoints, bool claimed, bool quarterEndedFlag, uint256 poolSnapshot) {
         referrerPoints = vault.yearPoints(year, referrer);
         claimed = vault.quarterClaimed(year, quarter, referrer);
         quarterEndedFlag = vault.quarterEnded(year, quarter);
@@ -391,16 +350,12 @@ contract EcosystemVaultView {
     /// @return lastWithdrawal lastWithdrawal
     /// @return cooldown cooldown
     /// @return canWithdraw canWithdraw
-    function getOperationsStatus() external view returns (
-        address wallet, uint256 pool, uint256 lastWithdrawal,
-        uint256 cooldown, bool canWithdraw
-    ) {
+    function getOperationsStatus() external view returns (address wallet, uint256 pool, uint256 lastWithdrawal, uint256 cooldown, bool canWithdraw) {
         wallet = vault.operationsWallet();
         pool = vault.operationsPool();
         lastWithdrawal = vault.lastOperationsWithdrawal();
         cooldown = vault.operationsWithdrawalCooldown();
-        canWithdraw = wallet != address(0) && pool > 0
-            && block.timestamp >= lastWithdrawal + cooldown;
+        canWithdraw = wallet != address(0) && pool > 0 && block.timestamp >= lastWithdrawal + cooldown;
     }
 
     /// @notice getMerchantTierMultipliers
@@ -412,18 +367,21 @@ contract EcosystemVaultView {
     /// @return tier3Multiplier tier3Multiplier
     /// @return tier4Threshold tier4Threshold
     /// @return tier4Multiplier tier4Multiplier
-    function getMerchantTierMultipliers() external pure returns (
-        uint16 tier1Threshold, uint16 tier1Multiplier,
-        uint16 tier2Threshold, uint16 tier2Multiplier,
-        uint16 tier3Threshold, uint16 tier3Multiplier,
-        uint16 tier4Threshold, uint16 tier4Multiplier
-    ) {
-        return (
-            TIER1_THRESHOLD, TIER1_MULTIPLIER,
-            TIER2_THRESHOLD, TIER2_MULTIPLIER,
-            TIER3_THRESHOLD, TIER3_MULTIPLIER,
-            TIER4_THRESHOLD, TIER4_MULTIPLIER
-        );
+    function getMerchantTierMultipliers()
+        external
+        pure
+        returns (
+            uint16 tier1Threshold,
+            uint16 tier1Multiplier,
+            uint16 tier2Threshold,
+            uint16 tier2Multiplier,
+            uint16 tier3Threshold,
+            uint16 tier3Multiplier,
+            uint16 tier4Threshold,
+            uint16 tier4Multiplier
+        )
+    {
+        return (TIER1_THRESHOLD, TIER1_MULTIPLIER, TIER2_THRESHOLD, TIER2_MULTIPLIER, TIER3_THRESHOLD, TIER3_MULTIPLIER, TIER4_THRESHOLD, TIER4_MULTIPLIER);
     }
 
     // ── Internal helpers ──

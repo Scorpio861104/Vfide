@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ServicePool } from "../ServicePool.sol";
+import {ServicePool} from "../ServicePool.sol";
 
 /// @title HeadhunterCompetitionPool — Monthly competition for user acquisition
 /// @notice Headhunters earn score for verified referrals.
@@ -30,11 +30,7 @@ contract HeadhunterCompetitionPool is ServicePool {
     /// @param period period
     /// @param newUser newUser
     /// @param headhunter headhunter
-    event ReferralQualified(
-        uint256 indexed period,
-        address indexed newUser,
-        address indexed headhunter
-    );
+    event ReferralQualified(uint256 indexed period, address indexed newUser, address indexed headhunter);
 
     /// @notice AlreadyReferred
     error AlreadyReferred();
@@ -49,19 +45,12 @@ contract HeadhunterCompetitionPool is ServicePool {
     /// @param _token _token
     /// @param _admin _admin
     /// @param _maxPayoutPerPeriod _maxPayoutPerPeriod
-    constructor(
-        address _token,
-        address _admin,
-        uint256 _maxPayoutPerPeriod
-    ) ServicePool(_token, _admin, MAX_HEADHUNTERS, _maxPayoutPerPeriod) {}
+    constructor(address _token, address _admin, uint256 _maxPayoutPerPeriod) ServicePool(_token, _admin, MAX_HEADHUNTERS, _maxPayoutPerPeriod) {}
 
     /// @notice registerReferral
     /// @param newUser newUser
     /// @param headhunter headhunter
-    function registerReferral(
-        address newUser,
-        address headhunter
-    ) external onlyRole(RECORDER_ROLE) nonReentrant {
+    function registerReferral(address newUser, address headhunter) external onlyRole(RECORDER_ROLE) nonReentrant {
         if (newUser == address(0) || headhunter == address(0)) revert ZeroAddress();
         if (newUser == headhunter) revert SelfReferral();
         if (referredBy[newUser] != address(0)) revert AlreadyReferred();

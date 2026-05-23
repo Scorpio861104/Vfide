@@ -1,6 +1,5 @@
 'use client';
-import { useState } from 'react';
-import { Heart, Star, Gift, Edit2 } from 'lucide-react';
+import { Heart, Star } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export interface LoyaltyTier { id: string; name: string; minPurchases: number; discountPercent: number; perks: string[]; color: string; }
@@ -13,7 +12,7 @@ const DEFAULT_TIERS: LoyaltyTier[] = [
   { id: '4', name: 'Platinum', minPurchases: 30, discountPercent: 15, perks: ['15% discount', 'VIP access', 'Birthday reward'], color: 'purple' },
 ];
 
-export function LoyaltyProgram({ config, memberCount = 0, onUpdateConfig }: { config?: LoyaltyConfig; memberCount?: number; onUpdateConfig?: (c: LoyaltyConfig) => void; }) {
+export function LoyaltyProgram({ config, memberCount = 0, onUpdateConfig: _onUpdateConfig }: { config?: LoyaltyConfig; memberCount?: number; onUpdateConfig?: (c: LoyaltyConfig) => void; }) {
   const { formatCurrency } = useLocale();
   const cfg = config || { enabled: true, programName: 'Rewards', tiers: DEFAULT_TIERS, pointsPerDollar: 1, redeemThreshold: 100, redeemValue: 5 };
   return (<div className="space-y-6">

@@ -46,7 +46,6 @@ DECLARE
         'notification_hub_preferences',
         'user_privacy_settings',
         'user_badges',
-        'analytics_events',
         'security_violations',
         'two_factor_codes',
         'time_locks',
@@ -88,7 +87,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_read_own', tbl, tbl);
@@ -99,7 +98,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_insert_own', tbl, tbl);
@@ -110,14 +109,14 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
             WITH CHECK (
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_update_own', tbl, tbl, tbl);
@@ -128,7 +127,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.user_id
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, tbl || '_delete_own', tbl, tbl);
@@ -184,6 +183,46 @@ BEGIN
 
         RAISE NOTICE 'Pattern B (address): added owner-only policies on %', tbl;
     END LOOP;
+END$$;
+
+-- ============================================================================
+-- PATTERN B2: `user_id` column stores a wallet address directly (VARCHAR)
+-- analytics_events stores the wallet in user_id (VARCHAR 42), not a FK int.
+-- ============================================================================
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'analytics_events'
+    ) THEN
+        RAISE NOTICE 'analytics_events table not found, skipping Pattern B2';
+    ELSIF EXISTS (
+        SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'analytics_events'
+    ) THEN
+        RAISE NOTICE 'analytics_events already has RLS policies, skipping Pattern B2';
+    ELSE
+        EXECUTE 'ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY';
+
+        EXECUTE $q$
+            CREATE POLICY analytics_events_read_own ON public.analytics_events FOR SELECT
+            USING (LOWER(user_id) = LOWER(current_setting('app.current_user_address', true)::text))
+        $q$;
+        EXECUTE $q$
+            CREATE POLICY analytics_events_insert_own ON public.analytics_events FOR INSERT
+            WITH CHECK (LOWER(user_id) = LOWER(current_setting('app.current_user_address', true)::text))
+        $q$;
+        EXECUTE $q$
+            CREATE POLICY analytics_events_update_own ON public.analytics_events FOR UPDATE
+            USING (LOWER(user_id) = LOWER(current_setting('app.current_user_address', true)::text))
+            WITH CHECK (LOWER(user_id) = LOWER(current_setting('app.current_user_address', true)::text))
+        $q$;
+        EXECUTE $q$
+            CREATE POLICY analytics_events_delete_own ON public.analytics_events FOR DELETE
+            USING (LOWER(user_id) = LOWER(current_setting('app.current_user_address', true)::text))
+        $q$;
+
+        RAISE NOTICE 'Pattern B2 (user_id as wallet): added owner-only policies on analytics_events';
+    END IF;
 END$$;
 
 -- ============================================================================
@@ -289,7 +328,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.%I
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, rec.tbl || '_read_own', rec.tbl, rec.tbl, rec.actor_col);
@@ -300,7 +339,7 @@ BEGIN
                 EXISTS (
                     SELECT 1 FROM users
                     WHERE users.id = %I.%I
-                      AND users.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(users.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, rec.tbl || '_insert_own', rec.tbl, rec.tbl, rec.actor_col);
@@ -349,7 +388,7 @@ BEGIN
                     SELECT 1 FROM group_members gm
                     JOIN users u ON u.id = gm.user_id
                     WHERE gm.group_id = %I.%I
-                      AND u.LOWER(wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
+                      AND LOWER(u.wallet_address) = LOWER(current_setting('app.current_user_address', true)::text)
                 )
             )
         $q$, rec.tbl || '_read_member', rec.tbl, rec.tbl, rec.group_col);

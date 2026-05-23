@@ -13,7 +13,7 @@ pragma solidity 0.8.30;
 // called by V1 paths. File retained for reference / backward-compat with
 // any pre-existing UserVaultLegacy deployments.
 
-import { LedgerLogFailed, IVaultHub, IProofLedger, IERC20, Ownable, ReentrancyGuard, SafeERC20 } from "../SharedInterfaces.sol";
+import {LedgerLogFailed, IVaultHub, IProofLedger, IERC20, Ownable, ReentrancyGuard, SafeERC20} from "../SharedInterfaces.sol";
 
 /**
  * VaultInfrastructure (zkSync Era ready) — FINAL
@@ -42,7 +42,7 @@ import { LedgerLogFailed, IVaultHub, IProofLedger, IERC20, Ownable, ReentrancyGu
 /// @author Vfide
 contract UserVaultLegacy is ReentrancyGuard {
     using SafeERC20 for IERC20;
-    
+
     /// Immutable references
     /// @notice hub
     address public immutable hub;
@@ -58,14 +58,14 @@ contract UserVaultLegacy is ReentrancyGuard {
     mapping(address => bool) public isGuardian;
     /// @notice guardianCount
     uint8 public guardianCount; // Track count for logic
-    
+
     // Track guardian list for enumeration
     /// @notice guardianList
     address[] private guardianList;
 
     /// @notice nextOfKin
     address public nextOfKin;
-    
+
     /// Withdrawal friction layer
     /// @notice lastWithdrawalTime
     uint64 public lastWithdrawalTime;
@@ -81,13 +81,13 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @notice spentToday
     uint256 public spentToday;
     /// @notice dayStart
-    uint64  public dayStart;
-    
+    uint64 public dayStart;
+
     /// @notice lastExecuteTime
     uint64 public lastExecuteTime;
     /// @notice executeCooldown
     uint64 public executeCooldown = 1 hours; // Default 1h cooldown for execute()
-    
+
     /// @notice maxExecuteValue
     uint256 public maxExecuteValue = 1 ether; // Default 1 ETH max per execute call
 
@@ -102,11 +102,11 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @notice ExecuteWhitelistEnforced
     /// @param enforced enforced
     event ExecuteWhitelistEnforced(bool enforced);
-    
+
     /// User-controlled security features
     /// @notice frozen
     bool public frozen; // User can freeze vault like freezing ATM card
-    
+
     // Flexible abnormal transaction detection
     /// @notice usePercentageThreshold
     bool public usePercentageThreshold; // If true, use percentage; if false, use fixed amount
@@ -118,7 +118,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     bool public useBalanceSnapshot; // If true, use snapshot balance; if false, use current balance
     /// @notice balanceSnapshot
     uint256 public balanceSnapshot; // Snapshot of balance for percentage calculations
-    
+
     struct PendingTransaction {
         address toVault;
         uint256 amount;
@@ -135,10 +135,13 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     struct Recovery {
         address proposedOwner;
-        uint8 approvals;               // guardian approvals count
-        uint64 readyTime;              // Minimum time before finalization
-        uint64 expiryTime;        uint8 guardianCountSnapshot;   // Lock guardian count at request time
-        uint256 nonce;        mapping(address => mapping(uint256 => bool)) voted;    }
+        uint8 approvals; // guardian approvals count
+        uint64 readyTime; // Minimum time before finalization
+        uint64 expiryTime;
+        uint8 guardianCountSnapshot; // Lock guardian count at request time
+        uint256 nonce;
+        mapping(address => mapping(uint256 => bool)) voted;
+    }
     /// @notice _recovery
     Recovery private _recovery;
     /// @notice RECOVERY_MIN_DELAY
@@ -147,13 +150,15 @@ contract UserVaultLegacy is ReentrancyGuard {
     uint64 public constant RECOVERY_EXPIRY = 30 days;
 
     struct Inheritance {
-        bool active;                   // Inheritance request active
-        uint8 approvals;               // guardian approvals count
-        uint64 readyTime;              // Minimum time before finalization
-        uint64 expiryTime;             // Inheritance expires after 30 days
-        uint8 guardianCountSnapshot;   // Lock guardian count at request time
-        bool ownerDenied;              // Owner explicitly denied (prevents gaming)
-        uint256 nonce;        mapping(address => mapping(uint256 => bool)) voted;    }
+        bool active; // Inheritance request active
+        uint8 approvals; // guardian approvals count
+        uint64 readyTime; // Minimum time before finalization
+        uint64 expiryTime; // Inheritance expires after 30 days
+        uint8 guardianCountSnapshot; // Lock guardian count at request time
+        bool ownerDenied; // Owner explicitly denied (prevents gaming)
+        uint256 nonce;
+        mapping(address => mapping(uint256 => bool)) voted;
+    }
     /// @notice _inheritance
     Inheritance private _inheritance;
     /// @notice INHERITANCE_MIN_DELAY
@@ -313,12 +318,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @param _vfide _vfide
     /// @param _owner _owner
     /// @param _ledger _ledger
-    constructor(
-        address _hub,
-        address _vfide,
-        address _owner,
-        address _ledger
-    ) {
+    constructor(address _hub, address _vfide, address _owner, address _ledger) {
         require(_hub != address(0) && _vfide != address(0) && _owner != address(0), "UV:zero");
         hub = _hub;
         vfideToken = _vfide;
@@ -351,7 +351,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @param active active
     function setGuardian(address g, bool active) external onlyOwner {
         if (g == address(0)) revert UV_Zero();
-        
+
         // Prevent guardian changes during active recovery to protect vote integrity
         // This blocks both additions (vote dilution) and removals (vote manipulation)
         if (_recovery.proposedOwner != address(0)) {
@@ -360,7 +360,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (_inheritance.active) {
             revert UV_InheritanceActive();
         }
-        
+
         if (isGuardian[g] != active) {
             isGuardian[g] = active;
             if (active) {
@@ -406,7 +406,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @notice WithdrawalCooldownSet
     /// @param cooldown cooldown
     event WithdrawalCooldownSet(uint64 cooldown);
-    
+
     /// @notice setWithdrawalCooldown
     /// @param cooldown cooldown
     function setWithdrawalCooldown(uint64 cooldown) external onlyOwner {
@@ -434,7 +434,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         dailyTransferLimit = limit;
         // Reset window so the new limit takes effect from now.
         spentToday = 0;
-        dayStart   = uint64(block.timestamp);
+        dayStart = uint64(block.timestamp);
         _logEv(msg.sender, "daily_limit_set", limit, "");
     }
 
@@ -449,9 +449,9 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(spentToday + amount <= dailyTransferLimit, "UV: daily limit exceeded");
         spentToday += amount;
     }
-    
+
     // ——— User Security Controls
-    
+
     /**
      * @notice Freeze vault to prevent ALL transactions (like freezing ATM card)
      * @dev Owner can freeze/unfreeze anytime. Useful when wallet might be compromised
@@ -462,24 +462,20 @@ contract UserVaultLegacy is ReentrancyGuard {
         emit VaultFrozen(_frozen);
         _logEv(msg.sender, _frozen ? "vault_frozen" : "vault_unfrozen", 0, "");
     }
-    
+
     /**
      * @notice Set threshold for abnormal transaction detection
      * @dev User can choose between fixed amount or percentage of vault balance
      * @param _usePercentage True to use percentage, false to use fixed amount
      * @param _fixedAmount Fixed amount threshold in wei (e.g., 50000 * 1e18 for 50k VFIDE)
      * @param _percentageBps Percentage threshold in basis points (e.g., 5000 = 50%, 2500 = 25%)
-     * 
+     *
      * Examples:
      * - setAbnormalTransactionThreshold(false, 10000 * 1e18, 0) = Fixed 10k VFIDE
      * - setAbnormalTransactionThreshold(true, 0, 2500) = 25% of vault balance
      * - setAbnormalTransactionThreshold(true, 0, 7500) = 75% of vault balance
      */
-    function setAbnormalTransactionThreshold(
-        bool _usePercentage,
-        uint256 _fixedAmount,
-        uint16 _percentageBps
-    ) external onlyOwner {
+    function setAbnormalTransactionThreshold(bool _usePercentage, uint256 _fixedAmount, uint16 _percentageBps) external onlyOwner {
         if (_usePercentage) {
             require(_percentageBps > 0 && _percentageBps <= 10000, "UV: invalid percentage (0-10000 bps)");
             abnormalTransactionPercentageBps = _percentageBps;
@@ -487,13 +483,13 @@ contract UserVaultLegacy is ReentrancyGuard {
             require(_fixedAmount >= largeTransferThreshold, "UV: must be >= large transfer threshold");
             abnormalTransactionThreshold = _fixedAmount;
         }
-        
+
         usePercentageThreshold = _usePercentage;
-        
+
         emit AbnormalThresholdSet(_usePercentage, _fixedAmount, _percentageBps);
         _logEv(msg.sender, "abnormal_tx_threshold_set", _usePercentage ? _percentageBps : _fixedAmount, "");
     }
-    
+
     /**
      * @notice Set balance snapshot mode for percentage-based thresholds
      * @dev When enabled, uses snapshot balance for calculations to prevent threshold manipulation
@@ -510,7 +506,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             _logEv(msg.sender, "balance_snapshot_disabled", 0, "");
         }
     }
-    
+
     /**
      * @notice Update balance snapshot (when in snapshot mode)
      * @dev Allows owner to update snapshot after significant deposits
@@ -520,11 +516,10 @@ contract UserVaultLegacy is ReentrancyGuard {
         balanceSnapshot = IERC20(vfideToken).balanceOf(address(this));
         _logEv(msg.sender, "balance_snapshot_updated", balanceSnapshot, "");
     }
-    
+
     /**
      * @notice Get current abnormal transaction threshold based on user preference
      * @return Current threshold amount in wei
-     * @return _uint256 _uint256
      */
     function getAbnormalTransactionThreshold() public view returns (uint256) {
         if (usePercentageThreshold) {
@@ -541,7 +536,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             return abnormalTransactionThreshold;
         }
     }
-    
+
     /**
      * @notice Approve pending abnormal transaction
      * @param txId Transaction ID to approve
@@ -551,12 +546,12 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (ptx.amount == 0) revert UV_NoPendingTx();
         if (ptx.executed) revert UV_TxAlreadyProcessed();
         require(block.timestamp <= ptx.requestTime + PENDING_TX_EXPIRY, "UV: pending tx expired");
-        
+
         ptx.approved = true;
         emit TransactionApproved(txId, msg.sender);
         _logEv(msg.sender, "pending_tx_approved", txId, "");
     }
-    
+
     /**
      * @notice Deny pending abnormal transaction
      * @param txId Transaction ID to deny
@@ -565,13 +560,13 @@ contract UserVaultLegacy is ReentrancyGuard {
         PendingTransaction storage ptx = pendingTransactions[txId];
         if (ptx.amount == 0) revert UV_NoPendingTx();
         if (ptx.executed) revert UV_TxAlreadyProcessed();
-        
+
         // Mark as executed to prevent retry
         ptx.executed = true;
         emit TransactionDenied(txId, msg.sender);
         _logEv(msg.sender, "pending_tx_denied", txId, "");
     }
-    
+
     /**
      * @notice Clean up expired pending transaction to free storage
      * @param txId Transaction ID to clean up
@@ -580,12 +575,12 @@ contract UserVaultLegacy is ReentrancyGuard {
         PendingTransaction storage ptx = pendingTransactions[txId];
         if (ptx.amount == 0) revert UV_NoPendingTx();
         require(block.timestamp > ptx.requestTime + PENDING_TX_EXPIRY, "UV: tx not expired");
-        
+
         // Clear storage
         delete pendingTransactions[txId];
         _logEv(msg.sender, "pending_tx_cleanup", txId, "");
     }
-    
+
     /**
      * @notice Execute approved pending transaction
      * @param txId Transaction ID to execute
@@ -596,14 +591,14 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (ptx.executed) revert UV_TxAlreadyProcessed();
         require(ptx.approved, "UV: tx not approved");
         require(block.timestamp <= ptx.requestTime + PENDING_TX_EXPIRY, "UV: pending tx expired");
-        
+
         ptx.executed = true;
         lastWithdrawalTime = uint64(block.timestamp);
-        
+
         // Execute the transfer
         require(IERC20(vfideToken).balanceOf(address(this)) >= ptx.amount, "UV: insufficient balance");
         IERC20(vfideToken).safeTransfer(ptx.toVault, ptx.amount);
-        
+
         emit TransactionExecuted(txId, ptx.toVault, ptx.amount);
         emit VaultTransfer(ptx.toVault, ptx.amount);
         _logEv(ptx.toVault, "pending_tx_executed", ptx.amount, "");
@@ -629,25 +624,26 @@ contract UserVaultLegacy is ReentrancyGuard {
             _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
             _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
             _recovery.guardianCountSnapshot = 0;
-            
+
             emit RecoveryRequested(proposedOwner);
             _logEv(proposedOwner, "recovery_requested_kin", 0, "7-day wait required");
             return;
         }
 
         // reset recovery with expiry time
-        _recovery.nonce++;        _recovery.proposedOwner = proposedOwner;
+        _recovery.nonce++;
+        _recovery.proposedOwner = proposedOwner;
         _recovery.approvals = 0;
         _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
         _recovery.expiryTime = uint64(block.timestamp + RECOVERY_EXPIRY);
         _recovery.guardianCountSnapshot = guardianCount; // Lock guardian count
-        
+
         // Auto-approve if sender is a guardian
         if (isGuardian[msg.sender]) {
             _recovery.voted[msg.sender][_recovery.nonce] = true;
             _recovery.approvals = 1;
         }
-        
+
         emit RecoveryRequested(proposedOwner);
         _logEv(proposedOwner, "recovery_requested", 0, "");
     }
@@ -670,11 +666,11 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
         require(block.timestamp >= _recovery.readyTime, "UV: recovery timelock");
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
-        
+
         // Use locked guardian count from request time to prevent threshold manipulation
         uint256 threshold = _recovery.guardianCountSnapshot == 0 ? 1 : (_recovery.guardianCountSnapshot / 2) + 1;
         require(_recovery.approvals >= threshold, "UV:insufficient-approvals");
-        
+
         address newOwner = _recovery.proposedOwner;
         owner = newOwner;
 
@@ -694,7 +690,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @notice cancelRecovery
     function cancelRecovery() external onlyOwner {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
-        
+
         // Clear the recovery request
         address cancelled = _recovery.proposedOwner;
         _recovery.proposedOwner = address(0);
@@ -702,13 +698,13 @@ contract UserVaultLegacy is ReentrancyGuard {
         _recovery.readyTime = 0;
         _recovery.expiryTime = 0;
         _recovery.guardianCountSnapshot = 0;
-        
+
         emit RecoveryCancelled(msg.sender);
         _logEv(cancelled, "recovery_cancelled", 0, "");
     }
 
     // ——— Inheritance (Next of Kin fund transfer with guardian approval)
-    
+
     /**
      * @notice Next of Kin requests inheritance transfer
      * @dev Requires guardian approval OR DAO approval to prevent gaming
@@ -717,22 +713,23 @@ contract UserVaultLegacy is ReentrancyGuard {
     function requestInheritance() external {
         if (msg.sender != nextOfKin) revert UV_NotNextOfKin();
         if (nextOfKin == address(0)) revert UV_Zero();
-        
+
         // Cannot request if already active or previously denied
         require(!_inheritance.active, "UV: inheritance already active");
         require(!_inheritance.ownerDenied, "UV: owner denied inheritance");
-        
-        _inheritance.nonce++;        _inheritance.active = true;
+
+        _inheritance.nonce++;
+        _inheritance.active = true;
         _inheritance.approvals = 0;
         _inheritance.readyTime = uint64(block.timestamp + INHERITANCE_MIN_DELAY);
         _inheritance.expiryTime = uint64(block.timestamp + INHERITANCE_EXPIRY);
         _inheritance.guardianCountSnapshot = guardianCount;
         _inheritance.ownerDenied = false;
-        
+
         emit InheritanceRequested(msg.sender);
         _logEv(msg.sender, "inheritance_requested", 0, "");
     }
-    
+
     /**
      * @notice Guardians approve inheritance request
      * @dev Requires 2/3 guardians to approve (same threshold as recovery)
@@ -743,35 +740,35 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (!_inheritance.active) revert UV_NoInheritance();
         if (_inheritance.ownerDenied) revert UV_InheritanceDenied();
         if (_inheritance.voted[msg.sender][_inheritance.nonce]) revert UV_AlreadyVoted();
-        
+
         // Check expiry
         require(block.timestamp <= _inheritance.expiryTime, "UV: inheritance expired");
-        
+
         _inheritance.voted[msg.sender][_inheritance.nonce] = true;
         ++_inheritance.approvals;
-        
+
         emit InheritanceApproved(msg.sender, _inheritance.approvals);
         _logEv(msg.sender, "inheritance_approved", _inheritance.approvals, "");
     }
-    
+
     /**
      * @notice Owner denies inheritance request (prevents gaming/premature claims)
      * @dev If owner is alive and accessible, they can deny the request
      */
     function denyInheritance() external onlyOwner {
         if (!_inheritance.active) revert UV_NoInheritance();
-        
+
         _inheritance.ownerDenied = true;
         _inheritance.active = false;
         _inheritance.approvals = 0;
         _inheritance.readyTime = 0;
         _inheritance.expiryTime = 0;
         _inheritance.guardianCountSnapshot = 0;
-        
+
         emit InheritanceDenied(msg.sender);
         _logEv(msg.sender, "inheritance_denied", 0, "");
     }
-    
+
     // Guardian cancellation tracking for inheritance
     // C-1 FIX: Added nonce to properly reset votes after successful cancellation
     /// @notice _inheritanceCancellationVoted
@@ -780,7 +777,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     uint8 private _inheritanceCancellationApprovals;
     /// @notice _inheritanceCancellationNonce
     uint256 private _inheritanceCancellationNonce;
-    
+
     /**
      * @notice Guardians vote to cancel fraudulent inheritance request
      * @dev Requires 2/3 guardians to cancel if owner is unreachable
@@ -792,14 +789,14 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (!_inheritance.active) revert UV_NoInheritance();
         // C-1 FIX: Check vote using current nonce
         if (_inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce]) revert UV_AlreadyVoted();
-        
+
         _inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce] = true;
         ++_inheritanceCancellationApprovals;
-        
+
         // Use guardian snapshot from request time to prevent threshold manipulation
         uint8 snapshotCount = _inheritance.guardianCountSnapshot;
         uint256 threshold = snapshotCount == 0 ? 1 : (snapshotCount / 2) + 1;
-        
+
         if (_inheritanceCancellationApprovals >= threshold) {
             // Cancel inheritance request
             _inheritance.active = false;
@@ -808,11 +805,11 @@ contract UserVaultLegacy is ReentrancyGuard {
             _inheritance.expiryTime = 0;
             _inheritance.guardianCountSnapshot = 0;
             _inheritance.ownerDenied = false;
-            
+
             // C-1 FIX: Increment nonce to invalidate all previous votes
             ++_inheritanceCancellationNonce;
             _inheritanceCancellationApprovals = 0;
-            
+
             // forge-lint: disable-next-line(unsafe-typecast)
             // Safe: threshold is bounded by guardian count (max 255) fits in uint8
             emit InheritanceCancelledByGuardians(msg.sender, uint8(threshold));
@@ -821,7 +818,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             _logEv(msg.sender, "inheritance_cancel_vote", _inheritanceCancellationApprovals, "");
         }
     }
-    
+
     /**
      * @notice Finalize inheritance - transfer funds to Next of Kin's vault
      * @dev Requires 2/3 guardian approvals AND inheritor must already have a vault
@@ -832,23 +829,23 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (!_inheritance.active) revert UV_NoInheritance();
         if (_inheritance.ownerDenied) revert UV_InheritanceDenied();
         require(block.timestamp >= _inheritance.readyTime, "UV: inheritance timelock");
-        
+
         // Check expiry
         require(block.timestamp <= _inheritance.expiryTime, "UV: inheritance expired");
-        
+
         // Require 2/3 guardian threshold (same as recovery)
         uint256 threshold = _inheritance.guardianCountSnapshot == 0 ? 1 : (_inheritance.guardianCountSnapshot / 2) + 1;
         require(_inheritance.approvals >= threshold, "UV: insufficient approvals");
-        
+
         address inheritor = nextOfKin;
         require(inheritor != address(0), "UV: no next of kin");
-        
+
         // IMPORTANT: Inheritor MUST already have a vault created
         // This ensures they're a responsible user who understands the system
         IVaultHub hubContract = IVaultHub(hub);
         address inheritorVault = hubContract.vaultOf(inheritor);
         require(inheritorVault != address(0), "UV: inheritor must have existing vault");
-        
+
         // Transfer all VFIDE to inheritor's vault
         uint256 balance = IERC20(vfideToken).balanceOf(address(this));
         require(balance > 0, "UV: no funds to inherit");
@@ -861,12 +858,12 @@ contract UserVaultLegacy is ReentrancyGuard {
         _inheritance.guardianCountSnapshot = 0;
         _inheritance.ownerDenied = false;
         _inheritanceCancellationApprovals = 0; // Clear guardian cancellation votes
-        
+
         IERC20(vfideToken).safeTransfer(inheritorVault, balance);
-        
+
         _logEv(inheritorVault, "inheritance_finalized", balance, "");
         emit InheritanceFinalized(inheritor, inheritorVault, balance);
-        
+
         // Note: Deceased's vault remains for record-keeping
         // Owner is NOT changed - vault effectively becomes locked historical record
     }
@@ -878,7 +875,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @param toVault toVault
     /// @param amount amount
     event TransferPendingApproval(uint256 indexed txId, address indexed toVault, uint256 amount);
-    
+
     // slither-disable-next-line reentrancy-benign
     /// @notice transferVFIDE
     /// @param toVault toVault
@@ -889,38 +886,32 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(amount > 0, "UV: zero amount");
         uint256 currentBalance = IERC20(vfideToken).balanceOf(address(this));
         require(currentBalance >= amount, "UV: insufficient balance");
-        
+
         // Get current abnormal transaction threshold (dynamic based on user preference)
         uint256 currentThreshold = getAbnormalTransactionThreshold();
-        
+
         // Abnormal transaction detection - requires explicit approval
         if (currentThreshold > 0 && amount >= currentThreshold) {
             // Create pending transaction for approval
             uint256 txId = pendingTxCount++;
-            pendingTransactions[txId] = PendingTransaction({
-                toVault: toVault,
-                amount: amount,
-                requestTime: uint64(block.timestamp),
-                approved: false,
-                executed: false
-            });
-            
+            pendingTransactions[txId] = PendingTransaction({toVault: toVault, amount: amount, requestTime: uint64(block.timestamp), approved: false, executed: false});
+
             emit AbnormalTransactionDetected(txId, toVault, amount);
             emit TransferPendingApproval(txId, toVault, amount); // Additional event for clarity
             _logEv(toVault, "abnormal_tx_detected", amount, "");
-            
+
             // CRITICAL: Revert with pending tx info so caller knows what happened
             // This is safer than returning false which callers might ignore
             revert(string(abi.encodePacked("UV:pending-approval:", _uint2str(txId))));
         }
-        
+
         // Withdrawal cooldown check
         if (withdrawalCooldown > 0 && lastWithdrawalTime > 0) {
             require(block.timestamp >= lastWithdrawalTime + withdrawalCooldown, "UV:cooldown-active");
         }
 
         lastWithdrawalTime = uint64(block.timestamp);
-        
+
         // Amount-based threshold: large transfers face additional scrutiny
         // (All transfers already checked by the notFrozen modifier above)
         _consumeDailyTransferLimit(amount);
@@ -928,9 +919,9 @@ contract UserVaultLegacy is ReentrancyGuard {
             // Large transfer - log for extra scrutiny
             _logEv(toVault, "large_transfer_attempt", amount, "");
         }
-        
+
         IERC20(vfideToken).safeTransfer(toVault, amount);
-        
+
         _logEv(toVault, "vault_transfer", amount, "");
         emit VaultTransfer(toVault, amount);
         return true;
@@ -943,13 +934,13 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @return _bool _bool
     function approveVFIDE(address spender, uint256 amount) external onlyOwner notFrozen noActiveClaims returns (bool) {
         if (spender == address(0)) revert UV_Zero();
-        
+
         // VI-05 FIX: Apply same protections as transferVFIDE
         if (amount > 0) {
             // Check abnormal transaction threshold
             uint256 currentThreshold = getAbnormalTransactionThreshold();
             require(!(currentThreshold > 0 && amount >= currentThreshold), "UV: approval exceeds abnormal threshold");
-            
+
             // Withdrawal cooldown check
             if (withdrawalCooldown > 0 && lastWithdrawalTime > 0) {
                 require(block.timestamp >= lastWithdrawalTime + withdrawalCooldown, "UV:cooldown-active");
@@ -957,7 +948,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             lastWithdrawalTime = uint64(block.timestamp);
             _consumeDailyTransferLimit(amount);
         }
-        
+
         bool ok = IERC20(vfideToken).approve(spender, amount);
         require(ok, "UV:approve-failed");
         emit VaultApprove(spender, amount);
@@ -974,13 +965,13 @@ contract UserVaultLegacy is ReentrancyGuard {
     function execute(address target, uint256 value, bytes calldata data) external onlyOwner notFrozen noActiveClaims nonReentrant returns (bytes memory result) {
         if (target == address(0)) revert UV_Zero();
         require(target != vfideToken, "UV:use-transferVFIDE");
-        
+
         require(value <= maxExecuteValue, "UV:value-exceeds-max");
-        
+
         if (executeCooldown > 0 && lastExecuteTime > 0) {
             require(block.timestamp >= lastExecuteTime + executeCooldown, "UV:execute-cooldown-active");
         }
-        
+
         // Security check: Prevent calling the Vault itself (reentrancy/self-destruct protection)
         require(target != address(this), "UV:self-call");
 
@@ -992,11 +983,11 @@ contract UserVaultLegacy is ReentrancyGuard {
 
         // Update execute timestamp before external interaction to minimize reentrancy surface.
         lastExecuteTime = uint64(block.timestamp);
-        
+
         // Execute call
         bool success;
         (success, result) = target.call{value: value}(data);
-        
+
         if (!success) {
             // Bubble up error
             assembly {
@@ -1005,7 +996,7 @@ contract UserVaultLegacy is ReentrancyGuard {
                 revert(ptr, returndatasize())
             }
         }
-        
+
         _logEv(target, "vault_execute", value, "");
     }
 
@@ -1023,11 +1014,11 @@ contract UserVaultLegacy is ReentrancyGuard {
             totalValue += values[i];
         }
         _consumeDailyTransferLimit(totalValue);
-        
+
         if (executeCooldown > 0 && lastExecuteTime > 0) {
             require(block.timestamp >= lastExecuteTime + executeCooldown, "UV:execute-cooldown-active");
         }
-        
+
         // Update execute timestamp before external interactions to minimize reentrancy surface.
         lastExecuteTime = uint64(block.timestamp);
 
@@ -1051,7 +1042,6 @@ contract UserVaultLegacy is ReentrancyGuard {
             results[i] = res;
             _logEv(targets[i], "vault_execute_batch", values[i], "");
         }
-        
     }
 
     /// @notice Allow or disallow a target address for execute() calls
@@ -1082,7 +1072,9 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @notice _logSys
     /// @param action action
     function _logSys(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     /// @notice _logEv
     /// @param who who
@@ -1090,9 +1082,11 @@ contract UserVaultLegacy is ReentrancyGuard {
     /// @param amount amount
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
-    
+
     // Helper to convert uint to string for error messages
     /// @notice _uint2str
     /// @param _i _i
@@ -1101,17 +1095,24 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (_i == 0) return "0";
         uint256 j = _i;
         uint256 len;
-        while (j != 0) { len++; j /= 10; }
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
         bytes memory bstr = new bytes(len);
         uint256 k = len;
-        while (_i != 0) { k = k - 1; bstr[k] = bytes1(uint8(48 + _i % 10)); _i /= 10; }
+        while (_i != 0) {
+            k = k - 1;
+            bstr[k] = bytes1(uint8(48 + (_i % 10)));
+            _i /= 10;
+        }
         return string(bstr);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                    CRITICAL USABILITY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Rescue stuck ETH accidentally sent to vault
      * @dev Owner can withdraw ETH that was accidentally sent to the vault
@@ -1122,13 +1123,13 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(recipient != address(0), "UV: zero recipient");
         uint256 balance = address(this).balance;
         require(balance > 0, "UV: no ETH to rescue");
-        
+
         (bool success, ) = recipient.call{value: balance}("");
         require(success, "UV: ETH transfer failed");
-        
+
         _logEv(recipient, "eth_rescued", balance, "");
     }
-    
+
     /**
      * @notice Rescue any ERC20 token (except VFIDE which uses transferVFIDE)
      * @dev For tokens accidentally sent to vault
@@ -1139,16 +1140,16 @@ contract UserVaultLegacy is ReentrancyGuard {
     function rescueToken(address token, address recipient, uint256 amount) external onlyOwner notFrozen {
         require(token != address(0) && recipient != address(0), "UV: zero address");
         require(token != vfideToken, "UV: use transferVFIDE for VFIDE");
-        
+
         IERC20(token).safeTransfer(recipient, amount);
-        
+
         _logEv(recipient, "token_rescued", amount, "");
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Get vault summary for frontend
      * @return vaultOwner vaultOwner
@@ -1161,17 +1162,11 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @return hasActiveRecovery hasActiveRecovery
      * @return hasActiveInheritance hasActiveInheritance
      */
-    function getVaultSummary() external view returns (
-        address vaultOwner,
-        uint256 vfideBalance,
-        uint256 ethBalance,
-        bool isFrozen,
-        bool isLocked,
-        uint8 numGuardians,
-        address kinAddress,
-        bool hasActiveRecovery,
-        bool hasActiveInheritance
-    ) {
+    function getVaultSummary()
+        external
+        view
+        returns (address vaultOwner, uint256 vfideBalance, uint256 ethBalance, bool isFrozen, bool isLocked, uint8 numGuardians, address kinAddress, bool hasActiveRecovery, bool hasActiveInheritance)
+    {
         vaultOwner = owner;
         vfideBalance = IERC20(vfideToken).balanceOf(address(this));
         ethBalance = address(this).balance;
@@ -1182,7 +1177,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         hasActiveRecovery = _recovery.proposedOwner != address(0);
         hasActiveInheritance = _inheritance.active;
     }
-    
+
     /**
      * @notice Get recovery status
      * @return active active
@@ -1191,20 +1186,14 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @return expiryTime expiryTime
      * @return guardianThreshold guardianThreshold
      */
-    function getRecoveryStatus() external view returns (
-        bool active,
-        address proposedOwner,
-        uint8 approvals,
-        uint64 expiryTime,
-        uint8 guardianThreshold
-    ) {
+    function getRecoveryStatus() external view returns (bool active, address proposedOwner, uint8 approvals, uint64 expiryTime, uint8 guardianThreshold) {
         active = _recovery.proposedOwner != address(0);
         proposedOwner = _recovery.proposedOwner;
         approvals = _recovery.approvals;
         expiryTime = _recovery.expiryTime;
         guardianThreshold = _recovery.guardianCountSnapshot == 0 ? 1 : (_recovery.guardianCountSnapshot / 2) + 1;
     }
-    
+
     /**
      * @notice Get inheritance status
      * @return active active
@@ -1214,14 +1203,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @return ownerDenied ownerDenied
      * @return guardianThreshold guardianThreshold
      */
-    function getInheritanceStatus() external view returns (
-        bool active,
-        uint8 approvals,
-        uint64 readyTime,
-        uint64 expiryTime,
-        bool ownerDenied,
-        uint8 guardianThreshold
-    ) {
+    function getInheritanceStatus() external view returns (bool active, uint8 approvals, uint64 readyTime, uint64 expiryTime, bool ownerDenied, uint8 guardianThreshold) {
         active = _inheritance.active;
         approvals = _inheritance.approvals;
         readyTime = _inheritance.readyTime;
@@ -1229,7 +1211,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         ownerDenied = _inheritance.ownerDenied;
         guardianThreshold = _inheritance.guardianCountSnapshot == 0 ? 1 : uint8((_inheritance.guardianCountSnapshot / 2) + 1);
     }
-    
+
     /**
      * @notice Get all pending transactions (paginated to prevent gas exhaustion)
      * @param offset Starting index in pendingTransactions array
@@ -1242,18 +1224,17 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @return executed executed
      * @return totalPending totalPending
      */
-    function getPendingTransactions(uint256 offset, uint256 limit) external view returns (
-        uint256[] memory txIds,
-        address[] memory toVaults,
-        uint256[] memory amounts,
-        uint64[] memory requestTimes,
-        bool[] memory approved,
-        bool[] memory executed,
-        uint256 totalPending
-    ) {
+    function getPendingTransactions(
+        uint256 offset,
+        uint256 limit
+    )
+        external
+        view
+        returns (uint256[] memory txIds, address[] memory toVaults, uint256[] memory amounts, uint64[] memory requestTimes, bool[] memory approved, bool[] memory executed, uint256 totalPending)
+    {
         if (limit == 0) limit = 50; // Reasonable default
         if (limit > 100) limit = 100; // Hard cap to prevent gas issues
-        
+
         // First pass: count total active pending transactions
         uint256 totalCount = 0;
         for (uint256 i = 0; i < pendingTxCount; ++i) {
@@ -1262,18 +1243,18 @@ contract UserVaultLegacy is ReentrancyGuard {
             }
         }
         totalPending = totalCount;
-        
+
         // Calculate actual page size
         uint256 pageSize = totalCount > offset ? totalCount - offset : 0;
         if (pageSize > limit) pageSize = limit;
-        
+
         txIds = new uint256[](pageSize);
         toVaults = new address[](pageSize);
         amounts = new uint256[](pageSize);
         requestTimes = new uint64[](pageSize);
         approved = new bool[](pageSize);
         executed = new bool[](pageSize);
-        
+
         // Second pass: collect results starting from offset
         uint256 found = 0;
         uint256 idx = 0;
@@ -1293,23 +1274,20 @@ contract UserVaultLegacy is ReentrancyGuard {
             }
         }
     }
-    
+
     /**
      * @notice Check cooldown status
      * @return withdrawalCooldownRemaining withdrawalCooldownRemaining
      * @return executeCooldownRemaining executeCooldownRemaining
      */
-    function getCooldownStatus() external view returns (
-        uint64 withdrawalCooldownRemaining,
-        uint64 executeCooldownRemaining
-    ) {
+    function getCooldownStatus() external view returns (uint64 withdrawalCooldownRemaining, uint64 executeCooldownRemaining) {
         if (withdrawalCooldown > 0 && lastWithdrawalTime > 0) {
             uint64 unlockTime = lastWithdrawalTime + withdrawalCooldown;
             if (block.timestamp < unlockTime) {
                 withdrawalCooldownRemaining = unlockTime - uint64(block.timestamp);
             }
         }
-        
+
         if (executeCooldown > 0 && lastExecuteTime > 0) {
             uint64 unlockTime = lastExecuteTime + executeCooldown;
             if (block.timestamp < unlockTime) {
@@ -1317,22 +1295,18 @@ contract UserVaultLegacy is ReentrancyGuard {
             }
         }
     }
-    
+
     /**
      * @notice Get list of all guardians
      * @return addresses addresses
      * @return addedTimes addedTimes
      * @return mature mature
      */
-    function getGuardians() external view returns (
-        address[] memory addresses,
-        uint64[] memory addedTimes,
-        bool[] memory mature
-    ) {
+    function getGuardians() external view returns (address[] memory addresses, uint64[] memory addedTimes, bool[] memory mature) {
         addresses = new address[](guardianList.length);
         addedTimes = new uint64[](guardianList.length);
         mature = new bool[](guardianList.length);
-        
+
         for (uint256 i = 0; i < guardianList.length; ++i) {
             address g = guardianList[i];
             addresses[i] = g;
@@ -1340,7 +1314,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             mature[i] = isGuardianMature(g);
         }
     }
-    
+
     /**
      * @notice Get pending transaction with expiry info
      * @param txId txId
@@ -1352,15 +1326,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @return approved approved
      * @return executed executed
      */
-    function getTransactionWithExpiry(uint256 txId) external view returns (
-        address toVault,
-        uint256 amount,
-        uint64 requestTime,
-        uint64 expiresAt,
-        bool isExpired,
-        bool approved,
-        bool executed
-    ) {
+    function getTransactionWithExpiry(uint256 txId) external view returns (address toVault, uint256 amount, uint64 requestTime, uint64 expiresAt, bool isExpired, bool approved, bool executed) {
         PendingTransaction storage ptx = pendingTransactions[txId];
         toVault = ptx.toVault;
         amount = ptx.amount;
@@ -1370,7 +1336,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         approved = ptx.approved;
         executed = ptx.executed;
     }
-    
+
     /**
      * @notice Allow vault to receive ETH
      */
@@ -1387,12 +1353,7 @@ interface IUserVaultBytecodeProvider {
     /// @param owner_ owner_
     /// @param ledger ledger
     /// @return _bytes _bytes
-    function creationCode(
-        address hub,
-        address vfide,
-        address owner_,
-        address ledger
-    ) external pure returns (bytes memory);
+    function creationCode(address hub, address vfide, address owner_, address ledger) external pure returns (bytes memory);
 }
 
 /// @notice UserVaultBytecodeProvider
@@ -1405,16 +1366,8 @@ contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
     /// @param owner_ owner_
     /// @param ledger ledger
     /// @return _bytes _bytes
-    function creationCode(
-        address hub,
-        address vfide,
-        address owner_,
-        address ledger
-    ) external pure returns (bytes memory) {
-        return abi.encodePacked(
-            type(UserVaultLegacy).creationCode,
-            abi.encode(hub, vfide, owner_, ledger)
-        );
+    function creationCode(address hub, address vfide, address owner_, address ledger) external pure returns (bytes memory) {
+        return abi.encodePacked(type(UserVaultLegacy).creationCode, abi.encode(hub, vfide, owner_, ledger));
     }
 }
 
@@ -1427,9 +1380,9 @@ contract VaultInfrastructure is Ownable {
     /// @notice vfideToken
     address public vfideToken;
     /// @notice ledger
-    IProofLedger public ledger;       // optional ledger
+    IProofLedger public ledger; // optional ledger
     /// @notice dao
-    address public dao;                  // DAO can force recover
+    address public dao; // DAO can force recover
     /// @notice vaultBytecodeProvider
     address public vaultBytecodeProvider;
 
@@ -1553,7 +1506,7 @@ contract VaultInfrastructure is Ownable {
         emit VaultBytecodeProviderSet(provider);
         _log("hub_bytecode_provider_set");
     }
-    
+
     /// @notice setRecoveryApprover
     /// @param approver approver
     /// @param status status
@@ -1572,12 +1525,7 @@ contract VaultInfrastructure is Ownable {
         bytes32 salt = _salt(owner_);
         bytes memory bytecode = _getCreationCode(owner_);
         bytes32 codeHash = keccak256(bytecode);
-        predicted = address(uint160(uint256(keccak256(abi.encodePacked(
-            bytes1(0xff),
-            address(this),
-            salt,
-            codeHash
-        )))));
+        predicted = address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, codeHash)))));
     }
 
     // ——— Auto-create (anyone can sponsor)
@@ -1593,16 +1541,18 @@ contract VaultInfrastructure is Ownable {
         // Deploy via CREATE2 for deterministic address
         bytes32 salt = _salt(owner_);
         bytes memory bytecode = _getCreationCode(owner_);
-        assembly { vault := create2(0, add(bytecode, 0x20), mload(bytecode), salt) }
+        assembly {
+            vault := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+        }
         require(vault != address(0), "create2 failed");
 
         vaultOf[owner_] = vault;
         ownerOfVault[vault] = owner_;
-        
+
         // Track vault creation
         ++totalVaults;
         vaultCreatedAt[vault] = block.timestamp;
-        
+
         emit VaultCreated(owner_, vault);
         _logEv(vault, "vault_created", 0, "");
     }
@@ -1612,7 +1562,7 @@ contract VaultInfrastructure is Ownable {
     /// @param a a
     /// @return _bool _bool
     function isVault(address a) external view returns (bool) {
-        return ownerOfVault[a] != address(0) && vaultOf[ ownerOfVault[a] ] == a;
+        return ownerOfVault[a] != address(0) && vaultOf[ownerOfVault[a]] == a;
     }
 
     // ── Force Recovery REMOVED — non-custodial ──────────────
@@ -1621,27 +1571,21 @@ contract VaultInfrastructure is Ownable {
     // ──────────────────────────────────────────────────────────
 
     /// @notice approveForceRecovery
-    /// @param vault vault
-    /// @param newOwner newOwner
     function approveForceRecovery(address /* vault */, address /* newOwner */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice initiateForceRecovery
-    /// @param vault vault
-    /// @param newOwner newOwner
     function initiateForceRecovery(address /* vault */, address /* newOwner */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice finalizeForceRecovery
-    /// @param vault vault
     function finalizeForceRecovery(address /* vault */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
     /// @notice cancelForceRecovery
-    /// @param vault vault
     function cancelForceRecovery(address /* vault */) external {
         revert("VI: force recovery disabled - non-custodial");
     }
@@ -1658,19 +1602,18 @@ contract VaultInfrastructure is Ownable {
     function _getCreationCode(address owner_) internal view returns (bytes memory) {
         address provider = vaultBytecodeProvider;
         if (provider == address(0)) revert VI_NotConfigured();
-        return IUserVaultBytecodeProvider(provider).creationCode(
-            address(this),
-            vfideToken,
-            owner_,
-            address(ledger)
-        );
+        return IUserVaultBytecodeProvider(provider).creationCode(address(this), vfideToken, owner_, address(ledger));
     }
 
     // slither-disable-next-line reentrancy-events
     /// @notice _log
     /// @param action action
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
+                emit LedgerLogFailed(address(this), action);
+            }
+        }
     }
     // slither-disable-next-line reentrancy-events
     /// @notice _logEv
@@ -1679,17 +1622,20 @@ contract VaultInfrastructure is Ownable {
     /// @param amount amount
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {
+                emit LedgerLogFailed(who, action);
+            }
+        }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     // Track total vaults created
     /// @notice totalVaults
     uint256 public totalVaults;
     /// @notice vaultCreatedAt
     mapping(address => uint256) public vaultCreatedAt;
-    
 }

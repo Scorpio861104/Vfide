@@ -7,11 +7,9 @@ import {
   ExternalLink,
   Flame,
   LifeBuoy,
-  Loader2,
   Shield,
   TrendingDown,
   TrendingUp,
-  Zap,
 } from 'lucide-react';
 import { formatEther } from 'viem';
 import { useEnterpriseTreasury } from '@/hooks/useEnterpriseTreasury';

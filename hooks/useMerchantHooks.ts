@@ -11,7 +11,6 @@ import { parseContractError, logError } from '@/lib/errorHandling';
 import { safeBigIntToNumber } from '@/lib/validation';
 import { useRequireAppLock } from './useRequireAppLock';
 import { useTransactionTrail } from '@/components/payments/TransactionTrailProvider';
-import { startTransactionTrail, updateTransactionTrail } from '@/lib/animation/transactionTrail';
 
 // ============================================
 // MERCHANT HOOKS - No processor fees (burn + gas apply)

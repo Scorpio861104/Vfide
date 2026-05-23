@@ -189,20 +189,20 @@ $$;
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Indexes
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_achievement_milestones_rarity
+CREATE INDEX IF NOT EXISTS idx_achievement_milestones_rarity
   ON achievement_milestones (rarity, requirement_value);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_achievement_progress_user
+CREATE INDEX IF NOT EXISTS idx_user_achievement_progress_user
   ON user_achievement_progress (user_id, unlocked, claimed);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_achievement_notifications_user_unshown
+CREATE INDEX IF NOT EXISTS idx_achievement_notifications_user_unshown
   ON achievement_notifications (user_id, shown, created_at)
   WHERE shown = false;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_streaks_user
+CREATE INDEX IF NOT EXISTS idx_user_streaks_user
   ON user_streaks (user_id, streak_type);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_daily_rewards_user_date
+CREATE INDEX IF NOT EXISTS idx_daily_rewards_user_date
   ON daily_rewards (user_id, reward_date);
 
 COMMIT;

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Home, ArrowLeft, Search, LayoutDashboard, Vault, Store, BookOpen } from 'lucide-react';
+import { Home, ArrowLeft, LayoutDashboard, Vault, Store, BookOpen } from 'lucide-react';
 
 const QUICK_LINKS = [
   { href: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },

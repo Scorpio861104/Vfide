@@ -16,7 +16,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, Shield, Check, TrendingUp, ShoppingCart, Users, Award, Flame, ArrowRight, MessageCircle, ThumbsUp } from 'lucide-react';
+import { Star, Shield, Check, TrendingUp, Award, Flame, ThumbsUp } from 'lucide-react';
 import { VaultIdentityChip } from '@/components/identity/VaultIdentityChip';
 
 // ═══════════════════════════════════════════════════════════════════════════

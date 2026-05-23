@@ -1,12 +1,12 @@
 'use client';
 import { useState } from 'react';
-import { Tag, Plus, Percent, DollarSign, Calendar, X } from 'lucide-react';
+import { Tag, Plus, X } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export interface Discount { id: string; code: string; type: 'percent'|'fixed'; value: number; minOrder: number; maxUses: number; usedCount: number; expiresAt: number; active: boolean; }
 
 export function DiscountManager({ discounts = [], onCreate, onToggle, onDelete }: { discounts: Discount[]; onCreate?: (d: Omit<Discount,'id'|'usedCount'>) => void; onToggle?: (id: string) => void; onDelete?: (id: string) => void; }) {
-  const { formatCurrency, formatDate } = useLocale();
+  const { formatCurrency, formatDate: _formatDate } = useLocale();
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ code: '', type: 'percent' as const, value: 10, minOrder: 0, maxUses: 100, days: 30 });
   const handleCreate = () => { onCreate?.({ code: form.code.toUpperCase(), type: form.type, value: form.value, minOrder: form.minOrder, maxUses: form.maxUses, expiresAt: Date.now()+form.days*86400000, active: true }); setShowCreate(false); setForm({ code: '', type: 'percent', value: 10, minOrder: 0, maxUses: 100, days: 30 }); };

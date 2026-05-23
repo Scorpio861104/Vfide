@@ -21,7 +21,7 @@ pragma solidity 0.8.30;
  *    the global breaker toggle.
  */
 
-import { LedgerLogFailed, IProofLedger, IEmergencyBreaker, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
+import {LedgerLogFailed, IProofLedger, IEmergencyBreaker, Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
 
 /// @notice EC_NotDAO
 error EC_NotDAO();
@@ -153,7 +153,7 @@ contract EmergencyControl is ReentrancyGuard {
     uint8 public approvalsHalt;
     /// @notice approvalsUnhalt
     uint8 public approvalsUnhalt;
-    
+
     /// @notice voteExpiryPeriod
     uint64 public constant voteExpiryPeriod = 7 days;
     /// @notice haltVotingStartTime
@@ -163,13 +163,13 @@ contract EmergencyControl is ReentrancyGuard {
 
     /// @notice MODULE_CHANGE_DELAY
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
-        // TL-365 FIX: 24h timelock for threshold changes (#365)
-        /// @notice THRESHOLD_CHANGE_DELAY
-        uint64 public constant THRESHOLD_CHANGE_DELAY = 24 hours;
-        /// @notice pendingThreshold
-        uint8 public pendingThreshold;
-        /// @notice pendingThresholdAt
-        uint64 public pendingThresholdAt;
+    // TL-365 FIX: 24h timelock for threshold changes (#365)
+    /// @notice THRESHOLD_CHANGE_DELAY
+    uint64 public constant THRESHOLD_CHANGE_DELAY = 24 hours;
+    /// @notice pendingThreshold
+    uint8 public pendingThreshold;
+    /// @notice pendingThresholdAt
+    uint64 public pendingThresholdAt;
     struct PendingModules {
         address dao;
         address breaker;
@@ -183,7 +183,7 @@ contract EmergencyControl is ReentrancyGuard {
     /// @notice 48h timelock state for foundation rotation (M-5).
     address public pendingFoundation;
     /// @notice pendingFoundationAt
-    uint64  public pendingFoundationAt;
+    uint64 public pendingFoundationAt;
 
     /// @notice 24-hour queue for foundation-initiated committee member changes.
     /// @dev M-5 FIX: DAO-initiated changes now also use a short 1-hour queue so monitoring
@@ -237,7 +237,7 @@ contract EmergencyControl is ReentrancyGuard {
     function setModules(address _dao, address _breaker, address _ledger) external onlyDAO nonReentrant {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
         require(pendingModulesAt == 0, "EC: pending modules");
-        pendingModules = PendingModules({ dao: _dao, breaker: _breaker, ledger: _ledger });
+        pendingModules = PendingModules({dao: _dao, breaker: _breaker, ledger: _ledger});
         pendingModulesAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         emit ModulesChangeQueued(_dao, _breaker, _ledger, pendingModulesAt);
         _log("ec_modules_queued");
@@ -285,7 +285,7 @@ contract EmergencyControl is ReentrancyGuard {
     function resetCommittee(uint8 _threshold, address[] calldata members) external onlyDAO nonReentrant {
         if (members.length > MAX_COMMITTEE_MEMBERS) revert EC_CommitteeCapExceeded();
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
-        
+
         // Clear old members
         uint256 _curLen = currentMembers.length;
         for (uint256 i = 0; i < _curLen; ++i) {
@@ -548,7 +548,7 @@ contract EmergencyControl is ReentrancyGuard {
             } else if (haltVotingStartTime < 1) {
                 haltVotingStartTime = uint64(block.timestamp);
             }
-            
+
             if (lastVotedHaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
             lastVotedHaltEpoch[msg.sender] = epoch;
             ++approvalsHalt;
@@ -570,7 +570,7 @@ contract EmergencyControl is ReentrancyGuard {
             } else if (unhaltVotingStartTime < 1) {
                 unhaltVotingStartTime = uint64(block.timestamp);
             }
-            
+
             if (lastVotedUnhaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
             lastVotedUnhaltEpoch[msg.sender] = epoch;
             ++approvalsUnhalt;
@@ -592,11 +592,15 @@ contract EmergencyControl is ReentrancyGuard {
     /// @notice hasVotedHalt
     /// @param m m
     /// @return _bool _bool
-    function hasVotedHalt(address m) external view returns (bool) { return lastVotedHaltEpoch[m] == epoch; }
+    function hasVotedHalt(address m) external view returns (bool) {
+        return lastVotedHaltEpoch[m] == epoch;
+    }
     /// @notice hasVotedUnhalt
     /// @param m m
     /// @return _bool _bool
-    function hasVotedUnhalt(address m) external view returns (bool) { return lastVotedUnhaltEpoch[m] == epoch; }
+    function hasVotedUnhalt(address m) external view returns (bool) {
+        return lastVotedUnhaltEpoch[m] == epoch;
+    }
 
     /// @notice timeSinceLastToggle
     /// @return _uint64 _uint64
@@ -627,7 +631,11 @@ contract EmergencyControl is ReentrancyGuard {
     /// @notice _log
     /// @param action action
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
+                emit LedgerLogFailed(address(this), action);
+            }
+        }
     }
     /// @notice _logEv
     /// @param who who
@@ -635,7 +643,11 @@ contract EmergencyControl is ReentrancyGuard {
     /// @param amount amount
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {
+                emit LedgerLogFailed(who, action);
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -649,12 +661,12 @@ contract EmergencyControl is ReentrancyGuard {
     // This is intentionally heavyweight to prevent abuse.
 
     struct RecoveryProposal {
-        address target;      // The contract whose ownership to transfer
-        address newOwner;    // Proposed new owner
-        uint8   approvals;
-        uint64  unlockTime;
-        bool    executed;
-        uint256 epoch;       // Tied to committee epoch
+        address target; // The contract whose ownership to transfer
+        address newOwner; // Proposed new owner
+        uint8 approvals;
+        uint64 unlockTime;
+        bool executed;
+        uint256 epoch; // Tied to committee epoch
     }
 
     /// @notice recoveryProposals
@@ -714,14 +726,7 @@ contract EmergencyControl is ReentrancyGuard {
         id = keccak256(abi.encode(target, newOwner, epoch));
         require(recoveryProposals[id].target == address(0), "EC: already proposed");
 
-        recoveryProposals[id] = RecoveryProposal({
-            target: target,
-            newOwner: newOwner,
-            approvals: 1,
-            unlockTime: 0,
-            executed: false,
-            epoch: epoch
-        });
+        recoveryProposals[id] = RecoveryProposal({target: target, newOwner: newOwner, approvals: 1, unlockTime: 0, executed: false, epoch: epoch});
         recoveryVoted[id][msg.sender] = true;
 
         emit RecoveryProposed(id, target, newOwner);

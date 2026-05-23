@@ -1,36 +1,36 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard, ISeer } from "../SharedInterfaces.sol";
-import { SeerAutonomousLib } from "./SeerAutonomousLib.sol";
+import {ReentrancyGuard, ISeer} from "../SharedInterfaces.sol";
+import {SeerAutonomousLib} from "./SeerAutonomousLib.sol";
 
 /**
  * @title SeerAutonomous
  * @notice Fully automatic, self-triggering enforcement system
- * 
+ *
  * This contract makes Seer a FULLY AUTONOMOUS guardian:
- * 
+ *
  * 1. AUTOMATIC TRIGGERS - No manual calls needed:
  *    - Every transfer triggers enforcement check
  *    - Every vault action triggers enforcement check
  *    - Every governance action triggers enforcement check
  *    - Score changes cascade to restrictions immediately
- * 
+ *
  * 2. DYNAMIC THRESHOLDS - Self-adjusting based on network:
  *    - Thresholds adjust based on network health
  *    - Penalty severity scales with violation frequency
  *    - Recovery rates adjust based on user behavior
- * 
+ *
  * 3. PATTERN DETECTION - Automated anomaly detection:
  *    - Detects unusual transfer patterns
  *    - Identifies governance manipulation attempts
  *    - Flags wash trading/self-endorsement
- * 
+ *
  * 4. CASCADING ENFORCEMENT:
  *    - Restriction in one area affects all areas
  *    - Reputation flows across system components
  *    - Cross-module synchronization
- * 
+ *
  * All automatic actions can still be overridden by DAO vote.
  */
 
@@ -65,7 +65,6 @@ interface IProofLedger_Auto {
 interface IEcosystemScheduler {
     /// @dev Chainlink Automation-compatible: returns whether tasks are due and an ABI-encoded bitmask.
     /// @notice checkUpkeep
-    /// @param _bytes _bytes
     /// @return upkeepNeeded upkeepNeeded
     /// @return performData performData
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
@@ -129,11 +128,11 @@ contract SeerAutonomous is ReentrancyGuard {
     uint16 private constant RC_PROGRESSIVE_UNFREEZE = 140;
     /// @notice DAO_OVERRIDE_DURATION
     uint64 private constant DAO_OVERRIDE_DURATION = 30 days;
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice ModulesSet
     /// @param seer seer
     /// @param dao dao
@@ -155,7 +154,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param subject subject
     /// @param risk risk
     event RiskOracleOutOfRange(address indexed subject, uint8 risk);
-    
+
     // Automatic enforcement
     /// @notice AutoEnforced
     /// @param subject subject
@@ -201,12 +200,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param action action
     /// @param oldLimit oldLimit
     /// @param newLimit newLimit
-    event DAORateLimitUpdated(
-        RestrictionLevel level,
-        ActionType action,
-        uint16 oldLimit,
-        uint16 newLimit
-    );
+    event DAORateLimitUpdated(RestrictionLevel level, ActionType action, uint16 oldLimit, uint16 newLimit);
     /// @notice DAORateLimitChangeQueued
     /// @param level level
     /// @param action action
@@ -285,11 +279,11 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param location location
     /// @param reason reason
     event ExternalCallFailed(string indexed location, bytes reason);
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              ENUMS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     enum ActionType {
         Transfer,
         VaultDeposit,
@@ -300,7 +294,7 @@ contract SeerAutonomous is ReentrancyGuard {
         Stake,
         Trade
     }
-    
+
     enum EnforcementResult {
         Allowed,
         Warned,
@@ -308,37 +302,37 @@ contract SeerAutonomous is ReentrancyGuard {
         Blocked,
         Penalized
     }
-    
+
     enum PatternType {
         None,
-        RapidTransfers,      // Many transfers in short time
-        CircularTransfers,   // A→B→C→A patterns
-        SelfEndorsement,     // Endorsing connected addresses
-        VoteManipulation,    // Suspicious voting patterns
-        WashTrading,         // Fake volume generation
-        SybilActivity        // Multiple wallets, one actor
+        RapidTransfers, // Many transfers in short time
+        CircularTransfers, // A→B→C→A patterns
+        SelfEndorsement, // Endorsing connected addresses
+        VoteManipulation, // Suspicious voting patterns
+        WashTrading, // Fake volume generation
+        SybilActivity // Multiple wallets, one actor
     }
-    
+
     enum RestrictionLevel {
-        None,           // 0: No restrictions
-        Monitored,      // 1: Extra logging, no blocks
-        Limited,        // 2: Rate limits applied
-        Restricted,     // 3: Governance + large transfer blocked
-        Suspended,      // 4: Most actions blocked
-        Frozen          // 5: All actions blocked (DAO review required)
+        None, // 0: No restrictions
+        Monitored, // 1: Extra logging, no blocks
+        Limited, // 2: Rate limits applied
+        Restricted, // 3: Governance + large transfer blocked
+        Suspended, // 4: Most actions blocked
+        Frozen // 5: All actions blocked (DAO review required)
     }
-    
+
     enum ThresholdType {
         AutoRestrict,
         AutoLift,
         RateLimitTrigger,
         PatternSensitivity
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              STATE
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice dao
     address public dao;
     /// @notice seer
@@ -349,7 +343,7 @@ contract SeerAutonomous is ReentrancyGuard {
     IRiskOracle_Auto public riskOracle;
     /// @notice EcosystemVault to monitor and trigger scheduled tasks on.
     address public ecosystemVault;
-    
+
     // Operator permissions (trusted contracts that can trigger checks)
     /// @notice operators
     mapping(address => bool) public operators;
@@ -376,11 +370,11 @@ contract SeerAutonomous is ReentrancyGuard {
     }
     /// @notice pendingOperatorChange
     PendingOperatorChange public pendingOperatorChange;
-    
+
     // ─────────────────────────────────────────────────────────────────
     //                    USER RESTRICTION STATE
     // ─────────────────────────────────────────────────────────────────
-    
+
     /// @notice restrictionLevel
     mapping(address => RestrictionLevel) public restrictionLevel;
     /// @notice restrictionExpiry
@@ -402,11 +396,11 @@ contract SeerAutonomous is ReentrancyGuard {
     mapping(address => PendingChallenge) public pendingChallenge;
     /// @notice challengeRequested
     mapping(address => bool) public challengeRequested;
-    
+
     // ─────────────────────────────────────────────────────────────────
     //                    ACTIVITY TRACKING (for patterns)
     // ─────────────────────────────────────────────────────────────────
-    
+
     struct ActivityWindow {
         uint64 windowStart;
         uint16 transferCount;
@@ -415,42 +409,42 @@ contract SeerAutonomous is ReentrancyGuard {
         uint256 transferVolume;
         address[] recentCounterparties;
     }
-    
+
     /// @notice activityWindows
     mapping(address => ActivityWindow) public activityWindows;
     /// @notice recentCounterpartyRingIndex
     mapping(address => uint8) public recentCounterpartyRingIndex;
     /// @notice WINDOW_DURATION
     uint64 public constant WINDOW_DURATION = 1 hours;
-    
+
     // ─────────────────────────────────────────────────────────────────
     //                    VIOLATION TRACKING
     // ─────────────────────────────────────────────────────────────────
-    
+
     /// @notice patternViolations
     mapping(address => mapping(PatternType => uint8)) public patternViolations;
     /// @notice lastViolationTime
     mapping(address => uint64) public lastViolationTime;
     /// @notice totalViolationScore
     mapping(address => uint16) public totalViolationScore; // Weighted sum
-    
+
     // ─────────────────────────────────────────────────────────────────
     //                    DYNAMIC THRESHOLDS (auto-adjusting)
     // ─────────────────────────────────────────────────────────────────
-    
+
     /// @notice autoRestrictThreshold
-    uint16 public autoRestrictThreshold = 3000;    // Score below = restrict
+    uint16 public autoRestrictThreshold = 3000; // Score below = restrict
     /// @notice autoLiftThreshold
-    uint16 public autoLiftThreshold = 5000;        // Score above = lift
+    uint16 public autoLiftThreshold = 5000; // Score above = lift
     /// @notice rateLimitThreshold
-    uint16 public rateLimitThreshold = 4000;       // Score below = rate limit
+    uint16 public rateLimitThreshold = 4000; // Score below = rate limit
     /// @notice patternSensitivity
-    uint16 public patternSensitivity = 50;         // 0-100 sensitivity
+    uint16 public patternSensitivity = 50; // 0-100 sensitivity
     /// @notice MAX_COUNTERPARTY_SCAN
     uint256 public constant MAX_COUNTERPARTY_SCAN = 20;
     /// @notice challengeWindow
-    uint64 public challengeWindow = 1 days;        // Time to contest severe actions
-    
+    uint64 public challengeWindow = 1 days; // Time to contest severe actions
+
     // Network health metrics (for dynamic adjustment)
     /// @notice networkViolationCount
     uint256 public networkViolationCount;
@@ -462,32 +456,32 @@ contract SeerAutonomous is ReentrancyGuard {
     uint64 public lastThresholdAdjustment;
     /// @notice ADJUSTMENT_INTERVAL
     uint64 public constant ADJUSTMENT_INTERVAL = 1 days;
-    
+
     // ─────────────────────────────────────────────────────────────────
     //                    RATE LIMITING
     // ─────────────────────────────────────────────────────────────────
-    
+
     /// @notice lastActionTime
     mapping(address => mapping(ActionType => uint64)) public lastActionTime;
     /// @notice actionCountToday
     mapping(address => mapping(ActionType => uint16)) public actionCountToday;
     /// @notice dailyResetTime
     mapping(address => uint64) public dailyResetTime;
-    
+
     // Rate limits per restriction level (actions per day)
     /// @notice rateLimits
     mapping(RestrictionLevel => mapping(ActionType => uint16)) public rateLimits;
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                            MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice onlyDAO
     modifier onlyDAO() {
         if (msg.sender != dao) revert SA_NotAuthorized();
         _;
     }
-    
+
     /// @notice onlyOperator
     modifier onlyOperator() {
         if (msg.sender != dao && !operators[msg.sender]) revert SA_NotAuthorized();
@@ -499,11 +493,11 @@ contract SeerAutonomous is ReentrancyGuard {
         if (msg.sender != address(riskOracle)) revert SA_NotAuthorized();
         _;
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                          CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice constructor
     /// @param _dao _dao
     /// @param _seer _seer
@@ -513,10 +507,10 @@ contract SeerAutonomous is ReentrancyGuard {
         dao = _dao;
         seer = ISeer(_seer);
         if (_ledger != address(0)) ledger = IProofLedger_Auto(_ledger);
-        
+
         // Initialize default rate limits
         _initializeRateLimits();
-        
+
         emit ModulesSet(_seer, _dao, _ledger);
     }
 
@@ -527,7 +521,7 @@ contract SeerAutonomous is ReentrancyGuard {
         riskOracle = IRiskOracle_Auto(_oracle);
         emit RiskOracleSet(oldOracle, _oracle);
     }
-    
+
     /// @notice _initializeRateLimits
     function _initializeRateLimits() internal {
         SeerAutonomousLib.RateLimitEntry[48] memory entries = SeerAutonomousLib.getDefaultProfile();
@@ -535,11 +529,11 @@ contract SeerAutonomous is ReentrancyGuard {
             rateLimits[RestrictionLevel(entries[i].level)][ActionType(entries[i].action)] = entries[i].limit;
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                    MAIN ENTRY POINT - AUTO ENFORCEMENT
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     // slither-disable-next-line reentrancy-no-eth
     /**
      * @notice Check and enforce before ANY action - called by other contracts
@@ -550,12 +544,7 @@ contract SeerAutonomous is ReentrancyGuard {
      * @param counterparty Other party involved (for pattern detection)
      * @return result The enforcement decision
      */
-    function beforeAction(
-        address subject,
-        ActionType action,
-        uint256 amount,
-        address counterparty
-    ) external onlyOperator nonReentrant returns (EnforcementResult result) {
+    function beforeAction(address subject, ActionType action, uint256 amount, address counterparty) external onlyOperator nonReentrant returns (EnforcementResult result) {
         // 1. Check if DAO has overridden - allow if so
         if (daoOverridden[subject]) {
             if (block.timestamp < daoOverrideExpiry[subject]) {
@@ -569,7 +558,7 @@ contract SeerAutonomous is ReentrancyGuard {
 
         // If a severe restriction is pending challenge and window passed, finalize
         _maybeFinalizeChallenge(subject);
-        
+
         // 2. Check restriction level and rate limits
         result = _checkRestrictions(subject, action);
         if (result == EnforcementResult.Blocked) {
@@ -577,11 +566,11 @@ contract SeerAutonomous is ReentrancyGuard {
             emit AutoEnforced(subject, action, result);
             return result;
         }
-        
+
         // 3. Update activity window and detect patterns
         _updateActivityWindow(subject, action, amount, counterparty);
         PatternType pattern = _detectPatterns(subject, action, counterparty);
-        
+
         if (pattern != PatternType.None) {
             result = _handlePattern(subject, pattern);
             emit PatternDetected(subject, pattern, uint8(restrictionLevel[subject]));
@@ -592,8 +581,7 @@ contract SeerAutonomous is ReentrancyGuard {
             try riskOracle.getRiskScore(subject) returns (uint8 risk) {
                 if (risk > 100) {
                     emit RiskOracleOutOfRange(subject, risk);
-                } else
-                if (risk > 80) {
+                } else if (risk > 80) {
                     // High risk: escalate to at least Restricted for a short period
                     _applyRestriction(subject, RestrictionLevel.Restricted, 3 days, "oracle_high_risk", RC_ORACLE_HIGH_RISK, false);
                     result = EnforcementResult.Delayed;
@@ -607,23 +595,23 @@ contract SeerAutonomous is ReentrancyGuard {
                 // Fall through — do not block user actions on oracle failure
             }
         }
-        
+
         // 4. Check score and auto-adjust restrictions
         _autoAdjustRestriction(subject);
-        
+
         // 5. Update rate limit counters
         _updateRateLimits(subject, action);
-        
+
         // 6. Periodic dynamic threshold adjustment
         _maybeAdjustThresholds();
-        
+
         // 7. Increment network counters
         ++networkActionCount;
-        
+
         emit AutoEnforced(subject, action, result);
         return result;
     }
-    
+
     /**
      * @notice Called after score changes to cascade effects
      * @param subject The user whose score changed
@@ -633,21 +621,21 @@ contract SeerAutonomous is ReentrancyGuard {
     function onScoreChange(address subject, uint16 oldScore, uint16 newScore) external onlyOperator nonReentrant {
         // Immediate restriction adjustment based on new score
         _autoAdjustRestriction(subject);
-        
+
         // Calculate reputation cascade
         int16 change = int16(newScore) - int16(oldScore);
         emit ReputationCascade(subject, change, "score_change");
-        
+
         // Significant drop triggers investigation
         if (oldScore > newScore && (oldScore - newScore) > 500) {
             _recordViolation(subject, PatternType.None, "rapid_score_drop");
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                    RESTRICTION CHECKING
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice _checkRestrictions
     /// @param subject subject
     /// @param action action
@@ -662,17 +650,10 @@ contract SeerAutonomous is ReentrancyGuard {
 
         uint16 limit = rateLimits[level][action];
         uint16 count = actionCountToday[subject][action];
-        uint8 r = SeerAutonomousLib.evaluateRestriction(
-            uint8(level),
-            uint8(RestrictionLevel.Frozen),
-            uint8(RestrictionLevel.Restricted),
-            uint8(RestrictionLevel.Suspended),
-            limit,
-            count
-        );
+        uint8 r = SeerAutonomousLib.evaluateRestriction(uint8(level), uint8(RestrictionLevel.Frozen), uint8(RestrictionLevel.Restricted), uint8(RestrictionLevel.Suspended), limit, count);
         return EnforcementResult(r);
     }
-    
+
     /// @notice _updateRateLimits
     /// @param subject subject
     /// @param action action
@@ -690,28 +671,23 @@ contract SeerAutonomous is ReentrancyGuard {
             actionCountToday[subject][ActionType.Stake] = 0;
             actionCountToday[subject][ActionType.Trade] = 0;
         }
-        
+
         ++actionCountToday[subject][action];
         lastActionTime[subject][action] = uint64(block.timestamp);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                    PATTERN DETECTION
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice _updateActivityWindow
     /// @param subject subject
     /// @param action action
     /// @param amount amount
     /// @param counterparty counterparty
-    function _updateActivityWindow(
-        address subject,
-        ActionType action,
-        uint256 amount,
-        address counterparty
-    ) internal {
+    function _updateActivityWindow(address subject, ActionType action, uint256 amount, address counterparty) internal {
         ActivityWindow storage window = activityWindows[subject];
-        
+
         // Reset window if expired
         if (block.timestamp >= window.windowStart + WINDOW_DURATION) {
             window.windowStart = uint64(block.timestamp);
@@ -722,7 +698,7 @@ contract SeerAutonomous is ReentrancyGuard {
             delete window.recentCounterparties;
             recentCounterpartyRingIndex[subject] = 0;
         }
-        
+
         // Update counters
         if (action == ActionType.Transfer) {
             ++window.transferCount;
@@ -732,7 +708,7 @@ contract SeerAutonomous is ReentrancyGuard {
         } else if (action == ActionType.Endorse) {
             ++window.endorseCount;
         }
-        
+
         // F-88 FIX: Track counterparties with ring-buffer eviction (max 20),
         // so newest entries are retained instead of being silently dropped.
         if (counterparty != address(0)) {
@@ -745,20 +721,16 @@ contract SeerAutonomous is ReentrancyGuard {
             }
         }
     }
-    
+
     /// @notice _detectPatterns
     /// @param subject subject
     /// @param action action
     /// @param counterparty counterparty
     /// @return _arg _arg
-    function _detectPatterns(
-        address subject,
-        ActionType action,
-        address counterparty
-    ) internal view returns (PatternType) {
+    function _detectPatterns(address subject, ActionType action, address counterparty) internal view returns (PatternType) {
         ActivityWindow storage window = activityWindows[subject];
         uint16 sensitivity = patternSensitivity;
-        
+
         // Rapid transfers (more than 10 in an hour at 50% sensitivity)
         if (action == ActionType.Transfer) {
             uint16 threshold = 20 - uint16((sensitivity * 15) / 100); // 5-20 range
@@ -766,7 +738,7 @@ contract SeerAutonomous is ReentrancyGuard {
                 return PatternType.RapidTransfers;
             }
         }
-        
+
         // Check for circular patterns (A<->B recurring both directions), not normal repeated merchant payments.
         if (action == ActionType.Transfer && counterparty != address(0)) {
             ActivityWindow storage cpWindow = activityWindows[counterparty];
@@ -796,7 +768,7 @@ contract SeerAutonomous is ReentrancyGuard {
                 return PatternType.CircularTransfers;
             }
         }
-        
+
         // Excessive endorsements in short time
         if (action == ActionType.Endorse) {
             uint16 threshold = 10 - uint16((sensitivity * 8) / 100); // 2-10 range
@@ -804,7 +776,7 @@ contract SeerAutonomous is ReentrancyGuard {
                 return PatternType.SelfEndorsement;
             }
         }
-        
+
         // Vote manipulation (too many votes in short window)
         if (action == ActionType.GovernanceVote) {
             uint16 threshold = 15 - uint16((sensitivity * 10) / 100); // 5-15 range
@@ -812,10 +784,10 @@ contract SeerAutonomous is ReentrancyGuard {
                 return PatternType.VoteManipulation;
             }
         }
-        
+
         return PatternType.None;
     }
-    
+
     /// @notice _handlePattern
     /// @param subject subject
     /// @param pattern pattern
@@ -860,7 +832,7 @@ contract SeerAutonomous is ReentrancyGuard {
             return EnforcementResult.Warned;
         }
     }
-    
+
     /// @notice _recordViolation
     /// @param subject subject
     /// @param pattern pattern
@@ -875,11 +847,11 @@ contract SeerAutonomous is ReentrancyGuard {
         ++networkViolationCount;
         _log(reason);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                    AUTO RESTRICTION ADJUSTMENT
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice _autoAdjustRestriction
     /// @param subject subject
     function _autoAdjustRestriction(address subject) internal {
@@ -890,16 +862,16 @@ contract SeerAutonomous is ReentrancyGuard {
             daoOverridden[subject] = false;
             daoOverrideExpiry[subject] = 0;
         }
-        
+
         uint16 score = seer.getScore(subject);
         RestrictionLevel current = restrictionLevel[subject];
-        
+
         // Check if current restriction has expired
         if (current != RestrictionLevel.None && block.timestamp >= restrictionExpiry[subject]) {
             _liftRestriction(subject);
             current = RestrictionLevel.None;
         }
-        
+
         // Score-based automatic adjustment
         if (score < 1000 && current < RestrictionLevel.Frozen) {
             _applyRestriction(subject, RestrictionLevel.Frozen, 30 days, "critical_score", RC_CRITICAL_SCORE, false);
@@ -914,7 +886,7 @@ contract SeerAutonomous is ReentrancyGuard {
             _liftRestriction(subject);
         }
     }
-    
+
     /// @notice _applyRestriction
     /// @param subject subject
     /// @param level level
@@ -922,14 +894,7 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param reason reason
     /// @param reasonCode reasonCode
     /// @param applyPenalty applyPenalty
-    function _applyRestriction(
-        address subject,
-        RestrictionLevel level,
-        uint64 duration,
-        string memory reason,
-        uint16 reasonCode,
-        bool applyPenalty
-    ) internal {
+    function _applyRestriction(address subject, RestrictionLevel level, uint64 duration, string memory reason, uint16 reasonCode, bool applyPenalty) internal {
         // Only escalate, never downgrade automatically
         if (level <= restrictionLevel[subject]) return;
         // Severe restrictions go through a challenge window first
@@ -958,7 +923,7 @@ contract SeerAutonomous is ReentrancyGuard {
             // reserved for compatibility/no-op
         }
     }
-    
+
     /// @notice _liftRestriction
     /// @param subject subject
     function _liftRestriction(address subject) internal {
@@ -1031,37 +996,39 @@ contract SeerAutonomous is ReentrancyGuard {
         if (decay == 0 && raw > 0) decay = 1;
         return decay >= raw ? 0 : raw - decay;
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                    DYNAMIC THRESHOLD ADJUSTMENT
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice _maybeAdjustThresholds
     function _maybeAdjustThresholds() internal {
         if (block.timestamp < lastThresholdAdjustment + ADJUSTMENT_INTERVAL) return;
         lastThresholdAdjustment = uint64(block.timestamp);
-        
+
         // Calculate network health (violation rate)
         uint256 totalActions = networkActionCount + networkBlockedCount;
         if (totalActions == 0) return;
-        
+
         uint256 violationRate = (networkViolationCount * 10000) / totalActions;
-        
+
         // High violation rate = tighten thresholds
-        if (violationRate > 500) { // >5% violation rate
+        if (violationRate > 500) {
+            // >5% violation rate
             _adjustThreshold(ThresholdType.AutoRestrict, true, 200);
             _adjustThreshold(ThresholdType.PatternSensitivity, true, 10);
         }
         // Low violation rate = relax thresholds slightly
-        else if (violationRate < 100) { // <1% violation rate
+        else if (violationRate < 100) {
+            // <1% violation rate
             _adjustThreshold(ThresholdType.AutoRestrict, false, 100);
             _adjustThreshold(ThresholdType.PatternSensitivity, false, 5);
         }
-        
+
         // Apply 80% EMA decay instead of a full reset to smooth threshold oscillation.
         networkViolationCount = (networkViolationCount * 8) / 10;
-        networkActionCount    = (networkActionCount    * 8) / 10;
-        networkBlockedCount   = (networkBlockedCount   * 8) / 10;
+        networkActionCount = (networkActionCount * 8) / 10;
+        networkBlockedCount = (networkBlockedCount * 8) / 10;
 
         // Automatically trigger any due EcosystemVault scheduled tasks on the
         // same daily cadence — no separate keeper bot needed.
@@ -1136,7 +1103,7 @@ contract SeerAutonomous is ReentrancyGuard {
     }
 
     // _reasonCode removed: challenge-derived codes use 0; direct calls pass RC_ constants
-    
+
     /// @notice _adjustThreshold
     /// @param ttype ttype
     /// @param increase increase
@@ -1144,7 +1111,7 @@ contract SeerAutonomous is ReentrancyGuard {
     function _adjustThreshold(ThresholdType ttype, bool increase, uint16 delta) internal {
         uint16 oldValue = 0;
         uint16 newValue = 0;
-        
+
         if (ttype == ThresholdType.AutoRestrict) {
             oldValue = autoRestrictThreshold;
             if (increase) {
@@ -1162,16 +1129,16 @@ contract SeerAutonomous is ReentrancyGuard {
             }
             patternSensitivity = newValue;
         }
-        
+
         if (oldValue != newValue) {
             emit DynamicThresholdAdjusted(ttype, oldValue, newValue);
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                    DAO OVERSIGHT (Override capability)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice daoOverride
     /// @param subject subject
     /// @param reason reason
@@ -1186,11 +1153,11 @@ contract SeerAutonomous is ReentrancyGuard {
         if (old != RestrictionLevel.None) {
             emit RestrictionLifted(subject, old);
         }
-        
+
         emit DAOOverride(subject, reason);
         _log("dao_override");
     }
-    
+
     /// @notice daoRemoveOverride
     /// @param subject subject
     function daoRemoveOverride(address subject) external onlyDAO {
@@ -1199,18 +1166,13 @@ contract SeerAutonomous is ReentrancyGuard {
         // Re-evaluate immediately
         _autoAdjustRestriction(subject);
     }
-    
+
     /// @notice daoSetThresholds
     /// @param _autoRestrict _autoRestrict
     /// @param _autoLift _autoLift
     /// @param _rateLimit _rateLimit
     /// @param _sensitivity _sensitivity
-    function daoSetThresholds(
-        uint16 _autoRestrict,
-        uint16 _autoLift,
-        uint16 _rateLimit,
-        uint16 _sensitivity
-    ) external onlyDAO {
+    function daoSetThresholds(uint16 _autoRestrict, uint16 _autoLift, uint16 _rateLimit, uint16 _sensitivity) external onlyDAO {
         if (_autoRestrict >= _autoLift) revert SA_InvalidThresholds();
         if (_sensitivity > 100) revert SA_InvalidSensitivity();
 
@@ -1218,24 +1180,15 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 oldAutoLift = autoLiftThreshold;
         uint16 oldRateLimit = rateLimitThreshold;
         uint16 oldSensitivity = patternSensitivity;
-        
+
         autoRestrictThreshold = _autoRestrict;
         autoLiftThreshold = _autoLift;
         rateLimitThreshold = _rateLimit;
         patternSensitivity = _sensitivity;
 
-        emit DAOThresholdsUpdated(
-            oldAutoRestrict,
-            _autoRestrict,
-            oldAutoLift,
-            _autoLift,
-            oldRateLimit,
-            _rateLimit,
-            oldSensitivity,
-            _sensitivity
-        );
+        emit DAOThresholdsUpdated(oldAutoRestrict, _autoRestrict, oldAutoLift, _autoLift, oldRateLimit, _rateLimit, oldSensitivity, _sensitivity);
     }
-    
+
     /// @notice daoSetRateLimit
     /// @param level level
     /// @param action action
@@ -1243,13 +1196,7 @@ contract SeerAutonomous is ReentrancyGuard {
     function daoSetRateLimit(RestrictionLevel level, ActionType action, uint16 limit) external onlyDAO {
         if (pendingRateLimitChange.exists) revert SA_NotAuthorized();
         uint64 executeAfter = uint64(block.timestamp) + DAO_RATE_LIMIT_DELAY;
-        pendingRateLimitChange = PendingRateLimitChange({
-            level: level,
-            action: action,
-            limit: limit,
-            executeAfter: executeAfter,
-            exists: true
-        });
+        pendingRateLimitChange = PendingRateLimitChange({level: level, action: action, limit: limit, executeAfter: executeAfter, exists: true});
         emit DAORateLimitChangeQueued(level, action, limit, executeAfter);
     }
 
@@ -1284,25 +1231,12 @@ contract SeerAutonomous is ReentrancyGuard {
         rateLimitThreshold = 5200;
         patternSensitivity = 100;
 
-        emit DAOThresholdsUpdated(
-            oldAutoRestrict,
-            autoRestrictThreshold,
-            oldAutoLift,
-            autoLiftThreshold,
-            oldRateLimit,
-            rateLimitThreshold,
-            oldSensitivity,
-            patternSensitivity
-        );
+        emit DAOThresholdsUpdated(oldAutoRestrict, autoRestrictThreshold, oldAutoLift, autoLiftThreshold, oldRateLimit, rateLimitThreshold, oldSensitivity, patternSensitivity);
 
         // Apply rate limits from library-supplied profile table
         SeerAutonomousLib.RateLimitEntry[48] memory profile = SeerAutonomousLib.getMaxAutonomyProfile();
         for (uint256 i = 0; i < 48; ++i) {
-            _setRateLimitWithEvent(
-                RestrictionLevel(profile[i].level),
-                ActionType(profile[i].action),
-                profile[i].limit
-            );
+            _setRateLimitWithEvent(RestrictionLevel(profile[i].level), ActionType(profile[i].action), profile[i].limit);
         }
 
         emit DAOMaxAutonomyProfileApplied(msg.sender);
@@ -1319,7 +1253,7 @@ contract SeerAutonomous is ReentrancyGuard {
             emit DAORateLimitUpdated(level, action, oldLimit, limit);
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         ADMIN
     // ═══════════════════════════════════════════════════════════════════════
@@ -1355,7 +1289,7 @@ contract SeerAutonomous is ReentrancyGuard {
         dao = _newDAO;
         emit DAOSet(old, _newDAO);
     }
-    
+
     /// @notice setModules
     /// @param _seer _seer
     /// @param _ledger _ledger
@@ -1365,7 +1299,7 @@ contract SeerAutonomous is ReentrancyGuard {
         if (_ledger != address(0)) ledger = IProofLedger_Auto(_ledger);
         emit ModulesSet(_seer, dao, _ledger);
     }
-    
+
     /// @notice setOperator
     /// @param operator operator
     /// @param authorized authorized
@@ -1373,12 +1307,7 @@ contract SeerAutonomous is ReentrancyGuard {
         if (operator == address(0)) revert SA_Zero();
         if (pendingOperatorChange.exists) revert SA_NotAuthorized();
         uint64 executeAfter = uint64(block.timestamp) + OPERATOR_CHANGE_DELAY;
-        pendingOperatorChange = PendingOperatorChange({
-            operator: operator,
-            authorized: authorized,
-            executeAfter: executeAfter,
-            exists: true
-        });
+        pendingOperatorChange = PendingOperatorChange({operator: operator, authorized: authorized, executeAfter: executeAfter, exists: true});
         emit OperatorChangeQueued(operator, authorized, executeAfter);
     }
 
@@ -1399,11 +1328,11 @@ contract SeerAutonomous is ReentrancyGuard {
         delete pendingOperatorChange;
         emit OperatorChangeCancelled(pending.operator, pending.authorized);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Check if an action would be allowed (without modifying state)
      * @param subject subject
@@ -1425,14 +1354,7 @@ contract SeerAutonomous is ReentrancyGuard {
 
         uint16 limit = rateLimits[level][action];
         uint16 count = actionCountToday[subject][action];
-        uint8 r = SeerAutonomousLib.evaluateRestriction(
-            uint8(level),
-            uint8(RestrictionLevel.Frozen),
-            uint8(RestrictionLevel.Restricted),
-            uint8(RestrictionLevel.Suspended),
-            limit,
-            count
-        );
+        uint8 r = SeerAutonomousLib.evaluateRestriction(uint8(level), uint8(RestrictionLevel.Frozen), uint8(RestrictionLevel.Restricted), uint8(RestrictionLevel.Suspended), limit, count);
         // r: 0=Allowed, 1=Warned (Suspended → still allowed for canPerformAction's bool semantics), 3=Blocked
         if (r == 3) {
             // Distinguish frozen vs other blocked
@@ -1442,7 +1364,7 @@ contract SeerAutonomous is ReentrancyGuard {
         }
         return (true, "allowed");
     }
-    
+
     /// @notice getRestrictionInfo
     /// @param subject subject
     /// @return level level
@@ -1450,20 +1372,8 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @return overridden overridden
     /// @return reason reason
     /// @return violationScore violationScore
-    function getRestrictionInfo(address subject) external view returns (
-        RestrictionLevel level,
-        uint64 expiry,
-        bool overridden,
-        string memory reason,
-        uint16 violationScore
-    ) {
-        return (
-            restrictionLevel[subject],
-            restrictionExpiry[subject],
-            daoOverridden[subject],
-            restrictionReason[subject],
-            totalViolationScore[subject]
-        );
+    function getRestrictionInfo(address subject) external view returns (RestrictionLevel level, uint64 expiry, bool overridden, string memory reason, uint16 violationScore) {
+        return (restrictionLevel[subject], restrictionExpiry[subject], daoOverridden[subject], restrictionReason[subject], totalViolationScore[subject]);
     }
 
     /// @notice Get the aggregate violation score for weighting endorsements
@@ -1472,7 +1382,7 @@ contract SeerAutonomous is ReentrancyGuard {
     function getViolationScore(address subject) external view returns (uint16) {
         return totalViolationScore[subject];
     }
-    
+
     /// @notice getActivitySummary
     /// @param subject subject
     /// @return transferCount transferCount
@@ -1480,36 +1390,34 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @return endorseCount endorseCount
     /// @return transferVolume transferVolume
     /// @return windowStart windowStart
-    function getActivitySummary(address subject) external view returns (
-        uint16 transferCount,
-        uint16 voteCount,
-        uint16 endorseCount,
-        uint256 transferVolume,
-        uint64 windowStart
-    ) {
+    function getActivitySummary(address subject) external view returns (uint16 transferCount, uint16 voteCount, uint16 endorseCount, uint256 transferVolume, uint64 windowStart) {
         ActivityWindow storage w = activityWindows[subject];
         return (w.transferCount, w.voteCount, w.endorseCount, w.transferVolume, w.windowStart);
     }
-    
+
     /// @notice getNetworkHealth
     /// @return totalActions totalActions
     /// @return totalViolations totalViolations
     /// @return violationRate violationRate
     /// @return currentSensitivity currentSensitivity
-    function getNetworkHealth() external view returns (
-        uint256 totalActions,
-        uint256 totalViolations,
-        uint256 violationRate,
-        uint16 currentSensitivity
+    function getNetworkHealth()
+        external
+        view
+        returns (
+            uint256 totalActions,
+            uint256 totalViolations,
+            uint256 violationRate,
+            uint16 currentSensitivity
             // F-08 FIX: Oracle call is now try/catch — a broken oracle cannot freeze pattern enforcement.
-    ) {
+        )
+    {
         // SA-04: include blocked actions so health metrics reflect all enforcement attempts.
         totalActions = networkActionCount + networkBlockedCount;
         totalViolations = networkViolationCount;
         violationRate = totalActions > 0 ? (networkViolationCount * 10000) / totalActions : 0;
         currentSensitivity = patternSensitivity;
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                            INTERNAL
     // ═══════════════════════════════════════════════════════════════════════

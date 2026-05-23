@@ -8,21 +8,21 @@ pragma solidity 0.8.30;
  * - Pays the 12 Council Members every 4 months.
  * - Enforces "Good Behavior" (ProofScore).
  * - Allows Council to vote out bad actors (Self-Policing).
- * 
+ *
  * COMPLIANCE NOTE:
  * - Council members are compensated as governance contributors.
  * - Salaries are paid in the configured ERC-20 token (`token`), currently VFIDE.
  * - This contract does not perform on-chain asset swaps.
  */
 
-import { IERC20, ISeer, ICouncilElection, SafeERC20 } from "../SharedInterfaces.sol";
+import {IERC20, ISeer, ICouncilElection, SafeERC20} from "../SharedInterfaces.sol";
 
 /// @notice CouncilSalary
 /// @title CouncilSalary
 /// @author Vfide
 contract CouncilSalary {
     using SafeERC20 for IERC20;
-    
+
     /// @notice SalaryPaid
     /// @param cycleId cycleId
     /// @param totalDistributed totalDistributed
@@ -112,7 +112,7 @@ contract CouncilSalary {
     // Legacy: Keep blacklist global (once removed, stays removed unless reinstated)
     /// @notice isBlacklisted
     mapping(address => bool) public isBlacklisted;
-    
+
     /// @notice dao
     address public dao;
     /// @notice pendingDAO
@@ -133,11 +133,11 @@ contract CouncilSalary {
     uint64 public pendingReinstateAt;
     /// @notice REINSTATE_DELAY
     uint64 public constant REINSTATE_DELAY = 7 days;
-    
+
     // C-1 FIX: Authorized keepers for distribution
     /// @notice isKeeper
     mapping(address => bool) public isKeeper;
-    
+
     // C-2 FIX: Distribution nonce to prevent replay/frontrunning
     /// @notice distributionNonce
     uint256 public distributionNonce;
@@ -170,7 +170,7 @@ contract CouncilSalary {
         isKeeper[keeper] = authorized;
         emit KeeperSet(keeper, authorized);
     }
-    
+
     /// @notice startNewTerm
     function startNewTerm() external {
         require(msg.sender == dao, "not dao");
@@ -227,7 +227,7 @@ contract CouncilSalary {
         delete pendingCouncilElectionAt;
         emit CouncilElectionChangeCancelled(queued);
     }
-    
+
     /// @notice setDAO
     /// @param _dao _dao
     function setDAO(address _dao) external {
@@ -270,25 +270,25 @@ contract CouncilSalary {
      * Distribute salary to eligible council members.
      * C-1 FIX: Now requires DAO or authorized keeper to call
      * This prevents MEV manipulation and timing attacks
-     * 
-    * NOTE: Council salaries are paid in the configured `token` balance held by this contract.
-    * This function does not swap VFIDE to other assets.
+     *
+     * NOTE: Council salaries are paid in the configured `token` balance held by this contract.
+     * This function does not swap VFIDE to other assets.
      * @notice distributeSalary
      */
     function distributeSalary() external nonReentrant {
         // C-1 FIX: Only DAO or authorized keepers can distribute
         require(msg.sender == dao || isKeeper[msg.sender], "CS: not authorized");
         require(block.timestamp >= lastPayTime + payInterval, "too early");
-        
+
         // C-2 FIX: Increment nonce to prevent replay
         ++distributionNonce;
-        
+
         uint256 balance = token.balanceOf(address(this));
         require(balance > 0, "no funds");
 
         uint256 size = election.getActualCouncilSize();
         require(size > 0, "no council");
-        
+
         require(balance >= size, "CS: insufficient balance for distribution");
 
         // 1. Identify eligible members
@@ -298,7 +298,7 @@ contract CouncilSalary {
         for (uint256 i = 0; i < size; ++i) {
             address member = election.getCouncilMember(i);
             if (member == address(0)) continue;
-            
+
             // Check Blacklist
             if (isBlacklisted[member]) continue;
 
@@ -311,12 +311,12 @@ contract CouncilSalary {
 
         // 2. Calculate Share
         if (eligibleCount == 0) return; // No one gets paid, funds roll over
-        
+
         uint256 share = balance / eligibleCount;
         require(share > 0, "CS: share too small");
 
         lastPayTime = block.timestamp;
-        
+
         // 3. Pay — last member receives the dust remainder to avoid stale funds
         uint256 remainder = balance % eligibleCount;
         for (uint256 i = 0; i < eligibleCount; ++i) {
@@ -348,10 +348,10 @@ contract CouncilSalary {
             isBlacklisted[target] = true;
             emit MemberRemoved(target, msg.sender);
         }
-        
+
         emit VoteCast(msg.sender, target, true);
     }
-    
+
     /**
      * Reinstate a previously blacklisted member
      * Only callable by DAO

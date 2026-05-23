@@ -628,7 +628,7 @@ export function TagInput({
   label,
   value = [],
   onChange,
-  placeholder = 'Add tags...',
+  placeholder: _placeholder = 'Add tags...',
   maxTags = 10,
   error,
   suggestions = [],

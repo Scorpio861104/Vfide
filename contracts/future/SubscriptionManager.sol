@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
  * - Subscription modification support
  */
 
-import { IVaultHub, IERC20, IEmergencyBreaker, ReentrancyGuard, SafeERC20 } from "../SharedInterfaces.sol";
+import {IVaultHub, IERC20, IEmergencyBreaker, ReentrancyGuard, SafeERC20} from "../SharedInterfaces.sol";
 
 using SafeERC20 for IERC20;
 
@@ -186,9 +186,9 @@ contract SubscriptionManager is ReentrancyGuard {
         uint256 interval; // seconds
         uint256 nextPayment;
         bool active;
-        bool paused;           // NEW: Pause state
-        uint256 pausedAt;      // NEW: When paused
-        uint256 graceEndTime;  // NEW: Grace period end (0 = no grace)
+        bool paused; // NEW: Pause state
+        uint256 pausedAt; // NEW: When paused
+        uint256 graceEndTime; // NEW: Grace period end (0 = no grace)
         uint256 failedPayments; // NEW: Count of consecutive failed payments
         uint256 lastFailedPaymentBlock; // N-H12 FIX: prevent same-block failure spam increments
         string memo; // e.g. "Netflix Premium"
@@ -198,7 +198,7 @@ contract SubscriptionManager is ReentrancyGuard {
     uint256 public subCount;
     /// @notice subscriptions
     mapping(uint256 => Subscription) public subscriptions;
-    
+
     // NEW: Configuration
     /// @notice GRACE_PERIOD
     uint256 public constant GRACE_PERIOD = 3 days;
@@ -210,7 +210,7 @@ contract SubscriptionManager is ReentrancyGuard {
     //               After this window anyone (keeper/bot) may process to prevent stalling.
     /// @notice MERCHANT_EXCLUSIVE_WINDOW
     uint256 public constant MERCHANT_EXCLUSIVE_WINDOW = 24 hours;
-    
+
     // NEW: DAO for emergency controls
     /// @notice dao
     address public dao;
@@ -233,17 +233,17 @@ contract SubscriptionManager is ReentrancyGuard {
     uint64 public pendingFraudRegistryAt;
     /// @notice FRAUD_REGISTRY_CHANGE_DELAY
     uint64 public constant FRAUD_REGISTRY_CHANGE_DELAY = 24 hours;
-    
+
     /// @notice vaultHub
     IVaultHub public vaultHub;
-    
+
     // ProofScore integration
     /// @notice seer
     ISeer_SM public seer;
     /// @notice fraudRegistry
     IFraudRegistry_SM public fraudRegistry;
     /// @notice SUBSCRIPTION_PAYER_REWARD
-    uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2;    // +0.2 per payment
+    uint16 public constant SUBSCRIPTION_PAYER_REWARD = 2; // +0.2 per payment
     /// @notice SUBSCRIPTION_MERCHANT_REWARD
     uint16 public constant SUBSCRIPTION_MERCHANT_REWARD = 3; // +0.3 per payment
 
@@ -264,7 +264,7 @@ contract SubscriptionManager is ReentrancyGuard {
         dao = _dao;
         if (_seer != address(0)) seer = ISeer_SM(_seer);
     }
-    
+
     /**
      * @notice Set Seer address (only DAO can change)
      * @param _seer _seer
@@ -304,7 +304,7 @@ contract SubscriptionManager is ReentrancyGuard {
         delete pendingFraudRegistry;
         delete pendingFraudRegistryAt;
     }
-    
+
     /**
      * @notice Set DAO address (only current DAO can change)
      * @param _dao _dao
@@ -353,13 +353,7 @@ contract SubscriptionManager is ReentrancyGuard {
     /// @param interval interval
     /// @param memo memo
     /// @return subId subId
-    function createSubscription(
-        address merchant,
-        address token,
-        uint256 amount,
-        uint256 interval,
-        string calldata memo
-    ) external returns (uint256 subId) {
+    function createSubscription(address merchant, address token, uint256 amount, uint256 interval, string calldata memo) external returns (uint256 subId) {
         if (merchant == address(0)) revert SM_InvalidMerchant();
         if (amount == 0) revert SM_InvalidAmount();
         if (interval < 1 hours) revert SM_InvalidInterval();
@@ -446,7 +440,7 @@ contract SubscriptionManager is ReentrancyGuard {
         emit SubscriptionCancelled(subId);
         emit SubscriptionSettledByInheritance(subId, deceasedParty);
     }
-    
+
     /**
      * @notice Pause subscription temporarily (subscriber or merchant)
      * @dev Useful for disputes, temporary suspension, etc.
@@ -457,13 +451,13 @@ contract SubscriptionManager is ReentrancyGuard {
         if (!sub.active) revert SM_InactiveSubscription();
         if (sub.paused) revert SM_AlreadyPaused();
         if (msg.sender != sub.subscriber && msg.sender != sub.merchant) revert SM_NotAuthorized();
-        
+
         sub.paused = true;
         sub.pausedAt = block.timestamp;
-        
+
         emit SubscriptionPaused(subId, msg.sender);
     }
-    
+
     /**
      * @notice Resume paused subscription
      * @dev Only subscriber can resume (prevents merchant abuse)
@@ -474,16 +468,16 @@ contract SubscriptionManager is ReentrancyGuard {
         if (!sub.active) revert SM_InactiveSubscription();
         if (!sub.paused) revert SM_NotPaused();
         if (msg.sender != sub.subscriber) revert SM_NotSubscriber();
-        
+
         sub.paused = false;
         // Adjust next payment to avoid immediate charge after pause
         if (block.timestamp > sub.nextPayment) {
             sub.nextPayment = block.timestamp;
         }
-        
+
         emit SubscriptionResumed(subId, msg.sender);
     }
-    
+
     /**
      * @notice Modify subscription parameters
      * @dev Only subscriber can modify, takes effect after next payment
@@ -497,16 +491,16 @@ contract SubscriptionManager is ReentrancyGuard {
         if (!sub.active) revert SM_InactiveSubscription();
         if (newAmount == 0) revert SM_InvalidAmount();
         if (newInterval < 1 hours) revert SM_InvalidInterval();
-        
+
         uint256 oldAmount = sub.amount;
         uint256 oldInterval = sub.interval;
-        
+
         sub.amount = newAmount;
         sub.interval = newInterval;
-        
+
         emit SubscriptionModified(subId, oldAmount, newAmount, oldInterval, newInterval);
     }
-    
+
     /**
      * @notice Propose emergency cancel by DAO (for fraud/disputes)
      * @dev #515 FIX: 48h notice before cancellation finalises.
@@ -571,7 +565,7 @@ contract SubscriptionManager is ReentrancyGuard {
                 revert SM_NotAuthorized();
             }
         }
-        
+
         // Check grace period
         if (sub.graceEndTime > 0 && block.timestamp > sub.graceEndTime) {
             // Grace period expired, auto-cancel
@@ -595,7 +589,7 @@ contract SubscriptionManager is ReentrancyGuard {
         // Check allowance and balance
         uint256 allowance = IERC20(sub.token).allowance(userVault, address(this));
         uint256 balance = IERC20(sub.token).balanceOf(userVault);
-        
+
         // NEW: Grace period handling for insufficient funds
         if (allowance < sub.amount || balance < sub.amount) {
             // N-H12 FIX: Count at most one failed payment per block for this subscription.
@@ -605,7 +599,7 @@ contract SubscriptionManager is ReentrancyGuard {
                 ++sub.failedPayments;
                 sub.lastFailedPaymentBlock = block.number;
             }
-            
+
             if (sub.failedPayments >= MAX_FAILED_PAYMENTS) {
                 // Too many failures, cancel subscription
                 sub.active = false;
@@ -613,17 +607,17 @@ contract SubscriptionManager is ReentrancyGuard {
                 emit SubscriptionCancelled(subId);
                 return;
             }
-            
+
             // Start or extend grace period
             if (sub.graceEndTime == 0) {
                 sub.graceEndTime = block.timestamp + GRACE_PERIOD;
                 emit GracePeriodStarted(subId, sub.graceEndTime);
             }
-            
+
             emit PaymentFailed(subId, block.timestamp, allowance < sub.amount ? "insufficient allowance" : "insufficient balance");
             return;
         }
-        
+
         // Reset grace period and failed payments on successful payment
         sub.graceEndTime = 0;
         sub.failedPayments = 0;
@@ -634,7 +628,7 @@ contract SubscriptionManager is ReentrancyGuard {
         // This pull uses user vault custody by design (not arbitrary user-provided from-address).
         // Execute Transfer (using SafeERC20 for non-standard tokens)
         IERC20(sub.token).safeTransferFrom(userVault, merchantVault, sub.amount);
-        
+
         // Reward ProofScore for successful subscription payment
         if (address(seer) != address(0)) {
             try seer.reward(sub.subscriber, SUBSCRIPTION_PAYER_REWARD, "subscription_payment") {} catch {
@@ -647,18 +641,18 @@ contract SubscriptionManager is ReentrancyGuard {
 
         emit PaymentProcessed(subId, block.timestamp);
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice getSubscription
     /// @param subId subId
     /// @return _arg _arg
     function getSubscription(uint256 subId) external view returns (Subscription memory) {
         return subscriptions[subId];
     }
-    
+
     /**
      * @notice Get next payment info for UI
      * @param subId subId
@@ -669,14 +663,9 @@ contract SubscriptionManager is ReentrancyGuard {
      * @return graceTimeRemaining graceTimeRemaining
      * @return failedPaymentCount failedPaymentCount
      */
-    function getNextPaymentInfo(uint256 subId) external view returns (
-        uint256 nextPaymentTime,
-        uint256 amount,
-        bool isPaused,
-        bool isInGracePeriod,
-        uint256 graceTimeRemaining,
-        uint256 failedPaymentCount
-    ) {
+    function getNextPaymentInfo(
+        uint256 subId
+    ) external view returns (uint256 nextPaymentTime, uint256 amount, bool isPaused, bool isInGracePeriod, uint256 graceTimeRemaining, uint256 failedPaymentCount) {
         Subscription storage sub = subscriptions[subId];
         nextPaymentTime = sub.nextPayment;
         amount = sub.amount;
@@ -685,7 +674,7 @@ contract SubscriptionManager is ReentrancyGuard {
         graceTimeRemaining = sub.graceEndTime > block.timestamp ? sub.graceEndTime - block.timestamp : 0;
         failedPaymentCount = sub.failedPayments;
     }
-    
+
     /**
      * @notice Check if subscription can be processed now
      * @param subId subId
@@ -694,24 +683,24 @@ contract SubscriptionManager is ReentrancyGuard {
      */
     function canProcess(uint256 subId) external view returns (bool processable, string memory reason) {
         Subscription storage sub = subscriptions[subId];
-        
+
         if (!sub.active) return (false, "inactive");
         if (sub.paused) return (false, "paused");
         if (block.timestamp < sub.nextPayment) return (false, "too early");
         if (sub.graceEndTime > 0 && block.timestamp > sub.graceEndTime) return (false, "grace expired");
-        
+
         address userVault = vaultHub.vaultOf(sub.subscriber);
         if (userVault == address(0)) return (false, "no vault");
-        
+
         uint256 allowance = IERC20(sub.token).allowance(userVault, address(this));
         uint256 balance = IERC20(sub.token).balanceOf(userVault);
-        
+
         if (allowance < sub.amount) return (false, "insufficient allowance");
         if (balance < sub.amount) return (false, "insufficient balance");
-        
+
         return (true, "ready");
     }
-    
+
     /**
      * @notice Get all subscriptions for a user
      * @param user user
@@ -723,7 +712,7 @@ contract SubscriptionManager is ReentrancyGuard {
         for (uint256 i = 1; i <= subCount; ++i) {
             if (subscriptions[i].subscriber == user) ++count;
         }
-        
+
         // Collect
         uint256[] memory result = new uint256[](count);
         uint256 idx = 0;
@@ -734,7 +723,7 @@ contract SubscriptionManager is ReentrancyGuard {
         }
         return result;
     }
-    
+
     /**
      * @notice Get all subscriptions for a merchant
      * @param merchant merchant
@@ -745,7 +734,7 @@ contract SubscriptionManager is ReentrancyGuard {
         for (uint256 i = 1; i <= subCount; ++i) {
             if (subscriptions[i].merchant == merchant) ++count;
         }
-        
+
         uint256[] memory result = new uint256[](count);
         uint256 idx = 0;
         for (uint256 i = 1; i <= subCount; ++i) {
@@ -755,7 +744,7 @@ contract SubscriptionManager is ReentrancyGuard {
         }
         return result;
     }
-    
+
     /**
      * @notice Get merchant subscription statistics
      * @param merchant merchant
@@ -765,13 +754,19 @@ contract SubscriptionManager is ReentrancyGuard {
      * @return totalMRR totalMRR
      * @return totalValuePerInterval totalValuePerInterval
      */
-    function getMerchantStats(address merchant) external view returns (
-        uint256 totalSubscriptions,
-        uint256 activeCount,
-        uint256 pausedCount,
-        uint256 totalMRR,  // Monthly Recurring Revenue (assumes 30-day interval)
-        uint256 totalValuePerInterval
-    ) {
+    function getMerchantStats(
+        address merchant
+    )
+        external
+        view
+        returns (
+            uint256 totalSubscriptions,
+            uint256 activeCount,
+            uint256 pausedCount,
+            uint256 totalMRR, // Monthly Recurring Revenue (assumes 30-day interval)
+            uint256 totalValuePerInterval
+        )
+    {
         for (uint256 i = 1; i <= subCount; ++i) {
             Subscription storage sub = subscriptions[i];
             if (sub.merchant == merchant) {
@@ -791,17 +786,14 @@ contract SubscriptionManager is ReentrancyGuard {
             }
         }
     }
-    
+
     /**
      * @notice Batch process multiple subscription payments (gas efficient for keepers)
      * @param subIds Array of subscription IDs to process
      * @return processed Number of successfully processed payments
      * @return failed Number of failed payments
      */
-    function batchProcessPayments(uint256[] calldata subIds) external returns (
-        uint256 processed,
-        uint256 failed
-    ) {
+    function batchProcessPayments(uint256[] calldata subIds) external returns (uint256 processed, uint256 failed) {
         require(subIds.length <= MAX_BATCH_SIZE, "SM: batch too large");
         for (uint256 i = 0; i < subIds.length; ++i) {
             try this.processPayment(subIds[i]) {
@@ -811,7 +803,7 @@ contract SubscriptionManager is ReentrancyGuard {
             }
         }
     }
-    
+
     /**
      * @notice Get all subscriptions ready for processing (for keepers)
      * @return ready Array of subscription IDs that can be processed
@@ -827,7 +819,7 @@ contract SubscriptionManager is ReentrancyGuard {
                 }
             }
         }
-        
+
         // Collect
         ready = new uint256[](count);
         uint256 idx = 0;
@@ -840,7 +832,7 @@ contract SubscriptionManager is ReentrancyGuard {
             }
         }
     }
-    
+
     /**
      * @notice Batch get subscription details
      * @param subIds subIds

@@ -152,14 +152,7 @@ interface IProofScoreBurnRouterToken {
         address from,
         address to,
         uint256 amount
-    ) external view returns (
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        address sanctumSink,
-        address ecosystemSink,
-        address burnSink
-    );
+    ) external view returns (uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address sanctumSink, address ecosystemSink, address burnSink);
 
     /// @notice computeFeesAndReserve
     /// @param from from
@@ -175,14 +168,7 @@ interface IProofScoreBurnRouterToken {
         address from,
         address to,
         uint256 amount
-    ) external returns (
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        address sanctumSink,
-        address ecosystemSink,
-        address burnSink
-    );
+    ) external returns (uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, address sanctumSink, address ecosystemSink, address burnSink);
 }
 
 /// @notice IProofScoreBurnRouter
@@ -225,7 +211,7 @@ interface IProofScoreBurnRouter {
     /// @return netAmount netAmount
     /// @return score score
     function previewFees(address user, uint256 amount) external view returns (uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint256 netAmount, uint16 score);
-    
+
     // Sustainability controls
     /// @notice setSustainability
     /// @param _dailyBurnCap _dailyBurnCap
@@ -248,7 +234,7 @@ interface IProofScoreBurnRouter {
     /// @notice updateScore
     /// @param user user
     function updateScore(address user) external;
-    
+
     // Sustainability views
     /// @notice dailyBurnCap
     /// @return _uint256 _uint256
@@ -279,15 +265,10 @@ interface IProofScoreBurnRouter {
     /// @return burnsPausedFlag burnsPausedFlag
     /// @return supplyFloor supplyFloor
     /// @return currentSupply currentSupply
-    function getSustainabilityStatus() external view returns (
-        uint256 dailyBurned,
-        uint256 burnCapacity,
-        uint256 dailyVolume,
-        uint16 volumeMultiplier,
-        bool burnsPausedFlag,
-        uint256 supplyFloor,
-        uint256 currentSupply
-    );
+    function getSustainabilityStatus()
+        external
+        view
+        returns (uint256 dailyBurned, uint256 burnCapacity, uint256 dailyVolume, uint16 volumeMultiplier, bool burnsPausedFlag, uint256 supplyFloor, uint256 currentSupply);
 }
 
 /// @notice IStablecoinRegistry
@@ -436,7 +417,7 @@ interface IVFIDEToken is IERC20 {
     /// @notice setFeeBypass
     /// @param active active
     /// @param duration duration
-    function setFeeBypass(bool active, uint256 duration) external;       // H-02 FIX: explicit fee bypass
+    function setFeeBypass(bool active, uint256 duration) external; // H-02 FIX: explicit fee bypass
     // setBlacklist removed — non-custodial
     /// @notice lockPolicy
     function lockPolicy() external;
@@ -489,7 +470,6 @@ interface IVFIDEToken is IERC20 {
     /// @return _uint256 _uint256
     function transferCooldown() external view returns (uint256);
     /// @notice whaleLimitExempt
-    /// @param _address _address
     /// @return _bool _bool
     function whaleLimitExempt(address) external view returns (bool);
     /// @notice remainingDailyLimit
@@ -656,14 +636,8 @@ interface ISwapRouter {
     /// @param to to
     /// @param deadline deadline
     /// @return amounts amounts
-    function swapExactTokensForTokens(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path,
-        address to,
-        uint256 deadline
-    ) external returns (uint256[] memory amounts);
-    
+    function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] calldata path, address to, uint256 deadline) external returns (uint256[] memory amounts);
+
     /// @notice getAmountsOut
     /// @param amountIn amountIn
     /// @param path path
@@ -798,14 +772,14 @@ abstract contract Ownable {
     /// @notice emergencyController
     address public emergencyController;
     /// @notice ownershipTransferDeadline
-    uint64  public ownershipTransferDeadline;
+    uint64 public ownershipTransferDeadline;
 
     /// @notice pendingEmergencyController
     address public pendingEmergencyController;
     /// @notice pendingEmergencyControllerAt
-    uint64  public pendingEmergencyControllerAt;
+    uint64 public pendingEmergencyControllerAt;
     /// @notice EMERGENCY_CONTROLLER_DELAY
-    uint64  public constant EMERGENCY_CONTROLLER_DELAY = 48 hours;
+    uint64 public constant EMERGENCY_CONTROLLER_DELAY = 48 hours;
 
     /// @notice constructor
     constructor() {
@@ -814,7 +788,10 @@ abstract contract Ownable {
     }
 
     /// @notice onlyOwner
-    modifier onlyOwner() { _checkOwner(); _; }
+    modifier onlyOwner() {
+        _checkOwner();
+        _;
+    }
 
     /// @notice _checkOwner
     function _checkOwner() internal view {
@@ -971,16 +948,30 @@ abstract contract Pausable {
     /// @notice _paused
     bool private _paused;
     /// @notice whenNotPaused
-    modifier whenNotPaused() { require(!_paused, "Pausable: paused"); _; }
+    modifier whenNotPaused() {
+        require(!_paused, "Pausable: paused");
+        _;
+    }
     /// @notice whenPaused
-    modifier whenPaused() { require(_paused, "Pausable: not paused"); _; }
+    modifier whenPaused() {
+        require(_paused, "Pausable: not paused");
+        _;
+    }
     /// @notice paused
     /// @return _bool _bool
-    function paused() public view returns (bool) { return _paused; }
+    function paused() public view returns (bool) {
+        return _paused;
+    }
     /// @notice _pause
-    function _pause() internal whenNotPaused { _paused = true; emit Paused(msg.sender); }
+    function _pause() internal whenNotPaused {
+        _paused = true;
+        emit Paused(msg.sender);
+    }
     /// @notice _unpause
-    function _unpause() internal whenPaused { _paused = false; emit Unpaused(msg.sender); }
+    function _unpause() internal whenPaused {
+        _paused = false;
+        emit Unpaused(msg.sender);
+    }
 }
 
 /// @notice AccessControl for role-based permissions (OpenZeppelin-compatible pattern)
@@ -991,13 +982,13 @@ abstract contract AccessControl {
         mapping(address => bool) members;
         bytes32 adminRole;
     }
-    
+
     /// @notice _roles
     mapping(bytes32 => RoleData) private _roles;
-    
+
     /// @notice DEFAULT_ADMIN_ROLE
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    
+
     /// @notice RoleGranted
     /// @param role role
     /// @param account account
@@ -1013,20 +1004,20 @@ abstract contract AccessControl {
     /// @param previousAdminRole previousAdminRole
     /// @param newAdminRole newAdminRole
     event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
-    
+
     /// @dev Auto-grant DEFAULT_ADMIN_ROLE to deployer to prevent bootstrap deadlock
     /// @notice constructor
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-    
+
     /// @notice onlyRole
     /// @param role role
     modifier onlyRole(bytes32 role) {
         require(hasRole(role, msg.sender), "AC: missing role");
         _;
     }
-    
+
     /// @notice hasRole
     /// @param role role
     /// @param account account
@@ -1034,28 +1025,28 @@ abstract contract AccessControl {
     function hasRole(bytes32 role, address account) public view virtual returns (bool) {
         return _roles[role].members[account];
     }
-    
+
     /// @notice getRoleAdmin
     /// @param role role
     /// @return _bytes32 _bytes32
     function getRoleAdmin(bytes32 role) public view virtual returns (bytes32) {
         return _roles[role].adminRole;
     }
-    
+
     /// @notice grantRole
     /// @param role role
     /// @param account account
     function grantRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {
         _grantRole(role, account);
     }
-    
+
     /// @notice revokeRole
     /// @param role role
     /// @param account account
     function revokeRole(bytes32 role, address account) public virtual onlyRole(getRoleAdmin(role)) {
         _revokeRole(role, account);
     }
-    
+
     /// @notice renounceRole
     /// @param role role
     /// @param account account
@@ -1063,7 +1054,7 @@ abstract contract AccessControl {
         require(account == msg.sender, "AC: can only renounce for self");
         _revokeRole(role, account);
     }
-    
+
     /// @notice _grantRole
     /// @param role role
     /// @param account account
@@ -1073,7 +1064,7 @@ abstract contract AccessControl {
             emit RoleGranted(role, account, msg.sender);
         }
     }
-    
+
     /// @notice _revokeRole
     /// @param role role
     /// @param account account
@@ -1083,7 +1074,7 @@ abstract contract AccessControl {
             emit RoleRevoked(role, account, msg.sender);
         }
     }
-    
+
     /// @notice _setRoleAdmin
     /// @param role role
     /// @param adminRole adminRole
@@ -1104,9 +1095,7 @@ library SafeERC20 {
     /// @param value value
     function safeTransfer(IERC20 token, address to, uint256 value) internal {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(token.transfer.selector, to, value)
-        );
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(token.transfer.selector, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transfer failed");
     }
 
@@ -1117,12 +1106,10 @@ library SafeERC20 {
     /// @param value value
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory data) = address(token).call(
-            abi.encodeWithSelector(token.transferFrom.selector, from, to, value)
-        );
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
         require(success && (data.length == 0 || abi.decode(data, (bool))), "SafeERC20: transferFrom failed");
     }
-    
+
     /// @notice safeApprove
     /// @param token token
     /// @param spender spender
@@ -1140,14 +1127,8 @@ library SafeERC20 {
             return;
         }
 
-        require(
-            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, 0)),
-            "SafeERC20: approve reset failed"
-        );
-        require(
-            _callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value)),
-            "SafeERC20: approve failed"
-        );
+        require(_callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, 0)), "SafeERC20: approve reset failed");
+        require(_callOptionalReturnBool(token, abi.encodeWithSelector(token.approve.selector, spender, value)), "SafeERC20: approve failed");
     }
 
     /// @notice _callOptionalReturnBool

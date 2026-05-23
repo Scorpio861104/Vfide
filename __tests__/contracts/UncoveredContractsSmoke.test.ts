@@ -11,13 +11,9 @@ const cases: ContractSmokeCase[] = [
     file: 'AdminMultiSig.sol',
     expectedPatterns: [/contract\s+AdminMultiSig\b/],
   },
-  {
-    file: 'BadgeQualificationRules.sol',
-    expectedPatterns: [
-      /interface\s+IBadgeQualificationRules\b/,
-      /contract\s+BadgeQualificationRules\b/,
-    ],
-  },
+  // BadgeQualificationRules.sol was removed from contracts/ (production scope) to fix
+  // Hardhat 3 HHE1001 (duplicate artifact: same contract name in contracts/ and
+  // contracts/future/). The future-tier copy lives at contracts/future/BadgeQualificationRules.sol.
   {
     file: 'CircuitBreaker.sol',
     expectedPatterns: [/contract\s+CircuitBreaker\b/],

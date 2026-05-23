@@ -12,9 +12,20 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package manifest + lockfile for deterministic installs
-COPY package.json package-lock.json ./
-RUN npm ci && npm cache clean --force
+# Copy package manifest + lockfile + npm config for deterministic installs.
+# .npmrc carries `legacy-peer-deps=true` which is required because
+# @layerzerolabs/lz-evm-oapp-v2 transitively requires ethers ^5 (via
+# @eth-optimism/contracts), while the root project uses ethers ^6. Without
+# this, `npm ci` fails with ERESOLVE in the Docker build context.
+#
+# We also need the postinstall-validate-env script because package.json's
+# `postinstall` hook runs it during `npm ci`. .dockerignore excludes the
+# rest of scripts/, but this single file must be present.
+COPY package.json package-lock.json .npmrc ./
+COPY scripts/postinstall-validate-env.cjs ./scripts/postinstall-validate-env.cjs
+# Set CI=true so postinstall-validate-env.cjs takes the CI shortcut and
+# skips `npm run validate:env` (which expects developer-machine env vars).
+RUN CI=true npm ci && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -25,6 +36,12 @@ COPY . .
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
+# FRONTEND_SELF_CONTAINED=true: tells lib/validateProduction.ts's `prebuild`
+# hook that we are building the frontend bundle without backend secrets
+# (DATABASE_URL, JWT_SECRET, etc.). The postinstall-validate-env.cjs already
+# skips when CI=true; this handles the separate `npm run prebuild` step which
+# runs `tsx lib/validateProduction.ts` before `next build`.
+ENV FRONTEND_SELF_CONTAINED true
 
 # Build application
 RUN npm run build

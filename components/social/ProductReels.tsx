@@ -11,8 +11,8 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { Heart, MessageCircle, Share2, ShoppingCart, Shield, Music2, Bookmark, MoreHorizontal, Volume2, VolumeX, Play } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, MessageCircle, Share2, ShoppingCart, Shield, Music2, Bookmark, Volume2, VolumeX, Play } from 'lucide-react';
 
 export interface ReelData {
   id: string;

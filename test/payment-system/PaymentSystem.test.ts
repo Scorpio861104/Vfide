@@ -1,11 +1,11 @@
-import { expect } from "chai";
-import { ethers } from "hardhat";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from 'chai';
+import { ethers } from 'hardhat';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { time, loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 
 const THIRTY_DAYS = 30 * 24 * 60 * 60;
 
-describe("FeeDistributor (5-channel)", function () {
+describe('FeeDistributor (5-channel)', function () {
   let distributor: any;
   let token: any;
   let admin: SignerWithAddress;
@@ -15,14 +15,22 @@ describe("FeeDistributor (5-channel)", function () {
   let merchants: SignerWithAddress;
   let headhunters: SignerWithAddress;
 
-  const FEE = ethers.utils.parseEther("10000");
+  const FEE = ethers.utils.parseEther('10000');
 
   async function deployFixture() {
     [admin, burn, sanctum, dao, merchants, headhunters] = await ethers.getSigners();
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("200000000"));
-    const F = await ethers.getContractFactory("FeeDistributor");
-    distributor = await F.deploy(token.address, burn.address, sanctum.address, dao.address, merchants.address, headhunters.address, admin.address);
+    const MockERC20 = await ethers.getContractFactory('MockERC20');
+    token = await MockERC20.deploy('VFIDE', 'VFD', ethers.utils.parseEther('200000000'));
+    const F = await ethers.getContractFactory('FeeDistributor');
+    distributor = await F.deploy(
+      token.address,
+      burn.address,
+      sanctum.address,
+      dao.address,
+      merchants.address,
+      headhunters.address,
+      admin.address
+    );
     await distributor.deployed();
     await token.transfer(distributor.address, FEE);
     await distributor.receiveFee(FEE);
@@ -30,10 +38,11 @@ describe("FeeDistributor (5-channel)", function () {
   }
 
   beforeEach(async function () {
-    ({ distributor, token, admin, burn, sanctum, dao, merchants, headhunters } = await loadFixture(deployFixture));
+    ({ distributor, token, admin, burn, sanctum, dao, merchants, headhunters } =
+      await loadFixture(deployFixture));
   });
 
-  it("should split 35/20/15/20/10 by default", async function () {
+  it('should split 35/20/15/20/10 by default', async function () {
     const totalSupplyBefore = await token.totalSupply();
     await distributor.distribute();
     const bBal = await token.balanceOf(burn.address);
@@ -51,46 +60,59 @@ describe("FeeDistributor (5-channel)", function () {
     expect(await token.totalSupply()).to.equal(totalSupplyBefore.sub(FEE.mul(3500).div(10000)));
   });
 
-  it("should leave zero balance after distribution", async function () {
+  it('should leave zero balance after distribution', async function () {
     await distributor.distribute();
     expect(await token.balanceOf(distributor.address)).to.equal(0);
   });
 
-  it("should revert below minimum", async function () {
-    const F = await ethers.getContractFactory("FeeDistributor");
-    const empty = await F.deploy(token.address, burn.address, sanctum.address, dao.address, merchants.address, headhunters.address, admin.address);
-    await token.transfer(empty.address, ethers.utils.parseEther("1"));
-    await expect(empty.distribute()).to.be.revertedWithCustomError(empty, "BelowMinimum");
+  it('should revert below minimum', async function () {
+    const F = await ethers.getContractFactory('FeeDistributor');
+    const empty = await F.deploy(
+      token.address,
+      burn.address,
+      sanctum.address,
+      dao.address,
+      merchants.address,
+      headhunters.address,
+      admin.address
+    );
+    await token.transfer(empty.address, ethers.utils.parseEther('1'));
+    await expect(empty.distribute()).to.be.revertedWithCustomError(empty, 'BelowMinimum');
   });
 
-  it("should enforce 72hr timelock on split changes", async function () {
+  it('should enforce 72hr timelock on split changes', async function () {
     await distributor.connect(admin).proposeSplitChange(3000, 2000, 2000, 2000, 1000);
-    await expect(distributor.connect(admin).executeSplitChange()).to.be.revertedWithCustomError(distributor, "SplitChangeNotReady");
+    await expect(distributor.connect(admin).executeSplitChange()).to.be.revertedWithCustomError(
+      distributor,
+      'SplitChangeNotReady'
+    );
     await time.increase(72 * 3600 + 1);
     await distributor.connect(admin).executeSplitChange();
     const split = await distributor.getCurrentSplit();
     expect(split[0]).to.equal(3000);
   });
 
-  it("should reject burn below 20%", async function () {
+  it('should reject burn below 20%', async function () {
     await expect(
       distributor.connect(admin).proposeSplitChange(1999, 2000, 2000, 2001, 2000)
-    ).to.be.revertedWithCustomError(distributor, "BurnTooLow");
+    ).to.be.revertedWithCustomError(distributor, 'BurnTooLow');
   });
 
-  it("should reject split not summing to 10000", async function () {
+  it('should reject split not summing to 10000', async function () {
     await expect(
       distributor.connect(admin).proposeSplitChange(3000, 2000, 2000, 2000, 999)
-    ).to.be.revertedWithCustomError(distributor, "InvalidSplit");
+    ).to.be.revertedWithCustomError(distributor, 'InvalidSplit');
   });
 
-  it("should timelock destination updates before applying them", async function () {
+  it('should timelock destination updates before applying them', async function () {
     const replacement = (await ethers.getSigners())[6];
 
-    await distributor.connect(admin).setDestination("dao", replacement.address);
+    await distributor.connect(admin).setDestination('dao', replacement.address);
     expect(await distributor.daoPayrollPool()).to.equal(dao.address);
 
-    await expect(distributor.connect(admin).executeDestinationChange()).to.be.revertedWithCustomError(distributor, "SplitChangeNotReady");
+    await expect(
+      distributor.connect(admin).executeDestinationChange()
+    ).to.be.revertedWithCustomError(distributor, 'SplitChangeNotReady');
 
     await time.increase(48 * 3600 + 1);
     await distributor.connect(admin).executeDestinationChange();
@@ -98,19 +120,20 @@ describe("FeeDistributor (5-channel)", function () {
     expect(await distributor.daoPayrollPool()).to.equal(replacement.address);
   });
 
-  it("should allow cancelling a pending destination update", async function () {
+  it('should allow cancelling a pending destination update', async function () {
     const replacement = (await ethers.getSigners())[6];
 
-    await distributor.connect(admin).setDestination("dao", replacement.address);
+    await distributor.connect(admin).setDestination('dao', replacement.address);
     await distributor.connect(admin).cancelDestinationChange();
 
-    await expect(distributor.connect(admin).executeDestinationChange()).to.be.revertedWithCustomError(distributor, "NoSplitChangePending");
+    await expect(
+      distributor.connect(admin).executeDestinationChange()
+    ).to.be.revertedWithCustomError(distributor, 'NoSplitChangePending');
     expect(await distributor.daoPayrollPool()).to.equal(dao.address);
   });
 });
 
-
-describe("DAOPayrollPool (12 max, percentage-based)", function () {
+describe('DAOPayrollPool (12 max, percentage-based)', function () {
   let pool: any;
   let token: any;
   let admin: SignerWithAddress;
@@ -121,41 +144,42 @@ describe("DAOPayrollPool (12 max, percentage-based)", function () {
   let inactive: SignerWithAddress;
   let feeSource: SignerWithAddress;
 
-  const SEED = ethers.utils.parseEther("90000");
-  const MAX_PAYOUT = ethers.utils.parseEther("500000");
+  const SEED = ethers.utils.parseEther('90000');
+  const MAX_PAYOUT = ethers.utils.parseEther('500000');
 
   async function deployFixture() {
     [admin, seer, m1, m2, m3, inactive, feeSource] = await ethers.getSigners();
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("200000000"));
-    const F = await ethers.getContractFactory("DAOPayrollPool");
+    const MockERC20 = await ethers.getContractFactory('MockERC20');
+    token = await MockERC20.deploy('VFIDE', 'VFD', ethers.utils.parseEther('200000000'));
+    const F = await ethers.getContractFactory('DAOPayrollPool');
     pool = await F.deploy(token.address, admin.address, MAX_PAYOUT);
     await pool.deployed();
     await pool.connect(admin).grantRecorder(seer.address);
-    await token.transfer(feeSource.address, ethers.utils.parseEther("5000000"));
+    await token.transfer(feeSource.address, ethers.utils.parseEther('5000000'));
     await token.connect(feeSource).approve(pool.address, ethers.constants.MaxUint256);
     await pool.connect(feeSource).receiveFunding(SEED);
     return { pool, token, admin, seer, m1, m2, m3, inactive, feeSource };
   }
 
   beforeEach(async function () {
-    ({ pool, token, admin, seer, m1, m2, m3, inactive, feeSource } = await loadFixture(deployFixture));
+    ({ pool, token, admin, seer, m1, m2, m3, inactive, feeSource } =
+      await loadFixture(deployFixture));
   });
 
-  it("should cap at 12 participants", async function () {
+  it('should cap at 12 participants', async function () {
     expect(await pool.maxParticipants()).to.equal(12);
   });
 
-  it("should record votes and weight by score", async function () {
-    await pool.connect(seer).recordVote(m1.address);    // 1 pt
-    await pool.connect(seer).recordReview(m1.address);   // 2 pts
-    await pool.connect(seer).recordVote(m2.address);     // 1 pt
+  it('should record votes and weight by score', async function () {
+    await pool.connect(seer).recordVote(m1.address); // 1 pt
+    await pool.connect(seer).recordReview(m1.address); // 2 pts
+    await pool.connect(seer).recordVote(m2.address); // 1 pt
     expect(await pool.scores(1, m1.address)).to.equal(3);
     expect(await pool.scores(1, m2.address)).to.equal(1);
     expect(await pool.totalScores(1)).to.equal(4);
   });
 
-  it("should split proportionally — more work = bigger share", async function () {
+  it('should split proportionally — more work = bigger share', async function () {
     // m1: 10 points (5 votes + 2 reviews + 1 discussion)
     for (let i = 0; i < 5; i++) await pool.connect(seer).recordVote(m1.address);
     await pool.connect(seer).recordReview(m1.address);
@@ -192,32 +216,39 @@ describe("DAOPayrollPool (12 max, percentage-based)", function () {
     expect(pay3).to.equal(SEED.mul(1).div(13));
   });
 
-  it("should give inactive members zero (Howey-safe)", async function () {
+  it('should give inactive members zero (Howey-safe)', async function () {
     await pool.connect(seer).recordVote(m1.address);
     await time.increase(THIRTY_DAYS + 1);
     await pool.connect(seer).recordVote(m1.address);
     await pool.finalizePeriod(1);
 
-    await expect(
-      pool.connect(inactive).claimPayment(1)
-    ).to.be.revertedWithCustomError(pool, "NoContribution");
+    await expect(pool.connect(inactive).claimPayment(1)).to.be.revertedWithCustomError(
+      pool,
+      'NoContribution'
+    );
   });
 
-  it("should reject claim before finalization", async function () {
+  it('should reject claim before finalization', async function () {
     await pool.connect(seer).recordVote(m1.address);
-    await expect(pool.connect(m1).claimPayment(1)).to.be.revertedWithCustomError(pool, "PeriodNotFinalized");
+    await expect(pool.connect(m1).claimPayment(1)).to.be.revertedWithCustomError(
+      pool,
+      'PeriodNotFinalized'
+    );
   });
 
-  it("should reject double claim", async function () {
+  it('should reject double claim', async function () {
     await pool.connect(seer).recordVote(m1.address);
     await time.increase(THIRTY_DAYS + 1);
     await pool.connect(seer).recordVote(m1.address);
     await pool.finalizePeriod(1);
     await pool.connect(m1).claimPayment(1);
-    await expect(pool.connect(m1).claimPayment(1)).to.be.revertedWithCustomError(pool, "AlreadyClaimed");
+    await expect(pool.connect(m1).claimPayment(1)).to.be.revertedWithCustomError(
+      pool,
+      'AlreadyClaimed'
+    );
   });
 
-  it("should carry balance forward when no one worked", async function () {
+  it('should carry balance forward when no one worked', async function () {
     await time.increase(THIRTY_DAYS + 1);
     await pool.connect(seer).recordVote(m1.address);
     await pool.finalizePeriod(1);
@@ -226,14 +257,14 @@ describe("DAOPayrollPool (12 max, percentage-based)", function () {
     expect(await token.balanceOf(pool.address)).to.equal(SEED);
   });
 
-  it("should NOT double-count balance across consecutive periods (critical fix)", async function () {
+  it('should NOT double-count balance across consecutive periods (critical fix)', async function () {
     // Period 1: m1 participates
     await pool.connect(seer).recordVote(m1.address);
     await time.increase(THIRTY_DAYS + 1);
 
     // Period 2: m2 participates — fee revenue arrives
     await pool.connect(seer).recordVote(m2.address);
-    await pool.connect(feeSource).receiveFunding(ethers.utils.parseEther("50000"));
+    await pool.connect(feeSource).receiveFunding(ethers.utils.parseEther('50000'));
     await time.increase(THIRTY_DAYS + 1);
 
     // Period 3: trigger advance
@@ -247,7 +278,7 @@ describe("DAOPayrollPool (12 max, percentage-based)", function () {
     // Finalize period 2: should get only the 50K that arrived, NOT re-count the 90K
     await pool.finalizePeriod(2);
     const pool2 = await pool.periodPool(2);
-    expect(pool2).to.equal(ethers.utils.parseEther("50000")); // Only 50K available
+    expect(pool2).to.equal(ethers.utils.parseEther('50000')); // Only 50K available
 
     // Both can claim without reverting
     await pool.connect(m1).claimPayment(1);
@@ -255,12 +286,12 @@ describe("DAOPayrollPool (12 max, percentage-based)", function () {
 
     // Verify totals
     expect(await pool.totalEarnedByWorker(m1.address)).to.equal(SEED);
-    expect(await pool.totalEarnedByWorker(m2.address)).to.equal(ethers.utils.parseEther("50000"));
+    expect(await pool.totalEarnedByWorker(m2.address)).to.equal(ethers.utils.parseEther('50000'));
   });
 
   it("should handle Howey equality — token holdings don't affect payment", async function () {
     // Give m1 a million tokens (whale), m2 has nothing
-    await token.transfer(m1.address, ethers.utils.parseEther("1000000"));
+    await token.transfer(m1.address, ethers.utils.parseEther('1000000'));
 
     // Both do 1 vote (same work)
     await pool.connect(seer).recordVote(m1.address);
@@ -274,13 +305,13 @@ describe("DAOPayrollPool (12 max, percentage-based)", function () {
     await pool.connect(m2).claimPayment(1);
 
     // Equal work = equal pay, regardless of holdings
-    expect(await pool.totalEarnedByWorker(m1.address))
-      .to.equal(await pool.totalEarnedByWorker(m2.address));
+    expect(await pool.totalEarnedByWorker(m1.address)).to.equal(
+      await pool.totalEarnedByWorker(m2.address)
+    );
   });
 });
 
-
-describe("MerchantCompetitionPool (volume-weighted)", function () {
+describe('MerchantCompetitionPool (volume-weighted)', function () {
   let pool: any;
   let token: any;
   let admin: SignerWithAddress;
@@ -289,29 +320,30 @@ describe("MerchantCompetitionPool (volume-weighted)", function () {
   let merchantB: SignerWithAddress;
   let feeSource: SignerWithAddress;
 
-  const SEED = ethers.utils.parseEther("200000");
-  const MAX_PAYOUT = ethers.utils.parseEther("1000000");
+  const SEED = ethers.utils.parseEther('200000');
+  const MAX_PAYOUT = ethers.utils.parseEther('1000000');
   const MIN_TX = 10 * 1e6; // $10 minimum
 
   async function deployFixture() {
     [admin, recorder, merchantA, merchantB, , feeSource] = await ethers.getSigners();
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("200000000"));
-    const F = await ethers.getContractFactory("MerchantCompetitionPool");
+    const MockERC20 = await ethers.getContractFactory('MockERC20');
+    token = await MockERC20.deploy('VFIDE', 'VFD', ethers.utils.parseEther('200000000'));
+    const F = await ethers.getContractFactory('MerchantCompetitionPool');
     pool = await F.deploy(token.address, admin.address, MAX_PAYOUT, MIN_TX);
     await pool.deployed();
     await pool.connect(admin).grantRecorder(recorder.address);
-    await token.transfer(feeSource.address, ethers.utils.parseEther("5000000"));
+    await token.transfer(feeSource.address, ethers.utils.parseEther('5000000'));
     await token.connect(feeSource).approve(pool.address, ethers.constants.MaxUint256);
     await pool.connect(feeSource).receiveFunding(SEED);
     return { pool, token, admin, recorder, merchantA, merchantB, feeSource };
   }
 
   beforeEach(async function () {
-    ({ pool, token, admin, recorder, merchantA, merchantB, feeSource } = await loadFixture(deployFixture));
+    ({ pool, token, admin, recorder, merchantA, merchantB, feeSource } =
+      await loadFixture(deployFixture));
   });
 
-  it("should score merchants by volume", async function () {
+  it('should score merchants by volume', async function () {
     // Merchant A: $50,000 in transactions
     await pool.connect(recorder).recordTransaction(merchantA.address, 50000 * 1e6);
     // Merchant B: $150,000
@@ -322,7 +354,7 @@ describe("MerchantCompetitionPool (volume-weighted)", function () {
     expect(await pool.totalScores(1)).to.equal(200000);
   });
 
-  it("should split pool proportional to volume", async function () {
+  it('should split pool proportional to volume', async function () {
     await pool.connect(recorder).recordTransaction(merchantA.address, 50000 * 1e6);
     await pool.connect(recorder).recordTransaction(merchantB.address, 150000 * 1e6);
 
@@ -342,19 +374,19 @@ describe("MerchantCompetitionPool (volume-weighted)", function () {
     expect(payB).to.equal(payA.mul(3)); // B did 3x volume → 3x pay
   });
 
-  it("should reject transactions below minimum size", async function () {
+  it('should reject transactions below minimum size', async function () {
     await expect(
       pool.connect(recorder).recordTransaction(merchantA.address, 5 * 1e6)
-    ).to.be.revertedWith("Below minimum transaction size");
+    ).to.be.revertedWith('Below minimum transaction size');
   });
 
-  it("should track volume per period", async function () {
+  it('should track volume per period', async function () {
     await pool.connect(recorder).recordTransaction(merchantA.address, 100000 * 1e6);
     expect(await pool.getMerchantVolume(1, merchantA.address)).to.equal(100000 * 1e6);
     expect(await pool.periodTotalVolume(1)).to.equal(100000 * 1e6);
   });
 
-  it("should roll over funds when nobody participates", async function () {
+  it('should roll over funds when nobody participates', async function () {
     // Period 1: no merchants participate
     await time.increase(THIRTY_DAYS + 1);
     // Need to trigger period advance — use a tiny tx from a throwaway
@@ -364,30 +396,30 @@ describe("MerchantCompetitionPool (volume-weighted)", function () {
     // Let me redo: start fresh, skip period 1 entirely
 
     // Re-approach: deploy fresh, let period 1 pass with no activity
-    const F2 = await ethers.getContractFactory("MerchantCompetitionPool");
+    const F2 = await ethers.getContractFactory('MerchantCompetitionPool');
     const fresh = await F2.deploy(token.address, admin.address, MAX_PAYOUT, MIN_TX);
     await fresh.deployed();
     await fresh.connect(admin).grantRecorder(recorder.address);
 
     // Month 1: FeeDistributor sends 100K, nobody works
     await token.connect(feeSource).approve(fresh.address, ethers.constants.MaxUint256);
-    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther("100000"));
+    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther('100000'));
     await time.increase(THIRTY_DAYS + 1);
 
     // Month 2: another 100K arrives, still nobody
-    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther("100000"));
+    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther('100000'));
     // Trigger period advance
     await fresh.connect(recorder).recordTransaction(merchantA.address, 50000 * 1e6);
     // Finalize period 1 (empty)
     await fresh.finalizePeriod(1);
     expect(await fresh.periodPool(1)).to.equal(0); // Nothing distributed
     // Balance should be 200K (100K + 100K) minus nothing claimed
-    expect(await token.balanceOf(fresh.address)).to.equal(ethers.utils.parseEther("200000"));
+    expect(await token.balanceOf(fresh.address)).to.equal(ethers.utils.parseEther('200000'));
 
     await time.increase(THIRTY_DAYS + 1);
 
     // Month 3: another 100K arrives, one merchant finally shows up
-    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther("100000"));
+    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther('100000'));
     await fresh.connect(recorder).recordTransaction(merchantA.address, 50000 * 1e6);
 
     // Finalize period 2 (merchantA participated)
@@ -398,18 +430,17 @@ describe("MerchantCompetitionPool (volume-weighted)", function () {
     // 200K was in contract at period 2 finalization, plus 100K just arrived = ~300K
     // (minus the dust from merchantA's period 2 activity recording, which may have
     // triggered period advance before the 3rd funding)
-    expect(period2Pool).to.be.gte(ethers.utils.parseEther("200000"));
+    expect(period2Pool).to.be.gte(ethers.utils.parseEther('200000'));
 
     // Merchant A gets the entire rolled-over pool (sole participant)
     await fresh.connect(merchantA).claimPayment(2);
     const earned = await fresh.totalEarnedByWorker(merchantA.address);
     expect(earned).to.equal(period2Pool);
-    expect(earned).to.be.gte(ethers.utils.parseEther("200000"));
+    expect(earned).to.be.gte(ethers.utils.parseEther('200000'));
   });
 });
 
-
-describe("HeadhunterCompetitionPool (referral-weighted)", function () {
+describe('HeadhunterCompetitionPool (referral-weighted)', function () {
   let pool: any;
   let token: any;
   let admin: SignerWithAddress;
@@ -421,28 +452,41 @@ describe("HeadhunterCompetitionPool (referral-weighted)", function () {
   let newUser3: SignerWithAddress;
   let feeSource: SignerWithAddress;
 
-  const SEED = ethers.utils.parseEther("100000");
-  const MAX_PAYOUT = ethers.utils.parseEther("500000");
+  const SEED = ethers.utils.parseEther('100000');
+  const MAX_PAYOUT = ethers.utils.parseEther('500000');
 
   async function deployFixture() {
-    [admin, recorder, hunterA, hunterB, newUser1, newUser2, newUser3, feeSource] = await ethers.getSigners();
-    const MockERC20 = await ethers.getContractFactory("MockERC20");
-    token = await MockERC20.deploy("VFIDE", "VFD", ethers.utils.parseEther("200000000"));
-    const F = await ethers.getContractFactory("HeadhunterCompetitionPool");
+    [admin, recorder, hunterA, hunterB, newUser1, newUser2, newUser3, feeSource] =
+      await ethers.getSigners();
+    const MockERC20 = await ethers.getContractFactory('MockERC20');
+    token = await MockERC20.deploy('VFIDE', 'VFD', ethers.utils.parseEther('200000000'));
+    const F = await ethers.getContractFactory('HeadhunterCompetitionPool');
     pool = await F.deploy(token.address, admin.address, MAX_PAYOUT);
     await pool.deployed();
     await pool.connect(admin).grantRecorder(recorder.address);
-    await token.transfer(feeSource.address, ethers.utils.parseEther("5000000"));
+    await token.transfer(feeSource.address, ethers.utils.parseEther('5000000'));
     await token.connect(feeSource).approve(pool.address, ethers.constants.MaxUint256);
     await pool.connect(feeSource).receiveFunding(SEED);
-    return { pool, token, admin, recorder, hunterA, hunterB, newUser1, newUser2, newUser3, feeSource };
+    return {
+      pool,
+      token,
+      admin,
+      recorder,
+      hunterA,
+      hunterB,
+      newUser1,
+      newUser2,
+      newUser3,
+      feeSource,
+    };
   }
 
   beforeEach(async function () {
-    ({ pool, token, admin, recorder, hunterA, hunterB, newUser1, newUser2, newUser3, feeSource } = await loadFixture(deployFixture));
+    ({ pool, token, admin, recorder, hunterA, hunterB, newUser1, newUser2, newUser3, feeSource } =
+      await loadFixture(deployFixture));
   });
 
-  it("should register and qualify referrals", async function () {
+  it('should register and qualify referrals', async function () {
     await pool.connect(recorder).registerReferral(newUser1.address, hunterA.address);
     expect(await pool.referredBy(newUser1.address)).to.equal(hunterA.address);
 
@@ -451,7 +495,7 @@ describe("HeadhunterCompetitionPool (referral-weighted)", function () {
     expect(await pool.referralCount(hunterA.address)).to.equal(1);
   });
 
-  it("should score proportional to qualified referrals", async function () {
+  it('should score proportional to qualified referrals', async function () {
     // Hunter A: 1 referral
     await pool.connect(recorder).registerReferral(newUser1.address, hunterA.address);
     await pool.connect(recorder).qualifyReferral(newUser1.address);
@@ -480,53 +524,53 @@ describe("HeadhunterCompetitionPool (referral-weighted)", function () {
     expect(payB).to.equal(SEED.mul(2).div(3));
   });
 
-  it("should reject self-referral", async function () {
+  it('should reject self-referral', async function () {
     await expect(
       pool.connect(recorder).registerReferral(hunterA.address, hunterA.address)
-    ).to.be.revertedWithCustomError(pool, "SelfReferral");
+    ).to.be.revertedWithCustomError(pool, 'SelfReferral');
   });
 
-  it("should reject duplicate referral registration", async function () {
+  it('should reject duplicate referral registration', async function () {
     await pool.connect(recorder).registerReferral(newUser1.address, hunterA.address);
     await expect(
       pool.connect(recorder).registerReferral(newUser1.address, hunterB.address)
-    ).to.be.revertedWithCustomError(pool, "AlreadyReferred");
+    ).to.be.revertedWithCustomError(pool, 'AlreadyReferred');
   });
 
-  it("should reject double qualification", async function () {
+  it('should reject double qualification', async function () {
     await pool.connect(recorder).registerReferral(newUser1.address, hunterA.address);
     await pool.connect(recorder).qualifyReferral(newUser1.address);
     await expect(
       pool.connect(recorder).qualifyReferral(newUser1.address)
-    ).to.be.revertedWithCustomError(pool, "AlreadyQualified");
+    ).to.be.revertedWithCustomError(pool, 'AlreadyQualified');
   });
 
-  it("should reject qualifying unregistered user", async function () {
+  it('should reject qualifying unregistered user', async function () {
     await expect(
       pool.connect(recorder).qualifyReferral(newUser1.address)
-    ).to.be.revertedWithCustomError(pool, "NotReferred");
+    ).to.be.revertedWithCustomError(pool, 'NotReferred');
   });
 
-  it("should not score unqualified referrals", async function () {
+  it('should not score unqualified referrals', async function () {
     // Register but don't qualify — no score
     await pool.connect(recorder).registerReferral(newUser1.address, hunterA.address);
     expect(await pool.scores(1, hunterA.address)).to.equal(0);
   });
 
-  it("should roll over funds when nobody refers", async function () {
+  it('should roll over funds when nobody refers', async function () {
     // Deploy fresh pool
-    const F2 = await ethers.getContractFactory("HeadhunterCompetitionPool");
+    const F2 = await ethers.getContractFactory('HeadhunterCompetitionPool');
     const fresh = await F2.deploy(token.address, admin.address, MAX_PAYOUT);
     await fresh.deployed();
     await fresh.connect(admin).grantRecorder(recorder.address);
     await token.connect(feeSource).approve(fresh.address, ethers.constants.MaxUint256);
 
     // Month 1: 50K arrives, nobody refers
-    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther("50000"));
+    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther('50000'));
     await time.increase(THIRTY_DAYS + 1);
 
     // Month 2: another 50K, still nobody
-    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther("50000"));
+    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther('50000'));
     // Trigger period advance
     await fresh.connect(recorder).registerReferral(newUser1.address, hunterA.address);
     await fresh.connect(recorder).qualifyReferral(newUser1.address);
@@ -535,12 +579,12 @@ describe("HeadhunterCompetitionPool (referral-weighted)", function () {
     await fresh.finalizePeriod(1);
     expect(await fresh.periodPool(1)).to.equal(0);
     // 100K still sitting in contract
-    expect(await token.balanceOf(fresh.address)).to.equal(ethers.utils.parseEther("100000"));
+    expect(await token.balanceOf(fresh.address)).to.equal(ethers.utils.parseEther('100000'));
 
     await time.increase(THIRTY_DAYS + 1);
 
     // Month 3: 50K more, one hunter qualified in period 2
-    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther("50000"));
+    await fresh.connect(feeSource).receiveFunding(ethers.utils.parseEther('50000'));
     await fresh.connect(recorder).registerReferral(newUser2.address, hunterA.address);
 
     // Finalize period 2 (hunterA had 1 qualified referral)
@@ -548,7 +592,7 @@ describe("HeadhunterCompetitionPool (referral-weighted)", function () {
     const period2Pool = await fresh.periodPool(2);
 
     // Should include all rolled-over funds: 100K + new revenue
-    expect(period2Pool).to.be.gte(ethers.utils.parseEther("100000"));
+    expect(period2Pool).to.be.gte(ethers.utils.parseEther('100000'));
 
     // Hunter A gets it all (sole participant)
     await fresh.connect(hunterA).claimPayment(2);

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Heart, DollarSign } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
 export function TipSelector({ baseAmount, onTipSelected }: { baseAmount: number; onTipSelected: (tip: number) => void; }) {

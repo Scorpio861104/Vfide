@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { LedgerLogFailed, IProofLedger, Ownable, ReentrancyGuard, Pausable } from "./SharedInterfaces.sol";
-import { CardBoundVault } from "./vault/CardBoundVault.sol";
-import { CardBoundVaultDeployer } from "./vault/CardBoundVaultDeployer.sol";
+import {LedgerLogFailed, IProofLedger, Ownable, ReentrancyGuard, Pausable} from "./SharedInterfaces.sol";
+import {CardBoundVault} from "./vault/CardBoundVault.sol";
+import {CardBoundVaultDeployer} from "./vault/CardBoundVaultDeployer.sol";
 
 /**
  * @title VaultHub
@@ -17,9 +17,9 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice vfideToken
     address public vfideToken;
     /// @notice ledger
-    IProofLedger public ledger;       // optional ledger
+    IProofLedger public ledger; // optional ledger
     /// @notice dao
-    address public dao;               // DAO can force recover
+    address public dao; // DAO can force recover
 
     /// @notice CARD_GUARDIAN_THRESHOLD
     uint8 public constant CARD_GUARDIAN_THRESHOLD = 1;
@@ -68,8 +68,8 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     mapping(address => uint256) public recoveryNonce;
     /// @notice RECOVERY_DELAY
     uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
-        /// @notice DAO_RECOVERY_DELAY
-        uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
+    /// @notice DAO_RECOVERY_DELAY
+    uint64 public constant DAO_RECOVERY_DELAY = 14 days; // F-23 FIX: DAO-triggered recovery uses extended delay
     /// @notice RECOVERY_APPROVALS_REQUIRED
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
     /// @notice RECOVERY_CHALLENGE_DELAY
@@ -119,13 +119,13 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice pendingRecoveryApproverAddr
     address public pendingRecoveryApproverAddr;
     /// @notice pendingRecoveryApproverStatus
-    bool    public pendingRecoveryApproverStatus;
+    bool public pendingRecoveryApproverStatus;
     /// @notice pendingRecoveryApproverAt
-    uint64  public pendingRecoveryApproverAt;
+    uint64 public pendingRecoveryApproverAt;
     /// @notice pendingCouncil
     address public pendingCouncil;
     /// @notice pendingCouncilAt
-    uint64  public pendingCouncilAt;
+    uint64 public pendingCouncilAt;
 
     /// Events
     /// @notice VFIDEScheduled_VH
@@ -370,7 +370,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         delete pendingDAOAt_VH;
         _log("hub_dao_set");
     }
-    
+
     /// @notice Propose adding or removing a recovery approver (48h timelock).
     /// @dev H-1 FIX: Instant approval grants `executeRecoveryRotation` power — must be timelocked.
     /// @param approver Address to authorize or revoke.
@@ -443,15 +443,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @return predicted predicted
     function predictVault(address owner_) public view returns (address predicted) {
         if (owner_ == address(0)) return address(0);
-        predicted = vaultDeployer.predict(
-            address(this),
-            vfideToken,
-            owner_,
-            CARD_GUARDIAN_THRESHOLD,
-            cardDefaultMaxPerTransfer,
-            cardDefaultDailyLimit,
-            address(ledger)
-        );
+        predicted = vaultDeployer.predict(address(this), vfideToken, owner_, CARD_GUARDIAN_THRESHOLD, cardDefaultMaxPerTransfer, cardDefaultDailyLimit, address(ledger));
     }
 
     // ——— Legacy function for compatibility
@@ -494,20 +486,12 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         vault = vaultOf[owner_];
         if (vault != address(0)) return vault;
 
-        vault = vaultDeployer.deploy(
-            address(this),
-            vfideToken,
-            owner_,
-            CARD_GUARDIAN_THRESHOLD,
-            cardDefaultMaxPerTransfer,
-            cardDefaultDailyLimit,
-            address(ledger)
-        );
+        vault = vaultDeployer.deploy(address(this), vfideToken, owner_, CARD_GUARDIAN_THRESHOLD, cardDefaultMaxPerTransfer, cardDefaultDailyLimit, address(ledger));
 
         vaultOf[owner_] = vault;
         ownerOfVault[vault] = owner_;
         guardianSetupComplete[vault] = false;
-        
+
         // Track vault creation
         ++totalVaults;
         vaultCreatedAt[vault] = block.timestamp;
@@ -535,7 +519,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param a Candidate vault address.
     /// @return _bool _bool
     function isVault(address a) external view returns (bool) {
-        return ownerOfVault[a] != address(0) && vaultOf[ ownerOfVault[a] ] == a;
+        return ownerOfVault[a] != address(0) && vaultOf[ownerOfVault[a]] == a;
     }
 
     // ── Force Recovery REMOVED — non-custodial ──────────────
@@ -605,11 +589,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @return isExpired True if the grace period has elapsed without setup completion.
     /// @return isComplete True if guardian setup has already been completed.
     /// @param vault vault
-    function guardianSetupTimeRemaining(address vault)
-        external
-        view
-        returns (uint256 remaining, bool isExpired, bool isComplete)
-    {
+    function guardianSetupTimeRemaining(address vault) external view returns (uint256 remaining, bool isExpired, bool isComplete) {
         isComplete = guardianSetupComplete[vault];
         if (isComplete) return (0, false, true);
         uint256 created = vaultCreatedAt[vault];
@@ -628,7 +608,7 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
         uint256 created = vaultCreatedAt[vault];
         if (created == 0) return;
         uint256 deadline = created + GUARDIAN_SETUP_GRACE;
-        if (block.timestamp >= deadline) return;                      // already expired
+        if (block.timestamp >= deadline) return; // already expired
         if (block.timestamp + GUARDIAN_SETUP_WARNING < deadline) return; // too early to warn
         emit GuardianSetupExpiring(vault, ownerOfVault[vault], deadline);
     }
@@ -771,7 +751,11 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @notice _log
     /// @param action action
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
+                emit LedgerLogFailed(address(this), action);
+            }
+        }
     }
     // slither-disable-next-line reentrancy-events
     /// @notice _logEv
@@ -780,18 +764,26 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param amount amount
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {
+                emit LedgerLogFailed(who, action);
+            }
+        }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         VIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice HALT-01: Hub-level global pause is deprecated in favor of breaker signals.
-    function pause() external view onlyOwner { revert VH_DeprecatedGlobalPause(); }
+    function pause() external view onlyOwner {
+        revert VH_DeprecatedGlobalPause();
+    }
 
     /// @notice HALT-01: Hub-level global unpause is deprecated in favor of breaker signals.
-    function unpause() external view onlyOwner { revert VH_DeprecatedGlobalPause(); }
+    function unpause() external view onlyOwner {
+        revert VH_DeprecatedGlobalPause();
+    }
 
     /// @notice Returns true if the vault is in any inheritance state other than NORMAL or CLOSED.
     /// @dev Thin delegation to the vault's own inheritanceState() — gives external callers

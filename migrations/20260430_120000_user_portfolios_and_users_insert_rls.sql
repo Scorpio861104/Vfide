@@ -30,11 +30,15 @@ CREATE TABLE IF NOT EXISTS user_portfolios (
   reward_balance NUMERIC(36, 18) NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE (user_id),
-  UNIQUE (LOWER(wallet_address))
+  UNIQUE (user_id)
 );
-
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_portfolios_wallet ON user_portfolios (LOWER(wallet_address));
+-- Case-insensitive uniqueness on wallet_address.
+-- PostgreSQL rejects UNIQUE(LOWER(wallet_address)) inline in CREATE TABLE;
+-- use a functional unique index instead.
+-- NOTE: The UNIQUE index below also serves as the lookup index so no separate
+-- non-unique index is needed on LOWER(wallet_address).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_portfolios_wallet_lower
+  ON user_portfolios (LOWER(wallet_address));
 
 ALTER TABLE user_portfolios ENABLE ROW LEVEL SECURITY;
 
