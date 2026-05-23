@@ -1448,15 +1448,12 @@ contract VFIDETermLoan is ReentrancyGuard {
 
     /// @notice getLoan
     /// @param id id
-    /// @return _arg _arg
     function getLoan(uint256 id) external view returns (Loan memory) { return loans[id]; }
     /// @notice getPlan
     /// @param id id
-    /// @return _arg _arg
     function getPlan(uint256 id) external view returns (PaymentPlan memory) { return plans[id]; }
     /// @notice getGuarantors
     /// @param id id
-    /// @return _arg _arg
     function getGuarantors(uint256 id) external view returns (address[] memory) { return guarantors[id]; }
 
     /// @notice maxBorrowable
