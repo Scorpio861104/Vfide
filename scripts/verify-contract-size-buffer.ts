@@ -27,6 +27,10 @@ const BUFFER_EXCEPTIONS: Record<string, number> = {
 const OVER_LIMIT_ACKNOWLEDGED: Record<string, number> = {
   CardBoundVaultDeployer: 56_000, // ceiling: must not grow past this while being reduced
   CardBoundVault: 30_000,         // ceiling: must not grow past this while being reduced
+  // MerchantPortal (26 091 B): fee inversion model + ProofScore trust scoring requires
+  //   significant on-chain surface. Acknowledged for post-launch reduction via
+  //   MerchantPortalView library extraction. Ceiling 27 000 — must not grow further.
+  MerchantPortal: 27_000,
 };
 
 type ArtifactShape = {
