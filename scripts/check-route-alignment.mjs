@@ -93,7 +93,7 @@ function collectRefs() {
       if (shouldIgnore(cleaned)) continue
 
       refs.push({
-        file: path.relative(ROOT, file).replace(/\/g, '/'),
+        file: path.relative(ROOT, file).replace(/\\/g, '/'),
         ref: cleaned,
       })
     }
