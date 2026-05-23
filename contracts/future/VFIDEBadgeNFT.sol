@@ -520,7 +520,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     
     /// @notice supportsInterface
     /// @param interfaceId interfaceId
-    /// @return _bool _bool
     function supportsInterface(bytes4 interfaceId)
         public
         view
