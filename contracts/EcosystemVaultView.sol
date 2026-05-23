@@ -26,7 +26,6 @@ interface IEcosystemVaultView {
     /// @return _uint256 _uint256
     function operationsPool() external view returns (uint256);
     /// @notice rewardToken
-    /// @return _arg _arg
     function rewardToken() external view returns (IERC20);
     /// @notice currentMerchantPeriod
     /// @return _uint256 _uint256
