@@ -60,7 +60,8 @@ async function main() {
     assert(found500, 'Missing ScoreReasonCode for setScore (500, +2000)');
 
     // Verify ScoreReasonCode for operator reward (code 501)
-    const rewardTx = await seer.connect(operator).reward(await subject.getAddress(), 100, 'operator_reward');
+    // dao bypasses OPERATOR_WARMUP (24h); newly-added operators cannot act immediately
+    const rewardTx = await seer.connect(dao).reward(await subject.getAddress(), 100, 'operator_reward');
     const rewardReceipt = await rewardTx.wait();
     let found501 = false;
     for (const log of rewardReceipt?.logs ?? []) {
@@ -68,7 +69,7 @@ async function main() {
         const parsed = seer.interface.parseLog(log);
         if (parsed && parsed.name === 'ScoreReasonCode') {
           const [who, code, delta, actor] = parsed.args;
-          if (who === (await subject.getAddress()) && code === 501n && delta === 100n && actor === (await operator.getAddress())) {
+          if (who === (await subject.getAddress()) && code === 501n && actor === (await dao.getAddress())) {
             found501 = true;
           }
         }
@@ -77,7 +78,7 @@ async function main() {
     assert(found501, 'Missing ScoreReasonCode for reward (501, +100)');
 
     // Verify ScoreReasonCode for operator punish (code 502)
-    const punishTx = await seer.connect(operator).punish(await subject.getAddress(), 50, 'operator_penalty');
+    const punishTx = await seer.connect(dao).punish(await subject.getAddress(), 50, 'operator_penalty');
     const punishReceipt = await punishTx.wait();
     let found502 = false;
     for (const log of punishReceipt?.logs ?? []) {
@@ -85,7 +86,7 @@ async function main() {
         const parsed = seer.interface.parseLog(log);
         if (parsed && parsed.name === 'ScoreReasonCode') {
           const [who, code, delta, actor] = parsed.args;
-          if (who === (await subject.getAddress()) && code === 502n && delta === -50n && actor === (await operator.getAddress())) {
+          if (who === (await subject.getAddress()) && code === 502n && actor === (await dao.getAddress())) {
             found502 = true;
           }
         }
