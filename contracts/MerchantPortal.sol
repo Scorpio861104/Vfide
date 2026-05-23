@@ -1188,7 +1188,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// @notice Legacy entrypoint retained for ABI compatibility. Reverts because
     ///         instant single-step payout changes are no longer permitted.
-    /// @param _address _address
     function setPayoutAddress(address) external view onlyMerchant {
         revert("MP: use proposePayoutAddress + applyPayoutAddress");
     }
@@ -1416,10 +1415,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
 
     /// @notice Deprecated on-chain quote helper retained for ABI compatibility.
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _uint256 _uint256
     /// @return _uint256 _uint256
     /// @return _uint256 _uint256
     /// @return _uint256 _uint256
