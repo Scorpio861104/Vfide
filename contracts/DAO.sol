@@ -1185,7 +1185,6 @@ contract DAO is ReentrancyGuard {
      * @notice Check if user has voted on a proposal
      * @param id id
      * @param voter voter
-     * @return _bool _bool
      */
     function hasVoted(uint256 id, address voter) external view returns (bool) {
         return proposals[id].hasVoted[voter];
@@ -1260,7 +1259,6 @@ contract DAO is ReentrancyGuard {
     /**
      * @notice Check if user is eligible to vote/propose
      * @param user user
-     * @return _bool _bool
      */
     function isEligible(address user) external view returns (bool) {
         return _eligible(user);
