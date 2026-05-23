@@ -326,7 +326,6 @@ contract LiquidityIncentives is ReentrancyGuard {
     
     /**
      * @notice Get all pools
-     * @return _arg _arg
      */
     function getAllPools() external view returns (address[] memory) {
         return poolList;
