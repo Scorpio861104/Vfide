@@ -125,7 +125,6 @@ library BadgeRegistry {
      * @notice Get human-readable badge name
      * @param badge The badge ID (bytes32)
      * @return name The display name
-     * @return _string _string
      */
     function getName(bytes32 badge) public pure returns (string memory) {
         if (badge == PIONEER) return "Pioneer";
@@ -163,7 +162,6 @@ library BadgeRegistry {
      * @notice Check if a badge ID is valid
      * @param badge The badge ID (bytes32)
      * @return True if the badge is a known valid badge
-     * @return _bool _bool
      */
     function isValidBadge(bytes32 badge) public pure returns (bool) {
         return
@@ -201,7 +199,6 @@ library BadgeRegistry {
      * @notice Get badge category
      * @param badge The badge ID
      * @return category Category name
-     * @return _string _string
      */
     function getCategory(bytes32 badge) public pure returns (string memory) {
         // Pioneer & Foundation
@@ -251,7 +248,6 @@ library BadgeRegistry {
      * @notice Check if badge is permanent (non-expiring)
      * @param badge The badge ID
      * @return isPermanent True if badge never expires
-     * @return _bool _bool
      */
     function isPermanent(bytes32 badge) public pure returns (bool) {
         return (badge == PIONEER ||
@@ -277,7 +273,6 @@ library BadgeRegistry {
      * @notice Get recommended badge weight (points)
      * @param badge The badge ID
      * @return weight Recommended points value
-     * @return _uint16 _uint16
      */
     function getRecommendedWeight(bytes32 badge) public pure returns (uint16) {
         if (badge == PIONEER) return 30;
@@ -315,7 +310,6 @@ library BadgeRegistry {
      * @notice Get recommended badge duration
      * @param badge The badge ID
      * @return duration Time in seconds (0 = permanent)
-     * @return _uint256 _uint256
      */
     function getRecommendedDuration(bytes32 badge) public pure returns (uint256) {
         if (badge == ACTIVE_TRADER) return 90 days;
