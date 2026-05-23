@@ -540,8 +540,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _origin Message origin info
      * @param _guid Message GUID
      * @param payload Message payload
-     * @param _address _address
-     * @param _bytes _bytes
      */
     function _lzReceive(Origin calldata _origin, bytes32 _guid, bytes calldata payload, address /*_executor*/, bytes calldata /*_extraData*/) internal override {
         // Verify trusted remote
