@@ -619,7 +619,6 @@ interface IEcosystemVault {
 /// @author Vfide
 interface ICouncilManager {
     /// @notice getActiveMembers
-    /// @return _arg _arg
     function getActiveMembers() external view returns (address[] memory);
     /// @notice isActiveMember
     /// @param member member
