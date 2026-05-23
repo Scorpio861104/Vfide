@@ -500,7 +500,6 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     }
     
     /// @notice _getSwapPath
-    /// @return _arg _arg
     function _getSwapPath() internal view returns (address[] memory) {
         address[] memory path = new address[](2);
         path[0] = address(token);
