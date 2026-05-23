@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -9,28 +9,30 @@ async function getConnection() {
   return connectionPromise;
 }
 
-describe("VFIDETermLoan batch #241/#245 guardrails", () => {
-  it("rejects guarantor signing when source balance is below committed liability", async () => {
+describe('VFIDETermLoan batch #241/#245 guardrails', () => {
+  it('rejects guarantor signing when source balance is below committed liability', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, lender, borrower, guarantor, feeCollector] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+    const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
     const termLoan = await TermLoan.deploy(
       await token.getAddress(),
       dao.address,
       ethers.ZeroAddress,
       ethers.ZeroAddress,
-      feeCollector.address,
+      feeCollector.address
     );
     await termLoan.waitForDeployment();
 
-    const principal = ethers.parseEther("100");
+    const principal = ethers.parseEther('100');
     await token.mint(lender.address, principal);
-    await token.mint(guarantor.address, ethers.parseEther("50"));
+    await token.mint(guarantor.address, ethers.parseEther('50'));
 
     await token.connect(lender).approve(await termLoan.getAddress(), principal);
     // Allowance is large, but balance is intentionally insufficient.
@@ -45,29 +47,31 @@ describe("VFIDETermLoan batch #241/#245 guardrails", () => {
     );
   });
 
-  it("re-checks borrower score at activation to prevent stale-score funding", async () => {
+  it('re-checks borrower score at activation to prevent stale-score funding', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, lender, borrower, guarantor, feeCollector] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const Seer = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:SeerScoreStub");
+    const Seer = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:SeerScoreStub');
     const seer = await Seer.deploy();
     await seer.waitForDeployment();
 
-    const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+    const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
     const termLoan = await TermLoan.deploy(
       await token.getAddress(),
       dao.address,
       await seer.getAddress(),
       ethers.ZeroAddress,
-      feeCollector.address,
+      feeCollector.address
     );
     await termLoan.waitForDeployment();
 
-    const principal = ethers.parseEther("1000");
+    const principal = ethers.parseEther('1000');
     await token.mint(lender.address, principal);
     await token.mint(guarantor.address, principal);
 

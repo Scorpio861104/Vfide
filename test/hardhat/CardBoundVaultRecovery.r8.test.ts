@@ -18,9 +18,9 @@
  * Each test is named after the property it enforces.
  */
 
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -43,15 +43,17 @@ async function deployRecoveryFixture(numGuardians = 3) {
   const claimantA = rest[numGuardians];
   const claimantB = rest[numGuardians + 1];
 
-  const Hub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+  const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
   const hub = await Hub.deploy();
   await hub.waitForDeployment();
 
-  const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+  const Token = await ethers.getContractFactory(
+    'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+  );
   const token = await Token.deploy();
   await token.waitForDeployment();
 
-  const Vault = await ethers.getContractFactory("CardBoundVault");
+  const Vault = await ethers.getContractFactory('CardBoundVault');
   const vault = await Vault.deploy(
     await hub.getAddress(),
     await token.getAddress(),
@@ -59,15 +61,15 @@ async function deployRecoveryFixture(numGuardians = 3) {
     originalOwner.address,
     guardians.map((g: any) => g.address),
     Math.min(2, numGuardians),
-    ethers.parseEther("100"),
-    ethers.parseEther("300"),
-    ethers.ZeroAddress,
+    ethers.parseEther('100'),
+    ethers.parseEther('300'),
+    ethers.ZeroAddress
   );
   await vault.waitForDeployment();
 
   await hub.setVault(originalOwner.address, await vault.getAddress());
 
-  const Recovery = await ethers.getContractFactory("VaultRecoveryClaim");
+  const Recovery = await ethers.getContractFactory('VaultRecoveryClaim');
   const recovery = await Recovery.deploy(await hub.getAddress(), ethers.ZeroAddress);
   await recovery.waitForDeployment();
 
@@ -88,31 +90,28 @@ async function deployRecoveryFixture(numGuardians = 3) {
  * Advance EVM clock by `seconds` and mine one block.
  */
 async function fastForward(ethers: any, seconds: number) {
-  await ethers.provider.send("evm_increaseTime", [seconds]);
-  await ethers.provider.send("evm_mine", []);
+  await ethers.provider.send('evm_increaseTime', [seconds]);
+  await ethers.provider.send('evm_mine', []);
 }
 
-describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
+describe('R-8 guardian-initiated recovery', { concurrency: 1 }, () => {
   // ───────────────────────────────────────────────────────────────────
   // T-R8-01: TRUSTEE GATING
   // ───────────────────────────────────────────────────────────────────
 
-  it("T-R8-01a: vault with zero trustees allows anyone to initiate (pre-R8 fallback)", async () => {
+  it('T-R8-01a: vault with zero trustees allows anyone to initiate (pre-R8 fallback)', async () => {
     const f = await deployRecoveryFixture(3);
     // No trustees configured — fallback behavior: any address can initiate.
     // This preserves the recovery path for users who haven't set up trustees.
-    await f.recovery.connect(f.claimantA).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "lost device",
-    );
+    await f.recovery
+      .connect(f.claimantA)
+      .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'lost device');
     // Claim is recorded
     const claimId = await f.recovery.claimCounter();
     assert.equal(claimId, 1n);
   });
 
-  it("T-R8-01b: vault with trustees rejects non-trustee initiators", async () => {
+  it('T-R8-01b: vault with trustees rejects non-trustee initiators', async () => {
     const f = await deployRecoveryFixture(3);
     const [g1] = f.guardians;
     // Promote g1 to trustee via the bootstrap setter (no timelock during bootstrap).
@@ -121,17 +120,14 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
 
     // A random non-trustee tries to initiate → must revert with NotTrustee
     await assert.rejects(
-      f.recovery.connect(f.claimantA).initiateClaim(
-        await f.vault.getAddress(),
-        "",
-        f.ethers.ZeroHash,
-        "lost device",
-      ),
-      (err: any) => /NotTrustee/.test(err?.message ?? ""),
+      f.recovery
+        .connect(f.claimantA)
+        .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'lost device'),
+      (err: any) => /NotTrustee/.test(err?.message ?? '')
     );
   });
 
-  it("T-R8-01c: vault with trustees accepts initiation from any trustee", async () => {
+  it('T-R8-01c: vault with trustees accepts initiation from any trustee', async () => {
     const f = await deployRecoveryFixture(3);
     const [g1] = f.guardians;
     await f.vault.connect(f.originalOwner).setTrustee(g1.address, true);
@@ -139,12 +135,14 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
     // Trustee initiating recovery from their own wallet on behalf of the user.
     // (In practice the user would initiate from THEIR new wallet — this is the
     // "trustee helps" path. Either is supported as long as msg.sender is a trustee.)
-    await f.recovery.connect(g1).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "user lost device, helping",
-    );
+    await f.recovery
+      .connect(g1)
+      .initiateClaim(
+        await f.vault.getAddress(),
+        '',
+        f.ethers.ZeroHash,
+        'user lost device, helping'
+      );
     const claimId = await f.recovery.claimCounter();
     assert.equal(claimId, 1n);
   });
@@ -153,87 +151,74 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
   // T-R8-02: INITIATOR COOLDOWN
   // ───────────────────────────────────────────────────────────────────
 
-  it("T-R8-02a: challenged initiator is locked out for 30 days", async () => {
+  it('T-R8-02a: challenged initiator is locked out for 30 days', async () => {
     const f = await deployRecoveryFixture(3);
     const [g1] = f.guardians;
     await f.vault.connect(f.originalOwner).setTrustee(g1.address, true);
 
     // g1 (trustee) initiates a claim
-    await f.recovery.connect(g1).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "first attempt",
-    );
+    await f.recovery
+      .connect(g1)
+      .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'first attempt');
     const claimId = await f.recovery.claimCounter();
 
     // Original owner challenges
-    await f.recovery.connect(f.originalOwner).challengeClaim(claimId, "not me");
+    await f.recovery.connect(f.originalOwner).challengeClaim(claimId, 'not me');
 
     // Same initiator (g1) tries again immediately → must revert with cooldown error
     await assert.rejects(
-      f.recovery.connect(g1).initiateClaim(
-        await f.vault.getAddress(),
-        "",
-        f.ethers.ZeroHash,
-        "harassment retry",
-      ),
-      (err: any) => /InitiatorCooldownActive/.test(err?.message ?? ""),
+      f.recovery
+        .connect(g1)
+        .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'harassment retry'),
+      (err: any) => /InitiatorCooldownActive/.test(err?.message ?? '')
     );
   });
 
-  it("T-R8-02b: cooldown expires after 30 days and initiator can re-attempt", async () => {
+  it('T-R8-02b: cooldown expires after 30 days and initiator can re-attempt', async () => {
     const f = await deployRecoveryFixture(3);
     const [g1] = f.guardians;
     await f.vault.connect(f.originalOwner).setTrustee(g1.address, true);
 
-    await f.recovery.connect(g1).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "attempt 1",
-    );
+    await f.recovery
+      .connect(g1)
+      .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'attempt 1');
     const firstId = await f.recovery.claimCounter();
-    await f.recovery.connect(f.originalOwner).challengeClaim(firstId, "not me");
+    await f.recovery.connect(f.originalOwner).challengeClaim(firstId, 'not me');
 
     // Wait 30 days + 1 second
     await fastForward(f.ethers, 30 * 24 * 60 * 60 + 1);
 
     // g1 can now initiate again
-    await f.recovery.connect(g1).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "attempt 2 (legitimate, time passed)",
-    );
+    await f.recovery
+      .connect(g1)
+      .initiateClaim(
+        await f.vault.getAddress(),
+        '',
+        f.ethers.ZeroHash,
+        'attempt 2 (legitimate, time passed)'
+      );
     const secondId = await f.recovery.claimCounter();
     assert.equal(secondId, firstId + 1n);
   });
 
-  it("T-R8-02c: cooldown is PER-INITIATOR — other trustees can still initiate", async () => {
+  it('T-R8-02c: cooldown is PER-INITIATOR — other trustees can still initiate', async () => {
     const f = await deployRecoveryFixture(3);
     const [g1, g2] = f.guardians;
     await f.vault.connect(f.originalOwner).setTrustee(g1.address, true);
     await f.vault.connect(f.originalOwner).setTrustee(g2.address, true);
 
     // g1 initiates → owner challenges → g1 in cooldown
-    await f.recovery.connect(g1).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "g1 attempt (rogue)",
-    );
+    await f.recovery
+      .connect(g1)
+      .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'g1 attempt (rogue)');
     const claimId = await f.recovery.claimCounter();
-    await f.recovery.connect(f.originalOwner).challengeClaim(claimId, "not me");
+    await f.recovery.connect(f.originalOwner).challengeClaim(claimId, 'not me');
 
     // g2 (different trustee) should still be able to initiate — they're not the
     // bad actor and the user might still have a real emergency.
-    await f.recovery.connect(g2).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "g2 legitimate attempt",
-    );
+    await f.recovery
+      .connect(g2)
+      .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'g2 legitimate attempt');
     const newId = await f.recovery.claimCounter();
     assert.equal(newId, claimId + 1n);
   });
@@ -242,23 +227,23 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
   // T-R8-03: CHALLENGE PERIOD SNAPSHOT
   // ───────────────────────────────────────────────────────────────────
 
-  it("T-R8-03a: rejects user preference below the 3-day floor", async () => {
+  it('T-R8-03a: rejects user preference below the 3-day floor', async () => {
     const f = await deployRecoveryFixture(3);
     await assert.rejects(
       f.vault.connect(f.originalOwner).setChallengePeriodPreference(2 * 24 * 60 * 60),
-      (err: any) => /CBV_ChallengePeriodTooShort/.test(err?.message ?? ""),
+      (err: any) => /CBV_ChallengePeriodTooShort/.test(err?.message ?? '')
     );
   });
 
-  it("T-R8-03b: rejects user preference above the 30-day ceiling", async () => {
+  it('T-R8-03b: rejects user preference above the 30-day ceiling', async () => {
     const f = await deployRecoveryFixture(3);
     await assert.rejects(
       f.vault.connect(f.originalOwner).setChallengePeriodPreference(31 * 24 * 60 * 60),
-      (err: any) => /CBV_ChallengePeriodTooLong/.test(err?.message ?? ""),
+      (err: any) => /CBV_ChallengePeriodTooLong/.test(err?.message ?? '')
     );
   });
 
-  it("T-R8-03c: preference is snapshotted at initiation — later change cannot shrink active window", async () => {
+  it('T-R8-03c: preference is snapshotted at initiation — later change cannot shrink active window', async () => {
     const f = await deployRecoveryFixture(3);
     const [g1] = f.guardians;
     await f.vault.connect(f.originalOwner).setTrustee(g1.address, true);
@@ -266,12 +251,9 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
     await f.vault.connect(f.originalOwner).setChallengePeriodPreference(20 * 24 * 60 * 60);
 
     // Trustee initiates → snapshot captures 20 days
-    await f.recovery.connect(g1).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "with 20-day pref",
-    );
+    await f.recovery
+      .connect(g1)
+      .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'with 20-day pref');
     const claimId = await f.recovery.claimCounter();
     const claim = await f.recovery.claims(claimId);
     // challengePeriodSnapshot field should be at least 20 days
@@ -280,7 +262,7 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
     const TWENTY_DAYS = 20n * 24n * 60n * 60n;
     assert.ok(
       claim.challengePeriodSnapshot >= TWENTY_DAYS,
-      `expected snapshot >= 20 days, got ${claim.challengePeriodSnapshot}`,
+      `expected snapshot >= 20 days, got ${claim.challengePeriodSnapshot}`
     );
 
     // Now owner (or a hypothetical compromised owner key) tries to set a shorter
@@ -289,8 +271,11 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
     await f.vault.connect(f.originalOwner).setChallengePeriodPreference(3 * 24 * 60 * 60);
 
     const claimAfter = await f.recovery.claims(claimId);
-    assert.equal(claimAfter.challengePeriodSnapshot, claim.challengePeriodSnapshot,
-      "snapshot must not change after a setter call on the vault");
+    assert.equal(
+      claimAfter.challengePeriodSnapshot,
+      claim.challengePeriodSnapshot,
+      'snapshot must not change after a setter call on the vault'
+    );
   });
 
   // ───────────────────────────────────────────────────────────────────
@@ -306,20 +291,18 @@ describe("R-8 guardian-initiated recovery", { concurrency: 1 }, () => {
     // A claim initiated now should use the base (7 or 14 day) period
     const [g1] = f.guardians;
     await f.vault.connect(f.originalOwner).setTrustee(g1.address, true);
-    await f.recovery.connect(g1).initiateClaim(
-      await f.vault.getAddress(),
-      "",
-      f.ethers.ZeroHash,
-      "default-period claim",
-    );
+    await f.recovery
+      .connect(g1)
+      .initiateClaim(await f.vault.getAddress(), '', f.ethers.ZeroHash, 'default-period claim');
     const claimId = await f.recovery.claimCounter();
     const claim = await f.recovery.claims(claimId);
     // Should be exactly 7 or 14 days (not the user preference — there isn't one)
     const SEVEN_DAYS = 7n * 24n * 60n * 60n;
     const FOURTEEN_DAYS = 14n * 24n * 60n * 60n;
     assert.ok(
-      claim.challengePeriodSnapshot === SEVEN_DAYS || claim.challengePeriodSnapshot === FOURTEEN_DAYS,
-      `expected default window, got ${claim.challengePeriodSnapshot}`,
+      claim.challengePeriodSnapshot === SEVEN_DAYS ||
+        claim.challengePeriodSnapshot === FOURTEEN_DAYS,
+      `expected default window, got ${claim.challengePeriodSnapshot}`
     );
   });
 });

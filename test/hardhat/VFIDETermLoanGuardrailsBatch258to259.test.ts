@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -9,26 +9,28 @@ async function getConnection() {
   return connectionPromise;
 }
 
-describe("VFIDETermLoan batch #258/#259 guardrails", () => {
-  it("blocks loan creation for lenders with unresolved defaults", async () => {
+describe('VFIDETermLoan batch #258/#259 guardrails', () => {
+  it('blocks loan creation for lenders with unresolved defaults', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, lenderA, lenderB, borrower, guarantor, feeCollector] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+    const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
     const termLoan = await TermLoan.deploy(
       await token.getAddress(),
       dao.address,
       ethers.ZeroAddress,
       ethers.ZeroAddress,
-      feeCollector.address,
+      feeCollector.address
     );
     await termLoan.waitForDeployment();
 
-    const principal = ethers.parseEther("100");
+    const principal = ethers.parseEther('100');
     await token.mint(lenderA.address, principal);
     await token.mint(lenderB.address, principal);
     await token.mint(guarantor.address, principal);
@@ -41,8 +43,8 @@ describe("VFIDETermLoan batch #258/#259 guardrails", () => {
     await termLoan.connect(borrower).acceptLoan(1);
     await termLoan.connect(guarantor).signAsGuarantor(1);
 
-    await ethers.provider.send("evm_increaseTime", [4 * 24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [4 * 24 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     await termLoan.connect(lenderA).claimDefault(1);
     assert.equal(await termLoan.unresolvedDefaults(borrower.address), 1n);
@@ -55,21 +57,23 @@ describe("VFIDETermLoan batch #258/#259 guardrails", () => {
     await termLoan.connect(lenderB).createLoan(principal, 500, 24 * 60 * 60);
   });
 
-  it("rejects non-monotonic DAO score tiers", async () => {
+  it('rejects non-monotonic DAO score tiers', async () => {
     const { ethers } = (await getConnection()) as any;
     const [dao, feeCollector] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const TermLoan = await ethers.getContractFactory("VFIDETermLoan");
+    const TermLoan = await ethers.getContractFactory('VFIDETermLoan');
     const termLoan = await TermLoan.deploy(
       await token.getAddress(),
       dao.address,
       ethers.ZeroAddress,
       ethers.ZeroAddress,
-      feeCollector.address,
+      feeCollector.address
     );
     await termLoan.waitForDeployment();
 

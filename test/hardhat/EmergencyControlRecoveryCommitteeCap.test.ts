@@ -1,24 +1,26 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
-describe("EmergencyControl committee cap guardrails", { concurrency: 1, timeout: 120000 }, () => {
-  it("rejects committee reset above max member cap", async () => {
+describe('EmergencyControl committee cap guardrails', { concurrency: 1, timeout: 120000 }, () => {
+  it('rejects committee reset above max member cap', async () => {
     const { ethers } = (await network.connect()) as any;
     const signers = await ethers.getSigners();
     const dao = signers[0];
     const foundation = signers[1];
 
-    const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
+    const Breaker = await ethers.getContractFactory(
+      'test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock'
+    );
     const breaker = await Breaker.deploy();
     await breaker.waitForDeployment();
 
-    const EmergencyControl = await ethers.getContractFactory("EmergencyControl");
+    const EmergencyControl = await ethers.getContractFactory('EmergencyControl');
     const control = await EmergencyControl.deploy(
       dao.address,
       await breaker.getAddress(),
       ethers.ZeroAddress,
-      foundation.address,
+      foundation.address
     );
     await control.waitForDeployment();
 
@@ -37,22 +39,24 @@ describe("EmergencyControl committee cap guardrails", { concurrency: 1, timeout:
     assert.equal(reverted, true);
   });
 
-  it("rejects applying foundation-queued member additions when committee cap is reached", async () => {
+  it('rejects applying foundation-queued member additions when committee cap is reached', async () => {
     const { ethers } = (await network.connect()) as any;
     const signers = await ethers.getSigners();
     const dao = signers[0];
     const foundation = signers[1];
 
-    const Breaker = await ethers.getContractFactory("test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock");
+    const Breaker = await ethers.getContractFactory(
+      'test/contracts/mocks/InterfaceMocks.sol:EmergencyBreakerMock'
+    );
     const breaker = await Breaker.deploy();
     await breaker.waitForDeployment();
 
-    const EmergencyControl = await ethers.getContractFactory("EmergencyControl");
+    const EmergencyControl = await ethers.getContractFactory('EmergencyControl');
     const control = await EmergencyControl.deploy(
       dao.address,
       await breaker.getAddress(),
       ethers.ZeroAddress,
-      foundation.address,
+      foundation.address
     );
     await control.waitForDeployment();
 
@@ -63,8 +67,8 @@ describe("EmergencyControl committee cap guardrails", { concurrency: 1, timeout:
     await control.connect(dao).resetCommittee(2, members);
 
     await control.connect(foundation).addMember(ethers.Wallet.createRandom().address);
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     let reverted = false;
     try {

@@ -1,21 +1,23 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
-describe("EcoTreasuryVault notifier timelock", () => {
-  it("only activates notifier changes after timelock", async () => {
+describe('EcoTreasuryVault notifier timelock', () => {
+  it('only activates notifier changes after timelock', async () => {
     const { ethers } = (await network.connect()) as any;
     const [dao, notifier, outsider] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:MintableTokenStub");
+    const Token = await ethers.getContractFactory(
+      'test/contracts/helpers/Stubs.sol:MintableTokenStub'
+    );
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const Treasury = await ethers.getContractFactory("EcoTreasuryVault");
+    const Treasury = await ethers.getContractFactory('EcoTreasuryVault');
     const treasury = await Treasury.deploy(
       dao.address,
       ethers.ZeroAddress,
-      await token.getAddress(),
+      await token.getAddress()
     );
     await treasury.waitForDeployment();
 
@@ -31,13 +33,10 @@ describe("EcoTreasuryVault notifier timelock", () => {
       /FI: notifier timelock|revert/
     );
 
-    await assert.rejects(
-      () => treasury.connect(outsider).applyNotifier(),
-      /FI_NotDAO|revert/
-    );
+    await assert.rejects(() => treasury.connect(outsider).applyNotifier(), /FI_NotDAO|revert/);
 
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     await treasury.connect(dao).applyNotifier();
     await token.mint(await treasury.getAddress(), 100n);
