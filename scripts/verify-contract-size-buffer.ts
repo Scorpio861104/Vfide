@@ -16,6 +16,10 @@ const BUFFER_EXCEPTIONS: Record<string, number> = {
   // UserVaultBytecodeProvider (24 274 B): legacy provider retained for backward compat
   //   with existing UserVaultLegacy deployments. Tracked for removal post-migration.
   UserVaultBytecodeProvider: EIP170_RUNTIME_LIMIT,
+  // EcosystemVault (24 409 B): largest contract in codebase (1449 lines). Already at runs:0
+  //   + revertStrings:strip + viaIR. Below EIP-170 hard limit (24 576 B). Tracked for
+  //   Sanctum Fund logic extraction post-launch to bring below 24 000 B buffer.
+  EcosystemVault: EIP170_RUNTIME_LIMIT,
 };
 
 // Contracts that are acknowledged to exceed EIP-170 and are actively being reduced.
