@@ -58,19 +58,16 @@ interface IUserVaultRecovery {
     /// @return _address _address
     function owner() external view returns (address);
     /// @notice isGuardian
-    /// @param _address _address
     /// @return _bool _bool
     function isGuardian(address) external view returns (bool);
     /// @notice guardianCount
     /// @return _uint8 _uint8
     function guardianCount() external view returns (uint8);
     /// @notice isGuardianMature
-    /// @param _address _address
     /// @return _bool _bool
     function isGuardianMature(address) external view returns (bool);
     // R-8: tiered guardian roles + per-vault configurable challenge window
     /// @notice isGuardianTrustee
-    /// @param _address _address
     /// @return _bool _bool
     function isGuardianTrustee(address) external view returns (bool);
     /// @notice trusteeCountView
