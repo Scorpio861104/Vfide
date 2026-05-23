@@ -940,7 +940,6 @@ contract SessionKeyManager is ReentrancyGuard {
      * @dev Only callable by authorized contracts (MerchantPortal, etc.)
      * @param sessionKey sessionKey
      * @param amount amount
-     * @return _bool _bool
      */
     function recordSpend(address sessionKey, uint256 amount) external onlyAuthorizedRecorder nonReentrant returns (bool) {
         Session storage s = sessions[sessionKey];
@@ -962,7 +961,6 @@ contract SessionKeyManager is ReentrancyGuard {
     /**
      * @notice Get vault owner for a session key
      * @param sessionKey sessionKey
-     * @return _address _address
      */
     function getSessionOwner(address sessionKey) external view returns (address) {
         return sessions[sessionKey].owner;
@@ -1301,7 +1299,6 @@ contract TerminalRegistry is ReentrancyGuard {
     /**
      * @notice Check if amount qualifies for tap-to-pay (no signature)
      * @param amount amount
-     * @return _bool _bool
      */
     function isTapEligible(uint256 amount) external view returns (bool) {
         return amount <= tapLimit;
