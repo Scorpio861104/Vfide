@@ -1063,7 +1063,6 @@ contract OwnerControlPanel {
      * @notice Set fee curve parameters (linear interpolation between min and max)
      * @param minBps Minimum fee in basis points (e.g., 25 = 0.25%) for high-trust users
      * @param maxBps Maximum fee in basis points (e.g., 500 = 5%) for low-trust users
-     * @return _bytes32 _bytes32
      */
     function actionId_fees_setPolicy(uint16 minBps, uint16 maxBps) private pure returns (bytes32) {
         return keccak256(abi.encode("fees_setPolicy", minBps, maxBps));
@@ -1276,8 +1275,6 @@ contract OwnerControlPanel {
     /**
      * @notice Check if address owns a vault
      * @param user user
-     * @return _bool _bool
-     * @return _address _address
      */
     function hasVault(address user) external view returns (bool, address) {
         address vault = vaultHub.vaultOf(user);
@@ -1286,9 +1283,6 @@ contract OwnerControlPanel {
 
     /**
      * @notice Deprecated dashboard helper retained for ABI compatibility.
-     * @return _bool _bool
-     * @return _bool _bool
-     * @return _string _string
      */
     function getSystemHealth() external pure returns (bool, bool, string memory) {
         revert OCP_DeprecatedView();
@@ -1386,7 +1380,6 @@ contract OwnerControlPanel {
      * @notice Set manager permissions for EcosystemVault
      * @param manager Address to grant/revoke manager role
      * @param active True to grant, false to revoke
-     * @return _bytes32 _bytes32
      */
     function actionId_ecosystem_setManager(address manager, bool active) private pure returns (bytes32) {
         return keccak256(abi.encode("ecosystem_setManager", manager, active));
@@ -1499,12 +1492,6 @@ contract OwnerControlPanel {
 
     /**
      * @notice Deprecated dashboard helper retained for ABI compatibility.
-     * @return _bool _bool
-     * @return _bool _bool
-     * @return _bool _bool
-     * @return _bool _bool
-     * @return _bool _bool
-     * @return _string _string
      */
     function system_getStatus() external pure returns (bool, bool, bool, bool, bool, string memory) {
         revert OCP_DeprecatedView();
