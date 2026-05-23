@@ -1072,8 +1072,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice setCircuitBreaker
-    /// @param _bool _bool
-    /// @param _uint256 _uint256
     function setCircuitBreaker(bool, uint256) external view onlyOwner {
         // #311: Circuit-breaker transfer halts were removed from token policy.
         // Keep this ABI method as a no-op for backward compatibility with existing tooling.
