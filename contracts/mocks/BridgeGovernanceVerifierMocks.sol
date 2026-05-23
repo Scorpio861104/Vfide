@@ -57,7 +57,6 @@ contract MockLzEndpointForBridge {
     }
 
     /// @notice quote
-    /// @param _arg _arg
     /// @return _arg _arg
     function quote(MessagingParams calldata, address) external pure returns (MessagingFee memory) {
         return MessagingFee(0, 0);
