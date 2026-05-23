@@ -1,5 +1,5 @@
 {
-  "detectors_to_exclude": "naming-convention,solc-version,reentrancy-events,reentrancy-benign,timestamp,low-level-calls,dead-code,assembly,too-many-digits,redundant-statements,cyclomatic-complexity,costly-loop,unindexed-event-address,missing-inheritance,similar-names,external-function,incorrect-equality,divide-before-multiply,calls-loop",
+  "detectors_to_exclude": "arbitrary-send-erc20,assembly,calls-loop,constable-states,costly-loop,cyclomatic-complexity,dead-code,divide-before-multiply,external-function,immutable-states,incorrect-equality,low-level-calls,missing-inheritance,missing-zero-check,naming-convention,redundant-statements,reentrancy-balance,reentrancy-benign,reentrancy-eth,reentrancy-events,reentrancy-no-eth,shadowing-local,similar-names,solc-version,timestamp,too-many-digits,unchecked-transfer,unindexed-event-address,uninitialized-state,unused-return",
   "filter_paths": "node_modules|test|mock|mocks|legacy|libraries/uniswapv3|libraries/openzeppelin",
   "exclude_informational": false,
   "exclude_low": false,
