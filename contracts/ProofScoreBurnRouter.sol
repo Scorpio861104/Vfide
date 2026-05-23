@@ -789,7 +789,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @return ecosystemSink_ Ecosystem vault address
      * @return burnSink_ Burn sink address (zero = hard burn)
      * @notice computeFees
-     * @param _address _address
      */
     function computeFees(
         address from,
