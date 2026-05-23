@@ -258,6 +258,10 @@ const config: VfideHardhatConfig = {
       // The EIP-170 violation is tracked in verify-contract-size-buffer.ts (BUFFER_EXCEPTIONS).
       // Once both contracts are reduced below 24KB this flag can be removed.
       allowUnlimitedContractSize: true,
+      // Bypass EIP-3860 initcode size limit (49152 bytes) so that VaultHub
+      // and CardBoundVaultDeployer (initcode ~54-69KB) can be deployed in tests.
+      // Remove when contracts are refactored below the initcode limit.
+      allowUnlimitedInitcodeSize: true,
       // Use Prague hardfork to avoid EIP-7825 (Osaka) transaction gas cap of 16M.
       // The default hardfork in this version of Hardhat 3 is Osaka, which introduces
       // a per-transaction gas limit of 16,777,216. Large contract deployments
