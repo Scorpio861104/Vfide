@@ -1969,7 +1969,6 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice _recoverSigner
     /// @param digest digest
     /// @param signature signature
-    /// @return _address _address
     function _recoverSigner(bytes32 digest, bytes calldata signature)
         internal
         pure
@@ -1998,7 +1997,6 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice _recoverTransferSigner
     /// @param intent intent
     /// @param signature signature
-    /// @return _address _address
     function _recoverTransferSigner(TransferIntent calldata intent, bytes calldata signature)
         internal
         view
@@ -2010,7 +2008,6 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice _recoverPaySigner
     /// @param intent intent
     /// @param signature signature
-    /// @return _address _address
     function _recoverPaySigner(PayIntent calldata intent, bytes calldata signature)
         internal
         view
@@ -2023,7 +2020,6 @@ contract CardBoundVault is ReentrancyGuard {
     ///         as _recoverPaySigner; the only difference is which typed-data digest is verified.
     /// @param intent intent
     /// @param signature signature
-    /// @return _address _address
     function _recoverFundEscrowSigner(EscrowFundIntent calldata intent, bytes calldata signature)
         internal
         view
