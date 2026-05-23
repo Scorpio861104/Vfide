@@ -519,14 +519,12 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
 
     /// @notice Get all task keys for a worker.
     /// @param worker worker
-    /// @return _arg _arg
     function getWorkerTaskKeys(address worker) external view returns (bytes32[] memory) {
         return workerTasks[worker];
     }
 
     /// @notice Get task details by key.
     /// @param key key
-    /// @return _arg _arg
     function getTask(bytes32 key) external view returns (TaskRecord memory) {
         return tasks[key];
     }
