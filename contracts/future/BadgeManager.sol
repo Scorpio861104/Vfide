@@ -674,7 +674,6 @@ contract BadgeManager {
      * @notice Get user statistics
      * @param user The user address
      * @return stats The user's statistics
-     * @return _arg _arg
      */
     function getUserStats(address user) external view returns (UserStats memory) {
         return userStats[user];
