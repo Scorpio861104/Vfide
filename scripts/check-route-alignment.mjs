@@ -50,7 +50,7 @@ function normalizeRoute(filePath) {
 
 function routeToRegex(route) {
   const escaped = route
-    .replace(/[.*+?^${}()|[\]\]/g, '\$&')
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     .replace(/\\[\.\.\.[^/\]]+\\]/g, '.+')
     .replace(/\\[[^/\]]+\\]/g, '[^/]+')
   return new RegExp(`^${escaped}$`)
