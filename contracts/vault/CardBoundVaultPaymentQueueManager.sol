@@ -91,9 +91,7 @@ contract CardBoundVaultPaymentQueueManager {
     /// @return cancelled cancelled
     /// @return intentNonce intentNonce
     /// @return recipientCodeHashAtQueue recipientCodeHashAtQueue
-    function paymentQueue(
-        uint256 index
-    )
+    function paymentQueue(uint256 index)
         external
         view
         returns (
@@ -121,7 +119,13 @@ contract CardBoundVaultPaymentQueueManager {
     /// @param intentNonce intentNonce
     /// @return queueIndex queueIndex
     /// @return executeAfter executeAfter
-    function queuePayment(address token, address merchant, address recipient, uint256 amount, uint256 intentNonce) external onlyVault returns (uint256 queueIndex, uint64 executeAfter) {
+    function queuePayment(
+        address token,
+        address merchant,
+        address recipient,
+        uint256 amount,
+        uint256 intentNonce
+    ) external onlyVault returns (uint256 queueIndex, uint64 executeAfter) {
         if (activeQueuedPayments >= MAX_QUEUED_PAYMENTS) revert PQM_QueueFull();
 
         executeAfter = uint64(block.timestamp) + uint64(WITHDRAWAL_DELAY);
@@ -156,7 +160,11 @@ contract CardBoundVaultPaymentQueueManager {
     /// @return token token
     /// @return recipient recipient
     /// @return amount amount
-    function executeQueuedPayment(uint256 queueIndex, bool isAdmin) external onlyVault returns (address token, address recipient, uint256 amount) {
+    function executeQueuedPayment(uint256 queueIndex, bool isAdmin)
+        external
+        onlyVault
+        returns (address token, address recipient, uint256 amount)
+    {
         if (!isAdmin) revert PQM_NotAuthorized();
         if (queueIndex >= _paymentQueue.length) revert PQM_InvalidIndex();
 
@@ -186,7 +194,11 @@ contract CardBoundVaultPaymentQueueManager {
     /// @param authorized authorized
     /// @return requestTime requestTime
     /// @return amount amount
-    function cancelQueuedPayment(uint256 queueIndex, bool authorized) external onlyVault returns (uint64 requestTime, uint256 amount) {
+    function cancelQueuedPayment(uint256 queueIndex, bool authorized)
+        external
+        onlyVault
+        returns (uint64 requestTime, uint256 amount)
+    {
         if (!authorized) revert PQM_NotAuthorized();
         if (queueIndex >= _paymentQueue.length) revert PQM_InvalidIndex();
 
@@ -206,7 +218,11 @@ contract CardBoundVaultPaymentQueueManager {
     /// @param threshold threshold
     /// @param delay delay
     /// @return executeAfter executeAfter
-    function setLargePaymentThreshold(uint256 threshold, uint64 delay) external onlyVault returns (uint64 executeAfter) {
+    function setLargePaymentThreshold(uint256 threshold, uint64 delay)
+        external
+        onlyVault
+        returns (uint64 executeAfter)
+    {
         executeAfter = uint64(block.timestamp) + delay;
         pendingLargePaymentThresholdChange = PendingLargePaymentThresholdChange({threshold: threshold, executeAfter: executeAfter});
     }
@@ -214,7 +230,11 @@ contract CardBoundVaultPaymentQueueManager {
     /// @notice applyLargePaymentThreshold
     /// @return oldThreshold oldThreshold
     /// @return newThreshold newThreshold
-    function applyLargePaymentThreshold() external onlyVault returns (uint256 oldThreshold, uint256 newThreshold) {
+    function applyLargePaymentThreshold()
+        external
+        onlyVault
+        returns (uint256 oldThreshold, uint256 newThreshold)
+    {
         PendingLargePaymentThresholdChange memory pending = pendingLargePaymentThresholdChange;
         if (pending.executeAfter == 0) revert PQM_NoPending();
         if (block.timestamp < pending.executeAfter) revert PQM_DelayActive();
@@ -237,7 +257,11 @@ contract CardBoundVaultPaymentQueueManager {
     /// pipelines. Previously only applyLargePaymentThreshold existed with no cancel.
     /// @return threshold threshold
     /// @return executeAfter executeAfter
-    function cancelLargePaymentThreshold() external onlyVault returns (uint256 threshold, uint64 executeAfter) {
+    function cancelLargePaymentThreshold()
+        external
+        onlyVault
+        returns (uint256 threshold, uint64 executeAfter)
+    {
         PendingLargePaymentThresholdChange memory pending = pendingLargePaymentThresholdChange;
         if (pending.executeAfter == 0) revert PQM_NoPending();
         threshold = pending.threshold;

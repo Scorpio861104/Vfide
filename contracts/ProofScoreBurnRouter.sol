@@ -13,39 +13,98 @@ import "./lib/ScoringConstants.sol";
  * - Dynamic fees based on ProofScore
  * - Implements computeFees interface for VFIDEToken integration
  * - All actions logged for transparency
+ * @notice BURN_Zero
  */
 
 error BURN_Zero();
 
+/// @notice ProofScoreBurnRouter
+/// @title ProofScoreBurnRouter
+/// @author Vfide
 contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
+    /// @notice ModulesSet
+    /// @param seer seer
+    /// @param sanctumSink sanctumSink
+    /// @param burnSink burnSink
+    /// @param ecosystemSink ecosystemSink
     event ModulesSet(address seer, address sanctumSink, address burnSink, address ecosystemSink);
+    /// @notice PolicySet
+    /// @param baseBurnBps baseBurnBps
+    /// @param baseSanctumBps baseSanctumBps
+    /// @param baseEcosystemBps baseEcosystemBps
+    /// @param highTrustReduction highTrustReduction
+    /// @param lowTrustPenalty lowTrustPenalty
     event PolicySet(uint16 baseBurnBps, uint16 baseSanctumBps, uint16 baseEcosystemBps, uint16 highTrustReduction, uint16 lowTrustPenalty);
     // H-6 FIX: Emit effective ecosystem allocations at representative score tiers whenever fee
     // policy changes so monitoring can detect drift between BurnRouter and EcosystemVault splits.
     // ecosystemBpsAtLow = effective ecosystem bps for a LOW_SCORE_THRESHOLD user.
     // ecosystemBpsAtHigh = effective ecosystem bps for a HIGH_SCORE_THRESHOLD user.
+    /// @notice EcosystemAllocationImpact
+    /// @param ecosystemBpsAtLow ecosystemBpsAtLow
+    /// @param ecosystemBpsAtNeutral ecosystemBpsAtNeutral
+    /// @param ecosystemBpsAtHigh ecosystemBpsAtHigh
     event EcosystemAllocationImpact(uint256 ecosystemBpsAtLow, uint256 ecosystemBpsAtNeutral, uint256 ecosystemBpsAtHigh);
+    /// @notice SustainabilitySet
+    /// @param dailyBurnCap dailyBurnCap
+    /// @param minimumSupplyFloor minimumSupplyFloor
+    /// @param ecosystemMinBps ecosystemMinBps
     event SustainabilitySet(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps);
+    /// @notice MicroTxFeeCeilingSet
+    /// @param maxBps maxBps
+    /// @param maxAmount maxAmount
     event MicroTxFeeCeilingSet(uint16 maxBps, uint256 maxAmount);
+    /// @notice MicroTxUsdCapSet
+    /// @param priceOracle priceOracle
+    /// @param maxUsd6 maxUsd6
     event MicroTxUsdCapSet(address indexed priceOracle, uint256 maxUsd6);
+    /// @notice AdaptiveFeesSet
+    /// @param lowVolumeThreshold lowVolumeThreshold
+    /// @param highVolumeThreshold highVolumeThreshold
+    /// @param lowVolMultiplier lowVolMultiplier
+    /// @param highVolMultiplier highVolMultiplier
+    /// @param enabled enabled
     event AdaptiveFeesSet(uint256 lowVolumeThreshold, uint256 highVolumeThreshold, uint16 lowVolMultiplier, uint16 highVolMultiplier, bool enabled);
+        /// @notice SustainabilityProposed
+        /// @param dailyBurnCap dailyBurnCap
+        /// @param minimumSupplyFloor minimumSupplyFloor
+        /// @param ecosystemMinBps ecosystemMinBps
+        /// @param effectiveAt effectiveAt
         event SustainabilityProposed(uint256 dailyBurnCap, uint256 minimumSupplyFloor, uint16 ecosystemMinBps, uint64 effectiveAt);
+        /// @notice SustainabilityCancelled
         event SustainabilityCancelled();
+        /// @notice MicroTxFeeCeilingProposed
+        /// @param maxBps maxBps
+        /// @param maxAmount maxAmount
+        /// @param effectiveAt effectiveAt
         event MicroTxFeeCeilingProposed(uint16 maxBps, uint256 maxAmount, uint64 effectiveAt);
+        /// @notice MicroTxUsdCapProposed
+        /// @param priceOracle priceOracle
+        /// @param maxUsd6 maxUsd6
+        /// @param effectiveAt effectiveAt
         event MicroTxUsdCapProposed(address indexed priceOracle, uint256 maxUsd6, uint64 effectiveAt);
+        /// @notice MicroTxFeeCancelled
         event MicroTxFeeCancelled();
     // L-03: Emitted when seer returns score 0 for a user, which silently applies max fees.
     // Monitoring systems should alert on this — it may indicate a misconfigured seer address.
+    /// @notice SeerScoreZeroWarning
+    /// @param user user
+    /// @param seerAddr seerAddr
     event SeerScoreZeroWarning(address indexed user, address indexed seerAddr);
 
+    /// @notice seer
     ISeer public seer;
+    /// @notice sanctumSink
     address public sanctumSink;   // SanctumVault address
+    /// @notice burnSink
     address public burnSink;      // Optional burn sink (if zero, hard burn to address(0))
+    /// @notice ecosystemSink
     address public ecosystemSink; // EcosystemVault address
     
     // BR-04 FIX: Pending modules with timelock to prevent instant sink replacement
+    /// @notice MODULE_CHANGE_DELAY
     uint64 public constant MODULE_CHANGE_DELAY = 7 days;
         // TL-348/349 FIX: 24h timelock for sustainability + micro-tx fee admin params (#348, #349)
+        /// @notice SUSTAINABILITY_CHANGE_DELAY
         uint64 public constant SUSTAINABILITY_CHANGE_DELAY = 24 hours;
         struct PendingSustainability {
             uint256 dailyBurnCap;
@@ -54,6 +113,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
             uint64 effectiveAt;
             bool pending;
         }
+        /// @notice pendingSustainability
         PendingSustainability public pendingSustainability;
         struct PendingMicroTxFee {
             uint16 maxBps;
@@ -64,6 +124,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
             bool pendingCeiling;
             bool pendingUsdCap;
         }
+        /// @notice pendingMicroTxFee
         PendingMicroTxFee public pendingMicroTxFee;
     struct PendingModules {
         address seer_;
@@ -71,37 +132,58 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         address burnSink_;
         address ecosystemSink_;
     }
+    /// @notice pendingModules
     PendingModules public pendingModules;
+    /// @notice pendingModulesAt
     uint64 public pendingModulesAt;
 
     // Policy: basis points (100 = 1%)
+    /// @notice DEFAULT_BURN_BPS
     uint16 public constant DEFAULT_BURN_BPS = 150;  // 1.5% base burn
+    /// @notice DEFAULT_SANCTUM_BPS
     uint16 public constant DEFAULT_SANCTUM_BPS = 5;  // 0.05% base Sanctum
+    /// @notice DEFAULT_ECOSYSTEM_BPS
     uint16 public constant DEFAULT_ECOSYSTEM_BPS = 20;  // 0.2% base Ecosystem
     
+    /// @notice baseBurnBps
     uint16 public constant baseBurnBps = DEFAULT_BURN_BPS;
+    /// @notice baseSanctumBps
     uint16 public constant baseSanctumBps = DEFAULT_SANCTUM_BPS;
+    /// @notice baseEcosystemBps
     uint16 public constant baseEcosystemBps = DEFAULT_ECOSYSTEM_BPS;
     
     // Linear fee curve parameters (0-10000 scale)
     // Fee = linear interpolation between minFeeBps and maxFeeBps based on score
     // WHITEPAPER: Low Trust ≤40% (4000), High Trust ≥80% (8000)
+    /// @notice LOW_SCORE_THRESHOLD
     uint16 public constant LOW_SCORE_THRESHOLD = ScoringConstants.LOW_FEE_FLOOR;  // ≤4000 pays max fee (40%)
+    /// @notice HIGH_SCORE_THRESHOLD
     uint16 public constant HIGH_SCORE_THRESHOLD = ScoringConstants.HIGH_FEE_CEIL;  // ≥8000 pays min fee (80%)
+    /// @notice MIN_TOTAL_FEE_FLOOR_BPS
     uint16 public constant MIN_TOTAL_FEE_FLOOR_BPS = 10; // 0.10% hard floor
+    /// @notice BPS_SCALE
     uint16 public constant BPS_SCALE = 10_000; // 100% in basis points
+    /// @notice minTotalBps
     uint16 public minTotalBps = 25;   // 0.25% minimum fee for score ≥8000
+    /// @notice maxTotalBps
     uint16 public maxTotalBps = 500;  // 5% maximum fee for score ≤4000
+    /// @notice microTxFeeCeilingBps
     uint16 public microTxFeeCeilingBps = 100; // 1.00% max fee for small payments
+    /// @notice microTxMaxAmount
     uint256 public microTxMaxAmount = 10 * 1e18;
+    /// @notice microTxPriceOracle
     address public microTxPriceOracle; // Optional VFIDE/USD oracle (getPrice -> 18 decimals)
+    /// @notice microTxMaxUsd6
     uint256 public microTxMaxUsd6;     // Optional USD cap with 6 decimals (e.g., 10e6 = $10)
     
     // BR-05 FIX: Rate limit fee policy changes (max 1 per day)
+    /// @notice lastFeePolicyChange
     uint64 public lastFeePolicyChange;
+    /// @notice FEE_POLICY_COOLDOWN
     uint64 public constant FEE_POLICY_COOLDOWN = 1 days;
 
         // F-13 FIX: Persistent initialized flag to prevent rate-limit bypass
+        /// @notice feePolicyInitialized
         bool public feePolicyInitialized;
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -110,20 +192,26 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     // Daily burn cap to prevent excessive deflation during high volume
     // When cap is reached, excess burns redirect to ecosystem fund
+    /// @notice dailyBurnCap
     uint256 public dailyBurnCap = 500_000 * 1e18;  // 0.25% of supply per day max
     
     // Minimum supply floor - burns pause when supply approaches this threshold
     // Ensures long-term token availability
+    /// @notice minimumSupplyFloor
     uint256 public minimumSupplyFloor = 50_000_000 * 1e18;  // 25% of initial supply (50M)
     
     // Minimum ecosystem fee even for high-score users (ensures sustainability)
+    /// @notice ecosystemMinBps
     uint16 public ecosystemMinBps = 5;  // 0.05% always goes to ecosystem
     
     // Daily tracking for burn cap
+    /// @notice currentDayStart
     uint256 public currentDayStart;
+    /// @notice dailyBurnedAmount
     uint256 public dailyBurnedAmount;
     
     // Reference to token for supply checking (immutable once deployed)
+    /// @notice token
     address public immutable token;
     
     // ═══════════════════════════════════════════════════════════════════════════
@@ -131,19 +219,25 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════
     
     // Low volume threshold - below this, fees increase to maintain ecosystem funding
+    /// @notice lowVolumeThreshold
     uint256 public lowVolumeThreshold = 100_000 * 1e18;   // 100K VFIDE/day = low
     
     // High volume threshold - above this, fees decrease to not over-extract
+    /// @notice highVolumeThreshold
     uint256 public highVolumeThreshold = 5_000_000 * 1e18; // 5M VFIDE/day = high
     
     // Fee multiplier range (in basis points: 10000 = 1x, 15000 = 1.5x, 5000 = 0.5x)
+    /// @notice lowVolumeFeeMultiplier
     uint16 public lowVolumeFeeMultiplier = 12000;  // 1.2x fees when volume is low
+    /// @notice highVolumeFeeMultiplier
     uint16 public highVolumeFeeMultiplier = 8000;  // 0.8x fees when volume is high
     
     // Whether adaptive fees are enabled
+    /// @notice adaptiveFeesEnabled
     bool public adaptiveFeesEnabled = false;
     
     // Daily volume tracking
+    /// @notice dailyVolumeTracked
     uint256 public dailyVolumeTracked;
 
     // Note: Scores now on 0-10000 scale for better sensitivity
@@ -151,15 +245,26 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         uint16 score;
         uint64 timestamp;
     }
+    /// @notice scoreHistory
     mapping(address => ScoreSnapshot[]) public scoreHistory;
+    /// @notice SCORE_WINDOW
     uint64 public constant SCORE_WINDOW = 7 days; // 7-day time-weighted average
+    /// @notice MAX_SCORE_SNAPSHOTS
     uint256 public constant MAX_SCORE_SNAPSHOTS = 32; // Hard cap to bound score-history iteration gas
+    /// @notice MIN_SCORE_UPDATE_INTERVAL
     uint64 public constant MIN_SCORE_UPDATE_INTERVAL = 1 hours;
+    /// @notice lastScoreUpdate
     mapping(address => uint64) public lastScoreUpdate;
+    /// @notice scoreHistoryLatestTs
     mapping(address => uint64) public scoreHistoryLatestTs;
+    /// @notice scoreHistoryHead
     mapping(address => uint256) public scoreHistoryHead;
+    /// @notice cachedTimeWeightedScore
     mapping(address => uint16) public cachedTimeWeightedScore;
 
+    /// @notice _dayStart
+    /// @param timestamp timestamp
+    /// @return _uint256 _uint256
     function _dayStart(uint256 timestamp) internal pure returns (uint256) {
         // slither-disable-next-line divide-before-multiply  // intentional truncation to start-of-day boundary
         return (timestamp / 1 days) * 1 days;
@@ -168,6 +273,12 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     // slither-disable-start missing-zero-check
     // _seer, _sanctumSink, _ecosystemSink validated by _validateModules() below;
     // _burnSink is intentionally allowed to be address(0) so tokens are sent to address(0) (true burn).
+    /// @notice constructor
+    /// @param _seer _seer
+    /// @param _sanctumSink _sanctumSink
+    /// @param _burnSink _burnSink
+    /// @param _ecosystemSink _ecosystemSink
+    /// @param _token _token
     constructor(
         address _seer,
         address _sanctumSink,
@@ -264,6 +375,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     /**
      * @notice Get current volume multiplier based on daily activity
      * @return multiplier in basis points (10000 = 1x)
+     * @return _uint16 _uint16
      */
     function getVolumeMultiplier() public view returns (uint16) {
         if (!adaptiveFeesEnabled) return BPS_SCALE; // 1x
@@ -289,6 +401,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     /**
      * @notice Get remaining daily burn capacity
+     * @return _uint256 _uint256
      */
     function remainingDailyBurnCapacity() public view returns (uint256) {
         // Check if new day
@@ -303,6 +416,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     /**
      * @notice Check if burns should be paused (supply floor reached)
+     * @return _bool _bool
      */
     function burnsPaused() public view returns (bool) {
         if (token == address(0) || minimumSupplyFloor == 0) return false;
@@ -348,6 +462,10 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     // ─────────────────────────── Admin
 
     /// @notice BR-04 FIX: Propose new modules (takes effect after timelock)
+    /// @param _seer _seer
+    /// @param _sanctumSink _sanctumSink
+    /// @param _burnSink _burnSink
+    /// @param _ecosystemSink _ecosystemSink
     function proposeModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) external onlyOwner nonReentrant {
         _validateModules(_seer, _sanctumSink, _burnSink, _ecosystemSink);
         pendingModules = PendingModules({
@@ -385,10 +503,17 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
 
     // ─────────────────────────── Admin (LEGACY entrypoint disabled)
     
+    /// @notice setModules
+    /// @param _address _address
+    /// @param _address _address
+    /// @param _address _address
+    /// @param _address _address
     function setModules(address, address, address, address) external pure {
         revert("BR: use proposeModules/applyModules");
     }
 
+    /// @notice updateScore
+    /// @param user user
     function updateScore(address user) external nonReentrant {
         // F-26 FIX: Only Seer can write score history. Removing owner authorization
         // prevents the owner from injecting arbitrary score snapshots to manipulate fees.
@@ -424,6 +549,10 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         cachedTimeWeightedScore[user] = _computeTimeWeightedScore(user, now_);
     }
 
+    /// @notice _computeTimeWeightedScore
+    /// @param user user
+    /// @param now_ now_
+    /// @return _uint16 _uint16
     function _computeTimeWeightedScore(address user, uint64 now_) internal view returns (uint16) {
         uint256 len = scoreHistory[user].length;
         if (len == 0) {
@@ -447,7 +576,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         // M-1 FIX: Cap iteration at MAX_SCORE_SNAPSHOTS to bound gas regardless of historical
         // array length (e.g. entries written before the cap was introduced).
         uint256 iterLen = len > MAX_SCORE_SNAPSHOTS ? MAX_SCORE_SNAPSHOTS : len;
-        for (uint256 i = 0; i < iterLen; i++) {
+        for (uint256 i = 0; i < iterLen; ++i) {
             uint64 snapshotTime = scoreHistory[user][i].timestamp;
             if (snapshotTime < windowStart) continue;
 
@@ -468,6 +597,9 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         return uint16(weightedSum / totalWeight);
     }
 
+    /// @notice getTimeWeightedScore
+    /// @param user user
+    /// @return _uint16 _uint16
     function getTimeWeightedScore(address user) public view returns (uint16) {
         if (scoreHistory[user].length == 0) {
             // No history yet — use cached score (I-13: avoids gas amplification)
@@ -503,6 +635,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * - Score 4000-8000: Linear interpolation
      * 
      * Formula: fee = maxFee - ((score - lowThreshold) * (maxFee - minFee)) / (highThreshold - lowThreshold)
+     * @return _uint256 _uint256
      */
     function _calculateLinearFee(uint16 score) internal view returns (uint256) {
         if (score <= LOW_SCORE_THRESHOLD) {
@@ -535,6 +668,8 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
 
     /**
      * @notice Update fee curve parameters (DAO controlled)
+     * @param _minTotalBps _minTotalBps
+     * @param _maxTotalBps _maxTotalBps
      */
     function setFeePolicy(
         uint16 _minTotalBps,
@@ -568,6 +703,8 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     }
 
     /// @notice TL-349 FIX: Propose micro-tx fee ceiling change (24h timelock). (#349)
+    /// @param _maxBps _maxBps
+    /// @param _maxAmount _maxAmount
     function setMicroTxFeeCeiling(uint16 _maxBps, uint256 _maxAmount) external onlyOwner nonReentrant {
         require(_maxBps >= minTotalBps, "BURN: micro ceiling below floor");
         require(_maxBps <= 500, "BURN: micro ceiling too high");
@@ -589,8 +726,10 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         emit MicroTxFeeCeilingSet(microTxFeeCeilingBps, microTxMaxAmount);
     }
 
-    /// @notice TL-349 FIX: Propose micro-tx USD cap change (24h timelock). (#349)
     // slither-disable-next-line missing-zero-check
+    /// @notice TL-349 FIX: Propose micro-tx USD cap change (24h timelock). (#349)
+    /// @param _priceOracle _priceOracle
+    /// @param _maxUsd6 _maxUsd6
     function setMicroTxUsdCap(address _priceOracle, uint256 _maxUsd6) external onlyOwner nonReentrant {
         require(_maxUsd6 == 0 || (_maxUsd6 >= 1e6 && _maxUsd6 <= 10_000e6), "BR: invalid usd cap");
         if (_maxUsd6 > 0) require(_priceOracle != address(0), "BR: oracle required with cap");
@@ -619,6 +758,9 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         emit MicroTxFeeCancelled();
     }
 
+    /// @notice _isWithinMicroTxUsdCap
+    /// @param amount amount
+    /// @return _bool _bool
     function _isWithinMicroTxUsdCap(uint256 amount) internal view returns (bool) {
         if (microTxMaxUsd6 == 0 || microTxPriceOracle == address(0)) return false;
 
@@ -650,6 +792,8 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @return sanctumSink_ Sanctum vault address
      * @return ecosystemSink_ Ecosystem vault address
      * @return burnSink_ Burn sink address (zero = hard burn)
+     * @notice computeFees
+     * @param _address _address
      */
     function computeFees(
         address from,
@@ -772,6 +916,15 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     /**
      * @notice BR-01 FIX: Compute fees and atomically reserve daily burn usage.
      * @dev Called by VFIDEToken in transfer path to remove same-block TOCTOU on burn cap.
+     * @param from from
+     * @param to to
+     * @param amount amount
+     * @return burnAmount burnAmount
+     * @return sanctumAmount sanctumAmount
+     * @return ecosystemAmount ecosystemAmount
+     * @return sanctumSink_ sanctumSink_
+     * @return ecosystemSink_ ecosystemSink_
+     * @return burnSink_ burnSink_
      */
     function computeFeesAndReserve(
         address from,
@@ -802,6 +955,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     /**
      * @notice Update daily burn tracking (called by token after transfer)
      * @dev This allows accurate daily cap enforcement
+     * @param burnAmount burnAmount
      */
     function recordBurn(uint256 burnAmount) external nonReentrant {
         require(msg.sender == token, "only token");
@@ -813,6 +967,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     /**
      * @notice Record transfer volume (called by token after transfer)
      * @dev Used for adaptive fee calculations
+     * @param amount amount
      */
     function recordVolume(uint256 amount) external {
         require(msg.sender == token, "only token");
@@ -822,6 +977,7 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     }
 
     /// @dev Atomically reset both counters when a new day starts
+    /// @notice _resetDayIfNeeded
     function _resetDayIfNeeded() internal {
         if (block.timestamp >= currentDayStart + 1 days) {
             currentDayStart = _dayStart(block.timestamp);
@@ -830,6 +986,11 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
         }
     }
 
+    /// @notice _validateModules
+    /// @param _seer _seer
+    /// @param _sanctumSink _sanctumSink
+    /// @param _burnSink _burnSink
+    /// @param _ecosystemSink _ecosystemSink
     function _validateModules(address _seer, address _sanctumSink, address _burnSink, address _ecosystemSink) internal pure {
         if (_seer == address(0) || _sanctumSink == address(0) || _ecosystemSink == address(0)) {
             revert BURN_Zero();
@@ -843,6 +1004,13 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     /**
      * @notice Get sustainability status for dashboard
+     * @return dailyBurned dailyBurned
+     * @return burnCapacity burnCapacity
+     * @return dailyVolume dailyVolume
+     * @return volumeMultiplier volumeMultiplier
+     * @return burnsPausedFlag burnsPausedFlag
+     * @return supplyFloor supplyFloor
+     * @return currentSupply currentSupply
      */
     function getSustainabilityStatus() external view returns (
         uint256 dailyBurned,
@@ -876,6 +1044,13 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @notice Preview fees for a given user and amount.
      * @dev This reflects the current on-chain state only. Final execution can still differ if
      *      other transfers reserve burn capacity before the user's transaction is mined.
+     * @param user user
+     * @param amount amount
+     * @return burnAmount burnAmount
+     * @return sanctumAmount sanctumAmount
+     * @return ecosystemAmount ecosystemAmount
+     * @return netAmount netAmount
+     * @return score score
      */
     function previewFees(address user, uint256 amount) external view returns (
         uint256 burnAmount,
@@ -894,6 +1069,16 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @notice Preview the fee outcome if this transfer executed next against current state.
      * @dev Returns the projected post-transfer daily burn usage so frontends can surface when
      *      the current burn cap headroom is nearly exhausted.
+     * @param from from
+     * @param to to
+     * @param amount amount
+     * @return burnAmount burnAmount
+     * @return sanctumAmount sanctumAmount
+     * @return ecosystemAmount ecosystemAmount
+     * @return netAmount netAmount
+     * @return score score
+     * @return projectedDailyBurned projectedDailyBurned
+     * @return projectedBurnCapacityRemaining projectedBurnCapacityRemaining
      */
     function previewFeesAccurate(address from, address to, uint256 amount) external view returns (
         uint256 burnAmount,
@@ -925,6 +1110,14 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * @notice Reverse fee calculator: find gross transfer amount needed to deliver a target net amount.
      * @dev Uses bounded iterative refinement so final amounts always match computeFees behavior,
      *      including micro-tx ceilings and sustainability redirects.
+     * @param from from
+     * @param to to
+     * @param desiredNetAmount desiredNetAmount
+     * @return grossAmount grossAmount
+     * @return burnAmount burnAmount
+     * @return sanctumAmount sanctumAmount
+     * @return ecosystemAmount ecosystemAmount
+     * @return totalFee totalFee
      */
     function calculateGrossAmount(
         address from,
@@ -961,12 +1154,21 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
             (burnAmount, sanctumAmount, ecosystemAmount,,,) = computeFees(from, to, grossAmount);
             totalFee = burnAmount + sanctumAmount + ecosystemAmount;
             netAmount = grossAmount - totalFee;
-            guard++;
+            ++guard;
         }
     }
 
     /**
      * @notice Checkout preview helper for UIs: desired net value in, gross + fee split out.
+     * @param from from
+     * @param to to
+     * @param desiredNetAmount desiredNetAmount
+     * @return grossAmount grossAmount
+     * @return burnAmount burnAmount
+     * @return sanctumAmount sanctumAmount
+     * @return ecosystemAmount ecosystemAmount
+     * @return totalFee totalFee
+     * @return netAmount netAmount
      */
     function previewCheckout(
         address from,
@@ -987,6 +1189,11 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
 
     /**
      * Get effective fee rates for a user (using linear curve)
+     * @notice getEffectiveBurnRate
+     * @param user user
+     * @return burnBps burnBps
+     * @return sanctumBps sanctumBps
+     * @return ecosystemBps ecosystemBps
      */
     function getEffectiveBurnRate(address user) external view returns (uint16 burnBps, uint16 sanctumBps, uint16 ecosystemBps) {
         uint16 score = getTimeWeightedScore(user);
@@ -1002,6 +1209,10 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
 
     /**
      * Get total fee percentage for a given score (for frontend display)
+     * @notice getFeeForScore
+     * @param score score
+     * @return totalBps totalBps
+     * @return feePercent feePercent
      */
     function getFeeForScore(uint16 score) external view returns (uint256 totalBps, uint256 feePercent) {
         totalBps = _calculateLinearFee(score);
@@ -1011,6 +1222,10 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
 
     /**
      * Calculate split ratio (for transparency)
+     * @notice getSplitRatio
+     * @return burnPercent burnPercent
+     * @return sanctumPercent sanctumPercent
+     * @return ecosystemPercent ecosystemPercent
      */
     function getSplitRatio() external pure returns (uint256 burnPercent, uint256 sanctumPercent, uint256 ecosystemPercent) {
         // Mirrors computeFees split: 40% burn / 10% sanctum / 50% ecosystem.

@@ -48,6 +48,7 @@ contract MockVaultHub {
     }
 
     /// @notice ensureVault
+    /// @param _address _address
     /// @return _address _address
     function ensureVault(address) external view returns (address) {
         return vault;
@@ -68,6 +69,7 @@ contract MockSecurityHub {
     }
 
     /// @notice isLocked
+    /// @param _address _address
     /// @return _bool _bool
     function isLocked(address) external view returns (bool) {
         return locked;

@@ -35,7 +35,7 @@ error FI_Insufficient();
  */
 contract EcoTreasuryVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
-
+    
     /// @notice ModulesSet
     /// @param dao dao
     /// @param ledger ledger
@@ -100,14 +100,9 @@ contract EcoTreasuryVault is ReentrancyGuard {
     uint256 public totalDisbursed;
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        _checkDAO();
-        _;
-    }
+    modifier onlyDAO() { _checkDAO(); _; }
     /// @notice _checkDAO
-    function _checkDAO() internal view {
-        if (msg.sender != dao) revert FI_NotDAO();
-    }
+    function _checkDAO() internal view { if (msg.sender != dao) revert FI_NotDAO(); }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -190,12 +185,12 @@ contract EcoTreasuryVault is ReentrancyGuard {
     }
     /// @notice pendingNotifierChange
     PendingNotifierChange public pendingNotifierChange;
-
+    
     /// @notice NotifierAuthorized
     /// @param notifier notifier
     /// @param authorized authorized
     event NotifierAuthorized(address indexed notifier, bool authorized);
-
+    
     /// @notice setNotifier
     /// @param notifier notifier
     /// @param authorized authorized
@@ -332,7 +327,7 @@ contract EcoTreasuryVault is ReentrancyGuard {
             try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
         }
     }
-
+    
     /// @notice _logEv
     /// @param who who
     /// @param action action

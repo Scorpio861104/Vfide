@@ -6,21 +6,53 @@ import "./SharedInterfaces.sol";
 // ─── Local-scoped interfaces (the _COM suffix keeps these distinct from the
 //     canonical interfaces under contracts/interfaces/). Imported by
 //     CommerceEscrow.sol via `import "./MerchantRegistry.sol";` ──
+/// @notice IVaultHub_COM
+/// @title IVaultHub_COM
+/// @author Vfide
 interface IVaultHub_COM {
+    /// @notice vaultOf
+    /// @param owner owner
+    /// @return _address _address
     function vaultOf(address owner) external view returns (address);
     /// @dev R-4 — used by settleByInheritance to gate on either party's vault
     ///      being in MEMORIAL or CLOSED state.
+    /// @notice isInMemorialState
+    /// @param vault vault
+    /// @return _bool _bool
     function isInMemorialState(address vault) external view returns (bool);
 }
 
+/// @notice ISeer_COM
+/// @title ISeer_COM
+/// @author Vfide
 interface ISeer_COM {
+    /// @notice getScore
+    /// @param _address _address
+    /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
+    /// @notice getCachedScore
+    /// @param _address _address
+    /// @return _uint16 _uint16
     function getCachedScore(address) external view returns (uint16);
+    /// @notice minForMerchant
+    /// @return _uint16 _uint16
     function minForMerchant() external view returns (uint16);
 }
 
+/// @notice IProofLedger_COM
+/// @title IProofLedger_COM
+/// @author Vfide
 interface IProofLedger_COM {
+    /// @notice logSystemEvent
+    /// @param who who
+    /// @param action action
+    /// @param by by
     function logSystemEvent(address who, string calldata action, address by) external;
+    /// @notice logEvent
+    /// @param who who
+    /// @param action action
+    /// @param amount amount
+    /// @param note note
     function logEvent(address who, string calldata action, uint256 amount, string calldata note) external;
 }
 
@@ -29,16 +61,27 @@ interface IProofLedger_COM {
 //     inherits visibility). Dead errors (COM_NotActive, COM_TooEarly,
 //     COM_NotFunded, COM_SecLocked, COM_BadRating) were removed when this
 //     file was split off from VFIDECommerce.sol — none had any throw site. ──
+/// @notice COM_NotDAO
 error COM_NotDAO();
+/// @notice COM_Zero
 error COM_Zero();
+/// @notice COM_NotMerchant
 error COM_NotMerchant();
+/// @notice COM_AlreadyMerchant
 error COM_AlreadyMerchant();
+/// @notice COM_Suspended
 error COM_Suspended();
+/// @notice COM_Delisted
 error COM_Delisted();
+/// @notice COM_NotBuyer
 error COM_NotBuyer();
+/// @notice COM_NotSeller
 error COM_NotSeller();
+/// @notice COM_BadAmount
 error COM_BadAmount();
+/// @notice COM_BadState
 error COM_BadState();
+/// @notice COM_NotAllowed
 error COM_NotAllowed();
 /// @notice R-4 — neither party's vault is in MEMORIAL state.
 error COM_NotInheritanceActive();
@@ -48,21 +91,50 @@ error COM_NotInheritanceActive();
 ///         status (ACTIVE / SUSPENDED / DELISTED), and refund/dispute
 ///         decay accounting. Used by CommerceEscrow for merchant
 ///         verification before any escrow can be opened.
+/// @author Vfide
 contract MerchantRegistry {
+    /// @notice ModulesSet
+    /// @param dao dao
+    /// @param token token
+    /// @param hub hub
+    /// @param seer seer
+    /// @param ledger ledger
     event ModulesSet(address dao, address token, address hub, address seer, address ledger);
+    /// @notice PolicySet
+    /// @param minScore minScore
+    /// @param autoSuspendRefunds autoSuspendRefunds
+    /// @param autoSuspendDisputes autoSuspendDisputes
     event PolicySet(uint16 minScore, uint8 autoSuspendRefunds, uint8 autoSuspendDisputes);
+    /// @notice MerchantAdded
+    /// @param owner owner
+    /// @param vault vault
+    /// @param metaHash metaHash
     event MerchantAdded(address indexed owner, address indexed vault, bytes32 metaHash);
     /// @notice Emitted when a merchant updates their off-chain profile hash via setMetaHash.
+    /// @param owner owner
+    /// @param newHash newHash
     event MerchantMetaHashUpdated(address indexed owner, bytes32 newHash);
+    /// @notice MerchantStatus
+    /// @param owner owner
+    /// @param status status
+    /// @param reason reason
     event MerchantStatus(address indexed owner, Status status, string reason);
+    /// @notice AutoFlagged
+    /// @param owner owner
+    /// @param reason reason
     event AutoFlagged(address indexed owner, string reason);
 
     enum Status { NONE, ACTIVE, SUSPENDED, DELISTED }
 
+    /// @notice dao
     address public immutable dao;
+    /// @notice token
     IERC20 public immutable token;
+    /// @notice vaultHub
     IVaultHub_COM public immutable vaultHub;
+    /// @notice seer
     ISeer_COM public immutable seer;
+    /// @notice ledger
     IProofLedger_COM public immutable ledger;
 
     struct Merchant {
@@ -74,9 +146,13 @@ contract MerchantRegistry {
         bytes32 metaHash;
     }
 
+    /// @notice merchants
     mapping(address => Merchant) public merchants;
+    /// @notice minScore
     uint16 public immutable minScore;
+    /// @notice autoSuspendRefunds
     uint8  public constant autoSuspendRefunds = 5;
+    /// @notice autoSuspendDisputes
     uint8  public constant autoSuspendDisputes = 3;
 
     // POW-1 decay tracking: per-merchant timestamp of most recent strike,
@@ -84,12 +160,22 @@ contract MerchantRegistry {
     // the counter for every full 90-day window of clean operation. This
     // makes the "5 lifetime refunds → permanent ban" rule a "5 refunds in
     // any rolling 90-day window" rule.
+    /// @notice lastRefundAt
     mapping(address => uint64) public lastRefundAt;
+    /// @notice lastDisputeAt
     mapping(address => uint64) public lastDisputeAt;
+    /// @notice STRIKE_DECAY_INTERVAL
     uint64 public constant STRIKE_DECAY_INTERVAL = 90 days;
 
+    /// @notice onlyDAO
     modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
+    /// @notice constructor
+    /// @param _dao _dao
+    /// @param _token _token
+    /// @param _hub _hub
+    /// @param _seer _seer
+    /// @param _ledger _ledger
     constructor(address _dao, address _token, address _hub, address _seer, address _ledger) {
         if (_dao==address(0)||_token==address(0)||_hub==address(0)||_seer==address(0)) revert COM_Zero();
         dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); seer=ISeer_COM(_seer);
@@ -99,6 +185,8 @@ contract MerchantRegistry {
     }
 
     // slither-disable-next-line reentrancy-events
+    /// @notice addMerchant
+    /// @param metaHash metaHash
     function addMerchant(bytes32 metaHash) external {
         if (merchants[msg.sender].status != Status.NONE) revert COM_AlreadyMerchant();
         address v = vaultHub.vaultOf(msg.sender);
@@ -146,17 +234,23 @@ contract MerchantRegistry {
         emit MerchantMetaHashUpdated(msg.sender, newHash);
     }
 
+    /// @notice authorizedEscrow
     address public authorizedEscrow;
 
+    /// @notice setAuthorizedEscrow
+    /// @param _escrow _escrow
     function setAuthorizedEscrow(address _escrow) external onlyDAO {
         if (_escrow == address(0)) revert COM_Zero();
         authorizedEscrow = _escrow;
     }
 
+    /// @notice clearAuthorizedEscrow
     function clearAuthorizedEscrow() external onlyDAO {
         authorizedEscrow = address(0);
     }
 
+    /// @notice _noteRefund
+    /// @param owner owner
     function _noteRefund(address owner) external {
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
@@ -169,7 +263,7 @@ contract MerchantRegistry {
         // never be suspended by the threshold; the counter decays back to
         // ~0 between events.
         _applyRefundDecay(m);
-        m.refunds += 1;
+        ++m.refunds;
         lastRefundAt[owner] = uint64(block.timestamp);
         if (m.refunds >= autoSuspendRefunds) {
             m.status = Status.SUSPENDED;
@@ -177,13 +271,15 @@ contract MerchantRegistry {
         }
     }
 
+    /// @notice _noteDispute
+    /// @param owner owner
     function _noteDispute(address owner) external {
         require(msg.sender == authorizedEscrow || msg.sender == dao, "COM: not authorized");
         Merchant storage m = merchants[owner];
         if (m.status == Status.NONE) revert COM_NotMerchant();
         // POW-1 FIX: same decay rule applied to disputes (separate clock).
         _applyDisputeDecay(m);
-        m.disputes += 1;
+        ++m.disputes;
         lastDisputeAt[owner] = uint64(block.timestamp);
         if (m.disputes >= autoSuspendDisputes) {
             m.status = Status.SUSPENDED;
@@ -204,6 +300,7 @@ contract MerchantRegistry {
     ///         Running a real-world business will eventually accumulate
     ///         5 refunds over its lifetime; the protocol must have a
     ///         recovery path or it cannot host long-running merchants.
+    /// @param owner owner
     function unsuspendMerchant(address owner) external onlyDAO {
         Merchant storage m = merchants[owner];
         if (m.status != Status.SUSPENDED) revert COM_NotAllowed();
@@ -246,6 +343,8 @@ contract MerchantRegistry {
         emit MerchantStatus(owner, Status.DELISTED, reason);
     }
 
+    /// @notice _applyRefundDecay
+    /// @param m m
     function _applyRefundDecay(Merchant storage m) internal {
         uint64 last = lastRefundAt[m.owner];
         if (last == 0 || m.refunds == 0) return;
@@ -259,6 +358,8 @@ contract MerchantRegistry {
         }
     }
 
+    /// @notice _applyDisputeDecay
+    /// @param m m
     function _applyDisputeDecay(Merchant storage m) internal {
         uint64 last = lastDisputeAt[m.owner];
         if (last == 0 || m.disputes == 0) return;
@@ -272,5 +373,8 @@ contract MerchantRegistry {
         }
     }
 
+    /// @notice info
+    /// @param owner owner
+    /// @return _arg _arg
     function info(address owner) external view returns (Merchant memory) { return merchants[owner]; }
 }

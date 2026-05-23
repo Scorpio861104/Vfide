@@ -14,11 +14,11 @@ library ScoringConstants {
     // ── Fee-curve band (ProofScoreBurnRouter) ────────────────────────────────
     /// @dev Scores at or below this value pay the maximum burn fee.
     /// @notice LOW_FEE_FLOOR
-    uint16 internal constant LOW_FEE_FLOOR = 4000; // 40%
+    uint16 internal constant LOW_FEE_FLOOR  = 4000; // 40%
 
     /// @dev Scores at or above this value pay the minimum burn fee.
     /// @notice HIGH_FEE_CEIL
-    uint16 internal constant HIGH_FEE_CEIL = 8000; // 80%
+    uint16 internal constant HIGH_FEE_CEIL  = 8000; // 80%
 
     // ── Participation tiers (VFIDETermLoan, general gating) ──────────────────
     /// @dev Minimum score to participate at all (neutral / uninitialized proxy).
@@ -38,9 +38,9 @@ library ScoringConstants {
     // ── Domain-specific defaults (mutable per-contract, but defaulted here) ──
     /// @dev Default minimum score required to act as a merchant.
     /// @notice MIN_MERCHANT
-    uint16 internal constant MIN_MERCHANT = 5600; // 56%
+    uint16 internal constant MIN_MERCHANT    = 5600; // 56%
 
     /// @dev Default minimum score required to vote / propose in governance.
     /// @notice MIN_GOVERNANCE
-    uint16 internal constant MIN_GOVERNANCE = 5400; // 54%
+    uint16 internal constant MIN_GOVERNANCE  = 5400; // 54%
 }

@@ -35,6 +35,7 @@ contract MockSeerAuto {
     /// @notice punish
     /// @param subject subject
     /// @param delta delta
+    /// @param _string _string
     function punish(address subject, uint16 delta, string calldata) external {
         uint16 current = _score[subject];
         if (current == 0) current = NEUTRAL;
@@ -44,6 +45,7 @@ contract MockSeerAuto {
     /// @notice reward
     /// @param subject subject
     /// @param delta delta
+    /// @param _string _string
     function reward(address subject, uint16 delta, string calldata) external {
         uint16 current = _score[subject];
         if (current == 0) current = NEUTRAL;

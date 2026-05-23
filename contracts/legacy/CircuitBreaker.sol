@@ -30,10 +30,10 @@ interface ITVLSource_CB {
 contract CircuitBreaker is VFIDEAccessControl {
     /// @notice RECORDER_ROLE
     bytes32 public constant RECORDER_ROLE = keccak256("RECORDER_ROLE");
-    // F-63 FIX: Renamed from BLACKLIST_MANAGER_ROLE to reflect non-custodial philosophy.
-    /// @notice SUSPICIOUS_ACTIVITY_REPORTER_ROLE
-    bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
-
+        // F-63 FIX: Renamed from BLACKLIST_MANAGER_ROLE to reflect non-custodial philosophy.
+        /// @notice SUSPICIOUS_ACTIVITY_REPORTER_ROLE
+        bytes32 public constant SUSPICIOUS_ACTIVITY_REPORTER_ROLE = keccak256("SUSPICIOUS_ACTIVITY_REPORTER_ROLE");
+    
     struct TriggerConfig {
         bool enabled;
         uint256 dailyVolumeThreshold; // % of TVL (e.g., 50 = 50%)
@@ -64,24 +64,24 @@ contract CircuitBreaker is VFIDEAccessControl {
     /// @notice monitoring
     MonitoringData public monitoring;
     // F-31 FIX: Keep a bounded rolling sample window to avoid single-tick trigger risk.
-    // M-4 FIX: Require at least MIN_SAMPLES_FOR_TRIGGER samples before firing the price-drop
-    //          circuit breaker so a single oracle spike cannot trip it on its own.
-    /// @notice MIN_SAMPLES_FOR_TRIGGER
-    uint8 public constant MIN_SAMPLES_FOR_TRIGGER = 3;
-    /// @notice priceSamples
-    uint256[10] public priceSamples;
+        // M-4 FIX: Require at least MIN_SAMPLES_FOR_TRIGGER samples before firing the price-drop
+        //          circuit breaker so a single oracle spike cannot trip it on its own.
+        /// @notice MIN_SAMPLES_FOR_TRIGGER
+        uint8 public constant MIN_SAMPLES_FOR_TRIGGER = 3;
+        /// @notice priceSamples
+        uint256[10] public priceSamples;
     /// @notice priceSampleCount
     uint8 public priceSampleCount;
     /// @notice priceSampleIndex
     uint8 public priceSampleIndex;
-
+    
     /// @notice priceOracle
     address public priceOracle;
     /// @notice emergencyController
     address public emergencyController;
     /// @notice tvlSource
     address public tvlSource;
-
+    
     /// @notice circuitBreakerTriggered
     bool public circuitBreakerTriggered;
     /// @notice lastTriggerTime
@@ -90,7 +90,7 @@ contract CircuitBreaker is VFIDEAccessControl {
     uint256 private _guardLock;
     /// @notice triggerHistoryStart
     uint256 private triggerHistoryStart;
-
+    
     /// @notice triggerHistory
     TriggerEvent[] public triggerHistory;
     /// @notice MAX_TRIGGER_HISTORY
@@ -107,15 +107,24 @@ contract CircuitBreaker is VFIDEAccessControl {
     /// @param dailyVolumeThreshold dailyVolumeThreshold
     /// @param priceDropThreshold priceDropThreshold
     /// @param suspiciousActivityThreshold suspiciousActivityThreshold
-    event CircuitBreakerConfigured(uint256 dailyVolumeThreshold, uint256 priceDropThreshold, uint256 suspiciousActivityThreshold);
-
+    event CircuitBreakerConfigured(
+        uint256 dailyVolumeThreshold,
+        uint256 priceDropThreshold,
+        uint256 suspiciousActivityThreshold
+    );
+    
     /// @notice CircuitBreakerTriggered
     /// @param reason reason
     /// @param metricValue metricValue
     /// @param timestamp timestamp
     /// @param triggeredBy triggeredBy
-    event CircuitBreakerTriggered(string reason, uint256 metricValue, uint256 timestamp, address indexed triggeredBy);
-
+    event CircuitBreakerTriggered(
+        string reason,
+        uint256 metricValue,
+        uint256 timestamp,
+        address indexed triggeredBy
+    );
+    
     /// @notice CircuitBreakerReset
     /// @param resetBy resetBy
     /// @param timestamp timestamp
@@ -123,12 +132,12 @@ contract CircuitBreaker is VFIDEAccessControl {
     /// @notice PriceOracleUpdated
     /// @param newOracle newOracle
     event PriceOracleUpdated(address indexed newOracle);
-    /// @notice PriceOracleProposed
-    /// @param newOracle newOracle
-    /// @param effectiveAt effectiveAt
-    event PriceOracleProposed(address indexed newOracle, uint256 effectiveAt);
-    /// @notice PriceOracleCancelled
-    event PriceOracleCancelled();
+        /// @notice PriceOracleProposed
+        /// @param newOracle newOracle
+        /// @param effectiveAt effectiveAt
+        event PriceOracleProposed(address indexed newOracle, uint256 effectiveAt);
+        /// @notice PriceOracleCancelled
+        event PriceOracleCancelled();
     /// @notice EmergencyControllerUpdated
     /// @param newController newController
     event EmergencyControllerUpdated(address indexed newController);
@@ -450,7 +459,9 @@ contract CircuitBreaker is VFIDEAccessControl {
         }
 
         for (uint256 i = 0; i < len; ++i) {
-            uint256 index = len < MAX_TRIGGER_HISTORY ? i : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
+            uint256 index = len < MAX_TRIGGER_HISTORY
+                ? i
+                : (triggerHistoryStart + i) % MAX_TRIGGER_HISTORY;
             history[i] = triggerHistory[index];
         }
     }

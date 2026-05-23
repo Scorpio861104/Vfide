@@ -58,16 +58,19 @@ interface IUserVaultRecovery {
     /// @return _address _address
     function owner() external view returns (address);
     /// @notice isGuardian
+    /// @param _address _address
     /// @return _bool _bool
     function isGuardian(address) external view returns (bool);
     /// @notice guardianCount
     /// @return _uint8 _uint8
     function guardianCount() external view returns (uint8);
     /// @notice isGuardianMature
+    /// @param _address _address
     /// @return _bool _bool
     function isGuardianMature(address) external view returns (bool);
     // R-8: tiered guardian roles + per-vault configurable challenge window
     /// @notice isGuardianTrustee
+    /// @param _address _address
     /// @return _bool _bool
     function isGuardianTrustee(address) external view returns (bool);
     /// @notice trusteeCountView
@@ -101,28 +104,28 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice CHALLENGE_PERIOD
-    uint64 public constant CHALLENGE_PERIOD = 7 days; // Time for original owner to cancel (guardian path)
+    uint64 public constant CHALLENGE_PERIOD = 7 days;      // Time for original owner to cancel (guardian path)
     /// @notice FINALIZATION_GRACE_PERIOD
     uint64 public constant FINALIZATION_GRACE_PERIOD = 1 days;
     /// @notice GUARDIAN_VOTE_WINDOW
     uint64 public constant GUARDIAN_VOTE_WINDOW = 14 days; // Time for guardians to vote
     /// @notice CLAIM_EXPIRY
-    uint64 public constant CLAIM_EXPIRY = 30 days; // Max time for claim process
+    uint64 public constant CLAIM_EXPIRY = 30 days;         // Max time for claim process
     /// @notice VERIFIER_CHANGE_DELAY
     uint64 public constant VERIFIER_CHANGE_DELAY = 1 days;
     /// @notice MODULE_CHANGE_DELAY
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
     /// @notice MIN_GUARDIAN_APPROVALS
-    uint8 public constant MIN_GUARDIAN_APPROVALS = 2; // Minimum guardian approvals needed
+    uint8 public constant MIN_GUARDIAN_APPROVALS = 2;      // Minimum guardian approvals needed
     /// @notice MIN_VERIFIER_VOTES
-    uint8 public constant MIN_VERIFIER_VOTES = 3; // Minimum trusted verifier votes (guardian path)
-
+    uint8 public constant MIN_VERIFIER_VOTES = 3;          // Minimum trusted verifier votes (guardian path)
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // STORAGE
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice vaultHub
     IVaultHubRecovery public vaultHub;
     /// @notice vaultRegistry
@@ -242,14 +245,20 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     // EVENTS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice ClaimInitiated
     /// @param claimId claimId
     /// @param vault vault
     /// @param claimant claimant
     /// @param originalOwner originalOwner
     /// @param expiresAt expiresAt
-    event ClaimInitiated(uint256 indexed claimId, address indexed vault, address indexed claimant, address originalOwner, uint64 expiresAt);
+    event ClaimInitiated(
+        uint256 indexed claimId,
+        address indexed vault,
+        address indexed claimant,
+        address originalOwner,
+        uint64 expiresAt
+    );
 
     // F-54: Emitted when vault activity is recorded (extends future challenge windows)
     /// @notice VaultActivityRecorded
@@ -262,38 +271,64 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /// @param guardian guardian
     /// @param approved approved
     /// @param totalApprovals totalApprovals
-    event GuardianVoteCast(uint256 indexed claimId, address indexed guardian, bool approved, uint8 totalApprovals);
-
+    event GuardianVoteCast(
+        uint256 indexed claimId,
+        address indexed guardian,
+        bool approved,
+        uint8 totalApprovals
+    );
+    
+    
     /// @notice ClaimChallenged
     /// @param claimId claimId
     /// @param challenger challenger
     /// @param reason reason
-    event ClaimChallenged(uint256 indexed claimId, address indexed challenger, string reason);
-
+    event ClaimChallenged(
+        uint256 indexed claimId,
+        address indexed challenger,
+        string reason
+    );
+    
     /// @notice ClaimApproved
     /// @param claimId claimId
     /// @param vault vault
     /// @param newOwner newOwner
-    event ClaimApproved(uint256 indexed claimId, address indexed vault, address indexed newOwner);
-
+    event ClaimApproved(
+        uint256 indexed claimId,
+        address indexed vault,
+        address indexed newOwner
+    );
+    
     /// @notice ClaimRejected
     /// @param claimId claimId
     /// @param vault vault
     /// @param reason reason
-    event ClaimRejected(uint256 indexed claimId, address indexed vault, string reason);
-
+    event ClaimRejected(
+        uint256 indexed claimId,
+        address indexed vault,
+        string reason
+    );
+    
     /// @notice ClaimExecuted
     /// @param claimId claimId
     /// @param vault vault
     /// @param newOwner newOwner
     /// @param previousOwner previousOwner
-    event ClaimExecuted(uint256 indexed claimId, address indexed vault, address indexed newOwner, address previousOwner);
-
+    event ClaimExecuted(
+        uint256 indexed claimId,
+        address indexed vault,
+        address indexed newOwner,
+        address previousOwner
+    );
+    
     /// @notice ClaimExpired
     /// @param claimId claimId
     /// @param vault vault
-    event ClaimExpired(uint256 indexed claimId, address indexed vault);
-
+    event ClaimExpired(
+        uint256 indexed claimId,
+        address indexed vault
+    );
+    
     /// @notice VerifierSet
     /// @param verifier verifier
     /// @param trusted trusted
@@ -333,7 +368,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════════════
     // ERRORS
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice InvalidVault
     error InvalidVault();
     /// @notice ClaimAlreadyExists
@@ -372,18 +407,21 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     error NoPendingModuleChange();
     // R-8 (guardian-initiated recovery)
     /// @notice NotTrustee
-    error NotTrustee(); // initiateClaim caller is not a trustee on the vault
+    error NotTrustee();              // initiateClaim caller is not a trustee on the vault
     /// @notice InitiatorCooldownActive
     error InitiatorCooldownActive(); // initiator was challenged on this vault within the cooldown window
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════════════════════
-
+    
     /// @notice constructor
     /// @param _vaultHub _vaultHub
     /// @param _vaultRegistry _vaultRegistry
-    constructor(address _vaultHub, address _vaultRegistry) {
+    constructor(
+        address _vaultHub,
+        address _vaultRegistry
+    ) {
         if (_vaultHub == address(0)) revert ZeroAddress();
         vaultHub = IVaultHubRecovery(_vaultHub);
         vaultRegistry = IVaultRegistry(_vaultRegistry);
@@ -712,7 +750,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         // Execute the recovery
         _executeRecovery(claimId);
     }
-
+    
     // slither-disable-next-line reentrancy-no-eth  // internal helper; only called from finalizeClaim (which has nonReentrant guard)
     /**
      * @notice Execute the actual ownership transfer via guardian-approved rotation
@@ -720,7 +758,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
      *      Non-custodial: only reachable after guardian approvals + 7-day challenge.
      * @param claimId claimId
      */
-    // slither-disable-next-line reentrancy-no-eth  // internal helper; only called from finalizeClaim (which has nonReentrant guard)
     function _executeRecovery(uint256 claimId) internal {
         RecoveryClaim storage claim = claims[claimId];
 
@@ -893,7 +930,7 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
         delete pendingVaultRegistryChange;
         emit VaultRegistryChangeCancelled(pending.newAddress);
     }
-
+    
     /// @notice setTrustedVerifier
     /// @param verifier verifier
     /// @param trusted trusted

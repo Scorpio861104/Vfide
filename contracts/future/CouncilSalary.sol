@@ -22,7 +22,7 @@ import {IERC20, ISeer, ICouncilElection, SafeERC20} from "../SharedInterfaces.so
 /// @author Vfide
 contract CouncilSalary {
     using SafeERC20 for IERC20;
-
+    
     /// @notice SalaryPaid
     /// @param cycleId cycleId
     /// @param totalDistributed totalDistributed
@@ -112,7 +112,7 @@ contract CouncilSalary {
     // Legacy: Keep blacklist global (once removed, stays removed unless reinstated)
     /// @notice isBlacklisted
     mapping(address => bool) public isBlacklisted;
-
+    
     /// @notice dao
     address public dao;
     /// @notice pendingDAO
@@ -170,7 +170,7 @@ contract CouncilSalary {
         isKeeper[keeper] = authorized;
         emit KeeperSet(keeper, authorized);
     }
-
+    
     /// @notice startNewTerm
     function startNewTerm() external {
         require(msg.sender == dao, "not dao");
@@ -227,7 +227,7 @@ contract CouncilSalary {
         delete pendingCouncilElectionAt;
         emit CouncilElectionChangeCancelled(queued);
     }
-
+    
     /// @notice setDAO
     /// @param _dao _dao
     function setDAO(address _dao) external {
@@ -270,9 +270,9 @@ contract CouncilSalary {
      * Distribute salary to eligible council members.
      * C-1 FIX: Now requires DAO or authorized keeper to call
      * This prevents MEV manipulation and timing attacks
-     *
-     * NOTE: Council salaries are paid in the configured `token` balance held by this contract.
-     * This function does not swap VFIDE to other assets.
+     * 
+    * NOTE: Council salaries are paid in the configured `token` balance held by this contract.
+    * This function does not swap VFIDE to other assets.
      * @notice distributeSalary
      */
     function distributeSalary() external nonReentrant {
@@ -282,7 +282,7 @@ contract CouncilSalary {
 
         // C-2 FIX: Increment nonce to prevent replay
         ++distributionNonce;
-
+        
         uint256 balance = token.balanceOf(address(this));
         require(balance > 0, "no funds");
 

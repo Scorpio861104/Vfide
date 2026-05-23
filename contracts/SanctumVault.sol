@@ -123,7 +123,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
     // ProofScore rewards for charitable actions
     /// @notice DONATION_REWARD
-    uint16 public constant DONATION_REWARD = 10; // +1.0 per donation
+    uint16 public constant DONATION_REWARD = 10;  // +1.0 per donation
     /// @notice MIN_REWARDABLE_DEPOSIT
     uint256 public constant MIN_REWARDABLE_DEPOSIT = 1_000_000; // Ignore dust donations (1 unit at 6 decimals)
     /// @notice lastDonationRewardDay
@@ -275,7 +275,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         emit LedgerSet(_ledger);
         _log("sanctum_ledger_set");
     }
-
+    
     /// @notice setSeer
     /// @param _seer _seer
     function setSeer(address _seer) external onlyDAO {
@@ -330,7 +330,11 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @param charity charity
     /// @param name name
     /// @param category category
-    function approveCharity(address charity, string calldata name, string calldata category) external onlyDAO {
+    function approveCharity(
+        address charity,
+        string calldata name,
+        string calldata category
+    ) external onlyDAO {
         require(charity != address(0), "zero");
         require(!charities[charity].approved, "already approved");
 
@@ -481,7 +485,7 @@ contract SanctumVault is Ownable, ReentrancyGuard {
 
         d.approvals[msg.sender] = true;
         ++d.approvalCount;
-
+        
         emit DisbursementApproved(proposalId, msg.sender);
         _logEv(msg.sender, "disbursement_approval", proposalId, "");
     }
@@ -545,24 +549,18 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @return executed executed
     /// @return rejected rejected
     /// @return approvalCount_ approvalCount_
-    function getDisbursement(
-        uint256 proposalId
-    )
-        external
-        view
-        returns (
-            address charity,
-            address token,
-            uint256 amount,
-            string memory campaign,
-            string memory documentation,
-            uint64 proposedAt,
-            uint64 executedAt,
-            bool executed,
-            bool rejected,
-            uint8 approvalCount_
-        )
-    {
+    function getDisbursement(uint256 proposalId) external view returns (
+        address charity,
+        address token,
+        uint256 amount,
+        string memory campaign,
+        string memory documentation,
+        uint64 proposedAt,
+        uint64 executedAt,
+        bool executed,
+        bool rejected,
+        uint8 approvalCount_
+    ) {
         Disbursement storage d = disbursements[proposalId];
         return (d.charity, d.token, d.amount, d.campaign, d.documentation, d.proposedAt, d.executedAt, d.executed, d.rejected, d.approvalCount);
     }
@@ -588,7 +586,12 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     /// @return name name
     /// @return category category
     /// @return approvedAt approvedAt
-    function getCharityInfo(address charity) external view returns (bool approved, string memory name, string memory category, uint64 approvedAt) {
+    function getCharityInfo(address charity) external view returns (
+        bool approved,
+        string memory name,
+        string memory category,
+        uint64 approvedAt
+    ) {
         CharityInfo storage c = charities[charity];
         return (c.approved, c.name, c.category, c.approvedAt);
     }

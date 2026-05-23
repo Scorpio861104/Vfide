@@ -16,7 +16,7 @@ contract AdminMultiSig is ReentrancyGuard {
     uint256 public constant REQUIRED_APPROVALS = 3;
     /// @notice EMERGENCY_APPROVALS
     uint256 public constant EMERGENCY_APPROVALS = 4;
-
+    
     /// @notice CONFIG_DELAY
     uint256 public constant CONFIG_DELAY = 24 hours;
     /// @notice CRITICAL_DELAY
@@ -62,12 +62,12 @@ contract AdminMultiSig is ReentrancyGuard {
     address[COUNCIL_SIZE] public council;
     /// @notice isCouncilMember
     mapping(address => bool) public isCouncilMember;
-
+    
     /// @notice proposalCount
     uint256 public proposalCount;
     /// @notice proposals
     mapping(uint256 => Proposal) public proposals;
-
+    
     /// @notice vetoThreshold
     uint256 public vetoThreshold = 100; // 100 veto votes needed
     // This makes Sybil attacks economically costly — 100 wallets × 10,000 VFIDE = 1M VFIDE locked.
@@ -76,7 +76,7 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @notice vfideToken
     IERC20 public vfideToken; // VFIDE token reference for fallback stake checks
     /// @notice seer
-    ISeer public seer; // M-6 FIX: ProofScore oracle — primary veto eligibility gate
+    ISeer public seer;        // M-6 FIX: ProofScore oracle — primary veto eligibility gate
     /// @notice vetoMinScore
     uint16 public vetoMinScore = 5000; // M-6 FIX: minimum ProofScore (50/100) to cast a veto vote
     /// @notice communityVetos
@@ -116,8 +116,14 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @param proposalType proposalType
     /// @param target target
     /// @param description description
-    event ProposalCreated(uint256 indexed proposalId, address indexed proposer, ProposalType proposalType, address target, string description);
-
+    event ProposalCreated(
+        uint256 indexed proposalId,
+        address indexed proposer,
+        ProposalType proposalType,
+        address target,
+        string description
+    );
+    
     /// @notice ProposalApproved
     /// @param proposalId proposalId
     /// @param approver approver
@@ -297,7 +303,10 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @param _proposalType _proposalType
     /// @param _target _target
     /// @param _allowed _allowed
-    function setProposalTypeTargetAllowed(ProposalType _proposalType, address _target, bool _allowed) external onlyEmergencyProposalExecutionContext {
+    function setProposalTypeTargetAllowed(ProposalType _proposalType, address _target, bool _allowed)
+        external
+        onlyEmergencyProposalExecutionContext
+    {
         require(_target != address(0), "AdminMultiSig: zero target");
         proposalTypeTargetAllowed[_proposalType][_target] = _allowed;
         emit ProposalTypeTargetAllowSet(_proposalType, _target, _allowed);
@@ -307,7 +316,10 @@ contract AdminMultiSig is ReentrancyGuard {
     /// @param _proposalType _proposalType
     /// @param _selector _selector
     /// @param _allowed _allowed
-    function setProposalTypeSelectorAllowed(ProposalType _proposalType, bytes4 _selector, bool _allowed) external onlyEmergencyProposalExecutionContext {
+    function setProposalTypeSelectorAllowed(ProposalType _proposalType, bytes4 _selector, bool _allowed)
+        external
+        onlyEmergencyProposalExecutionContext
+    {
         proposalTypeSelectorAllowed[_proposalType][_selector] = _allowed;
         emit ProposalTypeSelectorAllowSet(_proposalType, _selector, _allowed);
     }
@@ -384,7 +396,12 @@ contract AdminMultiSig is ReentrancyGuard {
      * @notice Execute a proposal
      * @param _proposalId ID of the proposal to execute
      */
-    function executeProposal(uint256 _proposalId) external onlyCouncil nonReentrant proposalExists(_proposalId) {
+    function executeProposal(uint256 _proposalId) 
+        external 
+        onlyCouncil 
+        nonReentrant
+        proposalExists(_proposalId) 
+    {
         Proposal storage proposal = proposals[_proposalId];
 
         require(proposal.status == ProposalStatus.Approved, "AdminMultiSig: not approved");
@@ -563,6 +580,7 @@ contract AdminMultiSig is ReentrancyGuard {
      * @param _proposalId Proposal ID
      * @param _member Council member address
      * @return bool True if approved
+     * @return _bool _bool
      */
     function hasApproved(uint256 _proposalId, address _member) external view proposalExists(_proposalId) returns (bool) {
         return proposals[_proposalId].hasApproved[_member];

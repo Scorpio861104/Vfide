@@ -4,10 +4,18 @@ pragma solidity 0.8.30;
 /// @title DeployPhase3
 /// @notice Deploys Phase 3-6 contracts with strict dependency pre-condition guards.
 /// @dev Guards prevent deployment if core dependencies are not pre-deployed.
+/// @author Vfide
 contract DeployPhase3 {
+    /// @notice DP3_Zero
     error DP3_Zero();
 
+    /// @notice PhaseDeployed
+    /// @param phase phase
+    /// @param deployer deployer
     event PhaseDeployed(uint8 indexed phase, address indexed deployer);
+    /// @notice ContractDeployed
+    /// @param name name
+    /// @param addr addr
     event ContractDeployed(bytes32 indexed name, address indexed addr);
 
     /// @notice Deploy all Phase 3-6 contracts.

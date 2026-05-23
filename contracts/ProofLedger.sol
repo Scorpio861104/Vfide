@@ -76,14 +76,9 @@ contract ProofLedger {
     uint64 public constant CHANGE_DELAY = 48 hours;
 
     /// @notice onlyDAO
-    modifier onlyDAO() {
-        _checkDAOPL();
-        _;
-    }
+    modifier onlyDAO() { _checkDAOPL(); _; }
     /// @notice _checkDAOPL
-    function _checkDAOPL() internal view {
-        if (msg.sender != dao) revert TRUST_NotDAO();
-    }
+    function _checkDAOPL() internal view { if (msg.sender != dao) revert TRUST_NotDAO(); }
 
     /// @notice onlyLogger
     modifier onlyLogger() {

@@ -7,13 +7,32 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./libraries/uniswapv3/FullMath.sol";
 import "./libraries/uniswapv3/TickMath.sol";
 
+/// @notice IUniswapV3PoolLite
+/// @title IUniswapV3PoolLite
+/// @author Vfide
 interface IUniswapV3PoolLite {
+    /// @notice token0
+    /// @return _address _address
     function token0() external view returns (address);
+    /// @notice token1
+    /// @return _address _address
     function token1() external view returns (address);
+    /// @notice observe
+    /// @param secondsAgos secondsAgos
+    /// @return tickCumulatives tickCumulatives
+    /// @return secondsPerLiquidityCumulativeX128s secondsPerLiquidityCumulativeX128s
     function observe(uint32[] calldata secondsAgos)
         external
         view
         returns (int56[] memory tickCumulatives, uint160[] memory secondsPerLiquidityCumulativeX128s);
+    /// @notice slot0
+    /// @return sqrtPriceX96 sqrtPriceX96
+    /// @return tick tick
+    /// @return observationIndex observationIndex
+    /// @return observationCardinality observationCardinality
+    /// @return observationCardinalityNext observationCardinalityNext
+    /// @return feeProtocol feeProtocol
+    /// @return unlocked unlocked
     function slot0()
         external
         view
@@ -28,7 +47,12 @@ interface IUniswapV3PoolLite {
         );
 }
 
+/// @notice IERC20DecimalsOracle
+/// @title IERC20DecimalsOracle
+/// @author Vfide
 interface IERC20DecimalsOracle {
+    /// @notice decimals
+    /// @return _uint8 _uint8
     function decimals() external view returns (uint8);
 }
 
@@ -46,6 +70,9 @@ interface IERC20DecimalsOracle {
  * - Price deviation monitoring
  */
 // ReentrancyGuard intentionally omitted: oracle update path stores rates and emits events without transfer calls.
+/// @notice VFIDEPriceOracle
+/// @title VFIDEPriceOracle
+/// @author Vfide
 contract VFIDEPriceOracle is Ownable, Pausable {
     using Math for uint256;
 
@@ -66,6 +93,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
     /// @notice Maximum price staleness (2 hours)
     uint256 public constant MAX_PRICE_STALENESS = 2 hours;
+    /// @notice MAX_HISTORY
     uint256 public constant MAX_HISTORY = 8760; // 1 year of hourly updates
 
     /// @notice Price deviation threshold (10%)
@@ -97,23 +125,29 @@ contract VFIDEPriceOracle is Ownable, Pausable {
 
     /// @notice Pending Chainlink feed change
     address public pendingChainlinkFeed;
+    /// @notice pendingChainlinkFeedAt
     uint64  public pendingChainlinkFeedAt;
 
     /// @notice Pending Uniswap pool change
     address public pendingUniswapPool;
+    /// @notice pendingUniswapPoolAt
     uint64  public pendingUniswapPoolAt;
 
     /// @notice Pending manual price (timelocked) used as last-resort fallback.
     uint256 public pendingManualPrice;
+    /// @notice pendingManualPriceAt
     uint64  public pendingManualPriceAt;
 
     /// @notice Active manual fallback price and status.
     uint256 public manualPrice;
+    /// @notice manualPriceActive
     bool public manualPriceActive;
 
     /// @notice Historical prices
     mapping(uint256 => PricePoint) public historicalPrices;
+    /// @notice pricePointCount
     uint256 public pricePointCount;
+    /// @notice historyStartIndex
     uint256 private historyStartIndex;
 
     struct PricePoint {
@@ -129,28 +163,59 @@ contract VFIDEPriceOracle is Ownable, Pausable {
     }
 
     // Events
+    /// @notice PriceUpdated
+    /// @param price price
+    /// @param source source
+    /// @param timestamp timestamp
     event PriceUpdated(
         uint256 indexed price,
         PriceSource indexed source,
         uint256 timestamp
     );
+    /// @notice CircuitBreakerTriggered
+    /// @param oldPrice oldPrice
+    /// @param newPrice newPrice
+    /// @param deviation deviation
     event CircuitBreakerTriggered(
         uint256 oldPrice,
         uint256 newPrice,
         uint256 deviation
     );
+    /// @notice CircuitBreakerReset
     event CircuitBreakerReset();
+    /// @notice ChainlinkFeedUpdated
+    /// @param oldFeed oldFeed
+    /// @param newFeed newFeed
     event ChainlinkFeedUpdated(address indexed oldFeed, address indexed newFeed);
+    /// @notice ChainlinkFeedScheduled
+    /// @param pendingFeed pendingFeed
+    /// @param effectiveAt effectiveAt
     event ChainlinkFeedScheduled(address indexed pendingFeed, uint64 effectiveAt);
+    /// @notice UniswapPoolUpdated
+    /// @param oldPool oldPool
+    /// @param newPool newPool
     event UniswapPoolUpdated(address indexed oldPool, address indexed newPool);
+    /// @notice UniswapPoolScheduled
+    /// @param pendingPool pendingPool
+    /// @param effectiveAt effectiveAt
     event UniswapPoolScheduled(address indexed pendingPool, uint64 effectiveAt);
+    /// @notice ManualPriceScheduled
+    /// @param pendingPrice pendingPrice
+    /// @param effectiveAt effectiveAt
     event ManualPriceScheduled(uint256 indexed pendingPrice, uint64 effectiveAt);
+    /// @notice ManualPriceApplied
+    /// @param price price
     event ManualPriceApplied(uint256 indexed price);
+    /// @notice ManualPriceDisabled
     event ManualPriceDisabled();
 
+    /// @notice PriceStale
     error PriceStale();
+    /// @notice InvalidPrice
     error InvalidPrice();
+    /// @notice CircuitBreakerActive
     error CircuitBreakerActive();
+    /// @notice UpdateTooFrequent
     error UpdateTooFrequent();
 
     // Custom Ownable has no renounceOwnership — no override needed
@@ -202,6 +267,9 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         return _getLivePrice();
     }
 
+    /// @notice _getLivePrice
+    /// @return price price
+    /// @return source source
     function _getLivePrice() internal view returns (uint256 price, PriceSource source) {
         if (circuitBreakerActive) {
             if (block.timestamp < circuitBreakerTime + CIRCUIT_BREAKER_COOLDOWN) {
@@ -345,7 +413,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         int56 period = int56(uint56(TWAP_PERIOD));
         int24 arithmeticMeanTick = int24(tickDelta / period);
         if (tickDelta < 0 && (tickDelta % period != 0)) {
-            arithmeticMeanTick--;
+            --arithmeticMeanTick;
         }
 
         uint256 vfideUnit = 10 ** uint256(vfideDecimals);
@@ -366,6 +434,12 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         return (price, PriceSource.UNISWAP);
     }
 
+    /// @notice _getQuoteAtTick
+    /// @param tick tick
+    /// @param baseAmount baseAmount
+    /// @param baseToken baseToken
+    /// @param quoteToken_ quoteToken_
+    /// @return quoteAmount quoteAmount
     function _getQuoteAtTick(int24 tick, uint128 baseAmount, address baseToken, address quoteToken_)
         internal
         pure
@@ -386,6 +460,10 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         }
     }
 
+    /// @notice _getTokenDecimals
+    /// @param token token
+    /// @return decimals decimals
+    /// @return ok ok
     function _getTokenDecimals(address token) internal view returns (uint8 decimals, bool ok) {
         try IERC20DecimalsOracle(token).decimals() returns (uint8 d) {
             return (d, true);
@@ -426,7 +504,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         uint256 writeIndex;
         if (pricePointCount < MAX_HISTORY) {
             writeIndex = pricePointCount;
-            pricePointCount++;
+            ++pricePointCount;
         } else {
             writeIndex = historyStartIndex;
             historyStartIndex = (historyStartIndex + 1) % MAX_HISTORY;
@@ -558,6 +636,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @notice Get historical price
      * @param index Price point index
      * @return pricePoint Historical price point
+     * @return _arg _arg
      */
     function getHistoricalPrice(uint256 index) external view returns (PricePoint memory) {
         require(index < pricePointCount, "Invalid index");
@@ -576,7 +655,7 @@ contract VFIDEPriceOracle is Ownable, Pausable {
         uint256 returnCount = count > pricePointCount ? pricePointCount : count;
         prices = new PricePoint[](returnCount);
         
-        for (uint256 i = 0; i < returnCount; i++) {
+        for (uint256 i = 0; i < returnCount; ++i) {
             uint256 relativeIndex = pricePointCount - returnCount + i;
             uint256 storageIndex = pricePointCount < MAX_HISTORY
                 ? relativeIndex

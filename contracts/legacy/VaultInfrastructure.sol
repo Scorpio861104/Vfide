@@ -37,53 +37,86 @@ import "../SharedInterfaces.sol";
 /// @dev DEPRECATED — Retained for backward compatibility with existing deployments.
 ///      New vaults are deployed as CardBoundVault via VaultHub.ensureVault().
 /// ─────────────────────────── User Vault (embedded, legacy)
+/// @notice UserVaultLegacy
+/// @title UserVaultLegacy
+/// @author Vfide
 contract UserVaultLegacy is ReentrancyGuard {
     using SafeERC20 for IERC20;
     
     /// Immutable references
+    /// @notice hub
     address public immutable hub;
+    /// @notice vfideToken
     address public immutable vfideToken;
+    /// @notice ledger
     IProofLedger public immutable ledger;
 
     /// State
+    /// @notice owner
     address public owner;
+    /// @notice isGuardian
     mapping(address => bool) public isGuardian;
+    /// @notice guardianCount
     uint8 public guardianCount; // Track count for logic
     
     // Track guardian list for enumeration
+    /// @notice guardianList
     address[] private guardianList;
 
+    /// @notice nextOfKin
     address public nextOfKin;
     
     /// Withdrawal friction layer
+    /// @notice lastWithdrawalTime
     uint64 public lastWithdrawalTime;
+    /// @notice withdrawalCooldown
     uint64 public withdrawalCooldown = 24 hours; // Default 24h cooldown
+    /// @notice largeTransferThreshold
     uint256 public largeTransferThreshold = 10000 * 1e18; // Default 10k VFIDE (legacy, optional)
 
     // H-1 FIX: Daily transfer limit — mirrors CardBoundVault spend limit enforcement.
     // 0 = no limit (opt-in; owner sets via setDailyTransferLimit).
+    /// @notice dailyTransferLimit
     uint256 public dailyTransferLimit;
+    /// @notice spentToday
     uint256 public spentToday;
+    /// @notice dayStart
     uint64  public dayStart;
     
+    /// @notice lastExecuteTime
     uint64 public lastExecuteTime;
+    /// @notice executeCooldown
     uint64 public executeCooldown = 1 hours; // Default 1h cooldown for execute()
     
+    /// @notice maxExecuteValue
     uint256 public maxExecuteValue = 1 ether; // Default 1 ETH max per execute call
 
+    /// @notice allowedExecuteTarget
     mapping(address => bool) public allowedExecuteTarget;
+    /// @notice executeWhitelistEnforced
     bool public executeWhitelistEnforced = true; // Legacy vaults default to whitelist-on
+    /// @notice ExecuteTargetSet
+    /// @param target target
+    /// @param allowed allowed
     event ExecuteTargetSet(address indexed target, bool allowed);
+    /// @notice ExecuteWhitelistEnforced
+    /// @param enforced enforced
     event ExecuteWhitelistEnforced(bool enforced);
     
     /// User-controlled security features
+    /// @notice frozen
     bool public frozen; // User can freeze vault like freezing ATM card
     
     // Flexible abnormal transaction detection
+    /// @notice usePercentageThreshold
     bool public usePercentageThreshold; // If true, use percentage; if false, use fixed amount
+    /// @notice abnormalTransactionThreshold
     uint256 public abnormalTransactionThreshold = 50000 * 1e18; // Fixed amount (default 50k VFIDE)
+    /// @notice abnormalTransactionPercentageBps
     uint16 public abnormalTransactionPercentageBps = 5000; // Percentage in basis points (default 50% = 5000 bps)
+    /// @notice useBalanceSnapshot
     bool public useBalanceSnapshot; // If true, use snapshot balance; if false, use current balance
+    /// @notice balanceSnapshot
     uint256 public balanceSnapshot; // Snapshot of balance for percentage calculations
     
     struct PendingTransaction {
@@ -93,8 +126,11 @@ contract UserVaultLegacy is ReentrancyGuard {
         bool approved;
         bool executed;
     }
+    /// @notice pendingTransactions
     mapping(uint256 => PendingTransaction) public pendingTransactions;
+    /// @notice pendingTxCount
     uint256 public pendingTxCount;
+    /// @notice PENDING_TX_EXPIRY
     uint64 public constant PENDING_TX_EXPIRY = 24 hours;
 
     struct Recovery {
@@ -103,8 +139,11 @@ contract UserVaultLegacy is ReentrancyGuard {
         uint64 readyTime;              // Minimum time before finalization
         uint64 expiryTime;        uint8 guardianCountSnapshot;   // Lock guardian count at request time
         uint256 nonce;        mapping(address => mapping(uint256 => bool)) voted;    }
+    /// @notice _recovery
     Recovery private _recovery;
+    /// @notice RECOVERY_MIN_DELAY
     uint64 public constant RECOVERY_MIN_DELAY = 7 days;
+    /// @notice RECOVERY_EXPIRY
     uint64 public constant RECOVERY_EXPIRY = 30 days;
 
     struct Inheritance {
@@ -115,77 +154,165 @@ contract UserVaultLegacy is ReentrancyGuard {
         uint8 guardianCountSnapshot;   // Lock guardian count at request time
         bool ownerDenied;              // Owner explicitly denied (prevents gaming)
         uint256 nonce;        mapping(address => mapping(uint256 => bool)) voted;    }
+    /// @notice _inheritance
     Inheritance private _inheritance;
+    /// @notice INHERITANCE_MIN_DELAY
     uint64 public constant INHERITANCE_MIN_DELAY = 7 days;
+    /// @notice INHERITANCE_EXPIRY
     uint64 public constant INHERITANCE_EXPIRY = 30 days;
 
     /// Events
+    /// @notice OwnerSet
+    /// @param newOwner newOwner
     event OwnerSet(address indexed newOwner);
+    /// @notice GuardianSet
+    /// @param guardian guardian
+    /// @param active active
     event GuardianSet(address indexed guardian, bool active);
+    /// @notice NextOfKinSet
+    /// @param kin kin
     event NextOfKinSet(address indexed kin);
+    /// @notice RecoveryRequested
+    /// @param proposedOwner proposedOwner
     event RecoveryRequested(address indexed proposedOwner);
+    /// @notice RecoveryApproved
+    /// @param guardian guardian
+    /// @param proposedOwner proposedOwner
+    /// @param approvals approvals
     event RecoveryApproved(address indexed guardian, address indexed proposedOwner, uint8 approvals);
+    /// @notice RecoveryCancelled
+    /// @param cancelledBy cancelledBy
     event RecoveryCancelled(address indexed cancelledBy);
+    /// @notice RecoveryFinalized
+    /// @param newOwner newOwner
     event RecoveryFinalized(address indexed newOwner);
+    /// @notice InheritanceRequested
+    /// @param nextOfKin nextOfKin
     event InheritanceRequested(address indexed nextOfKin);
+    /// @notice InheritanceApproved
+    /// @param guardian guardian
+    /// @param approvals approvals
     event InheritanceApproved(address indexed guardian, uint8 approvals);
+    /// @notice InheritanceDenied
+    /// @param owner owner
     event InheritanceDenied(address indexed owner);
+    /// @notice InheritanceCancelled
+    /// @param cancelledBy cancelledBy
     event InheritanceCancelled(address indexed cancelledBy);
+    /// @notice InheritanceCancelledByGuardians
+    /// @param cancelledBy cancelledBy
+    /// @param approvals approvals
     event InheritanceCancelledByGuardians(address indexed cancelledBy, uint8 approvals);
+    /// @notice InheritanceFinalized
+    /// @param inheritor inheritor
+    /// @param inheritorVault inheritorVault
+    /// @param amount amount
     event InheritanceFinalized(address indexed inheritor, address indexed inheritorVault, uint256 amount);
+    /// @notice VaultTransfer
+    /// @param toVault toVault
+    /// @param amount amount
     event VaultTransfer(address indexed toVault, uint256 amount);
+    /// @notice VaultApprove
+    /// @param spender spender
+    /// @param amount amount
     event VaultApprove(address indexed spender, uint256 amount);
+    /// @notice VaultFrozen
+    /// @param frozen frozen
     event VaultFrozen(bool frozen);
+    /// @notice AbnormalTransactionDetected
+    /// @param txId txId
+    /// @param toVault toVault
+    /// @param amount amount
     event AbnormalTransactionDetected(uint256 indexed txId, address indexed toVault, uint256 amount);
+    /// @notice TransactionApproved
+    /// @param txId txId
+    /// @param by by
     event TransactionApproved(uint256 indexed txId, address indexed by);
+    /// @notice TransactionDenied
+    /// @param txId txId
+    /// @param by by
     event TransactionDenied(uint256 indexed txId, address indexed by);
+    /// @notice TransactionExecuted
+    /// @param txId txId
+    /// @param toVault toVault
+    /// @param amount amount
     event TransactionExecuted(uint256 indexed txId, address indexed toVault, uint256 amount);
+    /// @notice AbnormalThresholdSet
+    /// @param usePercentage usePercentage
+    /// @param fixedAmount fixedAmount
+    /// @param percentageBps percentageBps
     event AbnormalThresholdSet(bool usePercentage, uint256 fixedAmount, uint16 percentageBps);
 
     /// Errors
+    /// @notice UV_NotOwner
     error UV_NotOwner();
+    /// @notice UV_Locked
     error UV_Locked();
+    /// @notice UV_Frozen
     error UV_Frozen();
+    /// @notice UV_Zero
     error UV_Zero();
+    /// @notice UV_NotGuardian
     error UV_NotGuardian();
+    /// @notice UV_AlreadyVoted
     error UV_AlreadyVoted();
+    /// @notice UV_NoRecovery
     error UV_NoRecovery();
+    /// @notice UV_NoInheritance
     error UV_NoInheritance();
+    /// @notice UV_InheritanceDenied
     error UV_InheritanceDenied();
+    /// @notice UV_NotNextOfKin
     error UV_NotNextOfKin();
+    /// @notice UV_NoPendingTx
     error UV_NoPendingTx();
+    /// @notice UV_TxAlreadyProcessed
     error UV_TxAlreadyProcessed();
+    /// @notice UV_RecoveryActive
     error UV_RecoveryActive();
+    /// @notice UV_InheritanceActive
     error UV_InheritanceActive();
+    /// @notice UV_ClaimInProgress
     error UV_ClaimInProgress();
 
+    /// @notice onlyOwner
     modifier onlyOwner() {
         _checkOwner();
         _;
     }
 
+    /// @notice _checkOwner
     function _checkOwner() internal view {
         if (msg.sender != owner) revert UV_NotOwner();
     }
 
+    /// @notice notFrozen
     modifier notFrozen() {
         _checkNotFrozen();
         _;
     }
 
+    /// @notice _checkNotFrozen
     function _checkNotFrozen() internal view {
         if (frozen) revert UV_Frozen();
     }
 
+    /// @notice noActiveClaims
     modifier noActiveClaims() {
         _checkNoActiveClaims();
         _;
     }
 
+    /// @notice _checkNoActiveClaims
     function _checkNoActiveClaims() internal view {
         if (_recovery.proposedOwner != address(0) || _inheritance.active) revert UV_ClaimInProgress();
     }
 
+    /// @notice constructor
+    /// @param _hub _hub
+    /// @param _vfide _vfide
+    /// @param _owner _owner
+    /// @param _ledger _ledger
     constructor(
         address _hub,
         address _vfide,
@@ -203,6 +330,8 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Governance hooks (only hub may force operations)
+    /// @notice __forceSetOwner
+    /// @param newOwner newOwner
     function __forceSetOwner(address newOwner) external {
         newOwner;
         revert("VI: force recovery disabled - legacy vault migration required");
@@ -210,10 +339,16 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     // ——— Owner controls
     // Track guardian add time for flash endorsement protection
+    /// @notice guardianAddTime
     mapping(address => uint64) public guardianAddTime;
+    /// @notice GUARDIAN_MATURITY_PERIOD
     uint64 public constant GUARDIAN_MATURITY_PERIOD = 7 days;
+    /// @notice MAX_GUARDIANS
     uint8 public constant MAX_GUARDIANS = 20;
 
+    /// @notice setGuardian
+    /// @param g g
+    /// @param active active
     function setGuardian(address g, bool active) external onlyOwner {
         if (g == address(0)) revert UV_Zero();
         
@@ -230,14 +365,14 @@ contract UserVaultLegacy is ReentrancyGuard {
             isGuardian[g] = active;
             if (active) {
                 require(guardianCount < MAX_GUARDIANS, "UV: guardian limit reached");
-                guardianCount++;
+                ++guardianCount;
                 guardianAddTime[g] = uint64(block.timestamp); // H-1: Track add time
                 guardianList.push(g); // Track for enumeration
             } else {
-                guardianCount--;
+                --guardianCount;
                 delete guardianAddTime[g]; // H-17: Clear on removal
                 // Remove from list (swap and pop)
-                for (uint256 i = 0; i < guardianList.length; i++) {
+                for (uint256 i = 0; i < guardianList.length; ++i) {
                     if (guardianList[i] == g) {
                         guardianList[i] = guardianList[guardianList.length - 1];
                         guardianList.pop();
@@ -250,11 +385,16 @@ contract UserVaultLegacy is ReentrancyGuard {
         }
     }
 
+    /// @notice isGuardianMature
+    /// @param g g
+    /// @return _bool _bool
     function isGuardianMature(address g) public view returns (bool) {
         if (!isGuardian[g]) return false;
         return block.timestamp >= guardianAddTime[g] + GUARDIAN_MATURITY_PERIOD;
     }
 
+    /// @notice setNextOfKin
+    /// @param kin kin
     function setNextOfKin(address kin) external onlyOwner {
         if (kin == address(0)) revert UV_Zero();
         if (_inheritance.active) revert UV_InheritanceActive();
@@ -263,8 +403,12 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logEv(kin, "next_of_kin_set", 0, "");
     }
 
+    /// @notice WithdrawalCooldownSet
+    /// @param cooldown cooldown
     event WithdrawalCooldownSet(uint64 cooldown);
     
+    /// @notice setWithdrawalCooldown
+    /// @param cooldown cooldown
     function setWithdrawalCooldown(uint64 cooldown) external onlyOwner {
         require(cooldown <= 7 days, "UV:cooldown-too-long");
         require(cooldown >= 1 hours || cooldown == 0, "UV:cooldown-too-short");
@@ -273,6 +417,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logEv(msg.sender, "cooldown_set", cooldown, "");
     }
 
+    /// @notice setLargeTransferThreshold
+    /// @param threshold threshold
     function setLargeTransferThreshold(uint256 threshold) external onlyOwner {
         require(threshold >= 100 * 1e18, "UV: threshold too low");
         require(threshold <= 1_000_000 * 1e18, "UV: threshold too high");
@@ -282,6 +428,7 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     /// @notice H-1 FIX: Set a rolling 24-hour transfer limit aligned with CardBoundVault.
     ///         Pass 0 to disable the limit.
+    /// @param limit limit
     function setDailyTransferLimit(uint256 limit) external onlyOwner {
         require(limit == 0 || limit >= 100 * 1e18, "UV: limit too low");
         dailyTransferLimit = limit;
@@ -291,6 +438,8 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logEv(msg.sender, "daily_limit_set", limit, "");
     }
 
+    /// @notice _consumeDailyTransferLimit
+    /// @param amount amount
     function _consumeDailyTransferLimit(uint256 amount) internal {
         if (amount == 0 || dailyTransferLimit == 0) return;
         if (block.timestamp >= uint256(dayStart) + 1 days) {
@@ -375,6 +524,7 @@ contract UserVaultLegacy is ReentrancyGuard {
     /**
      * @notice Get current abnormal transaction threshold based on user preference
      * @return Current threshold amount in wei
+     * @return _uint256 _uint256
      */
     function getAbnormalTransactionThreshold() public view returns (uint256) {
         if (usePercentageThreshold) {
@@ -460,6 +610,8 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Recovery flow (owner lost)
+    /// @notice requestRecovery
+    /// @param proposedOwner proposedOwner
     function requestRecovery(address proposedOwner) external {
         // Either nextOfKin, an existing guardian, or the current owner may open a request
         if (!(msg.sender == owner || isGuardian[msg.sender] || msg.sender == nextOfKin)) revert UV_NotGuardian();
@@ -471,7 +623,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (msg.sender == nextOfKin && guardianCount == 0) {
             // Instead of instant recovery, require a 7-day waiting period.
             // With zero guardians, mark one virtual approval so finalize can occur after timelock.
-            _recovery.nonce++;
+            ++_recovery.nonce;
             _recovery.proposedOwner = proposedOwner;
             _recovery.approvals = 1;
             _recovery.readyTime = uint64(block.timestamp + RECOVERY_MIN_DELAY);
@@ -500,6 +652,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logEv(proposedOwner, "recovery_requested", 0, "");
     }
 
+    /// @notice guardianApproveRecovery
     function guardianApproveRecovery() external {
         if (!isGuardian[msg.sender]) revert UV_NotGuardian();
         require(isGuardianMature(msg.sender), "UV: guardian not mature");
@@ -507,11 +660,12 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(block.timestamp <= _recovery.expiryTime, "UV: recovery expired");
         if (_recovery.voted[msg.sender][_recovery.nonce]) revert UV_AlreadyVoted();
         _recovery.voted[msg.sender][_recovery.nonce] = true;
-        _recovery.approvals += 1;
+        ++_recovery.approvals;
         emit RecoveryApproved(msg.sender, _recovery.proposedOwner, _recovery.approvals);
         _logEv(msg.sender, "recovery_approval", _recovery.approvals, "");
     }
 
+    /// @notice finalizeRecovery
     function finalizeRecovery() external {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
         require(block.timestamp >= _recovery.readyTime, "UV: recovery timelock");
@@ -537,6 +691,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         _logSys("recovery_finalized");
     }
 
+    /// @notice cancelRecovery
     function cancelRecovery() external onlyOwner {
         if (_recovery.proposedOwner == address(0)) revert UV_NoRecovery();
         
@@ -593,7 +748,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         require(block.timestamp <= _inheritance.expiryTime, "UV: inheritance expired");
         
         _inheritance.voted[msg.sender][_inheritance.nonce] = true;
-        _inheritance.approvals++;
+        ++_inheritance.approvals;
         
         emit InheritanceApproved(msg.sender, _inheritance.approvals);
         _logEv(msg.sender, "inheritance_approved", _inheritance.approvals, "");
@@ -619,8 +774,11 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     // Guardian cancellation tracking for inheritance
     // C-1 FIX: Added nonce to properly reset votes after successful cancellation
+    /// @notice _inheritanceCancellationVoted
     mapping(address => mapping(uint256 => bool)) private _inheritanceCancellationVoted;
+    /// @notice _inheritanceCancellationApprovals
     uint8 private _inheritanceCancellationApprovals;
+    /// @notice _inheritanceCancellationNonce
     uint256 private _inheritanceCancellationNonce;
     
     /**
@@ -636,7 +794,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         if (_inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce]) revert UV_AlreadyVoted();
         
         _inheritanceCancellationVoted[msg.sender][_inheritanceCancellationNonce] = true;
-        _inheritanceCancellationApprovals++;
+        ++_inheritanceCancellationApprovals;
         
         // Use guardian snapshot from request time to prevent threshold manipulation
         uint8 snapshotCount = _inheritance.guardianCountSnapshot;
@@ -652,7 +810,7 @@ contract UserVaultLegacy is ReentrancyGuard {
             _inheritance.ownerDenied = false;
             
             // C-1 FIX: Increment nonce to invalidate all previous votes
-            _inheritanceCancellationNonce++;
+            ++_inheritanceCancellationNonce;
             _inheritanceCancellationApprovals = 0;
             
             // forge-lint: disable-next-line(unsafe-typecast)
@@ -715,9 +873,17 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     // ——— Token operations (VFIDE only)
     // Return value for transfers that require approval
+    /// @notice TransferPendingApproval
+    /// @param txId txId
+    /// @param toVault toVault
+    /// @param amount amount
     event TransferPendingApproval(uint256 indexed txId, address indexed toVault, uint256 amount);
     
     // slither-disable-next-line reentrancy-benign
+    /// @notice transferVFIDE
+    /// @param toVault toVault
+    /// @param amount amount
+    /// @return _bool _bool
     function transferVFIDE(address toVault, uint256 amount) external onlyOwner notFrozen noActiveClaims nonReentrant returns (bool) {
         if (toVault == address(0)) revert UV_Zero();
         require(amount > 0, "UV: zero amount");
@@ -771,6 +937,10 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // slither-disable-next-line reentrancy-events
+    /// @notice approveVFIDE
+    /// @param spender spender
+    /// @param amount amount
+    /// @return _bool _bool
     function approveVFIDE(address spender, uint256 amount) external onlyOwner notFrozen noActiveClaims returns (bool) {
         if (spender == address(0)) revert UV_Zero();
         
@@ -796,6 +966,11 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Generic Execution (Smart Account)
+    /// @notice execute
+    /// @param target target
+    /// @param value value
+    /// @param data data
+    /// @return result result
     function execute(address target, uint256 value, bytes calldata data) external onlyOwner notFrozen noActiveClaims nonReentrant returns (bytes memory result) {
         if (target == address(0)) revert UV_Zero();
         require(target != vfideToken, "UV:use-transferVFIDE");
@@ -836,11 +1011,16 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Batch Execution (UX improvement)
+    /// @notice executeBatch
+    /// @param targets targets
+    /// @param values values
+    /// @param datas datas
+    /// @return results results
     function executeBatch(address[] calldata targets, uint256[] calldata values, bytes[] calldata datas) external onlyOwner notFrozen noActiveClaims nonReentrant returns (bytes[] memory results) {
         require(targets.length == values.length && values.length == datas.length, "UV:length-mismatch");
 
         uint256 totalValue;
-        for (uint256 i = 0; i < values.length; i++) {
+        for (uint256 i = 0; i < values.length; ++i) {
             totalValue += values[i];
         }
         _consumeDailyTransferLimit(totalValue);
@@ -853,7 +1033,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         lastExecuteTime = uint64(block.timestamp);
 
         results = new bytes[](targets.length);
-        for (uint256 i = 0; i < targets.length; i++) {
+        for (uint256 i = 0; i < targets.length; ++i) {
             if (targets[i] == address(0)) revert UV_Zero();
             require(targets[i] != vfideToken, "UV:use-transferVFIDE");
             require(targets[i] != address(this), "UV:self-call");
@@ -878,6 +1058,8 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     /// @notice Allow or disallow a target address for execute() calls
     /// @dev Can only be called by vault owner or hub
+    /// @param target target
+    /// @param allowed allowed
     function setAllowedTarget(address target, bool allowed) external {
         require(msg.sender == owner || msg.sender == hub, "UV:unauthorized");
         require(target != address(0), "UV:zero");
@@ -888,6 +1070,7 @@ contract UserVaultLegacy is ReentrancyGuard {
 
     /// @notice Toggle whitelist enforcement for execute()
     /// @dev Hub-only — ensures protocol-level control over enforcement
+    /// @param enforce enforce
     function enforceExecuteWhitelist(bool enforce) external {
         require(msg.sender == hub, "UV:only-hub");
         // H-7 FIX: Whitelist enforcement can only be enabled, never disabled.
@@ -898,14 +1081,24 @@ contract UserVaultLegacy is ReentrancyGuard {
     }
 
     // ——— Internals: ledger logging (best-effort)
+    /// @notice _logSys
+    /// @param action action
     function _logSys(string memory action) internal {
         if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
     }
+    /// @notice _logEv
+    /// @param who who
+    /// @param action action
+    /// @param amount amount
+    /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
     }
     
     // Helper to convert uint to string for error messages
+    /// @notice _uint2str
+    /// @param _i _i
+    /// @return _string _string
     function _uint2str(uint256 _i) internal pure returns (string memory) {
         if (_i == 0) return "0";
         uint256 j = _i;
@@ -925,6 +1118,7 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @notice Rescue stuck ETH accidentally sent to vault
      * @dev Owner can withdraw ETH that was accidentally sent to the vault
      * Added nonReentrant to prevent reentrancy via malicious recipient
+     * @param recipient recipient
      */
     function rescueETH(address payable recipient) external onlyOwner notFrozen nonReentrant {
         require(recipient != address(0), "UV: zero recipient");
@@ -940,6 +1134,9 @@ contract UserVaultLegacy is ReentrancyGuard {
     /**
      * @notice Rescue any ERC20 token (except VFIDE which uses transferVFIDE)
      * @dev For tokens accidentally sent to vault
+     * @param token token
+     * @param recipient recipient
+     * @param amount amount
      */
     function rescueToken(address token, address recipient, uint256 amount) external onlyOwner notFrozen {
         require(token != address(0) && recipient != address(0), "UV: zero address");
@@ -956,6 +1153,15 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     /**
      * @notice Get vault summary for frontend
+     * @return vaultOwner vaultOwner
+     * @return vfideBalance vfideBalance
+     * @return ethBalance ethBalance
+     * @return isFrozen isFrozen
+     * @return isLocked isLocked
+     * @return numGuardians numGuardians
+     * @return kinAddress kinAddress
+     * @return hasActiveRecovery hasActiveRecovery
+     * @return hasActiveInheritance hasActiveInheritance
      */
     function getVaultSummary() external view returns (
         address vaultOwner,
@@ -981,6 +1187,11 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     /**
      * @notice Get recovery status
+     * @return active active
+     * @return proposedOwner proposedOwner
+     * @return approvals approvals
+     * @return expiryTime expiryTime
+     * @return guardianThreshold guardianThreshold
      */
     function getRecoveryStatus() external view returns (
         bool active,
@@ -998,6 +1209,12 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     /**
      * @notice Get inheritance status
+     * @return active active
+     * @return approvals approvals
+     * @return readyTime readyTime
+     * @return expiryTime expiryTime
+     * @return ownerDenied ownerDenied
+     * @return guardianThreshold guardianThreshold
      */
     function getInheritanceStatus() external view returns (
         bool active,
@@ -1019,6 +1236,13 @@ contract UserVaultLegacy is ReentrancyGuard {
      * @notice Get all pending transactions (paginated to prevent gas exhaustion)
      * @param offset Starting index in pendingTransactions array
      * @param limit Maximum number of results to return (0 for default of 50)
+     * @return txIds txIds
+     * @return toVaults toVaults
+     * @return amounts amounts
+     * @return requestTimes requestTimes
+     * @return approved approved
+     * @return executed executed
+     * @return totalPending totalPending
      */
     function getPendingTransactions(uint256 offset, uint256 limit) external view returns (
         uint256[] memory txIds,
@@ -1034,9 +1258,9 @@ contract UserVaultLegacy is ReentrancyGuard {
         
         // First pass: count total active pending transactions
         uint256 totalCount = 0;
-        for (uint256 i = 0; i < pendingTxCount; i++) {
+        for (uint256 i = 0; i < pendingTxCount; ++i) {
             if (pendingTransactions[i].amount > 0 && !pendingTransactions[i].executed) {
-                totalCount++;
+                ++totalCount;
             }
         }
         totalPending = totalCount;
@@ -1055,7 +1279,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         // Second pass: collect results starting from offset
         uint256 found = 0;
         uint256 idx = 0;
-        for (uint256 i = 0; i < pendingTxCount && idx < pageSize; i++) {
+        for (uint256 i = 0; i < pendingTxCount && idx < pageSize; ++i) {
             PendingTransaction storage ptx = pendingTransactions[i];
             if (ptx.amount > 0 && !ptx.executed) {
                 if (found >= offset) {
@@ -1065,15 +1289,17 @@ contract UserVaultLegacy is ReentrancyGuard {
                     requestTimes[idx] = ptx.requestTime;
                     approved[idx] = ptx.approved;
                     executed[idx] = ptx.executed;
-                    idx++;
+                    ++idx;
                 }
-                found++;
+                ++found;
             }
         }
     }
     
     /**
      * @notice Check cooldown status
+     * @return withdrawalCooldownRemaining withdrawalCooldownRemaining
+     * @return executeCooldownRemaining executeCooldownRemaining
      */
     function getCooldownStatus() external view returns (
         uint64 withdrawalCooldownRemaining,
@@ -1096,6 +1322,9 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     /**
      * @notice Get list of all guardians
+     * @return addresses addresses
+     * @return addedTimes addedTimes
+     * @return mature mature
      */
     function getGuardians() external view returns (
         address[] memory addresses,
@@ -1106,7 +1335,7 @@ contract UserVaultLegacy is ReentrancyGuard {
         addedTimes = new uint64[](guardianList.length);
         mature = new bool[](guardianList.length);
         
-        for (uint256 i = 0; i < guardianList.length; i++) {
+        for (uint256 i = 0; i < guardianList.length; ++i) {
             address g = guardianList[i];
             addresses[i] = g;
             addedTimes[i] = guardianAddTime[g];
@@ -1116,6 +1345,14 @@ contract UserVaultLegacy is ReentrancyGuard {
     
     /**
      * @notice Get pending transaction with expiry info
+     * @param txId txId
+     * @return toVault toVault
+     * @return amount amount
+     * @return requestTime requestTime
+     * @return expiresAt expiresAt
+     * @return isExpired isExpired
+     * @return approved approved
+     * @return executed executed
      */
     function getTransactionWithExpiry(uint256 txId) external view returns (
         address toVault,
@@ -1142,7 +1379,16 @@ contract UserVaultLegacy is ReentrancyGuard {
     receive() external payable {}
 }
 
+/// @notice IUserVaultBytecodeProvider
+/// @title IUserVaultBytecodeProvider
+/// @author Vfide
 interface IUserVaultBytecodeProvider {
+    /// @notice creationCode
+    /// @param hub hub
+    /// @param vfide vfide
+    /// @param owner_ owner_
+    /// @param ledger ledger
+    /// @return _bytes _bytes
     function creationCode(
         address hub,
         address vfide,
@@ -1151,7 +1397,16 @@ interface IUserVaultBytecodeProvider {
     ) external pure returns (bytes memory);
 }
 
+/// @notice UserVaultBytecodeProvider
+/// @title UserVaultBytecodeProvider
+/// @author Vfide
 contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
+    /// @notice creationCode
+    /// @param hub hub
+    /// @param vfide vfide
+    /// @param owner_ owner_
+    /// @param ledger ledger
+    /// @return _bytes _bytes
     function creationCode(
         address hub,
         address vfide,
@@ -1166,42 +1421,90 @@ contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
 }
 
 /// ─────────────────────────── Hub / Factory / Registry
+/// @notice VaultInfrastructure
+/// @title VaultInfrastructure
+/// @author Vfide
 contract VaultInfrastructure is Ownable {
     /// Modules & config
+    /// @notice vfideToken
     address public vfideToken;
+    /// @notice ledger
     IProofLedger public ledger;       // optional ledger
+    /// @notice dao
     address public dao;                  // DAO can force recover
+    /// @notice vaultBytecodeProvider
     address public vaultBytecodeProvider;
 
     /// Registry
+    /// @notice vaultOf
     mapping(address => address) public vaultOf;
+    /// @notice ownerOfVault
     mapping(address => address) public ownerOfVault;
 
     // Recovery Timelock with Multi-Sig
+    /// @notice recoveryUnlockTime
     mapping(address => uint64) public recoveryUnlockTime;
+    /// @notice recoveryProposedOwner
     mapping(address => address) public recoveryProposedOwner;
+    /// @notice recoveryApprovals
     mapping(address => mapping(address => mapping(uint256 => bool))) public recoveryApprovals;
+    /// @notice recoveryApprovalCount
     mapping(address => uint8) public recoveryApprovalCount;
+    /// @notice recoveryCandidateForNonce
     mapping(address => mapping(uint256 => address)) public recoveryCandidateForNonce;
-    mapping(address => uint256) public recoveryNonce;    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
+    /// @notice recoveryNonce
+    mapping(address => uint256) public recoveryNonce;
+    /// @notice RECOVERY_DELAY
+    uint64 public constant RECOVERY_DELAY = 7 days; // H-5: Increased from 3 to 7 days
+    /// @notice RECOVERY_APPROVALS_REQUIRED
     uint8 public constant RECOVERY_APPROVALS_REQUIRED = 3; // H-5: Multi-sig requirement
+    /// @notice isRecoveryApprover
     mapping(address => bool) public isRecoveryApprover;
 
     /// Events
+    /// @notice ModulesSet
+    /// @param vfide vfide
+    /// @param ledger ledger
+    /// @param dao dao
     event ModulesSet(address vfide, address ledger, address dao);
+    /// @notice VaultCreated
+    /// @param owner owner
+    /// @param vault vault
     event VaultCreated(address indexed owner, address indexed vault);
+    /// @notice ForcedRecoveryInitiated
+    /// @param vault vault
+    /// @param newOwner newOwner
+    /// @param unlockTime unlockTime
     event ForcedRecoveryInitiated(address indexed vault, address indexed newOwner, uint64 unlockTime);
+    /// @notice ForcedRecovery
+    /// @param vault vault
+    /// @param newOwner newOwner
     event ForcedRecovery(address indexed vault, address indexed newOwner);
+    /// @notice ForcedRecoveryCancelled
+    /// @param vault vault
     event ForcedRecoveryCancelled(address indexed vault); // VI-06 FIX
+    /// @notice VFIDESet
+    /// @param vfide vfide
     event VFIDESet(address vfide);
+    /// @notice DAOSet
+    /// @param dao dao
     event DAOSet(address dao);
+    /// @notice VaultBytecodeProviderSet
+    /// @param provider provider
     event VaultBytecodeProviderSet(address provider);
 
     /// Errors
+    /// @notice VI_Zero
     error VI_Zero();
+    /// @notice VI_NotDAO
     error VI_NotDAO();
+    /// @notice VI_NotConfigured
     error VI_NotConfigured();
 
+    /// @notice constructor
+    /// @param _vfideToken _vfideToken
+    /// @param _ledger _ledger
+    /// @param _dao _dao
     constructor(address _vfideToken, address _ledger, address _dao) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VI_Zero();
         vfideToken = _vfideToken;
@@ -1213,6 +1516,10 @@ contract VaultInfrastructure is Ownable {
     }
 
     // ——— Module wiring
+    /// @notice setModules
+    /// @param _vfideToken _vfideToken
+    /// @param _ledger _ledger
+    /// @param _dao _dao
     function setModules(address _vfideToken, address _ledger, address _dao) external onlyOwner {
         if (_vfideToken == address(0) || _dao == address(0)) revert VI_Zero();
         vfideToken = _vfideToken;
@@ -1222,6 +1529,8 @@ contract VaultInfrastructure is Ownable {
         _log("hub_modules_set");
     }
 
+    /// @notice setVFIDE
+    /// @param _vfide _vfide
     function setVFIDE(address _vfide) external onlyOwner {
         if (_vfide == address(0)) revert VI_Zero();
         vfideToken = _vfide;
@@ -1229,6 +1538,8 @@ contract VaultInfrastructure is Ownable {
         _log("hub_vfide_set");
     }
 
+    /// @notice setDAO
+    /// @param _dao _dao
     function setDAO(address _dao) external onlyOwner {
         if (_dao == address(0)) revert VI_Zero();
         dao = _dao;
@@ -1236,6 +1547,8 @@ contract VaultInfrastructure is Ownable {
         _log("hub_dao_set");
     }
 
+    /// @notice setVaultBytecodeProvider
+    /// @param provider provider
     function setVaultBytecodeProvider(address provider) external onlyOwner {
         if (provider == address(0)) revert VI_Zero();
         vaultBytecodeProvider = provider;
@@ -1243,6 +1556,9 @@ contract VaultInfrastructure is Ownable {
         _log("hub_bytecode_provider_set");
     }
     
+    /// @notice setRecoveryApprover
+    /// @param approver approver
+    /// @param status status
     function setRecoveryApprover(address approver, bool status) external onlyOwner {
         require(approver != address(0), "VI:zero");
         isRecoveryApprover[approver] = status;
@@ -1250,6 +1566,9 @@ contract VaultInfrastructure is Ownable {
     }
 
     // ——— Deterministic address prediction for UX
+    /// @notice predictVault
+    /// @param owner_ owner_
+    /// @return predicted predicted
     function predictVault(address owner_) public view returns (address predicted) {
         if (owner_ == address(0)) return address(0);
         bytes32 salt = _salt(owner_);
@@ -1264,6 +1583,9 @@ contract VaultInfrastructure is Ownable {
     }
 
     // ——— Auto-create (anyone can sponsor)
+    /// @notice ensureVault
+    /// @param owner_ owner_
+    /// @return vault vault
     function ensureVault(address owner_) public returns (address vault) {
         if (owner_ == address(0)) revert VI_Zero();
         if (vfideToken == address(0)) revert VI_Zero(); // Ensure token is set
@@ -1281,7 +1603,7 @@ contract VaultInfrastructure is Ownable {
         ownerOfVault[vault] = owner_;
         
         // Track vault creation
-        totalVaults++;
+        ++totalVaults;
         vaultCreatedAt[vault] = block.timestamp;
         
         emit VaultCreated(owner_, vault);
@@ -1289,6 +1611,9 @@ contract VaultInfrastructure is Ownable {
     }
 
     // ——— View helpers (token expects vaultOf(owner))
+    /// @notice isVault
+    /// @param a a
+    /// @return _bool _bool
     function isVault(address a) external view returns (bool) {
         return ownerOfVault[a] != address(0) && vaultOf[ ownerOfVault[a] ] == a;
     }
@@ -1298,25 +1623,41 @@ contract VaultInfrastructure is Ownable {
     // wallet rotation or VaultRecoveryClaim.
     // ──────────────────────────────────────────────────────────
 
+    /// @notice approveForceRecovery
+    /// @param vault vault
+    /// @param newOwner newOwner
     function approveForceRecovery(address vault, address newOwner) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
+    /// @notice initiateForceRecovery
+    /// @param vault vault
+    /// @param newOwner newOwner
     function initiateForceRecovery(address vault, address newOwner) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
+    /// @notice finalizeForceRecovery
+    /// @param vault vault
     function finalizeForceRecovery(address vault) external {
         revert("VI: force recovery disabled - non-custodial");
     }
 
+    /// @notice cancelForceRecovery
+    /// @param vault vault
     function cancelForceRecovery(address vault) external {
         revert("VI: force recovery disabled - non-custodial");
     }
+    /// @notice _salt
+    /// @param owner_ owner_
+    /// @return _bytes32 _bytes32
     function _salt(address owner_) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked(owner_));
     }
 
+    /// @notice _getCreationCode
+    /// @param owner_ owner_
+    /// @return _bytes _bytes
     function _getCreationCode(address owner_) internal view returns (bytes memory) {
         address provider = vaultBytecodeProvider;
         if (provider == address(0)) revert VI_NotConfigured();
@@ -1329,10 +1670,17 @@ contract VaultInfrastructure is Ownable {
     }
 
     // slither-disable-next-line reentrancy-events
+    /// @notice _log
+    /// @param action action
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
     // slither-disable-next-line reentrancy-events
+    /// @notice _logEv
+    /// @param who who
+    /// @param action action
+    /// @param amount amount
+    /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
@@ -1342,7 +1690,9 @@ contract VaultInfrastructure is Ownable {
     // ═══════════════════════════════════════════════════════════════════════
     
     // Track total vaults created
+    /// @notice totalVaults
     uint256 public totalVaults;
+    /// @notice vaultCreatedAt
     mapping(address => uint256) public vaultCreatedAt;
     
 }

@@ -43,9 +43,9 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @notice MAX_BPS
     uint256 public constant MAX_BPS = 10000;
     /// @notice MIN_BURN_BPS
-    uint256 public constant MIN_BURN_BPS = 2000; // Burn floor: 20%
+    uint256 public constant MIN_BURN_BPS = 2000;    // Burn floor: 20%
     /// @notice MAX_SINGLE_BPS
-    uint256 public constant MAX_SINGLE_BPS = 5000; // No channel > 50%
+    uint256 public constant MAX_SINGLE_BPS = 5000;   // No channel > 50%
     /// @notice SPLIT_CHANGE_DELAY
     uint256 public constant SPLIT_CHANGE_DELAY = 72 hours;
     /// @notice DESTINATION_CHANGE_DELAY
@@ -253,7 +253,15 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
     /// @param _merchantPool _merchantPool
     /// @param _headhunterPool _headhunterPool
     /// @param _admin _admin
-    constructor(address _token, address _burn, address _sanctum, address _daoPayroll, address _merchantPool, address _headhunterPool, address _admin) {
+    constructor(
+        address _token,
+        address _burn,
+        address _sanctum,
+        address _daoPayroll,
+        address _merchantPool,
+        address _headhunterPool,
+        address _admin
+    ) {
         if (_token == address(0) || _admin == address(0) || _burn == address(0)) revert ZeroAddress();
         if (_sanctum == address(0) || _daoPayroll == address(0)) revert ZeroAddress();
         if (_merchantPool == address(0) || _headhunterPool == address(0)) revert ZeroAddress();
@@ -273,16 +281,16 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         minDistributionAmount = 100 * 1e18;
     }
 
-    /// @notice TL-236 FIX: Propose a fee-source authorization change (48h timelock). (#236)
-    /// @param source source
-    /// @param authorized authorized
-    function setAuthorizedFeeSource(address source, bool authorized) external onlyRole(ADMIN_ROLE) {
-        if (source == address(0)) revert ZeroAddress();
-        require(!pendingFeeSourceChange.pending, "FD: change pending");
-        uint256 effectiveTime = block.timestamp + FEE_SOURCE_CHANGE_DELAY;
-        pendingFeeSourceChange = PendingFeeSourceChange({source: source, authorized: authorized, effectiveTime: effectiveTime, pending: true});
-        emit FeeSourceChangeProposed(source, authorized, effectiveTime);
-    }
+        /// @notice TL-236 FIX: Propose a fee-source authorization change (48h timelock). (#236)
+        /// @param source source
+        /// @param authorized authorized
+        function setAuthorizedFeeSource(address source, bool authorized) external onlyRole(ADMIN_ROLE) {
+            if (source == address(0)) revert ZeroAddress();
+            require(!pendingFeeSourceChange.pending, "FD: change pending");
+            uint256 effectiveTime = block.timestamp + FEE_SOURCE_CHANGE_DELAY;
+            pendingFeeSourceChange = PendingFeeSourceChange({ source: source, authorized: authorized, effectiveTime: effectiveTime, pending: true });
+            emit FeeSourceChangeProposed(source, authorized, effectiveTime);
+        }
 
     /// @notice Apply a pending fee-source change after the 48h timelock.
     function applyFeeSourceChange() external onlyRole(ADMIN_ROLE) {
@@ -302,16 +310,16 @@ contract FeeDistributor is AccessControl, ReentrancyGuard, Pausable {
         emit FeeSourceChangeCancelled(source);
     }
 
-    /// @notice Receive fee tokens from VFIDEToken._transfer() or authorized sources.
-    /// @param amount amount
-    function receiveFee(uint256 amount) external nonReentrant {
-        // F-33 FIX: Allow both VFIDEToken and authorized fee sources to report fees
-        bool isVFIDEToken = msg.sender == address(vfideToken);
-        bool isAuthorizedSource = authorizedFeeSources[msg.sender];
-        if (!isVFIDEToken && !isAuthorizedSource) revert NotAuthorized();
-        totalReceived += amount;
-        emit FeeReceived(amount);
-    }
+        /// @notice Receive fee tokens from VFIDEToken._transfer() or authorized sources.
+        /// @param amount amount
+        function receiveFee(uint256 amount) external nonReentrant {
+            // F-33 FIX: Allow both VFIDEToken and authorized fee sources to report fees
+            bool isVFIDEToken = msg.sender == address(vfideToken);
+            bool isAuthorizedSource = authorizedFeeSources[msg.sender];
+            if (!isVFIDEToken && !isAuthorizedSource) revert NotAuthorized();
+            totalReceived += amount;
+            emit FeeReceived(amount);
+        }
 
     // M-6 FIX: Minimum interval between distribution calls to prevent spam/dust accumulation attacks
     /// @notice MIN_DISTRIBUTION_INTERVAL
