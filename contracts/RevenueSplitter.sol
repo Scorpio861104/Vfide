@@ -107,7 +107,6 @@ contract RevenueSplitter is ReentrancyGuard {
     }
     
     /// @notice getPayees
-    /// @return _arg _arg
     function getPayees() external view returns (Payee[] memory) {
         return payees;
     }
