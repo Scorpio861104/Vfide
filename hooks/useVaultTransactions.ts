@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { usePublicClient, useChainId } from 'wagmi';
 import { type Address, parseAbiItem, formatUnits } from 'viem';
-import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, CARD_BOUND_VAULT_ABI } from '@/lib/contracts';
+import { CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { isAddress } from 'viem';
 
 export interface VaultTransaction {
@@ -32,7 +32,7 @@ export interface VaultTransaction {
 const GUARDIAN_ADDED = parseAbiItem(
   'event GuardianChanged(address indexed guardian, bool active)'
 );
-const TRUSTEE_CHANGED = parseAbiItem(
+const _TRUSTEE_CHANGED = parseAbiItem(
   'event TrusteeChanged(address indexed trustee, bool active)'
 );
 const PAYMENT_QUEUED = parseAbiItem(
@@ -60,7 +60,7 @@ function shortAddr(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-function formatTimestamp(blockNumber: bigint, chainId: number): string {
+function formatTimestamp(blockNumber: bigint, _chainId: number): string {
   // Rough estimate: Base mainnet ~2s/block, Sepolia ~12s/block
   // We don't have exact block timestamps without a separate eth_getBlockByNumber call
   // so we return block number as reference; VaultContent can enrich if needed.
@@ -308,7 +308,7 @@ export function useVaultTransactions(vaultAddress: Address | undefined): {
 
     load();
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [vaultAddress, publicClient, chainId, tick]);
 
   return { transactions, isLoading, error, refetch };

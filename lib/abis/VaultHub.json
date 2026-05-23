@@ -27,11 +27,6 @@
   },
   {
     "inputs": [],
-    "name": "VH_Create2Failed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "VH_DeprecatedGlobalPause",
     "type": "error"
   },
@@ -47,11 +42,6 @@
   },
   {
     "inputs": [],
-    "name": "VH_InsufficientRecoveryApprovals",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "VH_InvalidLimits",
     "type": "error"
   },
@@ -63,11 +53,6 @@
   {
     "inputs": [],
     "name": "VH_NeedIndependentGuardian",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "VH_NotDAO",
     "type": "error"
   },
   {
@@ -93,11 +78,6 @@
   {
     "inputs": [],
     "name": "VH_RecoveryCandidateMismatch",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "VH_RecoveryDisabled",
     "type": "error"
   },
   {
@@ -888,24 +868,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "approveForceRecovery",
-    "outputs": [],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "cancelCardDefaultLimits",
     "outputs": [],
@@ -917,19 +879,6 @@
     "name": "cancelCouncil",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "cancelDAORecovery",
-    "outputs": [],
-    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1137,32 +1086,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "finalizeDAORecovery",
-    "outputs": [],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      }
-    ],
-    "name": "finalizeForceRecovery",
-    "outputs": [],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "owner_",
         "type": "address"
       }
@@ -1224,24 +1147,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "initiateForceRecovery",
-    "outputs": [],
-    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -1817,24 +1722,6 @@
     "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "vault",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "requestDAORecovery",
-    "outputs": [],
-    "stateMutability": "pure",
     "type": "function"
   },
   {

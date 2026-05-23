@@ -77,14 +77,19 @@ contract DAO is ReentrancyGuard {
     ISeer public seer;
     IVaultHub public vaultHub;
     IGovernanceHooks public hooks; // optional callbacks (logs/penalties)
-    IProofLedger public ledger; // optional via hooks
+    // Optional ledger module wired via GovernanceHooks; declared here so external consumers
+    // and the upgrade plumbing can discover it via the public getter. Cannot be `constant`
+    // (interface type — Solidity only allows constants for value types), and cannot be
+    // `immutable` (set after deployment by the hooks contract). Suppress Slither here.
+    // slither-disable-next-line constable-states
+    IProofLedger public ledger;
     ISeerGuardian_DAO public guardian; // SeerGuardian for mutual oversight
     ISeerAutonomous_DAO public seerAutonomous; // optional proactive Seer automation checks
 
     uint64 public votingPeriod = 7 days;
     uint64 public constant MIN_VOTING_PERIOD = 1 hours;
     uint64 public constant MAX_VOTING_PERIOD = 30 days;
-    uint64 public votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
+    uint64 public constant votingDelay = 1 days; // Flash loan protection: vote cannot start immediately
     uint64 public constant VOTE_GRACE_PERIOD = 30 minutes; // Anti-front-running: voting closes early
     uint64 public proposalCooldown = 1 hours;
     uint256 public minVotesRequired = 5000; // Absolute number of vote-points (Score) required to pass
@@ -802,6 +807,7 @@ contract DAO is ReentrancyGuard {
         // Execute the queued transaction via the timelock interface.
         // This will revert if not yet ripe, already executed, or if execution fails.
         // The timelock will call this DAO's markExecuted() to update the associated proposal state.
+        // slither-disable-next-line unused-return  // timelock.execute reverts on failure; return value not needed
         timelock.execute(timelockId);
     }
 

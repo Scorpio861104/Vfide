@@ -82,6 +82,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     event SeerUpdated(address indexed oldSeer, address indexed newSeer);
     event PendingReferralRegistered(address indexed referred, address indexed referrer, bool isMerchant);
     event RewardTokenUpdated(address indexed oldToken, address indexed newToken);
+    event OperationsCooldownSet(uint256 oldCooldown, uint256 newCooldown);
     event ReferralVaultHubUpdated(address indexed oldHub, address indexed newHub);
     event ManagerChangeQueued(address indexed manager, bool active, uint256 executeAfter);
     event AllocationChangeQueued(uint16 councilBps, uint16 merchantBps, uint16 headhunterBps, uint16 operationsBps, uint256 executeAfter);
@@ -148,7 +149,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                              STATE
     // ═══════════════════════════════════════════════════════════════════════
-    IERC20 public vfide;
+    IERC20 public immutable vfide;
     IERC20 public rewardToken;
     ISeer public seer;
     ICouncilManager public councilManager;
@@ -619,7 +620,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setOperationsCooldown(uint256 _cooldown) external onlyOwner {
         if (_cooldown < 1 hours) revert ECO_InvalidConfig();
         if (_cooldown > 90 days) revert ECO_InvalidConfig();
+        uint256 oldCooldown = operationsWithdrawalCooldown;
         operationsWithdrawalCooldown = _cooldown;
+        emit OperationsCooldownSet(oldCooldown, _cooldown);
     }
     
     /**
@@ -930,6 +933,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 spendable = _getSpendablePoolBalance(merchantPool, merchantPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
+        // slither-disable-next-line events-maths  // _deliverWorkReward emits Payment* events with full context
         merchantPool -= amount;
         merchantPaidThisEpoch += amount;
         totalMerchantBonusPaid += amount;
@@ -1204,6 +1208,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 spendable = _getSpendablePoolBalance(headhunterPool, headhunterPoolReserveBps);
         if (amount > spendable) revert ECO_InsufficientFunds();
 
+        // slither-disable-next-line events-maths  // _deliverWorkReward emits Payment* events with full context
         headhunterPool -= amount;
         headhunterPaidThisEpoch += amount;
         totalHeadhunterPaid += amount;
@@ -1237,6 +1242,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
         if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
+        // slither-disable-next-line events-maths  // _payoutConfiguredReward emits OperationsWithdrawal with full context
         operationsSpentInEpoch += amount;
 
         operationsPool -= amount;

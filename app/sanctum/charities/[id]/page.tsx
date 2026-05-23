@@ -10,8 +10,7 @@ import {
   AlertTriangle,
   Heart,
   Calendar,
-  Copy,
-  ExternalLink,
+  Copy
 } from 'lucide-react';
 import { formatEther, type Address } from 'viem';
 import { Footer } from '@/components/layout/Footer';

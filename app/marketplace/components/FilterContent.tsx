@@ -37,7 +37,7 @@ export function FilterContent({ filters, setFilters, onClose }: FilterContentPro
     >
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">Filters</h2>
-        <button onClick={onClose} className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white">
+        <button onClick={onClose} className="rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white" aria-label="Close">
           <X size={18} />
         </button>
       </div>

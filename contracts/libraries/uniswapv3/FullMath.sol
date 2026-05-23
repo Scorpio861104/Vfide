@@ -13,11 +13,7 @@ library FullMath {
     /// @param denominator The divisor
     /// @return result The 256-bit result
     /// @dev Credit to Remco Bloemen under MIT license https://xn--2-umb.com/21/muldiv
-    function mulDiv(
-        uint256 a,
-        uint256 b,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
+    function mulDiv(uint256 a, uint256 b, uint256 denominator) internal pure returns (uint256 result) {
         // 512-bit multiply [prod1 prod0] = a * b
         // Compute the product mod 2**256 and mod 2**256 - 1
         // then use the Chinese Remainder Theorem to reconstruct
@@ -86,6 +82,15 @@ library FullMath {
         // modulo 2**256 such that denominator * inv = 1 mod 2**256.
         // Compute the inverse by starting with a seed that is correct
         // correct for four bits. That is, denominator * inv = 1 mod 2**4
+        //
+        // SLITHER FALSE POSITIVE (incorrect-exp): The `^ 2` here is
+        // INTENTIONAL bitwise XOR, not exponentiation. This is the canonical
+        // Hensel's-lifting-lemma seed used by Uniswap V3's FullMath.mulDiv
+        // (see https://xn--2-umb.com/21/muldiv/index.html). Replacing it with
+        // `** 2` would silently break the modular-inverse computation that
+        // follows. This file is a vendored copy of Uniswap V3 FullMath; the
+        // exact same line is present in v3-core.
+        // slither-disable-next-line incorrect-exp
         uint256 inv = (3 * denominator) ^ 2;
         // Now use Newton-Raphson iteration to improve the precision.
         // Thanks to Hensel's lifting lemma, this also works in modular
@@ -112,11 +117,7 @@ library FullMath {
     /// @param b The multiplier
     /// @param denominator The divisor
     /// @return result The 256-bit result
-    function mulDivRoundingUp(
-        uint256 a,
-        uint256 b,
-        uint256 denominator
-    ) internal pure returns (uint256 result) {
+    function mulDivRoundingUp(uint256 a, uint256 b, uint256 denominator) internal pure returns (uint256 result) {
         result = mulDiv(a, b, denominator);
         if (mulmod(a, b, denominator) > 0) {
             require(result < type(uint256).max);

@@ -45,10 +45,12 @@ describe('R-061 – Structured logging in critical flows', () => {
   });
 
   it('logger warning/error paths send context extras to Sentry', () => {
-    expect(loggerSrc).toMatch(/const safeExtra = toSentryExtras\(scrubValue\(normalizeContext\(context\)\)\)/s);
-    expect(loggerSrc).toMatch(/Sentry\.captureMessage\(message, \{\s*level: 'warning',\s*extra: safeExtra/s);
-    expect(loggerSrc).toMatch(/const safeContext = toSentryExtras\(scrubValue\(normalizeContext\(context\)\)\)/s);
-    expect(loggerSrc).toMatch(/Sentry\.captureException\(safeError, \{\s*extra: \{ message: safeMessage, \.\.\.\(safeContext \|\| \{\}\) \}/s);
+    // Uses normalizeContext + scrubValue pipeline, forwarded via scope.setExtra
+    expect(loggerSrc).toMatch(/const normalizedContext = normalizeContext\(context\)/);
+    expect(loggerSrc).toMatch(/const extras = normalizedContext \? scrubValue\(normalizedContext\) : undefined/);
+    expect(loggerSrc).toMatch(/scope\.setExtra\(k, v\)/);
+    expect(loggerSrc).toMatch(/Sentry\.captureMessage\(scrubString\(message\), 'warning'\)/);
+    expect(loggerSrc).toMatch(/Sentry\.captureException\(error\)/);
   });
 
   it('security logs endpoint stores structured fields (address/type/severity/message/details)', () => {

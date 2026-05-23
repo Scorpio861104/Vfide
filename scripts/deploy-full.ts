@@ -202,7 +202,7 @@ async function main() {
         cwd: process.cwd(),
         stdio: "inherit",
       });
-    } catch (err) {
+    } catch (_err) {
       throw new Error(
         "Mainnet readiness sweep FAILED. Refusing to deploy to a mainnet chainId. " +
         "Fix the failing checks (see output above) and re-run.",

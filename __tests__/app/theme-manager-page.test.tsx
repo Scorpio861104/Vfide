@@ -1,42 +1,24 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { render, screen } from '@testing-library/react';
-import type React from 'react';
 
-const renderPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/theme-manager/page');
-  const Page = pageModule.default as React.ComponentType;
-  return render(<Page />);
-};
+// The /theme-manager page now simply redirects to /theme (consolidated).
+// Per components/navigation/navigationItems.ts: "T1-4: Theme merged — one
+// entry for /theme (the canonical theme page)". The route is preserved as
+// a redirect shim so back-links and bookmarks still work.
 
-jest.mock('@/hooks/useThemeManager', () => ({
-  useThemeManager: () => ({
-    resetToDefault: jest.fn(),
-    isDirty: false,
-    isSaved: true,
-    exportAsCSS: jest.fn(),
-  }),
+const redirectMock = jest.fn(() => { throw new Error('NEXT_REDIRECT'); });
+
+jest.mock('next/navigation', () => ({
+  redirect: (...args: unknown[]) => redirectMock(...args),
 }));
 
-jest.mock('@/components/theme/ThemeSelector', () => ({ ThemeSelector: () => <div>ThemeSelector</div> }));
-jest.mock('@/components/theme/ThemeCustomizer', () => ({ ThemeCustomizer: () => <div>ThemeCustomizer</div> }));
-jest.mock('@/components/theme/SavedThemesManager', () => ({ SavedThemesManager: () => <div>SavedThemesManager</div> }));
-
-jest.mock('framer-motion', () => {
-  const MotionTag = ({ children, ...props }: any) => <div {...props}>{children}</div>;
-  return { motion: new Proxy({}, { get: () => MotionTag }) };
-});
-
-jest.mock('lucide-react', () => {
-  const Icon = ({ className }: { className?: string }) => <span className={className}>icon</span>;
-  return new Proxy({}, { get: () => Icon });
-});
-
-describe('Theme manager page', () => {
-  it('renders heading and default tab content', () => {
-    renderPage();
-    expect(screen.getByRole('heading', { name: /Theme Manager/i })).toBeTruthy();
-    expect(screen.getByText('ThemeSelector')).toBeTruthy();
-    expect(screen.getByText(/All Saved/i)).toBeTruthy();
+describe('Theme manager page (redirect shim)', () => {
+  it('redirects to /theme', () => {
+    jest.isolateModules(() => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pageModule = require('../../app/theme-manager/page');
+      const ThemeManagerPage = pageModule.default as () => never;
+      expect(() => ThemeManagerPage()).toThrow('NEXT_REDIRECT');
+    });
+    expect(redirectMock).toHaveBeenCalledWith('/theme');
   });
 });

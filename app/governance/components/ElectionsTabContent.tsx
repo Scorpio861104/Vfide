@@ -5,11 +5,10 @@
  * reusable component for embedding inside the Governance hub.
  */
 
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle, ArrowRight } from 'lucide-react';
+import { Vote, Users, Shield, Star, Award, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
 import { CouncilElectionABI } from '@/lib/abis/future';
 

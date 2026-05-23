@@ -205,7 +205,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
       <div className="flex items-center gap-1 px-3 py-2 border-t border-white/5">
         <span className="text-gray-600 text-xs">{story.views} views</span>
         <span className="flex-1" />
-        <button onClick={handleWhatsApp} className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10">
+        <button onClick={handleWhatsApp} className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10" aria-label="Send via WhatsApp">
           <MessageCircle size={16} />
         </button>
         <button onClick={() => setShowProducts(!showProducts)} className="p-1.5 rounded-lg text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10">

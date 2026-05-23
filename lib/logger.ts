@@ -42,7 +42,7 @@ function scrubValue(value: unknown): unknown {
   return value;
 }
 
-function toSentryExtras(value: unknown): Record<string, unknown> | undefined {
+function _toSentryExtras(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return undefined;
   }
@@ -74,7 +74,7 @@ function _loadSentryClient(): typeof import('@sentry/nextjs') | null {
     return null;
   }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     _sentryClientCache = require('@sentry/nextjs');
   } catch {
     _sentryClientCache = null;

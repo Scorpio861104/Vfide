@@ -74,7 +74,7 @@ export function AppLockModal({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [tab]);
 
   const submitPin = async () => {

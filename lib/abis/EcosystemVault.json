@@ -146,37 +146,6 @@
         "internalType": "uint16",
         "name": "operationsBps",
         "type": "uint16"
-      }
-    ],
-    "name": "AllocationChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "councilBps",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "merchantBps",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "headhunterBps",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "operationsBps",
-        "type": "uint16"
       },
       {
         "indexed": false,
@@ -329,19 +298,6 @@
       }
     ],
     "name": "CouncilDistributed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "councilManager",
-        "type": "address"
-      }
-    ],
-    "name": "CouncilManagerChangeCancelled",
     "type": "event"
   },
   {
@@ -565,25 +521,6 @@
         "internalType": "bool",
         "name": "active",
         "type": "bool"
-      }
-    ],
-    "name": "ManagerChangeCancelled",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "manager",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "active",
-        "type": "bool"
       },
       {
         "indexed": false,
@@ -662,20 +599,7 @@
         "type": "uint256"
       }
     ],
-    "name": "OperationsCooldownUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "wallet",
-        "type": "address"
-      }
-    ],
-    "name": "OperationsWalletChangeCancelled",
+    "name": "OperationsCooldownSet",
     "type": "event"
   },
   {
@@ -771,31 +695,6 @@
       }
     ],
     "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "reason",
-        "type": "string"
-      }
-    ],
-    "name": "PaymentMade",
     "type": "event"
   },
   {
@@ -1090,37 +989,6 @@
       }
     ],
     "name": "WithdrawRequested",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "worker",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "program",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "reason",
-        "type": "string"
-      }
-    ],
-    "name": "WorkRewardPaid",
     "type": "event"
   },
   {

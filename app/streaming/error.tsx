@@ -22,8 +22,10 @@ export default function StreamingError({
         <div className="w-20 h-20 mx-auto bg-red-600/20 border-2 border-red-600 rounded-full flex items-center justify-center mb-6">
           <AlertTriangle className="w-10 h-10 text-red-600" />
         </div>
-        <h1 className="text-2xl font-bold text-zinc-100 mb-3">Streaming Error</h1>
-        <p className="text-zinc-400 mb-2">Streaming data failed to load. Please retry.</p>
+        <h1 className="text-2xl font-bold text-zinc-100 mb-3">Page Error</h1>
+        <p className="text-zinc-400 mb-2">
+          Something went wrong loading this page. The streaming page is currently a placeholder for a future feature, so no funds or on-chain state are involved.
+        </p>
         {error.digest && (
           <p className="text-sm text-zinc-500 mb-6 font-mono">Error ID: {error.digest}</p>
         )}

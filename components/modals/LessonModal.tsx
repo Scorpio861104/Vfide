@@ -44,8 +44,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
             </div>
             <button
               onClick={onClose}
-              className="text-zinc-400 hover:text-zinc-100 transition-colors"
-            >
+              className="text-zinc-400 hover:text-zinc-100 transition-colors" aria-label="Close">
               <X className="w-6 h-6" />
             </button>
           </div>

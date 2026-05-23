@@ -150,7 +150,8 @@ describe('R-052 – Quorum floor enforcement', () => {
   });
 
   it('finalize requires both vote-points quorum and unique-voter participation floor', () => {
-    expect(daoSrc).toMatch(/bool qmet = total >= minVotesRequired && p\.voterCount >= minParticipation/);
+    // Uses effectiveMinParticipation() for dynamic quorum floor
+    expect(daoSrc).toMatch(/bool qmet = total >= minVotesRequired && p\.voterCount >= effectiveMinParticipation\(\)/);
   });
 
   describe('TypeScript model: quorum floor math', () => {
@@ -197,7 +198,9 @@ describe('R-053 – Timelock admin handover risk', () => {
     });
 
     it('handover sets timelock admin to DAO', () => {
-      expect(handoverSrc).toMatch(/timelock\.setAdmin\(address\(dao\)\)/);
+      // F-58 FIX: handover validates admin is already set rather than calling setAdmin
+      // It reverts with SH_TimelockAdminMismatch if timelock.admin() != address(dao)
+      expect(handoverSrc).toMatch(/revert SH_TimelockAdminMismatch\(address\(dao\), actualTimelockAdmin\)/);
     });
 
     it('handover emits executed event with dao/timelock/newAdmin', () => {
@@ -248,7 +251,7 @@ describe('R-054 – Queue cancellation semantics', () => {
   });
 
   it('cancel rejects unknown queue ids', () => {
-    expect(timelockSrc).toMatch(/if\(queue\[id\]\.eta==0\) revert TL_NotQueued\(\)/);
+    expect(timelockSrc).toMatch(/if\s*\(\s*queue\[id\]\.eta\s*==\s*0\s*\)\s*revert TL_NotQueued\(\)/);
   });
 
   it('cancel emits Cancelled event and removes tracked id', () => {
@@ -257,7 +260,8 @@ describe('R-054 – Queue cancellation semantics', () => {
   });
 
   it('execute is admin-only to prevent front-running', () => {
-    expect(timelockSrc).toMatch(/require\(msg\.sender == admin, "TL: only admin can execute"\)/);
+    // #208 FIX: admin-only by default, with permissionless exception for self-admin-rotation
+    expect(timelockSrc).toMatch(/if \(msg\.sender != admin\).*require.*"TL: only admin can execute"/s);
   });
 
   it('expired transactions can be admin-cleaned and re-queued', () => {

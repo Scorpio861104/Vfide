@@ -19,7 +19,7 @@ import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, Wallet, Shield, ArrowRight, Check, Loader2, Info } from 'lucide-react';
+import { Wallet, Shield, Check, Loader2, Info } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import { usePayMerchant } from '@/lib/vfide-hooks';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
@@ -74,7 +74,7 @@ export function CheckoutPanel({
   onCancel,
 }: CheckoutPanelProps) {
   const { address, isConnected } = useAccount();
-  const { formatCurrency, displayCurrency } = useLocale();
+  const { formatCurrency, displayCurrency: _displayCurrency } = useLocale();
   const [selectedToken, setSelectedToken] = useState<string>('VFIDE');
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'review' | 'paying' | 'complete'>('review');
@@ -146,7 +146,7 @@ export function CheckoutPanel({
       setTxHash(hash);
       setStep('complete');
       onComplete?.(hash);
-    } catch (error) {
+    } catch (_error) {
       setStep('review');
     }
     setIsProcessing(false);

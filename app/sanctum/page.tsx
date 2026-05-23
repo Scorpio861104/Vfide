@@ -5,9 +5,7 @@ export const dynamic = 'force-dynamic';
 import { Footer } from "@/components/layout/Footer";
 import { useState } from "react";
 import { useAccount } from "wagmi";
-import { motion } from "framer-motion";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Heart, Gift, History, Coins, BarChart3 } from "lucide-react";
+import { Heart, Gift, History, Coins } from "lucide-react";
 
 import { OverviewTab } from "./components/OverviewTab";
 import { CharitiesTab } from "./components/CharitiesTab";

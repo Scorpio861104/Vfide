@@ -87,11 +87,6 @@
   },
   {
     "inputs": [],
-    "name": "VF_LOCKED",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "VF_MaxTransferExceeded",
     "type": "error"
   },
@@ -410,25 +405,6 @@
       }
     ],
     "name": "EmergencyOwnershipProposed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "target",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "exempt",
-        "type": "bool"
-      }
-    ],
-    "name": "ExemptSet",
     "type": "event"
   },
   {

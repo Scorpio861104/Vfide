@@ -155,8 +155,7 @@ export function NotificationToast({
               </h4>
               <button
                 onClick={onDismiss}
-                className="shrink-0 p-1 hover:bg-white/10 rounded-lg transition-colors"
-              >
+                className="shrink-0 p-1 hover:bg-white/10 rounded-lg transition-colors" aria-label="Close">
                 <X size={14} className="text-gray-400" />
               </button>
             </div>
@@ -671,8 +670,7 @@ export function NotificationDropdown({ isOpen, onClose }: NotificationDropdownPr
                   </button>
                   <button
                     onClick={onClose}
-                    className="p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-colors"
-                  >
+                    className="p-2 hover:bg-white/10 rounded-lg text-gray-400 transition-colors" aria-label="Close">
                     <X size={16} />
                   </button>
                 </div>

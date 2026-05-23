@@ -70,8 +70,8 @@ contract FraudRegistry is ReentrancyGuard {
     uint16 public constant COMPLAINT_REPORTER_PENALTY = 50; // Filing false complaints costs score
 
     address public dao;
-    ISeer_FR public seer;
-    IERC20 public vfideToken; // Token contract reference for escrow releases
+    ISeer_FR public immutable seer;
+    IERC20 public immutable vfideToken; // Token contract reference for escrow releases
     IVaultHub_FR public vaultHub;
 
     // H-4 FIX: Timelocked dao/vaultHub rotation
@@ -391,6 +391,7 @@ contract FraudRegistry is ReentrancyGuard {
     ///      No consequences were ever applied (review was pending, not active).
     ///      Reporter penalties are processed separately in bounded chunks so the DAO action
     ///      itself cannot gas out on large complaint sets.
+    // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; status updates and Seer calls are protected
     function dismissComplaints(address target) external onlyDAO nonReentrant {
         require(isPendingReview[target], "FR: not pending review");
 
@@ -429,6 +430,8 @@ contract FraudRegistry is ReentrancyGuard {
         processed = _processDismissedComplaintPenalties(target, maxCount);
     }
 
+    /// @dev Internal helper called only from `dismissComplaints` (which is nonReentrant).
+    // slither-disable-next-line reentrancy-no-eth  // protected by parent function's nonReentrant guard
     function _processDismissedComplaintPenalties(address target, uint256 maxCount) internal returns (uint256 processed) {
         uint256 end = complaints[target].length;
         uint256 cursor = dismissedComplaintPenaltyCursor[target];
@@ -489,6 +492,7 @@ contract FraudRegistry is ReentrancyGuard {
     /// @dev N-H1 FIX: Bounded chunk processing to avoid unbounded clearFlag loops.
     /// @param target Address whose flag was cleared.
     /// @param maxCount Max escrow entries to scan in this call (0 => default 25).
+    // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; SafeERC20.safeTransfer reverts atomically on failure
     function processClearFlagEscrowRefunds(address target, uint256 maxCount)
         external
         nonReentrant

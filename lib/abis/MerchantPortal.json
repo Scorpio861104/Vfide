@@ -701,61 +701,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "customer",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "merchant",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "fee",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "orderId",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint16",
-        "name": "customerScore",
-        "type": "uint16"
-      },
-      {
-        "indexed": false,
-        "internalType": "enum PaymentChannel",
-        "name": "channel",
-        "type": "uint8"
-      }
-    ],
-    "name": "PaymentWithChannel",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "merchant",
         "type": "address"
       }

@@ -267,6 +267,8 @@ jest.mock('viem', () => ({
   parseUnits: jest.fn((value, decimals) => BigInt(Math.floor(parseFloat(value) * Math.pow(10, decimals)))),
   formatEther: jest.fn((value) => (Number(value) / 1e18).toString()),
   parseEther: jest.fn((value) => BigInt(Math.floor(parseFloat(value) * 1e18))),
+  parseGwei: jest.fn((value) => BigInt(Math.floor(parseFloat(value) * 1e9))),
+  formatGwei: jest.fn((value) => (Number(value) / 1e9).toString()),
   keccak256: jest.fn((bytes) => {
     // Simple mock hash - in reality uses actual keccak256
     const str = typeof bytes === 'string' ? bytes : Array.from(bytes).join('')
@@ -278,12 +280,60 @@ jest.mock('viem', () => ({
     return `0x${Math.abs(hash).toString(16).padStart(64, '0')}`
   }),
   toBytes: jest.fn((str) => new TextEncoder().encode(str)),
-  createPublicClient: jest.fn(() => ({})),
-  createWalletClient: jest.fn(() => ({})),
-  http: jest.fn(() => ({})),
-  custom: jest.fn(() => ({})),
+  toHex: jest.fn((v) => typeof v === 'string' ? v : '0x' + Buffer.from(v).toString('hex')),
+  fromHex: jest.fn((v) => v),
+  hexToBytes: jest.fn((hex) => new Uint8Array(Buffer.from(hex.replace(/^0x/, ''), 'hex'))),
+  bytesToHex: jest.fn((b) => '0x' + Buffer.from(b).toString('hex')),
+  stringToHex: jest.fn((s) => '0x' + Buffer.from(s, 'utf8').toString('hex')),
+  hexToString: jest.fn((h) => Buffer.from(h.replace(/^0x/, ''), 'hex').toString('utf8')),
+  pad: jest.fn((v) => v),
+  padHex: jest.fn((v) => v),
+  trim: jest.fn((v) => v),
+  size: jest.fn((v) => (typeof v === 'string' ? (v.length - 2) / 2 : v.length)),
+  slice: jest.fn((v, s, e) => (typeof v === 'string' ? '0x' + v.slice(2 + (s || 0) * 2, e ? 2 + e * 2 : undefined) : v)),
+  concat: jest.fn((arr) => arr.join('').replace(/0x/g, '0x')),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  maxUint256: BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'),
+  parseAbi: jest.fn((abi) => Array.isArray(abi) ? abi.map((s) => ({ type: 'function', name: String(s).split(' ')[1] || 'fn', inputs: [], outputs: [] })) : []),
+  parseAbiItem: jest.fn((abi) => ({ type: 'event', name: String(abi).split(' ')[1] || 'evt', inputs: [] })),
+  parseAbiParameters: jest.fn(() => []),
+  parseAbiParameter: jest.fn(() => ({ type: 'address' })),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  encodePacked: jest.fn(() => '0x'),
   encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionData: jest.fn(() => ({ functionName: '', args: [] })),
+  encodeFunctionResult: jest.fn(() => '0x'),
   decodeFunctionResult: jest.fn(() => []),
+  encodeEventTopics: jest.fn(() => []),
+  decodeEventLog: jest.fn(() => ({ eventName: '', args: {} })),
+  recoverAddress: jest.fn(() => '0x0000000000000000000000000000000000000000'),
+  recoverMessageAddress: jest.fn(() => '0x0000000000000000000000000000000000000000'),
+  recoverTypedDataAddress: jest.fn(() => '0x0000000000000000000000000000000000000000'),
+  verifyMessage: jest.fn(() => true),
+  verifyTypedData: jest.fn(() => true),
+  hashTypedData: jest.fn(() => '0x' + '0'.repeat(64)),
+  hashMessage: jest.fn(() => '0x' + '0'.repeat(64)),
+  signatureToHex: jest.fn(() => '0x'),
+  hexToSignature: jest.fn(() => ({ r: '0x0', s: '0x0', v: 27n })),
+  serializeSignature: jest.fn(() => '0x'),
+  parseSignature: jest.fn(() => ({ r: '0x0', s: '0x0', v: 27n })),
+  createPublicClient: jest.fn(() => ({
+    readContract: jest.fn(),
+    getBlockNumber: jest.fn(),
+    getTransactionReceipt: jest.fn(),
+    getLogs: jest.fn(() => []),
+    watchContractEvent: jest.fn(() => () => {}),
+  })),
+  createWalletClient: jest.fn(() => ({})),
+  createTestClient: jest.fn(() => ({})),
+  http: jest.fn(() => ({})),
+  webSocket: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  publicActions: jest.fn(() => ({})),
+  walletActions: jest.fn(() => ({})),
+  defineChain: jest.fn((c) => c),
 }))
 
 // Mock viem/chains
@@ -673,10 +723,28 @@ jest.mock('wagmi/chains', () => ({
 }))
 
 // Mock RainbowKit
-jest.mock('@rainbow-me/rainbowkit', () => ({
-  ConnectButton: () => null,
-  RainbowKitProvider: ({ children }) => children,
-}))
+jest.mock('@rainbow-me/rainbowkit', () => {
+  const ConnectButton = () => null;
+  ConnectButton.displayName = 'ConnectButton';
+  const ConnectButtonCustom = ({ children }) => {
+    if (typeof children !== 'function') return null;
+    return children({
+      account: undefined,
+      chain: undefined,
+      openAccountModal: () => {},
+      openChainModal: () => {},
+      openConnectModal: () => {},
+      authenticationStatus: 'unauthenticated',
+      mounted: true,
+    });
+  };
+  ConnectButtonCustom.displayName = 'ConnectButton.Custom';
+  ConnectButton.Custom = ConnectButtonCustom;
+  return {
+    ConnectButton,
+    RainbowKitProvider: ({ children }) => children,
+  };
+})
 
 // Mock framer-motion
 jest.mock('framer-motion', () => {

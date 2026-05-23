@@ -22,8 +22,8 @@ CREATE TABLE IF NOT EXISTS streams (
   status VARCHAR(20) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_streams_sender ON streams(sender_address);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_streams_recipient ON streams(recipient_address);
+CREATE INDEX IF NOT EXISTS idx_streams_sender ON streams(sender_address);
+CREATE INDEX IF NOT EXISTS idx_streams_recipient ON streams(recipient_address);
 
 CREATE TABLE IF NOT EXISTS flashloan_lanes (
   id BIGSERIAL PRIMARY KEY,
@@ -59,10 +59,10 @@ CREATE TABLE IF NOT EXISTS flashloan_lane_events (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_flashloan_lanes_borrower ON flashloan_lanes(borrower_address);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_flashloan_lanes_lender ON flashloan_lanes(lender_address);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_flashloan_lanes_arbiter ON flashloan_lanes(arbiter_address);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_flashloan_lanes_stage ON flashloan_lanes(stage);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_flashloan_lane_events_lane_created ON flashloan_lane_events(lane_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_flashloan_lanes_borrower ON flashloan_lanes(borrower_address);
+CREATE INDEX IF NOT EXISTS idx_flashloan_lanes_lender ON flashloan_lanes(lender_address);
+CREATE INDEX IF NOT EXISTS idx_flashloan_lanes_arbiter ON flashloan_lanes(arbiter_address);
+CREATE INDEX IF NOT EXISTS idx_flashloan_lanes_stage ON flashloan_lanes(stage);
+CREATE INDEX IF NOT EXISTS idx_flashloan_lane_events_lane_created ON flashloan_lane_events(lane_id, created_at DESC);
 
 COMMIT;

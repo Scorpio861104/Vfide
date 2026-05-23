@@ -25,7 +25,7 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
  *   Custom    — freeform target + data hex + ptype, for advanced users.
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useSearchParams } from 'next/navigation';
 import { encodeFunctionData, isAddress, parseUnits, type Address, type Hex } from 'viem';
@@ -280,7 +280,7 @@ export function CreateTab() {
       setResolveBuyerWins(prefill.resolveBuyerWins);
     }
     // The effect intentionally runs only on initial mount + when query string changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [searchParams]);
 
   const currentTemplate = TEMPLATES.find((t) => t.key === templateKey)!;

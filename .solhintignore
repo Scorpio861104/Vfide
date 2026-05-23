@@ -1,0 +1,9 @@
+# Vendored 3rd-party code — preserve as-is for fidelity to upstream sources.
+# Lint findings here should be raised against the upstream project, not modified locally.
+contracts/libraries/uniswapv3/
+
+# Auto-generated / build artifacts
+node_modules/
+artifacts/
+cache/
+typechain-types/

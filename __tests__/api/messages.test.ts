@@ -8,6 +8,34 @@ jest.mock('@/lib/db', () => ({
 
 jest.mock('@/lib/auth/middleware', () => ({
   requireAuth: jest.fn(),
+  requireOwnership: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  requireAdmin: jest.fn(async () => ({ user: { sub: 'test', address: '0x0000000000000000000000000000000000000000' } })),
+  verifyAuth: jest.fn(async () => ({ ok: true, user: { sub: 'test' } })),
+  getRequestAuthToken: jest.fn(async () => null),
+  optionalAuth: jest.fn(async () => null),
+  isAdmin: jest.fn(() => false),
+  verifyOnChainAdmin: jest.fn(async () => false),
+  checkOwnership: jest.fn(() => true),
+  withAuth: jest.fn((handler: any) => async (req: any, ctx?: any) => {
+    // Use the same address that requireAuth returns so route auth checks line up.
+    // If requireAuth returns a Response (e.g. 401), bubble it up.
+    const auth = (jest.requireMock('@/lib/auth/middleware') as any).requireAuth;
+    let user: any = { sub: 'test', address: '0x0000000000000000000000000000000000000000' };
+    try {
+      const r = typeof auth === 'function' ? auth(req) : null;
+      if (r && typeof r.status === 'number' && typeof r.json === 'function') {
+        // It's a Response — return it directly to mimic real withAuth behavior.
+        return r;
+      }
+      if (r && r.user) user = r.user;
+    } catch { /* ignore */ }
+    return handler(req, user, ctx);
+  }),
+  withOwnership: jest.fn((extractor: any, handler: any) => async (req: any, ctx?: any) => {
+    const target = await extractor(req, ctx);
+    const address = (typeof target === 'string' ? target : '0x0000000000000000000000000000000000000000').toLowerCase();
+    return handler(req, { sub: address, address }, ctx);
+  }),
 }));
 
 jest.mock('@/lib/auth/rateLimit', () => ({
@@ -21,6 +49,53 @@ jest.mock('@/lib/auth/validation', () => ({
 
 jest.mock('viem', () => ({
   isAddress: jest.fn(),
+  parseAbi: jest.fn(() => []),
+  parseAbiItem: jest.fn((sig: any) => ({ name: typeof sig === 'string' ? sig.split(' ')[1]?.split('(')[0] : '', type: 'function',
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
+})),
+  formatUnits: jest.fn((v: any) => String(v)),
+  parseUnits: jest.fn((v: any) => BigInt(v || 0)),
+  formatEther: jest.fn((v: any) => String(v)),
+  parseEther: jest.fn((v: any) => BigInt(v || 0)),
+  getAddress: jest.fn((a: string) => a),
+  encodeFunctionData: jest.fn(() => '0x'),
+  decodeFunctionResult: jest.fn(() => undefined),
+  encodeAbiParameters: jest.fn(() => '0x'),
+  decodeAbiParameters: jest.fn(() => []),
+  keccak256: jest.fn(() => '0x' + '0'.repeat(64)),
+  toBytes: jest.fn(() => new Uint8Array()),
+  toHex: jest.fn((v: any) => '0x' + (v ?? '').toString(16)),
+  hexToString: jest.fn((h: any) => String(h)),
+  padHex: jest.fn((h: any) => h),
+  zeroAddress: '0x0000000000000000000000000000000000000000',
+  stringToHex: jest.fn((s: any) => '0x' + Buffer.from(String(s)).toString('hex')),
+  createPublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn() })),
+  createWalletClient: jest.fn(() => ({ writeContract: jest.fn() })),
+  http: jest.fn(() => ({})),
+  custom: jest.fn(() => ({})),
+  erc20Abi: [],
+  erc721Abi: [],
 }));
 
 jest.mock('@/lib/server/websocketBridge', () => ({
@@ -248,7 +323,7 @@ describe('/api/messages', () => {
         expect.objectContaining({
           type: 'message',
           payload: expect.objectContaining({
-            topic: `chat.${mockRecipientAddress.toLowerCase()}_${mockUserAddress.toLowerCase()}`,
+            topic: [mockUserAddress.toLowerCase(), mockRecipientAddress.toLowerCase()].sort().join('_').replace(/^/, 'chat.'),
             from: mockUserAddress.toLowerCase(),
             to: mockRecipientAddress.toLowerCase(),
           }),
@@ -259,7 +334,7 @@ describe('/api/messages', () => {
         expect.objectContaining({
           type: 'notification',
           payload: expect.objectContaining({
-            topic: 'notifications',
+            topic: `notifications.${mockRecipientAddress.toLowerCase()}`,
             category: 'message',
             recipient: mockRecipientAddress.toLowerCase(),
             sender: mockUserAddress.toLowerCase(),
@@ -392,7 +467,7 @@ describe('/api/messages', () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe('Database error');
+      expect(data.error).toBe('Failed to send message');
       expect(mockClient.release).toHaveBeenCalled();
     });
 

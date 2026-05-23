@@ -96,11 +96,11 @@ describe('/api/ussd', () => {
 
   it('confirms a merchant payment flow', async () => {
     const POST = await loadPostHandler();
-    const request = buildAuthorizedUSSDRequest('1*SHOP001*25*1');
+    const request = buildAuthorizedUSSDRequest('1');
 
     const response = await POST(request as any);
     const text = await response.text();
 
-    expect(text).toContain('END VFIDE USSD payments are coming soon. No payment was submitted.');
+    expect(text).toContain('END Merchant payments are currently available in the VFIDE app only.');
   });
 });

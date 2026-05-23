@@ -148,6 +148,8 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
                 key={beneficiary.id}
                 role="button"
                 tabIndex={0}
+                aria-label={`Select beneficiary ${beneficiary.name || beneficiary.id}`}
+                aria-pressed={selected}
                 onClick={() => onSelect?.(beneficiary)}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {

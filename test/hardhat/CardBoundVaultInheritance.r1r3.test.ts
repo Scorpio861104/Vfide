@@ -16,9 +16,9 @@
  *   - R-1: vote from non-guardian reverts
  */
 
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -34,13 +34,13 @@ function encodeInheritanceCommitment(
   configVersion: bigint,
   heir: string,
   basisPoints: bigint,
-  secret: string,
+  secret: string
 ) {
   const abi = ethers.AbiCoder.defaultAbiCoder();
-  const domain = ethers.keccak256(ethers.toUtf8Bytes("VFIDE_INHERITANCE_V1"));
+  const domain = ethers.keccak256(ethers.toUtf8Bytes('VFIDE_INHERITANCE_V1'));
   const encoded = abi.encode(
-    ["bytes32", "uint256", "address", "uint64", "address", "uint256", "bytes32"],
-    [domain, chainId, vault, configVersion, heir, basisPoints, secret],
+    ['bytes32', 'uint256', 'address', 'uint64', 'address', 'uint256', 'bytes32'],
+    [domain, chainId, vault, configVersion, heir, basisPoints, secret]
   );
   return ethers.keccak256(encoded);
 }
@@ -57,18 +57,16 @@ async function deployFixture(numGuardians = 1, threshold = 1) {
   const external = signers[8];
 
   const Token = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:MintableTokenStub",
+    'test/contracts/helpers/Stubs.sol:MintableTokenStub'
   );
   const token = await Token.deploy();
   await token.waitForDeployment();
 
-  const Hub = await ethers.getContractFactory(
-    "test/contracts/helpers/Stubs.sol:VaultHubStub",
-  );
+  const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
   const hub = await Hub.deploy();
   await hub.waitForDeployment();
 
-  const Vault = await ethers.getContractFactory("CardBoundVault");
+  const Vault = await ethers.getContractFactory('CardBoundVault');
   const vault = await Vault.deploy(
     await hub.getAddress(),
     await token.getAddress(),
@@ -76,17 +74,15 @@ async function deployFixture(numGuardians = 1, threshold = 1) {
     owner.address,
     [owner.address],
     1,
-    ethers.parseEther("1000"),
-    ethers.parseEther("10000"),
-    ethers.ZeroAddress,
+    ethers.parseEther('1000'),
+    ethers.parseEther('10000'),
+    ethers.ZeroAddress
   );
   await vault.waitForDeployment();
   const vaultAddr = await vault.getAddress();
   await hub.setVault(owner.address, vaultAddr);
 
-  const Manager = await ethers.getContractFactory(
-    "CardBoundVaultInheritanceManager",
-  );
+  const Manager = await ethers.getContractFactory('CardBoundVaultInheritanceManager');
   const manager = await Manager.deploy(vaultAddr);
   await manager.waitForDeployment();
   await vault.connect(owner).setInheritanceManager(await manager.getAddress());
@@ -121,7 +117,7 @@ async function deployFixture(numGuardians = 1, threshold = 1) {
 async function proposeConfig(
   f: Awaited<ReturnType<typeof deployFixture>>,
   heir: { address: string },
-  salt: string,
+  salt: string
 ) {
   const configVersion = (await f.vault.inheritanceConfigVersion()) + 1n;
   const secret = f.ethers.keccak256(f.ethers.toUtf8Bytes(salt));
@@ -132,11 +128,9 @@ async function proposeConfig(
     configVersion,
     heir.address,
     10_000n,
-    secret,
+    secret
   );
-  await f.vault
-    .connect(f.owner)
-    .proposeInheritanceConfig([heir.address], [commitment]);
+  await f.vault.connect(f.owner).proposeInheritanceConfig([heir.address], [commitment]);
   return { configVersion, secret, commitment };
 }
 
@@ -148,10 +142,10 @@ async function expectRevert(promise: Promise<unknown>, hint?: string) {
   });
 }
 
-describe("Inheritance — R-1 + R-3 residual fixes", { concurrency: 1 }, () => {
+describe('Inheritance — R-1 + R-3 residual fixes', { concurrency: 1 }, () => {
   // ── R-3 — DAO initiation block ──────────────────────────────────────────
 
-  it("R-3 setter: setDAOGuardian writes and emits, supports clear", async () => {
+  it('R-3 setter: setDAOGuardian writes and emits, supports clear', async () => {
     const f = await deployFixture();
     // Initially zero.
     let dao = await f.manager.daoGuardian();
@@ -164,10 +158,12 @@ describe("Inheritance — R-1 + R-3 residual fixes", { concurrency: 1 }, () => {
     assert.equal(dao, f.daoGuardian.address);
     const event = receipt.logs.find((l: any) => {
       try {
-        return f.manager.interface.parseLog(l)?.name === "DAOGuardianSet";
-      } catch { return false; }
+        return f.manager.interface.parseLog(l)?.name === 'DAOGuardianSet';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(event, "DAOGuardianSet event expected");
+    assert.ok(event, 'DAOGuardianSet event expected');
 
     // Replace with a different address.
     await f.vault.connect(f.owner).setDAOGuardian(f.guardian2.address);
@@ -180,21 +176,19 @@ describe("Inheritance — R-1 + R-3 residual fixes", { concurrency: 1 }, () => {
     assert.equal(dao, f.ethers.ZeroAddress);
   });
 
-  it("R-3 setter: non-admin cannot set DAO guardian", async () => {
+  it('R-3 setter: non-admin cannot set DAO guardian', async () => {
     const f = await deployFixture();
-    await expectRevert(
-      f.vault.connect(f.external).setDAOGuardian(f.daoGuardian.address),
-    );
+    await expectRevert(f.vault.connect(f.external).setDAOGuardian(f.daoGuardian.address));
   });
 
-  it("T-24 / R-3: DAO guardian cannot initiate inheritance claim", async () => {
+  it('T-24 / R-3: DAO guardian cannot initiate inheritance claim', async () => {
     const f = await deployFixture(2);
     // Make daoGuardian an actual guardian on the vault (it is, per setup).
     await f.vault.connect(f.owner).setGuardian(f.daoGuardian.address, true);
     // Register them as the DAO guardian.
     await f.vault.connect(f.owner).setDAOGuardian(f.daoGuardian.address);
     // Configure inheritance.
-    const { secret } = await proposeConfig(f, f.heir1, "r3-init");
+    const { secret } = await proposeConfig(f, f.heir1, 'r3-init');
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.owner).confirmInheritanceConfig();
 
@@ -202,16 +196,12 @@ describe("Inheritance — R-1 + R-3 residual fixes", { concurrency: 1 }, () => {
     await expectRevert(
       f.vault
         .connect(f.daoGuardian)
-        .initiateInheritanceClaim(
-          f.ethers.keccak256(f.ethers.toUtf8Bytes("dao-init")),
-        ),
+        .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('dao-init')))
     );
     // Sanity: heir1 (a regular guardian) can still initiate.
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("regular-init")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('regular-init')));
     const st = await f.vault.inheritanceState();
     assert.equal(Number(st[0]), 1); // VETO_PERIOD
     // Sanity 2: DAO guardian CAN veto.
@@ -220,39 +210,41 @@ describe("Inheritance — R-1 + R-3 residual fixes", { concurrency: 1 }, () => {
     assert.equal(vetoCount, 1n);
   });
 
-  it("R-3: when daoGuardian is unset (zero), the check is a no-op", async () => {
+  it('R-3: when daoGuardian is unset (zero), the check is a no-op', async () => {
     const f = await deployFixture();
     // daoGuardian is zero by default. heir1 (a guardian) should initiate fine.
-    await proposeConfig(f, f.heir1, "r3-noop");
+    await proposeConfig(f, f.heir1, 'r3-noop');
     await f.networkHelpers.time.increase(30 * 24 * 60 * 60 + 5);
     await f.vault.connect(f.owner).confirmInheritanceConfig();
     await f.vault
       .connect(f.heir1)
-      .initiateInheritanceClaim(
-        f.ethers.keccak256(f.ethers.toUtf8Bytes("noop")),
-      );
+      .initiateInheritanceClaim(f.ethers.keccak256(f.ethers.toUtf8Bytes('noop')));
     const st = await f.vault.inheritanceState();
     assert.equal(Number(st[0]), 1);
   });
 
   // ── R-1 — Guardian-quorum cancel of pending config ──────────────────────
 
-  it("R-1: single vote does not clear pending when threshold > 1", async () => {
+  it('R-1: single vote does not clear pending when threshold > 1', async () => {
     const f = await deployFixture(3, 2); // threshold 2
-    await proposeConfig(f, f.heir1, "r1-single");
+    await proposeConfig(f, f.heir1, 'r1-single');
 
     // One guardian vote.
     await f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians();
     const pendingHeirCount = await f.manager.pendingHeirCount();
-    assert.equal(pendingHeirCount, 1, "pending state still present after 1 vote when threshold = 2");
+    assert.equal(
+      pendingHeirCount,
+      1,
+      'pending state still present after 1 vote when threshold = 2'
+    );
     const pendingVersion = await f.manager.pendingConfigVersion();
     const votes = await f.manager.cancelVotesByPendingVersion(pendingVersion);
     assert.equal(votes, 1n);
   });
 
-  it("R-1: M-of-N votes clear pending state + emit cancellation", async () => {
+  it('R-1: M-of-N votes clear pending state + emit cancellation', async () => {
     const f = await deployFixture(3, 2);
-    await proposeConfig(f, f.heir1, "r1-quorum");
+    await proposeConfig(f, f.heir1, 'r1-quorum');
 
     await f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians();
     // The second vote reaches threshold and clears.
@@ -260,16 +252,20 @@ describe("Inheritance — R-1 + R-3 residual fixes", { concurrency: 1 }, () => {
     const receipt = await tx.wait();
     const cancelledByGuardians = receipt.logs.find((l: any) => {
       try {
-        return f.manager.interface.parseLog(l)?.name === "PendingConfigCancelledByGuardians";
-      } catch { return false; }
+        return f.manager.interface.parseLog(l)?.name === 'PendingConfigCancelledByGuardians';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(cancelledByGuardians, "PendingConfigCancelledByGuardians event expected");
+    assert.ok(cancelledByGuardians, 'PendingConfigCancelledByGuardians event expected');
     const generalCancelled = receipt.logs.find((l: any) => {
       try {
-        return f.manager.interface.parseLog(l)?.name === "InheritanceConfigCancelled";
-      } catch { return false; }
+        return f.manager.interface.parseLog(l)?.name === 'InheritanceConfigCancelled';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(generalCancelled, "InheritanceConfigCancelled event also expected");
+    assert.ok(generalCancelled, 'InheritanceConfigCancelled event also expected');
 
     // Pending state is gone.
     const pendingHeirCount = await f.manager.pendingHeirCount();
@@ -278,38 +274,32 @@ describe("Inheritance — R-1 + R-3 residual fixes", { concurrency: 1 }, () => {
     assert.equal(pendingEffectiveAt, 0n);
   });
 
-  it("R-1: double-vote from same guardian reverts", async () => {
+  it('R-1: double-vote from same guardian reverts', async () => {
     const f = await deployFixture(3, 2);
-    await proposeConfig(f, f.heir1, "r1-double");
+    await proposeConfig(f, f.heir1, 'r1-double');
     await f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians();
-    await expectRevert(
-      f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians(),
-    );
+    await expectRevert(f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians());
   });
 
-  it("R-1: vote with no pending proposal reverts", async () => {
+  it('R-1: vote with no pending proposal reverts', async () => {
     const f = await deployFixture(3, 2);
     // No propose() called — should revert with INH_NoPendingConfig.
-    await expectRevert(
-      f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians(),
-    );
+    await expectRevert(f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians());
   });
 
-  it("R-1: non-guardian cannot vote to cancel", async () => {
+  it('R-1: non-guardian cannot vote to cancel', async () => {
     const f = await deployFixture(3, 2);
-    await proposeConfig(f, f.heir1, "r1-nonguardian");
-    await expectRevert(
-      f.vault.connect(f.external).cancelInheritanceConfigChangeByGuardians(),
-    );
+    await proposeConfig(f, f.heir1, 'r1-nonguardian');
+    await expectRevert(f.vault.connect(f.external).cancelInheritanceConfigChangeByGuardians());
   });
 
-  it("R-1: after quorum cancel, owner can propose a fresh config", async () => {
+  it('R-1: after quorum cancel, owner can propose a fresh config', async () => {
     const f = await deployFixture(3, 2);
-    await proposeConfig(f, f.heir1, "r1-after-1");
+    await proposeConfig(f, f.heir1, 'r1-after-1');
     await f.vault.connect(f.guardian2).cancelInheritanceConfigChangeByGuardians();
     await f.vault.connect(f.guardian3).cancelInheritanceConfigChangeByGuardians();
     // Now propose a brand new config — should succeed cleanly.
-    await proposeConfig(f, f.heir1, "r1-after-2");
+    await proposeConfig(f, f.heir1, 'r1-after-2');
     const pending = await f.manager.pendingHeirCount();
     assert.equal(pending, 1);
   });

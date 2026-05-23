@@ -20,9 +20,9 @@
  * alongside the contract in Phase 3e (2026-05-15).
  */
 
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -39,25 +39,22 @@ async function expectRevert(promise: Promise<unknown>, hint?: string) {
   });
 }
 
-
-describe("R-4 — VFIDETermLoan.settleLoanByInheritance", { concurrency: 1 }, () => {
-  it("T-R4-6: settle reverts when VaultHub is wired but neither party is in memorial", async () => {
+describe('R-4 — VFIDETermLoan.settleLoanByInheritance', { concurrency: 1 }, () => {
+  it('T-R4-6: settle reverts when VaultHub is wired but neither party is in memorial', async () => {
     const f = await deployTermLoanFixture();
     // Create an OPEN loan offer.
-    await f.loan
-      .connect(f.lender)
-      .createLoan(
-        f.ethers.parseEther("100"),
-        500, // 5% interest
-        30 * 24 * 60 * 60, // 30 days
-      );
+    await f.loan.connect(f.lender).createLoan(
+      f.ethers.parseEther('100'),
+      500, // 5% interest
+      30 * 24 * 60 * 60 // 30 days
+    );
     // VaultHub is wired but neither vault is marked memorial.
     await expectRevert(f.loan.connect(f.external).settleLoanByInheritance(0));
   });
 
   it("R-4: OPEN loan settles when lender's vault enters MEMORIAL, refunds lender", async () => {
     const f = await deployTermLoanFixture();
-    const principal = f.ethers.parseEther("100");
+    const principal = f.ethers.parseEther('100');
     // Lender creates a loan offer (principal locked in contract).
     await f.loan.connect(f.lender).createLoan(principal, 500, 30 * 24 * 60 * 60);
     const lenderBalBefore = await f.token.balanceOf(f.lender.address);
@@ -75,39 +72,35 @@ describe("R-4 — VFIDETermLoan.settleLoanByInheritance", { concurrency: 1 }, ()
     // Event fired.
     const event = receipt.logs.find((l: any) => {
       try {
-        return f.loan.interface.parseLog(l)?.name === "LoanSettledByInheritance";
-      } catch { return false; }
+        return f.loan.interface.parseLog(l)?.name === 'LoanSettledByInheritance';
+      } catch {
+        return false;
+      }
     });
-    assert.ok(event, "LoanSettledByInheritance event expected");
+    assert.ok(event, 'LoanSettledByInheritance event expected');
   });
 
   it("R-4: OPEN loan settles when borrower's vault enters MEMORIAL, refunds lender", async () => {
     const f = await deployTermLoanFixture();
-    await f.loan
-      .connect(f.lender)
-      .createLoan(f.ethers.parseEther("50"), 700, 30 * 24 * 60 * 60);
+    await f.loan.connect(f.lender).createLoan(f.ethers.parseEther('50'), 700, 30 * 24 * 60 * 60);
     await f.hub.setInMemorialState(f.borrowerVaultAddr, true);
     await f.loan.connect(f.external).settleLoanByInheritance(0);
     const loanData = await f.loan.loans(0);
     assert.equal(Number(loanData.state), 7);
   });
 
-  it("T-R4-5: double-settle reverts (loan already in terminal state)", async () => {
+  it('T-R4-5: double-settle reverts (loan already in terminal state)', async () => {
     const f = await deployTermLoanFixture();
-    await f.loan
-      .connect(f.lender)
-      .createLoan(f.ethers.parseEther("50"), 500, 30 * 24 * 60 * 60);
+    await f.loan.connect(f.lender).createLoan(f.ethers.parseEther('50'), 500, 30 * 24 * 60 * 60);
     await f.hub.setInMemorialState(f.lenderVaultAddr, true);
     await f.loan.connect(f.external).settleLoanByInheritance(0);
     // Second call should revert.
     await expectRevert(f.loan.connect(f.external).settleLoanByInheritance(0));
   });
 
-  it("T-R4-3: settle reverts when vault was rolled back to NORMAL", async () => {
+  it('T-R4-3: settle reverts when vault was rolled back to NORMAL', async () => {
     const f = await deployTermLoanFixture();
-    await f.loan
-      .connect(f.lender)
-      .createLoan(f.ethers.parseEther("50"), 500, 30 * 24 * 60 * 60);
+    await f.loan.connect(f.lender).createLoan(f.ethers.parseEther('50'), 500, 30 * 24 * 60 * 60);
     // Briefly mark as memorial, then roll back.
     await f.hub.setInMemorialState(f.lenderVaultAddr, true);
     await f.hub.setInMemorialState(f.lenderVaultAddr, false);
@@ -115,11 +108,9 @@ describe("R-4 — VFIDETermLoan.settleLoanByInheritance", { concurrency: 1 }, ()
     await expectRevert(f.loan.connect(f.external).settleLoanByInheritance(0));
   });
 
-  it("R-4: cancelled loan cannot be re-settled", async () => {
+  it('R-4: cancelled loan cannot be re-settled', async () => {
     const f = await deployTermLoanFixture();
-    await f.loan
-      .connect(f.lender)
-      .createLoan(f.ethers.parseEther("50"), 500, 30 * 24 * 60 * 60);
+    await f.loan.connect(f.lender).createLoan(f.ethers.parseEther('50'), 500, 30 * 24 * 60 * 60);
     // Lender cancels normally.
     await f.loan.connect(f.lender).cancelLoan(0);
     // Now mark memorial — settle should still revert because state is terminal.

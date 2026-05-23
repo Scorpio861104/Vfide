@@ -21,7 +21,20 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
           : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'
       }`}
     >
-      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+      <div
+        role="button"
+        tabIndex={0}
+        className="w-full flex items-center justify-between p-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-2px] rounded-lg"
+        aria-expanded={expanded}
+        aria-controls={`session-${session.id}-details`}
+        onClick={() => setExpanded(!expanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+      >
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${isActive ? 'bg-green-100 dark:bg-green-900/30' : 'bg-gray-200 dark:bg-gray-700'}`}>
             <Key className={`w-5 h-5 ${isActive ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`} />
@@ -45,6 +58,7 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
         <div className="flex items-center gap-2">
           {isActive && (
             <button onClick={(e) => { e.stopPropagation(); onRevoke(session.id); }}
+              aria-label="Revoke session key"
               className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors">
               <Trash2 className="w-4 h-4" />
             </button>
@@ -55,7 +69,7 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
 
       <AnimatePresence>
         {expanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden" id={`session-${session.id}-details`}>
             <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-gray-700 space-y-3">
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Permissions</p>

@@ -12,7 +12,7 @@ import { logger } from '@/lib/logger';
  * 
  * Returns basic application status and version information
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const envHealthy = checkEnvironmentVariables();
   const statusCode = envHealthy ? 200 : 503;
   const status = envHealthy ? 'ok' : 'degraded';

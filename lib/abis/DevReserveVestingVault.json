@@ -72,11 +72,6 @@
   },
   {
     "inputs": [],
-    "name": "DV_VaultLocked",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "DV_Zero",
     "type": "error"
   },

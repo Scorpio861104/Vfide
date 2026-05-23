@@ -871,6 +871,26 @@ contract VFIDETermLoan is ReentrancyGuard {
      * repays via repayDefaultedLoan(), extraction stops immediately.
      */
     // slither-disable-next-line reentrancy-no-eth,reentrancy-benign,reentrancy-events
+    // SLITHER FALSE POSITIVE (arbitrary-send-erc20):
+    //   The `source` address is not arbitrary. It is constrained by
+    //   `_isValidGuarantorSource(g[i], source)`, which permits only:
+    //     (a) the guarantor's own EOA wallet, OR
+    //     (b) a vault whose current owner-mapping resolves to the guarantor.
+    //   Each guarantor must have explicitly `approve()`d this contract for
+    //   their committed liability when co-signing the loan (collateral
+    //   commitment step). On default, this function pulls only up to the
+    //   per-guarantor liability share — the standard guarantor-extraction
+    //   mechanic. Function is `nonReentrant`.
+    //
+    // SLITHER FALSE POSITIVE (unchecked-transfer):
+    //   The bool return of `transferFrom` is intentionally not checked here
+    //   because we use a *stronger* check: a balance-diff verification on
+    //   `recipient` (lines after the try). If the transfer succeeds but
+    //   reports false, balance won't increase and we skip; if the transfer
+    //   reverts, the catch-block emits `GuarantorExtractionSkipped` and
+    //   continues. Both paths are safer than a plain bool check, which would
+    //   silently accept a successful-but-misreporting token.
+    // slither-disable-next-line arbitrary-send-erc20,unchecked-transfer,reentrancy-no-eth
     function extractFromGuarantors(uint256 id) external nonReentrant {
         Loan storage l = loans[id];
         if (l.lender != msg.sender) revert TL_NotLender();

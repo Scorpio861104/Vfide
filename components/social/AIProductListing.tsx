@@ -15,8 +15,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Sparkles, Check, Edit3, RefreshCw, ShoppingCart, Tag, X } from 'lucide-react';
+import { Camera, Sparkles, Check, Edit3, RefreshCw, Tag, X } from 'lucide-react';
 
 interface GeneratedListing {
   name: string;
@@ -109,7 +108,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
         <h2 className="text-white font-bold text-sm flex items-center gap-2"><Sparkles size={16} className="text-amber-400" />AI Product Listing</h2>
-        {onClose && <button onClick={onClose} className="text-gray-500"><X size={18} /></button>}
+        {onClose && <button onClick={onClose} className="text-gray-500" aria-label="Close"><X size={18} /></button>}
       </div>
 
       {!imageUrl ? (

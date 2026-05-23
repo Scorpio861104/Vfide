@@ -32,7 +32,7 @@ import { logger } from '@/lib/logger';
  * Get quarantine status and expiry time for a vault
  */
 export function useQuarantineStatus(vaultAddress?: `0x${string}`) {
-  const CONTRACT_ADDRESSES = useContractAddresses();
+  const _CONTRACT_ADDRESSES = useContractAddresses();
   const { data: paused, isLoading: isLoadingPaused } = useReadContract({
     address: vaultAddress,
     abi: CARD_BOUND_VAULT_ABI,

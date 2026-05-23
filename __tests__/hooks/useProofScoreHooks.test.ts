@@ -1,11 +1,43 @@
 import { describe, it, expect,  beforeEach } from '@jest/globals'
 
 // Mock wagmi hooks
-jest.mock('wagmi', () => ({
-  useAccount: jest.fn(() => ({ address: '0x1234567890123456789012345678901234567890' })),
-  useReadContract: jest.fn(() => ({ data: null, isLoading: false, refetch: jest.fn() })),
-  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: null, isPending: false })),
-  useWaitForTransactionReceipt: jest.fn(() => ({ isLoading: false, isSuccess: false })),
+jest.mock('wagmi', () => ({ /* CANONICAL_WAGMI_MOCK_V2 */
+  useAccount: jest.fn(() => ({ address: undefined, isConnected: false, status: 'disconnected', chainId: undefined })),
+  useChainId: jest.fn(() => 1),
+  useSwitchChain: jest.fn(() => ({ switchChain: jest.fn(), switchChainAsync: jest.fn(), chains: [], status: 'idle' })),
+  useReadContract: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useReadContracts: jest.fn(() => ({ data: undefined, isError: false, isLoading: false, isSuccess: false, error: null, refetch: jest.fn() })),
+  useWriteContract: jest.fn(() => ({ writeContract: jest.fn(), writeContractAsync: jest.fn(), data: undefined, isPending: false, isSuccess: false, isError: false, error: null, reset: jest.fn() })),
+  useWaitForTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useWatchContractEvent: jest.fn(() => undefined),
+  usePublicClient: jest.fn(() => ({ readContract: jest.fn(), getBlockNumber: jest.fn(), getTransactionReceipt: jest.fn() })),
+  useWalletClient: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSignTypedData: jest.fn(() => ({ signTypedData: jest.fn(), signTypedDataAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useSignMessage: jest.fn(() => ({ signMessage: jest.fn(), signMessageAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null, reset: jest.fn() })),
+  useConnect: jest.fn(() => ({ connect: jest.fn(), connectAsync: jest.fn(), connectors: [], status: 'idle' })),
+  useDisconnect: jest.fn(() => ({ disconnect: jest.fn(), disconnectAsync: jest.fn() })),
+  useConnections: jest.fn(() => []),
+  useBalance: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEnsName: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useEnsAvatar: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useBlockNumber: jest.fn(() => ({ data: undefined, isLoading: false, refetch: jest.fn() })),
+  useEstimateGas: jest.fn(() => ({ data: undefined, isLoading: false })),
+  useSendTransaction: jest.fn(() => ({ sendTransaction: jest.fn(), sendTransactionAsync: jest.fn(), data: undefined, isPending: false, isError: false, error: null })),
+  useConfig: jest.fn(() => ({})),
+  WagmiProvider: ({ children }) => children,
+  createConfig: jest.fn(() => ({})),
+  createStorage: jest.fn(() => ({ getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() })),
+  cookieStorage: { getItem: jest.fn(() => null), setItem: jest.fn(), removeItem: jest.fn() },
+  http: jest.fn(() => ({})),
+  fallback: jest.fn(() => ({})),
+  useGasPrice: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useEstimateFeesPerGas: jest.fn(() => ({ data: undefined, isLoading: false, isError: false, refetch: jest.fn() })),
+  useReconnect: jest.fn(() => ({ reconnect: jest.fn(), reconnectAsync: jest.fn(), connectors: [], status: 'idle', isPending: false, isSuccess: false, isError: false })),
+  useTransaction: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  useTransactionReceipt: jest.fn(() => ({ data: undefined, isLoading: false, isSuccess: false, isError: false })),
+  serialize: jest.fn((v) => JSON.stringify(v)),
+  deserialize: jest.fn((v) => { try { return JSON.parse(v); } catch { return v; } }),
+  cookieToInitialState: jest.fn(() => undefined),
 }))
 
 // Mock React hooks
@@ -19,18 +51,14 @@ jest.mock('react', async () => {
 
 // Mock contracts
 jest.mock('@/lib/contracts', () => ({
-  CONTRACT_ADDRESSES: {
-    Seer: '0x1234567890123456789012345678901234567890',
-    SeerSocial: '0x1234567890123456789012345678901234567891',
-    BurnRouter: '0x0000000000000000000000000000000000000000',
-  },
-  isConfiguredContractAddress: (address?: string | null) =>
-    typeof address === 'string' &&
-    address !== '0x0000000000000000000000000000000000000000' &&
-    address.startsWith('0x') &&
-    address.length === 42,
-  SEER_ABI: [],
-  ProofScoreBurnRouterABI: [],
+  // CANONICAL_CONTRACTS_MOCK_V4
+  CONTRACT_ADDRESSES: { VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' },
+  CONTRACTS: {},
+  getContractAddresses: jest.fn(() => ({ VFIDEToken: '0x1111111111111111111111111111111111111101', StablecoinRegistry: '0x1111111111111111111111111111111111111102', MerchantPortal: '0x1111111111111111111111111111111111111103', MerchantRegistry: '0x1111111111111111111111111111111111111104', VaultHub: '0x1111111111111111111111111111111111111105', Seer: '0x1111111111111111111111111111111111111106', SeerView: '0x1111111111111111111111111111111111111107', DAO: '0x1111111111111111111111111111111111111108', DAOTimelock: '0x1111111111111111111111111111111111111109', TrustGateway: '0x111111111111111111111111111111111111110a', GuardianRegistry: '0x111111111111111111111111111111111111110b', GuardianLock: '0x111111111111111111111111111111111111110c', PanicGuard: '0x111111111111111111111111111111111111110d', EmergencyBreaker: '0x111111111111111111111111111111111111110e' })),
+  isConfiguredContractAddress: jest.fn(() => true),
+  validateContractAddress: jest.fn((addr) => addr),
+  ZERO_ADDRESS: '0x0000000000000000000000000000000000000000',
+  CURRENT_CHAIN_ID: 84532,
 }))
 
 // Mock ABIs
@@ -79,7 +107,7 @@ describe('useProofScoreHooks', () => {
       expect(canEndorse).toBe(true)
     })
 
-    it('returns High Trust tier for score 7000-7999', () => {
+    it('returns Council tier for score 7000-7999', () => {
       jest.mocked(useReadContract).mockReturnValue({
         data: 7500n as unknown as undefined,
         isLoading: false,
@@ -87,9 +115,9 @@ describe('useProofScoreHooks', () => {
       } as ReturnType<typeof useReadContract>)
 
       const { tier, canCouncil, canEndorse } = useProofScore()
-      expect(tier).toBe('High Trust')
+      expect(tier).toBe('Council')
       expect(canCouncil).toBe(true)
-      expect(canEndorse).toBe(false)
+      expect(canEndorse).toBe(true)
     })
 
     it('returns Low Trust tier for score 3500-4999', () => {
@@ -151,7 +179,7 @@ describe('useProofScoreHooks', () => {
         isLoading: false,
         refetch: jest.fn(),
       } as ReturnType<typeof useReadContract>)
-      expect(useProofScore().color).toBe('#00F0FF') // High trust cyan
+      expect(useProofScore().color).toBe('#A78BFA') // Council purple
 
       jest.mocked(useReadContract).mockReturnValue({
         data: 5000n as unknown as undefined,

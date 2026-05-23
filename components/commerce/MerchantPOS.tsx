@@ -1133,6 +1133,8 @@ export function MerchantPOS() {
                   </label>
                   <input
                     type="email"
+                    autoComplete="email"
+                    inputMode="email"
                     value={customerEmail}
                     onChange={(e) =>  setCustomerEmail(e.target.value)}
                    

@@ -177,6 +177,8 @@ export function ProfileSettings() {
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input
                 type="email"
+                autoComplete="email"
+                inputMode="email"
                 value={formData.email}
                 onChange={(e) =>  handleInputChange('email', e.target.value)}
                

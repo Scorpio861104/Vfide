@@ -28,8 +28,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, Shield, AlertTriangle, Check, X,
-  Fuel, Clock, Eye, ChevronDown, Info, Loader2,
+  ArrowRight, AlertTriangle, Check, X,
+  Fuel, Eye, ChevronDown, Info, Loader2,
 } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
@@ -136,7 +136,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
             <Eye size={20} className="text-cyan-400" />
             <h3 className="text-lg font-bold text-white">Review Transaction</h3>
           </div>
-          <button onClick={props.onCancel} className="p-2 text-gray-400 hover:text-white"><X size={18} /></button>
+          <button onClick={props.onCancel} className="p-2 text-gray-400 hover:text-white" aria-label="Close"><X size={18} /></button>
         </div>
 
         <div className="p-5 space-y-4">

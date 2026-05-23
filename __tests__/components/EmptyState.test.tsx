@@ -3,14 +3,30 @@ import { render, screen } from '@testing-library/react'
 import React from 'react'
 
 // Mock lucide-react
-jest.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => (() => { /* LucideProxyFallback */
+  const __orig = ({
   Inbox: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'inbox-icon' }),
   Search: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'search-icon' }),
   FileQuestion: ({ className }: { className?: string }) => 
     React.createElement('svg', { className, 'data-testid': 'file-question-icon' }),
-}))
+});
+  return new Proxy(__orig, {
+    get: (t, prop) => {
+      if (prop in t) return (t as any)[prop];
+      if (prop === '__esModule') return true;
+      if (typeof prop === 'symbol') return undefined;
+      const name = String(prop);
+      const Icon = ({ className, ...rest }: any) => {
+        const React = require('react');
+        return React.createElement('span', { 'data-testid': `${name.toLowerCase()}-icon`, className, ...rest });
+      };
+      Icon.displayName = `LucideMock(${name})`;
+      return Icon;
+    },
+  });
+})())
 
 import { EmptyState, NoResults, NoData } from '@/components/ui/EmptyState'
 
