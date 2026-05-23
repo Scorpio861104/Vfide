@@ -13,6 +13,9 @@ const BUFFER_EXCEPTIONS: Record<string, number> = {
   DeployPhase3: EIP170_RUNTIME_LIMIT,
   VFIDEToken: EIP170_RUNTIME_LIMIT,
   OwnerControlPanel: EIP170_RUNTIME_LIMIT,
+  // UserVaultBytecodeProvider (24 274 B): legacy provider retained for backward compat
+  //   with existing UserVaultLegacy deployments. Tracked for removal post-migration.
+  UserVaultBytecodeProvider: EIP170_RUNTIME_LIMIT,
 };
 
 // Contracts that are acknowledged to exceed EIP-170 and are actively being reduced.
