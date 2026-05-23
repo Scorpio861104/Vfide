@@ -41,8 +41,8 @@ async function main() {
     await (await seer.connect(dao).setOperator(await operator.getAddress(), true)).wait();
 
     // Verify ScoreReasonCode for manual setScore (code 500)
-    // Use newScore=500 → delta=490 (below maxDAOScoreChange cap of 500)
-    const setScoreTx = await seer.connect(dao).setScore(await subject.getAddress(), 500, 'manual_rectification');
+    // NEUTRAL=5000, maxDAOScoreChange=500 → use newScore=5499 (delta=499, within cap)
+    const setScoreTx = await seer.connect(dao).setScore(await subject.getAddress(), 5499, 'manual_rectification');
     const setScoreReceipt = await setScoreTx.wait();
     let found500 = false;
     for (const log of setScoreReceipt?.logs ?? []) {
