@@ -22,7 +22,6 @@ interface IVaultHub_Trust {
 /// @author Vfide
 interface ITokenLike_Trust {
     /// @notice balanceOf
-    /// @param _address _address
     /// @return _uint256 _uint256
     function balanceOf(address) external view returns (uint256);
 }
