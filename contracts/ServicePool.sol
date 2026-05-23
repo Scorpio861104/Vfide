@@ -556,7 +556,6 @@ abstract contract ServicePool is AccessControl, ReentrancyGuard, Pausable {
 
     /// @notice getParticipants
     /// @param period period
-    /// @return _arg _arg
     function getParticipants(uint256 period) external view returns (address[] memory) {
         return _participants[period];
     }
