@@ -824,7 +824,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * @notice Deprecated refund path retained for ABI compatibility.
      * @dev Use completeRefund() where the merchant caller funds the refund transfer.
-     * @param _bytes32 _bytes32
      */
     function completeRefundFromVault(bytes32) external pure {
         revert MERCH_Deprecated();
@@ -1224,10 +1223,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * @notice Online payment - MUST use escrow for buyer protection
      * @dev Reverts - online payments require escrow via VFIDECommerce
-     * @param _address _address
-     * @param _address _address
-     * @param _uint256 _uint256
-     * @param _string _string
      */
     function payOnline(
         address /*merchant*/,
@@ -1471,7 +1466,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * @notice Deprecated heavy on-chain aggregation view.
      * @dev Compute refund analytics off-chain from events and getRefundStatus().
-     * @param _address _address
      */
     function getMerchantRefundRate(address) external pure returns (
         uint256,
