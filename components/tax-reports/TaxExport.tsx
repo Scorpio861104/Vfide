@@ -1,6 +1,6 @@
 'use client';
-import { useState, useMemo } from 'react';
-import { FileText, Download, Calendar } from 'lucide-react';
+import { useMemo } from 'react';
+import { FileText, Download } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import { exportCSV } from '@/components/export/csv-export';
 

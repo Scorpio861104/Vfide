@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, withAuth } from '@/lib/auth/middleware';
+import { withAuth } from '@/lib/auth/middleware';
 import { withRateLimit } from '@/lib/auth/rateLimit'
 import { createLane, listLanesForAddress } from '@/lib/flashloans/repository'
 import { sanitizeTerms, validateSimulationState, type LoanSimulationState, type LoanTerms } from '@/lib/flashloans/engine'

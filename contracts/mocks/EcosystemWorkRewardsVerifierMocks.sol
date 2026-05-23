@@ -38,7 +38,7 @@ contract MockTokenForEcosystem {
 
     function burn(uint256 amount) external {
         uint256 accountBalance = balanceOf[msg.sender];
-        require(accountBalance >= amount, 'ERC20: burn exceeds balance');
+        require(accountBalance >= amount, "ERC20: burn exceeds balance");
 
         unchecked {
             balanceOf[msg.sender] = accountBalance - amount;

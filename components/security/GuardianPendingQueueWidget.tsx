@@ -9,7 +9,7 @@ import {
 } from 'wagmi';
 import { motion } from 'framer-motion';
 import { formatUnits } from 'viem';
-import { AlertTriangle, Clock, X, Loader2, Inbox, Shield } from 'lucide-react';
+import { X, Loader2, Inbox, Shield } from 'lucide-react';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import { useGuardianWatchlist } from '@/app/guardians/components/hooks';
 import { shortAddress } from '@/app/guardians/components/types';
@@ -102,7 +102,7 @@ interface PendingQueueRowProps {
   connectedAddress?: `0x${string}`;
 }
 
-function PendingQueueRow({ vault, label, connectedAddress }: PendingQueueRowProps) {
+function PendingQueueRow({ vault, label, connectedAddress: _connectedAddress }: PendingQueueRowProps) {
   const [refreshKey, setRefreshKey] = useState(0);
   const bumpRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 

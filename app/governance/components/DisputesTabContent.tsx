@@ -8,7 +8,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { ArrowRight, Scale, ShieldAlert, RotateCcw, MessagesSquare, AlertCircle } from 'lucide-react';
+import { ArrowRight, ShieldAlert, RotateCcw, MessagesSquare, AlertCircle } from 'lucide-react';
 import { LazyPeerMediation as PeerMediation } from '@/lib/lazy';
 
 interface ReturnPreview {

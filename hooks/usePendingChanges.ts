@@ -47,7 +47,7 @@
 import { useCallback } from 'react';
 import { useAccount, usePublicClient, useReadContract, useReadContracts, useWriteContract } from 'wagmi';
 import { type Address } from 'viem';
-import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, ZERO_ADDRESS } from '@/lib/contracts';
+import { ACTIVE_VAULT_ABI, ZERO_ADDRESS } from '@/lib/contracts';
 import { CardBoundVaultAdminManagerABI, CardBoundVaultPaymentQueueManagerABI } from '@/lib/abis';
 
 /**
@@ -65,7 +65,7 @@ export type PendingChangeId =
   | 'largePaymentThreshold';
 
 /** Source of truth contract for the pending state of each pipeline. */
-const PIPELINE_SOURCES: Record<PendingChangeId, 'admin' | 'paymentQueue'> = {
+const _PIPELINE_SOURCES: Record<PendingChangeId, 'admin' | 'paymentQueue'> = {
   guardian: 'admin',
   trustee: 'admin',
   spendLimits: 'admin',
@@ -103,7 +103,7 @@ function formatTokenAmount(amount: bigint): string {
 }
 
 export function usePendingChanges(vaultAddress: Address | undefined) {
-  const { address: connectedAddress } = useAccount();
+  const { address: _connectedAddress } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync, isPending: isWritePending, error: writeError } = useWriteContract();
 

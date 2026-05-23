@@ -1,6 +1,6 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -9,19 +9,23 @@ async function getConnection() {
   return connectionPromise;
 }
 
-describe("VaultRegistry vaultHub timelock", () => {
-  it("queues and applies setVaultHub after 48h", async () => {
+describe('VaultRegistry vaultHub timelock', () => {
+  it('queues and applies setVaultHub after 48h', async () => {
     const { ethers } = (await getConnection()) as any;
     const [owner] = await ethers.getSigners();
 
-    const Hub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+    const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
     const hubA = await Hub.deploy();
     const hubB = await Hub.deploy();
     await hubA.waitForDeployment();
     await hubB.waitForDeployment();
 
-    const Registry = await ethers.getContractFactory("VaultRegistry");
-    const registry = await Registry.deploy(await hubA.getAddress(), ethers.ZeroAddress, ethers.ZeroAddress);
+    const Registry = await ethers.getContractFactory('VaultRegistry');
+    const registry = await Registry.deploy(
+      await hubA.getAddress(),
+      ethers.ZeroAddress,
+      ethers.ZeroAddress
+    );
     await registry.waitForDeployment();
 
     await registry.connect(owner).setVaultHub(await hubB.getAddress());
@@ -31,25 +35,29 @@ describe("VaultRegistry vaultHub timelock", () => {
       /ModuleChangeNotReady|revert/
     );
 
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     await registry.connect(owner).applyVaultHub();
     assert.equal(await registry.vaultHub(), await hubB.getAddress());
   });
 
-  it("allows cancelling a pending vaultHub update", async () => {
+  it('allows cancelling a pending vaultHub update', async () => {
     const { ethers } = (await getConnection()) as any;
     const [owner] = await ethers.getSigners();
 
-    const Hub = await ethers.getContractFactory("test/contracts/helpers/Stubs.sol:VaultHubStub");
+    const Hub = await ethers.getContractFactory('test/contracts/helpers/Stubs.sol:VaultHubStub');
     const hubA = await Hub.deploy();
     const hubB = await Hub.deploy();
     await hubA.waitForDeployment();
     await hubB.waitForDeployment();
 
-    const Registry = await ethers.getContractFactory("VaultRegistry");
-    const registry = await Registry.deploy(await hubA.getAddress(), ethers.ZeroAddress, ethers.ZeroAddress);
+    const Registry = await ethers.getContractFactory('VaultRegistry');
+    const registry = await Registry.deploy(
+      await hubA.getAddress(),
+      ethers.ZeroAddress,
+      ethers.ZeroAddress
+    );
     await registry.waitForDeployment();
 
     await registry.connect(owner).setVaultHub(await hubB.getAddress());

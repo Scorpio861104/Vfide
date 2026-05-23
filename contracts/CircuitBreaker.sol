@@ -99,5 +99,14 @@ contract CircuitBreaker {
         return monitoring;
     }
 
-    function onlyRole(bytes32 /* role */) internal pure {}
+    /// @dev No-op role gate stub. The role constants RECORDER_ROLE and
+    ///      SUSPICIOUS_ACTIVITY_REPORTER_ROLE above are declared but not
+    ///      yet wired to AccessControl. This modifier preserves the
+    ///      original author's no-op semantics so the contract compiles
+    ///      and existing tests pass unchanged. Real RBAC enforcement
+    ///      should be added in a separate, security-reviewed change
+    ///      (inherit AccessControl and grant roles in the constructor).
+    modifier onlyRole(bytes32 /* role */) {
+        _;
+    }
 }

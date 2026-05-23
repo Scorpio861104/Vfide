@@ -33,7 +33,7 @@ export function OptimizedImage({
   fill = false,
   sizes,
   quality = 75,
-  placeholder,
+  placeholder: _placeholder,
   blurDataURL,
   onLoad,
   onError,

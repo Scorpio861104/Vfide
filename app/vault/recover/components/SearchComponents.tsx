@@ -1,17 +1,10 @@
 'use client';
-
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Activity,
-  AlertTriangle,
   Award,
   CheckCircle2,
-  Clock,
-  Copy,
-  ExternalLink,
   Key,
-  Loader2,
   Lock,
   Shield,
   ShieldCheck,

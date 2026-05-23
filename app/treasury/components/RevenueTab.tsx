@@ -2,7 +2,7 @@
 
 import { ArrowRight, TrendingUp, Clock, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useReadContracts, useChainId } from 'wagmi';
-import { type Address, type Abi, formatEther } from 'viem';
+import { type Address, type Abi } from 'viem';
 import { FeeDistributorABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 

@@ -24,7 +24,7 @@ interface FetchedProfile {
 export default function MerchantProfileEditPage() {
   const router = useRouter();
   const { address } = useAccount();
-  const { identity } = useVaultIdentity(address);
+  const { identity: _identity } = useVaultIdentity(address);
   const { currentMetaHash, registrationStatus } = useMerchantProfile();
 
   const [initialValues, setInitialValues] = useState<FetchedProfile | null>(null);
