@@ -504,10 +504,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     // ─────────────────────────── Admin (LEGACY entrypoint disabled)
     
     /// @notice setModules
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _address _address
     function setModules(address, address, address, address) external pure {
         revert("BR: use proposeModules/applyModules");
     }
