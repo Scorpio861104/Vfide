@@ -18,7 +18,7 @@ WORKDIR /app
 # transitive @eth-optimism/contracts (peer ethers@^5) pulled in via
 # @layerzerolabs/lz-evm-messagelib-v2.
 COPY package.json package-lock.json .npmrc ./
-RUN npm ci && npm cache clean --force
+RUN npm ci --legacy-peer-deps && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder
