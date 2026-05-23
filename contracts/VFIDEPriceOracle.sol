@@ -636,7 +636,6 @@ contract VFIDEPriceOracle is Ownable, Pausable {
      * @notice Get historical price
      * @param index Price point index
      * @return pricePoint Historical price point
-     * @return _arg _arg
      */
     function getHistoricalPrice(uint256 index) external view returns (PricePoint memory) {
         require(index < pricePointCount, "Invalid index");
