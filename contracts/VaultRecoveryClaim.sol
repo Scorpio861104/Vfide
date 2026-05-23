@@ -800,7 +800,6 @@ contract VaultRecoveryClaim is Ownable, ReentrancyGuard {
     /**
      * @notice Get claim details
      * @param claimId claimId
-     * @return _arg _arg
      */
     function getClaim(uint256 claimId) external view returns (RecoveryClaim memory) {
         return claims[claimId];
