@@ -508,7 +508,6 @@ contract FraudRegistry is ReentrancyGuard {
     /// @notice Check if an address is banned from protocol services
     /// @param user Address to check
     /// @return banned True if flagged or permanently banned
-    /// @return _bool _bool
     function isServiceBanned(address user) external view returns (bool) {
         return isFlagged[user] || isPermanentlyBanned[user];
     }
@@ -519,7 +518,6 @@ contract FraudRegistry is ReentrancyGuard {
     /// @dev H-3 FIX: Permanently banned users must also have escrow applied.
     ///      Previously `isPermanentlyBanned` silently removed the escrow restriction,
     ///      meaning the most severely sanctioned users had the fewest transfer restrictions.
-    /// @return _bool _bool
     function requiresEscrow(address user) external view returns (bool) {
         return isFlagged[user] || isPermanentlyBanned[user];
     }
