@@ -26,7 +26,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
-import { canonicalizeJSON, canonicalizeJSONString } from '@/lib/profile/canonicalize';
+import { canonicalizeJSONString } from '@/lib/profile/canonicalize';
 import { validateProfile } from '@/lib/profile/validate';
 import { hashToCid, hashToBytes32, bytes32ToCid } from '@/lib/profile/cid';
 import { getRequestIp } from '@/lib/security/requestContext';

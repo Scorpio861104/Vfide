@@ -11,7 +11,7 @@ import { useUnifiedSearch } from './useUnifiedSearch';
 
 export function UnifiedSearch({
   className = '',
-  placeholder = 'Search merchants, products, services...',
+  placeholder: _placeholder,
   autoFocus = false,
   size = 'md' as 'sm' | 'md' | 'lg',
 }: {

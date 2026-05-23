@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Code2, X, MessageCircle, ExternalLink, ArrowUpRight } from "lucide-react";
+import { Code2, X, MessageCircle, ArrowUpRight } from "lucide-react";
 import { VFIDEMark } from "../ui/VFIDEMark";
 
 type FooterLink = {
@@ -32,6 +32,8 @@ const footerLinks: {
     { href: "https://discord.gg/vfide",              label: "Discord", external: true, soon: true },
   ],
   resources: [
+    { href: "/whitepaper/vfide-whitepaper.pdf",         label: "White Paper",   external: true },
+    { href: "/whitepaper/vfide-executive-summary.pdf",  label: "1-Page Summary", external: true },
     { href: "/docs",       label: "Documentation" },
     { href: "/onboarding", label: "Setup Wizard" },
     { href: "/about",      label: "About" },
@@ -142,9 +144,21 @@ export function Footer() {
             <ul className="space-y-2.5">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="footer-link">
-                    {link.label}
-                  </Link>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="footer-link"
+                    >
+                      {link.label}
+                      <ArrowUpRight className="w-3 h-3 opacity-50" />
+                    </a>
+                  ) : (
+                    <Link href={link.href} className="footer-link">
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

@@ -235,7 +235,7 @@ interface InputProps {
 
 export function Input({
   label,
-  placeholder,
+  placeholder: _placeholder,
   value,
   onChange,
   type = 'text',

@@ -1,7 +1,7 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
-import { expectHardhatRevert } from "./utils/expectHardhatRevert";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
+import { expectHardhatRevert } from './utils/expectHardhatRevert';
 
 let defaultConnectionPromise: Promise<any> | null = null;
 let unlimitedConnectionPromise: Promise<any> | null = null;
@@ -23,21 +23,21 @@ async function getUnlimitedConnection() {
 // setFeePolicy enforces a 1-day cooldown between changes and a 2× cap on
 // maxTotalBps increase, preventing instant value-extraction fee spikes.
 // ─────────────────────────────────────────────────────────────────────────────
-describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", () => {
+describe('ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)', () => {
   async function burnRouterFixture() {
     const { ethers } = (await getDefaultConnection()) as any;
     const [owner, , sanctum, burn, eco] = await ethers.getSigners();
 
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+    const SeerStub = await ethers.getContractFactory('SeerScoreStub');
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
 
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+    const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
     const router = await Router.deploy(
       await seer.getAddress(),
       sanctum.address,
       burn.address,
-      eco.address,
+      eco.address
     );
     await router.waitForDeployment();
     return { ethers, router, owner };
@@ -48,7 +48,7 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
     return networkHelpers.loadFixture(burnRouterFixture);
   }
 
-  it("second setFeePolicy call reverts within 1-day cooldown", async () => {
+  it('second setFeePolicy call reverts within 1-day cooldown', async () => {
     const { router, owner } = await deployRouter();
 
     // First call succeeds (no prior change yet, lastFeePolicyChange = 0)
@@ -61,26 +61,26 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
     );
   });
 
-  it("setFeePolicy succeeds after 1-day cooldown elapses", async () => {
+  it('setFeePolicy succeeds after 1-day cooldown elapses', async () => {
     const { ethers, router, owner } = await deployRouter();
 
     await router.connect(owner).setFeePolicy(25, 500);
 
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [24 * 60 * 60]);
+    await ethers.provider.send('evm_mine', []);
 
     await router.connect(owner).setFeePolicy(30, 600);
     assert.equal(await router.maxTotalBps(), 600n);
   });
 
-  it("setFeePolicy reverts when maxTotalBps would exceed 2× the current value", async () => {
+  it('setFeePolicy reverts when maxTotalBps would exceed 2× the current value', async () => {
     const { ethers, router, owner } = await deployRouter();
 
     // Establish a baseline so the rate-of-change guard is active (maxTotalBps > 0)
     await router.connect(owner).setFeePolicy(25, 500); // baseline: max=500
 
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [24 * 60 * 60]);
+    await ethers.provider.send('evm_mine', []);
 
     // 500 * 2 = 1000 is the allowed ceiling; 1001 must revert
     await expectHardhatRevert(
@@ -89,17 +89,18 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
     );
   });
 
-  it("rejects legacy setModules path and requires propose/apply flow", async () => {
+  it('rejects legacy setModules path and requires propose/apply flow', async () => {
     const { router, owner, ethers } = await deployRouter();
     const [, , sanctum, burn, eco] = await ethers.getSigners();
 
     await expectHardhatRevert(
-      () => router.connect(owner).setModules(owner.address, sanctum.address, burn.address, eco.address),
+      () =>
+        router.connect(owner).setModules(owner.address, sanctum.address, burn.address, eco.address),
       /use proposeModules\/applyModules/
     );
   });
 
-  it("computeFeesAndReserve matches computeFees for the same inputs", async () => {
+  it('computeFeesAndReserve matches computeFees for the same inputs', async () => {
     const { router, owner, ethers } = await deployRouter();
     const [, user] = await ethers.getSigners();
 
@@ -108,7 +109,9 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
 
     const amount = 1_000n * 10n ** 18n;
     const quoted = await router.computeFees(owner.address, user.address, amount);
-    const reserved = await router.connect(owner).computeFeesAndReserve.staticCall(owner.address, user.address, amount);
+    const reserved = await router
+      .connect(owner)
+      .computeFeesAndReserve.staticCall(owner.address, user.address, amount);
 
     assert.deepEqual([...reserved], [...quoted]);
   });
@@ -118,18 +121,18 @@ describe("ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)", ()
 // OwnerControlPanel governance delay hardening
 // Delay reductions are capped (50% per step) and now rate-limited over time.
 // ─────────────────────────────────────────────────────────────────────────────
-describe("OwnerControlPanel (governance delay reduction cooldown)", () => {
+describe('OwnerControlPanel (governance delay reduction cooldown)', () => {
   async function ownerControlPanelFixture() {
     const { ethers } = (await getUnlimitedConnection()) as any;
     const [owner] = await ethers.getSigners();
 
-    const Panel = await ethers.getContractFactory("OwnerControlPanel");
+    const Panel = await ethers.getContractFactory('OwnerControlPanel');
     const panel = await Panel.deploy(
       owner.address,
       ethers.ZeroAddress,
       ethers.ZeroAddress,
       ethers.ZeroAddress,
-      ethers.ZeroAddress,
+      ethers.ZeroAddress
     );
     await panel.waitForDeployment();
 
@@ -141,24 +144,22 @@ describe("OwnerControlPanel (governance delay reduction cooldown)", () => {
     return networkHelpers.loadFixture(ownerControlPanelFixture);
   }
 
-  async function queueAndExecuteDelay(
-    ethers: any,
-    panel: any,
-    owner: any,
-    newDelay: bigint,
-  ) {
+  async function queueAndExecuteDelay(ethers: any, panel: any, owner: any, newDelay: bigint) {
     const actionId = ethers.keccak256(
-      ethers.AbiCoder.defaultAbiCoder().encode(["string", "uint256"], ["governance_setDelay", newDelay]),
+      ethers.AbiCoder.defaultAbiCoder().encode(
+        ['string', 'uint256'],
+        ['governance_setDelay', newDelay]
+      )
     );
     await panel.connect(owner).governance_queueAction(actionId);
     const eta = await panel.queuedActionEta(actionId);
-    const now = BigInt((await ethers.provider.getBlock("latest")).timestamp);
-    await ethers.provider.send("evm_increaseTime", [Number(eta - now + 1n)]);
-    await ethers.provider.send("evm_mine", []);
+    const now = BigInt((await ethers.provider.getBlock('latest')).timestamp);
+    await ethers.provider.send('evm_increaseTime', [Number(eta - now + 1n)]);
+    await ethers.provider.send('evm_mine', []);
     await panel.connect(owner).governance_setDelay(newDelay);
   }
 
-  it("allows a first reduction but blocks a second reduction inside cooldown window", async () => {
+  it('allows a first reduction but blocks a second reduction inside cooldown window', async () => {
     const { ethers, owner, panel } = await deployPanel();
 
     // Raise from 1d -> 4d first (non-reduction path)
@@ -172,14 +173,17 @@ describe("OwnerControlPanel (governance delay reduction cooldown)", () => {
     // Second reduction attempt inside cooldown: 2d -> 1d should revert
     const nextDelay = 1n * 24n * 60n * 60n;
     const actionId = ethers.keccak256(
-      ethers.AbiCoder.defaultAbiCoder().encode(["string", "uint256"], ["governance_setDelay", nextDelay]),
+      ethers.AbiCoder.defaultAbiCoder().encode(
+        ['string', 'uint256'],
+        ['governance_setDelay', nextDelay]
+      )
     );
     await panel.connect(owner).governance_queueAction(actionId);
 
     const eta = await panel.queuedActionEta(actionId);
-    const now = BigInt((await ethers.provider.getBlock("latest")).timestamp);
-    await ethers.provider.send("evm_increaseTime", [Number(eta - now + 1n)]);
-    await ethers.provider.send("evm_mine", []);
+    const now = BigInt((await ethers.provider.getBlock('latest')).timestamp);
+    await ethers.provider.send('evm_increaseTime', [Number(eta - now + 1n)]);
+    await ethers.provider.send('evm_mine', []);
 
     await assert.rejects(
       () => panel.connect(owner).governance_setDelay(nextDelay),
@@ -194,43 +198,48 @@ describe("OwnerControlPanel (governance delay reduction cooldown)", () => {
 // executeEmergencyQuorumRescue must reject a new minVotesRequired that is
 // less than 10% of the current value.
 // ─────────────────────────────────────────────────────────────────────────────
-describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
-  async function configureGenericProposalPolicies(ethers: any, dao: any, timelock: any, updates: (timelockSigner: any) => Promise<void> = async () => {}) {
+describe('DAO (F-21: emergency quorum rescue 10% floor)', () => {
+  async function configureGenericProposalPolicies(
+    ethers: any,
+    dao: any,
+    timelock: any,
+    updates: (timelockSigner: any) => Promise<void> = async () => {}
+  ) {
     const timelockAddr = await timelock.getAddress();
-    await ethers.provider.send("hardhat_setBalance", [timelockAddr, "0x3635C9ADC5DEA00000"]);
-    await ethers.provider.send("hardhat_impersonateAccount", [timelockAddr]);
+    await ethers.provider.send('hardhat_setBalance', [timelockAddr, '0x3635C9ADC5DEA00000']);
+    await ethers.provider.send('hardhat_impersonateAccount', [timelockAddr]);
     const timelockSigner = await ethers.getSigner(timelockAddr);
 
     await dao.connect(timelockSigner).setProposalTypeTargetPolicy(0, timelockAddr, true);
-    await dao.connect(timelockSigner).setProposalTypeSelectorPolicy(0, "0x00000000", true);
+    await dao.connect(timelockSigner).setProposalTypeSelectorPolicy(0, '0x00000000', true);
     await updates(timelockSigner);
 
-    await ethers.provider.send("hardhat_stopImpersonatingAccount", [timelockAddr]);
+    await ethers.provider.send('hardhat_stopImpersonatingAccount', [timelockAddr]);
   }
 
   async function daoWithoutApproverFixture() {
     const { ethers } = (await getDefaultConnection()) as any;
     const [admin] = await ethers.getSigners();
 
-    const Placeholder = await ethers.getContractFactory("Placeholder");
+    const Placeholder = await ethers.getContractFactory('Placeholder');
     const timelock = await Placeholder.deploy();
     await timelock.waitForDeployment();
 
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+    const SeerStub = await ethers.getContractFactory('SeerScoreStub');
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
 
-    const VaultHubStub = await ethers.getContractFactory("VaultHubStub");
+    const VaultHubStub = await ethers.getContractFactory('VaultHubStub');
     const hub = await VaultHubStub.deploy();
     await hub.waitForDeployment();
 
-    const DAO = await ethers.getContractFactory("DAO");
+    const DAO = await ethers.getContractFactory('DAO');
     const dao = await DAO.deploy(
       admin.address,
       await timelock.getAddress(),
       await seer.getAddress(),
       await hub.getAddress(),
-      ethers.ZeroAddress,
+      ethers.ZeroAddress
     );
     await dao.waitForDeployment();
 
@@ -241,25 +250,25 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     const { ethers } = (await getDefaultConnection()) as any;
     const [admin, approver] = await ethers.getSigners();
 
-    const Placeholder = await ethers.getContractFactory("Placeholder");
+    const Placeholder = await ethers.getContractFactory('Placeholder');
     const timelock = await Placeholder.deploy();
     await timelock.waitForDeployment();
 
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+    const SeerStub = await ethers.getContractFactory('SeerScoreStub');
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
 
-    const VaultHubStub = await ethers.getContractFactory("VaultHubStub");
+    const VaultHubStub = await ethers.getContractFactory('VaultHubStub');
     const hub = await VaultHubStub.deploy();
     await hub.waitForDeployment();
 
-    const DAO = await ethers.getContractFactory("DAO");
+    const DAO = await ethers.getContractFactory('DAO');
     const dao = await DAO.deploy(
       admin.address,
       await timelock.getAddress(),
       await seer.getAddress(),
       await hub.getAddress(),
-      ethers.ZeroAddress,
+      ethers.ZeroAddress
     );
     await dao.waitForDeployment();
 
@@ -281,19 +290,19 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
   }
 
   async function initiateAndApproveRescue(
-    ethers: Awaited<ReturnType<typeof deployDAO>>["ethers"],
-    dao: Awaited<ReturnType<typeof deployDAO>>["dao"],
-    admin: Awaited<ReturnType<typeof deployDAO>>["admin"],
-    approver: Awaited<ReturnType<typeof deployDAO>>["approver"],
+    ethers: Awaited<ReturnType<typeof deployDAO>>['ethers'],
+    dao: Awaited<ReturnType<typeof deployDAO>>['dao'],
+    admin: Awaited<ReturnType<typeof deployDAO>>['admin'],
+    approver: Awaited<ReturnType<typeof deployDAO>>['approver']
   ) {
     await dao.connect(admin).initiateEmergencyQuorumRescue();
     await dao.connect(approver).approveEmergencyQuorumRescue();
     // Advance 14 days (EMERGENCY_RESCUE_DELAY)
-    await ethers.provider.send("evm_increaseTime", [14 * 24 * 60 * 60]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [14 * 24 * 60 * 60]);
+    await ethers.provider.send('evm_mine', []);
   }
 
-  it("reverts when new minVotesRequired is below 10% of current", async () => {
+  it('reverts when new minVotesRequired is below 10% of current', async () => {
     const { ethers, dao, admin, approver } = await deployDAO();
     await initiateAndApproveRescue(ethers, dao, admin, approver);
 
@@ -307,7 +316,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
   });
 
-  it("permits new minVotesRequired at exactly 10% of current", async () => {
+  it('permits new minVotesRequired at exactly 10% of current', async () => {
     const { ethers, dao, admin, approver } = await deployDAO();
     await initiateAndApproveRescue(ethers, dao, admin, approver);
 
@@ -318,7 +327,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     assert.equal(await dao.minVotesRequired(), floor);
   });
 
-  it("rejects emergency rescue self-approval by initiator", async () => {
+  it('rejects emergency rescue self-approval by initiator', async () => {
     const { dao, admin } = await deployDAO();
 
     await dao.connect(admin).initiateEmergencyQuorumRescue();
@@ -329,7 +338,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
   });
 
-  it("rejects emergency timelock replacement self-approval by initiator", async () => {
+  it('rejects emergency timelock replacement self-approval by initiator', async () => {
     const { dao, admin } = await deployDAO();
 
     // Any non-zero address works as replacement candidate for this guard test.
@@ -341,7 +350,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
   });
 
-  it("rejects rescue self-approval even when the emergency approver is a contract", async () => {
+  it('rejects rescue self-approval even when the emergency approver is a contract', async () => {
     const { dao, admin, timelock } = await deployDAOWithoutApprover();
 
     assert.equal(await dao.emergencyApprover(), await timelock.getAddress());
@@ -353,7 +362,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
   });
 
-  it("initializes emergency approver to timelock at deployment", async () => {
+  it('initializes emergency approver to timelock at deployment', async () => {
     const { dao, admin } = await deployDAOWithoutApprover();
     const timelockAddr = await dao.timelock();
 
@@ -361,43 +370,43 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     await dao.connect(admin).initiateEmergencyQuorumRescue();
   });
 
-  it("enables fail-closed proposal policy enforcement at deployment", async () => {
+  it('enables fail-closed proposal policy enforcement at deployment', async () => {
     const { dao } = await deployDAOWithoutApprover();
 
     assert.equal(await dao.requireProposalPolicies(), true);
   });
 
-  it("allows explicit zero-selector policies for short calldata proposals", async () => {
+  it('allows explicit zero-selector policies for short calldata proposals', async () => {
     const { ethers, dao, timelock } = await deployDAOWithoutApprover();
 
     await configureGenericProposalPolicies(ethers, dao, timelock);
 
     assert.equal(await dao.proposalTypeSelectorPolicyCount(0), 1n);
-    assert.equal(await dao.proposalTypeSelectorAllowed(0, "0x00000000"), true);
+    assert.equal(await dao.proposalTypeSelectorAllowed(0, '0x00000000'), true);
   });
 
-  it("counts only active proposals toward the cap", async () => {
+  it('counts only active proposals toward the cap', async () => {
     const { ethers, dao, admin, seer, hub, timelock } = await deployDAO();
 
     await hub.setVault(admin.address, admin.address);
     await seer.setScore(admin.address, 5000);
 
-    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, "0x", "first-proposal");
+    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, '0x', 'first-proposal');
     assert.equal(await dao.proposalCount(), 1n);
     assert.equal(await dao.activeProposalCount(), 1n);
 
     await dao.connect(admin).withdrawProposal(1n);
     assert.equal(await dao.activeProposalCount(), 0n);
 
-    await ethers.provider.send("evm_increaseTime", [60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
-    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, "0x01", "second-proposal");
+    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, '0x01', 'second-proposal');
     assert.equal(await dao.proposalCount(), 2n);
     assert.equal(await dao.activeProposalCount(), 1n);
   });
 
-  it("allows voting when voter activity is established at least SCORE_SETTLEMENT_WINDOW before proposal", async () => {
+  it('allows voting when voter activity is established at least SCORE_SETTLEMENT_WINDOW before proposal', async () => {
     const { ethers, dao, admin, approver, seer, hub, timelock } = await deployDAO();
 
     // Eligibility requires both a vault and sufficient score.
@@ -406,20 +415,20 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     await seer.setScore(admin.address, 5000);
     await seer.setScore(approver.address, 5000);
 
-    const now = BigInt((await ethers.provider.getBlock("latest")).timestamp);
+    const now = BigInt((await ethers.provider.getBlock('latest')).timestamp);
     const twoDays = 2n * 24n * 60n * 60n;
     await seer.setActivity(approver.address, Number(now - twoDays - 10n));
 
-    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, "0x", "dao-05-pass");
+    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, '0x', 'dao-05-pass');
 
     // Wait until voting starts (votingDelay = 1 day)
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     await dao.connect(approver).vote(1n, true);
   });
 
-  it("rejects voting when voter activity was updated too close to proposal creation", async () => {
+  it('rejects voting when voter activity was updated too close to proposal creation', async () => {
     const { ethers, dao, admin, approver, seer, hub, timelock } = await deployDAO();
 
     await hub.setVault(admin.address, admin.address);
@@ -427,15 +436,15 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     await seer.setScore(admin.address, 5000);
     await seer.setScore(approver.address, 5000);
 
-    const now = BigInt((await ethers.provider.getBlock("latest")).timestamp);
+    const now = BigInt((await ethers.provider.getBlock('latest')).timestamp);
     const oneDay = 1n * 24n * 60n * 60n;
     // Clearly too recent for the 2-day settlement-window requirement.
     await seer.setActivity(approver.address, Number(now - oneDay));
 
-    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, "0x", "dao-05-fail");
+    await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, '0x', 'dao-05-fail');
 
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     await expectHardhatRevert(
       () => dao.connect(approver).vote(1n, true),
@@ -443,7 +452,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     );
   });
 
-  it("uses the proposal-time score snapshot instead of a post-proposal score increase", async () => {
+  it('uses the proposal-time score snapshot instead of a post-proposal score increase', async () => {
     const { ethers, dao, admin, approver, seer, hub, timelock } = await deployDAO();
 
     await hub.setVault(admin.address, admin.address);
@@ -451,19 +460,21 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     await seer.setScore(admin.address, 5000);
     await seer.setScore(approver.address, 2000);
 
-    const now = BigInt((await ethers.provider.getBlock("latest")).timestamp);
+    const now = BigInt((await ethers.provider.getBlock('latest')).timestamp);
     const twoDays = 2n * 24n * 60n * 60n;
     await seer.setActivity(approver.address, Number(now - twoDays - 10n));
 
-    const proposeTx = await dao.connect(admin).propose(0, await timelock.getAddress(), 0n, "0x", "dao-05-snapshot");
+    const proposeTx = await dao
+      .connect(admin)
+      .propose(0, await timelock.getAddress(), 0n, '0x', 'dao-05-snapshot');
     const proposeReceipt = await proposeTx.wait();
     const proposeBlock = await ethers.provider.getBlock(proposeReceipt!.blockNumber);
     await seer.setScoreAt(approver.address, proposeBlock!.timestamp, 2000);
 
     await seer.setScore(approver.address, 9000);
 
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     await dao.connect(approver).vote(1n, true);
 
@@ -472,10 +483,10 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     assert.equal(details[8], 0n);
   });
 
-  it("scales quorum to the 15-seat council band", async () => {
+  it('scales quorum to the 15-seat council band', async () => {
     const { ethers, dao, timelock } = await deployDAOWithoutApprover();
 
-    const CouncilStub = await ethers.getContractFactory("CouncilStub");
+    const CouncilStub = await ethers.getContractFactory('CouncilStub');
     const council = await CouncilStub.deploy();
     await council.waitForDeployment();
 
@@ -491,10 +502,10 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     assert.equal(await dao.minParticipation(), 12n);
   });
 
-  it("scales quorum to the 21-seat council band", async () => {
+  it('scales quorum to the 21-seat council band', async () => {
     const { ethers, dao, timelock } = await deployDAOWithoutApprover();
 
-    const CouncilStub = await ethers.getContractFactory("CouncilStub");
+    const CouncilStub = await ethers.getContractFactory('CouncilStub');
     const council = await CouncilStub.deploy();
     await council.waitForDeployment();
 
@@ -510,7 +521,7 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
     assert.equal(await dao.minParticipation(), 16n);
   });
 
-  it("rejects quorum sync when the council module is unset", async () => {
+  it('rejects quorum sync when the council module is unset', async () => {
     const { ethers, dao, timelock } = await deployDAOWithoutApprover();
 
     await configureGenericProposalPolicies(ethers, dao, timelock, async (timelockSigner) => {
@@ -526,39 +537,39 @@ describe("DAO (F-21: emergency quorum rescue 10% floor)", () => {
 // MerchantPortal scoped pull permit hardening
 // Merchant-initiated pulls must respect remaining amount, expiry, and revocation.
 // ─────────────────────────────────────────────────────────────────────────────
-describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
+describe('MerchantPortal (scoped pull permits)', { concurrency: 1 }, () => {
   async function merchantPortalFixture() {
     const { ethers } = (await getUnlimitedConnection()) as any;
     const [dao, merchant, customer, feeSink] = await ethers.getSigners();
 
-    const VaultHub = await ethers.getContractFactory("VaultHubStub");
+    const VaultHub = await ethers.getContractFactory('VaultHubStub');
     const hub = await VaultHub.deploy();
     await hub.waitForDeployment();
 
-    const Seer = await ethers.getContractFactory("SeerScoreStub");
+    const Seer = await ethers.getContractFactory('SeerScoreStub');
     const seer = await Seer.deploy();
     await seer.waitForDeployment();
 
-    const Token = await ethers.getContractFactory("TokenStub");
+    const Token = await ethers.getContractFactory('TokenStub');
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const Portal = await ethers.getContractFactory("MerchantPortal");
+    const Portal = await ethers.getContractFactory('MerchantPortal');
     const portal = await Portal.deploy(
       dao.address,
       await hub.getAddress(),
       await seer.getAddress(),
       ethers.ZeroAddress,
-      feeSink.address,
+      feeSink.address
     );
     await portal.waitForDeployment();
 
     await seer.setScore(merchant.address, 7000);
     await portal.connect(dao).setProtocolFee(0);
     await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
-    await portal.connect(merchant).registerMerchant("Merchant", "Retail");
+    await portal.connect(merchant).registerMerchant('Merchant', 'Retail');
 
-    const VaultSpendLimit = await ethers.getContractFactory("VaultSpendLimitStub");
+    const VaultSpendLimit = await ethers.getContractFactory('VaultSpendLimitStub');
     const customerVault = await VaultSpendLimit.deploy(1000n);
     await customerVault.waitForDeployment();
     const merchantVault = await VaultSpendLimit.deploy(1000n);
@@ -575,37 +586,44 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
     return networkHelpers.loadFixture(merchantPortalFixture);
   }
 
-  it("decrements remaining permit amount after each merchant pull", async () => {
+  it('decrements remaining permit amount after each merchant pull', async () => {
     const { ethers, portal, token, merchant, customer } = await deployPortal();
 
-    const latest = await ethers.provider.getBlock("latest");
+    const latest = await ethers.provider.getBlock('latest');
     const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
     await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, expiresAt);
-    await portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 400n, "order-1", { gasLimit: 3_000_000n });
+    await portal
+      .connect(merchant)
+      .processPayment(customer.address, await token.getAddress(), 400n, 'order-1', {
+        gasLimit: 3_000_000n,
+      });
 
     assert.equal(await portal.merchantPullRemaining(customer.address, merchant.address), 600n);
   });
 
-  it("rejects merchant pulls after permit expiry", async () => {
+  it('rejects merchant pulls after permit expiry', async () => {
     const { ethers, portal, token, merchant, customer } = await deployPortal();
 
-    const latest = await ethers.provider.getBlock("latest");
+    const latest = await ethers.provider.getBlock('latest');
     const expiresAt = BigInt((latest?.timestamp ?? 0) + 60);
     await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, expiresAt);
 
-    await ethers.provider.send("evm_increaseTime", [61]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [61]);
+    await ethers.provider.send('evm_mine', []);
 
     await expectHardhatRevert(
-      async () => portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 100n, "order-expired"),
+      async () =>
+        portal
+          .connect(merchant)
+          .processPayment(customer.address, await token.getAddress(), 100n, 'order-expired'),
       /merchant approval expired/
     );
   });
 
-  it("clears permit state on revoke and blocks further pulls", async () => {
+  it('clears permit state on revoke and blocks further pulls', async () => {
     const { ethers, portal, token, merchant, customer } = await deployPortal();
 
-    const latest = await ethers.provider.getBlock("latest");
+    const latest = await ethers.provider.getBlock('latest');
     const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
     await portal.connect(customer).setMerchantPullPermit(merchant.address, 1000n, expiresAt);
     await portal.connect(customer).setMerchantPullApproval(merchant.address, false);
@@ -615,27 +633,31 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
     assert.equal(await portal.merchantPullExpiry(customer.address, merchant.address), 0n);
 
     await expectHardhatRevert(
-      async () => portal.connect(merchant).processPayment(customer.address, await token.getAddress(), 100n, "order-revoked"),
+      async () =>
+        portal
+          .connect(merchant)
+          .processPayment(customer.address, await token.getAddress(), 100n, 'order-revoked'),
       /merchant not approved by customer/
     );
   });
 
-  it("rejects permit amount above vault daily transfer limit", async () => {
+  it('rejects permit amount above vault daily transfer limit', async () => {
     const { ethers, portal, merchant, customer } = await deployPortal();
 
-    const latest = await ethers.provider.getBlock("latest");
+    const latest = await ethers.provider.getBlock('latest');
     const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
 
     await expectHardhatRevert(
-      async () => portal.connect(customer).setMerchantPullPermit(merchant.address, 1001n, expiresAt),
+      async () =>
+        portal.connect(customer).setMerchantPullPermit(merchant.address, 1001n, expiresAt),
       /MERCH_CapExceeded|cap exceeded/
     );
   });
 
-  it("rejects permit expiry beyond max duration", async () => {
+  it('rejects permit expiry beyond max duration', async () => {
     const { ethers, portal, merchant, customer } = await deployPortal();
 
-    const latest = await ethers.provider.getBlock("latest");
+    const latest = await ethers.provider.getBlock('latest');
     const tooFar = BigInt((latest?.timestamp ?? 0) + 120 * 24 * 60 * 60);
 
     await expectHardhatRevert(
@@ -644,62 +666,75 @@ describe("MerchantPortal (scoped pull permits)", { concurrency: 1 }, () => {
     );
   });
 
-  it("enforces vault allowance when setting token-scoped pull permit", async () => {
+  it('enforces vault allowance when setting token-scoped pull permit', async () => {
     const { ethers, portal, merchant, customer } = await deployPortal();
 
-    const StrictToken = await ethers.getContractFactory("MutableDecimalsTokenStub");
+    const StrictToken = await ethers.getContractFactory('MutableDecimalsTokenStub');
     const strictToken = await StrictToken.deploy(18);
     await strictToken.waitForDeployment();
     await portal.setAcceptedToken(await strictToken.getAddress(), true);
 
-    const latest = await ethers.provider.getBlock("latest");
+    const latest = await ethers.provider.getBlock('latest');
     const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
 
     await expectHardhatRevert(
-      async () => portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await strictToken.getAddress(), 100n, expiresAt),
+      async () =>
+        portal
+          .connect(customer)
+          .setMerchantPullPermitForToken(
+            merchant.address,
+            await strictToken.getAddress(),
+            100n,
+            expiresAt
+          ),
       /MERCH_NotApproved|not approved/
     );
   });
 
-  it("binds scoped permits to a specific token", async () => {
+  it('binds scoped permits to a specific token', async () => {
     const { ethers, portal, token, merchant, customer, customerVault } = await deployPortal();
 
-    const OtherToken = await ethers.getContractFactory("TokenStub");
+    const OtherToken = await ethers.getContractFactory('TokenStub');
     const otherToken = await OtherToken.deploy();
     await otherToken.waitForDeployment();
     await portal.setAcceptedToken(await otherToken.getAddress(), true);
 
-    const latest = await ethers.provider.getBlock("latest");
+    const latest = await ethers.provider.getBlock('latest');
     const expiresAt = BigInt((latest?.timestamp ?? 0) + 3600);
-    await portal.connect(customer).setMerchantPullPermitForToken(merchant.address, await token.getAddress(), 1000n, expiresAt);
+    await portal
+      .connect(customer)
+      .setMerchantPullPermitForToken(merchant.address, await token.getAddress(), 1000n, expiresAt);
 
     await expectHardhatRevert(
-      async () => portal.connect(merchant).processPayment(customer.address, await otherToken.getAddress(), 100n, "order-scoped-token"),
+      async () =>
+        portal
+          .connect(merchant)
+          .processPayment(
+            customer.address,
+            await otherToken.getAddress(),
+            100n,
+            'order-scoped-token'
+          ),
       /merchant not approved by customer/
     );
   });
 });
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // VaultHub guardian bootstrap hardening
 // New vaults should not inherit DAO as default guardian.
 // ─────────────────────────────────────────────────────────────────────────────
-describe("VaultHub (guardian bootstrap hardening)", () => {
+describe('VaultHub (guardian bootstrap hardening)', () => {
   async function vaultHubFixture() {
     const { ethers } = (await getUnlimitedConnection()) as any;
     const [dao, owner, recipient] = await ethers.getSigners();
 
-    const Token = await ethers.getContractFactory("TokenStub");
+    const Token = await ethers.getContractFactory('TokenStub');
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory("VaultHub");
-    const hub = await VaultHub.deploy(
-      await token.getAddress(),
-      ethers.ZeroAddress,
-      dao.address,
-    );
+    const VaultHub = await ethers.getContractFactory('VaultHub');
+    const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
     await hub.waitForDeployment();
 
     return { ethers, dao, owner, recipient, hub };
@@ -710,20 +745,20 @@ describe("VaultHub (guardian bootstrap hardening)", () => {
     return networkHelpers.loadFixture(vaultHubFixture);
   }
 
-  it("assigns owner as initial guardian and does not assign DAO guardian by default", async () => {
+  it('assigns owner as initial guardian and does not assign DAO guardian by default', async () => {
     const { ethers, dao, owner, hub } = await deployVaultHubHarness();
 
     await hub.connect(owner).createVault();
     const vaultAddr = await hub.vaultOf(owner.address);
     assert.notEqual(vaultAddr, ethers.ZeroAddress);
 
-    const vault = await ethers.getContractAt("CardBoundVault", vaultAddr);
+    const vault = await ethers.getContractAt('CardBoundVault', vaultAddr);
     assert.equal(await vault.isGuardian(owner.address), true);
     assert.equal(await vault.isGuardian(dao.address), false);
     assert.equal(await vault.guardianCount(), 1n);
   });
 
-  it("blocks vault-to-vault transfers before guardian setup is completed", async () => {
+  it('blocks vault-to-vault transfers before guardian setup is completed', async () => {
     const { ethers, owner, recipient, hub } = await deployVaultHubHarness();
 
     await hub.connect(owner).createVault();
@@ -731,9 +766,9 @@ describe("VaultHub (guardian bootstrap hardening)", () => {
 
     const vaultAddr = await hub.vaultOf(owner.address);
     const recipientVaultAddr = await hub.vaultOf(recipient.address);
-    const vault = await ethers.getContractAt("CardBoundVault", vaultAddr);
+    const vault = await ethers.getContractAt('CardBoundVault', vaultAddr);
 
-    const latestBlock = await ethers.provider.getBlock("latest");
+    const latestBlock = await ethers.provider.getBlock('latest');
     const intent = {
       vault: vaultAddr,
       toVault: recipientVaultAddr,
@@ -745,7 +780,7 @@ describe("VaultHub (guardian bootstrap hardening)", () => {
     };
 
     await assert.rejects(
-      () => vault.connect(owner).executeVaultToVaultTransfer(intent, "0x"),
+      () => vault.connect(owner).executeVaultToVaultTransfer(intent, '0x'),
       /revert/
     );
   });
@@ -756,25 +791,25 @@ describe("VaultHub (guardian bootstrap hardening)", () => {
 // CouncilElection should preserve a 12-seat default while allowing governance
 // to scale above 12 up to a hard cap of 21.
 // ─────────────────────────────────────────────────────────────────────────────
-describe("CouncilElection (governed seat growth)", () => {
+describe('CouncilElection (governed seat growth)', () => {
   async function councilElectionFixture() {
     const { ethers } = (await getDefaultConnection()) as any;
     const [dao] = await ethers.getSigners();
 
-    const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+    const SeerStub = await ethers.getContractFactory('SeerScoreStub');
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory("VaultHubStub");
+    const VaultHub = await ethers.getContractFactory('VaultHubStub');
     const hub = await VaultHub.deploy();
     await hub.waitForDeployment();
 
-    const CouncilElection = await ethers.getContractFactory("CouncilElection");
+    const CouncilElection = await ethers.getContractFactory('CouncilElection');
     const election = await CouncilElection.deploy(
       dao.address,
       await seer.getAddress(),
       await hub.getAddress(),
-      ethers.ZeroAddress,
+      ethers.ZeroAddress
     );
     await election.waitForDeployment();
 
@@ -786,12 +821,12 @@ describe("CouncilElection (governed seat growth)", () => {
     return networkHelpers.loadFixture(councilElectionFixture);
   }
 
-  it("keeps 12 as the default starting council size", async () => {
+  it('keeps 12 as the default starting council size', async () => {
     const { election } = await deployElection();
     assert.equal(await election.councilSize(), 12n);
   });
 
-  it("allows governance to expand council size above 12 up to 21", async () => {
+  it('allows governance to expand council size above 12 up to 21', async () => {
     const { election, dao } = await deployElection();
 
     await election.connect(dao).setParams(21, 7000, 365n * 24n * 60n * 60n, 14n * 24n * 60n * 60n);
@@ -800,11 +835,12 @@ describe("CouncilElection (governed seat growth)", () => {
     assert.equal(await election.councilSize(), 21n);
   });
 
-  it("still rejects council sizes above the long-term cap", async () => {
+  it('still rejects council sizes above the long-term cap', async () => {
     const { election, dao } = await deployElection();
 
     await expectHardhatRevert(
-      () => election.connect(dao).setParams(22, 7000, 365n * 24n * 60n * 60n, 14n * 24n * 60n * 60n),
+      () =>
+        election.connect(dao).setParams(22, 7000, 365n * 24n * 60n * 60n, 14n * 24n * 60n * 60n),
       /revert/
     );
   });

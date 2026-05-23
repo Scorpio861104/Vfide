@@ -35,8 +35,7 @@ import {
   encodeAbiParameters,
   parseAbiParameters,
   toBytes,
-  isAddress,
-  formatEther,
+  isAddress
 } from 'viem';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -47,7 +46,6 @@ import {
   ShieldOff,
   Clock,
   Download,
-  Trash2,
   CheckCircle,
   AlertTriangle,
   XCircle,

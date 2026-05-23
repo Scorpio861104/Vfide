@@ -12,8 +12,12 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package manifest + lockfile for deterministic installs
-COPY package.json package-lock.json ./
+# Copy package manifest + lockfile + npm config for deterministic installs.
+# .npmrc carries legacy-peer-deps=true which is required to resolve the
+# ethers v5/v6 peer-dep conflict between the root project (ethers@^6) and
+# transitive @eth-optimism/contracts (peer ethers@^5) pulled in via
+# @layerzerolabs/lz-evm-messagelib-v2.
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci && npm cache clean --force
 
 # Rebuild the source code only when needed

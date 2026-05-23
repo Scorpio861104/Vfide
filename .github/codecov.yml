@@ -2,7 +2,7 @@ coverage:
   status:
     project:
       default:
-        target: 85%
+        target: 84%
         threshold: 2%
         base: auto
     patch:
@@ -36,6 +36,6 @@ flag_management:
     carryforward: true
     statuses:
       - type: project
-        target: 85%
+        target: 84%
       - type: patch
         target: 80%

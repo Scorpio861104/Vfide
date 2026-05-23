@@ -62,7 +62,7 @@ function parseWindowHours(raw: string | null): number | null {
   return Math.min(parsed, MAX_WINDOW_HOURS);
 }
 
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const GET = withAuth(async (request: NextRequest, _user: JWTPayload) => {
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;
   try {

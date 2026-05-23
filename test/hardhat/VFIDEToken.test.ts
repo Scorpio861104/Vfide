@@ -7,9 +7,9 @@
  *  - H-02: circuitBreaker bypasses fees during emergency mode
  *  - Core: deployment, supply distribution, owner can set vaultOnly
  */
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 const H48 = 48 * 60 * 60; // 48 hours in seconds
 
@@ -24,20 +24,20 @@ async function deployTokenFixture() {
   const { ethers } = await getConnection();
   const [owner, user1] = await ethers.getSigners();
 
-  const Placeholder = await ethers.getContractFactory("Placeholder");
-  const TreasuryForwarder = await ethers.getContractFactory("TreasuryForwarder");
+  const Placeholder = await ethers.getContractFactory('Placeholder');
+  const TreasuryForwarder = await ethers.getContractFactory('TreasuryForwarder');
   const devVault = await Placeholder.deploy();
   const treasury = await TreasuryForwarder.deploy();
   await devVault.waitForDeployment();
   await treasury.waitForDeployment();
 
-  const Token = await ethers.getContractFactory("VFIDEToken");
+  const Token = await ethers.getContractFactory('VFIDEToken');
   const token = await Token.deploy(
     await devVault.getAddress(),
     await treasury.getAddress(),
     ethers.ZeroAddress,
     ethers.ZeroAddress,
-    ethers.ZeroAddress,
+    ethers.ZeroAddress
   );
   await token.waitForDeployment();
 
@@ -52,123 +52,118 @@ async function deployToken() {
   return deployTokenFixture();
 }
 
-describe("VFIDEToken", () => {
+describe('VFIDEToken', () => {
   // ─── Deployment ──────────────────────────────────────────────────────────
-  describe("deployment", () => {
-    it("mints 200M total supply and distributes at genesis", async () => {
+  describe('deployment', () => {
+    it('mints 200M total supply and distributes at genesis', async () => {
       const { token, devVault } = await deployToken();
 
       const totalSupply = await token.totalSupply();
-      assert.equal(totalSupply, 200_000_000n * 10n ** 18n, "total supply must be 200M");
+      assert.equal(totalSupply, 200_000_000n * 10n ** 18n, 'total supply must be 200M');
 
       const devBal = await token.balanceOf(await devVault.getAddress());
-      assert.equal(devBal, 50_000_000n * 10n ** 18n, "devVault must hold 50M");
+      assert.equal(devBal, 50_000_000n * 10n ** 18n, 'devVault must hold 50M');
     });
 
-    it("reverts if devVault is zero address", async () => {
+    it('reverts if devVault is zero address', async () => {
       const { ethers } = await getConnection();
       const [owner] = await ethers.getSigners();
-      const Placeholder = await ethers.getContractFactory("Placeholder");
+      const Placeholder = await ethers.getContractFactory('Placeholder');
       const real = await Placeholder.deploy();
       await real.waitForDeployment();
 
-      const Token = await ethers.getContractFactory("VFIDEToken");
+      const Token = await ethers.getContractFactory('VFIDEToken');
       await assert.rejects(
-        async () => Token.deploy(
-          ethers.ZeroAddress,
-          owner.address,
-          ethers.ZeroAddress,
-          ethers.ZeroAddress,
-          ethers.ZeroAddress
-        ),
+        async () =>
+          Token.deploy(
+            ethers.ZeroAddress,
+            owner.address,
+            ethers.ZeroAddress,
+            ethers.ZeroAddress,
+            ethers.ZeroAddress
+          ),
         /revert/
       );
     });
   });
 
   // ─── H-01: proposeSystemExempt / confirmSystemExempt timelock ─────────────
-  describe("H-01: system exempt timelock", () => {
-    it("proposeSystemExempt sets pending state", async () => {
+  describe('H-01: system exempt timelock', () => {
+    it('proposeSystemExempt sets pending state', async () => {
       const { token, owner, user1 } = await deployToken();
       await token.connect(owner).proposeSystemExempt(user1.address, true);
       const pending = await token.pendingExemptAddr();
       assert.equal(pending.toLowerCase(), user1.address.toLowerCase());
     });
 
-    it("confirmSystemExempt reverts before 48h", async () => {
+    it('confirmSystemExempt reverts before 48h', async () => {
       const { token, owner, user1, ethers } = await deployToken();
       await token.connect(owner).proposeSystemExempt(user1.address, true);
 
       // Advance only 47 hours
-      await ethers.provider.send("evm_increaseTime", [H48 - 3600]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48 - 3600]);
+      await ethers.provider.send('evm_mine', []);
 
-      await assert.rejects(
-        () => token.connect(owner).confirmSystemExempt(),
-        /revert/
-      );
+      await assert.rejects(() => token.connect(owner).confirmSystemExempt(), /revert/);
     });
 
-    it("confirmSystemExempt succeeds after 48h", async () => {
+    it('confirmSystemExempt succeeds after 48h', async () => {
       const { token, owner, user1, ethers } = await deployToken();
       await token.connect(owner).proposeSystemExempt(user1.address, true);
 
       // Advance 48 hours
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
 
       await token.connect(owner).confirmSystemExempt();
       const isExempt = await token.systemExempt(user1.address);
-      assert.equal(isExempt, true, "systemExempt must be true after confirm");
+      assert.equal(isExempt, true, 'systemExempt must be true after confirm');
     });
 
-    it("owner can cancel pending system exempt proposal", async () => {
+    it('owner can cancel pending system exempt proposal', async () => {
       const { token, owner, user1 } = await deployToken();
       await token.connect(owner).proposeSystemExempt(user1.address, true);
 
       await token.connect(owner).cancelPendingExempt();
 
-      assert.equal(await token.pendingExemptAddr(), "0x0000000000000000000000000000000000000000");
+      assert.equal(await token.pendingExemptAddr(), '0x0000000000000000000000000000000000000000');
       assert.equal(await token.pendingExemptAt(), 0n);
-      await assert.rejects(
-        () => token.connect(owner).confirmSystemExempt(),
-        /revert/
-      );
+      await assert.rejects(() => token.connect(owner).confirmSystemExempt(), /revert/);
     });
   });
 
   // ─── H-01: proposeWhitelist / confirmWhitelist timelock ───────────────────
-  describe("H-01: whitelist timelock", () => {
-    it("confirmWhitelist succeeds after 48h", async () => {
+  describe('H-01: whitelist timelock', () => {
+    it('confirmWhitelist succeeds after 48h', async () => {
       const { token, owner, user1, ethers } = await deployToken();
       await token.connect(owner).proposeWhitelist(user1.address, true);
 
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
 
       await token.connect(owner).confirmWhitelist();
       const isWhitelisted = await token.whitelisted(user1.address);
       assert.equal(isWhitelisted, true);
     });
 
-    it("owner can cancel pending whitelist proposal", async () => {
+    it('owner can cancel pending whitelist proposal', async () => {
       const { token, owner, user1 } = await deployToken();
       await token.connect(owner).proposeWhitelist(user1.address, true);
 
       await token.connect(owner).cancelPendingWhitelist();
 
-      assert.equal(await token.pendingWhitelistAddr(), "0x0000000000000000000000000000000000000000");
-      assert.equal(await token.pendingWhitelistAt(), 0n);
-      await assert.rejects(
-        () => token.connect(owner).confirmWhitelist(),
-        /revert/
+      assert.equal(
+        await token.pendingWhitelistAddr(),
+        '0x0000000000000000000000000000000000000000'
       );
+      assert.equal(await token.pendingWhitelistAt(), 0n);
+      await assert.rejects(() => token.connect(owner).confirmWhitelist(), /revert/);
     });
   });
 
   // ─── H-02: circuitBreaker bypasses fees in emergency mode ─────────────────
-  describe("H-02: circuit breaker bypasses fees", () => {
-    it("circuit breaker activation is timelocked and does not imply fee bypass", async () => {
+  describe('H-02: circuit breaker bypasses fees', () => {
+    it('circuit breaker activation is timelocked and does not imply fee bypass', async () => {
       const { token, owner, ethers } = await deployToken();
       const MAX = 7 * 24 * 60 * 60;
 
@@ -176,24 +171,21 @@ describe("VFIDEToken", () => {
       await token.connect(owner).setCircuitBreaker(true, MAX);
       assert.equal(await token.isCircuitBreakerActive(), false);
 
-      await assert.rejects(
-        () => token.connect(owner).confirmCircuitBreaker(),
-        /revert/
-      );
+      await assert.rejects(() => token.connect(owner).confirmCircuitBreaker(), /revert/);
 
       // H-02: circuit breaker does not imply fee bypass.
       const feeBypassed = await token.isFeeBypassed();
       assert.equal(feeBypassed, false);
     });
 
-    it("cleans expired circuit breaker state on transfer", async () => {
+    it('cleans expired circuit breaker state on transfer', async () => {
       const { token, owner, user1, ethers } = await deployToken();
 
       // No-op after #311, but kept for ABI compatibility.
       await token.connect(owner).setCircuitBreaker(true, 1);
 
-      await ethers.provider.send("evm_increaseTime", [2]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [2]);
+      await ethers.provider.send('evm_mine', []);
 
       // Transfer should remain healthy with no token-side circuit breaker state.
       await token.connect(owner).transfer(user1.address, 1n);
@@ -202,17 +194,17 @@ describe("VFIDEToken", () => {
       assert.equal(await token.isFeeBypassed(), false);
     });
 
-    it("cleans expired emergency flags via syncEmergencyFlags without transfer", async () => {
+    it('cleans expired emergency flags via syncEmergencyFlags without transfer', async () => {
       const { token, owner, ethers } = await deployToken();
 
       // Circuit-breaker API is no-op; exercise real expiring flag via fee bypass.
       await token.connect(owner).setFeeBypass(true, 1);
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).confirmFeeBypass();
 
-      await ethers.provider.send("evm_increaseTime", [2]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [2]);
+      await ethers.provider.send('evm_mine', []);
 
       // View functions already treat expired flags as inactive, but storage is stale until synced.
       assert.equal(await token.isCircuitBreakerActive(), false);
@@ -225,7 +217,7 @@ describe("VFIDEToken", () => {
       assert.equal(await token.feeBypassExpiry(), 0n);
     });
 
-    it("getExpectedNetAmount returns gross amount when burnRouter is unset", async () => {
+    it('getExpectedNetAmount returns gross amount when burnRouter is unset', async () => {
       const { token, owner, user1 } = await deployToken();
 
       const amount = 1234n;
@@ -235,30 +227,30 @@ describe("VFIDEToken", () => {
   });
 
   // ─── Core: vaultOnly mode ──────────────────────────────────────────────────
-  describe("permit", () => {
-    it("accepts a valid EIP-2612 signature", async () => {
+  describe('permit', () => {
+    it('accepts a valid EIP-2612 signature', async () => {
       const { token, owner, user1, ethers } = await deployToken();
 
       const amount = 1234n;
       const nonce = await token.nonces(owner.address);
-      const latest = await ethers.provider.getBlock("latest");
+      const latest = await ethers.provider.getBlock('latest');
       const deadline = BigInt((latest?.timestamp ?? 0) + 3600);
       const network = await ethers.provider.getNetwork();
 
       const domain = {
         name: await token.name(),
-        version: "1",
+        version: '1',
         chainId: network.chainId,
         verifyingContract: await token.getAddress(),
       };
 
       const types = {
         Permit: [
-          { name: "owner", type: "address" },
-          { name: "spender", type: "address" },
-          { name: "value", type: "uint256" },
-          { name: "nonce", type: "uint256" },
-          { name: "deadline", type: "uint256" },
+          { name: 'owner', type: 'address' },
+          { name: 'spender', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'nonce', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' },
         ],
       };
 
@@ -277,30 +269,30 @@ describe("VFIDEToken", () => {
       assert.equal(allowance, amount);
     });
 
-    it("rejects a signature when the submitted deadline differs from the signed deadline", async () => {
+    it('rejects a signature when the submitted deadline differs from the signed deadline', async () => {
       const { token, owner, user1, ethers } = await deployToken();
 
       const amount = 999n;
       const nonce = await token.nonces(owner.address);
-      const latest = await ethers.provider.getBlock("latest");
+      const latest = await ethers.provider.getBlock('latest');
       const signedDeadline = BigInt((latest?.timestamp ?? 0) + 3600);
       const submittedDeadline = signedDeadline + 1n;
       const network = await ethers.provider.getNetwork();
 
       const domain = {
         name: await token.name(),
-        version: "1",
+        version: '1',
         chainId: network.chainId,
         verifyingContract: await token.getAddress(),
       };
 
       const types = {
         Permit: [
-          { name: "owner", type: "address" },
-          { name: "spender", type: "address" },
-          { name: "value", type: "uint256" },
-          { name: "nonce", type: "uint256" },
-          { name: "deadline", type: "uint256" },
+          { name: 'owner', type: 'address' },
+          { name: 'spender', type: 'address' },
+          { name: 'value', type: 'uint256' },
+          { name: 'nonce', type: 'uint256' },
+          { name: 'deadline', type: 'uint256' },
         ],
       };
 
@@ -320,28 +312,28 @@ describe("VFIDEToken", () => {
     });
   });
 
-  describe("vaultOnly mode", () => {
-    it("owner can enable vaultOnly mode", async () => {
+  describe('vaultOnly mode', () => {
+    it('owner can enable vaultOnly mode', async () => {
       const { token, owner } = await deployToken();
       await token.connect(owner).setVaultOnly(true);
       assert.equal(await token.vaultOnly(), true);
     });
 
-    it("redirects EOA receipts into the recipient vault", async () => {
+    it('redirects EOA receipts into the recipient vault', async () => {
       const { token, owner, user1, ethers } = await deployToken();
 
-      const VaultHubMock = await ethers.getContractFactory("VaultHubMock");
+      const VaultHubMock = await ethers.getContractFactory('VaultHubMock');
       const vaultHub = await VaultHubMock.deploy();
       await vaultHub.waitForDeployment();
 
-      const ownerVault = "0x1000000000000000000000000000000000000001";
-      const userVault = "0x1000000000000000000000000000000000000002";
+      const ownerVault = '0x1000000000000000000000000000000000000001';
+      const userVault = '0x1000000000000000000000000000000000000002';
       await vaultHub.setVault(owner.address, ownerVault);
       await vaultHub.setVault(user1.address, userVault);
 
       await token.connect(owner).setVaultHub(await vaultHub.getAddress());
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).applyVaultHub();
 
       const amount = 1000n;
@@ -352,29 +344,26 @@ describe("VFIDEToken", () => {
     });
   });
 
-  describe("sanctum sink policy", () => {
-    it("allows zero sanctum sink when policy is not locked", async () => {
+  describe('sanctum sink policy', () => {
+    it('allows zero sanctum sink when policy is not locked', async () => {
       const { token, owner, ethers } = await deployToken();
 
       await token.connect(owner).setSanctumSink(ethers.ZeroAddress);
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).applySanctumSink();
 
       assert.equal(await token.sanctumSink(), ethers.ZeroAddress);
     });
 
-    it("rejects zero sanctum sink after policy lock", async () => {
+    it('rejects zero sanctum sink after policy lock', async () => {
       const { token, owner, ethers } = await deployToken();
 
       await token.connect(owner).lockPolicy();
-      await assert.rejects(
-        () => token.connect(owner).setSanctumSink(ethers.ZeroAddress),
-        /revert/
-      );
+      await assert.rejects(() => token.connect(owner).setSanctumSink(ethers.ZeroAddress), /revert/);
     });
 
-    it("owner can cancel pending treasury and sanctum sink updates", async () => {
+    it('owner can cancel pending treasury and sanctum sink updates', async () => {
       const { token, owner } = await deployToken();
 
       await token.connect(owner).setTreasurySink(owner.address);
@@ -390,35 +379,35 @@ describe("VFIDEToken", () => {
     });
   });
 
-  describe("transfer preview", () => {
-    it("keeps transfer preview non-custodial after legacy freeze controls were removed", async () => {
+  describe('transfer preview', () => {
+    it('keeps transfer preview non-custodial after legacy freeze controls were removed', async () => {
       const { token, owner, user1 } = await deployToken();
 
-      assert.equal(typeof (token as any).setFrozen, "undefined");
-      assert.equal(typeof (token as any).setBlacklist, "undefined");
+      assert.equal(typeof (token as any).setFrozen, 'undefined');
+      assert.equal(typeof (token as any).setBlacklist, 'undefined');
 
       const result = await token.canTransfer(owner.address, user1.address, 1n);
       assert.equal(result[0], true);
-      assert.equal(result[1], "");
+      assert.equal(result[1], '');
     });
   });
 
-  describe("anti-whale accounting", () => {
-    it("tracks dailyTransferred using gross amount when fees are active", async () => {
+  describe('anti-whale accounting', () => {
+    it('tracks dailyTransferred using gross amount when fees are active', async () => {
       const { token, owner, user1, ethers } = await deployToken();
       const [, , sanctumSink, burnSink, ecoSink] = await ethers.getSigners();
 
-      const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+      const SeerStub = await ethers.getContractFactory('SeerScoreStub');
       const seer = await SeerStub.deploy();
       await seer.waitForDeployment();
 
-      const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+      const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
       const router = await Router.deploy(
         await seer.getAddress(),
         sanctumSink.address,
         burnSink.address,
         ecoSink.address,
-        await token.getAddress(),
+        await token.getAddress()
       );
       await router.waitForDeployment();
 
@@ -426,16 +415,16 @@ describe("VFIDEToken", () => {
       await token.connect(owner).setTreasurySink(ecoSink.address);
       await token.connect(owner).setSanctumSink(sanctumSink.address);
       await token.connect(owner).setBurnRouter(await router.getAddress());
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).applyTreasurySink();
       await token.connect(owner).applySanctumSink();
       await token.connect(owner).applyBurnRouter();
 
       // Owner is treasury at genesis and exempt by default; disable exemption so anti-whale accounting executes.
       await token.connect(owner).setWhaleLimitExempt(owner.address, false);
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).applyWhaleLimitExempt(owner.address);
 
       const amount = 1_000n * 10n ** 18n;
@@ -449,42 +438,39 @@ describe("VFIDEToken", () => {
       assert.notEqual(tracked, expectedNet);
     });
 
-    it("canTransfer preview uses net estimate while stored daily usage remains gross", async () => {
+    it('canTransfer preview uses net estimate while stored daily usage remains gross', async () => {
       const { token, owner, user1, ethers } = await deployToken();
       const [, , sanctumSink, burnSink, ecoSink] = await ethers.getSigners();
 
-      const SeerStub = await ethers.getContractFactory("SeerScoreStub");
+      const SeerStub = await ethers.getContractFactory('SeerScoreStub');
       const seer = await SeerStub.deploy();
       await seer.waitForDeployment();
 
-      const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+      const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
       const router = await Router.deploy(
         await seer.getAddress(),
         sanctumSink.address,
         burnSink.address,
         ecoSink.address,
-        await token.getAddress(),
+        await token.getAddress()
       );
       await router.waitForDeployment();
       await token.connect(owner).setTreasurySink(ecoSink.address);
       await token.connect(owner).setSanctumSink(sanctumSink.address);
       await token.connect(owner).setBurnRouter(await router.getAddress());
 
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
 
       await token.connect(owner).applyTreasurySink();
       await token.connect(owner).applySanctumSink();
       await token.connect(owner).applyBurnRouter();
       await token.connect(owner).setWhaleLimitExempt(owner.address, false);
-      await token.connect(owner).setAntiWhale(
-        2_000_000n * 10n ** 18n,
-        4_000_000n * 10n ** 18n,
-        580_000n * 10n ** 18n,
-        0n,
-      );
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await token
+        .connect(owner)
+        .setAntiWhale(2_000_000n * 10n ** 18n, 4_000_000n * 10n ** 18n, 580_000n * 10n ** 18n, 0n);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).applyWhaleLimitExempt(owner.address);
       await token.connect(owner).applyAntiWhale();
 
@@ -494,39 +480,36 @@ describe("VFIDEToken", () => {
 
       const can = await token.canTransfer(owner.address, user1.address, amount);
       assert.equal(can[0], true);
-      assert.equal(can[1], "");
+      assert.equal(can[1], '');
 
       await token.connect(owner).transfer(user1.address, amount);
       assert.equal(await token.dailyTransferred(owner.address), amount);
     });
 
-    it("enforces the daily limit across UTC boundaries until 24 hours have elapsed", async () => {
+    it('enforces the daily limit across UTC boundaries until 24 hours have elapsed', async () => {
       const { token, owner, user1, ethers } = await deployToken();
 
       await token.connect(owner).setWhaleLimitExempt(owner.address, false);
       // L-1 FIX: applyWhaleLimitExempt is called after the 48h delay below (shared with applyAntiWhale)
-      await token.connect(owner).setAntiWhale(
-        2_000_000n * 10n ** 18n,
-        4_000_000n * 10n ** 18n,
-        500_000n * 10n ** 18n,
-        0n,
-      );
-      await ethers.provider.send("evm_increaseTime", [H48]);
-      await ethers.provider.send("evm_mine", []);
+      await token
+        .connect(owner)
+        .setAntiWhale(2_000_000n * 10n ** 18n, 4_000_000n * 10n ** 18n, 500_000n * 10n ** 18n, 0n);
+      await ethers.provider.send('evm_increaseTime', [H48]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).applyWhaleLimitExempt(owner.address);
       await token.connect(owner).applyAntiWhale();
 
       const amount = 500_000n * 10n ** 18n;
-      const latest = await ethers.provider.getBlock("latest");
+      const latest = await ethers.provider.getBlock('latest');
       const now = BigInt(latest.timestamp);
-      const nextMidnight = ((now / 86400n) + 1n) * 86400n;
+      const nextMidnight = (now / 86400n + 1n) * 86400n;
 
-      await ethers.provider.send("evm_setNextBlockTimestamp", [Number(nextMidnight - 1n)]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_setNextBlockTimestamp', [Number(nextMidnight - 1n)]);
+      await ethers.provider.send('evm_mine', []);
       await token.connect(owner).transfer(user1.address, amount);
 
-      await ethers.provider.send("evm_setNextBlockTimestamp", [Number(nextMidnight + 1n)]);
-      await ethers.provider.send("evm_mine", []);
+      await ethers.provider.send('evm_setNextBlockTimestamp', [Number(nextMidnight + 1n)]);
+      await ethers.provider.send('evm_mine', []);
 
       await assert.rejects(
         () => token.connect(owner).transfer(user1.address, 1n),

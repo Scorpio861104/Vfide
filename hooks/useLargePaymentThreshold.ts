@@ -28,8 +28,8 @@
 
 import { useCallback, useState } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { type Address, parseUnits } from 'viem';
-import { ACTIVE_VAULT_ABI, CONTRACT_ADDRESSES, isConfiguredContractAddress, ZERO_ADDRESS } from '@/lib/contracts';
+import { type Address } from 'viem';
+import { ACTIVE_VAULT_ABI, ZERO_ADDRESS } from '@/lib/contracts';
 import { CardBoundVaultPaymentQueueManagerABI } from '@/lib/abis';
 
 /**
@@ -40,7 +40,7 @@ import { CardBoundVaultPaymentQueueManagerABI } from '@/lib/abis';
 export const FIXED_THRESHOLD_DELAY_SECONDS = 7 * 24 * 3600;
 
 export function useLargePaymentThreshold(vaultAddress: Address | undefined) {
-  const { address } = useAccount();
+  const { address: _address } = useAccount();
 
   const enabled = !!vaultAddress && vaultAddress !== ZERO_ADDRESS;
 

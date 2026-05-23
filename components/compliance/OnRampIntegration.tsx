@@ -18,8 +18,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, ExternalLink, X, Shield, ChevronRight } from 'lucide-react';
-import { OnRampDisclaimer, ThirdPartyServiceNotice } from './ProtocolDisclaimers';
+import { CreditCard, ExternalLink, X } from 'lucide-react';
+import { OnRampDisclaimer } from './ProtocolDisclaimers';
 
 // ── Provider Config ─────────────────────────────────────────────────────────
 

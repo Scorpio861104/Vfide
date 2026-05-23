@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle2, Clock, FileText, Lock, PlusCircle, Wallet } from 'lucide-react';
+import { CheckCircle2, FileText, Lock, PlusCircle } from 'lucide-react';
 import { useState } from 'react';
 
 import { Footer } from '@/components/layout/Footer';
