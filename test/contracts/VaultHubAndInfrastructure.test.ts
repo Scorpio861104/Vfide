@@ -51,11 +51,31 @@ describe('VaultHub', function () {
       vaultHub = await VaultHubFactory.deploy(token.address, owner.address, owner.address);
       await vaultHub.deployed();
     } catch (err: any) {
-      if (err?.message?.includes('initcode size') || err?.code === 'UNPREDICTABLE_GAS_LIMIT' || err?.message?.includes('create initcode')) {
+      const msg = err?.message ?? '';
+      const isInitcodeLimit =
+        msg.includes('initcode size') ||
+        msg.includes('create initcode') ||
+        err?.code === 'UNPREDICTABLE_GAS_LIMIT';
+      if (isInitcodeLimit) {
         // EIP-3860 enforcement — VaultHub initcode too large for this hardfork.
         // Tests will skip via capability guards below.
         vaultHub = null;
-        return { vaultHub: null, token, owner, user, guardian, attacker, capabilities: { canReadCore: false, canEnsureVault: false, canRegistry: false, canForceRecovery: false, canAdminRecoveryConfig: false, canEnsureVaultFunctional: false } };
+        return {
+          vaultHub: null,
+          token,
+          owner,
+          user,
+          guardian,
+          attacker,
+          capabilities: {
+            canReadCore: false,
+            canEnsureVault: false,
+            canRegistry: false,
+            canForceRecovery: false,
+            canAdminRecoveryConfig: false,
+            canEnsureVaultFunctional: false,
+          },
+        };
       }
       throw err;
     }
