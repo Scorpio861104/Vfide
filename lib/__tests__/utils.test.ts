@@ -361,7 +361,8 @@ describe('timeUntil', () => {
   })
 
   it('returns days for future date', () => {
-    const futureDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+    // Add 5-minute buffer to avoid floor rounding on slow CI runners
+    const futureDate = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 5 * 60 * 1000)
     expect(timeUntil(futureDate)).toBe('2 days')
   })
 
