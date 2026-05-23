@@ -12,12 +12,12 @@ contract CardBoundVaultAdminManager {
     /// @notice SENSITIVE_ADMIN_DELAY
     uint64 public constant SENSITIVE_ADMIN_DELAY = 7 days;
     /// @notice GUARDIAN_CHANGE_DELAY
-    uint64 public constant GUARDIAN_CHANGE_DELAY  = 1 days;
+    uint64 public constant GUARDIAN_CHANGE_DELAY = 1 days;
 
     struct PendingGuardianChange {
         address guardian;
-        bool    active;
-        uint64  effectiveAt;
+        bool active;
+        uint64 effectiveAt;
     }
 
     // R-8: Trustee role changes use the same 24-hour timelock as guardian changes.
@@ -26,58 +26,58 @@ contract CardBoundVaultAdminManager {
     // wait for her to mature, then promote her to trustee).
     struct PendingTrusteeChange {
         address guardian;
-        bool    trustee;
-        uint64  effectiveAt;
+        bool trustee;
+        uint64 effectiveAt;
     }
 
     struct PendingUint256x2 {
         uint256 value1;
         uint256 value2;
-        uint64  executeAfter;
+        uint64 executeAfter;
     }
 
     struct PendingUint256 {
         uint256 value;
-        uint64  executeAfter;
+        uint64 executeAfter;
     }
 
     struct PendingRescue {
         address addr;
         uint256 amount;
-        uint64  executeAfter;
+        uint64 executeAfter;
     }
 
     struct PendingERC20Rescue {
         address token;
         address to;
         uint256 amount;
-        uint64  executeAfter;
+        uint64 executeAfter;
     }
 
     struct PendingTokenApproval {
         address token;
         address spender;
         uint256 amount;
-        uint64  executeAfter;
+        uint64 executeAfter;
     }
 
     /// @notice vault
     address public immutable vault;
 
     /// @notice pendingGuardianChange
-    PendingGuardianChange  public pendingGuardianChange;
+    PendingGuardianChange public pendingGuardianChange;
     /// @notice pendingTrusteeChange
-    PendingTrusteeChange   public pendingTrusteeChange;
+    PendingTrusteeChange public pendingTrusteeChange;
     /// @notice pendingSpendLimitChange
-    PendingUint256x2       public pendingSpendLimitChange;
+    PendingUint256x2 public pendingSpendLimitChange;
     /// @notice pendingLargeTransferThresholdChange
-    PendingUint256         public pendingLargeTransferThresholdChange;
+    PendingUint256 public pendingLargeTransferThresholdChange;
     /// @notice pendingNativeRescue
-    PendingRescue          public pendingNativeRescue;
+    PendingRescue public pendingNativeRescue;
     /// @notice pendingERC20Rescue
-    PendingERC20Rescue     public pendingERC20Rescue;
+    PendingERC20Rescue public pendingERC20Rescue;
     /// @notice pendingTokenApproval
-    PendingTokenApproval   public pendingTokenApproval;
+    PendingTokenApproval public pendingTokenApproval;
 
     /// @notice AM_OnlyVault
     error AM_OnlyVault();
@@ -107,9 +107,7 @@ contract CardBoundVaultAdminManager {
     /// @param active active
     function proposeGuardianChange(address guardian, bool active) external onlyVault {
         if (pendingGuardianChange.effectiveAt != 0) revert AM_PendingExists();
-        pendingGuardianChange = PendingGuardianChange(
-            guardian, active, uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY
-        );
+        pendingGuardianChange = PendingGuardianChange(guardian, active, uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY);
     }
 
     /// @notice applyGuardianChange
@@ -143,9 +141,7 @@ contract CardBoundVaultAdminManager {
     /// @param trustee trustee
     function proposeTrusteeChange(address guardian, bool trustee) external onlyVault {
         if (pendingTrusteeChange.effectiveAt != 0) revert AM_PendingExists();
-        pendingTrusteeChange = PendingTrusteeChange(
-            guardian, trustee, uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY
-        );
+        pendingTrusteeChange = PendingTrusteeChange(guardian, trustee, uint64(block.timestamp) + GUARDIAN_CHANGE_DELAY);
     }
 
     /// @notice applyTrusteeChange
@@ -174,9 +170,7 @@ contract CardBoundVaultAdminManager {
     /// @param dailyTransferLimit dailyTransferLimit
     function proposeSpendLimits(uint256 maxPerTransfer, uint256 dailyTransferLimit) external onlyVault {
         if (pendingSpendLimitChange.executeAfter != 0) revert AM_PendingExists();
-        pendingSpendLimitChange = PendingUint256x2(
-            maxPerTransfer, dailyTransferLimit, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingSpendLimitChange = PendingUint256x2(maxPerTransfer, dailyTransferLimit, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applySpendLimits
@@ -200,9 +194,7 @@ contract CardBoundVaultAdminManager {
     /// @param threshold threshold
     function proposeLargeTransferThreshold(uint256 threshold) external onlyVault {
         if (pendingLargeTransferThresholdChange.executeAfter != 0) revert AM_PendingExists();
-        pendingLargeTransferThresholdChange = PendingUint256(
-            threshold, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingLargeTransferThresholdChange = PendingUint256(threshold, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applyLargeTransferThreshold
@@ -288,9 +280,7 @@ contract CardBoundVaultAdminManager {
     /// @param amount amount
     function proposeTokenApproval(address token, address spender, uint256 amount) external onlyVault {
         if (pendingTokenApproval.executeAfter != 0) revert AM_PendingExists();
-        pendingTokenApproval = PendingTokenApproval(
-            token, spender, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY
-        );
+        pendingTokenApproval = PendingTokenApproval(token, spender, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
     }
 
     /// @notice applyTokenApproval

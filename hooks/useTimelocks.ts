@@ -30,7 +30,7 @@
  * applied or cancelled. We disclose this in the consuming component.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useReadContract, useWatchContractEvent } from 'wagmi';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import { useUserVault } from './useVaultHooks';

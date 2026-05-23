@@ -36,7 +36,6 @@ contract MockSeerForEscrow {
     /// @notice reward
     /// @param subject subject
     /// @param delta delta
-    /// @param _string _string
     function reward(address subject, uint16 delta, string calldata) external {
         rewarded[subject] += delta;
     }
@@ -44,7 +43,6 @@ contract MockSeerForEscrow {
     /// @notice punish
     /// @param subject subject
     /// @param delta delta
-    /// @param _string _string
     function punish(address subject, uint16 delta, string calldata) external {
         punished[subject] += delta;
     }

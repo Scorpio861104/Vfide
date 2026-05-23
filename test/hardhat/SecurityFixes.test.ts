@@ -9,9 +9,9 @@
  *  - M-18 (Seer): Circular delta guard
  *  - L-08 (VFIDEAccessControl): Atomic admin transfer
  */
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { network } from "hardhat";
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { network } from 'hardhat';
 
 let connectionPromise: Promise<any> | null = null;
 
@@ -27,23 +27,23 @@ async function getConnection() {
 // ──────────────────────────────────────────────────────────────────────────────
 // M-11: VaultHub + Non-custodial recovery guard
 // ──────────────────────────────────────────────────────────────────────────────
-describe("VaultHub (M-11: non-custodial recovery guard)", { concurrency: 1 }, () => {
+describe('VaultHub (M-11: non-custodial recovery guard)', { concurrency: 1 }, () => {
   async function vaultHubRecoveryFixture() {
     const { ethers } = await getConnection();
     const [, dao, , councilMember, vaultOwner, newOwner] = await ethers.getSigners();
 
-    const TokenStub = await ethers.getContractFactory("TokenStub");
+    const TokenStub = await ethers.getContractFactory('TokenStub');
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory("VaultHub");
+    const VaultHub = await ethers.getContractFactory('VaultHub');
     const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
     await hub.waitForDeployment();
 
     await (await hub.connect(vaultOwner).ensureVault(vaultOwner.address)).wait();
     const vaultAddr = await hub.vaultOf(vaultOwner.address);
 
-    const CouncilStub = await ethers.getContractFactory("CouncilStub");
+    const CouncilStub = await ethers.getContractFactory('CouncilStub');
     const council = await CouncilStub.deploy();
     await council.waitForDeployment();
     await council.addCouncilMember(councilMember.address);
@@ -56,7 +56,7 @@ describe("VaultHub (M-11: non-custodial recovery guard)", { concurrency: 1 }, ()
     return vaultHubRecoveryFixture();
   }
 
-  it("keeps DAO/council force recovery paths absent (non-custody guarantee)", async () => {
+  it('keeps DAO/council force recovery paths absent (non-custody guarantee)', async () => {
     const { hub, vaultAddr } = await deployVaultHubRecoveryHarness();
 
     // v19.13 cleanup: the force-recovery selectors were removed entirely
@@ -68,35 +68,35 @@ describe("VaultHub (M-11: non-custodial recovery guard)", { concurrency: 1 }, ()
     // vault since the only writers via the removed force-recovery
     // selectors are gone).
     const forbiddenSelectors = [
-      "approveForceRecovery",
-      "initiateForceRecovery",
-      "finalizeForceRecovery",
-      "requestDAORecovery",
-      "finalizeDAORecovery",
-      "cancelDAORecovery",
+      'approveForceRecovery',
+      'initiateForceRecovery',
+      'finalizeForceRecovery',
+      'requestDAORecovery',
+      'finalizeDAORecovery',
+      'cancelDAORecovery',
     ];
     for (const name of forbiddenSelectors) {
       const fragment = hub.interface.fragments.find(
-        (f: any) => f.type === "function" && f.name === name,
+        (f: any) => f.type === 'function' && f.name === name
       );
       assert.equal(
         fragment,
         undefined,
-        `Non-custody violation: VaultHub ABI exposes ${name}; it must remain absent`,
+        `Non-custody violation: VaultHub ABI exposes ${name}; it must remain absent`
       );
     }
     assert.equal(await hub.recoveryApprovalCount(vaultAddr), 0n);
   });
 
-  it("requires multi-approver quorum and delay for recovery rotation", async () => {
+  it('requires multi-approver quorum and delay for recovery rotation', async () => {
     const { ethers } = await getConnection();
     const [owner, dao, recovery1, recovery2, vaultOwner, newOwner] = await ethers.getSigners();
 
-    const TokenStub = await ethers.getContractFactory("TokenStub");
+    const TokenStub = await ethers.getContractFactory('TokenStub');
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory("VaultHub");
+    const VaultHub = await ethers.getContractFactory('VaultHub');
     const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
     await hub.waitForDeployment();
 
@@ -104,24 +104,30 @@ describe("VaultHub (M-11: non-custodial recovery guard)", { concurrency: 1 }, ()
     const vaultAddr = await hub.vaultOf(vaultOwner.address);
 
     await (await hub.connect(owner).setRecoveryApprover(recovery1.address, true)).wait();
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
     await (await hub.connect(owner).applyRecoveryApprover()).wait();
 
     await (await hub.connect(owner).setRecoveryApprover(recovery2.address, true)).wait();
-    await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [48 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
     await (await hub.connect(owner).applyRecoveryApprover()).wait();
 
-    await (await hub.connect(recovery1).executeRecoveryRotation(vaultAddr, newOwner.address)).wait();
+    await (
+      await hub.connect(recovery1).executeRecoveryRotation(vaultAddr, newOwner.address)
+    ).wait();
     assert.equal(await hub.ownerOfVault(vaultAddr), vaultOwner.address);
 
-    await (await hub.connect(recovery2).executeRecoveryRotation(vaultAddr, newOwner.address)).wait();
+    await (
+      await hub.connect(recovery2).executeRecoveryRotation(vaultAddr, newOwner.address)
+    ).wait();
     assert.equal(await hub.ownerOfVault(vaultAddr), vaultOwner.address);
 
-    await ethers.provider.send("evm_increaseTime", [72 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
-    await (await hub.connect(recovery1).executeRecoveryRotation(vaultAddr, newOwner.address)).wait();
+    await ethers.provider.send('evm_increaseTime', [72 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
+    await (
+      await hub.connect(recovery1).executeRecoveryRotation(vaultAddr, newOwner.address)
+    ).wait();
 
     assert.equal(await hub.ownerOfVault(vaultAddr), newOwner.address);
     assert.equal(await hub.vaultOf(newOwner.address), vaultAddr);
@@ -132,23 +138,26 @@ describe("VaultHub (M-11: non-custodial recovery guard)", { concurrency: 1 }, ()
 // ──────────────────────────────────────────────────────────────────────────────
 // H-03: DevReserveVestingVault + DAO Pause Claims
 // ──────────────────────────────────────────────────────────────────────────────
-describe("DevReserveVestingVault (H-03: DAO pause claims)", { concurrency: 1 }, () => {
+describe('DevReserveVestingVault (H-03: DAO pause claims)', { concurrency: 1 }, () => {
   async function devReserveFixture() {
     const { ethers } = await getConnection();
     const [, bene, dao] = await ethers.getSigners();
 
-    const TokenStub = await ethers.getContractFactory("TokenStub");
+    const TokenStub = await ethers.getContractFactory('TokenStub');
     const token = await TokenStub.deploy();
     const vaultHub = await TokenStub.deploy();
     await token.waitForDeployment();
     await vaultHub.waitForDeployment();
 
     const EXPECTED_ALLOC = 50_000_000n * 10n ** 18n;
-    const DRVV = await ethers.getContractFactory("DevReserveVestingVault");
+    const DRVV = await ethers.getContractFactory('DevReserveVestingVault');
     const vault = await DRVV.deploy(
-      await token.getAddress(), bene.address, await vaultHub.getAddress(),
+      await token.getAddress(),
+      bene.address,
+      await vaultHub.getAddress(),
       ethers.ZeroAddress,
-      EXPECTED_ALLOC, dao.address
+      EXPECTED_ALLOC,
+      dao.address
     );
     await vault.waitForDeployment();
 
@@ -159,7 +168,7 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", { concurrency: 1 }, 
     return devReserveFixture();
   }
 
-  it("DAO can pause claims" , async () => {
+  it('DAO can pause claims', async () => {
     const { dao, vault } = await deployDevReserveHarness();
 
     // DAO pauses claims
@@ -167,7 +176,7 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", { concurrency: 1 }, 
     assert.equal(await vault.claimsPaused(), true);
   });
 
-  it("DAO can call emergencyFreeze", async () => {
+  it('DAO can call emergencyFreeze', async () => {
     const { dao, vault } = await deployDevReserveHarness();
 
     // DAO calls emergencyFreeze
@@ -179,22 +188,24 @@ describe("DevReserveVestingVault (H-03: DAO pause claims)", { concurrency: 1 }, 
 // ──────────────────────────────────────────────────────────────────────────────
 // H-05: VaultInfrastructure + Execute Whitelist
 // ──────────────────────────────────────────────────────────────────────────────
-describe("UserVaultLegacy (H-05: execute whitelist)", { concurrency: 1 }, () => {
+describe('UserVaultLegacy (H-05: execute whitelist)', { concurrency: 1 }, () => {
   async function userVaultLegacyFixture() {
     const { ethers } = await getConnection();
     const [hubAddr, owner] = await ethers.getSigners();
 
-    const TokenStub = await ethers.getContractFactory("TokenStub");
+    const TokenStub = await ethers.getContractFactory('TokenStub');
     const token = await TokenStub.deploy();
     await token.waitForDeployment();
 
-    const Placeholder = await ethers.getContractFactory("Placeholder");
+    const Placeholder = await ethers.getContractFactory('Placeholder');
     const hubContract = await Placeholder.deploy();
     await hubContract.waitForDeployment();
 
-    const Vault = await ethers.getContractFactory("UserVaultLegacy");
+    const Vault = await ethers.getContractFactory('UserVaultLegacy');
     const vault = await Vault.deploy(
-      await hubContract.getAddress(), await token.getAddress(), owner.address,
+      await hubContract.getAddress(),
+      await token.getAddress(),
+      owner.address,
       ethers.ZeroAddress
     );
     await vault.waitForDeployment();
@@ -206,47 +217,48 @@ describe("UserVaultLegacy (H-05: execute whitelist)", { concurrency: 1 }, () => 
     return userVaultLegacyFixture();
   }
 
-  it("blocks execute to non-whitelisted targets by default", async () => {
+  it('blocks execute to non-whitelisted targets by default', async () => {
     const { hubAddr, owner, vault } = await deployUserVaultLegacyHarness();
 
     assert.equal(await vault.executeWhitelistEnforced(), true);
 
-    await assert.rejects(
-      async () => {
-        await vault.connect(owner).execute(hubAddr.address, 0, "0x");
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await vault.connect(owner).execute(hubAddr.address, 0, '0x');
+    }, /revert/);
   });
 
-  it("enforces execute whitelist when enabled", async () => {
+  it('enforces execute whitelist when enabled', async () => {
     const { hubAddr, owner, vault } = await deployUserVaultLegacyHarness();
 
     // Owner adds target to whitelist
     await vault.connect(owner).setAllowedTarget(hubAddr.address, true);
     assert.equal(await vault.allowedExecuteTarget(hubAddr.address), true);
 
-    await vault.connect(owner).execute(hubAddr.address, 0, "0x");
+    await vault.connect(owner).execute(hubAddr.address, 0, '0x');
   });
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
 // M-25: VFIDESecurity + PanicGuard Vault Registration Check
 // ──────────────────────────────────────────────────────────────────────────────
-describe("PanicGuard (M-25: vault registration check)", { concurrency: 1 }, () => {
+describe('PanicGuard (M-25: vault registration check)', { concurrency: 1 }, () => {
   async function panicGuardFixture() {
     const { ethers } = await getConnection();
     const [dao, user] = await ethers.getSigners();
 
-    const VaultHubStub = await ethers.getContractFactory("VaultHubStub");
+    const VaultHubStub = await ethers.getContractFactory('VaultHubStub');
     const hubStub = await VaultHubStub.deploy();
     await hubStub.waitForDeployment();
 
-    const PanicGuard = await ethers.getContractFactory("PanicGuard");
-    const panicGuard = await PanicGuard.deploy(dao.address, ethers.ZeroAddress, await hubStub.getAddress());
+    const PanicGuard = await ethers.getContractFactory('PanicGuard');
+    const panicGuard = await PanicGuard.deploy(
+      dao.address,
+      ethers.ZeroAddress,
+      await hubStub.getAddress()
+    );
     await panicGuard.waitForDeployment();
 
-    const Placeholder = await ethers.getContractFactory("Placeholder");
+    const Placeholder = await ethers.getContractFactory('Placeholder');
     const fakeVault = await Placeholder.deploy();
     await fakeVault.waitForDeployment();
 
@@ -259,41 +271,42 @@ describe("PanicGuard (M-25: vault registration check)", { concurrency: 1 }, () =
     return panicGuardFixture();
   }
 
-  it("selfPanic reverts if vault not registered", async () => {
+  it('selfPanic reverts if vault not registered', async () => {
     const { user, panicGuard } = await deployPanicGuardHarness();
 
     // selfPanic must revert — vault not registered
-    await assert.rejects(
-      async () => {
-        await panicGuard.connect(user).selfPanic(1 * 24 * 60 * 60);
-      },
-      /revert/
-    );
+    await assert.rejects(async () => {
+      await panicGuard.connect(user).selfPanic(1 * 24 * 60 * 60);
+    }, /revert/);
   });
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
 // M-18: Seer + Circular Delta Guard
 // ──────────────────────────────────────────────────────────────────────────────
-describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
+describe('Seer (M-18: circular delta guard)', { concurrency: 1 }, () => {
   async function seerFixture() {
     const { ethers } = await getConnection();
     const [dao, operator, user, counterparty, sanctum, burn, eco] = await ethers.getSigners();
 
-    const Seer = await ethers.getContractFactory("Seer");
+    const Seer = await ethers.getContractFactory('Seer');
     const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
     await seer.waitForDeployment();
 
-    const SeerAutonomous = await ethers.getContractFactory("SeerAutonomous");
-    const autonomous = await SeerAutonomous.deploy(dao.address, await seer.getAddress(), ethers.ZeroAddress);
+    const SeerAutonomous = await ethers.getContractFactory('SeerAutonomous');
+    const autonomous = await SeerAutonomous.deploy(
+      dao.address,
+      await seer.getAddress(),
+      ethers.ZeroAddress
+    );
     await autonomous.waitForDeployment();
 
-    const Router = await ethers.getContractFactory("ProofScoreBurnRouter");
+    const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
     const router = await Router.deploy(
       await seer.getAddress(),
       sanctum.address,
       burn.address,
-      eco.address,
+      eco.address
     );
     await router.waitForDeployment();
 
@@ -304,40 +317,40 @@ describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
     return seerFixture();
   }
 
-  it("setScore works and caches score", async () => {
+  it('setScore works and caches score', async () => {
     const { dao, user, seer } = await deploySeerHarness();
 
     // DAO can only change by maxDAOScoreChange (500) per call.
     const baseline = await seer.getScore(user.address);
     const target = Number(baseline) + 500;
-    await seer.connect(dao).setScore(user.address, target, "initial");
+    await seer.connect(dao).setScore(user.address, target, 'initial');
     assert.equal(await seer.getScore(user.address), BigInt(target));
   });
 
-  it("operator can reward user", async () => {
+  it('operator can reward user', async () => {
     const { ethers, dao, operator, user, seer } = await deploySeerHarness();
 
     // Set operator
     await seer.connect(dao).setOperator(operator.address, true);
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60 + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [24 * 60 * 60 + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     const baseline = await seer.getScore(user.address);
-    await seer.connect(dao).setScore(user.address, Number(baseline), "seed");
+    await seer.connect(dao).setScore(user.address, Number(baseline), 'seed');
 
     // Operator rewards
-    await seer.connect(operator).reward(user.address, 100n, "good");
+    await seer.connect(operator).reward(user.address, 100n, 'good');
     assert.equal(await seer.getScore(user.address), baseline + 100n);
   });
 
-  it("pushes score snapshots to BurnRouter on DAO score updates", async () => {
+  it('pushes score snapshots to BurnRouter on DAO score updates', async () => {
     const { dao, user, seer, router } = await deploySeerHarness();
 
     await seer.connect(dao).setBurnRouter(await router.getAddress());
 
     const baseline = await seer.getScore(user.address);
     const target = Number(baseline) + 500;
-    await seer.connect(dao).setScore(user.address, target, "sync-check");
+    await seer.connect(dao).setScore(user.address, target, 'sync-check');
 
     const updatedAt = await router.lastScoreUpdate(user.address);
     const snapshot = await router.scoreHistory(user.address, 0);
@@ -345,7 +358,7 @@ describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
     assert.equal(snapshot[0], BigInt(target));
   });
 
-  it("does not punish again when auto restriction is triggered by low score", async () => {
+  it('does not punish again when auto restriction is triggered by low score', async () => {
     const { ethers, dao, operator, user, seer, autonomous } = await deploySeerHarness();
 
     await autonomous.connect(dao).setOperator(operator.address, true);
@@ -355,9 +368,9 @@ describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
     let current = await seer.getScore(user.address);
     while (current > 2900n) {
       const next = current - 500n > 2900n ? current - 500n : 2900n;
-      await seer.connect(dao).setScore(user.address, Number(next), "seed-low");
-      await ethers.provider.send("evm_increaseTime", [4 * 60 * 60 + 1]);
-      await ethers.provider.send("evm_mine", []);
+      await seer.connect(dao).setScore(user.address, Number(next), 'seed-low');
+      await ethers.provider.send('evm_increaseTime', [4 * 60 * 60 + 1]);
+      await ethers.provider.send('evm_mine', []);
       current = await seer.getScore(user.address);
     }
     const scoreBefore = await seer.getScore(user.address);
@@ -383,12 +396,12 @@ describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
     }
   });
 
-  it("does not reduce Seer score when pattern escalation reaches restricted", async () => {
+  it('does not reduce Seer score when pattern escalation reaches restricted', async () => {
     const { dao, operator, user, counterparty, seer, autonomous } = await deploySeerHarness();
 
     await autonomous.connect(dao).setOperator(operator.address, true);
     // Keep score above restrict threshold but below auto-lift threshold so pattern restriction persists.
-    await seer.connect(dao).setScore(user.address, 4500, "stable");
+    await seer.connect(dao).setScore(user.address, 4500, 'stable');
 
     const scoreBefore = await seer.getScore(user.address);
 
@@ -405,15 +418,17 @@ describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
     assert.equal(scoreAfter, scoreBefore);
   });
 
-  it("emits a cache refresh event when subject refreshes its cached score", async () => {
+  it('emits a cache refresh event when subject refreshes its cached score', async () => {
     const { dao, user, seer } = await deploySeerHarness();
 
     const baseline = await seer.getScore(user.address);
-    await seer.connect(dao).setScore(user.address, Number(baseline) + 500, "seed");
+    await seer.connect(dao).setScore(user.address, Number(baseline) + 500, 'seed');
 
     const tx = await seer.connect(user).refreshScoreCache(user.address);
     const receipt = await tx.wait();
-    const refreshEvent = receipt!.logs.find((log: any) => log.fragment?.name === "ScoreCacheRefreshed");
+    const refreshEvent = receipt!.logs.find(
+      (log: any) => log.fragment?.name === 'ScoreCacheRefreshed'
+    );
 
     assert.ok(refreshEvent);
     assert.equal(refreshEvent.args.subject, user.address);
@@ -426,12 +441,12 @@ describe("Seer (M-18: circular delta guard)", { concurrency: 1 }, () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // L-08: VFIDEAccessControl + Atomic Admin Transfer
 // ──────────────────────────────────────────────────────────────────────────────
-describe("VFIDEAccessControl (L-08: atomic admin transfer)", { concurrency: 1 }, () => {
+describe('VFIDEAccessControl (L-08: atomic admin transfer)', { concurrency: 1 }, () => {
   async function accessControlFixture() {
     const { ethers } = await getConnection();
     const [initialAdmin, newAdmin, other] = await ethers.getSigners();
 
-    const AccessControl = await ethers.getContractFactory("VFIDEAccessControl");
+    const AccessControl = await ethers.getContractFactory('VFIDEAccessControl');
     const ac = await AccessControl.deploy(initialAdmin.address);
     await ac.waitForDeployment();
 
@@ -442,7 +457,7 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", { concurrency: 1 },
     return accessControlFixture();
   }
 
-  it("queues and applies DEFAULT_ADMIN_ROLE transfer after delay", async () => {
+  it('queues and applies DEFAULT_ADMIN_ROLE transfer after delay', async () => {
     const { initialAdmin, newAdmin, ac } = await deployAccessControlHarness();
     const { ethers } = await getConnection();
 
@@ -460,8 +475,8 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", { concurrency: 1 },
     });
 
     const delay = await ac.ADMIN_TRANSFER_DELAY();
-    await ethers.provider.send("evm_increaseTime", [Number(delay) + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [Number(delay) + 1]);
+    await ethers.provider.send('evm_mine', []);
 
     await ac.connect(initialAdmin).applyAdminRoleTransfer();
 
@@ -470,15 +485,15 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", { concurrency: 1 },
     assert.equal(await ac.hasRole(DEFAULT_ADMIN_ROLE, newAdmin.address), true);
   });
 
-  it("new admin can grant roles immediately after transfer", async () => {
+  it('new admin can grant roles immediately after transfer', async () => {
     const { initialAdmin, newAdmin, other, ac } = await deployAccessControlHarness();
     const { ethers } = await getConnection();
 
     // Queue and apply transfer
     await ac.connect(initialAdmin).transferAdminRole(newAdmin.address);
     const delay = await ac.ADMIN_TRANSFER_DELAY();
-    await ethers.provider.send("evm_increaseTime", [Number(delay) + 1]);
-    await ethers.provider.send("evm_mine", []);
+    await ethers.provider.send('evm_increaseTime', [Number(delay) + 1]);
+    await ethers.provider.send('evm_mine', []);
     await ac.connect(initialAdmin).applyAdminRoleTransfer();
 
     // New admin grants role immediately
@@ -487,4 +502,3 @@ describe("VFIDEAccessControl (L-08: atomic admin transfer)", { concurrency: 1 },
     assert.equal(await ac.hasRole(TREASURY_MANAGER_ROLE, other.address), true);
   });
 });
-

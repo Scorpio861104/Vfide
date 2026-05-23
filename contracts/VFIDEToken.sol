@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { LedgerLogFailed, IVaultHub, IProofLedger, IProofScoreBurnRouterToken, IProofScoreBurnRouter, IEmergencyBreaker, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
+import {LedgerLogFailed, IVaultHub, IProofLedger, IProofScoreBurnRouterToken, IProofScoreBurnRouter, IEmergencyBreaker, Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
 
 /// @dev Fraud registry interface for community-driven fraud flagging
 /// @notice IFraudRegistry
@@ -50,13 +50,13 @@ interface ISeerAutonomousToken {
  * - Total supply: 200,000,000 VFIDE (18 decimals)
  * - Dev reserve: 50,000,000 → DevReserveVestingVault (locked)
  * - Treasury/Operations: 150,000,000 → Treasury (liquidity, DEX, CEX, operations, ecosystem)
- * 
+ *
  * VAULT-ONLY (ON BY DEFAULT):
  * - Users MUST use vaults for transfers (enables recovery/ProofScore)
  * - Exchanges/contracts can be whitelisted by owner
  * - System contracts (sinks) auto-exempt
  * - Mints/burns always allowed
- * 
+ *
  * FEATURES:
  * - ProofScore-aware fees/burns via BurnRouter
  * - FraudRegistry community-driven 30-day escrow (not a freeze)
@@ -74,11 +74,11 @@ interface ISeerAutonomousToken {
 contract VFIDEToken is Ownable, ReentrancyGuard {
     /// Constants
     /// @notice name
-    string public constant name = "VFIDE Token";  // WHITEPAPER: "VFIDE Token"
+    string public constant name = "VFIDE Token"; // WHITEPAPER: "VFIDE Token"
     /// @notice symbol
     string public constant symbol = "VFIDE";
     /// @notice decimals
-    uint8  public constant decimals = 18;
+    uint8 public constant decimals = 18;
 
     /// @notice MAX_SUPPLY
     uint256 public constant MAX_SUPPLY = 200_000_000e18;
@@ -92,14 +92,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     // ─────────────────────────── Anti-Whale Protection
     // All limits configurable by owner, can be disabled by setting to 0
     /// @notice maxTransferAmount
-    uint256 public maxTransferAmount = 2_000_000e18;     // 2M VFIDE max per transfer (1% of supply)
+    uint256 public maxTransferAmount = 2_000_000e18; // 2M VFIDE max per transfer (1% of supply)
     /// @notice maxWalletBalance
-    uint256 public maxWalletBalance = 4_000_000e18;      // 4M VFIDE max per wallet (2% of supply)
+    uint256 public maxWalletBalance = 4_000_000e18; // 4M VFIDE max per wallet (2% of supply)
     /// @notice dailyTransferLimit
-    uint256 public dailyTransferLimit = 5_000_000e18;    // 5M VFIDE max per 24h (2.5% of supply)
+    uint256 public dailyTransferLimit = 5_000_000e18; // 5M VFIDE max per 24h (2.5% of supply)
     /// @notice transferCooldown
-    uint256 public transferCooldown = 0;                  // Seconds between transfers (0 = disabled)
-    
+    uint256 public transferCooldown = 0; // Seconds between transfers (0 = disabled)
+
     // Tracking for daily limits and cooldowns
     /// @notice dailyTransferred
     mapping(address => uint256) public dailyTransferred;
@@ -107,7 +107,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     mapping(address => uint256) public dailyResetTime;
     /// @notice lastTransferTime
     mapping(address => uint256) public lastTransferTime;
-    
+
     // Exemptions from whale limits (exchanges, contracts, etc.)
     /// @notice whaleLimitExempt
     mapping(address => bool) public whaleLimitExempt;
@@ -121,8 +121,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice pendingCooldown
     uint256 public pendingCooldown;
     /// @notice pendingAntiWhaleAt
-    uint64  public pendingAntiWhaleAt;
-    
+    uint64 public pendingAntiWhaleAt;
+
     /// @notice AntiWhaleSet
     /// @param maxTransfer maxTransfer
     /// @param maxWallet maxWallet
@@ -152,15 +152,15 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     /// Modules & config
     /// @notice vaultHub
-    IVaultHub public vaultHub;                    // vault registry (required)
+    IVaultHub public vaultHub; // vault registry (required)
     /// @notice ledger
-    IProofLedger public ledger;                   // event logging (optional)
+    IProofLedger public ledger; // event logging (optional)
     /// @notice burnRouter
     IProofScoreBurnRouterToken public burnRouter; // fee calculator (optional)
     /// @notice emergencyBreaker
-    IEmergencyBreaker public emergencyBreaker;    // global emergency halt gate
+    IEmergencyBreaker public emergencyBreaker; // global emergency halt gate
     /// @notice seerAutonomous
-    ISeerAutonomousToken public seerAutonomous;   // optional proactive transfer enforcement
+    ISeerAutonomousToken public seerAutonomous; // optional proactive transfer enforcement
 
     /// Fraud registry — community-driven fraud flagging
     /// Flagged addresses (3+ complaints) have transfers escrowed for 30 days
@@ -171,7 +171,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice pendingFraudRegistry
     address public pendingFraudRegistry;
     /// @notice pendingFraudRegistryAt
-    uint64  public pendingFraudRegistryAt;
+    uint64 public pendingFraudRegistryAt;
     /// @notice FraudRegistryScheduled
     /// @param registry registry
     /// @param effectiveAt effectiveAt
@@ -182,29 +182,29 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
     /// Policy settings
     /// @notice vaultOnly
-    bool public vaultOnly = true;                 // VAULT-ONLY ON BY DEFAULT (user security)
+    bool public vaultOnly = true; // VAULT-ONLY ON BY DEFAULT (user security)
     /// @notice policyLocked
-    bool public policyLocked = false;             // once locked, cannot disable vault-only
+    bool public policyLocked = false; // once locked, cannot disable vault-only
     /// @notice MAX_CIRCUIT_BREAKER_DURATION
     uint256 public constant MAX_CIRCUIT_BREAKER_DURATION = 7 days; // maximum allowed duration
     /// @notice feeBypass
-    bool public feeBypass = false;                // bypass BurnRouter fee calculation only
+    bool public feeBypass = false; // bypass BurnRouter fee calculation only
     /// @notice feeBypassExpiry
     uint256 public feeBypassExpiry = 0;
     /// @notice feeBypassActivatedAt
-    uint64 public feeBypassActivatedAt = 0;       // L-3 FIX: cooldown anchor for fee bypass
+    uint64 public feeBypassActivatedAt = 0; // L-3 FIX: cooldown anchor for fee bypass
     /// @notice FEE_BYPASS_COOLDOWN
     uint64 public constant FEE_BYPASS_COOLDOWN = 7 days;
-    
+
     /// Exemptions
     /// @notice systemExempt
     mapping(address => bool) public systemExempt; // bypass all checks (sinks, etc)
     /// @notice whitelisted
-    mapping(address => bool) public whitelisted;  // bypass vault-only (exchanges)
+    mapping(address => bool) public whitelisted; // bypass vault-only (exchanges)
 
     // Sinks (fallbacks if router is unset or returns zero sinks)
     /// @notice treasurySink
-    address public treasurySink;  // sanctuary/treasury receiver for charity share
+    address public treasurySink; // sanctuary/treasury receiver for charity share
     /// @notice sanctumSink
     address public sanctumSink; // Optional: Burn to Sanctum instead of 0x0
     // C-1 FIX: FeeDistributor wiring — eco fees route here; triggers receiveFee() notification
@@ -217,78 +217,77 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice pendingBurnRouter
     address public pendingBurnRouter;
     /// @notice pendingBurnRouterAt
-    uint64  public pendingBurnRouterAt;
+    uint64 public pendingBurnRouterAt;
     /// @notice pendingTreasurySink
     address public pendingTreasurySink;
     /// @notice pendingTreasurySinkAt
-    uint64  public pendingTreasurySinkAt;
+    uint64 public pendingTreasurySinkAt;
     /// @notice pendingSanctumSink
     address public pendingSanctumSink;
     /// @notice pendingSanctumSinkAt
-    uint64  public pendingSanctumSinkAt;
+    uint64 public pendingSanctumSinkAt;
     // C-1 FIX: Pending state for ecosystemDistributor timelock
     /// @notice pendingEcosystemDistributor
     address public pendingEcosystemDistributor;
     /// @notice pendingEcosystemDistributorAt
-    uint64  public pendingEcosystemDistributorAt;
+    uint64 public pendingEcosystemDistributorAt;
 
     /// @notice pendingVaultHub
     address public pendingVaultHub;
     /// @notice pendingVaultHubAt
-    uint64  public pendingVaultHubAt;
+    uint64 public pendingVaultHubAt;
 
     /// @notice pendingEmergencyBreaker
     address public pendingEmergencyBreaker;
     /// @notice pendingEmergencyBreakerAt
-    uint64  public pendingEmergencyBreakerAt;
+    uint64 public pendingEmergencyBreakerAt;
 
     /// F-05 FIX: Add timelock state for ledger changes (matches other module setters)
     /// @notice pendingLedger
     address public pendingLedger;
     /// @notice pendingLedgerAt
-    uint64  public pendingLedgerAt;
+    uint64 public pendingLedgerAt;
     // TL-308 FIX: Timelocked seerAutonomous setter (#308)
     /// @notice pendingSeerAutonomous
     address public pendingSeerAutonomous;
     /// @notice pendingSeerAutonomousAt
-    uint64  public pendingSeerAutonomousAt;
+    uint64 public pendingSeerAutonomousAt;
 
     /// @notice pendingExemptAddr
     address public pendingExemptAddr;
     /// @notice pendingExemptStatus
-    bool    public pendingExemptStatus;
+    bool public pendingExemptStatus;
     /// @notice pendingExemptAt
-    uint64  public pendingExemptAt;
+    uint64 public pendingExemptAt;
     /// @notice pendingWhitelistAddr
     address public pendingWhitelistAddr;
     /// @notice pendingWhitelistStatus
-    bool    public pendingWhitelistStatus;
+    bool public pendingWhitelistStatus;
     /// @notice pendingWhitelistAt
-    uint64  public pendingWhitelistAt;
+    uint64 public pendingWhitelistAt;
 
     /// H-2 FIX: Timelock for vault-only disablement (48-hour delay; re-enabling is always instant).
     /// @notice pendingVaultOnlyDisableAt
-    uint64  public pendingVaultOnlyDisableAt;
+    uint64 public pendingVaultOnlyDisableAt;
 
     // L-1 FIX: Per-address pending state for whale limit exemption timelock
     /// @notice pendingWhaleExemptStatus
-    mapping(address => bool)   public pendingWhaleExemptStatus;
+    mapping(address => bool) public pendingWhaleExemptStatus;
     /// @notice pendingWhaleExemptAt
     mapping(address => uint64) public pendingWhaleExemptAt;
 
     /// H-6 FIX: Timelock for fee bypass activation (48-hour delay; deactivation remains instant).
-        /// @notice WhaleLimitExemptProposed
-        /// @param addr addr
-        /// @param exempt exempt
-        /// @param effectiveAt effectiveAt
-        event WhaleLimitExemptProposed(address indexed addr, bool exempt, uint64 effectiveAt); // L-1 FIX
+    /// @notice WhaleLimitExemptProposed
+    /// @param addr addr
+    /// @param exempt exempt
+    /// @param effectiveAt effectiveAt
+    event WhaleLimitExemptProposed(address indexed addr, bool exempt, uint64 effectiveAt); // L-1 FIX
     /// @notice pendingFeeBypassActive
-    bool    public pendingFeeBypassActive;
+    bool public pendingFeeBypassActive;
     /// @notice pendingFeeBypassDuration
     uint256 public pendingFeeBypassDuration;
     /// @notice pendingFeeBypassAt
-    uint64  public pendingFeeBypassAt;
-    
+    uint64 public pendingFeeBypassAt;
 
     // EIP-2612 Permit
     // NOTE: These two fields cannot be `immutable` even though they are set in the constructor:
@@ -394,7 +393,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice FeeBypassSet
     /// @param active active
     /// @param expiry expiry
-    event FeeBypassSet(bool active, uint256 expiry);      // T-12 FIX: emit on bypass change
+    event FeeBypassSet(bool active, uint256 expiry); // T-12 FIX: emit on bypass change
     /// @notice FeeBypassProposed
     /// @param active active
     /// @param duration duration
@@ -452,8 +451,8 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     error VF_ZeroAddress();
     /// @notice VF_NoPending
     error VF_NoPending();
-        /// @notice VF_Timelock
-        error VF_Timelock();
+    /// @notice VF_Timelock
+    error VF_Timelock();
     /// @notice VF_TimelockActive
     error VF_TimelockActive();
     /// @notice VF_InvalidDuration
@@ -487,26 +486,27 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice constructor
     /// @param devReserveVestingVault devReserveVestingVault
     /// @param treasury treasury
-    /// @param _vaultHub _vaultHub
-    /// @param _ledger _ledger
-    /// @param _treasurySink _treasurySink
     constructor(
         address devReserveVestingVault, // MUST be deployed before token (receives 50M locked)
-        address treasury,               // Treasury/Owner address (receives 150M for operations/liquidity)
-        address _vaultHub,              // MAY be zero at deploy; can be set later
-        address _ledger,                // optional
-        address _treasurySink           // recommended: EcoTreasuryVault
+        address treasury, // Treasury/Owner address (receives 150M for operations/liquidity)
+        address _vaultHub, // MAY be zero at deploy; can be set later
+        address _ledger, // optional
+        address _treasurySink // recommended: EcoTreasuryVault
     ) {
         if (devReserveVestingVault == address(0)) revert VF_ZERO();
         if (treasury == address(0)) revert VF_ZERO();
 
         // Require dev vault is a contract to prevent misconfig
         uint256 size;
-        assembly { size := extcodesize(devReserveVestingVault) }
+        assembly {
+            size := extcodesize(devReserveVestingVault)
+        }
         if (size == 0) revert VF_NotContract();
 
         // Harden treasury custody: require a contract (multisig/DAO), not an EOA.
-        assembly { size := extcodesize(treasury) }
+        assembly {
+            size := extcodesize(treasury)
+        }
         if (size == 0) revert VF_NotContract();
 
         // Optional modules (can be set later)
@@ -530,23 +530,17 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // EIP-712 Domain Separator (cached + dynamic)
         _cachedChainId = block.chainid;
         _cachedDomainSeparator = keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(name)),
-                keccak256(bytes("1")),
-                block.chainid,
-                address(this)
-            )
+            abi.encode(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"), keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this))
         );
 
         // Mint full 200M supply at genesis and distribute
         totalSupply = MAX_SUPPLY;
-        
+
         // 50M to Dev Reserve Vesting Vault (locked)
         _balances[devReserveVestingVault] = DEV_RESERVE_SUPPLY;
         emit Transfer(address(0), devReserveVestingVault, DEV_RESERVE_SUPPLY);
         _logEv(devReserveVestingVault, "pmd", DEV_RESERVE_SUPPLY, "");
-        
+
         // 150M to Treasury (operations, liquidity, DEX seeding, CEX, ecosystem: 200M - 50M dev)
         uint256 treasuryAmount = MAX_SUPPLY - DEV_RESERVE_SUPPLY;
         _balances[treasury] = treasuryAmount;
@@ -559,12 +553,16 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice balanceOf
     /// @param account account
     /// @return _uint256 _uint256
-    function balanceOf(address account) external view returns (uint256) { return _balances[account]; }
+    function balanceOf(address account) external view returns (uint256) {
+        return _balances[account];
+    }
     /// @notice allowance
     /// @param owner_ owner_
     /// @param spender spender
     /// @return _uint256 _uint256
-    function allowance(address owner_, address spender) external view returns (uint256) { return _allowances[owner_][spender]; }
+    function allowance(address owner_, address spender) external view returns (uint256) {
+        return _allowances[owner_][spender];
+    }
 
     /// @notice approve
     /// @param spender spender
@@ -601,15 +599,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (block.chainid == _cachedChainId) {
             return _cachedDomainSeparator;
         }
-        return keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(name)),
-                keccak256(bytes("1")),
-                block.chainid,
-                address(this)
-            )
-        );
+        return
+            keccak256(
+                abi.encode(keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"), keccak256(bytes(name)), keccak256(bytes("1")), block.chainid, address(this))
+            );
     }
 
     // slither-disable-next-line shadowing-local  // 'owner' parameter mandated by EIP-2612 spec
@@ -665,7 +658,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (amount == 0) revert VF_ZERO();
         uint256 bal = _balances[msg.sender];
         if (bal < amount) revert VF_InsufficientBalance();
-        unchecked { _balances[msg.sender] = bal - amount; }
+        unchecked {
+            _balances[msg.sender] = bal - amount;
+        }
         totalSupply -= amount;
         emit Transfer(msg.sender, address(0), amount);
         _logEv(msg.sender, "burn", amount, "");
@@ -1070,8 +1065,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     /// @notice setCircuitBreaker
-    /// @param _bool _bool
-    /// @param _uint256 _uint256
     function setCircuitBreaker(bool, uint256) external view onlyOwner {
         // #311: Circuit-breaker transfer halts were removed from token policy.
         // Keep this ABI method as a no-op for backward compatibility with existing tooling.
@@ -1123,7 +1116,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         emit FeeBypassSet(true, feeBypassExpiry);
         _log("fb+");
     }
-    
+
     /// @notice isCircuitBreakerActive
     /// @return _bool _bool
     function isCircuitBreakerActive() public pure returns (bool) {
@@ -1159,12 +1152,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @param _dailyLimit Max tokens transferred per 24h (0 = disabled)
      * @param _cooldown Seconds between transfers (0 = disabled)
      */
-    function setAntiWhale(
-        uint256 _maxTransfer,
-        uint256 _maxWallet,
-        uint256 _dailyLimit,
-        uint256 _cooldown
-    ) external onlyOwner {
+    function setAntiWhale(uint256 _maxTransfer, uint256 _maxWallet, uint256 _dailyLimit, uint256 _cooldown) external onlyOwner {
         // Once policy is locked, whale limits must remain active (non-zero).
         // Allowing a full disable post-lock would silently remove the anti-whale
         // guarantee that was part of the published policy at lock time.
@@ -1217,7 +1205,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         delete pendingAntiWhaleAt;
         _log("awx");
     }
-    
+
     /**
      * @notice Exempt address from whale limits (for exchanges, liquidity pools, etc.)
      * @param addr addr
@@ -1270,7 +1258,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         _enforceSeerAction(scoringFrom, 0, amount, _resolveFeeScoringAddress(logicalTo));
 
-
         // Route EOA receipts into the recipient's vault without changing the fee/scoring context.
         if (vaultOnly && address(vaultHub) != address(0)) {
             if (!_isContract(logicalTo) && !systemExempt[logicalTo] && !whitelisted[logicalTo]) {
@@ -1288,11 +1275,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
 
         address fraudCheckAddr = scoringFrom;
-        bool escrowTransferRequired =
-            address(fraudRegistry) != address(0) &&
-            !systemExempt[from] &&
-            !systemExempt[logicalTo] &&
-            fraudRegistry.requiresEscrow(fraudCheckAddr);
+        bool escrowTransferRequired = address(fraudRegistry) != address(0) && !systemExempt[from] && !systemExempt[logicalTo] && fraudRegistry.requiresEscrow(fraudCheckAddr);
 
         // 2. Anti-whale checks (skip for exempt addresses like exchanges, mints, burns)
         // EE-1 GAS FIX: _checkWhaleProtection now returns the daily window state it read from
@@ -1300,8 +1283,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // and avoid re-reading the same slots (~2 100–4 200 gas saved per non-exempt transfer).
         uint256 _cachedWindowStart = 0;
         uint256 _cachedStoredUsed = 0;
-        bool    _dailyExempt = whaleLimitExempt[from] || whaleLimitExempt[custodyTo] ||
-                                systemExempt[from] || systemExempt[logicalTo];
+        bool _dailyExempt = whaleLimitExempt[from] || whaleLimitExempt[custodyTo] || systemExempt[from] || systemExempt[logicalTo];
         if (!_dailyExempt) {
             (_cachedWindowStart, _cachedStoredUsed) = _checkWhaleProtection(from, custodyTo, amount);
         }
@@ -1310,13 +1292,17 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (vaultOnly && address(vaultHub) != address(0)) {
             // 3. Vault-only enforcement
             // FROM must be: mint, system exempt, whitelisted, vault, or owns a vault
-            bool fromOk = (from == address(0) || systemExempt[from] || whitelisted[from] || 
-                          _isVault(from) || _hasVault(from));
-            
+            bool fromOk = (from == address(0) || systemExempt[from] || whitelisted[from] || _isVault(from) || _hasVault(from));
+
             // TO must be: burn, sink, system exempt, whitelisted, vault, or owns a vault
-            bool toOk = (logicalTo == address(0) || logicalTo == treasurySink || logicalTo == sanctumSink || 
-                        systemExempt[logicalTo] || whitelisted[logicalTo] || _isVault(custodyTo) || _hasVault(logicalTo));
-            
+            bool toOk = (logicalTo == address(0) ||
+                logicalTo == treasurySink ||
+                logicalTo == sanctumSink ||
+                systemExempt[logicalTo] ||
+                whitelisted[logicalTo] ||
+                _isVault(custodyTo) ||
+                _hasVault(logicalTo));
+
             if (!fromOk) revert Token_NotVault();
             if (!toOk) revert Token_NotVault();
         }
@@ -1332,17 +1318,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // Balance update: pull from sender
         uint256 bal = _balances[from];
         if (bal < amount) revert VF_InsufficientBalance();
-        unchecked { _balances[from] = bal - amount; }
+        unchecked {
+            _balances[from] = bal - amount;
+        }
 
         uint256 remaining = amount;
 
         // Dynamic fees via burn router (if present and not exempt and not bypassed)
-        if (
-            !escrowTransferRequired &&
-            address(burnRouter) != address(0) &&
-            !isFeeBypassed() &&
-            !(systemExempt[from] || systemExempt[logicalTo])
-        ) {
+        if (!escrowTransferRequired && address(burnRouter) != address(0) && !isFeeBypassed() && !(systemExempt[from] || systemExempt[logicalTo])) {
             try burnRouter.computeFeesAndReserve(scoringFrom, logicalTo, amount) returns (
                 uint256 _burnAmt,
                 uint256 _sanctumAmt,
@@ -1399,10 +1382,14 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 }
 
                 // Record volume for adaptive fee tracking (sustainability)
-                try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) { emit ExternalCallFailed("rv", reason); }
+                try IProofScoreBurnRouter(address(burnRouter)).recordVolume(amount) {} catch (bytes memory reason) {
+                    emit ExternalCallFailed("rv", reason);
+                }
                 // #353 FIX: Record burn amount for daily cap tracking
                 if (_burnAmt > 0) {
-                    try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch (bytes memory reason) { emit ExternalCallFailed("rb", reason); }
+                    try IProofScoreBurnRouter(address(burnRouter)).recordBurn(_burnAmt) {} catch (bytes memory reason) {
+                        emit ExternalCallFailed("rb", reason);
+                    }
                 }
             } catch (bytes memory reason) {
                 emit ExternalCallFailed("cfr", reason);
@@ -1443,9 +1430,9 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             emit Transfer(from, custodyTo, remaining);
         }
 
-    // F-31 FIX: Basic transfer invariant check for defense-in-depth monitoring.
-    // The receiver's net amount can never exceed the original transfer amount.
-    assert(remaining <= amount);
+        // F-31 FIX: Basic transfer invariant check for defense-in-depth monitoring.
+        // The receiver's net amount can never exceed the original transfer amount.
+        assert(remaining <= amount);
 
         _logEv(from, "transfer", amount, "");
     }
@@ -1515,21 +1502,25 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     }
 
     // ─────────────────────────── Helpers
-    
+
     /// @notice _isContract
     /// @param addr addr
     /// @return _bool _bool
     function _isContract(address addr) internal view returns (bool) {
         uint256 size;
-        assembly { size := extcodesize(addr) }
+        assembly {
+            size := extcodesize(addr)
+        }
         if (size > 0) return true;
 
         // Distinguish deployed contracts from EOAs/non-existent accounts.
         bytes32 codeHash;
-        assembly { codeHash := extcodehash(addr) }
+        assembly {
+            codeHash := extcodehash(addr)
+        }
         return codeHash != bytes32(0) && codeHash != EMPTY_CODE_HASH;
     }
-    
+
     /// @notice _isVault
     /// @param addr addr
     /// @return _bool _bool
@@ -1541,7 +1532,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             return false;
         }
     }
-    
+
     /// @notice _hasVault
     /// @param account account
     /// @return _bool _bool
@@ -1602,21 +1593,18 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @return expectedNet expectedNet
     function _tryExpectedNetAmount(address from, address to, uint256 amount) internal view returns (bool ok, uint256 expectedNet) {
         address feeFrom = _resolveFeeScoringAddress(from);
-        (bool success, bytes memory data) = address(burnRouter).staticcall(
-            abi.encodeWithSelector(IProofScoreBurnRouterToken.computeFees.selector, feeFrom, to, amount)
-        );
+        (bool success, bytes memory data) = address(burnRouter).staticcall(abi.encodeWithSelector(IProofScoreBurnRouterToken.computeFees.selector, feeFrom, to, amount));
         if (!success || data.length < 192) return (false, 0);
 
-        (uint256 burnAmt, uint256 sanctumAmt, uint256 ecoAmt, , , ) =
-            abi.decode(data, (uint256, uint256, uint256, address, address, address));
+        (uint256 burnAmt, uint256 sanctumAmt, uint256 ecoAmt, , , ) = abi.decode(data, (uint256, uint256, uint256, address, address, address));
 
         uint256 totalFees = burnAmt + sanctumAmt + ecoAmt;
         if (totalFees > amount) return (false, 0);
         return (true, amount - totalFees);
     }
-    
+
     // ─────────────────────────── Anti-Whale Protection Logic
-    
+
     /**
      * @dev Check and enforce all anti-whale protections.
      * Reverts if any limit is exceeded.
@@ -1634,10 +1622,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @param to to
      * @param amount amount
      */
-    function _checkWhaleProtection(address from, address to, uint256 amount)
-        internal
-        returns (uint256 cachedWindowStart, uint256 cachedStoredUsed)
-    {
+    function _checkWhaleProtection(address from, address to, uint256 amount) internal returns (uint256 cachedWindowStart, uint256 cachedStoredUsed) {
         uint256 trackedAmount = amount;
 
         // Track recipient impact and daily usage using expected post-fee net amount.
@@ -1655,7 +1640,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (maxTransferAmount > 0 && amount > maxTransferAmount) {
             revert VF_MaxTransferExceeded();
         }
-        
+
         // 2. Max wallet balance check (for recipient)
         // T-02/T-08 FIX: Check against expected net impact, not gross amount.
         if (maxWalletBalance > 0) {
@@ -1664,7 +1649,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
                 revert VF_MaxWalletExceeded();
             }
         }
-        
+
         // 3. Daily transfer limit tracking: validate using projected post-fee flow,
         // but persist the actual delivered amount later in _transfer().
         // Use a rolling 24-hour window instead of UTC day boundaries.
@@ -1683,11 +1668,10 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         // Note: when dailyTransferLimit == 0, cachedStoredUsed stays 0 and cachedWindowStart
         // holds the last reset timestamp.  _recordActualDailyTransfer uses only the cached
         // parameters — no storage re-reads happen there under any code path.
-        
+
         // 4. Transfer cooldown check (for sender)
         if (transferCooldown > 0) {
-            if (lastTransferTime[from] > 0 && 
-                block.timestamp < lastTransferTime[from] + transferCooldown) {
+            if (lastTransferTime[from] > 0 && block.timestamp < lastTransferTime[from] + transferCooldown) {
                 revert VF_TransferCooldown();
             }
             lastTransferTime[from] = block.timestamp;
@@ -1705,12 +1689,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      *                          (0 if window was expired or limit disabled at check time).
      * @notice _recordActualDailyTransfer
      */
-    function _recordActualDailyTransfer(
-        address from,
-        uint256 actualAmount,
-        uint256 cachedWindowStart,
-        uint256 cachedStoredUsed
-    ) internal {
+    function _recordActualDailyTransfer(address from, uint256 actualAmount, uint256 cachedWindowStart, uint256 cachedStoredUsed) internal {
         bool windowExpired = (cachedWindowStart == 0 || block.timestamp >= cachedWindowStart + 1 days);
         if (windowExpired) {
             // EE-1 GAS FIX: Directly assign actualAmount instead of zeroing then incrementing —
@@ -1722,7 +1701,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
             dailyTransferred[from] = cachedStoredUsed + actualAmount;
         }
     }
-    
+
     /// @notice T-02 FIX: Helper to compute expected net amount after fees
     /// @param from from
     /// @param to to
@@ -1739,7 +1718,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         }
         return expectedNet;
     }
-    
+
     /**
      * @dev View function to check remaining daily allowance
      * @notice remainingDailyLimit
@@ -1753,12 +1732,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         if (windowStart == 0 || block.timestamp >= windowStart + 1 days) {
             return dailyTransferLimit;
         }
-        
+
         // Return remaining
         if (dailyTransferred[account] >= dailyTransferLimit) return 0;
         return dailyTransferLimit - dailyTransferred[account];
     }
-    
+
     /**
      * @dev View function to check time until next transfer allowed
      * @notice cooldownRemaining
@@ -1768,7 +1747,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     function cooldownRemaining(address account) external view returns (uint256) {
         if (transferCooldown == 0) return 0;
         if (lastTransferTime[account] < 1) return 0;
-        
+
         uint256 unlockTime = lastTransferTime[account] + transferCooldown;
         if (block.timestamp >= unlockTime) return 0;
         return unlockTime - block.timestamp;
@@ -1778,7 +1757,11 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @notice _log
     /// @param action action
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
+                emit LedgerLogFailed(address(this), action);
+            }
+        }
     }
     // slither-disable-next-line reentrancy-events
     /// @notice _logEv
@@ -1787,13 +1770,17 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     /// @param amount amount
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
+        if (address(ledger) != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {
+                emit LedgerLogFailed(who, action);
+            }
+        }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         VIEW/PREVIEW FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Check if a transfer can be executed
      * @param from Sender address
@@ -1812,7 +1799,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         return (true, "");
     }
-    
+
     /**
      * @notice Preview fees that would be applied to a transfer
      * @param from Sender address
@@ -1823,12 +1810,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @return ecosystemAmount Amount sent to ecosystem treasury
      * @return netReceived Net amount recipient would receive
      */
-    function previewTransferFees(address from, address to, uint256 amount) external view returns (
-        uint256 burnAmount,
-        uint256 sanctumAmount,
-        uint256 ecosystemAmount,
-        uint256 netReceived
-    ) {
+    function previewTransferFees(address from, address to, uint256 amount) external view returns (uint256 burnAmount, uint256 sanctumAmount, uint256 ecosystemAmount, uint256 netReceived) {
         // No fees for exempt addresses or if router not set
         if (systemExempt[from] || systemExempt[to] || address(burnRouter) == address(0) || isFeeBypassed()) {
             return (0, 0, 0, amount);
@@ -1842,7 +1824,7 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
         burnAmount = 0;
         sanctumAmount = 0;
     }
-    
+
     // NOTE: Detailed transfer-limit and daily-stats helper views were removed to keep
     // VFIDEToken runtime under EIP-170. Off-chain indexers should derive these values
     // from existing public state (maxTransferAmount/maxWalletBalance/dailyTransferLimit,

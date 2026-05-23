@@ -121,7 +121,7 @@ function bufferToBase64(buffer: ArrayBuffer): string {
 /**
  * Convert base64 string to ArrayBuffer
  */
-function base64ToBuffer(base64: string): ArrayBuffer {
+function _base64ToBuffer(base64: string): ArrayBuffer {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {

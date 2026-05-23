@@ -57,8 +57,8 @@ const SHOW_DIFF = argv.includes('--diff');
 // Only the named exports we know are safe to rewrite from `motion` to
 // `m` (or to leave untouched). `AnimatePresence`, hooks, etc. don't
 // have an `m`-equivalent — they're already lazy-friendly.
-const REWRITE_NAMED = new Set(['motion']);
-const KEEP_AS_IS = new Set([
+const _REWRITE_NAMED = new Set(['motion']);
+const _KEEP_AS_IS = new Set([
   'AnimatePresence',
   'useReducedMotion',
   'useAnimation',

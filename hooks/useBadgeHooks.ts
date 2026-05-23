@@ -1,7 +1,7 @@
 'use client'
 
 import { useReadContract, useWriteContract, useAccount, useWaitForTransactionReceipt } from 'wagmi'
-import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '../lib/contracts'
+import { isConfiguredContractAddress } from '../lib/contracts'
 import { getFutureContractAddress } from '@/lib/contracts/future-contracts'
 import { VFIDEBadgeNFTABI } from '@/lib/abis/future'
 

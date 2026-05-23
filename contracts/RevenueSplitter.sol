@@ -10,7 +10,7 @@ pragma solidity 0.8.30;
  * - Safe against failed transfers (uses try/catch).
  */
 
-import { IERC20, SafeERC20, ReentrancyGuard } from "./SharedInterfaces.sol";
+import {IERC20, SafeERC20, ReentrancyGuard} from "./SharedInterfaces.sol";
 
 /// @notice RevenueSplitter
 /// @title RevenueSplitter
@@ -19,12 +19,12 @@ contract RevenueSplitter is ReentrancyGuard {
     using SafeERC20 for IERC20;
     /// @notice owner
     address public immutable owner;
-    
+
     struct Payee {
         address account;
         uint256 shareBps; // Basis points (100 = 1%)
     }
-    
+
     /// @notice payees
     Payee[] public payees;
     /// @notice totalShares
@@ -51,7 +51,7 @@ contract RevenueSplitter is ReentrancyGuard {
         require(_accounts.length > 0, "RS: no payees");
         require(msg.sender != address(0), "RS: zero owner");
         owner = msg.sender;
-        
+
         uint256 length = _accounts.length;
         for (uint256 i = 0; i < length; ++i) {
             require(_accounts[i] != address(0), "zero address");
@@ -83,15 +83,13 @@ contract RevenueSplitter is ReentrancyGuard {
             } else {
                 amount = (balance * payees[i].shareBps) / 10000;
             }
-            
+
             if (amount > 0) {
                 // H-29 FIX: Compute amount for last payee BEFORE updating distributed.
                 // Only increment distributed after a successful transfer.
                 // M-2 FIX: Low-level call for non-standard ERC20s (USDT)
                 // solhint-disable-next-line avoid-low-level-calls
-                (bool callOk, bytes memory returnData) = token.call(
-                    abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount)
-                );
+                (bool callOk, bytes memory returnData) = token.call(abi.encodeWithSelector(IERC20.transfer.selector, payees[i].account, amount));
                 bool success = callOk && (returnData.length == 0 || abi.decode(returnData, (bool)));
                 if (success) {
                     distributed += amount;
@@ -103,10 +101,10 @@ contract RevenueSplitter is ReentrancyGuard {
                 }
             }
         }
-        
+
         emit Distributed(token, balance, payeesSucceeded, payeesFailed);
     }
-    
+
     /// @notice getPayees
     /// @return _arg _arg
     function getPayees() external view returns (Payee[] memory) {
@@ -149,11 +147,7 @@ contract RevenueSplitter is ReentrancyGuard {
         }
         require(totalBps == 10000, "must equal 100%");
 
-        _pendingPayeesUpdate = PendingPayeesUpdate({
-            accounts: _accounts,
-            shares: _shares,
-            validFrom: block.timestamp + PAYEES_UPDATE_DELAY
-        });
+        _pendingPayeesUpdate = PendingPayeesUpdate({accounts: _accounts, shares: _shares, validFrom: block.timestamp + PAYEES_UPDATE_DELAY});
         hasPendingPayeesUpdate = true;
         emit PayeesUpdateProposed(block.timestamp + PAYEES_UPDATE_DELAY);
     }
@@ -182,5 +176,4 @@ contract RevenueSplitter is ReentrancyGuard {
         delete _pendingPayeesUpdate;
         emit PayeesUpdateCancelled();
     }
-
 }

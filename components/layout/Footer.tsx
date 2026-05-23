@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Code2, X, MessageCircle, ExternalLink, ArrowUpRight } from "lucide-react";
+import { Code2, X, MessageCircle, ArrowUpRight } from "lucide-react";
 import { VFIDEMark } from "../ui/VFIDEMark";
 
 type FooterLink = {

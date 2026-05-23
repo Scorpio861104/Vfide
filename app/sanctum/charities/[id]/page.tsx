@@ -11,7 +11,6 @@ import {
   Heart,
   Calendar,
   Copy,
-  ExternalLink,
 } from 'lucide-react';
 import { formatEther, type Address } from 'viem';
 import { Footer } from '@/components/layout/Footer';

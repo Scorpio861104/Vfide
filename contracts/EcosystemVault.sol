@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
-import { EcosystemVaultLib } from "./EcosystemVaultLib.sol";
+import {IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20, Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
+import {EcosystemVaultLib} from "./EcosystemVaultLib.sol";
 
 /// @dev Minimal interface for real token burn (H-10 fix)
 /// @notice IVFIDEBurnable
@@ -41,19 +41,19 @@ interface IVaultHubReferral_ECO {
  * EcosystemVault — Growth Incentive Treasury (Howey-safe)
  * ----------------------------------------------------------
  * Receives 50% of all transfer fees from ProofScoreBurnRouter.
- * 
+ *
  * Active buckets:
- * 
+ *
  * 1. COUNCIL REWARDS (50%)
  *    - Split evenly between active council members (1-12)
  *    - Distributed every 120 days via CouncilSalary contract
  *    - Each member gets: councilPool / activeMembers
- * 
+ *
  * 2. MERCHANT WORK REWARDS (fixed payouts for verified merchant work)
  * 3. REFERRAL WORK REWARDS (fixed payouts for verified acquisition work)
  * 4. OPERATIONS
  *    - Reserved for protocol operations and upgrades
- * 
+ *
  * NOTE: Percentage/rank-based merchant and headhunter claims remain disabled.
  * Fixed payout compensation for verified work remains available.
  *
@@ -106,7 +106,7 @@ error ECO_HeadhunterEpochCapExceeded();
 /// @author Vfide
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
@@ -232,43 +232,43 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public constant EXPENSE_EPOCH_DURATION = 7 days;
     /// @notice EXPENSE_EPOCH_CAP_BPS
     uint16 public constant EXPENSE_EPOCH_CAP_BPS = 2500;
-    
+
     // Points for referrals
     /// @notice POINTS_USER_REFERRAL
     uint16 public constant POINTS_USER_REFERRAL = 1;
     /// @notice POINTS_MERCHANT_REFERRAL
     uint16 public constant POINTS_MERCHANT_REFERRAL = 3;
-    
+
     // Minimum score to participate in headhunter program (60%)
     /// @notice HEADHUNTER_MIN_SCORE
     uint16 public constant HEADHUNTER_MIN_SCORE = 6000;
-    
+
     // Minimum activity for referral to count
     /// @notice MIN_MERCHANT_TX
-    uint8 public constant MIN_MERCHANT_TX = 3;        // Merchant needs 3 transactions
+    uint8 public constant MIN_MERCHANT_TX = 3; // Merchant needs 3 transactions
     /// @notice MIN_USER_VAULT_USD
-    uint256 public constant MIN_USER_VAULT_USD = 25;  // User needs $25 worth in vault
+    uint256 public constant MIN_USER_VAULT_USD = 25; // User needs $25 worth in vault
     /// @notice MIN_USER_VAULT_BALANCE
     uint256 public constant MIN_USER_VAULT_BALANCE = 25e18;
 
     // Merchant tier multipliers (weight for ranking, not direct payout)
     // Higher tier = more weight per transaction
     /// @notice TIER1_THRESHOLD
-    uint16 public constant TIER1_THRESHOLD = 9500;  // 95%+ ProofScore
+    uint16 public constant TIER1_THRESHOLD = 9500; // 95%+ ProofScore
     /// @notice TIER2_THRESHOLD
-    uint16 public constant TIER2_THRESHOLD = 9000;  // 90-94%
+    uint16 public constant TIER2_THRESHOLD = 9000; // 90-94%
     /// @notice TIER3_THRESHOLD
-    uint16 public constant TIER3_THRESHOLD = 8500;  // 85-89%
+    uint16 public constant TIER3_THRESHOLD = 8500; // 85-89%
     /// @notice TIER4_THRESHOLD
-    uint16 public constant TIER4_THRESHOLD = 8000;  // 80-84%
+    uint16 public constant TIER4_THRESHOLD = 8000; // 80-84%
     /// @notice TIER1_MULTIPLIER
-    uint16 public constant TIER1_MULTIPLIER = 5;    // 5x weight
+    uint16 public constant TIER1_MULTIPLIER = 5; // 5x weight
     /// @notice TIER2_MULTIPLIER
-    uint16 public constant TIER2_MULTIPLIER = 4;    // 4x weight
+    uint16 public constant TIER2_MULTIPLIER = 4; // 4x weight
     /// @notice TIER3_MULTIPLIER
-    uint16 public constant TIER3_MULTIPLIER = 3;    // 3x weight
+    uint16 public constant TIER3_MULTIPLIER = 3; // 3x weight
     /// @notice TIER4_MULTIPLIER
-    uint16 public constant TIER4_MULTIPLIER = 2;    // 2x weight
+    uint16 public constant TIER4_MULTIPLIER = 2; // 2x weight
 
     // Merchant rank share distribution (100 ranks, total = 10000 bps = 100%)
     // Rank 1-5:    500 bps each = 25%
@@ -285,7 +285,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @notice MAX_REFERRERS_PER_YEAR
     uint256 public constant MAX_REFERRERS_PER_YEAR = 200;
     /// @notice MAX_RANK_ITERATIONS
-    uint256 public constant MAX_RANK_ITERATIONS = 200;  // Max iterations for ranking calculation
+    uint256 public constant MAX_RANK_ITERATIONS = 200; // Max iterations for ranking calculation
     /// @notice MAX_COUNCIL_DISTRIBUTION_BATCH
     uint256 public constant MAX_COUNCIL_DISTRIBUTION_BATCH = 200;
 
@@ -302,7 +302,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     ICouncilManager public councilManager;
     /// @notice referralVaultHub
     IVaultHubReferral_ECO public referralVaultHub;
-    
+
     /// @notice isManager
     mapping(address => bool) public isManager;
 
@@ -359,17 +359,17 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     // Allocation buckets (council + merchant + headhunter + operations = 10000)
     /// @notice councilBps
-    uint16 public councilBps = 2500;      // 25% - DAO council
+    uint16 public councilBps = 2500; // 25% - DAO council
     /// @notice merchantBps
-    uint16 public merchantBps = 2500;     // 25% - Merchant rewards
+    uint16 public merchantBps = 2500; // 25% - Merchant rewards
     /// @notice headhunterBps
-    uint16 public headhunterBps = 2500;   // 25% - Referral rewards
+    uint16 public headhunterBps = 2500; // 25% - Referral rewards
     /// @notice operationsBps
-    uint16 public operationsBps = 2500;   // 25% - Team operations/sustainability
-    
+    uint16 public operationsBps = 2500; // 25% - Team operations/sustainability
+
     /// @notice MIN_ALLOCATION_BPS
     uint16 public constant MIN_ALLOCATION_BPS = 500; // Reduced to 5% to allow 4-way split
-    
+
     // Operations wallet for team sustainability
     /// @notice operationsWallet
     address public operationsWallet;
@@ -388,9 +388,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // H-11 FIX: Per-epoch caps to prevent a compromised manager from draining pools in one call.
     // Default: 10% of pool per 30-day epoch; DAO can adjust via setEpochCaps().
     /// @notice merchantEpochCapBps
-    uint16 public merchantEpochCapBps = 1000;     // 10% of merchantPool per epoch
+    uint16 public merchantEpochCapBps = 1000; // 10% of merchantPool per epoch
     /// @notice headhunterEpochCapBps
-    uint16 public headhunterEpochCapBps = 1000;   // 10% of headhunterPool per epoch
+    uint16 public headhunterEpochCapBps = 1000; // 10% of headhunterPool per epoch
     /// @notice EPOCH_DURATION
     uint256 public constant EPOCH_DURATION = 30 days;
     /// @notice merchantEpochStart
@@ -455,14 +455,14 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     mapping(uint256 => mapping(uint256 => mapping(address => bool))) public quarterClaimed; // year => quarter => referrer => claimed
     /// @notice quarterEnded
     mapping(uint256 => mapping(uint256 => bool)) public quarterEnded; // year => quarter => ended
-    
+
     // Pending referrals (awaiting activity threshold)
     /// @notice pendingMerchantReferrer
     mapping(address => address) public pendingMerchantReferrer; // merchant => who referred them
     /// @notice pendingUserReferrer
-    mapping(address => address) public pendingUserReferrer;     // user => who referred them
+    mapping(address => address) public pendingUserReferrer; // user => who referred them
     /// @notice referralCredited
-    mapping(address => bool) public referralCredited;           // referred => already credited
+    mapping(address => bool) public referralCredited; // referred => already credited
 
     // ═══════════════════════════════════════════════════════════════════════
     //                   STABLECOIN WORK-COMPENSATION (Howey-safe)
@@ -471,11 +471,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @notice swapRouter
     address public swapRouter;
     /// @notice preferredStablecoin
-    address public preferredStablecoin;  // e.g., USDC
+    address public preferredStablecoin; // e.g., USDC
     /// @notice autoSwapEnabled
-    bool public autoSwapEnabled;         // Disabled by default; enable after liquidity is established
+    bool public autoSwapEnabled; // Disabled by default; enable after liquidity is established
     /// @notice maxSlippageBps
-    uint16 public maxSlippageBps = 100;  // 1% max slippage (default)
+    uint16 public maxSlippageBps = 100; // 1% max slippage (default)
 
     // Admin-set floor price: stablecoin units per 1e18 VFIDE, used as minAmountOut in DEX swaps.
     // Protects against sandwich attacks without requiring a live on-chain oracle.
@@ -526,21 +526,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @param merchantTxReward merchantTxReward
     /// @param merchantReferralReward merchantReferralReward
     /// @param userReferralReward userReferralReward
-    event AutoWorkPayoutConfigured(
-        bool enabled,
-        uint256 merchantTxReward,
-        uint256 merchantReferralReward,
-        uint256 userReferralReward
-    );
+    event AutoWorkPayoutConfigured(bool enabled, uint256 merchantTxReward, uint256 merchantReferralReward, uint256 userReferralReward);
     /// @notice AutoPayoutSustainabilityConfigured
     /// @param merchantReserveBps merchantReserveBps
     /// @param headhunterReserveBps headhunterReserveBps
     /// @param maxAutoPayoutBps maxAutoPayoutBps
-    event AutoPayoutSustainabilityConfigured(
-        uint16 merchantReserveBps,
-        uint16 headhunterReserveBps,
-        uint16 maxAutoPayoutBps
-    );
+    event AutoPayoutSustainabilityConfigured(uint16 merchantReserveBps, uint16 headhunterReserveBps, uint16 maxAutoPayoutBps);
     /// @notice ReferralWorkLevelsConfigured
     /// @param level1Points level1Points
     /// @param level2Points level2Points
@@ -574,12 +565,12 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // Sustainability guardrails for burn-fee funded reward pools.
     // Reserve bps protect a minimum pool balance from reward payouts.
     /// @notice merchantPoolReserveBps
-    uint16 public merchantPoolReserveBps = 2000;   // Keep 20% reserve in merchant pool.
+    uint16 public merchantPoolReserveBps = 2000; // Keep 20% reserve in merchant pool.
     /// @notice headhunterPoolReserveBps
     uint16 public headhunterPoolReserveBps = 2000; // Keep 20% reserve in headhunter pool.
     // Auto payouts cannot exceed this fraction of current pool in a single execution.
     /// @notice maxAutoPayoutBps
-    uint16 public maxAutoPayoutBps = 1000;         // Max 10% per auto payout.
+    uint16 public maxAutoPayoutBps = 1000; // Max 10% per auto payout.
 
     // Howey-safe referral work milestones (absolute thresholds, no ranking/profit share)
     /// @notice referralLevel1Points
@@ -666,11 +657,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             return;
         }
 
-        pendingManagerChange = PendingManagerChange({
-            manager: manager,
-            active: active,
-            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
-        });
+        pendingManagerChange = PendingManagerChange({manager: manager, active: active, executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY});
 
         emit ManagerChangeQueued(manager, active, block.timestamp + SENSITIVE_CHANGE_DELAY);
     }
@@ -792,10 +779,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             return;
         }
 
-        pendingCouncilManagerChange = PendingCouncilManagerChange({
-            councilManager: _councilManager,
-            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
-        });
+        pendingCouncilManagerChange = PendingCouncilManagerChange({councilManager: _councilManager, executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY});
 
         emit CouncilManagerChangeQueued(_councilManager, block.timestamp + SENSITIVE_CHANGE_DELAY);
     }
@@ -831,20 +815,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
 
         uint16 operationsAllocation = MAX_BPS - (_councilBps + _merchantBps + _headhunterBps);
-        pendingAllocationChange = PendingAllocationChange({
-            councilBps: _councilBps,
-            merchantBps: _merchantBps,
-            headhunterBps: _headhunterBps,
-            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
-        });
+        pendingAllocationChange = PendingAllocationChange({councilBps: _councilBps, merchantBps: _merchantBps, headhunterBps: _headhunterBps, executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY});
 
-        emit AllocationChangeQueued(
-            _councilBps,
-            _merchantBps,
-            _headhunterBps,
-            operationsAllocation,
-            block.timestamp + SENSITIVE_CHANGE_DELAY
-        );
+        emit AllocationChangeQueued(_councilBps, _merchantBps, _headhunterBps, operationsAllocation, block.timestamp + SENSITIVE_CHANGE_DELAY);
     }
 
     /// @notice executeAllocationChange
@@ -864,7 +837,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
         delete pendingAllocationChange;
     }
-    
+
     /**
      * @notice Set operations wallet for team sustainability
      * @param _wallet _wallet
@@ -872,10 +845,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function setOperationsWallet(address _wallet) external onlyOwner {
         if (_wallet == address(0)) revert ECO_Zero();
         uint256 executeAfter = block.timestamp + SENSITIVE_CHANGE_DELAY;
-        pendingOperationsWalletChange = PendingOperationsWalletChange({
-            wallet: _wallet,
-            executeAfter: executeAfter
-        });
+        pendingOperationsWalletChange = PendingOperationsWalletChange({wallet: _wallet, executeAfter: executeAfter});
         emit OperationsWalletChangeQueued(_wallet, executeAfter);
     }
 
@@ -898,7 +868,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         delete pendingOperationsWalletChange;
         emit OperationsWalletUpdated(oldWallet, pending.wallet);
     }
-    
+
     /**
      * @notice Set operations allocation percentage
      * @param _operationsBps _operationsBps
@@ -915,7 +885,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         operationsBps = _operationsBps;
         emit AllocationUpdated(councilBps, merchantBps, headhunterBps, _operationsBps);
     }
-    
+
     /**
      * @notice Set operations withdrawal cooldown
      * @param _cooldown _cooldown
@@ -927,7 +897,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         operationsWithdrawalCooldown = _cooldown;
         emit OperationsCooldownSet(oldCooldown, _cooldown);
     }
-    
+
     /**
      * @notice Configure automatic VFIDE to stablecoin conversion for reward payments.
      * @dev Safe to enable once the VFIDE/stablecoin liquidity pool is established (phased
@@ -938,12 +908,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param _enabled Whether to enable automatic conversion
      * @param _maxSlippageBps Maximum slippage tolerance in basis points (100 = 1%)
      */
-    function configureAutoSwap(
-        address _router,
-        address _stablecoin,
-        bool _enabled,
-        uint16 _maxSlippageBps
-    ) external onlyOwner {
+    function configureAutoSwap(address _router, address _stablecoin, bool _enabled, uint16 _maxSlippageBps) external onlyOwner {
         if (_maxSlippageBps > 500) revert ECO_InvalidConfig(); // Max 5%
         if (_enabled) {
             if (_router == address(0)) revert ECO_Zero();
@@ -976,20 +941,20 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @dev HOWEY FIX: Work and council reward compensation are always paid in stablecoin.
      *      This toggle remains for non-reward paths such as expenses.
      *
-    *      Payment routing: direct reserve first, then automatic VFIDE swap when auto-swap is
-    *      configured. This keeps payouts in fixed-dollar terms while still allowing the vault
-    *      to operate without a manually pre-funded reserve.
+     *      Payment routing: direct reserve first, then automatic VFIDE swap when auto-swap is
+     *      configured. This keeps payouts in fixed-dollar terms while still allowing the vault
+     *      to operate without a manually pre-funded reserve.
      *
      *      Distributing a potentially-appreciating VFIDE token as "compensation" creates an
      *      implicit profit expectation (Howey Prong 3). Fixed stablecoin service fees make
      *      the work-for-pay relationship legally unambiguous.
      *
-    *      REQUIREMENTS before enabling:
-    *      - preferredStablecoin must be set
-    *      - Either the direct reserve must already be funded, or autoSwapEnabled must be active
+     *      REQUIREMENTS before enabling:
+     *      - preferredStablecoin must be set
+     *      - Either the direct reserve must already be funded, or autoSwapEnabled must be active
      *
-    * @param _enabled True to require stablecoin payments for non-reward payouts; false to allow
-    *        those non-reward paths to use VFIDE again.
+     * @param _enabled True to require stablecoin payments for non-reward payouts; false to allow
+     *        those non-reward paths to use VFIDE again.
      */
     function setStablecoinOnlyMode(bool _enabled) external onlyOwner {
         if (_enabled) {
@@ -1041,12 +1006,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param merchantReferralReward merchantReferralReward
      * @param userReferralReward userReferralReward
      */
-    function configureAutoWorkPayout(
-        bool enabled,
-        uint256 merchantTxReward,
-        uint256 merchantReferralReward,
-        uint256 userReferralReward
-    ) external onlyOwner {
+    function configureAutoWorkPayout(bool enabled, uint256 merchantTxReward, uint256 merchantReferralReward, uint256 userReferralReward) external onlyOwner {
         autoWorkPayoutEnabled = enabled;
         autoMerchantTxReward = merchantTxReward;
         autoMerchantReferralReward = merchantReferralReward;
@@ -1062,11 +1022,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param headhunterReserve headhunterReserve
      * @param maxAutoPayout maxAutoPayout
      */
-    function configureAutoPayoutSustainability(
-        uint16 merchantReserve,
-        uint16 headhunterReserve,
-        uint16 maxAutoPayout
-    ) external onlyOwner {
+    function configureAutoPayoutSustainability(uint16 merchantReserve, uint16 headhunterReserve, uint16 maxAutoPayout) external onlyOwner {
         if (merchantReserve > 9000) revert ECO_ExceedsMax();
         if (headhunterReserve > 9000) revert ECO_ExceedsMax();
         if (maxAutoPayout == 0 || maxAutoPayout > 5000) revert ECO_InvalidConfig();
@@ -1115,22 +1071,13 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         referralLevel3Reward = level3Reward;
         referralLevel4Reward = level4Reward;
 
-        emit ReferralWorkLevelsConfigured(
-            level1Points,
-            level2Points,
-            level3Points,
-            level4Points,
-            level1Reward,
-            level2Reward,
-            level3Reward,
-            level4Reward
-        );
+        emit ReferralWorkLevelsConfigured(level1Points, level2Points, level3Points, level4Points, level1Reward, level2Reward, level3Reward, level4Reward);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     //                         RECEIVE & ALLOCATE
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice allocateIncoming
     function allocateIncoming() public {
         if (!isManager[msg.sender] && msg.sender != owner && msg.sender != address(this)) {
@@ -1144,7 +1091,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         uint256 balance = rewardToken.balanceOf(address(this));
         uint256 allocated = councilPool + merchantPool + headhunterPool + operationsPool;
         uint256 unallocated = balance > allocated ? balance - allocated : 0;
-        
+
         if (unallocated > 0) {
             uint256 toCouncil = (unallocated * councilBps) / MAX_BPS;
             uint256 toMerchant = (unallocated * merchantBps) / MAX_BPS;
@@ -1164,16 +1111,16 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
             totalReceived += unallocated;
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                         OPERATIONS WITHDRAWAL (Team Sustainability)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice OperationsWithdrawal
     /// @param wallet wallet
     /// @param amount amount
     event OperationsWithdrawal(address indexed wallet, uint256 amount);
-    
+
     /**
      * @notice Withdraw operations pool to team wallet
      * @dev Can only be called by owner (DAO), enforces expense epoch cap
@@ -1188,7 +1135,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                         1. COUNCIL REWARDS (Monthly)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Distribute council pool evenly to active council members
      * @dev Called monthly, splits pool equally among active members
@@ -1200,7 +1147,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                         2. MERCHANT WORK PROGRAM (Monthly Tracking)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Record merchant transaction for this month's distribution
      * @dev Tracks tx count and tier, actual payout happens monthly
@@ -1209,18 +1156,18 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     function recordMerchantTransaction(address merchant) external onlyManager nonReentrant {
         uint16 score = seer.getCachedScore(merchant);
         uint16 tier = _getMerchantBonusTier(score);
-        
+
         if (tier == 0) return; // Below 80%, no bonus eligibility
-        
+
         // First tx this period? Add to list (with cap check)
         if (periodMerchantTxCount[currentMerchantPeriod][merchant] == 0) {
             if (periodMerchants[currentMerchantPeriod].length >= MAX_MERCHANTS_PER_PERIOD) revert ECO_ArrayCapReached();
             periodMerchants[currentMerchantPeriod].push(merchant);
         }
-        
+
         ++periodMerchantTxCount[currentMerchantPeriod][merchant];
         ++merchantLifetimeTxCount[merchant];
-        
+
         // Store best tier achieved this period
         if (tier > periodMerchantTier[currentMerchantPeriod][merchant]) {
             periodMerchantTier[currentMerchantPeriod][merchant] = tier;
@@ -1231,7 +1178,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /**
      * @notice End merchant period and snapshot for claiming
-    * @dev Called monthly to snapshot pool/accounting for program management
+     * @dev Called monthly to snapshot pool/accounting for program management
      */
     function endMerchantPeriod() external onlyManager {
         _endMerchantPeriodIfDue(true);
@@ -1279,7 +1226,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                         3. HEADHUNTER FUND (Quarterly, Work Tracking)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Register a pending merchant referral (points awarded after 3 tx)
      * @param merchant The new merchant who was referred
@@ -1289,10 +1236,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (referrer == address(0) || referrer == merchant) return;
         if (pendingMerchantReferrer[merchant] != address(0)) return; // Already has referrer
         if (referralCredited[merchant]) return; // Already credited
-        
+
         // Referrer must have minimum ProofScore
         if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
-        
+
         pendingMerchantReferrer[merchant] = referrer;
         emit PendingReferralRegistered(merchant, referrer, true);
     }
@@ -1306,10 +1253,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (referrer == address(0) || referrer == user) return;
         if (pendingUserReferrer[user] != address(0)) return; // Already has referrer
         if (referralCredited[user]) return; // Already credited
-        
+
         // Referrer must have minimum ProofScore
         if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
-        
+
         pendingUserReferrer[user] = referrer;
         emit PendingReferralRegistered(user, referrer, false);
     }
@@ -1323,10 +1270,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (referrer == address(0)) return;
         if (referralCredited[merchant]) return;
         if (merchantLifetimeTxCount[merchant] < MIN_MERCHANT_TX) return;
-        
+
         // Referrer must still have minimum score at credit time
         if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
-        
+
         referralCredited[merchant] = true;
         _awardPoints(referrer, POINTS_MERCHANT_REFERRAL, merchant, true);
         _tryAutoWorkPayout(referrer, autoMerchantReferralReward, false, "verified_merchant_referral");
@@ -1341,10 +1288,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (referrer == address(0)) return;
         if (referralCredited[user]) return;
         if (!_meetsUserReferralThreshold(user)) return;
-        
+
         // Referrer must still have minimum score at credit time
         if (seer.getCachedScore(referrer) < HEADHUNTER_MIN_SCORE) return;
-        
+
         referralCredited[user] = true;
         _awardPoints(referrer, POINTS_USER_REFERRAL, user, false);
         _tryAutoWorkPayout(referrer, autoUserReferralReward, false, "verified_user_referral");
@@ -1381,12 +1328,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @param useMerchantPool useMerchantPool
     /// @param reason reason
     /// @return paid paid
-    function _tryAutoWorkPayout(
-        address worker,
-        uint256 amount,
-        bool useMerchantPool,
-        string memory reason
-    ) internal returns (bool paid) {
+    function _tryAutoWorkPayout(address worker, uint256 amount, bool useMerchantPool, string memory reason) internal returns (bool paid) {
         if (!autoWorkPayoutEnabled || worker == address(0) || amount == 0) {
             return false;
         }
@@ -1438,11 +1380,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param amount amount
      * @param reason reason
      */
-    function _deliverWorkReward(
-        address worker,
-        uint256 amount,
-        string memory reason
-    ) internal {
+    function _deliverWorkReward(address worker, uint256 amount, string memory reason) internal {
         reason;
         _payoutStablecoin(worker, preferredStablecoin, amount);
     }
@@ -1493,10 +1431,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
      * @param year year
      * @param quarter quarter
      */
-    function claimHeadhunterQuarterReward(uint256 year, uint256 quarter)
-        external
-        nonReentrant
-    {
+    function claimHeadhunterQuarterReward(uint256 year, uint256 quarter) external nonReentrant {
         if (quarter < 1 || quarter > 4) revert ECO_InvalidConfig();
         if (!quarterEnded[year][quarter]) revert ECO_TooEarly();
         if (quarterClaimed[year][quarter][msg.sender]) revert ECO_AlreadyExecuted();
@@ -1535,14 +1470,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @param referrerPoints referrerPoints
     /// @param totalYearPoints totalYearPoints
     /// @param amountClaimed amountClaimed
-    event HeadhunterQuarterClaimed(
-        uint256 indexed year,
-        uint256 indexed quarter,
-        address indexed referrer,
-        uint16 referrerPoints,
-        uint256 totalYearPoints,
-        uint256 amountClaimed
-    );
+    event HeadhunterQuarterClaimed(uint256 indexed year, uint256 indexed quarter, address indexed referrer, uint16 referrerPoints, uint256 totalYearPoints, uint256 amountClaimed);
 
     /**
      * @notice Pay fixed compensation for verified referral/acquisition work
@@ -1587,7 +1515,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                         UTILITY FUNCTIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /**
      * @notice Pay expense from ecosystem vault
      * @dev Stablecoin-only mode pays from reserve first and automatically swaps VFIDE when the
@@ -1603,7 +1531,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (operationsPool < amount) revert ECO_InsufficientFunds();
         _rollExpenseEpochIfNeeded();
 
-        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
+        uint256 expenseCap = (operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS) / MAX_BPS;
         if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
         // slither-disable-next-line events-maths  // _payoutConfiguredReward emits OperationsWithdrawal with full context
         operationsSpentInEpoch += amount;
@@ -1646,21 +1574,15 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (to == address(0)) revert ECO_Zero();
         if (amount == 0) revert ECO_Zero();
         uint256 bal = rewardToken.balanceOf(address(this));
-        if (amount + pendingWithdrawTotal > bal * maxWithdrawBps / 10_000) revert ECO_ExceedsMax();
-        
+        if (amount + pendingWithdrawTotal > (bal * maxWithdrawBps) / 10_000) revert ECO_ExceedsMax();
+
         id = ++withdrawRequestCount;
-        withdrawRequests[id] = WithdrawRequest({
-            to: to,
-            amount: amount,
-            requestedAt: block.timestamp,
-            executed: false,
-            cancelled: false
-        });
+        withdrawRequests[id] = WithdrawRequest({to: to, amount: amount, requestedAt: block.timestamp, executed: false, cancelled: false});
         pendingWithdrawTotal += amount;
-        
+
         emit WithdrawRequested(id, to, amount);
     }
-    
+
     /// @notice cancelWithdraw
     /// @param id id
     function cancelWithdraw(uint256 id) external onlyOwner {
@@ -1671,7 +1593,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         pendingWithdrawTotal -= req.amount;
         emit WithdrawCancelled(id);
     }
-    
+
     /// @notice executeWithdraw
     /// @param id id
     function executeWithdraw(uint256 id) external onlyOwner nonReentrant {
@@ -1743,18 +1665,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
 
     /// @notice _rollExpenseEpochIfNeeded
     function _rollExpenseEpochIfNeeded() internal {
-        if (
-            operationsExpenseEpochStartedAt == 0
-            || block.timestamp >= operationsExpenseEpochStartedAt + EXPENSE_EPOCH_DURATION
-        ) {
+        if (operationsExpenseEpochStartedAt == 0 || block.timestamp >= operationsExpenseEpochStartedAt + EXPENSE_EPOCH_DURATION) {
             operationsExpenseEpochStartedAt = block.timestamp;
             operationsExpenseEpochBase = operationsPool;
             operationsSpentInEpoch = 0;
-            emit ExpenseEpochRolled(
-                block.timestamp,
-                operationsExpenseEpochBase,
-                operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS
-            );
+            emit ExpenseEpochRolled(block.timestamp, operationsExpenseEpochBase, (operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS) / MAX_BPS);
         }
     }
 
@@ -1859,13 +1774,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         if (minAmountOut == 0) revert ECO_InvalidConfig();
 
         rewardToken.forceApprove(router, amountIn);
-        uint256[] memory amounts = ISwapRouter(router).swapExactTokensForTokens(
-            amountIn,
-            minAmountOut,
-            path,
-            recipient,
-            block.timestamp
-        );
+        uint256[] memory amounts = ISwapRouter(router).swapExactTokensForTokens(amountIn, minAmountOut, path, recipient, block.timestamp);
         rewardToken.forceApprove(router, 0);
 
         if (amounts[amounts.length - 1] == 0) revert ECO_InsufficientFunds();
@@ -1940,7 +1849,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         }
 
         _rollExpenseEpochIfNeeded();
-        uint256 expenseCap = operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS / MAX_BPS;
+        uint256 expenseCap = (operationsExpenseEpochBase * EXPENSE_EPOCH_CAP_BPS) / MAX_BPS;
         if (operationsSpentInEpoch + amount > expenseCap) revert ECO_ExpenseCapExceeded();
         operationsSpentInEpoch += amount;
 
@@ -1951,5 +1860,4 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit OperationsWithdrawal(operationsWallet, amount);
         return true;
     }
-
 }

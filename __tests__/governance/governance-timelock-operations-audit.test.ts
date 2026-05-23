@@ -251,7 +251,7 @@ describe('R-054 – Queue cancellation semantics', () => {
   });
 
   it('cancel rejects unknown queue ids', () => {
-    expect(timelockSrc).toMatch(/if\(queue\[id\]\.eta==0\) revert TL_NotQueued\(\)/);
+    expect(timelockSrc).toMatch(/if\s*\(\s*queue\[id\]\.eta\s*==\s*0\s*\)\s*revert TL_NotQueued\(\)/);
   });
 
   it('cancel emits Cancelled event and removes tracked id', () => {

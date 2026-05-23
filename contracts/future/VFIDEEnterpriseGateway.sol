@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20, ISeer, ISwapRouter, IVaultHub, ReentrancyGuard, SafeERC20 } from "../SharedInterfaces.sol";
+import {IERC20, ISeer, ISwapRouter, IVaultHub, ReentrancyGuard, SafeERC20} from "../SharedInterfaces.sol";
 
 /// @notice ENT_NotOracle
 error ENT_NotOracle();
@@ -85,11 +85,16 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     /// @param merchantWallet merchantWallet
     event MerchantWalletChangeCancelled(address indexed merchantWallet);
 
-    enum Status { NONE, PENDING, SETTLED, REFUNDED }
+    enum Status {
+        NONE,
+        PENDING,
+        SETTLED,
+        REFUNDED
+    }
 
     struct Order {
         address buyer;
-        address payer;  // Actual source of funds (vault or EOA)
+        address payer; // Actual source of funds (vault or EOA)
         uint256 amount;
         Status status;
         uint256 timestamp;
@@ -116,7 +121,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     address public pendingOracle;
     /// @notice pendingOracleAt
     uint64 public pendingOracleAt;
-    
+
     /// @notice token
     IERC20 public token;
     /// @notice seer
@@ -158,22 +163,8 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     /// @param _vaultHub _vaultHub
     /// @param _oracle _oracle
     /// @param _merchantWallet _merchantWallet
-    constructor(
-        address _dao,
-        address _token,
-        address _seer,
-        address _vaultHub,
-        address _oracle,
-        address _merchantWallet
-    ) {
-        if (
-            _dao == address(0)
-                || _token == address(0)
-                || _seer == address(0)
-                || _vaultHub == address(0)
-                || _oracle == address(0)
-                || _merchantWallet == address(0)
-        ) {
+    constructor(address _dao, address _token, address _seer, address _vaultHub, address _oracle, address _merchantWallet) {
+        if (_dao == address(0) || _token == address(0) || _seer == address(0) || _vaultHub == address(0) || _oracle == address(0) || _merchantWallet == address(0)) {
             revert ENT_Zero();
         }
         require(_oracle != _dao, "ENT: oracle must differ from DAO");
@@ -264,11 +255,11 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
         // This preserves vault-custody flows while remaining backward compatible.
         address userVault = vaultHub.vaultOf(msg.sender);
         address payer = userVault != address(0) ? userVault : msg.sender;
-        
+
         // If user has a vault, we expect them to pay via vault (or approve from vault)
         // For simplicity in this gateway, we pull from msg.sender (EOA) or Vault if msg.sender is Vault
         // But standard flow: User approves Gateway. Gateway pulls.
-        
+
         // Pull funds
         // FIX: Measure actual received amount to support Fee-on-Transfer tokens
         uint256 balanceBefore = token.balanceOf(address(this));
@@ -277,8 +268,8 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
 
         orders[orderId] = Order({
             buyer: msg.sender, // The EOA initiating
-            payer: payer,      // Actual source of funds (vault or EOA)
-            amount: received,  // Record actual amount received
+            payer: payer, // Actual source of funds (vault or EOA)
+            amount: received, // Record actual amount received
             status: Status.PENDING,
             timestamp: block.timestamp
         });
@@ -290,7 +281,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                    STABLECOIN SETTLEMENT (FOR MERCHANTS)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     /// @notice StableSettlementConfigured
     /// @param swapRouter swapRouter
     /// @param stablecoin stablecoin
@@ -312,16 +303,16 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     /// @notice OracleFloorCancelled
     /// @param floorPerVfide floorPerVfide
     event OracleFloorCancelled(uint256 floorPerVfide);
-    
+
     // DEX router for VFIDE → Stablecoin swaps
     /// @notice swapRouter
     address public swapRouter;
     /// @notice settlementStablecoin
-    address public settlementStablecoin;  // e.g., USDC
+    address public settlementStablecoin; // e.g., USDC
     /// @notice stableSettlementEnabled
     bool public stableSettlementEnabled;
     /// @notice maxSlippageBps
-    uint16 public maxSlippageBps = 100;   // 1% max slippage
+    uint16 public maxSlippageBps = 100; // 1% max slippage
     // H-37 FIX: External reference price floor (DAO-set from off-chain oracle / Chainlink feed).
     // Represents the minimum acceptable stablecoin amount per 1e18 VFIDE (18 decimals).
     // Prevents tautological slippage where getAmountsOut + swap both use the same manipulated AMM state.
@@ -333,7 +324,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     uint256 public pendingOracleFloorAmountPerVfide;
     /// @notice pendingOracleFloorAt
     uint64 public pendingOracleFloorAt;
-    
+
     /**
      * @notice Configure stablecoin settlement for merchants who need stable revenue
      * @param _router DEX router (Uniswap, SyncSwap, etc.)
@@ -341,12 +332,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
      * @param _enabled Whether to auto-convert to stable
      * @param _maxSlippageBps Maximum slippage tolerance
      */
-    function configureStableSettlement(
-        address _router,
-        address _stablecoin,
-        bool _enabled,
-        uint16 _maxSlippageBps
-    ) external onlyDAO {
+    function configureStableSettlement(address _router, address _stablecoin, bool _enabled, uint16 _maxSlippageBps) external onlyDAO {
         require(_maxSlippageBps <= 500, "ENT: slippage too high"); // Max 5%
         if (_enabled) {
             if (_router == address(0) || _stablecoin == address(0)) revert ENT_Zero();
@@ -413,7 +399,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
 
         o.status = Status.SETTLED;
         totalPendingOrderAmount -= o.amount;
-        
+
         uint256 stableReceived = 0;
 
         // If stable settlement enabled, swap VFIDE → Stablecoin
@@ -441,7 +427,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
             emit SeerRewardFailed(orderId, o.buyer, 10, reason);
         }
     }
-    
+
     /**
      * @notice Internal: Swap VFIDE to stablecoin via DEX
      * @dev Uses simple swap interface - can be adapted for different DEXes
@@ -452,10 +438,10 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
         if (vfideAmount == 0) return 0;
         if (oracleFloorAmountPerVfide == 0) return 0;
-        
+
         // Approve router
         token.forceApprove(swapRouter, vfideAmount);
-        
+
         // Get expected output amount (use oracle or on-chain price if available)
         uint256 minAmountOut = 0;
         try ISwapRouter(swapRouter).getAmountsOut(vfideAmount, _getSwapPath()) returns (uint256[] memory amountsOut) {
@@ -464,9 +450,9 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
                 return 0;
             }
             uint256 expectedOut = amountsOut[amountsOut.length - 1];
-            minAmountOut = expectedOut * (10000 - maxSlippageBps) / 10000;
+            minAmountOut = (expectedOut * (10000 - maxSlippageBps)) / 10000;
             // H-37 FIX: Apply external oracle floor to prevent tautological AMM slippage.
-            uint256 oracleFloor = vfideAmount * oracleFloorAmountPerVfide / 1e18;
+            uint256 oracleFloor = (vfideAmount * oracleFloorAmountPerVfide) / 1e18;
             if (oracleFloor > minAmountOut) {
                 minAmountOut = oracleFloor;
             }
@@ -478,14 +464,17 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
             token.forceApprove(swapRouter, 0);
             return 0;
         }
-        
+
         // Perform swap with slippage protection
-        try ISwapRouter(swapRouter).swapExactTokensForTokens(
-            vfideAmount,
-            minAmountOut,            _getSwapPath(),
-            address(this),
-            block.timestamp + 300 // 5 min deadline
-        ) returns (uint256[] memory amounts) {
+        try
+            ISwapRouter(swapRouter).swapExactTokensForTokens(
+                vfideAmount,
+                minAmountOut,
+                _getSwapPath(),
+                address(this),
+                block.timestamp + 300 // 5 min deadline
+            )
+        returns (uint256[] memory amounts) {
             // DEEP-C-1 FIX: Revoke leftover approval
             token.forceApprove(swapRouter, 0);
             return amounts[amounts.length - 1];
@@ -496,7 +485,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
             return 0;
         }
     }
-    
+
     /// @notice _getSwapPath
     /// @return _arg _arg
     function _getSwapPath() internal view returns (address[] memory) {
@@ -531,7 +520,7 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     function refundOrder(bytes32 orderId, string calldata reason) external nonReentrant {
         // Allow Oracle (Amazon return) or DAO (Dispute resolution)
         if (msg.sender != oracle && msg.sender != dao) revert ENT_NotOracle();
-        
+
         Order storage o = orders[orderId];
         if (o.status != Status.PENDING) revert ENT_NotPending();
 
@@ -552,14 +541,8 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
     function cancelOrder(bytes32 orderId) external nonReentrant {
         Order storage o = orders[orderId];
         if (o.status != Status.PENDING) revert ENT_NotPending();
-        require(
-            msg.sender == o.buyer || msg.sender == o.payer,
-            "ENT: only buyer/payer"
-        );
-        require(
-            block.timestamp >= o.timestamp + ORDER_PAYER_CANCEL_WINDOW,
-            "ENT: cancel window not elapsed"
-        );
+        require(msg.sender == o.buyer || msg.sender == o.payer, "ENT: only buyer/payer");
+        require(block.timestamp >= o.timestamp + ORDER_PAYER_CANCEL_WINDOW, "ENT: cancel window not elapsed");
 
         o.status = Status.REFUNDED;
         totalPendingOrderAmount -= o.amount;
@@ -568,4 +551,3 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
         emit OrderCancelled(orderId, o.buyer, o.amount);
     }
 }
-

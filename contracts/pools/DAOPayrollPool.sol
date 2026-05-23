@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ServicePool } from "../ServicePool.sol";
+import {ServicePool} from "../ServicePool.sol";
 
 /// @title DAOPayrollPool — Monthly governance compensation for DAO members
 /// @notice Each governance action (vote, review, discussion) earns points and
@@ -23,16 +23,8 @@ contract DAOPayrollPool is ServicePool {
     /// @param _admin _admin
     /// @param _initialMaxMembers _initialMaxMembers
     /// @param _maxPayoutPerPeriod _maxPayoutPerPeriod
-    constructor(
-        address _token,
-        address _admin,
-        uint256 _initialMaxMembers,
-        uint256 _maxPayoutPerPeriod
-    ) ServicePool(_token, _admin, _initialMaxMembers, _maxPayoutPerPeriod) {
-        require(
-            _initialMaxMembers >= MIN_DAO_MEMBERS_CAP && _initialMaxMembers <= MAX_DAO_MEMBERS_CAP,
-            "DAOPayrollPool: initial cap out of bounds"
-        );
+    constructor(address _token, address _admin, uint256 _initialMaxMembers, uint256 _maxPayoutPerPeriod) ServicePool(_token, _admin, _initialMaxMembers, _maxPayoutPerPeriod) {
+        require(_initialMaxMembers >= MIN_DAO_MEMBERS_CAP && _initialMaxMembers <= MAX_DAO_MEMBERS_CAP, "DAOPayrollPool: initial cap out of bounds");
     }
 
     /// @notice setMaxParticipants
@@ -74,7 +66,7 @@ contract DAOPayrollPool is ServicePool {
     function batchRecordVotes(address[] calldata members) external onlyRole(RECORDER_ROLE) nonReentrant {
         uint256 len = members.length;
         require(len <= maxParticipants, "Exceeds max members");
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i = 0; i < len; ) {
             if (members[i] != address(0)) {
                 _recordContribution(members[i], 1);
             }

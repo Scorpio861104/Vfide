@@ -7,8 +7,8 @@ pragma solidity 0.8.30;
  * OZ version baseline: 5.1.0. Review OZ advisories on dependency updates.
  */
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 // F-38 FIX: minimal interface used to cross-check the DAO state before recording attestation.
 /// @notice IDAO_WA
@@ -43,7 +43,6 @@ interface IDAO_WA {
 ///      - PROTOCOL_MAINTENANCE: On-chain maintenance tx confirmed
 /// @author Vfide
 contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
-
     /// @notice SEER_CORE_ROLE
     bytes32 public constant SEER_CORE_ROLE = keccak256("SEER_CORE_ROLE");
     /// @notice VERIFIER_ROLE
@@ -56,13 +55,13 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════
 
     struct TaskRecord {
-        address worker;             // Who performed the work
-        uint8 category;             // ServiceCategory enum value
-        bytes32 taskId;             // Unique task identifier
-        bytes32 evidenceHash;       // Hash of on-chain evidence (tx hash, state proof)
-        uint256 completedAt;        // When work was verified as complete
-        bool attested;              // Whether attestation was generated
-        address verifiedBy;         // Which verifier confirmed the work
+        address worker; // Who performed the work
+        uint8 category; // ServiceCategory enum value
+        bytes32 taskId; // Unique task identifier
+        bytes32 evidenceHash; // Hash of on-chain evidence (tx hash, state proof)
+        uint256 completedAt; // When work was verified as complete
+        bool attested; // Whether attestation was generated
+        address verifiedBy; // Which verifier confirmed the work
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -134,31 +133,17 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param taskId taskId
     /// @param evidenceHash evidenceHash
     /// @param verifiedBy verifiedBy
-    event TaskVerified(
-        address indexed worker,
-        uint8 indexed category,
-        bytes32 indexed taskId,
-        bytes32 evidenceHash,
-        address verifiedBy
-    );
+    event TaskVerified(address indexed worker, uint8 indexed category, bytes32 indexed taskId, bytes32 evidenceHash, address verifiedBy);
     /// @notice DuplicateTaskSkipped
     /// @param worker worker
     /// @param category category
     /// @param taskId taskId
     /// @param caller caller
-    event DuplicateTaskSkipped(
-        address indexed worker,
-        uint8 indexed category,
-        bytes32 indexed taskId,
-        address caller
-    );
+    event DuplicateTaskSkipped(address indexed worker, uint8 indexed category, bytes32 indexed taskId, address caller);
     /// @notice TaskAttested
     /// @param worker worker
     /// @param taskId taskId
-    event TaskAttested(
-        address indexed worker,
-        bytes32 indexed taskId
-    );
+    event TaskAttested(address indexed worker, bytes32 indexed taskId);
     /// @notice FraudFlagAttestationQueued
     /// @param flagger flagger
     /// @param flagId flagId
@@ -181,15 +166,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param panic panic
     /// @param workPayment workPayment
     /// @param effectiveAt effectiveAt
-    event ProtocolContractsChangeProposed(
-        address dao,
-        address merchant,
-        address bridge,
-        address social,
-        address panic,
-        address workPayment,
-        uint64 effectiveAt
-    );
+    event ProtocolContractsChangeProposed(address dao, address merchant, address bridge, address social, address panic, address workPayment, uint64 effectiveAt);
     /// @notice ProtocolContractsChangeCancelled
     event ProtocolContractsChangeCancelled();
 
@@ -238,12 +215,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param category Service category (0-7)
     /// @param taskId Unique task identifier (e.g. proposalId, reportHash)
     /// @param evidenceHash Hash of the on-chain evidence proving work completion
-    function verifyTaskCompletion(
-        address worker,
-        uint8 category,
-        bytes32 taskId,
-        bytes32 evidenceHash
-    ) external onlyRole(VERIFIER_ROLE) {
+    function verifyTaskCompletion(address worker, uint8 category, bytes32 taskId, bytes32 evidenceHash) external onlyRole(VERIFIER_ROLE) {
         if (worker == address(0)) revert ZeroAddress();
         if (category >= 8) revert InvalidCategory();
         if (evidenceHash == bytes32(0)) revert InvalidEvidence();
@@ -261,20 +233,12 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param categories categories
     /// @param taskIds taskIds
     /// @param evidenceHashes evidenceHashes
-    function batchVerifyTasks(
-        address[] calldata workers,
-        uint8[] calldata categories,
-        bytes32[] calldata taskIds,
-        bytes32[] calldata evidenceHashes
-    ) external onlyRole(VERIFIER_ROLE) {
+    function batchVerifyTasks(address[] calldata workers, uint8[] calldata categories, bytes32[] calldata taskIds, bytes32[] calldata evidenceHashes) external onlyRole(VERIFIER_ROLE) {
         uint256 len = workers.length;
-        require(
-            len == categories.length && len == taskIds.length && len == evidenceHashes.length,
-            "Array length mismatch"
-        );
+        require(len == categories.length && len == taskIds.length && len == evidenceHashes.length, "Array length mismatch");
         require(len <= 50, "Batch too large");
 
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i = 0; i < len; ) {
             address worker = workers[i];
             uint8 category = categories[i];
             bytes32 taskId = taskIds[i];
@@ -285,7 +249,9 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
                 _recordTask(key, worker, category, taskId, evidenceHash, msg.sender);
             }
 
-            unchecked { ++i; }
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -301,10 +267,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     function onGovernanceVote(address voter, bytes32 proposalId) external {
         require(msg.sender == daoContract, "Only DAO");
         // F-38 FIX: cross-check that voter actually voted; prevents caller bugs from polluting attestations.
-        require(
-            IDAO_WA(daoContract).hasVoted(uint256(proposalId), voter),
-            "SWA: voter did not vote on proposal"
-        );
+        require(IDAO_WA(daoContract).hasVoted(uint256(proposalId), voter), "SWA: voter did not vote on proposal");
         bytes32 evidence = keccak256(abi.encodePacked("gov_vote", proposalId, voter, block.number));
         _autoVerify(voter, 0, proposalId, evidence);
     }
@@ -346,10 +309,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         PendingFraudAttestation storage pending = pendingFraudAttestation[flagId];
         require(pending.flagger == address(0), "SWA: fraud attestation already queued");
         uint64 readyAt = uint64(block.timestamp + FRAUD_FLAG_ATTESTATION_DELAY);
-        pendingFraudAttestation[flagId] = PendingFraudAttestation({
-            flagger: flagger,
-            readyAt: readyAt
-        });
+        pendingFraudAttestation[flagId] = PendingFraudAttestation({flagger: flagger, readyAt: readyAt});
         emit FraudFlagAttestationQueued(flagger, flagId, readyAt);
     }
 
@@ -363,9 +323,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
 
         delete pendingFraudAttestation[flagId];
 
-        bytes32 evidence = keccak256(
-            abi.encodePacked("fraud_flag_finalized", flagId, pending.readyAt, msg.sender)
-        );
+        bytes32 evidence = keccak256(abi.encodePacked("fraud_flag_finalized", flagId, pending.readyAt, msg.sender));
         _autoVerify(pending.flagger, 5, flagId, evidence);
         emit FraudFlagAttestationFinalized(pending.flagger, flagId, msg.sender);
     }
@@ -376,12 +334,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param category category
     /// @param taskId taskId
     /// @param evidenceHash evidenceHash
-    function _autoVerify(
-        address worker,
-        uint8 category,
-        bytes32 taskId,
-        bytes32 evidenceHash
-    ) internal {
+    function _autoVerify(address worker, uint8 category, bytes32 taskId, bytes32 evidenceHash) internal {
         bytes32 key = keccak256(abi.encodePacked(worker, category, taskId));
 
         if (taskExists[key]) {
@@ -400,23 +353,8 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param taskId taskId
     /// @param evidenceHash evidenceHash
     /// @param verifier verifier
-    function _recordTask(
-        bytes32 key,
-        address worker,
-        uint8 category,
-        bytes32 taskId,
-        bytes32 evidenceHash,
-        address verifier
-    ) internal {
-        tasks[key] = TaskRecord({
-            worker: worker,
-            category: category,
-            taskId: taskId,
-            evidenceHash: evidenceHash,
-            completedAt: block.timestamp,
-            attested: false,
-            verifiedBy: verifier
-        });
+    function _recordTask(bytes32 key, address worker, uint8 category, bytes32 taskId, bytes32 evidenceHash, address verifier) internal {
+        tasks[key] = TaskRecord({worker: worker, category: category, taskId: taskId, evidenceHash: evidenceHash, completedAt: block.timestamp, attested: false, verifiedBy: verifier});
 
         taskExists[key] = true;
         workerTasks[worker].push(key);
@@ -452,25 +390,10 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param _social _social
     /// @param _panic _panic
     /// @param _workPayment _workPayment
-    function setProtocolContracts(
-        address _dao,
-        address _merchant,
-        address _bridge,
-        address _social,
-        address _panic,
-        address _workPayment
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setProtocolContracts(address _dao, address _merchant, address _bridge, address _social, address _panic, address _workPayment) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (pendingProtocolContracts.effectiveAt != 0) revert PendingChangeExists();
         uint64 effectiveAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
-        pendingProtocolContracts = PendingProtocolContracts({
-            dao: _dao,
-            merchant: _merchant,
-            bridge: _bridge,
-            social: _social,
-            panic: _panic,
-            workPayment: _workPayment,
-            effectiveAt: effectiveAt
-        });
+        pendingProtocolContracts = PendingProtocolContracts({dao: _dao, merchant: _merchant, bridge: _bridge, social: _social, panic: _panic, workPayment: _workPayment, effectiveAt: effectiveAt});
         emit ProtocolContractsChangeProposed(_dao, _merchant, _bridge, _social, _panic, _workPayment, effectiveAt);
     }
 
@@ -480,12 +403,30 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
         if (p.effectiveAt == 0) revert NoPendingChange();
         if (block.timestamp < p.effectiveAt) revert ChangeNotReady();
 
-        if (p.dao != address(0)) { daoContract = p.dao; emit ProtocolContractUpdated("DAO", p.dao); }
-        if (p.merchant != address(0)) { merchantPortal = p.merchant; emit ProtocolContractUpdated("MerchantPortal", p.merchant); }
-        if (p.bridge != address(0)) { bridgeModule = p.bridge; emit ProtocolContractUpdated("BridgeModule", p.bridge); }
-        if (p.social != address(0)) { seerSocial = p.social; emit ProtocolContractUpdated("SeerSocial", p.social); }
-        if (p.panic != address(0)) { panicGuard = p.panic; emit ProtocolContractUpdated("PanicGuard", p.panic); }
-        if (p.workPayment != address(0)) { workPaymentManager = p.workPayment; emit ProtocolContractUpdated("WorkPaymentManager", p.workPayment); }
+        if (p.dao != address(0)) {
+            daoContract = p.dao;
+            emit ProtocolContractUpdated("DAO", p.dao);
+        }
+        if (p.merchant != address(0)) {
+            merchantPortal = p.merchant;
+            emit ProtocolContractUpdated("MerchantPortal", p.merchant);
+        }
+        if (p.bridge != address(0)) {
+            bridgeModule = p.bridge;
+            emit ProtocolContractUpdated("BridgeModule", p.bridge);
+        }
+        if (p.social != address(0)) {
+            seerSocial = p.social;
+            emit ProtocolContractUpdated("SeerSocial", p.social);
+        }
+        if (p.panic != address(0)) {
+            panicGuard = p.panic;
+            emit ProtocolContractUpdated("PanicGuard", p.panic);
+        }
+        if (p.workPayment != address(0)) {
+            workPaymentManager = p.workPayment;
+            emit ProtocolContractUpdated("WorkPaymentManager", p.workPayment);
+        }
 
         delete pendingProtocolContracts;
     }
@@ -532,11 +473,7 @@ contract SeerWorkAttestation is AccessControl, ReentrancyGuard {
     /// @param category category
     /// @param taskId taskId
     /// @return _bool _bool
-    function isTaskVerified(
-        address worker,
-        uint8 category,
-        bytes32 taskId
-    ) external view returns (bool) {
+    function isTaskVerified(address worker, uint8 category, bytes32 taskId) external view returns (bool) {
         bytes32 key = keccak256(abi.encodePacked(worker, category, taskId));
         return taskExists[key];
     }

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { Ownable, ReentrancyGuard, Pausable } from "../SharedInterfaces.sol";
+import {Ownable, ReentrancyGuard, Pausable} from "../SharedInterfaces.sol";
 
 /**
  * @title BridgeSecurityModule
  * @notice Security controls for cross-chain bridge operations
  * @dev Implements rate limiting, daily caps, and suspicious transfer detection
- * 
+ *
  * Features:
  * - Hourly rate limiting (max 100K tokens/hour)
  * - Daily transfer caps (1M tokens/day)
@@ -66,7 +66,6 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     mapping(address => SuspiciousFlags) public suspiciousActivity;
     /// @notice Deprecated legacy field kept for ABI compatibility.
     mapping(address => bool) public blacklist;
-
 
     struct SuspiciousFlags {
         uint256 rapidTransferCount;
@@ -145,10 +144,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
      * @param amount Transfer amount
      * @return approved Whether transfer is approved
      */
-    function checkRateLimit(
-        address user,
-        uint256 amount
-    ) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
+    function checkRateLimit(address user, uint256 amount) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
         // BSM-01: Reject flagged users (fail-closed once flagged).
         if (suspiciousActivity[user].flagged) revert SuspiciousActivity();
 
@@ -290,8 +286,6 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
     /**
      * @notice Deprecated: blacklist controls are disabled to preserve non-custodial guarantees.
-     * @param _address _address
-     * @param _bool _bool
      */
     function setBlacklist(address, bool) external pure {
         revert("BSM: blacklist disabled");
@@ -311,7 +305,6 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
     /**
      * @notice Deprecated: manual suspicious-flag clearing is disabled.
-     * @param _address _address
      */
     function clearSuspiciousFlags(address) external pure {
         revert("BSM: clear flags disabled");

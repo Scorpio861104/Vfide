@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IERC20, ReentrancyGuard, SafeERC20 } from "./SharedInterfaces.sol";
+import {IERC20, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
 /**
  * @title FraudRegistry
@@ -102,7 +102,6 @@ error FR_EscrowRecipientMismatch();
 /// @title FraudRegistry
 /// @author Vfide
 contract FraudRegistry is ReentrancyGuard {
-
     // ── Configuration ────────────────────────────────────────
     /// @notice COMPLAINTS_TO_FLAG
     uint8 public constant COMPLAINTS_TO_FLAG = 3;
@@ -176,15 +175,15 @@ contract FraudRegistry is ReentrancyGuard {
 
     // ── Fraud flags ──────────────────────────────────────────
     /// @notice isPendingReview
-    mapping(address => bool) public isPendingReview;   // 3+ complaints → awaiting DAO review
+    mapping(address => bool) public isPendingReview; // 3+ complaints → awaiting DAO review
     /// @notice isFlagged
-    mapping(address => bool) public isFlagged;         // DAO confirmed fraud → service ban + escrow
+    mapping(address => bool) public isFlagged; // DAO confirmed fraud → service ban + escrow
     /// @notice isPermanentlyBanned
     mapping(address => bool) public isPermanentlyBanned; // DAO escalation
     /// @notice flaggedAt
     mapping(address => uint64) public flaggedAt;
     /// @notice pendingReviewAt
-    mapping(address => uint64) public pendingReviewAt;  // When review was triggered
+    mapping(address => uint64) public pendingReviewAt; // When review was triggered
     /// @notice dismissedComplaintPenaltyCursor
     mapping(address => uint256) public dismissedComplaintPenaltyCursor; // Number of dismissed complaints already penalized
     // N-H1 FIX: Chunked escrow-refund state used after clearFlag to avoid unbounded loops.
@@ -357,11 +356,7 @@ contract FraudRegistry is ReentrancyGuard {
         // Cap complaints array to prevent unbounded growth
         require(complaints[target].length < 100, "FR: complaint limit");
 
-        complaints[target].push(Complaint({
-            reporter: msg.sender,
-            reason: reason,
-            timestamp: uint64(block.timestamp)
-        }));
+        complaints[target].push(Complaint({reporter: msg.sender, reason: reason, timestamp: uint64(block.timestamp)}));
         ++complaintCount[target];
 
         emit ComplaintFiled(target, msg.sender, reason, complaintCount[target]);
@@ -406,15 +401,7 @@ contract FraudRegistry is ReentrancyGuard {
         uint64 releaseAt = uint64(block.timestamp) + uint64(ESCROW_DURATION);
 
         escrowIndex = escrowedTransfers.length;
-        escrowedTransfers.push(EscrowedTransfer({
-            from: from,
-            to: to,
-            amount: amount,
-            releaseAt: releaseAt,
-            released: false,
-            cancelled: false,
-            recipientOwner: recipientOwner
-        }));
+        escrowedTransfers.push(EscrowedTransfer({from: from, to: to, amount: amount, releaseAt: releaseAt, released: false, cancelled: false, recipientOwner: recipientOwner}));
 
         // M5g FIX: cap on ACTIVE escrows per user, not lifetime array length.
         // Prevents permanent user DoS after 500 historical escrows have released.
@@ -508,7 +495,6 @@ contract FraudRegistry is ReentrancyGuard {
     /// @notice Check if an address is banned from protocol services
     /// @param user Address to check
     /// @return banned True if flagged or permanently banned
-    /// @return _bool _bool
     function isServiceBanned(address user) external view returns (bool) {
         return isFlagged[user] || isPermanentlyBanned[user];
     }
@@ -519,7 +505,6 @@ contract FraudRegistry is ReentrancyGuard {
     /// @dev H-3 FIX: Permanently banned users must also have escrow applied.
     ///      Previously `isPermanentlyBanned` silently removed the escrow restriction,
     ///      meaning the most severely sanctioned users had the fewest transfer restrictions.
-    /// @return _bool _bool
     function requiresEscrow(address user) external view returns (bool) {
         return isFlagged[user] || isPermanentlyBanned[user];
     }
@@ -536,10 +521,7 @@ contract FraudRegistry is ReentrancyGuard {
     function confirmFraud(address target) external onlyDAO nonReentrant {
         require(isPendingReview[target], "FR: not pending review");
         require(!isFlagged[target], "FR: already flagged");
-        require(
-            block.timestamp >= pendingReviewAt[target] + PENDING_REVIEW_APPEAL_WINDOW,
-            "FR: appeal window not elapsed"
-        );
+        require(block.timestamp >= pendingReviewAt[target] + PENDING_REVIEW_APPEAL_WINDOW, "FR: appeal window not elapsed");
 
         isPendingReview[target] = false;
         pendingReviewAt[target] = 0;
@@ -653,7 +635,7 @@ contract FraudRegistry is ReentrancyGuard {
         // processClearFlagEscrowRefunds() to prevent clearFlag gas exhaustion.
         clearFlagEscrowCursor[target] = 0;
         clearFlagEscrowRefundPending[target] = true;
-        
+
         emit FlagCleared(target, msg.sender);
     }
 
@@ -663,11 +645,7 @@ contract FraudRegistry is ReentrancyGuard {
     /// @param target Address whose flag was cleared.
     /// @param maxCount Max escrow entries to scan in this call (0 => default 25).
     /// @return processed processed
-    function processClearFlagEscrowRefunds(address target, uint256 maxCount)
-        external
-        nonReentrant
-        returns (uint256 processed)
-    {
+    function processClearFlagEscrowRefunds(address target, uint256 maxCount) external nonReentrant returns (uint256 processed) {
         require(clearFlagEscrowRefundPending[target], "FR: no pending clear-refunds");
 
         uint256[] storage userIndices = userEscrowIndices[target];
@@ -812,11 +790,7 @@ contract FraudRegistry is ReentrancyGuard {
     /// @return reporters reporters
     /// @return reasons reasons
     /// @return timestamps timestamps
-    function getComplaints(address target) external view returns (
-        address[] memory reporters,
-        string[] memory reasons,
-        uint64[] memory timestamps
-    ) {
+    function getComplaints(address target) external view returns (address[] memory reporters, string[] memory reasons, uint64[] memory timestamps) {
         Complaint[] storage c = complaints[target];
         uint256 len = c.length;
         reporters = new address[](len);
@@ -836,19 +810,16 @@ contract FraudRegistry is ReentrancyGuard {
     /// @return recipients recipients
     /// @return amounts amounts
     /// @return releaseAts releaseAts
-    function getPendingEscrows(address user) external view returns (
-        uint256[] memory indices,
-        address[] memory recipients,
-        uint256[] memory amounts,
-        uint64[] memory releaseAts
-    ) {
+    function getPendingEscrows(address user) external view returns (uint256[] memory indices, address[] memory recipients, uint256[] memory amounts, uint64[] memory releaseAts) {
         uint256[] storage userIndices = userEscrowIndices[user];
         uint256 pendingCount = 0;
         uint256 _len = userIndices.length;
 
         for (uint256 i = 0; i < _len; ++i) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) { ++pendingCount; }
+            if (!e.released && !e.cancelled) {
+                ++pendingCount;
+            }
         }
 
         indices = new uint256[](pendingCount);
@@ -878,13 +849,11 @@ contract FraudRegistry is ReentrancyGuard {
     /// @return amounts Escrow amounts.
     /// @return releaseAts Escrow unlock timestamps.
     /// @return nextOffset Cursor for the next page.
-    function getPendingEscrowsPaginated(address user, uint256 offset, uint256 limit) external view returns (
-        uint256[] memory indices,
-        address[] memory recipients,
-        uint256[] memory amounts,
-        uint64[] memory releaseAts,
-        uint256 nextOffset
-    ) {
+    function getPendingEscrowsPaginated(
+        address user,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (uint256[] memory indices, address[] memory recipients, uint256[] memory amounts, uint64[] memory releaseAts, uint256 nextOffset) {
         uint256[] storage userIndices = userEscrowIndices[user];
         uint256 len = userIndices.length;
         if (offset >= len) {
@@ -930,14 +899,7 @@ contract FraudRegistry is ReentrancyGuard {
     /// @return permanentlyBanned permanentlyBanned
     /// @return flagTimestamp flagTimestamp
     /// @return pendingEscrowCount pendingEscrowCount
-    function getFraudStatus(address user) external view returns (
-        uint8 totalComplaints,
-        bool pendingReview,
-        bool flagged,
-        bool permanentlyBanned,
-        uint64 flagTimestamp,
-        uint256 pendingEscrowCount
-    ) {
+    function getFraudStatus(address user) external view returns (uint8 totalComplaints, bool pendingReview, bool flagged, bool permanentlyBanned, uint64 flagTimestamp, uint256 pendingEscrowCount) {
         totalComplaints = complaintCount[user];
         pendingReview = isPendingReview[user];
         flagged = isFlagged[user];
@@ -949,7 +911,9 @@ contract FraudRegistry is ReentrancyGuard {
         uint256 _lenUI = userIndices.length;
         for (uint256 i = 0; i < _lenUI; ++i) {
             EscrowedTransfer storage e = escrowedTransfers[userIndices[i]];
-            if (!e.released && !e.cancelled) { ++pendingEscrowCount; }
+            if (!e.released && !e.cancelled) {
+                ++pendingEscrowCount;
+            }
         }
     }
 

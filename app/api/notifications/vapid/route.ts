@@ -16,7 +16,7 @@ import { withRateLimit } from '@/lib/auth/rateLimit';
 // VAPID public key from environment - required for production
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const GET = withAuth(async (request: NextRequest, _user: JWTPayload) => {
   // Rate limiting
   const rateLimit = await withRateLimit(request, 'api');
   if (rateLimit) return rateLimit;

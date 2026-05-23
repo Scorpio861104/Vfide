@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IVaultHub, IProofLedger } from "../SharedInterfaces.sol";
+import {IVaultHub, IProofLedger} from "../SharedInterfaces.sol";
 
 /**
  * VFIDESecurity.sol  —  Consolidated Security Layer
@@ -114,7 +114,8 @@ contract GuardianRegistry {
     /// @param _dao _dao
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert SEC_Zero();
-        dao = _dao; emit DAOSet(_dao);
+        dao = _dao;
+        emit DAOSet(_dao);
     }
 
     /// @notice addGuardian
@@ -260,9 +261,14 @@ contract GuardianLock {
     mapping(address => uint8) public lockThresholdSnapshot;
 
     /// @notice onlyDAO
-    modifier onlyDAO() { _checkDAOGL(); _; }
+    modifier onlyDAO() {
+        _checkDAOGL();
+        _;
+    }
     /// @notice _checkDAOGL
-    function _checkDAOGL() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
+    function _checkDAOGL() internal view {
+        if (msg.sender != dao) revert SEC_NotDAO();
+    }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -382,7 +388,9 @@ contract GuardianLock {
     /// @param action action
     function _log(string memory action) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     /// @notice _logEv
     /// @param who who
@@ -391,7 +399,9 @@ contract GuardianLock {
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 }
 
@@ -465,7 +475,7 @@ contract PanicGuard {
     mapping(address => uint64) public quarantineUntil;
     /// @notice selfPanicUntil
     mapping(address => uint64) public selfPanicUntil;
-    
+
     // C-10: Self-panic rate limiting
     /// @notice lastSelfPanic
     mapping(address => uint256) public lastSelfPanic;
@@ -473,7 +483,7 @@ contract PanicGuard {
     uint256 public constant SELF_PANIC_COOLDOWN = 1 days;
     /// @notice MIN_VAULT_AGE_FOR_PANIC
     uint256 public constant MIN_VAULT_AGE_FOR_PANIC = 1 hours;
-    
+
     // Track when vaults were created (set by VaultHub integration)
     /// @notice vaultCreationTime
     mapping(address => uint256) public vaultCreationTime;
@@ -491,9 +501,14 @@ contract PanicGuard {
     uint64 public constant ABSOLUTE_MAX_QUARANTINE = 90 days;
 
     /// @notice onlyDAO
-    modifier onlyDAO() { _checkDAOPG(); _; }
+    modifier onlyDAO() {
+        _checkDAOPG();
+        _;
+    }
     /// @notice _checkDAOPG
-    function _checkDAOPG() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
+    function _checkDAOPG() internal view {
+        if (msg.sender != dao) revert SEC_NotDAO();
+    }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -586,24 +601,18 @@ contract PanicGuard {
         address vault = vaultHub.vaultOf(msg.sender);
         require(vault != address(0), "no vault");
         require(vaultCreationTime[vault] > 0, "SEC: vault not registered");
-        
+
         // C-10: Rate limiting - max 1 self-panic per 24 hours
-        require(
-            block.timestamp >= lastSelfPanic[msg.sender] + SELF_PANIC_COOLDOWN,
-            "SEC: panic cooldown active"
-        );
-        
+        require(block.timestamp >= lastSelfPanic[msg.sender] + SELF_PANIC_COOLDOWN, "SEC: panic cooldown active");
+
         // C-10: Require minimum vault age (prevents spam from new vaults)
         uint256 creationTime = vaultCreationTime[vault];
         if (creationTime > 0) {
-            require(
-                block.timestamp >= creationTime + MIN_VAULT_AGE_FOR_PANIC,
-                "SEC: vault too new for self-panic"
-            );
+            require(block.timestamp >= creationTime + MIN_VAULT_AGE_FOR_PANIC, "SEC: vault too new for self-panic");
         }
-        
+
         lastSelfPanic[msg.sender] = block.timestamp;
-        
+
         // Track self-panic window so cancelSelfPanic cannot clear DAO-imposed quarantines.
         uint64 appliedDuration = duration;
         if (appliedDuration < minDuration) appliedDuration = minDuration;
@@ -719,7 +728,9 @@ contract PanicGuard {
     /// @param action action
     function _log(string memory action) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     /// @notice _logEv
     /// @param who who
@@ -728,7 +739,9 @@ contract PanicGuard {
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 }
 
@@ -788,7 +801,7 @@ contract EmergencyBreaker {
 
     /// @notice halted
     bool public halted;
-    
+
     /// @notice lastToggleTime
     uint64 public lastToggleTime;
     /// @notice toggleCooldown
@@ -804,9 +817,14 @@ contract EmergencyBreaker {
     PendingToggle public pendingToggle;
 
     /// @notice onlyDAO
-    modifier onlyDAO() { _checkDAOEB(); _; }
+    modifier onlyDAO() {
+        _checkDAOEB();
+        _;
+    }
     /// @notice _checkDAOEB
-    function _checkDAOEB() internal view { if (msg.sender != dao) revert SEC_NotDAO(); }
+    function _checkDAOEB() internal view {
+        if (msg.sender != dao) revert SEC_NotDAO();
+    }
 
     /// @notice constructor
     /// @param _dao _dao
@@ -864,7 +882,7 @@ contract EmergencyBreaker {
         emit LedgerSet(_ledger);
         _log("breaker_ledger_set");
     }
-    
+
     /// @notice Set toggle cooldown (DAO-only)
     /// @dev SEC-05 FIX: Enforce minimum cooldown to prevent rapid toggle abuse
     /// @param _cooldown _cooldown
@@ -899,12 +917,7 @@ contract EmergencyBreaker {
 
         bytes32 requested = keccak256(abi.encode(on, reason));
         if (!pendingToggle.exists) {
-            pendingToggle = PendingToggle({
-                exists: true,
-                on: on,
-                reason: reason,
-                proposer: msg.sender
-            });
+            pendingToggle = PendingToggle({exists: true, on: on, reason: reason, proposer: msg.sender});
             emit ToggleProposed(on, reason, msg.sender);
             _logEv(address(this), "breaker_toggle_proposed", on ? 1 : 0, reason);
             return;
@@ -936,7 +949,9 @@ contract EmergencyBreaker {
     /// @param action action
     function _log(string memory action) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {}
+        }
     }
     /// @notice _logEv
     /// @param who who
@@ -945,7 +960,9 @@ contract EmergencyBreaker {
     /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         address L = address(ledger);
-        if (L != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch {} }
+        if (L != address(0)) {
+            try ledger.logEvent(who, action, amount, note) {} catch {}
+        }
     }
 }
 

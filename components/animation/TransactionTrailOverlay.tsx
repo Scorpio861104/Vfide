@@ -21,9 +21,9 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { useTransactionTrails, Trail } from '@/lib/animation/transactionTrail';
+import { useTransactionTrails } from '@/lib/animation/transactionTrail';
 import { usePrefersReducedMotion } from '@/app/components/usePrefersReducedMotion';
-import { cubicBezier, easeOutCubic } from '@/lib/animation/particles';
+import { cubicBezier } from '@/lib/animation/particles';
 
 interface Particle {
   trailId: string;

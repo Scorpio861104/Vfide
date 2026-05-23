@@ -115,7 +115,7 @@ function isDatabaseUnavailableError(error: unknown): boolean {
  * GET /api/endorsements?endorsedAddress=0x...&proposalId=123&limit=50&offset=0
  * Get endorsements
  */
-export const GET = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const GET = withAuth(async (request: NextRequest, _user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'api');
   if (rateLimitResponse) return rateLimitResponse;
 

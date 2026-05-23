@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { AccessControl } from "./SharedInterfaces.sol";
+import {AccessControl} from "./SharedInterfaces.sol";
 
 /**
  * @title VFIDEAccessControl
@@ -18,25 +18,25 @@ import { AccessControl } from "./SharedInterfaces.sol";
  */
 contract VFIDEAccessControl is AccessControl {
     /// @notice EMERGENCY_PAUSER_ROLE
-    bytes32 public constant EMERGENCY_PAUSER_ROLE  = keccak256("EMERGENCY_PAUSER_ROLE");
+    bytes32 public constant EMERGENCY_PAUSER_ROLE = keccak256("EMERGENCY_PAUSER_ROLE");
     /// @notice CONFIG_MANAGER_ROLE
-    bytes32 public constant CONFIG_MANAGER_ROLE    = keccak256("CONFIG_MANAGER_ROLE");
+    bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
     /// @notice TREASURY_MANAGER_ROLE
-    bytes32 public constant TREASURY_MANAGER_ROLE  = keccak256("TREASURY_MANAGER_ROLE");
+    bytes32 public constant TREASURY_MANAGER_ROLE = keccak256("TREASURY_MANAGER_ROLE");
 
     /// @notice ADMIN_TRANSFER_DELAY
-    uint64  public constant ADMIN_TRANSFER_DELAY = 48 hours;
+    uint64 public constant ADMIN_TRANSFER_DELAY = 48 hours;
 
     /// @notice _reentrancyLock
     uint256 private _reentrancyLock;
     /// @notice pendingAdmin
-    address public  pendingAdmin;
+    address public pendingAdmin;
     /// @notice pendingAdminAt
-    uint64  public  pendingAdminAt;
+    uint64 public pendingAdminAt;
 
     // Enumerable member tracking (mirrors OZ AccessControlEnumerable without OZ dep)
     /// @notice _roleMembers
-    mapping(bytes32 => address[])                   private _roleMembers;
+    mapping(bytes32 => address[]) private _roleMembers;
     /// @notice _roleMemberIndex
     mapping(bytes32 => mapping(address => uint256)) private _roleMemberIndex; // 1-based
 
@@ -87,9 +87,9 @@ contract VFIDEAccessControl is AccessControl {
         }
         _grantRole(DEFAULT_ADMIN_ROLE, _admin);
         _addMember(DEFAULT_ADMIN_ROLE, _admin);
-        _setRoleAdmin(EMERGENCY_PAUSER_ROLE,  DEFAULT_ADMIN_ROLE);
-        _setRoleAdmin(CONFIG_MANAGER_ROLE,    DEFAULT_ADMIN_ROLE);
-        _setRoleAdmin(TREASURY_MANAGER_ROLE,  DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(EMERGENCY_PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(CONFIG_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(TREASURY_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
     /// @notice _addMember
@@ -137,9 +137,9 @@ contract VFIDEAccessControl is AccessControl {
     /// @param newAdmin newAdmin
     function transferAdminRole(address newAdmin) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(newAdmin != address(0), "VFIDEAccessControl: new admin is zero address");
-        require(newAdmin != msg.sender,  "VFIDEAccessControl: already admin");
-        require(pendingAdminAt == 0,     "VFIDEAccessControl: transfer already pending");
-        pendingAdmin   = newAdmin;
+        require(newAdmin != msg.sender, "VFIDEAccessControl: already admin");
+        require(pendingAdminAt == 0, "VFIDEAccessControl: transfer already pending");
+        pendingAdmin = newAdmin;
         pendingAdminAt = uint64(block.timestamp) + ADMIN_TRANSFER_DELAY;
         emit AdminTransferQueued(msg.sender, newAdmin, pendingAdminAt);
     }
@@ -150,9 +150,12 @@ contract VFIDEAccessControl is AccessControl {
         require(block.timestamp >= pendingAdminAt, "VFIDEAccessControl: transfer timelock active");
         address prev = msg.sender;
         address next = pendingAdmin;
-        _grantRole(DEFAULT_ADMIN_ROLE, next);  _addMember(DEFAULT_ADMIN_ROLE, next);
-        _revokeRole(DEFAULT_ADMIN_ROLE, prev); _removeMember(DEFAULT_ADMIN_ROLE, prev);
-        delete pendingAdmin; delete pendingAdminAt;
+        _grantRole(DEFAULT_ADMIN_ROLE, next);
+        _addMember(DEFAULT_ADMIN_ROLE, next);
+        _revokeRole(DEFAULT_ADMIN_ROLE, prev);
+        _removeMember(DEFAULT_ADMIN_ROLE, prev);
+        delete pendingAdmin;
+        delete pendingAdminAt;
         emit AdminTransferApplied(prev, next);
     }
 
@@ -160,7 +163,8 @@ contract VFIDEAccessControl is AccessControl {
     function cancelAdminRoleTransfer() external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrantAC {
         require(pendingAdmin != address(0) && pendingAdminAt != 0, "VFIDEAccessControl: no pending transfer");
         address q = pendingAdmin;
-        delete pendingAdmin; delete pendingAdminAt;
+        delete pendingAdmin;
+        delete pendingAdminAt;
         emit AdminTransferCanceled(msg.sender, q);
     }
 
@@ -168,12 +172,11 @@ contract VFIDEAccessControl is AccessControl {
     /// @param role role
     /// @param account account
     /// @param reason reason
-    function grantRoleWithReason(bytes32 role, address account, string calldata reason)
-        external onlyRole(getRoleAdmin(role)) nonReentrantAC
-    {
+    function grantRoleWithReason(bytes32 role, address account, string calldata reason) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         require(account != address(0), "VFIDEAccessControl: account is zero address");
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
-        _grantRole(role, account); _addMember(role, account);
+        _grantRole(role, account);
+        _addMember(role, account);
         emit RoleGrantedWithReason(role, account, msg.sender, reason);
     }
 
@@ -181,11 +184,10 @@ contract VFIDEAccessControl is AccessControl {
     /// @param role role
     /// @param account account
     /// @param reason reason
-    function revokeRoleWithReason(bytes32 role, address account, string calldata reason)
-        external onlyRole(getRoleAdmin(role)) nonReentrantAC
-    {
+    function revokeRoleWithReason(bytes32 role, address account, string calldata reason) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         require(bytes(reason).length > 0, "VFIDEAccessControl: reason required");
-        _revokeRole(role, account); _removeMember(role, account);
+        _revokeRole(role, account);
+        _removeMember(role, account);
         emit RoleRevokedWithReason(role, account, msg.sender, reason);
     }
 
@@ -193,21 +195,24 @@ contract VFIDEAccessControl is AccessControl {
     /// @param role role
     /// @param account account
     function grantRole(bytes32 role, address account) public override onlyRole(getRoleAdmin(role)) {
-        super.grantRole(role, account); _addMember(role, account);
+        super.grantRole(role, account);
+        _addMember(role, account);
     }
 
     /// @notice revokeRole
     /// @param role role
     /// @param account account
     function revokeRole(bytes32 role, address account) public override onlyRole(getRoleAdmin(role)) {
-        super.revokeRole(role, account); _removeMember(role, account);
+        super.revokeRole(role, account);
+        _removeMember(role, account);
     }
 
     /// @notice renounceRole
     /// @param role role
     /// @param account account
     function renounceRole(bytes32 role, address account) public override {
-        super.renounceRole(role, account); _removeMember(role, account);
+        super.renounceRole(role, account);
+        _removeMember(role, account);
     }
 
     /// @notice hasAnyRole
@@ -235,23 +240,21 @@ contract VFIDEAccessControl is AccessControl {
     /// @notice batchGrantRole
     /// @param role role
     /// @param accounts accounts
-    function batchGrantRole(bytes32 role, address[] calldata accounts)
-        external onlyRole(getRoleAdmin(role)) nonReentrantAC
-    {
+    function batchGrantRole(bytes32 role, address[] calldata accounts) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         for (uint256 i = 0; i < accounts.length; ++i) {
             require(accounts[i] != address(0), "VFIDEAccessControl: account is zero address");
-            _grantRole(role, accounts[i]); _addMember(role, accounts[i]);
+            _grantRole(role, accounts[i]);
+            _addMember(role, accounts[i]);
         }
     }
 
     /// @notice batchRevokeRole
     /// @param role role
     /// @param accounts accounts
-    function batchRevokeRole(bytes32 role, address[] calldata accounts)
-        external onlyRole(getRoleAdmin(role)) nonReentrantAC
-    {
+    function batchRevokeRole(bytes32 role, address[] calldata accounts) external onlyRole(getRoleAdmin(role)) nonReentrantAC {
         for (uint256 i = 0; i < accounts.length; ++i) {
-            _revokeRole(role, accounts[i]); _removeMember(role, accounts[i]);
+            _revokeRole(role, accounts[i]);
+            _removeMember(role, accounts[i]);
         }
     }
 }

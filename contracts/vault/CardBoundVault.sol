@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { IVaultHub, IProofLedger, IERC20, ReentrancyGuard, SafeERC20 } from "../SharedInterfaces.sol";
-import { CardBoundVaultPaymentQueueManager } from "./CardBoundVaultPaymentQueueManager.sol";
-import { CardBoundVaultWithdrawalQueueManager } from "./CardBoundVaultWithdrawalQueueManager.sol";
-import { CardBoundVaultInheritanceManager } from "./CardBoundVaultInheritanceManager.sol";
-import { CardBoundVaultAdminManager } from "./CardBoundVaultAdminManager.sol";
+import {IVaultHub, IProofLedger, IERC20, ReentrancyGuard, SafeERC20} from "../SharedInterfaces.sol";
+import {CardBoundVaultPaymentQueueManager} from "./CardBoundVaultPaymentQueueManager.sol";
+import {CardBoundVaultWithdrawalQueueManager} from "./CardBoundVaultWithdrawalQueueManager.sol";
+import {CardBoundVaultInheritanceManager} from "./CardBoundVaultInheritanceManager.sol";
+import {CardBoundVaultAdminManager} from "./CardBoundVaultAdminManager.sol";
 
 /// @notice IVaultHubGuardianSetup
 /// @title IVaultHubGuardianSetup
@@ -276,7 +276,9 @@ interface ICardBoundVaultPaymentQueueManager {
     /// @return cancelled cancelled
     /// @return intentNonce intentNonce
     /// @return recipientCodeHashAtQueue recipientCodeHashAtQueue
-    function paymentQueue(uint256 index)
+    function paymentQueue(
+        uint256 index
+    )
         external
         view
         returns (
@@ -299,26 +301,20 @@ interface ICardBoundVaultPaymentQueueManager {
     /// @param intentNonce intentNonce
     /// @return queueIndex queueIndex
     /// @return executeAfter executeAfter
-    function queuePayment(address token, address merchant, address recipient, uint256 amount, uint256 intentNonce)
-        external
-        returns (uint256 queueIndex, uint64 executeAfter);
+    function queuePayment(address token, address merchant, address recipient, uint256 amount, uint256 intentNonce) external returns (uint256 queueIndex, uint64 executeAfter);
     /// @notice executeQueuedPayment
     /// @param queueIndex queueIndex
     /// @param isAdmin isAdmin
     /// @return token token
     /// @return recipient recipient
     /// @return amount amount
-    function executeQueuedPayment(uint256 queueIndex, bool isAdmin)
-        external
-        returns (address token, address recipient, uint256 amount);
+    function executeQueuedPayment(uint256 queueIndex, bool isAdmin) external returns (address token, address recipient, uint256 amount);
     /// @notice cancelQueuedPayment
     /// @param queueIndex queueIndex
     /// @param authorized authorized
     /// @return requestTime requestTime
     /// @return amount amount
-    function cancelQueuedPayment(uint256 queueIndex, bool authorized)
-        external
-        returns (uint64 requestTime, uint256 amount);
+    function cancelQueuedPayment(uint256 queueIndex, bool authorized) external returns (uint64 requestTime, uint256 amount);
     /// @notice setLargePaymentThreshold
     /// @param threshold threshold
     /// @param delay delay
@@ -356,62 +352,40 @@ interface ICardBoundVaultWithdrawalQueueManager {
     /// @return cancelled cancelled
     /// @return intentNonce intentNonce
     /// @return toVaultCodeHashAtQueue toVaultCodeHashAtQueue
-    function withdrawalQueue(uint256 index)
-        external
-        view
-        returns (
-            address toVault,
-            uint256 amount,
-            uint64 requestTime,
-            uint64 executeAfter,
-            bool executed,
-            bool cancelled,
-            uint256 intentNonce,
-            bytes32 toVaultCodeHashAtQueue
-        );
+    function withdrawalQueue(
+        uint256 index
+    ) external view returns (address toVault, uint256 amount, uint64 requestTime, uint64 executeAfter, bool executed, bool cancelled, uint256 intentNonce, bytes32 toVaultCodeHashAtQueue);
     /// @notice getPendingQueuedWithdrawals
     /// @return indices indices
     /// @return amounts amounts
     /// @return executeAfters executeAfters
-    function getPendingQueuedWithdrawals()
-        external
-        view
-        returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters);
+    function getPendingQueuedWithdrawals() external view returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters);
     /// @notice getPendingQueuedWithdrawalsPaged
     /// @param start start
     /// @param limit limit
     /// @return indices indices
     /// @return amounts amounts
     /// @return executeAfters executeAfters
-    function getPendingQueuedWithdrawalsPaged(uint256 start, uint256 limit)
-        external
-        view
-        returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters);
+    function getPendingQueuedWithdrawalsPaged(uint256 start, uint256 limit) external view returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters);
     /// @notice queueWithdrawal
     /// @param toVault toVault
     /// @param amount amount
     /// @param intentNonce intentNonce
     /// @return queueIndex queueIndex
     /// @return executeAfter executeAfter
-    function queueWithdrawal(address toVault, uint256 amount, uint256 intentNonce)
-        external
-        returns (uint256 queueIndex, uint64 executeAfter);
+    function queueWithdrawal(address toVault, uint256 amount, uint256 intentNonce) external returns (uint256 queueIndex, uint64 executeAfter);
     /// @notice executeQueuedWithdrawal
     /// @param queueIndex queueIndex
     /// @param isAdmin isAdmin
     /// @return toVault toVault
     /// @return amount amount
-    function executeQueuedWithdrawal(uint256 queueIndex, bool isAdmin)
-        external
-        returns (address toVault, uint256 amount);
+    function executeQueuedWithdrawal(uint256 queueIndex, bool isAdmin) external returns (address toVault, uint256 amount);
     /// @notice cancelQueuedWithdrawal
     /// @param queueIndex queueIndex
     /// @param authorized authorized
     /// @return requestTime requestTime
     /// @return amount amount
-    function cancelQueuedWithdrawal(uint256 queueIndex, bool authorized)
-        external
-        returns (uint64 requestTime, uint256 amount);
+    function cancelQueuedWithdrawal(uint256 queueIndex, bool authorized) external returns (uint64 requestTime, uint256 amount);
     /// @notice clearOnRecovery
     function clearOnRecovery() external;
 }
@@ -434,13 +408,9 @@ contract CardBoundVault is ReentrancyGuard {
     string private constant VERSION = "1";
 
     /// @notice EIP712_DOMAIN_TYPEHASH
-    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(
-        "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-    );
+    bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     /// @notice TRANSFER_INTENT_TYPEHASH
-    bytes32 private constant TRANSFER_INTENT_TYPEHASH = keccak256(
-        "TransferIntent(address vault,address toVault,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)"
-    );
+    bytes32 private constant TRANSFER_INTENT_TYPEHASH = keccak256("TransferIntent(address vault,address toVault,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)");
     /// @notice PAY_INTENT_TYPEHASH
     bytes32 private constant PAY_INTENT_TYPEHASH = keccak256(
         "PayIntent(address vault,address merchantPortal,address token,address merchant,address recipient,uint256 amount,uint256 nonce,uint64 walletEpoch,uint64 deadline,uint256 chainId)"
@@ -455,8 +425,7 @@ contract CardBoundVault is ReentrancyGuard {
 
     // secp256k1n / 2
     /// @notice ECDSA_S_UPPER_BOUND
-    uint256 private constant ECDSA_S_UPPER_BOUND =
-        0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0;
+    uint256 private constant ECDSA_S_UPPER_BOUND = 0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0;
 
     /// @notice MIN_ROTATION_DELAY
     uint64 public constant MIN_ROTATION_DELAY = 10 minutes;
@@ -668,10 +637,10 @@ contract CardBoundVault is ReentrancyGuard {
     ///      and is NOT verified by this contract — verification is the escrow contract's
     ///      responsibility (it knows what escrow id it just created).
     struct EscrowFundIntent {
-        address vault;          // must equal address(this)
+        address vault; // must equal address(this)
         address escrowContract; // must equal msg.sender
-        uint256 escrowId;       // event-indexing only; not verified
-        address token;          // must equal vfideToken
+        uint256 escrowId; // event-indexing only; not verified
+        address token; // must equal vfideToken
         uint256 amount;
         uint256 nonce;
         uint64 walletEpoch;
@@ -781,12 +750,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param newWallet newWallet
     /// @param activateAt activateAt
     /// @param proposalNonce proposalNonce
-    event WalletRotationProposed(
-        address indexed oldWallet,
-        address indexed newWallet,
-        uint64 activateAt,
-        uint256 indexed proposalNonce
-    );
+    event WalletRotationProposed(address indexed oldWallet, address indexed newWallet, uint64 activateAt, uint256 indexed proposalNonce);
     /// @notice WalletRotationApproved
     /// @param guardian guardian
     /// @param proposalNonce proposalNonce
@@ -809,13 +773,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param amount amount
     /// @param nonce nonce
     /// @param walletEpoch walletEpoch
-    event VaultTransferAuthorized(
-        address indexed signer,
-        address indexed toVault,
-        uint256 amount,
-        uint256 indexed nonce,
-        uint64 walletEpoch
-    );
+    event VaultTransferAuthorized(address indexed signer, address indexed toVault, uint256 amount, uint256 indexed nonce, uint64 walletEpoch);
 
     /// @notice PauseSet
     /// @param paused paused
@@ -892,7 +850,6 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param threshold threshold
     /// @param executeAfter executeAfter
     event LargePaymentThresholdCancelled(uint256 threshold, uint64 executeAfter);
-
 
     /// @notice GUARDIAN-WARN-1: emitted on every outgoing payment/transfer made before the
     /// vault has completed multi-guardian setup. The vault is operationally unprotected
@@ -1087,15 +1044,7 @@ contract CardBoundVault is ReentrancyGuard {
 
         adminManager = address(new CardBoundVaultAdminManager(address(this)));
 
-        _domainSeparator = keccak256(
-            abi.encode(
-                EIP712_DOMAIN_TYPEHASH,
-                keccak256(bytes(NAME)),
-                keccak256(bytes(VERSION)),
-                block.chainid,
-                address(this)
-            )
-        );
+        _domainSeparator = keccak256(abi.encode(EIP712_DOMAIN_TYPEHASH, keccak256(bytes(NAME)), keccak256(bytes(VERSION)), block.chainid, address(this)));
 
         emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
     }
@@ -1513,12 +1462,7 @@ contract CardBoundVault is ReentrancyGuard {
         if (delaySeconds < MIN_ROTATION_DELAY || delaySeconds > MAX_ROTATION_DELAY) revert CBV_RotationNotReady();
 
         ++rotationNonce;
-        pendingRotation = WalletRotation({
-            newWallet: newWallet,
-            activateAt: uint64(block.timestamp + delaySeconds),
-            approvals: 0,
-            proposalNonce: rotationNonce
-        });
+        pendingRotation = WalletRotation({newWallet: newWallet, activateAt: uint64(block.timestamp + delaySeconds), approvals: 0, proposalNonce: rotationNonce});
 
         emit WalletRotationProposed(activeWallet, newWallet, pendingRotation.activateAt, rotationNonce);
     }
@@ -1573,11 +1517,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Execute a signed transfer intent from this vault to another vault.
     /// @param intent Structured transfer intent signed by active wallet.
     /// @param signature ECDSA signature over the intent digest.
-    function executeVaultToVaultTransfer(TransferIntent calldata intent, bytes calldata signature)
-        external
-        nonReentrant
-        whenNotPaused
-    {
+    function executeVaultToVaultTransfer(TransferIntent calldata intent, bytes calldata signature) external nonReentrant whenNotPaused {
         _requireOperationalForOutboundTransfers();
         // GUARDIAN-WARN-1 FIX: warn-instead-of-revert. See executePayMerchant for full rationale.
         // Recovery operations remain gated; everyday transfers are not.
@@ -1640,11 +1580,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Execute a signed merchant payment intent from this vault.
     /// @param intent Structured payment intent signed by active wallet.
     /// @param signature ECDSA signature over the pay intent digest.
-    function executePayMerchant(PayIntent calldata intent, bytes calldata signature)
-        external
-        nonReentrant
-        whenNotPaused
-    {
+    function executePayMerchant(PayIntent calldata intent, bytes calldata signature) external nonReentrant whenNotPaused {
         _requireOperationalForOutboundTransfers();
         // GUARDIAN-WARN-1 FIX: Previously reverted with CBV_GuardianSetupRequired. That blocked
         // every merchant payment from new users until they had configured 2+ guardians with at
@@ -1685,8 +1621,7 @@ contract CardBoundVault is ReentrancyGuard {
         uint256 paymentThreshold = ICardBoundVaultPaymentQueueManager(paymentQueueManager).largePaymentThreshold();
         if (paymentThreshold > 0 && amount >= paymentThreshold) {
             spentToday += amount;
-            (uint256 queueIndex, uint64 executeAfter) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-                .queuePayment(intent.token, intent.merchant, intent.recipient, amount, intent.nonce);
+            (uint256 queueIndex, uint64 executeAfter) = ICardBoundVaultPaymentQueueManager(paymentQueueManager).queuePayment(intent.token, intent.merchant, intent.recipient, amount, intent.nonce);
             emit PaymentQueued(queueIndex, intent.token, intent.merchant, intent.recipient, amount, executeAfter);
             _logPayment(intent.recipient, amount);
             return;
@@ -1715,11 +1650,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// pass through this intent unchanged, and emit EscrowFunded once this returns.
     /// @param intent intent
     /// @param signature signature
-    function executeFundEscrow(EscrowFundIntent calldata intent, bytes calldata signature)
-        external
-        nonReentrant
-        whenNotPaused
-    {
+    function executeFundEscrow(EscrowFundIntent calldata intent, bytes calldata signature) external nonReentrant whenNotPaused {
         // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; intent flow is atomic
         _requireOperationalForOutboundTransfers();
         // Mirrors GUARDIAN-WARN-1 FIX: warn instead of revert when guardians aren't set up. Same
@@ -1756,14 +1687,9 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Execute a queued payment after the 7-day delay (admin only).
     /// @param queueIndex queueIndex
-    function executeQueuedPayment(uint256 queueIndex)
-        external
-        nonReentrant
-        whenNotPaused
-    {
+    function executeQueuedPayment(uint256 queueIndex) external nonReentrant whenNotPaused {
         _requireOperationalForOutboundTransfers();
-        (address token, address recipient, uint256 amount) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .executeQueuedPayment(queueIndex, msg.sender == admin);
+        (address token, address recipient, uint256 amount) = ICardBoundVaultPaymentQueueManager(paymentQueueManager).executeQueuedPayment(queueIndex, msg.sender == admin);
 
         _enforceSeerAction(admin, 0, amount, recipient);
 
@@ -1775,8 +1701,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Cancel a queued payment (admin or guardian).
     /// @param queueIndex queueIndex
     function cancelQueuedPayment(uint256 queueIndex) external {
-        (uint64 requestTime, uint256 amount) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .cancelQueuedPayment(queueIndex, msg.sender == admin || isGuardian[msg.sender]);
+        (uint64 requestTime, uint256 amount) = ICardBoundVaultPaymentQueueManager(paymentQueueManager).cancelQueuedPayment(queueIndex, msg.sender == admin || isGuardian[msg.sender]);
 
         _refreshDailyWindow();
         if (requestTime >= dayStart && spentToday >= amount) {
@@ -1789,23 +1714,20 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Propose a new large-payment threshold (timelocked).
     /// @param _threshold _threshold
     function setLargePaymentThreshold(uint256 _threshold) external onlyAdmin {
-        uint64 executeAfter = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .setLargePaymentThreshold(_threshold, SENSITIVE_ADMIN_DELAY);
+        uint64 executeAfter = ICardBoundVaultPaymentQueueManager(paymentQueueManager).setLargePaymentThreshold(_threshold, SENSITIVE_ADMIN_DELAY);
         emit LargePaymentThresholdProposed(_threshold, executeAfter);
     }
 
     /// @notice Apply a pending large-payment threshold change.
     function applyLargePaymentThreshold() external onlyAdmin {
-        (uint256 oldThreshold, uint256 newThreshold) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .applyLargePaymentThreshold();
+        (uint256 oldThreshold, uint256 newThreshold) = ICardBoundVaultPaymentQueueManager(paymentQueueManager).applyLargePaymentThreshold();
         emit LargePaymentThresholdSet(oldThreshold, newThreshold);
     }
 
     /// @notice Cancel a pending large-payment threshold change (R77: completes apply+cancel symmetry).
     /// @dev Delegates to PaymentQueueManager.cancelLargePaymentThreshold().
     function cancelLargePaymentThreshold() external onlyAdmin {
-        (uint256 threshold, uint64 executeAfter) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .cancelLargePaymentThreshold();
+        (uint256 threshold, uint64 executeAfter) = ICardBoundVaultPaymentQueueManager(paymentQueueManager).cancelLargePaymentThreshold();
         emit LargePaymentThresholdCancelled(threshold, executeAfter);
     }
     // ═══════════════════════════════════════════════════════════════
@@ -1842,17 +1764,12 @@ contract CardBoundVault is ReentrancyGuard {
     // slither-disable-start reentrancy-no-eth
     /// @notice Execute a previously queued large withdrawal after the delay period.
     /// @param queueIndex Index in the withdrawal queue.
-    function executeQueuedWithdrawal(uint256 queueIndex)
-        external
-        nonReentrant
-        whenNotPaused
-    {
+    function executeQueuedWithdrawal(uint256 queueIndex) external nonReentrant whenNotPaused {
         // slither-disable-next-line reentrancy-no-eth  // function has nonReentrant guard; queue manager is trusted internal module
         _requireOperationalForOutboundTransfers();
         if (msg.sender != admin) revert CBV_NotAdmin();
 
-        (address toVault, uint256 amount) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager)
-            .executeQueuedWithdrawal(queueIndex, true);
+        (address toVault, uint256 amount) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).executeQueuedWithdrawal(queueIndex, true);
 
         // Apply daily limit at execution time as an additional guard.
         _refreshDailyWindow();
@@ -1879,8 +1796,7 @@ contract CardBoundVault is ReentrancyGuard {
     ///      the 7-day waiting period.
     function cancelQueuedWithdrawal(uint256 queueIndex) external {
         if (msg.sender != admin && !isGuardian[msg.sender]) revert CBV_NotGuardian();
-        (uint64 requestTime, uint256 amount) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager)
-            .cancelQueuedWithdrawal(queueIndex, true);
+        (uint64 requestTime, uint256 amount) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).cancelQueuedWithdrawal(queueIndex, true);
 
         // H-02 FIX: Refund spentToday if the cancellation is within the same daily window
         // as the queue time, so the owner is not rate-limited for a transfer that never occurred.
@@ -1895,10 +1811,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @return indices indices
     /// @return amounts amounts
     /// @return executeAfters executeAfters
-    function getPendingQueuedWithdrawals()
-        external view
-        returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters)
-    {
+    function getPendingQueuedWithdrawals() external view returns (uint256[] memory indices, uint256[] memory amounts, uint64[] memory executeAfters) {
         // slither-disable-next-line unused-return  // forwarding tuple return; values are returned to caller
         return ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).getPendingQueuedWithdrawals();
     }
@@ -1908,8 +1821,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param amount amount
     /// @param intentNonce intentNonce
     function _queueWithdrawal(address toVault, uint256 amount, uint256 intentNonce) internal {
-        (uint256 queueIndex, uint64 executeAfter) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager)
-            .queueWithdrawal(toVault, amount, intentNonce);
+        (uint256 queueIndex, uint64 executeAfter) = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).queueWithdrawal(toVault, amount, intentNonce);
         emit WithdrawalQueued(queueIndex, toVault, amount, executeAfter);
     }
 
@@ -1970,11 +1882,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param digest digest
     /// @param signature signature
     /// @return _address _address
-    function _recoverSigner(bytes32 digest, bytes calldata signature)
-        internal
-        pure
-        returns (address)
-    {
+    function _recoverSigner(bytes32 digest, bytes calldata signature) internal pure returns (address) {
         if (signature.length != 65) revert CBV_InvalidSignature();
 
         bytes32 r;
@@ -1998,11 +1906,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param intent intent
     /// @param signature signature
     /// @return _address _address
-    function _recoverTransferSigner(TransferIntent calldata intent, bytes calldata signature)
-        internal
-        view
-        returns (address)
-    {
+    function _recoverTransferSigner(TransferIntent calldata intent, bytes calldata signature) internal view returns (address) {
         return _recoverSigner(_transferDigest(intent), signature);
     }
 
@@ -2010,11 +1914,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param intent intent
     /// @param signature signature
     /// @return _address _address
-    function _recoverPaySigner(PayIntent calldata intent, bytes calldata signature)
-        internal
-        view
-        returns (address)
-    {
+    function _recoverPaySigner(PayIntent calldata intent, bytes calldata signature) internal view returns (address) {
         return _recoverSigner(_payDigest(intent), signature);
     }
 
@@ -2023,11 +1923,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param intent intent
     /// @param signature signature
     /// @return _address _address
-    function _recoverFundEscrowSigner(EscrowFundIntent calldata intent, bytes calldata signature)
-        internal
-        view
-        returns (address)
-    {
+    function _recoverFundEscrowSigner(EscrowFundIntent calldata intent, bytes calldata signature) internal view returns (address) {
         return _recoverSigner(_fundEscrowDigest(intent), signature);
     }
 
@@ -2035,18 +1931,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param intent intent
     /// @return _bytes32 _bytes32
     function _transferDigest(TransferIntent calldata intent) internal view returns (bytes32) {
-        bytes32 structHash = keccak256(
-            abi.encode(
-                TRANSFER_INTENT_TYPEHASH,
-                intent.vault,
-                intent.toVault,
-                intent.amount,
-                intent.nonce,
-                intent.walletEpoch,
-                intent.deadline,
-                intent.chainId
-            )
-        );
+        bytes32 structHash = keccak256(abi.encode(TRANSFER_INTENT_TYPEHASH, intent.vault, intent.toVault, intent.amount, intent.nonce, intent.walletEpoch, intent.deadline, intent.chainId));
 
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator(), structHash));
     }
@@ -2348,10 +2233,7 @@ contract CardBoundVault is ReentrancyGuard {
     ///         contracts — see VFIDE_INHERITANCE_THREAT_MODEL.md R-4.
     /// @param withdrawalsCancelled withdrawalsCancelled
     /// @param paymentsCancelled paymentsCancelled
-    event LocalObligationsCancelled(
-        uint256 withdrawalsCancelled,
-        uint256 paymentsCancelled
-    );
+    event LocalObligationsCancelled(uint256 withdrawalsCancelled, uint256 paymentsCancelled);
 
     /// @notice Finalize the inheritance distribution.
     ///
@@ -2373,10 +2255,8 @@ contract CardBoundVault is ReentrancyGuard {
     /// Documented as residual risk R-4 in the threat model.
     function finalizeInheritanceDistribution() external {
         // Read counts BEFORE clearing so the event reflects what was cancelled.
-        uint256 withdrawalsCount =
-            ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).activeQueuedWithdrawals();
-        uint256 paymentsCount =
-            ICardBoundVaultPaymentQueueManager(paymentQueueManager).activeQueuedPayments();
+        uint256 withdrawalsCount = ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).activeQueuedWithdrawals();
+        uint256 paymentsCount = ICardBoundVaultPaymentQueueManager(paymentQueueManager).activeQueuedPayments();
 
         IAdminManager(adminManager).clearOnRecovery();
         ICardBoundVaultWithdrawalQueueManager(withdrawalQueueManager).clearOnRecovery();
@@ -2390,7 +2270,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice withdrawFinalHeirPayout
     function withdrawFinalHeirPayout() external nonReentrant {
         // slither-disable-next-line unused-return  // 2nd & 3rd tuple elements (lastClaimedAt, totalClaimed) intentionally ignored
-        (uint256 amount,,) = ICardBoundVaultInheritanceManager(inheritanceManager).consumeHeirPayout(msg.sender);
+        (uint256 amount, , ) = ICardBoundVaultInheritanceManager(inheritanceManager).consumeHeirPayout(msg.sender);
         address heirVault = IVaultHub(hub).ensureVault(msg.sender);
         IERC20(vfideToken).safeTransfer(heirVault, amount);
     }
@@ -2417,7 +2297,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice _requireOperationalForOutboundTransfers
     function _requireOperationalForOutboundTransfers() internal view {
         // slither-disable-next-line unused-return  // 2nd tuple element (windowEnd) intentionally ignored — only state matters here
-        (uint8 state,) = ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceState();
+        (uint8 state, ) = ICardBoundVaultInheritanceManager(inheritanceManager).inheritanceState();
         if (state != 0) revert CBV_InheritanceActive();
     }
 

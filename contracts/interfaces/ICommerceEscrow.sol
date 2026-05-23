@@ -5,7 +5,15 @@ pragma solidity 0.8.30;
 /// @title ICommerceEscrow
 /// @author Vfide
 interface ICommerceEscrow {
-    enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED }
+    enum State {
+        NONE,
+        OPEN,
+        FUNDED,
+        RELEASED,
+        REFUNDED,
+        DISPUTED,
+        RESOLVED
+    }
 
     struct Escrow {
         address buyerOwner;
@@ -13,7 +21,7 @@ interface ICommerceEscrow {
         address buyerVault;
         address sellerVault;
         uint256 amount;
-        State   state;
+        State state;
         bytes32 metaHash;
     }
 
@@ -29,15 +37,7 @@ interface ICommerceEscrow {
     /// @return amount amount
     /// @return state state
     /// @return metaHash metaHash
-    function escrows(uint256 id) external view returns (
-        address buyerOwner,
-        address merchantOwner,
-        address buyerVault,
-        address sellerVault,
-        uint256 amount,
-        State   state,
-        bytes32 metaHash
-    );
+    function escrows(uint256 id) external view returns (address buyerOwner, address merchantOwner, address buyerVault, address sellerVault, uint256 amount, State state, bytes32 metaHash);
 
     /// @notice open
     /// @param merchantOwner merchantOwner

@@ -1,14 +1,12 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Heart, Star, Share2, ChevronLeft, ChevronRight, Package, ArrowLeft, Shield, Truck, Download, Clock, Minus, Plus, Check, Loader2, ExternalLink } from 'lucide-react';
+import { Package, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
 
-import { StarRating } from './components/StarRating';
 import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { RelatedProducts } from './components/RelatedProducts';

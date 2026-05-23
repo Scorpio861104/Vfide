@@ -39,7 +39,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Store, AlertTriangle, ExternalLink, CheckCircle2, Ban, Pause } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { useMerchantRegistry, MerchantStatus } from '@/hooks/useMerchantRegistry';
+import { useMerchantRegistry } from '@/hooks/useMerchantRegistry';
 
 function shortAddress(addr: string | undefined): string {
   if (!addr || addr.length < 10) return addr || '—';

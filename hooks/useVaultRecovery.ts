@@ -17,7 +17,7 @@ interface RecoveryStatus {
   daysRemaining: number | null;
 }
 
-interface InheritanceStatus {
+interface _InheritanceStatus {
   isActive: boolean;
   approvals: number;
   threshold: number;

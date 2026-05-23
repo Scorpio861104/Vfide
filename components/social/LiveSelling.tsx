@@ -10,10 +10,10 @@
  */
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Video, VideoOff, ShoppingCart, Shield, Heart, Send, Users, X, MessageCircle, Mic, MicOff, RotateCcw, Package, Sparkles } from 'lucide-react';
+import { Video, Shield, Heart, Send, X, Package, Sparkles } from 'lucide-react';
 
 interface LiveProduct {
   id: string; name: string; price: number; currency: string; imageUrl?: string; stock: number;
@@ -68,7 +68,7 @@ export function LiveViewer({
 }: LiveViewerProps) {
   const [commentText, setCommentText] = useState('');
   const [showProducts, setShowProducts] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
+  const [_likeCount, setLikeCount] = useState(0);
   const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
   const commentsEndRef = useRef<HTMLDivElement>(null);
 
