@@ -1388,7 +1388,6 @@ interface IUserVaultBytecodeProvider {
     /// @param vfide vfide
     /// @param owner_ owner_
     /// @param ledger ledger
-    /// @return _bytes _bytes
     function creationCode(
         address hub,
         address vfide,
@@ -1406,7 +1405,6 @@ contract UserVaultBytecodeProvider is IUserVaultBytecodeProvider {
     /// @param vfide vfide
     /// @param owner_ owner_
     /// @param ledger ledger
-    /// @return _bytes _bytes
     function creationCode(
         address hub,
         address vfide,
