@@ -524,7 +524,6 @@ contract UserVaultLegacy is ReentrancyGuard {
     /**
      * @notice Get current abnormal transaction threshold based on user preference
      * @return Current threshold amount in wei
-     * @return _uint256 _uint256
      */
     function getAbnormalTransactionThreshold() public view returns (uint256) {
         if (usePercentageThreshold) {
