@@ -23,9 +23,15 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://vfide.app'),
-  title: 'VFIDE — Trust-Scored Payment Protocol',
-  description: 'Zero merchant fees. Guardian-protected self-custody. Trust earned through real transactions.',
-  openGraph: { title: 'VFIDE — Keep What You Earn', description: 'Decentralized payment protocol with zero merchant fees.', type: 'website' },
+  title: 'VFIDE — Self-custodial payments and commerce on Base',
+  description:
+    'VFIDE is a self-custodial payments + commerce protocol on Base, with zero merchant fees and a reputation system that rewards honest users.',
+  openGraph: {
+    title: 'VFIDE — Self-custodial payments and commerce on Base',
+    description:
+      'Zero merchant fees. You hold your keys. A reputation that lowers your fees the more you use it.',
+    type: 'website',
+  },
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.svg',
