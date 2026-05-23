@@ -7,9 +7,6 @@ pragma solidity 0.8.30;
  *
  * Contains the rate-limit profile tables that generate high bytecode volume
  * due to repeated storage writes across 6 restriction levels × 8 action types.
- * @notice SeerAutonomousLib
- * @title SeerAutonomousLib
- * @author Vfide
  */
 library SeerAutonomousLib {
     /// @dev Packed (level, action, limit) tuple for batch initialization.
@@ -22,22 +19,21 @@ library SeerAutonomousLib {
     /**
      * @notice Returns the full max-autonomy rate-limit profile as an array.
      * @dev Looping over the returned array in the caller replaces 48 inline calls.
-     * @return entries entries
      */
     function getMaxAutonomyProfile() internal pure returns (RateLimitEntry[48] memory entries) {
         // RestrictionLevel.None (0)
-        entries[0] = RateLimitEntry(0, 0, 300); // Transfer
-        entries[1] = RateLimitEntry(0, 1, 300); // VaultDeposit
-        entries[2] = RateLimitEntry(0, 2, 300); // VaultWithdraw
-        entries[3] = RateLimitEntry(0, 3, 30); // GovernanceVote
-        entries[4] = RateLimitEntry(0, 4, 6); // GovernancePropose
-        entries[5] = RateLimitEntry(0, 5, 30); // Endorse
-        entries[6] = RateLimitEntry(0, 6, 60); // Stake
-        entries[7] = RateLimitEntry(0, 7, 300); // Trade
+        entries[0]  = RateLimitEntry(0, 0, 300);  // Transfer
+        entries[1]  = RateLimitEntry(0, 1, 300);  // VaultDeposit
+        entries[2]  = RateLimitEntry(0, 2, 300);  // VaultWithdraw
+        entries[3]  = RateLimitEntry(0, 3, 30);   // GovernanceVote
+        entries[4]  = RateLimitEntry(0, 4, 6);    // GovernancePropose
+        entries[5]  = RateLimitEntry(0, 5, 30);   // Endorse
+        entries[6]  = RateLimitEntry(0, 6, 60);   // Stake
+        entries[7]  = RateLimitEntry(0, 7, 300);  // Trade
 
         // RestrictionLevel.Monitored (1)
-        entries[8] = RateLimitEntry(1, 0, 40);
-        entries[9] = RateLimitEntry(1, 1, 40);
+        entries[8]  = RateLimitEntry(1, 0, 40);
+        entries[9]  = RateLimitEntry(1, 1, 40);
         entries[10] = RateLimitEntry(1, 2, 40);
         entries[11] = RateLimitEntry(1, 3, 15);
         entries[12] = RateLimitEntry(1, 4, 3);
@@ -90,22 +86,21 @@ library SeerAutonomousLib {
      * @notice Returns the default rate-limit profile used by SeerAutonomous._initializeRateLimits.
      * @dev Looping over the returned array in the caller replaces 48 inline storage writes.
      *      Layout: 6 RestrictionLevels (None..Frozen) x 8 ActionTypes (Transfer..Trade).
-     * @return entries entries
      */
     function getDefaultProfile() internal pure returns (RateLimitEntry[48] memory entries) {
         // RestrictionLevel.None (0): unlimited
-        entries[0] = RateLimitEntry(0, 0, 1000); // Transfer
-        entries[1] = RateLimitEntry(0, 1, 1000); // VaultDeposit
-        entries[2] = RateLimitEntry(0, 2, 1000); // VaultWithdraw
-        entries[3] = RateLimitEntry(0, 3, 100); // GovernanceVote
-        entries[4] = RateLimitEntry(0, 4, 20); // GovernancePropose
-        entries[5] = RateLimitEntry(0, 5, 100); // Endorse
-        entries[6] = RateLimitEntry(0, 6, 200); // Stake
-        entries[7] = RateLimitEntry(0, 7, 1000); // Trade
+        entries[0]  = RateLimitEntry(0, 0, 1000); // Transfer
+        entries[1]  = RateLimitEntry(0, 1, 1000); // VaultDeposit
+        entries[2]  = RateLimitEntry(0, 2, 1000); // VaultWithdraw
+        entries[3]  = RateLimitEntry(0, 3, 100);  // GovernanceVote
+        entries[4]  = RateLimitEntry(0, 4, 20);   // GovernancePropose
+        entries[5]  = RateLimitEntry(0, 5, 100);  // Endorse
+        entries[6]  = RateLimitEntry(0, 6, 200);  // Stake
+        entries[7]  = RateLimitEntry(0, 7, 1000); // Trade
 
         // RestrictionLevel.Monitored (1): normal limits
-        entries[8] = RateLimitEntry(1, 0, 100);
-        entries[9] = RateLimitEntry(1, 1, 100);
+        entries[8]  = RateLimitEntry(1, 0, 100);
+        entries[9]  = RateLimitEntry(1, 1, 100);
         entries[10] = RateLimitEntry(1, 2, 100);
         entries[11] = RateLimitEntry(1, 3, 50);
         entries[12] = RateLimitEntry(1, 4, 10);
@@ -160,8 +155,6 @@ library SeerAutonomousLib {
      *         PatternType layout (matches contract enum):
      *         0=None, 1=RapidTransfers, 2=CircularTransfers, 3=SelfEndorsement,
      *         4=VoteManipulation, 5=WashTrading, 6=SybilActivity
-     * @param patternIndex patternIndex
-     * @return _uint16 _uint16
      */
     function severityFor(uint8 patternIndex) internal pure returns (uint16) {
         if (patternIndex == 1) return 10;
@@ -184,9 +177,15 @@ library SeerAutonomousLib {
      * @param suspendedLevel     Numeric value of RestrictionLevel.Suspended (4).
      * @param limit              rateLimits[level][action]
      * @param count              actionCountToday[subject][action]
-     * @return _uint8 _uint8
      */
-    function evaluateRestriction(uint8 effectiveLevel, uint8 frozenLevel, uint8 restrictedLevel, uint8 suspendedLevel, uint16 limit, uint16 count) internal pure returns (uint8) {
+    function evaluateRestriction(
+        uint8 effectiveLevel,
+        uint8 frozenLevel,
+        uint8 restrictedLevel,
+        uint8 suspendedLevel,
+        uint16 limit,
+        uint16 count
+    ) internal pure returns (uint8) {
         if (effectiveLevel == frozenLevel) return 3; // Blocked
         if (limit == 0) {
             return effectiveLevel >= restrictedLevel ? 3 : 0; // Blocked or Allowed

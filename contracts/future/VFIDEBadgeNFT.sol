@@ -1,168 +1,149 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import {Ownable, ReentrancyGuard} from "../SharedInterfaces.sol";
-import {Seer} from "../Seer.sol";
-import {BadgeRegistry} from "./BadgeRegistry.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "../SharedInterfaces.sol";
+import { Seer } from "../Seer.sol";
+import "../BadgeRegistry.sol";
 
 /**
  * @title VFIDEBadgeNFT
  * @notice Soulbound NFT representation of VFIDE badges
  * @dev Implements ERC-5192 (Minimal Soulbound NFTs) - Non-transferable achievement tokens
- *
+ * 
  * Philosophy: Badges are earned through actions, commemorated as NFTs, but never sold.
- *
+ * 
  * Key Features:
  * - Lazy minting: Users mint NFTs for badges they've earned (verified via Seer)
  * - Soulbound: Cannot be transferred (except burn)
  * - Provenance: Stores mint timestamp and badge number
  * - Metadata: Rich JSON with images, descriptions, rarity
  * - Synced with Seer: NFT requires active badge in Seer contract
- * @author Vfide
  */
 contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, ReentrancyGuard {
+    
     // ============ STATE VARIABLES ============
-
-    /// @notice seer
+    
     Seer public immutable seer;
-
+    
     /// @notice Base URI for token metadata
     string private _baseTokenURI;
 
-    /// @notice pendingBaseTokenURI
     string public pendingBaseTokenURI;
-    /// @notice pendingBaseTokenURIAt
     uint256 public pendingBaseTokenURIAt;
-    /// @notice BASE_URI_DELAY
     uint256 public constant BASE_URI_DELAY = 24 hours;
-
+    
     /// @notice Counter for unique token IDs
     uint256 private _nextTokenId;
-
+    
     /// @notice Track which badge each token represents
     /// tokenId => badge ID
     mapping(uint256 => bytes32) public tokenBadge;
-
+    
     /// @notice Track mint order for each badge type
     /// badge ID => total minted count
     mapping(bytes32 => uint256) public badgeMintCount;
-
+    
     /// @notice Track which user minted which badge
     /// user => badge ID => tokenId (0 if not minted)
     mapping(address => mapping(bytes32 => uint256)) public userBadgeToken;
-
+    
     /// @notice Mint timestamp for provenance
     /// tokenId => timestamp
     mapping(uint256 => uint256) public mintTimestamp;
-
+    
     /// @notice Badge number within type (e.g., "Pioneer #2,847")
     /// tokenId => badge number
     mapping(uint256 => uint256) public badgeNumber;
-
+    
     // ============ EVENTS ============
-
+    
     /// @notice Emitted when a badge NFT is minted
-    /// @param user user
-    /// @param tokenId tokenId
-    /// @param badge badge
-    /// @param badgeNumber badgeNumber
-    /// @param timestamp timestamp
-    event BadgeNFTMinted(address indexed user, uint256 indexed tokenId, bytes32 indexed badge, uint256 badgeNumber, uint256 timestamp);
-
+    event BadgeNFTMinted(
+        address indexed user,
+        uint256 indexed tokenId,
+        bytes32 indexed badge,
+        uint256 badgeNumber,
+        uint256 timestamp
+    );
+    
     /// @notice Emitted when a badge NFT is burned (badge lost/revoked)
-    /// @param user user
-    /// @param tokenId tokenId
-    /// @param badge badge
-    event BadgeNFTBurned(address indexed user, uint256 indexed tokenId, bytes32 indexed badge);
+    event BadgeNFTBurned(
+        address indexed user,
+        uint256 indexed tokenId,
+        bytes32 indexed badge
+    );
 
-    /// @notice BaseURIUpdateProposed
-    /// @param newBaseURI newBaseURI
-    /// @param effectiveAt effectiveAt
     event BaseURIUpdateProposed(string newBaseURI, uint256 effectiveAt);
-    /// @notice BaseURIUpdated
-    /// @param oldBaseURI oldBaseURI
-    /// @param newBaseURI newBaseURI
     event BaseURIUpdated(string oldBaseURI, string newBaseURI);
-
+    
     /// @notice ERC-5192: Emitted when token is locked (soulbound)
-    /// @param tokenId tokenId
     event Locked(uint256 tokenId);
-
+    
     // ============ ERRORS ============
-
-    /// @notice BadgeNotEarned
-    /// @param badge badge
+    
     error BadgeNotEarned(bytes32 badge);
-    /// @notice BadgeAlreadyMinted
-    /// @param badge badge
     error BadgeAlreadyMinted(bytes32 badge);
-    /// @notice BadgeExpired
-    /// @param badge badge
     error BadgeExpired(bytes32 badge);
-    /// @notice TokenIsSoulbound
     error TokenIsSoulbound();
-    /// @notice InvalidBadge
     error InvalidBadge();
-    /// @notice NotTokenOwner
     error NotTokenOwner();
-
+    
     // ============ CONSTRUCTOR ============
-
-    /// @notice constructor
-    /// @param _seer _seer
-    /// @param _baseURI _baseURI
-    constructor(address _seer, string memory _baseURI) ERC721("VFIDE Badge", "VBADGE") {
+    
+    constructor(
+        address _seer,
+        string memory _baseURI
+    ) ERC721("VFIDE Badge", "VBADGE") {
         seer = Seer(_seer);
         _baseTokenURI = _baseURI;
         _nextTokenId = 1; // Start at 1 (0 = unminted)
     }
-
+    
     // ============ MINTING ============
-
+    
     /**
      * @notice Mint an NFT for a badge you've earned
      * @param badge The badge ID to mint
      * @dev Verifies badge ownership via Seer contract before minting
-     * @return tokenId tokenId
      */
     function mintBadge(bytes32 badge) public nonReentrant returns (uint256 tokenId) {
         // Check badge is valid
         if (!BadgeRegistry.isValidBadge(badge)) revert InvalidBadge();
-
+        
         // Check user hasn't already minted this badge
         if (userBadgeToken[msg.sender][badge] != 0) revert BadgeAlreadyMinted(badge);
-
+        
         // Verify user has earned this badge in Seer
         if (!seer.hasBadge(msg.sender, badge)) revert BadgeNotEarned(badge);
-
+        
         // Check badge hasn't expired
         uint256 expiry = seer.badgeExpiry(msg.sender, badge);
         if (expiry > 0 && block.timestamp > expiry) revert BadgeExpired(badge);
-
+        
         // Mint the NFT
         tokenId = _nextTokenId++;
-        ++badgeMintCount[badge];
+        badgeMintCount[badge]++;
         uint256 badgeNum = badgeMintCount[badge];
-
+        
         // Store metadata BEFORE _safeMint to prevent reentrancy via onERC721Received
         tokenBadge[tokenId] = badge;
         userBadgeToken[msg.sender][badge] = tokenId;
         mintTimestamp[tokenId] = block.timestamp;
         badgeNumber[tokenId] = badgeNum;
-
+        
         _safeMint(msg.sender, tokenId);
-
+        
         // Lock the token (soulbound)
         emit Locked(tokenId);
-
+        
         emit BadgeNFTMinted(msg.sender, tokenId, badge, badgeNum, block.timestamp);
-
+        
         return tokenId;
     }
-
+    
     /**
      * @notice Batch mint multiple badges at once
      * @param badges Array of badge IDs to mint
@@ -171,14 +152,14 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     function mintBadges(bytes32[] calldata badges) external returns (uint256[] memory tokenIds) {
         require(badges.length <= 28, "BADGE: batch too large");
         tokenIds = new uint256[](badges.length);
-
-        for (uint256 i = 0; i < badges.length; ++i) {
+        
+        for (uint256 i = 0; i < badges.length; i++) {
             tokenIds[i] = mintBadge(badges[i]);
         }
-
+        
         return tokenIds;
     }
-
+    
     /**
      * @notice Burn badge NFT (if badge was revoked or user wants to remove it)
      * @param tokenId The token ID to burn
@@ -186,39 +167,38 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      */
     function burnBadge(uint256 tokenId) external nonReentrant {
         if (ownerOf(tokenId) != msg.sender) revert NotTokenOwner();
-
+        
         bytes32 badge = tokenBadge[tokenId];
-
+        
         // Clear mappings
         delete userBadgeToken[msg.sender][badge];
         delete tokenBadge[tokenId];
         delete mintTimestamp[tokenId];
         delete badgeNumber[tokenId];
-
+        
         _burn(tokenId);
-
+        
         emit BadgeNFTBurned(msg.sender, tokenId, badge);
     }
-
+    
     // ============ SOULBOUND ENFORCEMENT (ERC-5192) ============
-
+    
     /**
      * @notice Check if token is locked (soulbound)
      * @dev All VFIDE badges are permanently locked
-     * @return _bool _bool
      */
     function locked(uint256 /* tokenId */) external pure returns (bool) {
         return true;
     }
-
+    
     /**
      * @notice Override _update to prevent transfers (soulbound) and support ERC721Enumerable
-     * @param to to
-     * @param tokenId tokenId
-     * @param auth auth
-     * @return _address _address
      */
-    function _update(address to, uint256 tokenId, address auth) internal override(ERC721, ERC721Enumerable) returns (address) {
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override(ERC721, ERC721Enumerable) returns (address) {
         address from = _ownerOf(tokenId);
         if (from != address(0) && to != address(0)) {
             revert TokenIsSoulbound();
@@ -229,32 +209,40 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
 
     /**
      * @notice Override _increaseBalance for ERC721Enumerable
-     * @param account account
-     * @param value value
      */
     function _increaseBalance(address account, uint128 value) internal override(ERC721, ERC721Enumerable) {
         super._increaseBalance(account, value);
     }
-
+    
     // ============ METADATA ============
-
+    
     /**
      * @notice Get token URI with metadata
      * @param tokenId The token ID
      * @return Full metadata URI
      */
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
         _requireOwned(tokenId);
-
+        
         bytes32 badge = tokenBadge[tokenId];
-
+        
         // Build URI: baseURI/BADGE_NAME/tokenId
-        return string(abi.encodePacked(_baseTokenURI, _badgeNameToPath(badge), "/", _toString(tokenId), ".json"));
+        return string(abi.encodePacked(
+            _baseTokenURI,
+            _badgeNameToPath(badge),
+            "/",
+            _toString(tokenId),
+            ".json"
+        ));
     }
-
+    
     /**
      * @notice Set base URI for metadata (only owner/DAO)
-     * @param newBaseURI newBaseURI
      */
     function setBaseURI(string memory newBaseURI) external onlyOwner {
         pendingBaseTokenURI = newBaseURI;
@@ -262,7 +250,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         emit BaseURIUpdateProposed(newBaseURI, pendingBaseTokenURIAt);
     }
 
-    /// @notice applyBaseURI
     function applyBaseURI() external onlyOwner {
         require(pendingBaseTokenURIAt > 0, "BADGE: no pending base URI");
         require(block.timestamp >= pendingBaseTokenURIAt, "BADGE: base URI timelocked");
@@ -277,12 +264,10 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         emit BaseURIUpdated(oldBaseURI, newBaseURI);
     }
 
-    /// @notice baseURI
-    /// @return _string _string
     function baseURI() external view returns (string memory) {
         return _baseTokenURI;
     }
-
+    
     /**
      * @notice Get all badge NFTs owned by a user
      * @param user The user address
@@ -291,14 +276,14 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     function getBadgesOfUser(address user) external view returns (uint256[] memory tokens) {
         uint256 balance = balanceOf(user);
         tokens = new uint256[](balance);
-
-        for (uint256 i = 0; i < balance; ++i) {
+        
+        for (uint256 i = 0; i < balance; i++) {
             tokens[i] = tokenOfOwnerByIndex(user, i);
         }
-
+        
         return tokens;
     }
-
+    
     /**
      * @notice Get badge details for a token
      * @param tokenId The token ID
@@ -308,18 +293,24 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @return mintTime When it was minted
      * @return number Badge number (e.g., #2847)
      */
-    function getBadgeDetails(uint256 tokenId) external view returns (bytes32 badge, string memory name, string memory category, uint256 mintTime, uint256 number) {
+    function getBadgeDetails(uint256 tokenId) external view returns (
+        bytes32 badge,
+        string memory name,
+        string memory category,
+        uint256 mintTime,
+        uint256 number
+    ) {
         _requireOwned(tokenId);
-
+        
         badge = tokenBadge[tokenId];
         name = BadgeRegistry.getName(badge);
         category = BadgeRegistry.getCategory(badge);
         mintTime = mintTimestamp[tokenId];
         number = badgeNumber[tokenId];
-
+        
         return (badge, name, category, mintTime, number);
     }
-
+    
     /**
      * @notice Check if user can mint a specific badge
      * @param user The user address
@@ -327,23 +318,26 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
      * @return canMint True if user can mint
      * @return reason Reason if cannot mint
      */
-    function canMintBadge(address user, bytes32 badge) external view returns (bool canMint, string memory reason) {
+    function canMintBadge(address user, bytes32 badge) external view returns (
+        bool canMint,
+        string memory reason
+    ) {
         if (userBadgeToken[user][badge] != 0) {
             return (false, "Already minted");
         }
-
+        
         if (!seer.hasBadge(user, badge)) {
             return (false, "Badge not earned");
         }
-
+        
         uint256 expiry = seer.badgeExpiry(user, badge);
         if (expiry > 0 && block.timestamp > expiry) {
             return (false, "Badge expired");
         }
-
+        
         return (true, "");
     }
-
+    
     /**
      * @notice Get total minted count for a badge type
      * @param badge The badge ID
@@ -352,9 +346,9 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     function getBadgeMintCount(bytes32 badge) external view returns (uint256) {
         return badgeMintCount[badge];
     }
-
+    
     // ============ ADMIN FUNCTIONS ============
-
+    
     /**
      * @notice Emergency burn if badge was revoked in Seer
      * @param tokenId Token to burn
@@ -363,18 +357,18 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     function adminBurn(uint256 tokenId) external onlyOwner nonReentrant {
         address owner = ownerOf(tokenId);
         bytes32 badge = tokenBadge[tokenId];
-
+        
         // Verify badge is actually revoked in Seer
         require(!seer.hasBadge(owner, badge), "Badge still active");
-
+        
         // Clear mappings
         delete userBadgeToken[owner][badge];
         delete tokenBadge[tokenId];
         delete mintTimestamp[tokenId];
         delete badgeNumber[tokenId];
-
+        
         _burn(tokenId);
-
+        
         emit BadgeNFTBurned(owner, tokenId, badge);
     }
 
@@ -413,75 +407,69 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
         tokenBadge[newTokenId] = badge;
         userBadgeToken[newOwner][badge] = newTokenId;
         mintTimestamp[newTokenId] = block.timestamp;
-        ++badgeMintCount[badge];
+        badgeMintCount[badge] += 1;
         badgeNumber[newTokenId] = badgeMintCount[badge];
 
         emit Locked(newTokenId);
         emit BadgeNFTMinted(newOwner, newTokenId, badge, badgeMintCount[badge], block.timestamp);
     }
-
+    
     // ============ INTERNAL HELPERS ============
-
-    /// @notice _badgeNameToPath
-    /// @param badge badge
-    /// @return _string _string
+    
     function _badgeNameToPath(bytes32 badge) internal pure returns (string memory) {
         // Convert badge ID to URL-safe path
         // e.g., "PIONEER" => "pioneer"
         string memory name = BadgeRegistry.getName(badge);
         return _toLowerCase(name);
     }
-
-    /// @notice _toLowerCase
-    /// @param str str
-    /// @return _string _string
+    
     function _toLowerCase(string memory str) internal pure returns (string memory) {
         bytes memory bStr = bytes(str);
         bytes memory bLower = new bytes(bStr.length);
-
-        for (uint256 i = 0; i < bStr.length; ++i) {
+        
+        for (uint i = 0; i < bStr.length; i++) {
             if ((uint8(bStr[i]) >= 65) && (uint8(bStr[i]) <= 90)) {
                 bLower[i] = bytes1(uint8(bStr[i]) + 32);
             } else {
                 bLower[i] = bStr[i];
             }
         }
-
+        
         return string(bLower);
     }
-
-    /// @notice _toString
-    /// @param value value
-    /// @return _string _string
+    
     function _toString(uint256 value) internal pure returns (string memory) {
         if (value == 0) return "0";
-
+        
         uint256 temp = value;
         uint256 digits;
-
+        
         while (temp != 0) {
-            ++digits;
+            digits++;
             temp /= 10;
         }
-
+        
         bytes memory buffer = new bytes(digits);
-
+        
         while (value != 0) {
-            --digits;
+            digits -= 1;
             buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
             value /= 10;
         }
-
+        
         return string(buffer);
     }
-
+    
     // ============ OVERRIDES ============
-
-    /// @notice supportsInterface
-    /// @param interfaceId interfaceId
-    /// @return _bool _bool
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721URIStorage, ERC721Enumerable) returns (bool) {
+    
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721URIStorage, ERC721Enumerable)
+        returns (bool)
+    {
         // ERC-5192 interface ID
         return interfaceId == 0xb45a3c0e || super.supportsInterface(interfaceId);
     }
+
 }

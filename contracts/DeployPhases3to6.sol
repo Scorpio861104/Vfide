@@ -4,18 +4,10 @@ pragma solidity 0.8.30;
 /// @title DeployPhase3
 /// @notice Deploys Phase 3-6 contracts with strict dependency pre-condition guards.
 /// @dev Guards prevent deployment if core dependencies are not pre-deployed.
-/// @author Vfide
 contract DeployPhase3 {
-    /// @notice DP3_Zero
     error DP3_Zero();
 
-    /// @notice PhaseDeployed
-    /// @param phase phase
-    /// @param deployer deployer
     event PhaseDeployed(uint8 indexed phase, address indexed deployer);
-    /// @notice ContractDeployed
-    /// @param name name
-    /// @param addr addr
     event ContractDeployed(bytes32 indexed name, address indexed addr);
 
     /// @notice Deploy all Phase 3-6 contracts.
@@ -23,7 +15,12 @@ contract DeployPhase3 {
     /// @param preDeployedBSM   Pre-deployed BridgeSecurityModule address (must be non-zero)
     /// @param preDeployedOracle Pre-deployed VFIDEPriceOracle address (must be non-zero)
     /// @param owner            Owner address for deployed contracts (must be non-zero)
-    function deployAll(address vfideToken, address preDeployedBSM, address preDeployedOracle, address owner) external {
+    function deployAll(
+        address vfideToken,
+        address preDeployedBSM,
+        address preDeployedOracle,
+        address owner
+    ) external {
         if (vfideToken == address(0)) revert DP3_Zero();
         if (preDeployedBSM == address(0)) revert DP3_Zero();
         if (preDeployedOracle == address(0)) revert DP3_Zero();

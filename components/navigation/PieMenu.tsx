@@ -8,9 +8,12 @@ import {
   ProofScoreRing,
   QuickActions,
   useHaptics,
-  useLongPress,
+  useLongPress
 } from './PieMenuEnhancements';
-import { X, ChevronLeft } from 'lucide-react';
+import {
+  X,
+  ChevronLeft
+} from 'lucide-react';
 
 // ============================================================================
 // TYPES + NAV DATA

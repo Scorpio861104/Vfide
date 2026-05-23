@@ -21,169 +21,83 @@ pragma solidity 0.8.30;
  *    the global breaker toggle.
  */
 
-import {LedgerLogFailed, IProofLedger, IEmergencyBreaker, Ownable, ReentrancyGuard} from "./SharedInterfaces.sol";
+import "./SharedInterfaces.sol";
 
-/// @notice EC_NotDAO
 error EC_NotDAO();
-/// @notice EC_Zero
 error EC_Zero();
-/// @notice EC_BadThreshold
 error EC_BadThreshold();
-/// @notice EC_AlreadyMember
 error EC_AlreadyMember();
-/// @notice EC_NotMember
 error EC_NotMember();
-/// @notice EC_AlreadyVoted
 error EC_AlreadyVoted();
-/// @notice EC_Cooldown
 error EC_Cooldown();
-/// @notice EC_PendingFoundationChange
 error EC_PendingFoundationChange();
-/// @notice EC_NoPendingFoundationChange
 error EC_NoPendingFoundationChange();
-/// @notice EC_FoundationChangeLocked
 error EC_FoundationChangeLocked();
-/// @notice EC_CommitteeCapExceeded
 error EC_CommitteeCapExceeded();
 
-/// @notice EmergencyControl
-/// @title EmergencyControl
-/// @author Vfide
 contract EmergencyControl is ReentrancyGuard {
-    /// @notice ModulesSet
-    /// @param dao dao
-    /// @param breaker breaker
-    /// @param ledger ledger
     event ModulesSet(address dao, address breaker, address ledger);
-    /// @notice CooldownSet
-    /// @param secondsMin secondsMin
     event CooldownSet(uint64 secondsMin);
-    /// @notice CommitteeReset
-    /// @param threshold threshold
-    /// @param members members
     event CommitteeReset(uint8 threshold, address[] members);
-    /// @notice MemberAdded
-    /// @param member member
     event MemberAdded(address member);
-    /// @notice MemberRemoved
-    /// @param member member
     event MemberRemoved(address member);
     /// @notice Emitted when threshold is auto-clamped after a member removal (M-33 FIX).
-    /// @param oldThreshold oldThreshold
-    /// @param newThreshold newThreshold
     event ThresholdChanged(uint8 oldThreshold, uint8 newThreshold);
-    /// @notice FoundationRotated
-    /// @param oldFoundation oldFoundation
-    /// @param newFoundation newFoundation
     event FoundationRotated(address indexed oldFoundation, address indexed newFoundation);
-    /// @notice FoundationRotationProposed
-    /// @param newFoundation newFoundation
-    /// @param effectiveAt effectiveAt
     event FoundationRotationProposed(address indexed newFoundation, uint64 effectiveAt);
-    /// @notice CommitteeVote
-    /// @param member member
-    /// @param halt halt
-    /// @param approvals approvals
-    /// @param reason reason
     event CommitteeVote(address indexed member, bool halt, uint8 approvals, string reason);
-    /// @notice CommitteeTriggered
-    /// @param halt halt
-    /// @param reason reason
     event CommitteeTriggered(bool halt, string reason);
-    /// @notice DAOToggled
-    /// @param halt halt
-    /// @param reason reason
     event DAOToggled(bool halt, string reason);
-    /// @notice ModulesChangeQueued
-    /// @param dao dao
-    /// @param breaker breaker
-    /// @param ledger ledger
-    /// @param executeAfter executeAfter
     event ModulesChangeQueued(address dao, address breaker, address ledger, uint64 executeAfter);
-    /// @notice ModulesChangeCancelled
-    /// @param dao dao
-    /// @param breaker breaker
-    /// @param ledger ledger
     event ModulesChangeCancelled(address dao, address breaker, address ledger);
-    /// @notice FoundationMemberChangeQueued
-    /// @param member member
-    /// @param isAdd isAdd
-    /// @param effectiveAt effectiveAt
     event FoundationMemberChangeQueued(address indexed member, bool isAdd, uint64 effectiveAt);
-    /// @notice FoundationMemberChangeCancelled
-    /// @param member member
     event FoundationMemberChangeCancelled(address indexed member);
 
-    /// @notice dao
     address public dao;
     /// @notice Foundation address that can manage committee members
     ///         independent of the DAO, preventing a compromised DAO from locking out emergency control.
     address public foundation;
-    /// @notice breaker
     IEmergencyBreaker public breaker;
-    /// @notice ledger
     IProofLedger public ledger; // optional
 
     // anti-flap minimum time between successful toggles
-    /// @notice minCooldown
     uint64 public minCooldown = 5 minutes;
-    /// @notice lastToggleTs
     uint64 public lastToggleTs;
 
     // Committee config
-    /// @notice isMember
     mapping(address => bool) public isMember;
-    /// @notice currentMembers
     address[] public currentMembers;
-    /// @notice memberCount
     uint8 public memberCount;
-    /// @notice threshold
     uint8 public threshold; // M-of-N
-    /// @notice MAX_COMMITTEE_MEMBERS
     uint8 public constant MAX_COMMITTEE_MEMBERS = 21;
 
     // Per-stance voting (separate counters for halt=true vs halt=false)
-    /// @notice epoch
     uint256 public epoch;
-    /// @notice lastVotedHaltEpoch
     mapping(address => uint256) public lastVotedHaltEpoch;
-    /// @notice lastVotedUnhaltEpoch
     mapping(address => uint256) public lastVotedUnhaltEpoch;
-    /// @notice approvalsHalt
     uint8 public approvalsHalt;
-    /// @notice approvalsUnhalt
     uint8 public approvalsUnhalt;
-
-    /// @notice voteExpiryPeriod
+    
     uint64 public constant voteExpiryPeriod = 7 days;
-    /// @notice haltVotingStartTime
     uint64 public haltVotingStartTime;
-    /// @notice unhaltVotingStartTime
     uint64 public unhaltVotingStartTime;
 
-    /// @notice MODULE_CHANGE_DELAY
     uint64 public constant MODULE_CHANGE_DELAY = 48 hours;
-    // TL-365 FIX: 24h timelock for threshold changes (#365)
-    /// @notice THRESHOLD_CHANGE_DELAY
-    uint64 public constant THRESHOLD_CHANGE_DELAY = 24 hours;
-    /// @notice pendingThreshold
-    uint8 public pendingThreshold;
-    /// @notice pendingThresholdAt
-    uint64 public pendingThresholdAt;
+        // TL-365 FIX: 24h timelock for threshold changes (#365)
+        uint64 public constant THRESHOLD_CHANGE_DELAY = 24 hours;
+        uint8 public pendingThreshold;
+        uint64 public pendingThresholdAt;
     struct PendingModules {
         address dao;
         address breaker;
         address ledger;
     }
-    /// @notice pendingModules
     PendingModules public pendingModules;
-    /// @notice pendingModulesAt
     uint64 public pendingModulesAt;
 
     /// @notice 48h timelock state for foundation rotation (M-5).
     address public pendingFoundation;
-    /// @notice pendingFoundationAt
-    uint64 public pendingFoundationAt;
+    uint64  public pendingFoundationAt;
 
     /// @notice 24-hour queue for foundation-initiated committee member changes.
     /// @dev M-5 FIX: DAO-initiated changes now also use a short 1-hour queue so monitoring
@@ -191,32 +105,23 @@ contract EmergencyControl is ReentrancyGuard {
     ///      When the foundation adds or removes a member, the change is queued here so the
     ///      DAO has a window to observe and react before it takes effect.
     uint64 public constant FOUNDATION_MEMBER_CHANGE_DELAY = 24 hours;
-    /// @notice DAO_MEMBER_CHANGE_DELAY
     uint64 public constant DAO_MEMBER_CHANGE_DELAY = 1 hours;
     struct PendingFoundationMemberChange {
         address member;
         bool isAdd;
         uint64 effectiveAt;
     }
-    /// @notice pendingFoundationMemberChange
     PendingFoundationMemberChange public pendingFoundationMemberChange;
 
-    /// @notice onlyDAO
     modifier onlyDAO() {
         _checkDAO();
         _;
     }
 
-    /// @notice _checkDAO
     function _checkDAO() internal view {
         if (msg.sender != dao) revert EC_NotDAO();
     }
 
-    /// @notice constructor
-    /// @param _dao _dao
-    /// @param _breaker _breaker
-    /// @param _ledger _ledger
-    /// @param _foundation _foundation
     constructor(address _dao, address _breaker, address _ledger, address _foundation) {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
         require(_foundation != address(0), "EC: foundation=0");
@@ -230,20 +135,15 @@ contract EmergencyControl is ReentrancyGuard {
 
     // ───────────────────────────────── Admin / config
 
-    /// @notice setModules
-    /// @param _dao _dao
-    /// @param _breaker _breaker
-    /// @param _ledger _ledger
     function setModules(address _dao, address _breaker, address _ledger) external onlyDAO nonReentrant {
         if (_dao == address(0) || _breaker == address(0)) revert EC_Zero();
         require(pendingModulesAt == 0, "EC: pending modules");
-        pendingModules = PendingModules({dao: _dao, breaker: _breaker, ledger: _ledger});
+        pendingModules = PendingModules({ dao: _dao, breaker: _breaker, ledger: _ledger });
         pendingModulesAt = uint64(block.timestamp) + MODULE_CHANGE_DELAY;
         emit ModulesChangeQueued(_dao, _breaker, _ledger, pendingModulesAt);
         _log("ec_modules_queued");
     }
 
-    /// @notice applyModules
     function applyModules() external onlyDAO nonReentrant {
         require(pendingModulesAt != 0, "EC: no pending modules");
         require(block.timestamp >= pendingModulesAt, "EC: modules timelock");
@@ -256,7 +156,6 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_modules_set");
     }
 
-    /// @notice cancelModules
     function cancelModules() external onlyDAO nonReentrant {
         require(pendingModulesAt != 0, "EC: no pending modules");
         emit ModulesChangeCancelled(pendingModules.dao, pendingModules.breaker, pendingModules.ledger);
@@ -265,8 +164,6 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_modules_cancelled");
     }
 
-    /// @notice setCooldown
-    /// @param secondsMin secondsMin
     function setCooldown(uint64 secondsMin) external onlyDAO nonReentrant {
         // L-2 FIX (internal audit finding — anti-flap bypass): Zero cooldown would disable anti-flap protection entirely.
         // 5 minutes is the minimum because: (a) the breaker is a last-resort emergency
@@ -279,16 +176,13 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_cooldown_set");
     }
 
-    /// @notice resetCommittee
-    /// @param _threshold _threshold
-    /// @param members members
     function resetCommittee(uint8 _threshold, address[] calldata members) external onlyDAO nonReentrant {
         if (members.length > MAX_COMMITTEE_MEMBERS) revert EC_CommitteeCapExceeded();
         if (_threshold == 0 || _threshold > members.length) revert EC_BadThreshold();
-
+        
         // Clear old members
         uint256 _curLen = currentMembers.length;
-        for (uint256 i = 0; i < _curLen; ++i) {
+        for (uint256 i = 0; i < _curLen; i++) {
             isMember[currentMembers[i]] = false;
         }
         delete currentMembers;
@@ -299,20 +193,19 @@ contract EmergencyControl is ReentrancyGuard {
 
         _resetVotes();
 
-        for (uint256 j = 0; j < members.length; ++j) {
+        for (uint256 j = 0; j < members.length; j++) {
             address m = members[j];
             if (m == address(0)) revert EC_Zero();
             if (isMember[m]) revert EC_AlreadyMember();
             isMember[m] = true;
             currentMembers.push(m);
-            ++memberCount;
+            memberCount += 1;
             emit MemberAdded(m);
         }
         emit CommitteeReset(_threshold, members);
         _log("ec_committee_reset");
     }
 
-    /// @notice resetVotes
     function resetVotes() external onlyDAO nonReentrant {
         _resetVotes();
         haltVotingStartTime = 0;
@@ -320,8 +213,6 @@ contract EmergencyControl is ReentrancyGuard {
         _log("ec_votes_reset");
     }
 
-    /// @notice addMember
-    /// @param m m
     function addMember(address m) external nonReentrant {
         require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
         if (m == address(0)) revert EC_Zero();
@@ -345,8 +236,6 @@ contract EmergencyControl is ReentrancyGuard {
         // threshold unchanged; DAO should adjust separately if desired
     }
 
-    /// @notice removeMember
-    /// @param m m
     function removeMember(address m) external nonReentrant {
         require(msg.sender == dao || msg.sender == foundation, "EC: not DAO or foundation");
 
@@ -401,24 +290,20 @@ contract EmergencyControl is ReentrancyGuard {
 
     // ─── Internal member mutation helpers ───────────────────────────────────
 
-    /// @notice _applyAddMember
-    /// @param m m
     function _applyAddMember(address m) internal {
         if (memberCount >= MAX_COMMITTEE_MEMBERS) revert EC_CommitteeCapExceeded();
         isMember[m] = true;
-        ++memberCount;
+        memberCount += 1;
         currentMembers.push(m);
         emit MemberAdded(m);
         _log("ec_member_add");
     }
 
-    /// @notice _applyRemoveMember
-    /// @param m m
     function _applyRemoveMember(address m) internal {
         isMember[m] = false;
-        --memberCount;
+        memberCount -= 1;
 
-        for (uint256 i = 0; i < currentMembers.length; ++i) {
+        for (uint256 i = 0; i < currentMembers.length; i++) {
             if (currentMembers[i] == m) {
                 currentMembers[i] = currentMembers[currentMembers.length - 1];
                 currentMembers.pop();
@@ -453,7 +338,6 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     /// @notice TL-365 FIX: Propose a threshold change (24h timelock). (#365)
-    /// @param _threshold _threshold
     function setThreshold(uint8 _threshold) external onlyDAO nonReentrant {
         if (_threshold == 0 || _threshold > memberCount) revert EC_BadThreshold();
         require(pendingThresholdAt == 0, "EC: threshold pending");
@@ -486,7 +370,6 @@ contract EmergencyControl is ReentrancyGuard {
     ///      An attacker who obtains the foundation key could queue committee changes within
     ///      24h of rotating.  The 48h timelock gives the DAO time to observe and intervene.
     ///      Both the current foundation AND the DAO can apply or cancel the rotation.
-    /// @param newFoundation newFoundation
     function rotateFoundation(address newFoundation) external nonReentrant {
         require(msg.sender == foundation, "EC: not foundation");
         require(newFoundation != address(0), "EC: foundation=0");
@@ -522,9 +405,6 @@ contract EmergencyControl is ReentrancyGuard {
 
     // ───────────────────────────────── Actions
 
-    /// @notice daoToggle
-    /// @param halt halt
-    /// @param reason reason
     function daoToggle(bool halt, string calldata reason) external onlyDAO nonReentrant {
         _enforceCooldown();
         lastToggleTs = uint64(block.timestamp);
@@ -534,9 +414,6 @@ contract EmergencyControl is ReentrancyGuard {
     }
 
     /// Committee member casts a vote to (un)halt.
-    /// @notice committeeVote
-    /// @param halt halt
-    /// @param reason reason
     function committeeVote(bool halt, string calldata reason) external nonReentrant {
         if (!isMember[msg.sender]) revert EC_NotMember();
 
@@ -544,14 +421,14 @@ contract EmergencyControl is ReentrancyGuard {
             if (haltVotingStartTime > 0 && block.timestamp > haltVotingStartTime + voteExpiryPeriod) {
                 approvalsHalt = 0;
                 haltVotingStartTime = uint64(block.timestamp);
-                ++epoch; // Expire old votes
+                epoch++; // Expire old votes
             } else if (haltVotingStartTime < 1) {
                 haltVotingStartTime = uint64(block.timestamp);
             }
-
+            
             if (lastVotedHaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
             lastVotedHaltEpoch[msg.sender] = epoch;
-            ++approvalsHalt;
+            approvalsHalt += 1;
             emit CommitteeVote(msg.sender, true, approvalsHalt, reason);
             if (approvalsHalt >= threshold) {
                 _enforceCooldown();
@@ -566,14 +443,14 @@ contract EmergencyControl is ReentrancyGuard {
             if (unhaltVotingStartTime > 0 && block.timestamp > unhaltVotingStartTime + voteExpiryPeriod) {
                 approvalsUnhalt = 0;
                 unhaltVotingStartTime = uint64(block.timestamp);
-                ++epoch; // Expire old votes
+                epoch++; // Expire old votes
             } else if (unhaltVotingStartTime < 1) {
                 unhaltVotingStartTime = uint64(block.timestamp);
             }
-
+            
             if (lastVotedUnhaltEpoch[msg.sender] == epoch) revert EC_AlreadyVoted();
             lastVotedUnhaltEpoch[msg.sender] = epoch;
-            ++approvalsUnhalt;
+            approvalsUnhalt += 1;
             emit CommitteeVote(msg.sender, false, approvalsUnhalt, reason);
             if (approvalsUnhalt >= threshold) {
                 _enforceCooldown();
@@ -589,21 +466,9 @@ contract EmergencyControl is ReentrancyGuard {
 
     // ───────────────────────────────── Views
 
-    /// @notice hasVotedHalt
-    /// @param m m
-    /// @return _bool _bool
-    function hasVotedHalt(address m) external view returns (bool) {
-        return lastVotedHaltEpoch[m] == epoch;
-    }
-    /// @notice hasVotedUnhalt
-    /// @param m m
-    /// @return _bool _bool
-    function hasVotedUnhalt(address m) external view returns (bool) {
-        return lastVotedUnhaltEpoch[m] == epoch;
-    }
+    function hasVotedHalt(address m) external view returns (bool) { return lastVotedHaltEpoch[m] == epoch; }
+    function hasVotedUnhalt(address m) external view returns (bool) { return lastVotedUnhaltEpoch[m] == epoch; }
 
-    /// @notice timeSinceLastToggle
-    /// @return _uint64 _uint64
     function timeSinceLastToggle() external view returns (uint64) {
         if (lastToggleTs < 1) return type(uint64).max;
         return uint64(block.timestamp) - lastToggleTs;
@@ -611,43 +476,26 @@ contract EmergencyControl is ReentrancyGuard {
 
     // ───────────────────────────────── Internals
 
-    /// @notice _resetVotes
     function _resetVotes() internal {
         // Reset counts; per-member flags remain true for this epoch but won't matter
         approvalsHalt = 0;
         approvalsUnhalt = 0;
-        ++epoch;
+        epoch++;
         // M-3 FIX: Reset vote timers
         haltVotingStartTime = 0;
         unhaltVotingStartTime = 0;
     }
 
-    /// @notice _enforceCooldown
     function _enforceCooldown() internal view {
         if (lastToggleTs < 1) return;
         if (uint64(block.timestamp) < lastToggleTs + minCooldown) revert EC_Cooldown();
     }
 
-    /// @notice _log
-    /// @param action action
     function _log(string memory action) internal {
-        if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
-                emit LedgerLogFailed(address(this), action);
-            }
-        }
+        if (address(ledger) != address(0)) { try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
     }
-    /// @notice _logEv
-    /// @param who who
-    /// @param action action
-    /// @param amount amount
-    /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (address(ledger) != address(0)) {
-            try ledger.logEvent(who, action, amount, note) {} catch {
-                emit LedgerLogFailed(who, action);
-            }
-        }
+        if (address(ledger) != address(0)) { try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -661,56 +509,28 @@ contract EmergencyControl is ReentrancyGuard {
     // This is intentionally heavyweight to prevent abuse.
 
     struct RecoveryProposal {
-        address target; // The contract whose ownership to transfer
-        address newOwner; // Proposed new owner
-        uint8 approvals;
-        uint64 unlockTime;
-        bool executed;
-        uint256 epoch; // Tied to committee epoch
+        address target;      // The contract whose ownership to transfer
+        address newOwner;    // Proposed new owner
+        uint8   approvals;
+        uint64  unlockTime;
+        bool    executed;
+        uint256 epoch;       // Tied to committee epoch
     }
 
-    /// @notice recoveryProposals
     mapping(bytes32 => RecoveryProposal) public recoveryProposals;
-    /// @notice recoveryCancelled
     mapping(bytes32 => bool) public recoveryCancelled;
-    /// @notice recoveryVoted
     mapping(bytes32 => mapping(address => bool)) public recoveryVoted;
-    /// @notice recoveryCancelVoted
     mapping(bytes32 => mapping(address => bool)) public recoveryCancelVoted;
-    /// @notice recoveryCancelApprovals
     mapping(bytes32 => uint8) public recoveryCancelApprovals;
 
-    /// @notice RECOVERY_TIMELOCK
     uint64 public constant RECOVERY_TIMELOCK = 14 days;
 
-    /// @notice RecoveryProposed
-    /// @param id id
-    /// @param target target
-    /// @param newOwner newOwner
     event RecoveryProposed(bytes32 indexed id, address target, address newOwner);
-    /// @notice RecoveryApproved
-    /// @param id id
-    /// @param member member
-    /// @param approvals approvals
     event RecoveryApproved(bytes32 indexed id, address member, uint8 approvals);
-    /// @notice RecoveryCancelApproved
-    /// @param id id
-    /// @param member member
-    /// @param approvals approvals
     event RecoveryCancelApproved(bytes32 indexed id, address member, uint8 approvals);
-    /// @notice RecoveryExecuted
-    /// @param id id
-    /// @param target target
-    /// @param newOwner newOwner
     event RecoveryExecuted(bytes32 indexed id, address target, address newOwner);
-    /// @notice RecoveryCancelled
-    /// @param id id
     event RecoveryCancelled(bytes32 indexed id);
 
-    /// @notice proposeRecovery
-    /// @param target target
-    /// @param newOwner newOwner
-    /// @return id id
     function proposeRecovery(address target, address newOwner) external nonReentrant returns (bytes32 id) {
         require(isMember[msg.sender], "EC: not member");
         require(target != address(0) && newOwner != address(0), "EC: zero");
@@ -726,15 +546,20 @@ contract EmergencyControl is ReentrancyGuard {
         id = keccak256(abi.encode(target, newOwner, epoch));
         require(recoveryProposals[id].target == address(0), "EC: already proposed");
 
-        recoveryProposals[id] = RecoveryProposal({target: target, newOwner: newOwner, approvals: 1, unlockTime: 0, executed: false, epoch: epoch});
+        recoveryProposals[id] = RecoveryProposal({
+            target: target,
+            newOwner: newOwner,
+            approvals: 1,
+            unlockTime: 0,
+            executed: false,
+            epoch: epoch
+        });
         recoveryVoted[id][msg.sender] = true;
 
         emit RecoveryProposed(id, target, newOwner);
         _log("recovery_proposed");
     }
 
-    /// @notice approveRecovery
-    /// @param id id
     function approveRecovery(bytes32 id) external nonReentrant {
         require(isMember[msg.sender], "EC: not member");
         // L-21 FIX: Require a real committee. With memberCount < 3, the
@@ -751,7 +576,7 @@ contract EmergencyControl is ReentrancyGuard {
         require(breaker.halted(), "EC: system must be halted");
 
         recoveryVoted[id][msg.sender] = true;
-        ++p.approvals;
+        p.approvals++;
 
         // Supermajority: all members minus 1
         uint8 required = memberCount - 1;
@@ -763,8 +588,6 @@ contract EmergencyControl is ReentrancyGuard {
         _log("recovery_approved");
     }
 
-    /// @notice executeRecovery
-    /// @param id id
     function executeRecovery(bytes32 id) external nonReentrant {
         require(isMember[msg.sender], "EC: not member");
         RecoveryProposal storage p = recoveryProposals[id];
@@ -784,8 +607,6 @@ contract EmergencyControl is ReentrancyGuard {
         _log("recovery_executed");
     }
 
-    /// @notice cancelRecovery
-    /// @param id id
     function cancelRecovery(bytes32 id) external nonReentrant {
         RecoveryProposal storage p = recoveryProposals[id];
         require(p.target != address(0) && !p.executed, "EC: invalid");
@@ -820,7 +641,6 @@ contract EmergencyControl is ReentrancyGuard {
 
     /// @notice Refresh a recovery proposal's epoch after committee reset so it is not stale
     /// @dev Only callable by DAO when recovery is in progress but committee was reset
-    /// @param id id
     function refreshRecoveryEpoch(bytes32 id) external nonReentrant {
         require(msg.sender == dao, "EC: not DAO");
         RecoveryProposal storage p = recoveryProposals[id];

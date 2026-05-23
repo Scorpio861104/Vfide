@@ -29,7 +29,6 @@ import { useAccount, useReadContracts } from 'wagmi';
 import type { Address } from 'viem';
 import { Shield, AlertCircle, Check, ChevronRight, ExternalLink } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
-
 // ─────────────────────────────────────────────────────────────────
 // Vault ABI — we only need the views to read safety state
 // ─────────────────────────────────────────────────────────────────

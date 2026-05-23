@@ -4,30 +4,11 @@ pragma solidity 0.8.30;
 // Pulls in SafeERC20 / IERC20 (via SharedInterfaces.sol re-export),
 // the IVaultHub_COM interface, the COM_* errors, and the MerchantRegistry
 // contract type referenced by `merchants` below.
-// Note: SafeERC20/IERC20 must be imported explicitly because Wave 3's named-import
-// refactor doesn't transitively re-export them through MerchantRegistry.sol.
-import {SafeERC20, IERC20} from "./SharedInterfaces.sol";
-import {
-    IVaultHub_COM,
-    COM_NotDAO,
-    COM_Zero,
-    COM_NotMerchant,
-    COM_Suspended,
-    COM_Delisted,
-    COM_NotBuyer,
-    COM_NotSeller,
-    COM_BadAmount,
-    COM_BadState,
-    COM_NotAllowed,
-    COM_NotInheritanceActive,
-    MerchantRegistry
-} from "./MerchantRegistry.sol";
+import "./MerchantRegistry.sol";
 
 /// @notice Phase 3d Turn 3 — calling interface for atomic escrow funding on CardBoundVault.
 /// @dev Mirrors the ICardBoundVaultPay pattern in MerchantPortal: declare the calling interface
 ///      locally so the coupling is visible at the call site, not buried in a shared header.
-/// @title ICardBoundVaultFundEscrow
-/// @author Vfide
 interface ICardBoundVaultFundEscrow {
     struct EscrowFundIntent {
         address vault;
@@ -41,9 +22,6 @@ interface ICardBoundVaultFundEscrow {
         uint256 chainId;
     }
 
-    /// @notice executeFundEscrow
-    /// @param intent intent
-    /// @param signature signature
     function executeFundEscrow(EscrowFundIntent calldata intent, bytes calldata signature) external;
 }
 
@@ -60,33 +38,18 @@ interface ICardBoundVaultFundEscrow {
  *
  *      Integrated with MerchantRegistry for merchant verification and
  *      with VaultHub for inheritance-driven settlement (settleByInheritance).
- * @author Vfide
  */
 contract CommerceEscrow {
     using SafeERC20 for IERC20;
 
-    enum State {
-        NONE,
-        OPEN,
-        FUNDED,
-        RELEASED,
-        REFUNDED,
-        DISPUTED,
-        RESOLVED
-    }
+    enum State { NONE, OPEN, FUNDED, RELEASED, REFUNDED, DISPUTED, RESOLVED }
 
-    /// @notice dao
     address public immutable dao;
-    /// @notice token
-    IERC20 public immutable token;
-    /// @notice vaultHub
-    IVaultHub_COM public immutable vaultHub;
-    /// @notice merchants
+    IERC20     public immutable token;
+    IVaultHub_COM  public immutable vaultHub;
     MerchantRegistry public immutable merchants;
 
-    /// @notice _reentrancyStatus
     uint256 private _reentrancyStatus = 1;
-    /// @notice nonReentrant
     modifier nonReentrant() {
         require(_reentrancyStatus == 1, "ReentrancyGuard: reentrant call");
         _reentrancyStatus = 2;
@@ -100,28 +63,23 @@ contract CommerceEscrow {
         address buyerVault;
         address sellerVault;
         uint256 amount;
-        State state;
+        State   state;
         bytes32 metaHash;
         // M-COMMERCE-1 FIX: openedAt timestamp lets unfunded OPEN escrows be cancelled
         // after OPEN_ESCROW_EXPIRY without funder action, preventing storage pollution.
-        uint64 openedAt;
+        uint64  openedAt;
     }
 
     // M-COMMERCE-1 FIX: How long an OPEN (unfunded) escrow stays valid before anyone can cancel it.
-    /// @notice OPEN_ESCROW_EXPIRY
     uint256 public constant OPEN_ESCROW_EXPIRY = 7 days;
 
-    /// @notice escrowDeposited
     mapping(uint256 => uint256) public escrowDeposited;
 
-    /// @notice escrowCount
     uint256 public escrowCount;
-    /// @notice escrows
     mapping(uint256 => Escrow) public escrows;
 
     // N-H14 FIX: Only disputes above this amount increment merchant dispute counters.
     // Prevents griefers from opening tiny-value escrows and forcing auto-suspension.
-    /// @notice minDisputeAmountForPenalty
     uint256 public minDisputeAmountForPenalty = 100 * 1e18;
 
     // ─── Lifecycle events ────────────────────────────────────────────────────────
@@ -137,61 +95,28 @@ contract CommerceEscrow {
     //   EscrowReleased             — tokens OUT (to merchant's vault)
     //   EscrowRefunded             — tokens OUT (to buyer's vault), or state-only for cancelStaleOpen
     //   EscrowResolved + (Released|Refunded)  — DAO-decided dispute outcome
-    /// @notice EscrowOpened
-    /// @param id id
-    /// @param buyer buyer
-    /// @param merchant merchant
-    /// @param amount amount
-    /// @param metaHash metaHash
-    event EscrowOpened(uint256 indexed id, address indexed buyer, address indexed merchant, uint256 amount, bytes32 metaHash);
-    /// @notice EscrowFunded
-    /// @param id id
-    /// @param buyer buyer
-    /// @param amount amount
+    event EscrowOpened(
+        uint256 indexed id,
+        address indexed buyer,
+        address indexed merchant,
+        uint256 amount,
+        bytes32 metaHash
+    );
     event EscrowFunded(uint256 indexed id, address indexed buyer, uint256 amount);
-    /// @notice EscrowReleased
-    /// @param id id
-    /// @param merchant merchant
-    /// @param amount amount
     event EscrowReleased(uint256 indexed id, address indexed merchant, uint256 amount);
     /// @dev Emitted for refund(), cancelStaleOpen(), settleByInheritance(), and resolve(buyerWins=true).
     ///      For cancelStaleOpen, `amount` is 0 because the escrow was never funded — no transfer occurred.
-    /// @notice EscrowRefunded
-    /// @param id id
-    /// @param buyer buyer
-    /// @param amount amount
     event EscrowRefunded(uint256 indexed id, address indexed buyer, uint256 amount);
-    /// @notice EscrowDisputed
-    /// @param id id
-    /// @param initiator initiator
-    /// @param reason reason
     event EscrowDisputed(uint256 indexed id, address indexed initiator, string reason);
-    /// @notice EscrowResolved
-    /// @param id id
-    /// @param buyerWins buyerWins
     event EscrowResolved(uint256 indexed id, bool buyerWins);
 
-    /// @notice onlyDAO
-    modifier onlyDAO() {
-        if (msg.sender != dao) revert COM_NotDAO();
-        _;
-    }
+    modifier onlyDAO() { if (msg.sender != dao) revert COM_NotDAO(); _; }
 
-    /// @notice constructor
-    /// @param _dao _dao
-    /// @param _token _token
-    /// @param _hub _hub
-    /// @param _merchants _merchants
     constructor(address _dao, address _token, address _hub, address _merchants) {
-        if (_dao == address(0) || _token == address(0) || _hub == address(0) || _merchants == address(0)) revert COM_Zero();
-        dao = _dao;
-        token = IERC20(_token);
-        vaultHub = IVaultHub_COM(_hub);
-        merchants = MerchantRegistry(_merchants);
+        if (_dao==address(0)||_token==address(0)||_hub==address(0)||_merchants==address(0)) revert COM_Zero();
+        dao=_dao; token=IERC20(_token); vaultHub=IVaultHub_COM(_hub); merchants=MerchantRegistry(_merchants);
     }
 
-    /// @notice setMinDisputeAmountForPenalty
-    /// @param amount amount
     function setMinDisputeAmountForPenalty(uint256 amount) external onlyDAO {
         if (amount == 0) revert COM_BadAmount();
         minDisputeAmountForPenalty = amount;
@@ -200,20 +125,12 @@ contract CommerceEscrow {
     /**
      * @notice Returns the exact approval pair required before `markFunded` can transfer tokens.
      * @dev Buyers must approve this escrow contract as spender from their vault address.
-     * @param buyerOwner buyerOwner
-     * @return buyerVault buyerVault
-     * @return spender spender
      */
     function getRequiredApproval(address buyerOwner) external view returns (address buyerVault, address spender) {
         buyerVault = vaultHub.vaultOf(buyerOwner);
         spender = address(this);
     }
 
-    /// @notice open
-    /// @param merchantOwner merchantOwner
-    /// @param amount amount
-    /// @param metaHash metaHash
-    /// @return id id
     function open(address merchantOwner, uint256 amount, bytes32 metaHash) external nonReentrant returns (uint256 id) {
         if (amount == 0) revert COM_BadAmount();
         MerchantRegistry.Merchant memory m = merchants.info(merchantOwner);
@@ -256,7 +173,6 @@ contract CommerceEscrow {
     /// @param signature    EIP-712 signature from the buyer's activeWallet over `intent`.
     /// @param merchantOwner Merchant the escrow is opened with.
     /// @param metaHash     Off-chain content hash (order details, terms, etc.).
-    /// @return id id
     function openAndFundWithIntent(
         ICardBoundVaultFundEscrow.EscrowFundIntent calldata intent,
         bytes calldata signature,
@@ -319,8 +235,6 @@ contract CommerceEscrow {
     //   the call. This is the standard pull-based escrow funding pattern.
     //   Function is also `nonReentrant`.
     // slither-disable-next-line arbitrary-send-erc20
-    /// @notice markFunded
-    /// @param id id
     function markFunded(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.OPEN) revert COM_BadState();
@@ -348,8 +262,6 @@ contract CommerceEscrow {
         emit EscrowFunded(id, e.buyerOwner, e.amount);
     }
 
-    /// @notice release
-    /// @param id id
     function release(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
@@ -375,8 +287,6 @@ contract CommerceEscrow {
         emit EscrowReleased(id, e.merchantOwner, e.amount);
     }
 
-    /// @notice refund
-    /// @param id id
     function refund(uint256 id) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED && e.state != State.DISPUTED) revert COM_BadState();
@@ -418,7 +328,10 @@ contract CommerceEscrow {
 
         address buyerVaultLive = vaultHub.vaultOf(e.buyerOwner);
         address merchantVaultLive = vaultHub.vaultOf(e.merchantOwner);
-        if (!(buyerVaultLive != address(0) && vaultHub.isInMemorialState(buyerVaultLive)) && !(merchantVaultLive != address(0) && vaultHub.isInMemorialState(merchantVaultLive))) {
+        if (
+            !(buyerVaultLive != address(0) && vaultHub.isInMemorialState(buyerVaultLive)) &&
+            !(merchantVaultLive != address(0) && vaultHub.isInMemorialState(merchantVaultLive))
+        ) {
             revert COM_NotInheritanceActive();
         }
 
@@ -445,9 +358,6 @@ contract CommerceEscrow {
         emit EscrowRefunded(id, e.buyerOwner, 0);
     }
 
-    /// @notice dispute
-    /// @param id id
-    /// @param reason reason
     function dispute(uint256 id, string calldata reason) external nonReentrant {
         Escrow storage e = escrows[id];
         if (e.state != State.FUNDED) revert COM_BadState();
@@ -460,9 +370,6 @@ contract CommerceEscrow {
         emit EscrowDisputed(id, msg.sender, reason);
     }
 
-    /// @notice resolve
-    /// @param id id
-    /// @param buyerWins buyerWins
     function resolve(uint256 id, bool buyerWins) external nonReentrant onlyDAO {
         Escrow storage e = escrows[id];
         if (e.state != State.DISPUTED) revert COM_BadState();

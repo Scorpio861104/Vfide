@@ -1,57 +1,54 @@
+/**
+ * Loading skeleton for /multisig.
+ *
+ * The /multisig page is currently a ComingSoonPage — multi-signature
+ * vaults are designed but not yet shipped. This skeleton intentionally
+ * matches the shape of ComingSoonPage (notice block + header + list)
+ * so users do not see a flash of fake "dashboard" UI before the
+ * placeholder renders. See app/multisig/page.tsx.
+ */
 export default function MultisigLoading() {
   return (
     <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
-      {/* Ambient orbs */}
+      {/* Ambient orbs — match ComingSoonPage palette (amber + cyan) */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 -left-20 w-[500px] h-[500px] rounded-full opacity-[0.06]"
-          style={{ background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)" }} />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full opacity-[0.04]"
-          style={{ background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)" }} />
+        <div
+          className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
+          style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }}
+        />
       </div>
 
-      <div className="container mx-auto px-4 max-w-6xl py-10 relative">
-        {/* Page header skeleton */}
-        <div className="mb-8">
-          <div className="h-3 w-20 rounded-full bg-white/5 animate-pulse mb-3" />
-          <div className="h-9 w-72 rounded-xl bg-white/8 animate-pulse mb-2" />
-          <div className="h-4 w-48 rounded-lg bg-white/5 animate-pulse" />
-        </div>
+      <div className="container mx-auto px-4 max-w-3xl py-12 relative">
+        {/* Back link skeleton */}
+        <div className="h-4 w-32 rounded bg-white/8 animate-pulse mb-6" />
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i}
-              className="rounded-2xl border border-white/6 bg-white/[0.03] p-5"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              <div className="h-3 w-16 rounded bg-white/8 animate-pulse mb-3" />
-              <div className="h-7 w-24 rounded-lg bg-white/10 animate-pulse mb-1" />
-              <div className="h-2.5 w-12 rounded bg-white/5 animate-pulse" />
+        {/* "Not available in this release" notice block skeleton */}
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="w-5 h-5 rounded-full bg-amber-500/30 animate-pulse mt-0.5 flex-shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3.5 w-48 rounded bg-amber-500/30 animate-pulse" />
+              <div className="h-3 w-full rounded bg-amber-500/15 animate-pulse" />
+              <div className="h-3 w-3/4 rounded bg-amber-500/15 animate-pulse" />
             </div>
-          ))}
+          </div>
         </div>
 
-        {/* Main content skeleton */}
-        <div className="rounded-2xl border border-white/6 bg-white/[0.02] p-6 mb-6">
-          {/* Tab bar skeleton */}
-          <div className="flex gap-3 mb-6 border-b border-white/5 pb-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-8 w-20 rounded-lg bg-white/8 animate-pulse" />
-            ))}
-          </div>
-          {/* Content rows */}
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                <div className="w-10 h-10 rounded-full bg-white/8 animate-pulse shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 rounded bg-white/8 animate-pulse" style={{ width: `${60 + i * 5}%` }} />
-                  <div className="h-3 rounded bg-white/5 animate-pulse" style={{ width: `${40 + i * 4}%` }} />
-                </div>
-                <div className="h-8 w-20 rounded-lg bg-white/6 animate-pulse shrink-0" />
-              </div>
-            ))}
-          </div>
+        {/* Header skeleton */}
+        <div className="mb-6 space-y-3">
+          <div className="h-9 w-72 rounded-xl bg-white/10 animate-pulse" />
+          <div className="h-4 w-2/3 rounded bg-white/6 animate-pulse" />
+        </div>
+
+        {/* Description skeleton */}
+        <div className="rounded-2xl border border-white/6 bg-white/[0.02] p-6 mb-6 space-y-3">
+          <div className="h-4 w-full rounded bg-white/6 animate-pulse" />
+          <div className="h-4 w-full rounded bg-white/6 animate-pulse" />
+          <div className="h-4 w-5/6 rounded bg-white/6 animate-pulse" />
         </div>
       </div>
     </div>

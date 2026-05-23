@@ -6,7 +6,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { Package, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
-
 import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { RelatedProducts } from './components/RelatedProducts';

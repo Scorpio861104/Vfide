@@ -17,7 +17,7 @@ import {
   MessageSquare,
   Shield,
   Copy,
-  Check,
+  Check
 } from 'lucide-react';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import { useUserVault } from '@/hooks/useVaultHooks';

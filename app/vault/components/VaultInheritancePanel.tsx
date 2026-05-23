@@ -35,7 +35,7 @@ import {
   encodeAbiParameters,
   parseAbiParameters,
   toBytes,
-  isAddress,
+  isAddress
 } from 'viem';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -15,66 +15,34 @@ pragma solidity 0.8.30;
  * - All transactions logged for transparency
  */
 
-import {LedgerLogFailed, IVaultHub, IProofLedger, IERC20, ISeer, ISwapRouter, Ownable, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
-import {ScoringConstants} from "./lib/ScoringConstants.sol";
+import "./SharedInterfaces.sol";
+import "./lib/ScoringConstants.sol";
 
-/// @notice IVFIDETokenBurnRouterView
-/// @title IVFIDETokenBurnRouterView
-/// @author Vfide
 interface IVFIDETokenBurnRouterView {
-    /// @notice burnRouter
-    /// @return _address _address
     function burnRouter() external view returns (address);
 }
 
-/// @notice ICardBoundVaultPermitView
-/// @title ICardBoundVaultPermitView
-/// @author Vfide
 interface ICardBoundVaultPermitView {
-    /// @notice dailyTransferLimit
-    /// @return _uint256 _uint256
     function dailyTransferLimit() external view returns (uint256);
 }
 
-/// @notice IFraudRegistryMerchant
-/// @title IFraudRegistryMerchant
-/// @author Vfide
 interface IFraudRegistryMerchant {
-    /// @notice isServiceBanned
-    /// @param user user
-    /// @return _bool _bool
     function isServiceBanned(address user) external view returns (bool);
 }
 
-/// @notice IERC20DecimalsMerchant
-/// @title IERC20DecimalsMerchant
-/// @author Vfide
 interface IERC20DecimalsMerchant {
-    /// @notice decimals
-    /// @return _uint8 _uint8
     function decimals() external view returns (uint8);
 }
 
 // N-L15 FIX: optional SessionKeyManager gate.
 // MerchantPortal checks session-key spend limits when sessionKeyManager is configured.
 // If not set (zero address), the check is bypassed (backward-compatible default).
-/// @notice ISessionKeyManager_MP
-/// @title ISessionKeyManager_MP
-/// @author Vfide
 interface ISessionKeyManager_MP {
     /// @notice Returns true if `spender` has an active session key authorised to spend `amount`
     ///         of the given token for the given merchant.
-    /// @param spender spender
-    /// @param merchant merchant
-    /// @param token token
-    /// @param amount amount
-    /// @return _bool _bool
     function canSpend(address spender, address merchant, address token, uint256 amount) external view returns (bool);
 }
 
-/// @notice ICardBoundVaultPay
-/// @title ICardBoundVaultPay
-/// @author Vfide
 interface ICardBoundVaultPay {
     struct PayIntent {
         address vault;
@@ -89,61 +57,33 @@ interface ICardBoundVaultPay {
         uint256 chainId;
     }
 
-    /// @notice executePayMerchant
-    /// @param intent intent
-    /// @param signature signature
     function executePayMerchant(PayIntent calldata intent, bytes calldata signature) external;
 }
 
-/// @notice MERCH_Zero
 error MERCH_Zero();
-/// @notice MERCH_NotDAO
 error MERCH_NotDAO();
-/// @notice MERCH_NotMerchant
 error MERCH_NotMerchant();
-/// @notice MERCH_NotRegistered
 error MERCH_NotRegistered();
-/// @notice MERCH_AlreadyRegistered
 error MERCH_AlreadyRegistered();
-/// @notice MERCH_Suspended
 error MERCH_Suspended();
-/// @notice MERCH_LowTrust
 error MERCH_LowTrust();
-/// @notice MERCH_InvalidPayment
 error MERCH_InvalidPayment();
-/// @notice MERCH_EscrowRequired
 error MERCH_EscrowRequired();
-/// @notice MERCH_InvalidConfig
 error MERCH_InvalidConfig();
-/// @notice MERCH_TokenNotAccepted
 error MERCH_TokenNotAccepted();
-/// @notice MERCH_NoVault
 error MERCH_NoVault();
-/// @notice MERCH_NotApproved
 error MERCH_NotApproved();
-/// @notice MERCH_ApprovalExpired
 error MERCH_ApprovalExpired();
-/// @notice MERCH_LimitExceeded
 error MERCH_LimitExceeded();
-/// @notice MERCH_NotFound
 error MERCH_NotFound();
-/// @notice MERCH_AlreadyCompleted
 error MERCH_AlreadyCompleted();
-/// @notice MERCH_Forbidden
 error MERCH_Forbidden();
-/// @notice MERCH_CapExceeded
 error MERCH_CapExceeded();
-/// @notice MERCH_NotConfigured
 error MERCH_NotConfigured();
-/// @notice MERCH_VFIDESettlementDisabled
 error MERCH_VFIDESettlementDisabled();
-/// @notice MERCH_IntentInvalid
 error MERCH_IntentInvalid();
-/// @notice MERCH_IntentRecipientMismatch
 error MERCH_IntentRecipientMismatch();
-/// @notice MERCH_InvalidChannel
 error MERCH_InvalidChannel();
-/// @notice MERCH_Deprecated
 error MERCH_Deprecated();
 
 // Removed local Ownable to use SharedInterfaces.sol
@@ -152,144 +92,78 @@ error MERCH_Deprecated();
 
 /// @notice Payment channel types for differentiation and analytics
 enum PaymentChannel {
-    ONLINE, // 0 - E-commerce, requires escrow for buyer protection
-    IN_PERSON, // 1 - Point of sale, instant settlement, no escrow
-    POS_TERMINAL, // 2 - Hardware POS terminal
-    QR_CODE, // 3 - QR code scan payment
-    SUBSCRIPTION, // 4 - Recurring subscription
-    INVOICE // 5 - Invoice/bill payment
+    ONLINE,         // 0 - E-commerce, requires escrow for buyer protection
+    IN_PERSON,      // 1 - Point of sale, instant settlement, no escrow
+    POS_TERMINAL,   // 2 - Hardware POS terminal
+    QR_CODE,        // 3 - QR code scan payment
+    SUBSCRIPTION,   // 4 - Recurring subscription
+    INVOICE         // 5 - Invoice/bill payment
 }
 
-/// @notice MerchantPortal
-/// @title MerchantPortal
-/// @author Vfide
 contract MerchantPortal is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    /// @notice MIN_SWAP_OUTPUT_BPS
     uint256 public constant MIN_SWAP_OUTPUT_BPS = 9000;
-    /// @notice MAX_SWAP_OUTPUT_BPS
     uint256 public constant MAX_SWAP_OUTPUT_BPS = 10000;
-    /// @notice MAX_SWAP_PATH_LENGTH
     uint256 public constant MAX_SWAP_PATH_LENGTH = 3;
-    /// @notice REFUND_COMPLETION_WINDOW
     uint256 public constant REFUND_COMPLETION_WINDOW = 30 days;
-    /// @notice MAX_PULL_PERMIT_DURATION
     uint64 public constant MAX_PULL_PERMIT_DURATION = 90 days;
-
+    
     /// Events
-    /// @notice ModulesSet
-    /// @param vaultHub vaultHub
-    /// @param seer seer
-    /// @param ledger ledger
     event ModulesSet(address vaultHub, address seer, address ledger);
-    /// @notice MerchantRegistered
-    /// @param merchant merchant
-    /// @param businessName businessName
-    /// @param category category
     event MerchantRegistered(address indexed merchant, string businessName, string category);
-    /// @notice MerchantSuspended
-    /// @param merchant merchant
-    /// @param reason reason
     event MerchantSuspended(address indexed merchant, string reason);
-    /// @notice MerchantReinstated
-    /// @param merchant merchant
     event MerchantReinstated(address indexed merchant);
-    /// @notice PaymentProcessed
-    /// @param customer customer
-    /// @param merchant merchant
-    /// @param token token
-    /// @param amount amount
-    /// @param fee fee
-    /// @param orderId orderId
-    /// @param customerScore customerScore
-    /// @param channel channel
-    event PaymentProcessed(address indexed customer, address indexed merchant, address token, uint256 amount, uint256 fee, string orderId, uint16 customerScore, PaymentChannel channel);
+    event PaymentProcessed(
+        address indexed customer,
+        address indexed merchant,
+        address token,
+        uint256 amount,
+        uint256 fee,
+        string orderId,
+        uint16 customerScore,
+        PaymentChannel channel
+    );
     /// @notice Enhanced payment event with channel tracking
-    /// @param feeBasisPoints feeBasisPoints
     event FeeUpdated(uint256 feeBasisPoints);
-    /// @notice ProtocolFeeProposed
-    /// @param newFeeBps newFeeBps
-    /// @param effectiveAt effectiveAt
     event ProtocolFeeProposed(uint256 newFeeBps, uint64 effectiveAt); // H3
-    /// @notice ProtocolFeeCancelled
     event ProtocolFeeCancelled(); // H3
-    /// @notice MinScoreUpdated
-    /// @param minScore minScore
     event MinScoreUpdated(uint16 minScore);
-    /// @notice FeeSinkSet
-    /// @param sink sink
     event FeeSinkSet(address sink);
-    /// @notice MinSwapOutputUpdated
-    /// @param previousBps previousBps
-    /// @param newBps newBps
     event MinSwapOutputUpdated(uint256 previousBps, uint256 newBps);
-    /// @notice AutoConvertSet
-    /// @param merchant merchant
-    /// @param enabled enabled
     event AutoConvertSet(address indexed merchant, bool enabled);
-    /// @notice PayoutAddressSet
-    /// @param merchant merchant
-    /// @param payoutAddress payoutAddress
     event PayoutAddressSet(address indexed merchant, address payoutAddress);
-    /// @notice AutoConvertFallback
-    /// @param merchant merchant
-    /// @param tokenIn tokenIn
-    /// @param amountIn amountIn
-    /// @param reason reason
     event AutoConvertFallback(address indexed merchant, address indexed tokenIn, uint256 amountIn, string reason);
-    /// @notice DAORotationProposed
-    /// @param nextDAO nextDAO
-    /// @param effectiveAt effectiveAt
     event DAORotationProposed(address indexed nextDAO, uint64 effectiveAt);
-    /// @notice DAORotationCancelled
     event DAORotationCancelled();
-    /// @notice DAOSet
-    /// @param oldDAO oldDAO
-    /// @param newDAO newDAO
     event DAOSet(address indexed oldDAO, address indexed newDAO);
 
     /// External modules
-    /// @notice vaultHub
     IVaultHub public vaultHub;
-    /// @notice seer
     ISeer public seer;
-    /// @notice ledger
     IProofLedger public ledger;
 
     /// DAO control
-    /// @notice dao
     address public dao;
-    /// @notice pendingDAO
     address public pendingDAO;
-    /// @notice pendingDAOAt
     uint64 public pendingDAOAt;
-    /// @notice DAO_CHANGE_DELAY
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
 
     // H3 FIX: Protocol fee changes require a 24h timelock to honor the
     //         "zero merchant fees" guarantee against instant DAO action.
-    /// @notice pendingProtocolFeeBps
     uint256 public pendingProtocolFeeBps;
-    /// @notice pendingProtocolFeeAt
     uint64 public pendingProtocolFeeAt;
-    /// @notice PROTOCOL_FEE_CHANGE_DELAY
     uint64 public constant PROTOCOL_FEE_CHANGE_DELAY = 24 hours;
-    /// @notice fraudRegistry
     address public fraudRegistry;
     // N-L15 FIX: optional session-key spend-limit gate (zero address = disabled).
     // Kept private to avoid generating an extra public getter and reduce bytecode size.
-    /// @notice sessionKeyManager
     address private sessionKeyManager;
 
     /// Protocol fee (in basis points, e.g., 50 = 0.5%)
-    /// @notice protocolFeeBps
     uint256 public protocolFeeBps = 0; // 0% - No merchant payment fee (burn fees apply on VFIDE transfers)
-    /// @notice feeSink
     address public feeSink; // Where protocol fees go (could be treasury or burn)
 
     /// Merchant minimum ProofScore requirement (0-10000 scale)
-    /// @notice minMerchantScore
     uint16 public minMerchantScore = ScoringConstants.MIN_MERCHANT; // From ScoringConstants: 5600 (56%)
 
     /// Merchant registry
@@ -300,129 +174,86 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         string category; // e.g., "retail", "services", "digital_goods"
         uint64 registeredAt;
         uint256 totalVolume; // Lifetime payment volume
-        uint256 txCount; // Total transactions
+        uint256 txCount;     // Total transactions
         address payoutAddress; // Optional: Redirect funds to Treasury/Splitter
     }
-    /// @notice merchants
     mapping(address => MerchantInfo) public merchants;
-    /// @notice merchantList
     address[] public merchantList;
-    /// @notice merchantInList
     mapping(address => bool) private merchantInList;
-    /// @notice merchantIndexPlusOne
     mapping(address => uint256) private merchantIndexPlusOne;
 
     // F-SC-021 FIX: 24-hour timelock state for payout-address changes. Without
     // a delay, a single compromised merchant key would instantly redirect all
     // subsequent revenue to the attacker. The propose/apply/cancel pattern
     // gives merchants a window to detect the change before it takes effect.
-    /// @notice PAYOUT_ADDRESS_DELAY
     uint64 public constant PAYOUT_ADDRESS_DELAY = 24 hours;
-    /// @notice pendingPayoutAddress
     mapping(address => address) public pendingPayoutAddress;
-    /// @notice pendingPayoutAddressEffectiveAt
     mapping(address => uint64) public pendingPayoutAddressEffectiveAt;
-    /// @notice PayoutAddressProposed
-    /// @param merchant merchant
-    /// @param proposedAddress proposedAddress
-    /// @param effectiveAt effectiveAt
     event PayoutAddressProposed(address indexed merchant, address proposedAddress, uint64 effectiveAt);
-    /// @notice PayoutAddressProposalCancelled
-    /// @param merchant merchant
     event PayoutAddressProposalCancelled(address indexed merchant);
 
     /// Supported payment tokens (VFIDE + stablecoins)
-    /// @notice acceptedTokens
     mapping(address => bool) public acceptedTokens;
-    /// @notice acceptedTokenDecimals
     mapping(address => uint8) public acceptedTokenDecimals;
-    /// @notice merchantPullApproved
     mapping(address => mapping(address => bool)) public merchantPullApproved; // customer => merchant => approved
-    /// @notice merchantPullRemaining
     mapping(address => mapping(address => uint256)) public merchantPullRemaining; // customer => merchant => remaining pull amount
-    /// @notice merchantPullExpiry
     mapping(address => mapping(address => uint64)) public merchantPullExpiry; // customer => merchant => expiry timestamp (0 = no expiry)
-    /// @notice merchantPullToken
     mapping(address => mapping(address => address)) public merchantPullToken; // customer => merchant => token (0 = any accepted token)
-    /// @notice MerchantPullApprovalSet
-    /// @param customer customer
-    /// @param merchant merchant
-    /// @param approved approved
     event MerchantPullApprovalSet(address indexed customer, address indexed merchant, bool approved);
-    /// @notice MerchantPullPermitSet
-    /// @param customer customer
-    /// @param merchant merchant
-    /// @param maxAmount maxAmount
-    /// @param expiresAt expiresAt
     event MerchantPullPermitSet(address indexed customer, address indexed merchant, uint256 maxAmount, uint64 expiresAt);
-    /// @notice MerchantPullPermitTokenSet
-    /// @param customer customer
-    /// @param merchant merchant
-    /// @param token token
-    /// @param maxAmount maxAmount
-    /// @param expiresAt expiresAt
     event MerchantPullPermitTokenSet(address indexed customer, address indexed merchant, address indexed token, uint256 maxAmount, uint64 expiresAt);
 
-    /// @notice swapRouter
     ISwapRouter public swapRouter;
-    /// @notice stablecoin
     address public stablecoin; // Target stablecoin (e.g. USDC)
-    /// @notice autoConvert
     mapping(address => bool) public autoConvert; // Merchant -> Enabled
-
+    
     /// Slippage protection for swaps (basis points, e.g., 9800 = 98% = 2% slippage)
-    /// @notice minSwapOutputBps
     uint256 public minSwapOutputBps = 9500; // Default: 5% max slippage
-
+    
     /// Multi-hop swap paths (token -> path array)
-    /// @notice tokenSwapPaths
     mapping(address => address[]) public tokenSwapPaths;
 
-    /// @notice onlyDAO
     modifier onlyDAO() {
         _checkDAO();
         _;
     }
-    /// @notice _checkDAO
     function _checkDAO() internal view {
         if (msg.sender != dao) revert MERCH_NotDAO();
     }
 
-    /// @notice onlyMerchant
     modifier onlyMerchant() {
         _checkMerchant();
         _;
     }
-    /// @notice _checkMerchant
     function _checkMerchant() internal view {
         if (!merchants[msg.sender].registered) revert MERCH_NotMerchant();
     }
 
-    /// @notice constructor
-    /// @param _dao _dao
-    /// @param _vaultHub _vaultHub
-    /// @param _seer _seer
-    /// @param _ledger _ledger
-    /// @param _feeSink _feeSink
-    constructor(address _dao, address _vaultHub, address _seer, address _ledger, address _feeSink) {
+    constructor(
+        address _dao,
+        address _vaultHub,
+        address _seer,
+        address _ledger,
+        address _feeSink
+    ) {
         if (_dao == address(0) || _vaultHub == address(0) || _feeSink == address(0)) revert MERCH_InvalidConfig();
         dao = _dao;
         vaultHub = IVaultHub(_vaultHub);
         seer = ISeer(_seer);
         ledger = IProofLedger(_ledger);
         feeSink = _feeSink;
-
+        
         emit ModulesSet(_vaultHub, _seer, _ledger);
         emit FeeSinkSet(_feeSink);
     }
 
     // ─────────────────────────── Admin: DAO controls
 
-    /// @notice setModules
-    /// @param _vaultHub _vaultHub
-    /// @param _seer _seer
-    /// @param _ledger _ledger
-    function setModules(address _vaultHub, address _seer, address _ledger) external onlyDAO {
+    function setModules(
+        address _vaultHub,
+        address _seer,
+        address _ledger
+    ) external onlyDAO {
         if (_vaultHub == address(0) || _seer == address(0)) revert MERCH_Zero();
         vaultHub = IVaultHub(_vaultHub);
         seer = ISeer(_seer);
@@ -433,7 +264,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// @notice Propose DAO control transfer to a new address.
     /// @dev Enforced with a timelock to reduce instant key-compromise blast radius.
-    /// @param _dao _dao
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert MERCH_Zero();
         pendingDAO = _dao;
@@ -463,17 +293,15 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log("m_dao_cancel");
     }
 
-    // slither-disable-next-line missing-zero-check  // intentional: address(0) disables the gate
     /// @notice N-L15 FIX: Set the optional SessionKeyManager for per-session spend limits.
     ///         Pass address(0) to disable the gate (backward-compatible).
-    /// @param _skm _skm
+    // slither-disable-next-line missing-zero-check  // intentional: address(0) disables the gate
     function setSessionKeyManager(address _skm) external onlyDAO {
         sessionKeyManager = _skm;
     }
 
     /// @notice Propose a protocol fee change. Takes effect after 24h timelock.
     /// @dev H3 FIX: 24-hour delay gives merchants / community time to react.
-    /// @param _feeBps _feeBps
     function setProtocolFee(uint256 _feeBps) external onlyDAO {
         if (_feeBps > 500) revert MERCH_InvalidConfig(); // Max 5%
         pendingProtocolFeeBps = _feeBps;
@@ -502,8 +330,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log("fee_cancel");
     }
 
-    /// @notice setFeeSink
-    /// @param _sink _sink
     function setFeeSink(address _sink) external onlyDAO {
         if (_sink == address(0)) revert MERCH_Zero();
         feeSink = _sink;
@@ -511,8 +337,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log("fee_sink");
     }
 
-    /// @notice setMinMerchantScore
-    /// @param _minScore _minScore
     function setMinMerchantScore(uint16 _minScore) external onlyDAO {
         if (_minScore > 10000) revert MERCH_InvalidConfig(); // 0-10000 scale
         minMerchantScore = _minScore;
@@ -520,15 +344,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log("min_score");
     }
 
-    /// @notice setFraudRegistry
-    /// @param _fr _fr
     function setFraudRegistry(address _fr) external onlyDAO {
         if (_fr == address(0)) revert MERCH_Zero();
         fraudRegistry = _fr;
     }
-    /// @notice setAcceptedToken
-    /// @param token token
-    /// @param accepted accepted
     function setAcceptedToken(address token, bool accepted) external onlyDAO {
         if (token == address(0)) revert MERCH_Zero();
         acceptedTokens[token] = accepted;
@@ -542,9 +361,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         _log(accepted ? "tok_on" : "tok_off");
     }
 
-    /// @notice setSwapConfig
-    /// @param _router _router
-    /// @param _stable _stable
     function setSwapConfig(address _router, address _stable) external onlyDAO {
         if (_router != address(0)) {
             if (_stable == address(0)) revert MERCH_InvalidConfig();
@@ -554,9 +370,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         stablecoin = _stable;
         _log("swap_cfg");
     }
-
-    /// @notice setMinSwapOutput
-    /// @param _minBps _minBps
+    
     function setMinSwapOutput(uint256 _minBps) external onlyDAO {
         if (_minBps < MIN_SWAP_OUTPUT_BPS || _minBps > MAX_SWAP_OUTPUT_BPS) revert MERCH_InvalidConfig(); // 0-10% slippage
         uint256 previousBps = minSwapOutputBps;
@@ -564,16 +378,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         emit MinSwapOutputUpdated(previousBps, _minBps);
         _log("swap_min");
     }
-
-    /// @notice setSwapPath
-    /// @param token token
-    /// @param path path
+    
     function setSwapPath(address token, address[] calldata path) external onlyDAO {
         if (token == address(0)) revert MERCH_Zero();
         if (path.length < 2 || path.length > MAX_SWAP_PATH_LENGTH) revert MERCH_InvalidConfig();
         if (path[0] != token) revert MERCH_InvalidConfig();
         if (path[path.length - 1] != stablecoin) revert MERCH_InvalidConfig();
-        for (uint256 i = 0; i < path.length; ++i) {
+        for (uint256 i = 0; i < path.length; i++) {
             if (path[i] == address(0)) revert MERCH_Zero();
         }
         tokenSwapPaths[token] = path;
@@ -581,25 +392,21 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     }
 
     // ─────────────────────────── Internal Trust Validation
-
+    
     /**
      * Check if merchant meets minimum ProofScore requirement
      * Extracted to avoid code duplication
-     * @notice _checkMerchantScore
-     * @param merchant merchant
      */
     function _checkMerchantScore(address merchant) internal view {
         if (address(seer) == address(0)) return;
-
+        
         uint16 score = seer.getCachedScore(merchant);
         uint16 minScore = seer.minForMerchant();
         minScore = minScore > 0 ? minScore : minMerchantScore;
-
+        
         if (score < minScore) revert MERCH_LowTrust();
     }
 
-    /// @notice _checkFraudStatus
-    /// @param subject subject
     function _checkFraudStatus(address subject) internal view {
         if (fraudRegistry == address(0)) return;
         try IFraudRegistryMerchant(fraudRegistry).isServiceBanned(subject) returns (bool banned) {
@@ -613,17 +420,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /**
      * Register as a merchant (requires minimum ProofScore)
-     * @notice registerMerchant
-     * @param businessName businessName
-     * @param category category
      */
-    function registerMerchant(string calldata businessName, string calldata category) external {
+    function registerMerchant(
+        string calldata businessName,
+        string calldata category
+    ) external {
         _checkFraudStatus(msg.sender);
         if (merchants[msg.sender].registered) revert MERCH_AlreadyRegistered();
-
+        
         // Check ProofScore requirement
         _checkMerchantScore(msg.sender);
-
+        
         merchants[msg.sender] = MerchantInfo({
             registered: true,
             suspended: false,
@@ -634,18 +441,18 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             txCount: 0,
             payoutAddress: address(0)
         });
-
+        
         if (merchantList.length >= 10000) revert MERCH_CapExceeded(); // I-11
         if (!merchantInList[msg.sender]) {
             merchantList.push(msg.sender);
             merchantInList[msg.sender] = true;
             merchantIndexPlusOne[msg.sender] = merchantList.length;
         }
-
+        
         emit MerchantRegistered(msg.sender, businessName, category);
         _logEv(msg.sender, "m_reg", 0, category);
     }
-
+    
     /**
      * @notice Update merchant business information
      * @param businessName New business name
@@ -655,11 +462,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         MerchantInfo storage m = merchants[msg.sender];
         m.businessName = businessName;
         m.category = category;
-
+        
         emit MerchantUpdated(msg.sender, businessName, category);
         _logEv(msg.sender, "m_upd", 0, category);
     }
-
+    
     /**
      * @notice Merchant voluntarily deregisters
      * @dev Cannot deregister if there are pending refunds or disputes
@@ -681,9 +488,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             merchantInList[msg.sender] = false;
             merchantIndexPlusOne[msg.sender] = 0;
         }
-
+        
         m.registered = false;
-
+        
         emit MerchantDeregistered(msg.sender);
         _logEv(msg.sender, "m_dereg", 0, "");
     }
@@ -691,31 +498,14 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                              REFUND SYSTEM
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     // Backlog fix (R77): add refundId as first indexed parameter so frontend can
     // reconstruct refund state from events without storing it separately.
-    /// @notice RefundInitiated
-    /// @param refundId refundId
-    /// @param customer customer
-    /// @param merchant merchant
-    /// @param orderId orderId
-    /// @param amount amount
     event RefundInitiated(bytes32 indexed refundId, address indexed customer, address indexed merchant, string orderId, uint256 amount);
-    /// @notice RefundCompleted
-    /// @param customer customer
-    /// @param merchant merchant
-    /// @param orderId orderId
-    /// @param amount amount
     event RefundCompleted(address indexed customer, address indexed merchant, string orderId, uint256 amount);
-    /// @notice MerchantUpdated
-    /// @param merchant merchant
-    /// @param businessName businessName
-    /// @param category category
     event MerchantUpdated(address indexed merchant, string businessName, string category);
-    /// @notice MerchantDeregistered
-    /// @param merchant merchant
     event MerchantDeregistered(address indexed merchant);
-
+    
     struct RefundRequest {
         address customer;
         address merchant;
@@ -726,27 +516,30 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         bool approved;
         bool completed;
     }
-
-    /// @notice refundRequests
+    
     mapping(bytes32 => RefundRequest) public refundRequests;
-
+    
     /**
      * @notice Initiate a refund (merchant approves)
      * @param customer Customer to refund
      * @param token Token to refund
      * @param amount Amount to refund
      * @param orderId Original order ID
-     * @return refundId refundId
      */
-    function initiateRefund(address customer, address token, uint256 amount, string calldata orderId) external onlyMerchant returns (bytes32 refundId) {
+    function initiateRefund(
+        address customer,
+        address token,
+        uint256 amount,
+        string calldata orderId
+    ) external onlyMerchant returns (bytes32 refundId) {
         if (customer == address(0) || amount == 0) revert MERCH_InvalidPayment();
 
         // N-H11 FIX: Reserve headroom in the customer's refund history so one merchant
         // cannot saturate the full 500-slot history and block all future refunds.
         if (customerRefunds[customer].length >= 450) revert MERCH_CapExceeded();
-
+        
         refundId = keccak256(abi.encode(msg.sender, customer, orderId, block.timestamp, customerRefunds[customer].length));
-
+        
         refundRequests[refundId] = RefundRequest({
             customer: customer,
             merchant: msg.sender,
@@ -757,16 +550,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             approved: true, // Merchant-initiated = auto-approved
             completed: false
         });
-
+        
         // Track refunds for both parties (I-11: capped)
         customerRefunds[customer].push(refundId);
         if (merchantRefunds[msg.sender].length >= 500) revert MERCH_CapExceeded();
         merchantRefunds[msg.sender].push(refundId);
-
+        
         emit RefundInitiated(refundId, customer, msg.sender, orderId, amount);
         _logEv(customer, "rf_init", amount, orderId);
     }
-
+    
     /**
      * @notice Complete a refund (transfer tokens back to customer)
      * @param refundId The refund ID from initiateRefund
@@ -778,17 +571,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (r.completed) revert MERCH_AlreadyCompleted();
         if (msg.sender != r.merchant) revert MERCH_Forbidden();
         if (block.timestamp > uint256(r.requestTime) + REFUND_COMPLETION_WINDOW) revert MERCH_ApprovalExpired();
-
+        
         r.completed = true;
-
+        
         // Get vaults
         address merchantVault = vaultHub.vaultOf(r.merchant);
         address customerVault = vaultHub.vaultOf(r.customer);
         if (merchantVault == address(0) || customerVault == address(0)) revert MERCH_NoVault();
-
+        
         // Pull refund from the merchant caller to avoid requiring approvals from vault contracts.
         IERC20(r.token).safeTransferFrom(msg.sender, customerVault, r.amount);
-
+        
         emit RefundCompleted(r.customer, r.merchant, r.orderId, r.amount);
         _logEv(r.customer, "rf_done", r.amount, r.orderId);
     }
@@ -800,11 +593,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     function completeRefundFromVault(bytes32) external pure {
         revert MERCH_Deprecated();
     }
-
+    
     // ═══════════════════════════════════════════════════════════════════════
     //                           MERCHANT STATS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     /**
      * @notice Get merchant statistics
      * @param merchant Merchant address
@@ -815,7 +608,14 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @return avgTxSize Average transaction size
      * @return trustScore Current trust score
      */
-    function getMerchantStats(address merchant) external view returns (bool registered, bool suspended, uint256 totalVolume, uint256 txCount, uint256 avgTxSize, uint16 trustScore) {
+    function getMerchantStats(address merchant) external view returns (
+        bool registered,
+        bool suspended,
+        uint256 totalVolume,
+        uint256 txCount,
+        uint256 avgTxSize,
+        uint16 trustScore
+    ) {
         MerchantInfo storage m = merchants[merchant];
         registered = m.registered;
         suspended = m.suspended;
@@ -827,9 +627,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /**
      * DAO can suspend merchants for violations
-     * @notice suspendMerchant
-     * @param merchant merchant
-     * @param reason reason
      */
     function suspendMerchant(address merchant, string calldata reason) external onlyDAO {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
@@ -840,8 +637,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /**
      * DAO can reinstate suspended merchants
-     * @notice reinstateMerchant
-     * @param merchant merchant
      */
     function reinstateMerchant(address merchant) external onlyDAO {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
@@ -875,13 +670,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      *      guardian-mediated recovery path declines. See `VaultHub.ensureVault` for the
      *      full non-custodial reasoning. Frontends MUST surface the guardian-setup
      *      countdown in the merchant dashboard so the merchant can act before expiry.
-     * @param customer customer
-     * @param token token
-     * @param amount amount
-     * @param orderId orderId
-     * @return netAmount netAmount
      */
-    function processPayment(address customer, address token, uint256 amount, string calldata orderId) external nonReentrant onlyMerchant returns (uint256 netAmount) {
+    function processPayment(
+        address customer,
+        address token,
+        uint256 amount,
+        string calldata orderId
+    ) external nonReentrant onlyMerchant returns (uint256 netAmount) {
         if (customer == address(0) || token == address(0) || amount == 0) {
             revert MERCH_InvalidPayment();
         }
@@ -907,8 +702,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice Revoke merchant permission to initiate pulls from your vault via processPayment.
     /// @dev M-12 FIX: This function can ONLY revoke (approved must be false) — any call with approved=true reverts.
     ///      Use setMerchantPullPermit() to grant a scoped permit instead.
-    /// @param merchant merchant
-    /// @param approved approved
     function setMerchantPullApproval(address merchant, bool approved) external {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
         if (approved) {
@@ -931,21 +724,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// @notice Set a token-scoped permit and enforce that the customer's vault already approved this portal.
     /// @dev Helps wallets/UIs steer users to a single explicit spender+token target and avoid blind double approvals.
-    /// @param merchant merchant
-    /// @param token token
-    /// @param maxAmount maxAmount
-    /// @param expiresAt expiresAt
     function setMerchantPullPermitForToken(address merchant, address token, uint256 maxAmount, uint64 expiresAt) external {
         _setMerchantPullPermit(merchant, token, maxAmount, expiresAt, true);
     }
 
-    /// @notice _setMerchantPullPermit
-    /// @param merchant merchant
-    /// @param token token
-    /// @param maxAmount maxAmount
-    /// @param expiresAt expiresAt
-    /// @param requireVaultAllowance requireVaultAllowance
-    function _setMerchantPullPermit(address merchant, address token, uint256 maxAmount, uint64 expiresAt, bool requireVaultAllowance) internal {
+    function _setMerchantPullPermit(
+        address merchant,
+        address token,
+        uint256 maxAmount,
+        uint64 expiresAt,
+        bool requireVaultAllowance
+    ) internal {
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
         if (maxAmount == 0) revert MERCH_InvalidConfig();
 
@@ -988,28 +777,27 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /**
      * Simplified payment: customer pays merchant directly (pulls from msg.sender's vault)
-     * @notice pay
-     * @param merchant merchant
-     * @param token token
-     * @param amount amount
-     * @param orderId orderId
-     * @return netAmount netAmount
      */
-    function pay(address merchant, address token, uint256 amount, string calldata orderId) external nonReentrant returns (uint256 netAmount) {
+    function pay(
+        address merchant,
+        address token,
+        uint256 amount,
+        string calldata orderId
+    ) external nonReentrant returns (uint256 netAmount) {
         return _processPaymentWithChannel(msg.sender, merchant, token, amount, orderId, PaymentChannel.IN_PERSON);
     }
 
-    // slither-disable-start reentrancy-no-eth
+
     /**
      * Signed-intent payment path: customer signs an intent and merchant/relayer submits it.
      * Avoids requiring standing ERC20 approvals from the customer vault to this portal.
-     * @notice payWithIntent
-     * @param intent intent
-     * @param signature signature
-     * @param orderId orderId
-     * @return netAmount netAmount
      */
-    function payWithIntent(ICardBoundVaultPay.PayIntent calldata intent, bytes calldata signature, string calldata orderId) external nonReentrant returns (uint256 netAmount) {
+    // slither-disable-start reentrancy-no-eth
+    function payWithIntent(
+        ICardBoundVaultPay.PayIntent calldata intent,
+        bytes calldata signature,
+        string calldata orderId
+    ) external nonReentrant returns (uint256 netAmount) {
         // function has nonReentrant guard; cross-contract calls are to trusted vault/escrow modules
         if (intent.merchantPortal != address(this)) revert MERCH_IntentInvalid();
         if (intent.merchant == address(0) || intent.token == address(0)) revert MERCH_IntentInvalid();
@@ -1049,7 +837,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         // Intent path settles a direct vault transfer; protocol fee remains governed by token-level fee mechanics.
         netAmount = intent.amount;
 
-        emit PaymentProcessed(customer, intent.merchant, intent.token, intent.amount, 0, orderId, customerScore, PaymentChannel.IN_PERSON);
+        emit PaymentProcessed(
+            customer,
+            intent.merchant,
+            intent.token,
+            intent.amount,
+            0,
+            orderId,
+            customerScore,
+            PaymentChannel.IN_PERSON
+        );
 
         _rewardPaymentParticipants(customer, intent.merchant);
         _logEv(customer, "m_pay", intent.amount, orderId);
@@ -1058,8 +855,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /**
      * Enable or disable automatic conversion for stable-pay merchants
-     * @notice setAutoConvert
-     * @param enabled enabled
      */
     function setAutoConvert(bool enabled) external onlyMerchant {
         if (enabled) {
@@ -1083,8 +878,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      *
      * To CLEAR a payout (return to merchant vault), propose payout=address(0)
      * and apply after the delay.
-     * @notice proposePayoutAddress
-     * @param payout payout
      */
     function proposePayoutAddress(address payout) external onlyMerchant {
         if (!(payout == address(0) || vaultHub.isVault(payout))) revert MERCH_InvalidConfig();
@@ -1096,7 +889,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         emit PayoutAddressProposed(msg.sender, payout, pendingPayoutAddressEffectiveAt[msg.sender]);
     }
 
-    /// @notice applyPayoutAddress
     function applyPayoutAddress() external onlyMerchant {
         uint64 effectiveAt = pendingPayoutAddressEffectiveAt[msg.sender];
         require(effectiveAt != 0, "MP: no pending payout proposal");
@@ -1112,7 +904,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         emit PayoutAddressSet(msg.sender, proposed);
     }
 
-    /// @notice cancelPayoutAddressChange
     function cancelPayoutAddressChange() external onlyMerchant {
         require(pendingPayoutAddressEffectiveAt[msg.sender] != 0, "MP: no pending payout proposal");
         delete pendingPayoutAddress[msg.sender];
@@ -1136,21 +927,34 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @param amount Payment amount
      * @param orderId Merchant's order reference
      * @param channel Payment channel type (IN_PERSON, POS_TERMINAL, QR_CODE)
-     * @return netAmount netAmount
      */
-    function payInPerson(address merchant, address token, uint256 amount, string calldata orderId, PaymentChannel channel) external nonReentrant returns (uint256 netAmount) {
+    function payInPerson(
+        address merchant,
+        address token,
+        uint256 amount,
+        string calldata orderId,
+        PaymentChannel channel
+    ) external nonReentrant returns (uint256 netAmount) {
         // Only allow in-person channel types
-        if (channel != PaymentChannel.IN_PERSON && channel != PaymentChannel.POS_TERMINAL && channel != PaymentChannel.QR_CODE) revert MERCH_InvalidChannel();
-
+        if (
+            channel != PaymentChannel.IN_PERSON &&
+            channel != PaymentChannel.POS_TERMINAL &&
+            channel != PaymentChannel.QR_CODE
+        ) revert MERCH_InvalidChannel();
+        
         netAmount = _processPaymentWithChannel(msg.sender, merchant, token, amount, orderId, channel);
     }
 
     /**
      * @notice Online payment - MUST use escrow for buyer protection
      * @dev Reverts - online payments require escrow via VFIDECommerce
-     * @return _uint256 _uint256
      */
-    function payOnline(address /*merchant*/, address /*token*/, uint256 /*amount*/, string calldata /*orderId*/) external pure returns (uint256) {
+    function payOnline(
+        address /*merchant*/,
+        address /*token*/,
+        uint256 /*amount*/,
+        string calldata /*orderId*/
+    ) external pure returns (uint256) {
         // Prevent direct online payments - must use escrow
         revert MERCH_EscrowRequired();
     }
@@ -1161,9 +965,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @param token Payment token
      * @param amount Payment amount
      * @param subscriptionId Subscription reference
-     * @return netAmount netAmount
      */
-    function paySubscription(address merchant, address token, uint256 amount, string calldata subscriptionId) external nonReentrant returns (uint256 netAmount) {
+    function paySubscription(
+        address merchant,
+        address token,
+        uint256 amount,
+        string calldata subscriptionId
+    ) external nonReentrant returns (uint256 netAmount) {
         netAmount = _processPaymentWithChannel(msg.sender, merchant, token, amount, subscriptionId, PaymentChannel.SUBSCRIPTION);
     }
 
@@ -1173,23 +981,27 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @param token Payment token
      * @param amount Payment amount
      * @param invoiceId Invoice reference
-     * @return netAmount netAmount
      */
-    function payInvoice(address merchant, address token, uint256 amount, string calldata invoiceId) external nonReentrant returns (uint256 netAmount) {
+    function payInvoice(
+        address merchant,
+        address token,
+        uint256 amount,
+        string calldata invoiceId
+    ) external nonReentrant returns (uint256 netAmount) {
         netAmount = _processPaymentWithChannel(msg.sender, merchant, token, amount, invoiceId, PaymentChannel.INVOICE);
     }
 
     /**
      * @notice Internal payment processor with channel tracking
-     * @param customer customer
-     * @param merchant merchant
-     * @param token token
-     * @param amount amount
-     * @param orderId orderId
-     * @param channel channel
-     * @return netAmount netAmount
      */
-    function _processPaymentWithChannel(address customer, address merchant, address token, uint256 amount, string calldata orderId, PaymentChannel channel) internal returns (uint256 netAmount) {
+    function _processPaymentWithChannel(
+        address customer,
+        address merchant,
+        address token,
+        uint256 amount,
+        string calldata orderId,
+        PaymentChannel channel
+    ) internal returns (uint256 netAmount) {
         if (token == address(0) || amount == 0) revert MERCH_InvalidPayment();
         if (!merchants[merchant].registered) revert MERCH_NotRegistered();
         if (merchants[merchant].suspended) revert MERCH_Suspended();
@@ -1204,17 +1016,17 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             ISessionKeyManager_MP skm = ISessionKeyManager_MP(skmAddress);
             if (!skm.canSpend(customer, merchant, token, amount)) revert MERCH_Forbidden();
         }
-
+        
         uint16 customerScore = address(seer) != address(0) ? seer.getCachedScore(customer) : 500;
 
         _recordMerchantStats(merchant, amount);
-
+        
         // Get customer vault
         address customerVault = vaultHub.vaultOf(customer);
         if (customerVault == address(0)) revert MERCH_NoVault();
-
+        
         // SecurityHub lock check removed — non-custodial
-
+        
         // Use scoped block to reduce stack depth
         {
             // Determine recipient
@@ -1226,16 +1038,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
             // Calculate fee
             uint256 fee = (amount * protocolFeeBps) / 10000;
             netAmount = amount - fee;
-
+            
             // Fee transfer FIRST
             if (fee > 0 && feeSink != address(0)) {
                 IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
             }
-
+            
             // Transfer net amount (with STABLE-PAY auto-convert if enabled)
             _transferWithAutoConvert(token, customerVault, recipient, netAmount, merchant);
         }
-
+        
         // Emit payment event with channel tracking
         emit PaymentProcessed(
             customer,
@@ -1249,7 +1061,7 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         );
 
         _rewardPaymentParticipants(customer, merchant);
-
+        
         _logEv(customer, "m_pay", amount, orderId);
     }
 
@@ -1258,13 +1070,14 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /**
      * @notice Shared transfer helper with STABLE-PAY auto-convert
      * @dev Used by both _processPaymentInternal and _processPaymentWithChannel
-     * @param token token
-     * @param customerVault customerVault
-     * @param recipient recipient
-     * @param netAmount netAmount
-     * @param merchant merchant
      */
-    function _transferWithAutoConvert(address token, address customerVault, address recipient, uint256 netAmount, address merchant) internal {
+    function _transferWithAutoConvert(
+        address token,
+        address customerVault,
+        address recipient,
+        uint256 netAmount,
+        address merchant
+    ) internal {
         if (autoConvert[merchant] && token != stablecoin) {
             emit AutoConvertFallback(merchant, token, netAmount, "auto_conv_off");
             revert MERCH_NotConfigured();
@@ -1275,88 +1088,87 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /**
      * Get customer's trust assessment (read-only for merchants)
-     * @notice getCustomerTrustScore
-     * @param customer customer
-     * @return score score
-     * @return highTrust highTrust
-     * @return lowTrust lowTrust
-     * @return eligible eligible
      */
-    function getCustomerTrustScore(address customer) external view returns (uint16 score, bool highTrust, bool lowTrust, bool eligible) {
+    function getCustomerTrustScore(address customer) external view returns (
+        uint16 score,
+        bool highTrust,
+        bool lowTrust,
+        bool eligible
+    ) {
         if (address(seer) == address(0)) {
             return (500, false, false, true); // Neutral defaults
         }
-
+        
         score = seer.getCachedScore(customer);
         uint16 highThreshold = seer.highTrustThreshold();
         uint16 lowThreshold = seer.lowTrustThreshold();
-
+        
         highTrust = score >= highThreshold;
         lowTrust = score <= lowThreshold;
-
+        
         // Check if customer has vault
         address vault = vaultHub.vaultOf(customer);
         eligible = vault != address(0);
-
+        
         // SecurityHub lock check removed — non-custodial
     }
 
     /// @notice Deprecated on-chain quote helper retained for ABI compatibility.
-    /// @return _uint256 _uint256
-    /// @return _uint256 _uint256
-    /// @return _uint256 _uint256
-    /// @return _uint256 _uint256
-    function calculateGrossAmount(address, address, address, uint256) public pure returns (uint256, uint256, uint256, uint256) {
+    function calculateGrossAmount(
+        address,
+        address,
+        address,
+        uint256
+    ) public pure returns (
+        uint256,
+        uint256,
+        uint256,
+        uint256
+    ) {
         revert MERCH_Deprecated();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     //                        REFUND TRACKING VIEWS
     // ═══════════════════════════════════════════════════════════════════════
-
+    
     // Track refunds per customer and merchant
-    /// @notice customerRefunds
     mapping(address => bytes32[]) public customerRefunds;
-    /// @notice merchantRefunds
     mapping(address => bytes32[]) public merchantRefunds;
-
+    
     /**
      * @notice Get refund status by ID
-     * @param refundId refundId
-     * @return customer customer
-     * @return merchant merchant
-     * @return token token
-     * @return amount amount
-     * @return orderId orderId
-     * @return requestTime requestTime
-     * @return approved approved
-     * @return completed completed
      */
-    function getRefundStatus(
-        bytes32 refundId
-    ) external view returns (address customer, address merchant, address token, uint256 amount, string memory orderId, uint64 requestTime, bool approved, bool completed) {
+    function getRefundStatus(bytes32 refundId) external view returns (
+        address customer,
+        address merchant,
+        address token,
+        uint256 amount,
+        string memory orderId,
+        uint64 requestTime,
+        bool approved,
+        bool completed
+    ) {
         RefundRequest storage r = refundRequests[refundId];
         return (r.customer, r.merchant, r.token, r.amount, r.orderId, r.requestTime, r.approved, r.completed);
     }
-
+    
     /**
      * @notice Deprecated heavy on-chain aggregation view.
      * @dev Compute refund analytics off-chain from events and getRefundStatus().
-     * @return _uint256 _uint256
-     * @return _uint256 _uint256
-     * @return _uint256 _uint256
      */
-    function getMerchantRefundRate(address) external pure returns (uint256, uint256, uint256) {
+    function getMerchantRefundRate(address) external pure returns (
+        uint256,
+        uint256,
+        uint256
+    ) {
         revert MERCH_Deprecated();
     }
 
-    /// @notice _hasPendingRefunds
-    /// @param merchant merchant
-    /// @return _bool _bool
     function _hasPendingRefunds(address merchant) internal view returns (bool) {
         bytes32[] storage refundIds = merchantRefunds[merchant];
         uint256 len = refundIds.length;
-        for (uint256 i = 0; i < len; ++i) {
+        for (uint256 i = 0; i < len; i++) {
             if (!refundRequests[refundIds[i]].completed) {
                 return true;
             }
@@ -1366,39 +1178,27 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// @notice Returns all refund IDs initiated by the given customer.
     /// R77: mappings made public to unblock frontend enumeration.
-    /// @param customer customer
-    /// @return _arg _arg
     function getCustomerRefunds(address customer) external view returns (bytes32[] memory) {
         return customerRefunds[customer];
     }
 
     /// @notice Returns all refund IDs initiated by the given merchant.
-    /// @param merchant merchant
-    /// @return _arg _arg
     function getMerchantRefunds(address merchant) external view returns (bytes32[] memory) {
         return merchantRefunds[merchant];
     }
 
-    /// @notice _rewardPaymentParticipants
-    /// @param customer customer
-    /// @param merchant merchant
     function _rewardPaymentParticipants(address customer, address merchant) internal {
         if (address(seer) == address(0)) return;
         try seer.reward(merchant, 3, "m_pay") {} catch {}
         try seer.reward(customer, 1, "c_pay") {} catch {}
     }
 
-    /// @notice _recordMerchantStats
-    /// @param merchant merchant
-    /// @param amount amount
     function _recordMerchantStats(address merchant, uint256 amount) internal {
         MerchantInfo storage info = merchants[merchant];
         info.totalVolume += amount;
-        ++info.txCount;
+        info.txCount += 1;
     }
 
-    /// @notice _validateSettlementToken
-    /// @param token token
     function _validateSettlementToken(address token) internal view {
         if (!acceptedTokens[token]) revert MERCH_TokenNotAccepted();
 
@@ -1415,10 +1215,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         }
     }
 
-    /// @notice _readTokenDecimals
-    /// @param token token
-    /// @return decimals decimals
-    /// @return ok ok
     function _readTokenDecimals(address token) internal view returns (uint8 decimals, bool ok) {
         try IERC20DecimalsMerchant(token).decimals() returns (uint8 d) {
             return (d, true);
@@ -1430,27 +1226,16 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     // ─────────────────────────── Internal Helpers
 
     // slither-disable-next-line reentrancy-events
-    /// @notice _log
-    /// @param action action
     function _log(string memory action) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch {
-                emit LedgerLogFailed(address(this), action);
-            }
+            try ledger.logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); }
         }
     }
 
     // slither-disable-next-line reentrancy-events
-    /// @notice _logEv
-    /// @param who who
-    /// @param action action
-    /// @param amount amount
-    /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
         if (address(ledger) != address(0)) {
-            try ledger.logEvent(who, action, amount, note) {} catch {
-                emit LedgerLogFailed(who, action);
-            }
+            try ledger.logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); }
         }
     }
 }

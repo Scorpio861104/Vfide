@@ -1,4 +1,3 @@
-Found at: 3159
 import { expect } from 'chai';
 import { ethers, loadFixture, type SignerWithAddress } from './helpers/hardhatCompat';
 
@@ -45,19 +44,8 @@ describe('VaultHub', function () {
     const MockERC20 = await ethers.getContractFactory('MockERC20');
     token = await MockERC20.deploy('VFIDE', 'VFD', ethers.utils.parseEther('1000000'));
     const VaultHubFactory = await ethers.getContractFactory('VaultHub');
-    // VaultHub embeds CardBoundVault creation code via CardBoundVaultDeployer which
-    // currently exceeds the EIP-3860 initcode size limit on local Hardhat nodes.
-    // This is a known pre-existing constraint tracked in EIP170_SIZE_REFACTOR_PLAN.md.
-    // Tests skip gracefully until the size refactor lands.
-    try {
-      vaultHub = await VaultHubFactory.deploy(token.address, owner.address, owner.address);
-      await vaultHub.deployed();
-    } catch (err: any) {
-      if ((err?.message ?? err?.shortMessage ?? '').includes('initcode size')) {
-        return { skipAll: true };
-      }
-      throw err;
-    }
+    vaultHub = await VaultHubFactory.deploy(token.address, owner.address, owner.address);
+    await vaultHub.deployed();
     await token.transfer(user.address, ethers.utils.parseEther('50000'));
     const hasFn = (name: string) => {
       try {
