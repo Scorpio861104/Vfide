@@ -128,14 +128,20 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install slither-analyzer
-      - run: npx hardhat compile
+      - name: Install solc 0.8.30 via solc-select
+        run: |
+          pip install solc-select
+          solc-select install 0.8.30
+          solc-select use 0.8.30
       - name: Run Slither
         run: |
           mkdir -p reports
-          slither . \
+          # Use solc directly (bypasses crytic-compile Hardhat 3.x build-info parse bug)
+          slither contracts/ \
             --config-file slither.config.json \
             --sarif reports/slither.sarif \
-            --json reports/slither.json || true
+            --json reports/slither.json \
+            --solc "$(solc-select which 2>/dev/null || which solc)" || true
           # Ensure sarif exists even if slither exited non-zero (findings present)
           if [ ! -f reports/slither.sarif ]; then
             echo '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > reports/slither.sarif
