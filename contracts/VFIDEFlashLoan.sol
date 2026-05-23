@@ -509,7 +509,6 @@ contract VFIDEFlashLoan is ReentrancyGuard {
      *
      * If receiver doesn't repay amount + fee, the entire tx reverts.
      * Lender funds are mathematically impossible to lose.
-     * @return _bool _bool
      */
     function flashLoan(address lender, IERC3156FlashBorrower receiver, uint256 amount, uint256 maxFeeBps, bytes calldata data) external nonReentrant whenNotPaused returns (bool) {
         // SLITHER FALSE POSITIVES (suppressed via slither-disable-start below):
