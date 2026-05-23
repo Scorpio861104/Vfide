@@ -31,7 +31,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';

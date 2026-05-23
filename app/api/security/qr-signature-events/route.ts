@@ -67,7 +67,7 @@ function normalizeMerchant(value: unknown): string {
   return trimmed.toLowerCase();
 }
 
-export const POST = withAuth(async (request: NextRequest, user: JWTPayload) => {
+export const POST = withAuth(async (request: NextRequest, _user: JWTPayload) => {
   const rateLimitResponse = await withRateLimit(request, 'write');
   if (rateLimitResponse) return rateLimitResponse;
   let payload: z.infer<typeof qrSignatureEventSchema>;

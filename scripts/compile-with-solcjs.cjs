@@ -42,7 +42,7 @@ function walkSol(dir, acc = []) {
 }
 
 // Resolve an import path (relative to the importer, or absolute repo path)
-function resolveImport(importPath, importerPath) {
+function _resolveImport(importPath, importerPath) {
   // Strip ./ and ../
   if (importPath.startsWith("./") || importPath.startsWith("../")) {
     return path.resolve(path.dirname(importerPath), importPath);

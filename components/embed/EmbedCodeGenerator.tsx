@@ -7,7 +7,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Check, Code, Monitor, Smartphone } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 
 interface EmbedCodeGeneratorProps {
   slug: string;

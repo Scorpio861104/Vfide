@@ -2,7 +2,7 @@
 
 import { useAccount, useReadContract } from 'wagmi';
 import { useRouter } from 'next/navigation';
-import { Shield, Zap, Users, CheckCircle, Lock } from 'lucide-react';
+import { Shield, Zap, CheckCircle, Lock } from 'lucide-react';
 import { CardBoundVaultABI as CARD_BOUND_VAULT_ABI } from '@/lib/abis';
 import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, ZERO_ADDRESS, isConfiguredContractAddress } from '@/lib/contracts';
 

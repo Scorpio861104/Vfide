@@ -2,7 +2,7 @@
 
 import { Footer } from '@/components/layout/Footer';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Shield, Zap, Users, Star, TrendingUp, Lock, Globe, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
 import { OnboardingPathChooser, useOnboarding } from '@/components/onboarding';

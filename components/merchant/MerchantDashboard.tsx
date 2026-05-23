@@ -15,7 +15,6 @@ import {
 } from '@/lib/vfide-hooks'
 import { useAccount } from 'wagmi'
 import { Store, DollarSign, Settings, Zap, Shield, CheckCircle2, Sparkles } from 'lucide-react'
-import { isAddress } from 'viem'
 import { useTransactionSounds } from '@/hooks/useTransactionSounds'
 import { useEffect } from 'react'
 import { PROOF_SCORE_PERMISSIONS } from '@/lib/constants'
@@ -56,7 +55,7 @@ export function MerchantDashboard() {
   const [businessName, setBusinessName] = useState('')
   const [category, setCategory] = useState('retail')
   const [showCelebration, setShowCelebration] = useState(false)
-  const [isPendingConvertToggle, setIsPendingConvertToggle] = useState(false)
+  const [_isPendingConvertToggle, _setIsPendingConvertToggle] = useState(false)
   const { playSuccess, playNotification, playError: _playError } = useTransactionSounds()
 
   // #142 FIX: keep off-chain merchant profile in sync after successful on-chain registration.

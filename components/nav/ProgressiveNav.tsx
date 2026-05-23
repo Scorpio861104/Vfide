@@ -16,7 +16,7 @@
  */
 'use client';
 
-import { createContext, useContext, useState, useEffect, useMemo, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useMemo, ReactNode, useCallback } from 'react';
 import {
   Home, Store, Wallet, Shield, ShieldCheck, TrendingUp, Users, Award,
   BarChart3, Settings, Vote, Compass, type LucideIcon,

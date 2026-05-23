@@ -18,7 +18,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Award, Shield, Banknote, Users, Star, Flame, ShoppingCart, Heart, Check, TrendingUp, ArrowRight } from 'lucide-react';
+import { Award, Shield, Banknote, Star, Flame, ShoppingCart, Heart, Check, TrendingUp } from 'lucide-react';
 
 export type TrustEventType =
   | 'badge_earned'

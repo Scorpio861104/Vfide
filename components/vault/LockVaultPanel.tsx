@@ -10,7 +10,6 @@ import {
 import { motion } from 'framer-motion';
 import { isAddress, formatUnits } from 'viem';
 import {
-  AlertTriangle,
   Lock,
   X,
   Loader2,
@@ -18,8 +17,7 @@ import {
   MessageSquare,
   Shield,
   Copy,
-  Check,
-  Clock,
+  Check
 } from 'lucide-react';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
 import { useUserVault } from '@/hooks/useVaultHooks';

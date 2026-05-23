@@ -12,7 +12,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  1. SWIPE GESTURE — Directional swipe for instant navigation
@@ -230,7 +230,7 @@ interface AchievementBurstProps {
   onComplete: () => void;
 }
 
-export function AchievementBurst({ badgeName, badgeIcon, onComplete }: AchievementBurstProps) {
+export function AchievementBurst({ badgeName, badgeIcon: _badgeIcon, onComplete }: AchievementBurstProps) {
   useEffect(() => {
     if (badgeName) {
       const timer = setTimeout(onComplete, 3500);
