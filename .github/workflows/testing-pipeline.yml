@@ -339,7 +339,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci --legacy-peer-deps
-      - run: npx solhint 'contracts/**/*.sol'
+      # Warnings are informational; only errors block CI. Use --max-warnings -1.
+      - run: npx solhint 'contracts/**/*.sol' --max-warnings -1
       - run: npx eslint . --ext .ts,.tsx --max-warnings 0
       # Prettier checks .ts files only. .sol files are linted by solhint
       # (above) — adding the prettier-plugin-solidity dependency would let
