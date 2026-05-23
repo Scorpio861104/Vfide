@@ -780,7 +780,6 @@ contract SeerSocial {
 
     /// @notice getMentees
     /// @param mentor mentor
-    /// @return _arg _arg
     function getMentees(address mentor) external view returns (address[] memory) {
         return menteesOf[mentor];
     }
