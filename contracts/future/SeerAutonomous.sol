@@ -65,7 +65,6 @@ interface IProofLedger_Auto {
 interface IEcosystemScheduler {
     /// @dev Chainlink Automation-compatible: returns whether tasks are due and an ABI-encoded bitmask.
     /// @notice checkUpkeep
-    /// @param _bytes _bytes
     /// @return upkeepNeeded upkeepNeeded
     /// @return performData performData
     function checkUpkeep(bytes calldata) external view returns (bool upkeepNeeded, bytes memory performData);
@@ -750,7 +749,6 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param subject subject
     /// @param action action
     /// @param counterparty counterparty
-    /// @return _arg _arg
     function _detectPatterns(
         address subject,
         ActionType action,
