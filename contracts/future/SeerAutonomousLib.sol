@@ -161,7 +161,6 @@ library SeerAutonomousLib {
      *         0=None, 1=RapidTransfers, 2=CircularTransfers, 3=SelfEndorsement,
      *         4=VoteManipulation, 5=WashTrading, 6=SybilActivity
      * @param patternIndex patternIndex
-     * @return _uint16 _uint16
      */
     function severityFor(uint8 patternIndex) internal pure returns (uint16) {
         if (patternIndex == 1) return 10;
@@ -184,7 +183,6 @@ library SeerAutonomousLib {
      * @param suspendedLevel     Numeric value of RestrictionLevel.Suspended (4).
      * @param limit              rateLimits[level][action]
      * @param count              actionCountToday[subject][action]
-     * @return _uint8 _uint8
      */
     function evaluateRestriction(
         uint8 effectiveLevel,
