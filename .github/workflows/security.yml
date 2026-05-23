@@ -168,10 +168,19 @@ jobs:
           # Without this, slither-action installs whatever solc-select considers
           # "latest" (currently 0.8.35) and rejects the pragma.
           solc-version: '0.8.30'
-          slither-args: '--json slither-output.json --solc-args "--via-ir --optimize --optimize-runs 0"'
+          # Do NOT pass --solc-args here. With ignore-compile:true, slither reads
+          # the pre-compiled Hardhat build-info artifacts from artifacts/build-info/.
+          # Passing --solc-args would make crytic-compile switch to the solc platform
+          # (file-by-file compilation) which would use the system solc 0.8.35 and
+          # reject `pragma solidity 0.8.30` contracts.
+          slither-args: '--json slither-output.json'
           fail-on: none
           # Skip the action's internal compile + npm install; we did both above.
           ignore-compile: true
+          # crytic-compile 0.4.1 is required for Hardhat 3 build-info support.
+          # Hardhat 3 splits build-info into .json + .output.json; crytic-compile
+          # 0.3.x (bundled with slither-analyzer 0.11.x) raises KeyError: 'output'.
+          slither-plugins: slither-plugins.txt
         continue-on-error: true
 
       - name: Enforce zero-findings gate

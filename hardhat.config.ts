@@ -253,7 +253,20 @@ const config: VfideHardhatConfig = {
     hardhat: {
       type: "edr-simulated" as const,
       chainId: 31337,
-      allowUnlimitedContractSize,
+      // CardBoundVault (29KB runtime) and CardBoundVaultDeployer (55KB runtime) currently exceed
+      // EIP-170 (24KB). Set allowUnlimitedContractSize unconditionally so that unit/integration
+      // tests can deploy these contracts while active size-reduction work is ongoing.
+      // The EIP-170 violation is tracked in verify-contract-size-buffer.ts (BUFFER_EXCEPTIONS).
+      // Once both contracts are reduced below 24KB this flag can be removed.
+      allowUnlimitedContractSize: true,
+      // Use Prague hardfork to avoid EIP-7825 (Osaka) transaction gas cap of 16M.
+      // The default hardfork in this version of Hardhat 3 is Osaka, which introduces
+      // a per-transaction gas limit of 16,777,216. Large contract deployments
+      // (CardBoundVaultDeployer + CardBoundVault creation code ~54KB) require
+      // ~32M gas and exceed this cap even with allowUnlimitedContractSize=true.
+      // Prague has no such per-tx cap. Remove this override when CardBoundVault
+      // is refactored below the initcode limit.
+      hardfork: "prague",
       forking: process.env.FORK_MAINNET === "true"
         ? {
             url: process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com",

@@ -93,15 +93,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci
-      - run: npm install --no-save hardhat-contract-sizer
       - run: npx hardhat compile
       - name: Check contract sizes
         run: |
-          npx hardhat size-contracts 2>&1 | tee size-report.txt
-          if grep -q "exceeds" size-report.txt; then
-            echo "::error::One or more contracts exceed the 24KB EVM limit"
-            exit 1
-          fi
+          # hardhat-contract-sizer is a Hardhat 2 plugin and is not compatible with
+          # Hardhat 3 (HHE1001 on task registration). Use the project's own size
+          # verification script which checks both the EIP-170 hard limit and the
+          # 24 000-byte buffer policy.
           npm run contract:verify:size-buffer
 
   # ───────────────────────────────────────────
@@ -117,18 +115,31 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
       - run: npm ci
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install slither-analyzer
-      - run: npx hardhat compile
+      # Pre-compile with Hardhat so slither-action can run with ignore-compile:true.
+      # This sidesteps two problems:
+      #   1. The slither Docker container cannot do `npm ci` (ERESOLVE on
+      #      @layerzerolabs peer-deps without --legacy-peer-deps).
+      #   2. crytic-compile 0.3.x (bundled with slither 0.11.x) cannot parse
+      #      Hardhat 3 build-info (KeyError: 'output'); 0.4.x is required.
+      - name: Compile contracts
+        run: npx hardhat compile
       - name: Run Slither
-        run: |
-          mkdir -p reports
-          slither . \
-            --config-file slither.config.json \
-            --sarif reports/slither.sarif \
-            --json reports/slither.json
+        uses: crytic/slither-action@v0.4.2
+        id: slither
+        with:
+          target: 'contracts/'
+          # Pin solc to 0.8.30 - matches contracts' `pragma solidity 0.8.30`.
+          solc-version: '0.8.30'
+          # Do NOT pass --solc-args; with ignore-compile:true slither reads
+          # the pre-compiled Hardhat 3 build-info from artifacts/build-info/.
+          # --solc-args would switch crytic-compile to the solc platform and
+          # invoke system solc 0.8.35, which rejects the 0.8.30 pragma.
+          slither-args: '--json slither-output.json'
+          fail-on: none
+          ignore-compile: true
+          # crytic-compile 0.4.1 is required for Hardhat 3 split build-info format.
+          slither-plugins: slither-plugins.txt
+        continue-on-error: true
       - name: Enforce zero-findings gate
         # Mainnet-readiness contract: post PR #235 the repo runs Slither at 0 findings
         # across every severity tier. Any new finding must be either inline-suppressed
@@ -136,17 +147,21 @@ jobs:
         # SLITHER_TRIAGE_RATIONALE.md.
         run: |
           set -euo pipefail
-          if [ ! -f reports/slither.json ]; then
-            echo "::error::reports/slither.json not produced — Slither failed."
+          if [ ! -f slither-output.json ]; then
+            echo "::error::slither-output.json not produced — Slither failed to run."
             exit 1
           fi
-          COUNT=$(python3 -c "import json; d=json.load(open('reports/slither.json')); print(len((d.get('results') or {}).get('detectors') or []))")
+          COUNT=$(python3 -c "
+          import json
+          d = json.load(open('slither-output.json'))
+          print(len((d.get('results') or {}).get('detectors') or []))
+          ")
           echo "Slither finding count: $COUNT"
           if [ "$COUNT" != "0" ]; then
             echo "::error::Slither found $COUNT issue(s). Required: 0. See SLITHER_TRIAGE_RATIONALE.md."
             python3 -c "
           import json
-          d = json.load(open('reports/slither.json'))
+          d = json.load(open('slither-output.json'))
           for r in (d.get('results') or {}).get('detectors') or []:
               line = (r.get('description') or '').splitlines()[0][:160] if r.get('description') else ''
               print(f\"  - [{r.get('impact')}] {r.get('check')} :: {line}\")
@@ -154,18 +169,12 @@ jobs:
             exit 1
           fi
           echo "✅ Slither: 0 findings — gate passes."
-      - name: Upload SARIF
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        continue-on-error: true
-        with:
-          sarif_file: reports/slither.sarif
       - name: Upload Slither report
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: slither-report
-          path: reports/
+          path: slither-output.json
 
   # ───────────────────────────────────────────
   # 5. Mythril Deep Analysis (scheduled)

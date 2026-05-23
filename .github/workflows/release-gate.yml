@@ -20,6 +20,18 @@ jobs:
       NEXT_PUBLIC_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
       DATABASE_URL: "postgresql://vfide_user:postgres@127.0.0.1:5432/vfide_db"
       JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+      # Run the app in frontend-only mode so the Lighthouse performance test does
+      # not require a live postgres / Redis connection. Without this flag the app
+      # returns HTTP 500 on every page because DATABASE_URL points to a postgres
+      # instance that is not provisioned in this CI job.
+      NEXT_PUBLIC_FRONTEND_ONLY: "true"
+      # Required explicit env vars for Next.js production mode (validated by lib/env.ts).
+      # These must be set even in CI; using safe stub values for the performance gate.
+      NEXT_PUBLIC_NETWORK: "base"
+      NEXT_PUBLIC_IS_TESTNET: "false"
+      NEXT_PUBLIC_EXPLORER_URL: "https://basescan.org"
+      NEXT_PUBLIC_ENABLE_FAUCET: "false"
+      NEXT_PUBLIC_RPC_URL: "https://mainnet.base.org"
 
     steps:
       - uses: actions/checkout@v4
