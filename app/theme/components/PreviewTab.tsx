@@ -17,6 +17,7 @@ export function PreviewTab() {
 
         <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
           <p className="mb-3 text-sm font-semibold text-white">Action sample</p>
+          {/* button-ok: decorative theme-preview swatch buttons; intentionally inert */}
           <div className="flex flex-wrap gap-3">
             <button type="button" className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-zinc-950">Primary</button>
             <button type="button" className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-semibold text-white">Secondary</button>

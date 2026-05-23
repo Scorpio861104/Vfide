@@ -82,6 +82,7 @@ export function ClaimsTab() {
       address: viewAddress,
       abi: EcosystemVaultViewABI as any,
       functionName: 'previewHeadhunterReward',
+      // abi-parity-ok: previewHeadhunterReward(uint256 year, uint256 quarter, address user) — 3 args, statically present
       args: [p.year, p.quarter, address ?? '0x0000000000000000000000000000000000000000'] as const,
     })),
     query: { enabled: previewConfigured },

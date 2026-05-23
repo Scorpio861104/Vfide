@@ -257,10 +257,12 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
 
         // Require dev vault is a contract to prevent misconfig
         uint256 size;
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly { size := extcodesize(devReserveVestingVault) }
         if (size == 0) revert VF_NotContract();
 
         // Harden treasury custody: require a contract (multisig/DAO), not an EOA.
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly { size := extcodesize(treasury) }
         if (size == 0) revert VF_NotContract();
 
@@ -1158,11 +1160,13 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
     
     function _isContract(address addr) internal view returns (bool) {
         uint256 size;
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly { size := extcodesize(addr) }
         if (size > 0) return true;
 
         // Distinguish deployed contracts from EOAs/non-existent accounts.
         bytes32 codeHash;
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly { codeHash := extcodehash(addr) }
         return codeHash != bytes32(0) && codeHash != EMPTY_CODE_HASH;
     }

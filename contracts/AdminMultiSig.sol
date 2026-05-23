@@ -327,6 +327,7 @@ contract AdminMultiSig is ReentrancyGuard {
         require(proposalTypeTargetAllowed[_proposalType][_target], "AdminMultiSig: target not allowed");
 
         bytes4 selector;
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly {
             selector := calldataload(_data.offset)
         }

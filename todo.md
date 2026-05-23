@@ -1,34 +1,34 @@
-# CI Fix Todo - All Pre-existing Failures
+# Frontend Button & Function Functionality Audit
 
-## Completed
-- [x] ESLint / TypeScript
-- [x] Prettier
+## Phase 1: Discovery
+- [ ] Enumerate every page (app/**/page.tsx)
+- [ ] Enumerate every component with onClick/onSubmit handlers
+- [ ] Map all buttons → their handler functions
+- [ ] Detect dead handlers (onClick={() => {}}, TODO, console.log only, etc.)
 
-## Remaining Failures - Action Plan
+## Phase 2: Scanner
+- [ ] Build scripts/button-functionality-audit.cjs static scanner
+- [ ] Detect: empty handlers, TODO-only handlers, console-only handlers
+- [ ] Detect: forms without onSubmit
+- [ ] Detect: links to undefined routes (href="#" without onClick)
 
-### H. Trivy container scan (QUICK FIX)
-- [ ] Add `output: 'standalone'` to next.config.ts so Docker build succeeds
+## Phase 3: Manual review per surface
+- [ ] Wallet / connect flows
+- [ ] Vault create / lock / unlock / withdraw / payment queue
+- [ ] Merchant register / pay / refund / settle
+- [ ] Governance: proposals / votes / elections
+- [ ] Sanctum: charity / disbursement
+- [ ] Headhunter: claim
+- [ ] Splitter
+- [ ] Staking
+- [ ] Escrow / Commerce
+- [ ] Inheritance / NextOfKin
+- [ ] Admin / Owner Control Panel
+- [ ] Settings / Profile / Account
+- [ ] Footer / nav / pie menu
 
-### B. Duplicate artifacts HHE1001 (QUICK FIX)
-- [ ] Rename BadgeQualificationRules in contracts/future/ to avoid duplicate artifact names
-- [ ] VFIDEBridge is identical in contracts/ and contracts/future/ - remove one
+## Phase 4: Fix all real defects
 
-### A. Contract Size (CardBoundVaultDeployer + CardBoundVault + MerchantPortal)
-- [ ] The deployer embeds full CardBoundVault creation bytecode - refactor to bytecode provider pattern
-- [ ] Create ICardBoundVaultBytecodeProvider interface + separate CardBoundVaultBytecodeProvider contract
-- [ ] Update CardBoundVaultDeployer to use external bytecode provider
-- [ ] Update VaultHub to deploy bytecode provider separately
-- [ ] Verify MerchantPortal is under 24576 bytes (needs size check)
+## Phase 5: Re-run all five audits to confirm 0/0/0
 
-### D. Slither zero-findings (testing-pipeline.yml)
-- [ ] slither.config.json missing `output` key — causes KeyError: 'output'
-- [ ] Fix slither args to work correctly
-
-### E. Governance Safety verifiers
-- [ ] VaultHub CardBound integration - gas cap exceeded → fixed by reducing deployer size (A)
-- [ ] Seer watcher - REQUIRE_SEER_RUNTIME_REASON_CODES=true causes failure when Seer too large
-  - [ ] Fix: update script to not require runtime checks or ensure contract fits
-
-### C. Contracts Unit + Integration (depends on A+B)
-- [ ] HHE1001 fixes (same as B)
-- [ ] Contract size fixes (same as A)
+## Phase 6: Git commit + push

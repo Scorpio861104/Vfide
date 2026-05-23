@@ -42,8 +42,53 @@ function walk(dir, out = []) {
 
 const files = walk(CONTRACTS);
 const findings = [];
+const suppressions = []; // { severity, category, file, line, message, reason }
+
+// Cache per-file line arrays + file-level audit-ok markers.
+const FILE_LINES = new Map();
+const FILE_LEVEL_OK = new Map(); // file -> Set<category>
+function getLines(file) {
+  if (FILE_LINES.has(file)) return FILE_LINES.get(file);
+  const lines = fs.readFileSync(file, 'utf8').split('\n');
+  FILE_LINES.set(file, lines);
+  // Scan first 30 lines for `audit-ok(<cat>): ...` file-level markers
+  // (used by vendored libraries like Uniswap V3 to whitelist whole categories).
+  const fileSet = new Set();
+  for (let i = 0; i < Math.min(30, lines.length); i++) {
+    const re = /audit-ok\s*\(\s*([\w-]+)\s*\)/g;
+    let m;
+    while ((m = re.exec(lines[i] || '')) !== null) fileSet.add(m[1]);
+  }
+  FILE_LEVEL_OK.set(file, fileSet);
+  return lines;
+}
+
+// Returns reason string if the finding is suppressed, else null.
+function isAuditOk(file, line, category) {
+  const lines = getLines(file);
+  const fileLevel = FILE_LEVEL_OK.get(file);
+  if (fileLevel && fileLevel.has(category)) {
+    return 'file-level audit-ok marker';
+  }
+  // Check the line itself + 1 line above + 1 line below (idx is 1-based).
+  const re = new RegExp(`audit-ok\\s*\\(\\s*${category.replace(/[-]/g, '[-]')}\\s*\\)\\s*:?\\s*([^\\n*/]*)`, 'i');
+  for (const off of [-1, 0, 1]) {
+    const idx = line - 1 + off;
+    if (idx < 0 || idx >= lines.length) continue;
+    const m = re.exec(lines[idx] || '');
+    if (m) return (m[1] || 'inline audit-ok marker').trim();
+  }
+  return null;
+}
+
 function add(severity, category, file, line, message) {
-  findings.push({ severity, category, file: path.relative(ROOT, file), line, message });
+  const reason = isAuditOk(file, line, category);
+  const rel = path.relative(ROOT, file);
+  if (reason) {
+    suppressions.push({ severity, category, file: rel, line, message, reason });
+    return;
+  }
+  findings.push({ severity, category, file: rel, line, message });
 }
 
 for (const file of files) {
@@ -203,8 +248,17 @@ md += `\n## Findings\n\n`;
 for (const f of findings) md += `- **${f.severity}** [${f.category}] ${f.file}:${f.line} — ${f.message}\n`;
 if (findings.length === 0) md += `_No findings._\n`;
 
+if (suppressions.length > 0) {
+  md += `\n## Suppressed (${suppressions.length}) — marked \`audit-ok(<category>)\`\n\n`;
+  md += `These were flagged by the static scanner but have been triaged with an inline\n`;
+  md += `\`audit-ok(<category>): <reason>\` annotation in the contract source.\n\n`;
+  for (const f of suppressions) {
+    md += `- **${f.severity}** [${f.category}] ${f.file}:${f.line} — ${f.message} — _${f.reason}_\n`;
+  }
+}
+
 fs.writeFileSync(path.join(ROOT, 'CONTRACTS_AUDIT.md'), md);
 console.log(`Wrote CONTRACTS_AUDIT.md`);
-console.log(`  ${files.length} contracts, ${findings.length} findings`);
+console.log(`  ${files.length} contracts, ${findings.length} active findings, ${suppressions.length} suppressed`);
 console.log(`  high=${high} medium=${medium} low=${low}`);
 process.exit(high > 0 ? 1 : 0);

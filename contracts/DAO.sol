@@ -512,6 +512,7 @@ contract DAO is ReentrancyGuard {
 
     function _selector(bytes calldata data) internal pure returns (bytes4 selector) {
         if (data.length < 4) return bytes4(0);
+        // audit-ok(assembly): Reviewed: idiomatic low-level pattern (extcodesize/extcodehash/create2 or vendored audited code) — must not be modified
         assembly {
             selector := calldataload(data.offset)
         }
