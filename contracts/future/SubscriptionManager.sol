@@ -654,7 +654,6 @@ contract SubscriptionManager is ReentrancyGuard {
     
     /// @notice getSubscription
     /// @param subId subId
-    /// @return _arg _arg
     function getSubscription(uint256 subId) external view returns (Subscription memory) {
         return subscriptions[subId];
     }
@@ -710,7 +709,6 @@ contract SubscriptionManager is ReentrancyGuard {
     /**
      * @notice Get all subscriptions for a user
      * @param user user
-     * @return _arg _arg
      */
     function getUserSubscriptions(address user) external view returns (uint256[] memory) {
         // Count first
@@ -733,7 +731,6 @@ contract SubscriptionManager is ReentrancyGuard {
     /**
      * @notice Get all subscriptions for a merchant
      * @param merchant merchant
-     * @return _arg _arg
      */
     function getMerchantSubscriptions(address merchant) external view returns (uint256[] memory) {
         uint256 count = 0;
