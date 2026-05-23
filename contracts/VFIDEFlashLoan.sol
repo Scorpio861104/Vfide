@@ -76,7 +76,6 @@ interface IERC3156FlashBorrower {
 /// @author Vfide
 interface ISystemExemptQuery {
     /// @notice systemExempt
-    /// @param _address _address
     /// @return _bool _bool
     function systemExempt(address) external view returns (bool);
 }
