@@ -65,7 +65,7 @@ export function AppShell({ children }: AppShellProps) {
       <TopNav />
       <ProtocolTicker />
       <TimeLattice />
-      <main id="main-content" className="pt-7 pb-20 md:pb-0 appshell-content" tabIndex={-1}>{children}</main>
+      <main id="main" role="main" className="pt-7 pb-20 md:pb-0 appshell-content" tabIndex={-1}>{children}</main>
       <BottomTabBar />
       <MonumentCorner />
       <RecoveryBeacon />
