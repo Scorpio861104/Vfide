@@ -121,7 +121,6 @@ contract CardBoundVaultDeployer {
     /// @param maxPerTransfer maxPerTransfer
     /// @param dailyLimit dailyLimit
     /// @param ledger ledger
-    /// @return _bytes _bytes
     function _creationCode(
         address hub,
         address vfideToken,
@@ -144,7 +143,6 @@ contract CardBoundVaultDeployer {
     /// @param maxPerTransfer maxPerTransfer
     /// @param dailyLimit dailyLimit
     /// @param ledger ledger
-    /// @return _bytes32 _bytes32
     function _salt(
         address owner_,
         address hub,
