@@ -116,6 +116,7 @@ function matchingBrace(src, start) {
 }
 
 // Find matching closing for an opening (paren / brace / bracket).
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function matchingClose(src, start, openCh, closeCh) {
   let d = 0;
   for (let i = start; i < src.length; i++) {
@@ -229,6 +230,7 @@ function scanFile(absPath, rel) {
     let i = tagStart;
     let d = 0;
     let tagEnd = -1;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let selfClose = false;
     while (i < src.length) {
       const c = src[i];
