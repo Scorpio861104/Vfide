@@ -219,7 +219,6 @@ contract VFIDEBadgeNFT is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable, R
     /**
      * @notice Check if token is locked (soulbound)
      * @dev All VFIDE badges are permanently locked
-     * @param _uint256 _uint256
      * @return _bool _bool
      */
     function locked(uint256 /* tokenId */) external pure returns (bool) {
