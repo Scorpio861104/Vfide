@@ -2,6 +2,14 @@
 
 Next.js 16 frontend for the VFIDE trust-based payment protocol.
 
+## Documentation
+
+- 📄 **[White Paper](./WHITEPAPER.md)** ([PDF](./WHITEPAPER.pdf)) — full architecture, economics, governance, Howey compliance posture, threat model
+- 📋 **[Executive Summary](./WHITEPAPER-EXECUTIVE-SUMMARY.md)** ([PDF](./WHITEPAPER-EXECUTIVE-SUMMARY.pdf)) — 1-page TL;DR
+- 📚 **[Complete Manual](./docs/)** — the canonical technical reference (every threshold, every function, every line citation)
+- 🔐 **[Security Policy](./SECURITY.md)** — disclosure process and scope
+- 🛡️ **[Security Sweep](./SECURITY_SWEEP.md)** — full system security audit report
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
