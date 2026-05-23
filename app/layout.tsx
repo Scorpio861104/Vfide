@@ -56,7 +56,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning data-csp-nonce={nonce || undefined} className={jetbrainsMono.variable}>
       <body className="bg-zinc-950 text-white antialiased">
         {/* Skip-to-content: accessibility — visible on focus for keyboard users */}
-        <a href="#main-content" className="skip-to-content">
+        <a href="#main" className="skip-to-content">
           Skip to main content
         </a>
         {/* Hidden live region for screen-reader route announcements */}
