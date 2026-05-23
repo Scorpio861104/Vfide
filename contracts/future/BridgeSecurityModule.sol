@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "../SharedInterfaces.sol";
+import {Ownable, ReentrancyGuard, Pausable} from "../SharedInterfaces.sol";
 
 /**
  * @title BridgeSecurityModule
  * @notice Security controls for cross-chain bridge operations
  * @dev Implements rate limiting, daily caps, and suspicious transfer detection
- * 
+ *
  * Features:
  * - Hourly rate limiting (max 100K tokens/hour)
  * - Daily transfer caps (1M tokens/day)
@@ -15,6 +15,7 @@ import "../SharedInterfaces.sol";
  * - Suspicious transfer detection
  * - Multi-oracle verification support
  * - Emergency shutdown capability
+ * @author Vfide
  */
 contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     /// @notice Hourly rate limit (100,000 VFIDE)
@@ -34,7 +35,9 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Oracle addresses for verification
     mapping(address => bool) public authorizedOracles;
+    /// @notice oracleCount
     uint256 public oracleCount;
+    /// @notice requiredOracles
     uint256 public requiredOracles = 2; // 2 of 3 oracles must approve
 
     /// @notice Hourly volume tracking
@@ -51,17 +54,18 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
     /// @notice Global volume tracking
     mapping(uint256 => HourlyVolume) public hourlyVolume;
+    /// @notice dailyVolume
     mapping(uint256 => DailyVolume) public dailyVolume;
 
     /// @notice User volume tracking
     mapping(address => mapping(uint256 => uint256)) public userHourlyVolume;
+    /// @notice userDailyVolume
     mapping(address => mapping(uint256 => uint256)) public userDailyVolume;
 
     /// @notice Suspicious transfer tracking
     mapping(address => SuspiciousFlags) public suspiciousActivity;
     /// @notice Deprecated legacy field kept for ABI compatibility.
     mapping(address => bool) public blacklist;
-
 
     struct SuspiciousFlags {
         uint256 rapidTransferCount;
@@ -73,26 +77,60 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
     mapping(address => bool) public whitelist;
 
     // Events
+    /// @notice RateLimitChecked
+    /// @param user user
+    /// @param amount amount
+    /// @param approved approved
     event RateLimitChecked(address indexed user, uint256 amount, bool approved);
+    /// @notice UserLimitUpdated
+    /// @param hourly hourly
+    /// @param daily daily
     event UserLimitUpdated(uint256 hourly, uint256 daily);
+    /// @notice SuspiciousActivityDetected
+    /// @param user user
+    /// @param reason reason
     event SuspiciousActivityDetected(address indexed user, string reason);
+    /// @notice UserWhitelisted
+    /// @param user user
+    /// @param status status
     event UserWhitelisted(address indexed user, bool status);
+    /// @notice UserBlacklisted
+    /// @param user user
+    /// @param status status
     event UserBlacklisted(address indexed user, bool status);
+    /// @notice BridgeUpdated
+    /// @param oldBridge oldBridge
+    /// @param newBridge newBridge
     event BridgeUpdated(address indexed oldBridge, address indexed newBridge);
+    /// @notice OracleAuthorized
+    /// @param oracle oracle
+    /// @param authorized authorized
     event OracleAuthorized(address indexed oracle, bool authorized);
+    /// @notice RequiredOraclesUpdated
+    /// @param oldCount oldCount
+    /// @param newCount newCount
     event RequiredOraclesUpdated(uint256 oldCount, uint256 newCount);
 
+    /// @notice Unauthorized
     error Unauthorized();
+    /// @notice RateLimitExceeded
     error RateLimitExceeded();
+    /// @notice DailyCapExceeded
     error DailyCapExceeded();
+    /// @notice SuspiciousActivity
     error SuspiciousActivity();
+    /// @notice Blacklisted
     error Blacklisted();
 
+    /// @notice onlyBridge
     modifier onlyBridge() {
         if (msg.sender != bridge) revert Unauthorized();
         _;
     }
 
+    /// @notice constructor
+    /// @param _owner _owner
+    /// @param _bridge _bridge
     constructor(address _owner, address _bridge) {
         require(_owner != address(0), "Invalid owner");
         require(_bridge != address(0), "Invalid bridge");
@@ -106,10 +144,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
      * @param amount Transfer amount
      * @return approved Whether transfer is approved
      */
-    function checkRateLimit(
-        address user,
-        uint256 amount
-    ) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
+    function checkRateLimit(address user, uint256 amount) external onlyBridge whenNotPaused nonReentrant returns (bool approved) {
         // BSM-01: Reject flagged users (fail-closed once flagged).
         if (suspiciousActivity[user].flagged) revert SuspiciousActivity();
 
@@ -176,7 +211,7 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
 
         // Check rapid transfers (more than 5 in 5 minutes)
         if (block.timestamp - flags.lastTransferTime < 5 minutes) {
-            flags.rapidTransferCount++;
+            ++flags.rapidTransferCount;
             if (flags.rapidTransferCount > 5 && !flags.flagged) {
                 flags.flagged = true;
                 emit SuspiciousActivityDetected(user, "Rapid transfers detected");
@@ -241,9 +276,9 @@ contract BridgeSecurityModule is Ownable, Pausable, ReentrancyGuard {
         authorizedOracles[oracle] = authorized;
 
         if (authorized && !wasAuthorized) {
-            oracleCount++;
+            ++oracleCount;
         } else if (!authorized && wasAuthorized) {
-            oracleCount--;
+            --oracleCount;
         }
 
         emit OracleAuthorized(oracle, authorized);

@@ -71,9 +71,14 @@ CREATE TABLE IF NOT EXISTS merchant_coupons (
   valid_until TIMESTAMPTZ,
   active BOOLEAN DEFAULT true,
   product_ids UUID[],
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(merchant_address, LOWER(code))
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
+-- Case-insensitive uniqueness on (merchant_address, code).
+-- UNIQUE with a function expression must use CREATE UNIQUE INDEX, not an
+-- inline constraint (PostgreSQL rejects UNIQUE(merchant_address, LOWER(code))
+-- inside CREATE TABLE with syntax error 42601).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_merchant_coupons_merchant_code
+  ON merchant_coupons (merchant_address, LOWER(code));
 
 CREATE TABLE IF NOT EXISTS coupon_redemptions (
   id BIGSERIAL PRIMARY KEY,

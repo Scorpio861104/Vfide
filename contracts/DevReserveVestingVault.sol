@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import {LedgerLogFailed, IVaultHub, IProofLedger, IERC20, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
 /**
  * DevReserveVestingVault (immutable core; beneficiary-only pause; zkSync-ready)
@@ -23,72 +23,117 @@ import "./SharedInterfaces.sol";
  * exposure (Howey Prong 4). A longer vesting period signals long-term commitment
  * rather than short-term extraction, and delays the point at which founder tokens
  * enter circulation — reducing the "vertical commonality" argument (Howey Prong 2).
+ * @notice DevReserveVestingVault
+ * @title DevReserveVestingVault
+ * @author Vfide
  */
 
 contract DevReserveVestingVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
-    
+
     // ── Immutable wiring
-    address public immutable VFIDE;         // token
-    address public immutable BENEFICIARY;   // your EOA (controls pause)
-    address public immutable VAULT_HUB;     // VaultInfrastructure
-    address public immutable LEDGER;        // optional
-    uint256 public immutable ALLOCATION;    // e.g., 50_000_000e18
+    /// @notice VFIDE
+    address public immutable VFIDE; // token
+    /// @notice BENEFICIARY
+    address public immutable BENEFICIARY; // your EOA (controls pause)
+    /// @notice VAULT_HUB
+    address public immutable VAULT_HUB; // VaultInfrastructure
+    /// @notice LEDGER
+    address public immutable LEDGER; // optional
+    /// @notice ALLOCATION
+    uint256 public immutable ALLOCATION; // e.g., 50_000_000e18
+    /// @notice DAO
     address public immutable DAO;
     // ── Schedule constants
-    uint64  public constant CLIFF = 60 days;              // 2-month cliff
-    uint64  public constant VESTING = 60 * 30 days;       // 60 months total (1800 days) — 5-year vest
-    uint64  public constant UNLOCK_INTERVAL = 60 days;    // Bi-monthly unlocks
+    /// @notice CLIFF
+    uint64 public constant CLIFF = 60 days; // 2-month cliff
+    /// @notice VESTING
+    uint64 public constant VESTING = 60 * 30 days; // 60 months total (1800 days) — 5-year vest
+    /// @notice UNLOCK_INTERVAL
+    uint64 public constant UNLOCK_INTERVAL = 60 days; // Bi-monthly unlocks
+    /// @notice UNLOCK_AMOUNT
     uint256 public constant UNLOCK_AMOUNT = 1_666_666 * 1e18; // 1.67M per unlock; last unlock covers remainder
-    uint256 public constant TOTAL_UNLOCKS = 30;           // 30 unlocks over 5 years
+    /// @notice TOTAL_UNLOCKS
+    uint256 public constant TOTAL_UNLOCKS = 30; // 30 unlocks over 5 years
+    /// @notice EXPECTED_ALLOCATION
     uint256 public constant EXPECTED_ALLOCATION = 50_000_000e18;
 
     // ── Derived times (set once via setVestingStart)
-    uint64  public startTimestamp;
-    uint64  public cliffTimestamp;
-    uint64  public endTimestamp;
+    /// @notice startTimestamp
+    uint64 public startTimestamp;
+    /// @notice cliffTimestamp
+    uint64 public cliffTimestamp;
+    /// @notice endTimestamp
+    uint64 public endTimestamp;
 
     // ── State
+    /// @notice totalClaimed
     uint256 public totalClaimed;
-    bool    public claimsPaused;            // beneficiary-only toggle
+    /// @notice claimsPaused
+    bool public claimsPaused; // beneficiary-only toggle
 
     // ── Events
+    /// @notice SyncedStart
+    /// @param start start
+    /// @param cliff cliff
+    /// @param end end
     event SyncedStart(uint64 start, uint64 cliff, uint64 end);
+    /// @notice Claimed
+    /// @param beneficiary beneficiary
+    /// @param vault vault
+    /// @param amount amount
     event Claimed(address indexed beneficiary, address indexed vault, uint256 amount);
+    /// @notice PauseSet
+    /// @param paused paused
     event PauseSet(bool paused);
+    /// @notice EmergencyFreeze
+    /// @param by by
     event EmergencyFreeze(address indexed by);
+    /// @notice ModulesSet
+    /// @param vfide vfide
+    /// @param beneficiary beneficiary
+    /// @param vaultHub vaultHub
+    /// @param ledger ledger
     event ModulesSet(address vfide, address beneficiary, address vaultHub, address ledger);
 
     // ── Errors
+    /// @notice DV_Zero
     error DV_Zero();
+    /// @notice DV_NotBeneficiary
     error DV_NotBeneficiary();
+    /// @notice DV_NotStarted
     error DV_NotStarted();
+    /// @notice DV_NothingToClaim
     error DV_NothingToClaim();
+    /// @notice DV_Paused
     error DV_Paused();
+    /// @notice DV_InvalidAllocation
     error DV_InvalidAllocation();
+    /// @notice DV_InvalidStartTimestamp
     error DV_InvalidStartTimestamp();
+    /// @notice DV_AlreadyStarted
     error DV_AlreadyStarted();
 
-    constructor(
-        address _vfide,
-        address _beneficiary,
-        address _vaultHub,
-        address _ledger,
-        uint256 _allocation,
-        address _dao
-    ) {
-        if (_vfide==address(0) || _beneficiary==address(0) || _vaultHub==address(0) || _dao==address(0) || _allocation==0) revert DV_Zero();
+    /// @notice constructor
+    /// @param _vfide _vfide
+    /// @param _beneficiary _beneficiary
+    /// @param _vaultHub _vaultHub
+    /// @param _ledger _ledger
+    /// @param _allocation _allocation
+    /// @param _dao _dao
+    constructor(address _vfide, address _beneficiary, address _vaultHub, address _ledger, uint256 _allocation, address _dao) {
+        if (_vfide == address(0) || _beneficiary == address(0) || _vaultHub == address(0) || _dao == address(0) || _allocation == 0) revert DV_Zero();
         if (_allocation != EXPECTED_ALLOCATION) revert DV_InvalidAllocation();
-        VFIDE        = _vfide;
-        BENEFICIARY  = _beneficiary;
-        VAULT_HUB    = _vaultHub;
+        VFIDE = _vfide;
+        BENEFICIARY = _beneficiary;
+        VAULT_HUB = _vaultHub;
         if (_ledger != address(0)) {
             LEDGER = _ledger;
         } else {
             LEDGER = address(0);
         }
-        ALLOCATION   = _allocation;
-        DAO          = _dao;
+        ALLOCATION = _allocation;
+        DAO = _dao;
         emit ModulesSet(_vfide, _beneficiary, _vaultHub, _ledger);
         _log("dev_vesting_deployed");
     }
@@ -97,6 +142,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // Start time (called once by beneficiary or DAO at launch)
     // ─────────────────────────────────────────────────────────────
 
+    // slither-disable-next-line reentrancy-benign,reentrancy-events
     /**
      * @notice Set the vesting start timestamp (one-time, callable by beneficiary or DAO).
      * @dev    Called at protocol launch to initialize the vesting start timestamp.
@@ -104,8 +150,8 @@ contract DevReserveVestingVault is ReentrancyGuard {
      *         L-2 FIX: The original 7-day future buffer created a race condition where
      *         beneficiary could set start up to 7 days ahead, silently delaying all
      *         cliff/unlock dates.  Remove the buffer entirely.
+     * @param timestamp timestamp
      */
-    // slither-disable-next-line reentrancy-benign,reentrancy-events
     function setVestingStart(uint64 timestamp) external {
         require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
         if (startTimestamp != 0) revert DV_AlreadyStarted();
@@ -113,9 +159,9 @@ contract DevReserveVestingVault is ReentrancyGuard {
         // H-08 FIX: Prevent DAO from backdating more than 30 days (avoids instant full-vest exploit).
         require(timestamp >= uint64(block.timestamp) - 30 days, "DV: too far in past");
         if (timestamp > block.timestamp) revert DV_InvalidStartTimestamp();
-        startTimestamp  = timestamp;
-        cliffTimestamp  = timestamp + CLIFF;
-        endTimestamp    = timestamp + VESTING;
+        startTimestamp = timestamp;
+        cliffTimestamp = timestamp + CLIFF;
+        endTimestamp = timestamp + VESTING;
         _log("dev_vesting_synced");
         emit SyncedStart(startTimestamp, cliffTimestamp, endTimestamp);
     }
@@ -124,25 +170,29 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // Views
     // ─────────────────────────────────────────────────────────────
 
+    /// @notice vested
+    /// @return _uint256 _uint256
     function vested() public view returns (uint256) {
         (uint64 s, uint64 c, uint64 e) = _projTimesView();
-        if (s == 0 || block.timestamp < c) return 0;  // Before cliff: 0 vested
-        if (block.timestamp >= e) return ALLOCATION;  // After 60 months: all vested
-        
+        if (s == 0 || block.timestamp < c) return 0; // Before cliff: 0 vested
+        if (block.timestamp >= e) return ALLOCATION; // After 60 months: all vested
+
         // Bi-monthly unlocks: First unlock at cliff end, then every 60 days
         // At cliff (elapsed = 0): unlocksPassed = 1 (first unlock available)
         // At cliff + 60 days: unlocksPassed = 2 (second unlock available)
         uint256 elapsed = uint256(block.timestamp - c);
         uint256 unlocksPassed = (elapsed / UNLOCK_INTERVAL) + 1; // +1 for cliff unlock
-        
+
         // Cap at TOTAL_UNLOCKS (safety check)
         if (unlocksPassed >= TOTAL_UNLOCKS) return ALLOCATION;
-        
+
         // Return: unlocksPassed * UNLOCK_AMOUNT, but never exceed ALLOCATION
         uint256 vestedAmount = unlocksPassed * UNLOCK_AMOUNT;
         return vestedAmount > ALLOCATION ? ALLOCATION : vestedAmount;
     }
 
+    /// @notice claimable
+    /// @return _uint256 _uint256
     function claimable() public view returns (uint256) {
         uint256 v = vested();
         if (v <= totalClaimed) return 0;
@@ -154,18 +204,22 @@ contract DevReserveVestingVault is ReentrancyGuard {
     ///      was state-mutating (it called `ensureVault` which deploys a vault as a side
     ///      effect).  Off-chain tooling calling this for a balance check would accidentally
     ///      create a vault and spend gas.  This pure view reads the existing vault mapping.
+    /// @return _address _address
     function beneficiaryVaultAddress() public view returns (address) {
         return IVaultHub(VAULT_HUB).vaultOf(BENEFICIARY);
     }
 
     /// @notice Ensure the beneficiary vault exists, creating it if necessary.
     /// @dev Explicitly state-mutating; used only inside `claim()`.
+    /// @return _address _address
     function getOrCreateBeneficiaryVault() internal returns (address) {
         return IVaultHub(VAULT_HUB).ensureVault(BENEFICIARY);
     }
 
     /// @dev Kept for external backward compatibility only (e.g. existing monitoring scripts).
     ///      Prefer `beneficiaryVaultAddress()` for read-only lookups.
+    /// @notice beneficiaryVault
+    /// @return _address _address
     function beneficiaryVault() public returns (address) {
         return getOrCreateBeneficiaryVault();
     }
@@ -174,6 +228,8 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // Controls (beneficiary-only)
     // ─────────────────────────────────────────────────────────────
 
+    /// @notice pauseClaims
+    /// @param paused paused
     function pauseClaims(bool paused) external {
         require(msg.sender == BENEFICIARY || msg.sender == DAO, "DV: unauthorized");
         claimsPaused = paused;
@@ -181,6 +237,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
         _log(paused ? "claims_paused" : "claims_unpaused");
     }
 
+    /// @notice emergencyFreeze
     function emergencyFreeze() external {
         require(msg.sender == DAO, "DV: only DAO");
         claimsPaused = true;
@@ -201,6 +258,7 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     // slither-disable-next-line reentrancy-benign,reentrancy-events
+    /// @notice claim
     function claim() external nonReentrant {
         if (msg.sender != BENEFICIARY) revert DV_NotBeneficiary();
         if (claimsPaused) revert DV_Paused();
@@ -226,6 +284,10 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // Internal: projection helper
     // ─────────────────────────────────────────────────────────────
 
+    /// @notice _projTimesView
+    /// @return s s
+    /// @return c c
+    /// @return e e
     function _projTimesView() internal view returns (uint64 s, uint64 c, uint64 e) {
         s = startTimestamp;
         if (s != 0) {
@@ -233,17 +295,17 @@ contract DevReserveVestingVault is ReentrancyGuard {
             e = s + VESTING;
         }
     }
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     //                        VESTING SCHEDULE VIEWS
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     struct UnlockMilestone {
         uint64 unlockTime;
         uint256 amount;
         bool claimed;
     }
-    
+
     /**
      * @notice Get full vesting schedule with unlock milestones
      * @return milestones Array of unlock events with times and amounts
@@ -251,47 +313,58 @@ contract DevReserveVestingVault is ReentrancyGuard {
     function getVestingSchedule() external view returns (UnlockMilestone[] memory milestones) {
         (uint64 s, uint64 c, ) = _projTimesView();
         if (s == 0) return milestones; // Not started
-        
+
         milestones = new UnlockMilestone[](TOTAL_UNLOCKS);
         uint256 cumulativeClaimed = 0;
-        
-        for (uint256 i = 0; i < TOTAL_UNLOCKS; i++) {
+
+        for (uint256 i = 0; i < TOTAL_UNLOCKS; ++i) {
             // First unlock is available at cliff end; subsequent unlocks are every interval.
             uint64 unlockTime = c + uint64(i * UNLOCK_INTERVAL);
             uint256 amount = UNLOCK_AMOUNT;
-            
+
             // Last unlock may have rounding difference
             if (i == TOTAL_UNLOCKS - 1) {
                 amount = ALLOCATION - (UNLOCK_AMOUNT * (TOTAL_UNLOCKS - 1));
             }
-            
+
             cumulativeClaimed += amount;
             bool claimed = totalClaimed >= cumulativeClaimed;
-            
-            milestones[i] = UnlockMilestone({
-                unlockTime: unlockTime,
-                amount: amount,
-                claimed: claimed
-            });
+
+            milestones[i] = UnlockMilestone({unlockTime: unlockTime, amount: amount, claimed: claimed});
         }
     }
-    
+
     /**
      * @notice Get vesting status overview
+     * @return vestingStart vestingStart
+     * @return cliffEnd cliffEnd
+     * @return vestingEnd vestingEnd
+     * @return totalVested totalVested
+     * @return totalClaimedAmount totalClaimedAmount
+     * @return claimableNow claimableNow
+     * @return remaining remaining
+     * @return unlocksCompleted unlocksCompleted
+     * @return nextUnlockTime nextUnlockTime
+     * @return nextUnlockAmount nextUnlockAmount
+     * @return isPaused isPaused
      */
-    function getVestingStatus() external view returns (
-        uint64 vestingStart,
-        uint64 cliffEnd,
-        uint64 vestingEnd,
-        uint256 totalVested,
-        uint256 totalClaimedAmount,
-        uint256 claimableNow,
-        uint256 remaining,
-        uint256 unlocksCompleted,
-        uint256 nextUnlockTime,
-        uint256 nextUnlockAmount,
-        bool isPaused
-    ) {
+    function getVestingStatus()
+        external
+        view
+        returns (
+            uint64 vestingStart,
+            uint64 cliffEnd,
+            uint64 vestingEnd,
+            uint256 totalVested,
+            uint256 totalClaimedAmount,
+            uint256 claimableNow,
+            uint256 remaining,
+            uint256 unlocksCompleted,
+            uint256 nextUnlockTime,
+            uint256 nextUnlockAmount,
+            bool isPaused
+        )
+    {
         (uint64 s, uint64 c, uint64 e) = _projTimesView();
         vestingStart = s;
         cliffEnd = c;
@@ -301,14 +374,14 @@ contract DevReserveVestingVault is ReentrancyGuard {
         claimableNow = totalVested > totalClaimed ? totalVested - totalClaimed : 0;
         remaining = ALLOCATION > totalClaimed ? ALLOCATION - totalClaimed : 0;
         isPaused = claimsPaused;
-        
+
         // Calculate unlocks completed
         if (s > 0 && block.timestamp >= c) {
             uint256 timeSinceCliff = block.timestamp - c;
             // At cliff, first unlock is already available.
             unlocksCompleted = (timeSinceCliff / UNLOCK_INTERVAL) + 1;
             if (unlocksCompleted > TOTAL_UNLOCKS) unlocksCompleted = TOTAL_UNLOCKS;
-            
+
             // Next unlock info
             if (unlocksCompleted < TOTAL_UNLOCKS) {
                 nextUnlockTime = c + unlocksCompleted * UNLOCK_INTERVAL;
@@ -325,10 +398,25 @@ contract DevReserveVestingVault is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     // slither-disable-next-line missing-zero-check,reentrancy-events
+    /// @notice _log
+    /// @param action action
     function _log(string memory action) internal {
-        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logSystemEvent(address(this), action, msg.sender) {} catch { emit LedgerLogFailed(address(this), action); } }
+        if (LEDGER != address(0)) {
+            try IProofLedger(LEDGER).logSystemEvent(address(this), action, msg.sender) {} catch {
+                emit LedgerLogFailed(address(this), action);
+            }
+        }
     }
+    /// @notice _logEv
+    /// @param who who
+    /// @param action action
+    /// @param amount amount
+    /// @param note note
     function _logEv(address who, string memory action, uint256 amount, string memory note) internal {
-        if (LEDGER != address(0)) { try IProofLedger(LEDGER).logEvent(who, action, amount, note) {} catch { emit LedgerLogFailed(who, action); } }
+        if (LEDGER != address(0)) {
+            try IProofLedger(LEDGER).logEvent(who, action, amount, note) {} catch {
+                emit LedgerLogFailed(who, action);
+            }
+        }
     }
 }

@@ -60,6 +60,9 @@ websocket-server/src/
 
 # Deployment & tooling
 scripts/
+# Exception: postinstall-validate-env.cjs is referenced by package.json's
+# postinstall hook and is required during `npm ci` inside the Docker build.
+!scripts/postinstall-validate-env.cjs
 migrations/
 verify-*.sh
 verify-*.ts

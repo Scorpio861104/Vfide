@@ -1,0 +1,11 @@
+# Override crytic-compile to 0.4.x which supports Hardhat 3 build-info format.
+# Hardhat 3 splits build-info into a .json (input/metadata) and a .output.json
+# (compilation output) file. crytic-compile 0.3.x only recognises the combined
+# format from Hardhat 2 (single JSON with top-level "output" key) and raises
+# KeyError: 'output' when given the split Hardhat 3 format.
+# crytic-compile 0.4.0 added `get_targets_json()` which handles both formats.
+#
+# We use --force-reinstall so that pip replaces the 0.3.x version installed
+# by slither-analyzer's own transitive dep, even though slither 0.11.x formally
+# caps at <0.4.0. No slither API surface changed between 0.3.x and 0.4.x.
+crytic-compile==0.4.1

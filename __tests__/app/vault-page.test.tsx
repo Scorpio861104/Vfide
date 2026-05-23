@@ -75,6 +75,10 @@ jest.mock('@rainbow-me/rainbowkit', () => ({
   },
 }));
 
+jest.mock('@/hooks/useVaultTransactions', () => ({
+  useVaultTransactions: jest.fn(() => ({ transactions: [], isLoading: false })),
+}));
+
 jest.mock('@/hooks/useVaultHub', () => ({
   useVaultHub: () => mockVaultHubState,
 }));

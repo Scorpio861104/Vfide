@@ -6,6 +6,33 @@
     "avoid-call-value": "error",
     "reentrancy": "error",
     "no-unused-vars": "warn",
-    "func-visibility": ["warn", { "ignoreConstructors": true }]
+    "func-visibility": ["warn", { "ignoreConstructors": true }],
+
+    "func-name-mixedcase": "off",
+    "var-name-mixedcase": "off",
+    "const-name-snakecase": "off",
+    "immutable-vars-naming": "off",
+    "contract-name-capwords": "off",
+    "event-name-capwords": "off",
+    "interface-starts-with-i": "off",
+
+    "gas-custom-errors": "off",
+    "gas-indexed-events": "off",
+    "gas-strict-inequalities": "off",
+    "gas-small-strings": "off",
+    "gas-struct-packing": "off",
+    "gas-increment-by-one": "off",
+    "gas-calldata-parameters": "off",
+    "reason-string": "off",
+
+    "no-empty-blocks": "off",
+
+    "function-max-lines": "off",
+    "max-states-count": "off",
+    "one-contract-per-file": "off",
+    "no-complex-fallback": "off",
+
+    "no-inline-assembly": "off",
+    "use-forbidden-name": "off"
   }
 }

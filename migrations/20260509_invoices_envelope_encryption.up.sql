@@ -12,23 +12,55 @@
 --   - After backfill: code reads from the envelope; plaintext columns
 --     remain readable as a rollback fallback.
 --   - Final state (next migration): plaintext columns are dropped.
+--
+-- NOTE: This migration is a no-op if the `invoices` table does not yet
+-- exist (e.g. fresh CI databases). The ALTER TABLE statements are
+-- wrapped in a DO block that checks for table existence first.
 
-ALTER TABLE invoices
-  ADD COLUMN IF NOT EXISTS encrypted_envelope JSONB;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'invoices'
+  ) THEN
+    -- Add encrypted_envelope column if missing
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'invoices'
+        AND column_name = 'encrypted_envelope'
+    ) THEN
+      ALTER TABLE invoices ADD COLUMN encrypted_envelope JSONB;
+    END IF;
 
--- Partial index so the backfill query (WHERE encrypted_envelope IS NULL)
--- runs against an index, not a full scan. Drop this index in the next
--- migration once the backfill is complete.
-CREATE INDEX IF NOT EXISTS idx_invoices_envelope_pending
-  ON invoices (id)
-  WHERE encrypted_envelope IS NULL;
+    -- Add encrypted_at column if missing
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public' AND table_name = 'invoices'
+        AND column_name = 'encrypted_at'
+    ) THEN
+      ALTER TABLE invoices ADD COLUMN encrypted_at TIMESTAMP WITH TIME ZONE;
+    END IF;
 
--- For audit: track when the envelope was created. Useful when
--- investigating "was this invoice encrypted yet at time T?".
-ALTER TABLE invoices
-  ADD COLUMN IF NOT EXISTS encrypted_at TIMESTAMP WITH TIME ZONE;
+    -- Partial index for backfill query
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_indexes
+      WHERE schemaname = 'public' AND tablename = 'invoices'
+        AND indexname = 'idx_invoices_envelope_pending'
+    ) THEN
+      CREATE INDEX idx_invoices_envelope_pending
+        ON invoices (id)
+        WHERE encrypted_envelope IS NULL;
+    END IF;
 
-COMMENT ON COLUMN invoices.encrypted_envelope IS
-  'COMP-4: AES-256-GCM envelope-encrypted PII. See lib/crypto/invoiceEncryption.ts. NULL means plaintext-only (legacy). Populated by scripts/encrypt-existing-invoices.ts.';
-COMMENT ON COLUMN invoices.encrypted_at IS
-  'COMP-4: timestamp when the row was encrypted into envelope form. NULL for legacy plaintext-only rows.';
+    COMMENT ON COLUMN invoices.encrypted_envelope IS
+      'COMP-4: AES-256-GCM envelope-encrypted PII. See lib/crypto/invoiceEncryption.ts. NULL means plaintext-only (legacy). Populated by scripts/encrypt-existing-invoices.ts.';
+    COMMENT ON COLUMN invoices.encrypted_at IS
+      'COMP-4: timestamp when the row was encrypted into envelope form. NULL for legacy plaintext-only rows.';
+
+    RAISE NOTICE 'COMP-4: encrypted_envelope and encrypted_at columns applied to invoices table.';
+  ELSE
+    RAISE NOTICE 'COMP-4: invoices table does not exist; skipping envelope-encryption migration (no-op for fresh databases).';
+  END IF;
+END;
+$$;
+

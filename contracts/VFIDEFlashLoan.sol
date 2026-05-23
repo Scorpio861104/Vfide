@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import "./SharedInterfaces.sol";
+import {IERC20, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
 /**
  * VFIDEFlashLoan — Peer-to-Peer Atomic Flash Loans
@@ -50,54 +50,102 @@ import "./SharedInterfaces.sol";
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
+/// @notice IERC3156FlashBorrower
+/// @title IERC3156FlashBorrower
+/// @author Vfide
 interface IERC3156FlashBorrower {
-    function onFlashLoan(
-        address initiator,
-        address token,
-        uint256 amount,
-        uint256 fee,
-        bytes calldata data
-    ) external returns (bytes32);
+    /// @notice onFlashLoan
+    /// @param initiator initiator
+    /// @param token token
+    /// @param amount amount
+    /// @param fee fee
+    /// @param data data
+    /// @return _bytes32 _bytes32
+    function onFlashLoan(address initiator, address token, uint256 amount, uint256 fee, bytes calldata data) external returns (bytes32);
 }
 
 /// @dev External query interface for system exemption checks.
+/// @notice ISystemExemptQuery
+/// @title ISystemExemptQuery
+/// @author Vfide
 interface ISystemExemptQuery {
+    /// @notice systemExempt
+    /// @return _bool _bool
     function systemExempt(address) external view returns (bool);
 }
 
+/// @notice IFeeDistributor_FL
+/// @title IFeeDistributor_FL
+/// @author Vfide
 interface IFeeDistributor_FL {
+    /// @notice receiveFee
+    /// @param amount amount
     function receiveFee(uint256 amount) external;
 }
 
+/// @notice IFraudRegistryFL
+/// @title IFraudRegistryFL
+/// @author Vfide
 interface IFraudRegistryFL {
+    /// @notice isServiceBanned
+    /// @param user user
+    /// @return _bool _bool
     function isServiceBanned(address user) external view returns (bool);
 }
 
+/// @notice ISeerFL
+/// @title ISeerFL
+/// @author Vfide
 interface ISeerFL {
+    /// @notice getScore
+    /// @param subject subject
+    /// @return _uint16 _uint16
     function getScore(address subject) external view returns (uint16);
+    /// @notice reward
+    /// @param subject subject
+    /// @param delta delta
+    /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
 }
 
 // ── Errors ──────────────────────────────────────────────────────────────────
 
+/// @notice FL_ExceedsAvailable
 error FL_ExceedsAvailable();
+/// @notice FL_CallbackFailed
 error FL_CallbackFailed();
+/// @notice FL_InsufficientRepayment
 error FL_InsufficientRepayment();
+/// @notice FL_LenderPaused
 error FL_LenderPaused();
+/// @notice FL_Paused
 error FL_Paused();
+/// @notice FL_NotDAO
 error FL_NotDAO();
+/// @notice FL_Zero
 error FL_Zero();
+/// @notice FL_FeeTooHigh
 error FL_FeeTooHigh();
+/// @notice FL_CooldownActive
 error FL_CooldownActive();
+/// @notice FL_NotLender
 error FL_NotLender();
+/// @notice FL_InsufficientBalance
 error FL_InsufficientBalance();
+/// @notice FL_ExceedsOrphanBalance
 error FL_ExceedsOrphanBalance();
+/// @notice FL_MinInitialDeposit
 error FL_MinInitialDeposit();
+/// @notice FL_FeeExceeded
 error FL_FeeExceeded();
+/// @notice FL_UnsupportedTokenBehavior
 error FL_UnsupportedTokenBehavior();
 
 // ── Contract ────────────────────────────────────────────────────────────────
 
+/// @notice VFIDEFlashLoan
+/// @title VFIDEFlashLoan
+/// @author Vfide
 contract VFIDEFlashLoan is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -105,6 +153,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     //                              CONSTANTS
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice CALLBACK_SUCCESS
     bytes32 public constant CALLBACK_SUCCESS = keccak256("ERC3156FlashBorrower.onFlashLoan");
 
     /// @notice Maximum fee a lender can charge (1% = 100 bps)
@@ -141,97 +190,187 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     struct LenderInfo {
-        uint256 balance;          // VFIDE available for flash loans
-        uint256 feeBps;           // Fee rate in basis points
-        uint256 totalEarned;      // Lifetime fees earned
-        uint256 totalVolume;      // Lifetime volume lent
-        uint256 loanCount;        // Loans facilitated
-        bool paused;              // Lender can pause
-        bool registered;          // Has deposited at least once
+        uint256 balance; // VFIDE available for flash loans
+        uint256 feeBps; // Fee rate in basis points
+        uint256 totalEarned; // Lifetime fees earned
+        uint256 totalVolume; // Lifetime volume lent
+        uint256 loanCount; // Loans facilitated
+        bool paused; // Lender can pause
+        bool registered; // Has deposited at least once
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              STATE
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice vfideToken
     IERC20 public immutable vfideToken;
+    /// @notice dao
     address public dao;
+    /// @notice fraudRegistry
     address public fraudRegistry; // FraudRegistry — banned addresses cannot use flash loans
+    /// @notice seer
     ISeerFL public seer;
+    /// @notice feeDistributor
     address public feeDistributor;
 
+    /// @notice paused
     bool public paused;
 
     // C-2 FIX: Timelocked DAO rotation
+    /// @notice pendingDAO
     address public pendingDAO;
+    /// @notice pendingDAOAt
     uint64 public pendingDAOAt;
+    /// @notice DAO_CHANGE_DELAY
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
 
     // L-2 FIX: Timelocked fraud registry change
+    /// @notice pendingFraudRegistry
     address public pendingFraudRegistry;
+    /// @notice pendingFraudRegistryAt
     uint64 public pendingFraudRegistryAt;
+    /// @notice FRAUD_REGISTRY_DELAY
     uint64 public constant FRAUD_REGISTRY_DELAY = 24 hours;
 
     // TL-262 FIX: Timelocked seer + feeDistributor changes (#262)
+    /// @notice pendingSeer
     address public pendingSeer;
+    /// @notice pendingSeerAt
     uint64 public pendingSeerAt;
+    /// @notice pendingFeeDistributor
     address public pendingFeeDistributor;
+    /// @notice pendingFeeDistributorAt
     uint64 public pendingFeeDistributorAt;
 
     // TL-240 FIX: Timelocked orphan sweep (#240)
+    /// @notice pendingSweepRecipient
     address public pendingSweepRecipient;
+    /// @notice pendingSweepAmount
     uint256 public pendingSweepAmount;
+    /// @notice pendingSweepAt
     uint64 public pendingSweepAt;
 
+    /// @notice lenders
     mapping(address => LenderInfo) public lenders;
+    /// @notice lenderList
     address[] public lenderList;
+    /// @notice lenderListIndex
     mapping(address => uint256) private lenderListIndex;
+    /// @notice lastFlashLoan
     mapping(address => uint256) public lastFlashLoan;
-    
+
     // F-32 FIX: Volume tracking for reward gating
+    /// @notice lenderVolumeSinceLastReward
     mapping(address => uint256) public lenderVolumeSinceLastReward;
 
+    /// @notice totalTrackedBalance
     uint256 public totalTrackedBalance;
+    /// @notice totalProtocolFees
     uint256 public totalProtocolFees;
+    /// @notice totalVolume
     uint256 public totalVolume;
+    /// @notice totalLoans
     uint256 public totalLoans;
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
 
+    /// @notice LenderDeposited
+    /// @param lender lender
+    /// @param amount amount
+    /// @param newBalance newBalance
     event LenderDeposited(address indexed lender, uint256 amount, uint256 newBalance);
+    /// @notice LenderWithdrawn
+    /// @param lender lender
+    /// @param amount amount
+    /// @param newBalance newBalance
     event LenderWithdrawn(address indexed lender, uint256 amount, uint256 newBalance);
+    /// @notice LenderFeeSet
+    /// @param lender lender
+    /// @param feeBps feeBps
     event LenderFeeSet(address indexed lender, uint256 feeBps);
+    /// @notice LenderPaused
+    /// @param lender lender
+    /// @param isPaused isPaused
     event LenderPaused(address indexed lender, bool isPaused);
-    event FlashLoanExecuted(
-        address indexed lender, address indexed borrower,
-        address receiver, uint256 amount, uint256 lenderFee, uint256 protocolFee
-    );
+    /// @notice FlashLoanExecuted
+    /// @param lender lender
+    /// @param borrower borrower
+    /// @param receiver receiver
+    /// @param amount amount
+    /// @param lenderFee lenderFee
+    /// @param protocolFee protocolFee
+    event FlashLoanExecuted(address indexed lender, address indexed borrower, address receiver, uint256 amount, uint256 lenderFee, uint256 protocolFee);
+    /// @notice Paused
+    /// @param isPaused isPaused
     event Paused(bool isPaused);
+    /// @notice DAOSet
+    /// @param newDao newDao
     event DAOSet(address indexed newDao);
+    /// @notice DAOProposed
+    /// @param newDao newDao
+    /// @param effectiveAt effectiveAt
     event DAOProposed(address indexed newDao, uint64 effectiveAt);
+    /// @notice DAOChangeCancelled
     event DAOChangeCancelled();
+    /// @notice SeerProposed
+    /// @param newSeer newSeer
+    /// @param effectiveAt effectiveAt
     event SeerProposed(address indexed newSeer, uint64 effectiveAt);
+    /// @notice SeerSet
+    /// @param newSeer newSeer
     event SeerSet(address indexed newSeer);
+    /// @notice SeerChangeCancelled
     event SeerChangeCancelled();
+    /// @notice FeeDistributorProposed
+    /// @param newFeeDistributor newFeeDistributor
+    /// @param effectiveAt effectiveAt
     event FeeDistributorProposed(address indexed newFeeDistributor, uint64 effectiveAt);
+    /// @notice FeeDistributorSet
+    /// @param newFeeDistributor newFeeDistributor
     event FeeDistributorSet(address indexed newFeeDistributor);
+    /// @notice FeeDistributorChangeCancelled
     event FeeDistributorChangeCancelled();
+    /// @notice OrphanSweepProposed
+    /// @param recipient recipient
+    /// @param amount amount
+    /// @param effectiveAt effectiveAt
     event OrphanSweepProposed(address indexed recipient, uint256 amount, uint64 effectiveAt);
+    /// @notice OrphanSweepCancelled
     event OrphanSweepCancelled();
+    /// @notice FraudRegistryProposed
+    /// @param registry registry
+    /// @param effectiveAt effectiveAt
     event FraudRegistryProposed(address indexed registry, uint64 effectiveAt);
+    /// @notice FraudRegistrySet
+    /// @param registry registry
     event FraudRegistrySet(address indexed registry);
+    /// @notice FraudRegistryCancelled
     event FraudRegistryCancelled();
+    /// @notice OrphanTokensSwept
+    /// @param recipient recipient
+    /// @param amount amount
     event OrphanTokensSwept(address indexed recipient, uint256 amount);
 
     // ═══════════════════════════════════════════════════════════════════════
     //                              MODIFIERS
     // ═══════════════════════════════════════════════════════════════════════
 
-    modifier onlyDAO() { if (msg.sender != dao) revert FL_NotDAO(); _; }
-    modifier whenNotPaused() { if (paused) revert FL_Paused(); _; }
+    /// @notice onlyDAO
+    modifier onlyDAO() {
+        if (msg.sender != dao) revert FL_NotDAO();
+        _;
+    }
+    /// @notice whenNotPaused
+    modifier whenNotPaused() {
+        if (paused) revert FL_Paused();
+        _;
+    }
 
+    /// @notice _checkFraudStatus
+    /// @param subject subject
     function _checkFraudStatus(address subject) internal view {
         if (fraudRegistry == address(0)) return;
         try IFraudRegistryFL(fraudRegistry).isServiceBanned(subject) returns (bool banned) {
@@ -247,10 +386,17 @@ contract VFIDEFlashLoan is ReentrancyGuard {
 
     // H-18 FIX: Track whether the VFIDEToken has been told to systemExempt this contract.
     // flashLoan() and deposit() are gated on `systemExemptConfirmed` to close the deploy-time race.
+    /// @notice systemExemptConfirmed
     bool public systemExemptConfirmed;
 
+    /// @notice SystemExemptConfirmed
     event SystemExemptConfirmed();
 
+    /// @notice constructor
+    /// @param _vfideToken _vfideToken
+    /// @param _dao _dao
+    /// @param _seer _seer
+    /// @param _feeDistributor _feeDistributor
     constructor(address _vfideToken, address _dao, address _seer, address _feeDistributor) {
         if (_vfideToken == address(0) || _dao == address(0)) revert FL_Zero();
         vfideToken = IERC20(_vfideToken);
@@ -284,6 +430,8 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     //   differs from what was requested. This is a strictly defensive check,
     //   not a vulnerable balance-read.
     // slither-disable-next-line reentrancy-balance,reentrancy-no-eth,reentrancy-benign,reentrancy-events
+    /// @notice deposit
+    /// @param amount amount
     function deposit(uint256 amount) external nonReentrant whenNotPaused {
         // H-18 FIX: Block deposits until DAO confirms systemExempt is set on VFIDEToken.
         require(systemExemptConfirmed, "FL: not initialized");
@@ -311,6 +459,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice Withdraw VFIDE — available anytime, no lockup
+    /// @param amount amount
     function withdraw(uint256 amount) external nonReentrant {
         if (amount == 0) revert FL_Zero();
         _checkFraudStatus(msg.sender);
@@ -329,6 +478,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice Set your flash loan fee rate (max 1%)
+    /// @param feeBps feeBps
     function setFeeRate(uint256 feeBps) external {
         if (feeBps > MAX_LENDER_FEE_BPS) revert FL_FeeTooHigh();
         lenders[msg.sender].feeBps = feeBps;
@@ -336,6 +486,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice Pause/unpause your flash loan offering
+    /// @param _paused _paused
     function setLenderPaused(bool _paused) external {
         lenders[msg.sender].paused = _paused;
         emit LenderPaused(msg.sender, _paused);
@@ -350,19 +501,14 @@ contract VFIDEFlashLoan is ReentrancyGuard {
      * @param lender Address of the lender to borrow from
      * @param receiver Contract implementing IERC3156FlashBorrower
      * @param amount Amount to borrow
-    * @param maxFeeBps Maximum lender fee (bps) borrower is willing to pay
+     * @param maxFeeBps Maximum lender fee (bps) borrower is willing to pay
      * @param data Passed through to receiver.onFlashLoan()
      *
      * If receiver doesn't repay amount + fee, the entire tx reverts.
      * Lender funds are mathematically impossible to lose.
+     * @return _bool _bool
      */
-    function flashLoan(
-        address lender,
-        IERC3156FlashBorrower receiver,
-        uint256 amount,
-        uint256 maxFeeBps,
-        bytes calldata data
-    ) external nonReentrant whenNotPaused returns (bool) {
+    function flashLoan(address lender, IERC3156FlashBorrower receiver, uint256 amount, uint256 maxFeeBps, bytes calldata data) external nonReentrant whenNotPaused returns (bool) {
         // SLITHER FALSE POSITIVES (suppressed via slither-disable-start below):
         //
         //   arbitrary-send-erc20:
@@ -402,7 +548,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         // Fee calculation: lender's rate applied to loan amount
         uint256 totalFee = (amount * info.feeBps) / 10000;
         uint256 protocolFee = (totalFee * PROTOCOL_CUT_PCT) / 100; // 10% of fee → protocol
-        uint256 lenderFee = totalFee - protocolFee;                // 90% of fee → lender
+        uint256 lenderFee = totalFee - protocolFee; // 90% of fee → lender
 
         // ── ATOMIC EXECUTION ─────────────────────────────────────
 
@@ -440,10 +586,10 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         // ── BOOKKEEPING ──────────────────────────────────────────
         info.totalEarned += lenderFee;
         info.totalVolume += amount;
-        info.loanCount++;
+        ++info.loanCount;
         totalProtocolFees += protocolFee;
         totalVolume += amount;
-        totalLoans++;
+        ++totalLoans;
 
         // F-32 FIX: Reward lender only after accumulated volume reaches threshold
         // Prevents ProofScore pump via frequent small flash loans.
@@ -461,12 +607,16 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         // slither-disable-end arbitrary-send-erc20,reentrancy-balance,reentrancy-no-eth,reentrancy-benign,reentrancy-events
     }
 
+    /// @notice getOrphanBalance
+    /// @return _uint256 _uint256
     function getOrphanBalance() public view returns (uint256) {
         uint256 contractBalance = vfideToken.balanceOf(address(this));
         return contractBalance > totalTrackedBalance ? contractBalance - totalTrackedBalance : 0;
     }
 
     /// @notice TL-240 FIX: Propose an orphan-balance sweep (48h timelock). (#240)
+    /// @param recipient recipient
+    /// @param amount amount
     function sweepOrphanBalance(address recipient, uint256 amount) external onlyDAO nonReentrant {
         if (recipient == address(0)) revert FL_Zero();
         if (amount == 0 || amount > getOrphanBalance()) revert FL_ExceedsOrphanBalance();
@@ -505,6 +655,8 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
 
     /// @notice How much a specific lender has available
+    /// @param lender lender
+    /// @return _uint256 _uint256
     function maxFlashLoan(address lender) external view returns (uint256) {
         LenderInfo storage info = lenders[lender];
         if (!info.registered || info.paused) return 0;
@@ -512,23 +664,37 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice Calculate total fee for borrowing from a specific lender
+    /// @param lender lender
+    /// @param amount amount
+    /// @return _uint256 _uint256
     function flashFee(address lender, uint256 amount) external view returns (uint256) {
         return (amount * lenders[lender].feeBps) / 10000;
     }
 
     /// @notice Get full lender info
-    function getLenderInfo(address lender) external view returns (
-        uint256 balance, uint256 feeBps, uint256 earned,
-        uint256 volume, uint256 loans, bool isPaused, bool isRegistered
-    ) {
+    /// @param lender lender
+    /// @return balance balance
+    /// @return feeBps feeBps
+    /// @return earned earned
+    /// @return volume volume
+    /// @return loans loans
+    /// @return isPaused isPaused
+    /// @return isRegistered isRegistered
+    function getLenderInfo(address lender) external view returns (uint256 balance, uint256 feeBps, uint256 earned, uint256 volume, uint256 loans, bool isPaused, bool isRegistered) {
         LenderInfo storage i = lenders[lender];
         return (i.balance, i.feeBps, i.totalEarned, i.totalVolume, i.loanCount, i.paused, i.registered);
     }
 
     /// @notice Number of registered lenders
-    function lenderCount() external view returns (uint256) { return lenderList.length; }
+    /// @return _uint256 _uint256
+    function lenderCount() external view returns (uint256) {
+        return lenderList.length;
+    }
 
     /// @notice Paginated lender list (for frontend discovery)
+    /// @param offset offset
+    /// @param limit limit
+    /// @return result result
     function getLenders(uint256 offset, uint256 limit) external view returns (address[] memory result) {
         uint256 len = lenderList.length;
         if (offset >= len) return new address[](0);
@@ -536,11 +702,13 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         if (end > len) end = len;
         if (end - offset > 100) end = offset + 100;
         result = new address[](end - offset);
-        for (uint256 i = offset; i < end; i++) {
+        for (uint256 i = offset; i < end; ++i) {
             result[i - offset] = lenderList[i];
         }
     }
 
+    /// @notice _deregisterLender
+    /// @param lender lender
     function _deregisterLender(address lender) internal {
         uint256 idx = lenderListIndex[lender];
         if (idx == 0) return;
@@ -561,10 +729,13 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice Find cheapest lender with enough liquidity
+    /// @param amount amount
+    /// @return best best
+    /// @return bestFee bestFee
     function findBestLender(uint256 amount) external view returns (address best, uint256 bestFee) {
         bestFee = type(uint256).max;
         uint256 len = lenderList.length;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ++i) {
             LenderInfo storage info = lenders[lenderList[i]];
             if (!info.paused && info.balance >= amount && info.feeBps < bestFee) {
                 best = lenderList[i];
@@ -577,9 +748,15 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     //                          DAO ADMINISTRATION
     // ═══════════════════════════════════════════════════════════════════════
 
-    function setPaused(bool _paused) external onlyDAO { paused = _paused; emit Paused(_paused); }
+    /// @notice setPaused
+    /// @param _paused _paused
+    function setPaused(bool _paused) external onlyDAO {
+        paused = _paused;
+        emit Paused(_paused);
+    }
 
     /// @notice Propose a DAO rotation with 48-hour timelock (C-2 FIX)
+    /// @param _dao _dao
     function setDAO(address _dao) external onlyDAO {
         if (_dao == address(0)) revert FL_Zero();
         pendingDAO = _dao;
@@ -587,6 +764,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         emit DAOProposed(_dao, pendingDAOAt);
     }
 
+    /// @notice applyDAO
     function applyDAO() external onlyDAO {
         require(pendingDAOAt != 0 && block.timestamp >= pendingDAOAt, "FL: timelock");
         dao = pendingDAO;
@@ -595,6 +773,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         emit DAOSet(dao);
     }
 
+    /// @notice cancelDAO
     function cancelDAO() external onlyDAO {
         require(pendingDAOAt != 0, "FL: no pending");
         delete pendingDAO;
@@ -603,6 +782,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice TL-262 FIX: Propose a seer change (48h timelock). (#262)
+    /// @param _seer _seer
     function setSeer(address _seer) external onlyDAO {
         if (_seer == address(0)) revert FL_Zero();
         pendingSeer = _seer;
@@ -628,6 +808,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice TL-262 FIX: Propose a feeDistributor change (48h timelock). (#262)
+    /// @param _fd _fd
     function setFeeDistributor(address _fd) external onlyDAO {
         if (_fd == address(0)) revert FL_Zero();
         pendingFeeDistributor = _fd;
@@ -653,6 +834,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
     }
 
     /// @notice Propose a fraud registry change with 24-hour timelock (L-2 FIX)
+    /// @param _fr _fr
     function setFraudRegistry(address _fr) external onlyDAO {
         if (_fr == address(0)) revert FL_Zero();
         pendingFraudRegistry = _fr;
@@ -660,6 +842,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         emit FraudRegistryProposed(_fr, pendingFraudRegistryAt);
     }
 
+    /// @notice applyFraudRegistry
     function applyFraudRegistry() external onlyDAO {
         require(pendingFraudRegistryAt != 0 && block.timestamp >= pendingFraudRegistryAt, "FL: timelock");
         fraudRegistry = pendingFraudRegistry;
@@ -668,6 +851,7 @@ contract VFIDEFlashLoan is ReentrancyGuard {
         emit FraudRegistrySet(fraudRegistry);
     }
 
+    /// @notice cancelFraudRegistry
     function cancelFraudRegistry() external onlyDAO {
         require(pendingFraudRegistryAt != 0, "FL: no pending");
         delete pendingFraudRegistry;
