@@ -504,7 +504,6 @@ contract BadgeManager {
      * @notice Record a referral
      * @param referrer The referrer address
      * @param qualified Whether referred user reached 600+ score
-     * @param _address _address
      */
     function recordReferral(address referrer, address /*referred*/, bool qualified) external onlyOperator nonReentrantBM {
         UserStats storage stats = userStats[referrer];
