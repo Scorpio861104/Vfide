@@ -710,7 +710,6 @@ contract CouncilElection {
 
     /**
      * @notice Get current council members
-     * @return _arg _arg
      */
     function getCouncilMembers() external view returns (address[] memory) {
         return currentCouncil;
