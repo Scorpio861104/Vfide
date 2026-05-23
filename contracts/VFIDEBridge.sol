@@ -1028,7 +1028,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @notice Get user bridge statistics
      * @param _user User address
      * @return stats Bridge statistics
-     * @return _arg _arg
      */
     function getUserStats(address _user) external view returns (BridgeStats memory) {
         return userStats[_user];
