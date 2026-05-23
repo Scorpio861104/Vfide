@@ -1492,14 +1492,12 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice Returns all refund IDs initiated by the given customer.
     /// R77: mappings made public to unblock frontend enumeration.
     /// @param customer customer
-    /// @return _arg _arg
     function getCustomerRefunds(address customer) external view returns (bytes32[] memory) {
         return customerRefunds[customer];
     }
 
     /// @notice Returns all refund IDs initiated by the given merchant.
     /// @param merchant merchant
-    /// @return _arg _arg
     function getMerchantRefunds(address merchant) external view returns (bytes32[] memory) {
         return merchantRefunds[merchant];
     }
