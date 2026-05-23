@@ -35,7 +35,6 @@ interface ISeerViewTarget {
     function mentorOf(address account) external view returns (address);
     /// @notice getMentees
     /// @param mentor mentor
-    /// @return _arg _arg
     function getMentees(address mentor) external view returns (address[] memory);
     /// @notice minScoreToMentor
     /// @return _uint16 _uint16
@@ -86,7 +85,6 @@ interface ISeerSocialViewTarget {
     function mentorOf(address account) external view returns (address);
     /// @notice getMentees
     /// @param mentor mentor
-    /// @return _arg _arg
     function getMentees(address mentor) external view returns (address[] memory);
     /// @notice minScoreToMentor
     /// @return _uint16 _uint16
