@@ -650,7 +650,6 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @notice _checkRestrictions
     /// @param subject subject
     /// @param action action
-    /// @return _arg _arg
     function _checkRestrictions(address subject, ActionType action) internal view returns (EnforcementResult) {
         RestrictionLevel level = restrictionLevel[subject];
 
@@ -817,7 +816,6 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @notice _handlePattern
     /// @param subject subject
     /// @param pattern pattern
-    /// @return _arg _arg
     function _handlePattern(address subject, PatternType pattern) internal returns (EnforcementResult) {
         // Increment violation count
         ++patternViolations[subject][pattern];
