@@ -681,7 +681,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     /**
      * @notice Get total number of registered vaults
-     * @return _uint256 _uint256
      */
     function getTotalVaults() external view returns (uint256) {
         return allVaults.length;
@@ -772,7 +771,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /**
      * @notice Check if vault has recovery options set up
      * @param vault vault
-     * @return _bool _bool
      */
     function isRecoverable(address vault) external view returns (bool) {
         return recoveryIdOfVault[vault] != bytes32(0) || _hasGuardians(vault);
@@ -780,7 +778,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     
     /**
      * @notice Get total registered vaults
-     * @return _uint256 _uint256
      */
     function totalVaults() external view returns (uint256) {
         return allVaults.length;
@@ -789,7 +786,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /**
      * @notice Check if a recovery ID is available
      * @param recoveryId recoveryId
-     * @return _bool _bool
      */
     function isRecoveryIdAvailable(string calldata recoveryId) external view returns (bool) {
         bytes32 hashedId = _deriveScopedHash(recoveryId);
@@ -937,7 +933,6 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
     /**
      * @notice Check if a username is available
      * @param username username
-     * @return _bool _bool
      */
     function isUsernameAvailable(string calldata username) external view returns (bool) {
         bytes32 hashedUsername = _deriveScopedHash(_toLower(username));
