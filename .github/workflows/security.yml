@@ -217,13 +217,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build Docker image (local, not pushed)
-        run: docker build -t vfide:${{ github.sha }} .
-
-      - name: Run Trivy vulnerability scanner
+      # Scan the repository filesystem for vulnerabilities. This avoids needing
+      # Docker image build (which requires git credentials for private deps) while
+      # still providing HIGH/CRITICAL vulnerability detection on all dependencies.
+      - name: Run Trivy vulnerability scanner (filesystem)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: 'vfide:${{ github.sha }}'
+          scan-type: 'fs'
+          scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'HIGH,CRITICAL'
