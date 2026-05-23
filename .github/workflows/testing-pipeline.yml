@@ -258,8 +258,14 @@ jobs:
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-jwt-secret-for-ci
           NODE_ENV: test
+          # Required by /api/health to return 200 (missing vars → 503 → wait-on loops forever)
+          NEXT_PUBLIC_CHAIN_ID: "8453"
+          NEXT_PUBLIC_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
+          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ci-test-project-id
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          APP_ORIGIN: http://localhost:3000
       - name: Wait for server
-        run: npx wait-on http://localhost:3000/api/health -t 90000
+        run: npx wait-on http://localhost:3000/api/health -t 120000
       - name: Run API tests
         run: npx jest __tests__/api/ --runInBand --forceExit --detectOpenHandles
         env:
