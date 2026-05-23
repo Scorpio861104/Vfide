@@ -475,7 +475,6 @@ interface IVFIDEToken is IERC20 {
     /// @return _uint256 _uint256
     function transferCooldown() external view returns (uint256);
     /// @notice whaleLimitExempt
-    /// @param _address _address
     /// @return _bool _bool
     function whaleLimitExempt(address _address) external view returns (bool);
     /// @notice remainingDailyLimit
