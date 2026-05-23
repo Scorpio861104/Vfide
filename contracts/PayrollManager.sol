@@ -842,7 +842,6 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * @notice Get full stream info
      * @param streamId streamId
-     * @return _arg _arg
      */
     function getStream(uint256 streamId) external view returns (Stream memory) {
         return streams[streamId];
@@ -898,7 +897,6 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * @notice Get all stream IDs where user is payer (employer)
      * @param payer payer
-     * @return _arg _arg
      */
     function getPayerStreams(address payer) external view returns (uint256[] memory) {
         return payerStreams[payer];
@@ -907,7 +905,6 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * @notice Get all stream IDs where user is payee (employee)
      * @param payee payee
-     * @return _arg _arg
      */
     function getPayeeStreams(address payee) external view returns (uint256[] memory) {
         return payeeStreams[payee];
