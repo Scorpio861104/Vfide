@@ -378,7 +378,6 @@ contract PayrollManager is ReentrancyGuard {
      * @param rate Tokens per second (e.g. 3000 USDC / 30 days / 24h / 3600s)
      * @param initialDeposit Amount to deposit upfront
      * @notice createStream
-     * @return _uint256 _uint256
      */
     function createStream(address payee, address token, uint256 rate, uint256 initialDeposit) external nonReentrant returns (uint256) {
         if (payee == address(0)) revert PM_InvalidPayee();
@@ -689,7 +688,6 @@ contract PayrollManager is ReentrancyGuard {
      * Calculate how much is currently claimable
      * @notice claimable
      * @param streamId streamId
-     * @return _uint256 _uint256
      */
     function claimable(uint256 streamId) public view returns (uint256) {
         Stream storage s = streams[streamId];
@@ -880,7 +878,6 @@ contract PayrollManager is ReentrancyGuard {
     /**
      * @notice Estimate when stream will run out of funds
      * @param streamId streamId
-     * @return _uint256 _uint256
      */
     function estimateEndTime(uint256 streamId) external view returns (uint256) {
         Stream storage s = streams[streamId];
