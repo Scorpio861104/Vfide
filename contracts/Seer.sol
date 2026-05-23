@@ -1034,7 +1034,6 @@ contract Seer is ReentrancyGuard {
      * @param subject The user address
      * @param badge The badge ID
      * @return active True if badge is active
-     * @return _bool _bool
      */
     function _checkActiveBadge(address subject, bytes32 badge) internal view returns (bool) {
         if (!hasBadge[subject][badge]) return false;
