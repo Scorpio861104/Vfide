@@ -405,7 +405,6 @@ contract VFIDEBridge is OApp, OAppOptionsType3, ReentrancyGuard, Pausable {
      * @param _amount Amount to bridge
      * @param _options LayerZero options
      * @return receipt MessagingReceipt from LayerZero
-     * @return _bytes32 _bytes32
      */
     function bridge(uint32 _dstChainId, address _to, uint256 _amount, bytes calldata _options) external payable nonReentrant whenNotPaused returns (bytes32) {
         if (_amount < MIN_BRIDGE_AMOUNT || _amount > maxBridgeAmount) revert InvalidAmount();
