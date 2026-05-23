@@ -13,7 +13,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for _ in $(seq 1 30); do
+for _ in $(seq 1 60); do
   if curl -s -X POST "${RPC_URL_VALUE}" \
     -H "content-type: application/json" \
     --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
@@ -22,5 +22,7 @@ for _ in $(seq 1 30); do
   fi
   sleep 1
 done
+# Extra warmup buffer for the node to accept contract deployments
+sleep 3
 
 RPC_URL="${RPC_URL_VALUE}" REQUIRE_SEER_RUNTIME_REASON_CODES=true npm run -s contract:verify:seer:reason-codes
