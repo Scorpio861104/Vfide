@@ -124,7 +124,10 @@ jobs:
         with:
           # Scan only the commits introduced by this push / PR.
           # Use origin/<default_branch> so TruffleHog receives a valid ref.
-          base: origin/${{ github.event.repository.default_branch }}
+          # Use the commit before this push as baseline.
+          # For direct pushes: github.event.before is the pre-push SHA.
+          # Fallback to HEAD^1 if before is unavailable (e.g. initial push).
+          base: ${{ github.event.before || '' }}
           head: HEAD
           extra_args: --only-verified
 
@@ -145,6 +148,15 @@ jobs:
       #     (a) add an inline `// slither-disable-...` with a justification, or
       #     (b) update slither.config.json `detectors_to_exclude` AND add an entry
       #         to SLITHER_TRIAGE_RATIONALE.md explaining why.
+      - name: Setup Node.js for Slither
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies (with legacy peer deps for Slither)
+        run: npm ci --legacy-peer-deps
+
       - name: Run Slither
         uses: crytic/slither-action@v0.4.2
         id: slither
