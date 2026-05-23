@@ -138,6 +138,6 @@ contract CircuitBreaker {
     }
 
     /// @notice onlyRole
-    /// @param _bytes32 _bytes32
+    /// @param */ */
     function onlyRole(bytes32 /* role */) internal pure {}
 }
