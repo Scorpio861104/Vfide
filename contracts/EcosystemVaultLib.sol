@@ -34,7 +34,6 @@ library EcosystemVaultLib {
      * @notice Get merchant rank share based on rank position
      * @dev Rank 1-5: 500bps, 6-10: 300bps, 11-20: 200bps, 21-40: 100bps, 41-60: 50bps, 61-100: 25bps
      * @param rank rank
-     * @return _uint16 _uint16
      */
     function getMerchantRankShare(uint8 rank) public pure returns (uint16) {
         if (rank == 0 || rank > 100) return 0;
