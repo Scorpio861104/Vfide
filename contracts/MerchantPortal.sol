@@ -1228,7 +1228,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @param _address _address
      * @param _uint256 _uint256
      * @param _string _string
-     * @return _uint256 _uint256
      */
     function payOnline(
         address /*merchant*/,
@@ -1473,9 +1472,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @notice Deprecated heavy on-chain aggregation view.
      * @dev Compute refund analytics off-chain from events and getRefundStatus().
      * @param _address _address
-     * @return _uint256 _uint256
-     * @return _uint256 _uint256
-     * @return _uint256 _uint256
      */
     function getMerchantRefundRate(address) external pure returns (
         uint256,
