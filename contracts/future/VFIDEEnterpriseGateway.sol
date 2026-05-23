@@ -447,7 +447,6 @@ contract VFIDEEnterpriseGateway is ReentrancyGuard {
      * @dev Uses simple swap interface - can be adapted for different DEXes
      * DEEP-C-1 FIX: Revoke approval after swap to prevent leftover allowance exploitation
      * @param vfideAmount vfideAmount
-     * @return _uint256 _uint256
      */
     function _swapToStable(uint256 vfideAmount) internal returns (uint256) {
         if (vfideAmount == 0) return 0;
