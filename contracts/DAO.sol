@@ -1134,7 +1134,6 @@ contract DAO is ReentrancyGuard {
     }
 
     /// @notice Legacy convenience alias — returns first 100 active proposals
-    /// @return _arg _arg
     function getActiveProposals() external view returns (uint256[] memory) {
         return getActiveProposals(0, 100);
     }
@@ -1329,7 +1328,6 @@ contract DAO is ReentrancyGuard {
 
     /// @notice Legacy alias — returns first 200 voter proposals
     /// @param voter voter
-    /// @return _arg _arg
     function getVoterHistory(address voter) external view returns (uint256[] memory) {
         return getVoterHistory(voter, 0, 200);
     }
