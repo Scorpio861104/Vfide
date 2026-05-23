@@ -35,7 +35,6 @@ interface ISeer_GH {
     /// @param reason reason
     function reward(address subject, uint16 delta, string calldata reason) external;
     /// @notice getScore
-    /// @param _address _address
     /// @return _uint16 _uint16
     function getScore(address) external view returns (uint16);
     /// @notice minForGovernance
@@ -207,9 +206,6 @@ contract GovernanceHooks is ReentrancyGuard {
 
     /// @notice Legacy entrypoint retained for ABI compatibility.
     /// @dev Module changes are timelocked via proposeModules/applyModules.
-    /// @param _address _address
-    /// @param _address _address
-    /// @param _address _address
     function setModules(address, address, address) external pure {
         revert("GH: use proposeModules/applyModules");
     }
@@ -314,7 +310,7 @@ contract GovernanceHooks is ReentrancyGuard {
     }
     
     /// @notice onFinalized
-    /// @param _uint256 _uint256
+    /// @param /*id*/ /*id*/
     /// @param passed passed
     function onFinalized(uint256 /*id*/, bool passed) external onlyDAO nonReentrant {
         _log(passed ? "gh_passed" : "gh_failed");
