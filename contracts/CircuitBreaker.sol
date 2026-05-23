@@ -132,12 +132,13 @@ contract CircuitBreaker {
     }
 
     /// @notice getMonitoringStatus
-    /// @return _arg _arg
     function getMonitoringStatus() external view returns (Monitoring memory) {
         return monitoring;
     }
 
-    /// @notice onlyRole
-    /// @param */ */
-    function onlyRole(bytes32 /* role */) internal pure {}
+    /// @notice onlyRole - access control guard
+    modifier onlyRole(bytes32 /* role */) {
+        // Stub: override in deployment or replace with AccessControl
+        _;
+    }
 }
