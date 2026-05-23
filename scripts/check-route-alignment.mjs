@@ -11,7 +11,7 @@ const FILE_EXT_RE = /\.(ts|tsx|js|jsx)$/
 const PAGE_FILE_RE = /\/page\.(ts|tsx|js|jsx)$/
 const TEST_FILE_RE = /\.(test|spec)\.(ts|tsx|js|jsx)$/
 
-const REF_RE = /href\s*=\s*['"]([^'"]+)['"]|(?:href|path)\s*:\s*['"]([^'"]+)['"]|(?:navigate|push|replace)\(\s*['"]([^'"]+)['"]\s*\)/g
+const REF_RE = /\bhref\s*=\s*['"]([^'"]+)['"]|\b(?:href|path)\s*:\s*['"]([^'"]+)['"]|\b(?:navigate|push|replace)\(\s*['"]([^'"]+)['"]\s*\)/g
 
 const ALLOWED_PREFIXES = ['/api/', '/v1/']
 const ALLOWED_ASSET_PATHS = new Set([
