@@ -43,7 +43,7 @@ function walk(dir, out = []) {
 }
 
 function normalizeRoute(filePath) {
-  const rel = path.relative(APP_DIR, filePath).replace(/\/g, '/').replace(PAGE_FILE_RE, '')
+  const rel = path.relative(APP_DIR, filePath).replace(/\\/g, '/').replace(PAGE_FILE_RE, '')
   if (!rel) return '/'
   return `/${rel.replace(/\/index$/, '')}`
 }
