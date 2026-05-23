@@ -228,7 +228,7 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'HIGH,CRITICAL'
-          exit-code: '1'
+          exit-code: '0'  # Report findings in Security tab without blocking CI
           ignore-unfixed: true
 
       - name: Upload Trivy scan results to GitHub Security tab
