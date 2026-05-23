@@ -49,7 +49,7 @@ async function main() {
       try {
         const parsed = seer.interface.parseLog(log);
         if (parsed && parsed.name === 'ScoreReasonCode') {
-          const [who, code, delta, actor] = parsed.args;
+          const [who, code, _delta, actor] = parsed.args;
           // delta is dynamic (newScore - initialScore); only verify code and actor
           if (who === (await subject.getAddress()) && code === 500n && actor === (await dao.getAddress())) {
             found500 = true;
@@ -68,7 +68,7 @@ async function main() {
       try {
         const parsed = seer.interface.parseLog(log);
         if (parsed && parsed.name === 'ScoreReasonCode') {
-          const [who, code, delta, actor] = parsed.args;
+          const [who, code, _delta, actor] = parsed.args;
           if (who === (await subject.getAddress()) && code === 501n && actor === (await dao.getAddress())) {
             found501 = true;
           }
@@ -85,7 +85,7 @@ async function main() {
       try {
         const parsed = seer.interface.parseLog(log);
         if (parsed && parsed.name === 'ScoreReasonCode') {
-          const [who, code, delta, actor] = parsed.args;
+          const [who, code, _delta, actor] = parsed.args;
           if (who === (await subject.getAddress()) && code === 502n && actor === (await dao.getAddress())) {
             found502 = true;
           }
