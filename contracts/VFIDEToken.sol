@@ -1746,7 +1746,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @dev View function to check remaining daily allowance
      * @notice remainingDailyLimit
      * @param account account
-     * @return _uint256 _uint256
      */
     function remainingDailyLimit(address account) external view returns (uint256) {
         if (dailyTransferLimit == 0) return type(uint256).max; // No limit
@@ -1765,7 +1764,6 @@ contract VFIDEToken is Ownable, ReentrancyGuard {
      * @dev View function to check time until next transfer allowed
      * @notice cooldownRemaining
      * @param account account
-     * @return _uint256 _uint256
      */
     function cooldownRemaining(address account) external view returns (uint256) {
         if (transferCooldown == 0) return 0;
