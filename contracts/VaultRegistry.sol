@@ -626,10 +626,10 @@ contract VaultRegistry is Ownable, ReentrancyGuard {
      * @param endTime Unix timestamp for range end
      * @param limit Maximum results to return
      * @return matches Array of matching vault info
+     * @param offset Start index into allVaults for pagination (0 = beginning).
+     *               Call again with returned nextOffset to continue scanning.
+     * @return nextOffset Next pagination offset; equals total length when scan is complete.
      */
-    /// @param offset Start index into allVaults for pagination (0 = beginning).
-    ///               Call again with returned nextOffset to continue scanning.
-    /// @return nextOffset nextOffset
     function searchByCreationTime(
         uint256 startTime,
         uint256 endTime,
