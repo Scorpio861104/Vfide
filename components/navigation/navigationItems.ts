@@ -120,7 +120,7 @@ export const navigationItems: NavItem[] = [
       { id: 'vault-recover', label: 'Recovery', href: '/vault/recover', icon: KeyRound, color: '#8B5CF6' },
       { id: 'vault-settings', label: 'Settings', href: '/vault/settings', icon: Settings, color: '#8B5CF6' },
       { id: 'multisig', label: 'Multi-Sig', href: '/multisig', icon: Users, color: '#8B5CF6' },
-      { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6' },
+      { id: 'time-locks', label: 'Time Locks', href: '/time-locks', icon: Clock, color: '#8B5CF6', comingSoon: true },
       { id: 'vesting', label: 'Vesting', href: '/vesting', icon: Gift, color: '#8B5CF6' },
     ],
   },
