@@ -375,7 +375,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     /**
      * @notice Get current volume multiplier based on daily activity
      * @return multiplier in basis points (10000 = 1x)
-     * @return _uint16 _uint16
      */
     function getVolumeMultiplier() public view returns (uint16) {
         if (!adaptiveFeesEnabled) return BPS_SCALE; // 1x
@@ -401,7 +400,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     /**
      * @notice Get remaining daily burn capacity
-     * @return _uint256 _uint256
      */
     function remainingDailyBurnCapacity() public view returns (uint256) {
         // Check if new day
@@ -416,7 +414,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
     
     /**
      * @notice Check if burns should be paused (supply floor reached)
-     * @return _bool _bool
      */
     function burnsPaused() public view returns (bool) {
         if (token == address(0) || minimumSupplyFloor == 0) return false;
@@ -631,7 +628,6 @@ contract ProofScoreBurnRouter is Ownable, ReentrancyGuard {
      * - Score 4000-8000: Linear interpolation
      * 
      * Formula: fee = maxFee - ((score - lowThreshold) * (maxFee - minFee)) / (highThreshold - lowThreshold)
-     * @return _uint256 _uint256
      */
     function _calculateLinearFee(uint16 score) internal view returns (uint256) {
         if (score <= LOW_SCORE_THRESHOLD) {
