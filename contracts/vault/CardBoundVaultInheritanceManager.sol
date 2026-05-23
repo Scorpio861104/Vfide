@@ -763,7 +763,6 @@ contract CardBoundVaultInheritanceManager {
     /// @notice Returns all addresses that revealed during the current claim window.
     /// @dev Used by the memorial page to display "who claimed" once inheritance settles.
     ///      Bounded by MAX_HEIRS so the array is always small.
-    /// @return _arg _arg
     function getRevealersOfActiveClaim() external view returns (address[] memory) {
         return revealersByNonce[inheritanceClaimNonce];
     }
