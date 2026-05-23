@@ -235,7 +235,6 @@ contract FiatRampRegistry is ReentrancyGuard {
     
     /// @notice getUserRampHistory
     /// @param user user
-    /// @return _arg _arg
     function getUserRampHistory(address user) external view returns (bytes32[] memory) {
         return userRampHistory[user];
     }
