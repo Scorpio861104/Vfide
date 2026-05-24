@@ -126,7 +126,7 @@ export const ABOUT_TRANSLATIONS: TranslationMap<AboutCopy> = {
 };
 
 export interface HomeCopy { hero: string; subtitle: string; cta: string; homeAriaShop: string; homeAriaSell: string; }
-const _en_home: HomeCopy = { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started' };
+const _en_home: HomeCopy = { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started', homeAriaShop: 'Browse the marketplace', homeAriaSell: 'Set up your merchant account' };
 export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
   'en-US': _en_home, 'en-GB': _en_home, 'es-ES': _en_home, 'fr-FR': _en_home, 'de-DE': _en_home,
   'ar-SA': _en_home, 'fil-PH': _en_home, 'hi-IN': _en_home, 'id-ID': _en_home,
