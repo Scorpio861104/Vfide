@@ -37,7 +37,7 @@ export function BottomTabBar() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-700/50 pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800/50 pb-safe">
         <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto">
           {MAIN_TABS.map((tab) => {
             const Icon = tab.icon;
@@ -61,8 +61,8 @@ export function BottomTabBar() {
                 className={cn(
                   'flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all min-w-0',
                   isActive
-                    ? 'text-blue-400'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'text-cyan-400'
+                    : 'text-zinc-500 hover:text-zinc-300'
                 )}
               >
                 <div className="relative">
@@ -70,7 +70,7 @@ export function BottomTabBar() {
                   {isActive && (
                     <motion.div
                       layoutId="tab-indicator"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400"
                     />
                   )}
                 </div>
