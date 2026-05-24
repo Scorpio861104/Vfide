@@ -38,15 +38,17 @@ export function useProofScore(userAddress?: `0x${string}`) {
     },
   })
 
-  const scoreNum = data ? Number(data) : 5000 // Default neutral score (10x scale); new users with no on-chain score start at 5000
+  // When no address is connected, return null so UIs can show "connect wallet" 
+  // instead of misleadingly showing a neutral 5000 score as the user's own.
+  const scoreNum = !targetAddress ? null : (data ? Number(data) : 5000)
   
   // Get current tier from unified constants
-  const currentTier = getScoreTierObject(scoreNum)
+  const currentTier = scoreNum !== null ? getScoreTierObject(scoreNum) : null
   
   // Calculate burn fee based on ProofScore
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
   // Neutral score (5000) sits at the midpoint → 2.5%
-  const fallbackBurnFee =
+  const fallbackBurnFee = scoreNum === null ? null :
     scoreNum >= 8000 ? 0.25 :
     scoreNum >= 7000 ? 1.0 :
     scoreNum >= 5000 ? 2.5 :
@@ -65,17 +67,19 @@ export function useProofScore(userAddress?: `0x${string}`) {
 
   return {
     score: scoreNum,
+    /** True when no wallet is connected — score is null, not a real value */
+    isDisconnected: !targetAddress,
     tier: currentTier,
-    tierName: currentTier.label,
-    tierColor: currentTier.color,
+    tierName: currentTier?.label ?? null,
+    tierColor: currentTier?.color ?? null,
     burnFee,
-    color: getTierColor(scoreNum),
-    canVote: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
-    canMerchant: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
-    canCouncil: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
-    canEndorse: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_ENDORSE,
-    canMentor: scoreNum >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MENTOR,
-    isElite: scoreNum >= 8000,
+    color: scoreNum !== null ? getTierColor(scoreNum) : '#71717a',
+    canVote: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
+    canMerchant: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
+    canCouncil: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_COUNCIL,
+    canEndorse: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_ENDORSE,
+    canMentor: (scoreNum ?? 0) >= PROOF_SCORE_PERMISSIONS.MIN_FOR_MENTOR,
+    isElite: (scoreNum ?? 0) >= 8000,
     isError,
     isLoading,
     refetch,
