@@ -319,7 +319,7 @@ jobs:
           cache: "npm"
       - run: npm ci --legacy-peer-deps
       - run: npx hardhat compile
-      - run: npx hardhat test test/security/regressions.test.ts
+      - run: npx hardhat test test/contracts/regressions.test.ts
 
   # ───────────────────────────────────────────
   # 10. E2E Tests (Playwright, on main only)
