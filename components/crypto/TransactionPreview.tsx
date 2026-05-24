@@ -68,20 +68,20 @@ export function TransactionPreview({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="max-w-md w-full mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6">
+      <div className="max-w-md w-full mx-4 bg-zinc-900 rounded-2xl shadow-2xl border border-white/10 p-6">
         <div className="mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-xl font-bold text-white">
             Transaction Preview
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-zinc-400">
             Review the transaction details before signing
           </p>
         </div>
 
         {/* Transaction Description */}
         {transaction.description && (
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm text-blue-900 dark:text-blue-100">
+          <div className="mb-4 p-3 bg-blue-500/10 rounded-lg">
+            <p className="text-sm text-blue-300">
               {transaction.description}
             </p>
           </div>
@@ -91,10 +91,10 @@ export function TransactionPreview({
         <div className="space-y-3 mb-6">
           {/* Recipient Address */}
           <div className="flex flex-col">
-            <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <span className="text-xs text-zinc-500 mb-1">
               To Address
             </span>
-            <span className="text-sm font-mono text-gray-900 dark:text-white break-all">
+            <span className="text-sm font-mono text-white break-all">
               {transaction.to}
             </span>
           </div>
@@ -105,7 +105,7 @@ export function TransactionPreview({
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 ETH Amount
               </span>
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              <span className="text-sm font-semibold text-white">
                 {ethValue} ETH
               </span>
             </div>
@@ -117,7 +117,7 @@ export function TransactionPreview({
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 Token Amount
               </span>
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              <span className="text-sm font-semibold text-white">
                 {tokenAmount} {transaction.tokenSymbol || 'tokens'}
               </span>
             </div>
@@ -129,7 +129,7 @@ export function TransactionPreview({
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 Function
               </span>
-              <span className="text-sm font-mono text-gray-900 dark:text-white">
+              <span className="text-sm font-mono text-white">
                 {transaction.functionName}
               </span>
             </div>
@@ -137,7 +137,7 @@ export function TransactionPreview({
 
           {/* Estimated Gas */}
           <div className="flex justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-zinc-400">
               Estimated Gas Cost
             </span>
             <span className="text-sm text-gray-900 dark:text-white">
@@ -151,10 +151,10 @@ export function TransactionPreview({
         </div>
 
         {/* Warning Box */}
-        <div className="mb-6 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+        <div className="mb-6 p-3 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
           <div className="flex items-start">
             <svg
-              className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 flex-shrink-0 mt-0.5"
+              className="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0 mt-0.5"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -164,7 +164,7 @@ export function TransactionPreview({
                 clipRule="evenodd"
               />
             </svg>
-            <div className="text-xs text-yellow-800 dark:text-yellow-200">
+            <div className="text-xs text-yellow-300">
               <p className="font-semibold mb-1">Important:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Verify the recipient address is correct</li>
@@ -183,7 +183,7 @@ export function TransactionPreview({
             onChange={(e) => setConfirmed(e.target.checked)}
             className="mt-1 mr-3 h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
           />
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+          <span className="text-sm text-zinc-300">
             I have reviewed the transaction details and confirm they are correct
           </span>
         </label>
@@ -193,14 +193,14 @@ export function TransactionPreview({
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2 text-sm font-medium text-zinc-300 bg-zinc-800 rounded-xl hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={handleConfirm}
             disabled={!confirmed || isLoading || isEstimatingGas}
-            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-cyan-500 rounded-xl hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
