@@ -79,7 +79,7 @@ test.describe('Icon-only buttons have aria-label (R12)', () => {
     await expect(page.getByRole('button', { name: 'Connect wallet' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Search vaults' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Notifications' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'More options' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'More options' }).first()).toBeVisible()
   })
 })
 
