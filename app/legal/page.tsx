@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -16,7 +17,7 @@ const TABS = [
 
 const VALID_TABS: TabType[] = ['legal', 'privacy', 'terms'];
 
-export default function LegalPage() {
+function LegalPageContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('legal');
 
@@ -252,5 +253,13 @@ function TermsOfServiceTab() {
 
       <p className="text-zinc-400 text-sm text-center">Last updated: December 2025</p>
     </div>
+  );
+}
+
+export default function LegalPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <LegalPageContent />
+    </Suspense>
   );
 }
