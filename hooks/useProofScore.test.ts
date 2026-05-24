@@ -29,10 +29,10 @@ describe('useProofScore hook', () => {
     mockedUseReadContract.mockReturnValue({ data: undefined, isError: false, isLoading: false, refetch: jest.fn() } as any)
 
     const { result } = renderHook(() => useProofScore())
-    expect(result.current.score).toBe(5000)
-    expect(result.current.tierName).toBe(PROOF_SCORE_TIERS.NEUTRAL.label)
-    expect(result.current.burnFee).toBe(2.5)
-    expect(result.current.canVote).toBe(false)
+    expect(result.current.score).toBe(null)
+    // When disconnected, score is null, tier is not computed
+    expect(result.current.burnFee).toBe(null)
+    expect(result.current.canVote).toBe(false) // Can't vote without connection
     expect(result.current.color).toBe('#FFD700')
   })
 
