@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-/// @notice MockSeerForEscrow
+/// @notice MockSeerForEscrow — full ISeer stub for merchant payment escrow invariant tests
 /// @title MockSeerForEscrow
 /// @author Vfide
 contract MockSeerForEscrow {
@@ -12,40 +12,129 @@ contract MockSeerForEscrow {
     /// @notice punished
     mapping(address => uint256) public punished;
 
+    uint16 private _minForMerchant = 0; // 0 → MerchantPortal falls back to its own minMerchantScore
+
     /// @notice setScore
-    /// @param account account
-    /// @param score score
     function setScore(address account, uint16 score) external {
         _scores[account] = score;
     }
 
     /// @notice getScore
-    /// @param account account
-    /// @return _uint16 _uint16
     function getScore(address account) external view returns (uint16) {
         return _scores[account];
     }
 
     /// @notice getCachedScore
-    /// @param account account
-    /// @return _uint16 _uint16
     function getCachedScore(address account) external view returns (uint16) {
         return _scores[account];
     }
 
+    /// @notice getScoreAt
+    function getScoreAt(address account, uint64) external view returns (uint16) {
+        return _scores[account];
+    }
+
+    /// @notice lastActivity
+    function lastActivity(address) external view returns (uint64) {
+        return uint64(block.timestamp);
+    }
+
+    /// @notice hasBadge
+    function hasBadge(address, bytes32) external pure returns (bool) {
+        return false;
+    }
+
+    /// @notice minForGovernance — returns 0 so contract uses its own default
+    function minForGovernance() external pure returns (uint16) {
+        return 0;
+    }
+
+    /// @notice minForMerchant — returns 0 so MerchantPortal uses its own minMerchantScore
+    function minForMerchant() external view returns (uint16) {
+        return _minForMerchant;
+    }
+
+    /// @notice highTrustThreshold
+    function highTrustThreshold() external pure returns (uint16) {
+        return 8000;
+    }
+
+    /// @notice lowTrustThreshold
+    function lowTrustThreshold() external pure returns (uint16) {
+        return 2000;
+    }
+
+    /// @notice NEUTRAL
+    function NEUTRAL() external pure returns (uint16) {
+        return 5000;
+    }
+
+    /// @notice setModules — no-op stub
+    function setModules(address, address) external {}
+
+    /// @notice setThresholds — no-op stub
+    function setThresholds(uint16, uint16, uint16, uint16 minMerch) external {
+        _minForMerchant = minMerch;
+    }
+
     /// @notice reward
-    /// @param subject subject
-    /// @param delta delta
     function reward(address subject, uint16 delta, string calldata) external {
         rewarded[subject] += delta;
     }
 
     /// @notice punish
-    /// @param subject subject
-    /// @param delta delta
     function punish(address subject, uint16 delta, string calldata) external {
         punished[subject] += delta;
     }
+}
+
+/// @notice MockVaultHubForEscrow — minimal IVaultHub stub
+/// @title MockVaultHubForEscrow
+/// @author Vfide
+contract MockVaultHubForEscrow {
+    mapping(address => address) private _vaults;
+    mapping(address => address) private _owners;
+    uint256 public totalVaultsCreated;
+
+    /// @notice ensureVault — creates a trivial vault record and returns owner address as vault
+    function ensureVault(address owner_) external returns (address vault) {
+        if (_vaults[owner_] == address(0)) {
+            _vaults[owner_] = owner_; // self-referential stub vault
+            _owners[owner_] = owner_;
+            totalVaultsCreated++;
+        }
+        return _vaults[owner_];
+    }
+
+    function vaultOf(address owner_) external view returns (address) {
+        return _vaults[owner_];
+    }
+
+    function ownerOfVault(address vault) external view returns (address) {
+        return _owners[vault];
+    }
+
+    function isVault(address a) external view returns (bool) {
+        return _owners[a] != address(0);
+    }
+
+    function isInMemorialState(address) external pure returns (bool) {
+        return false;
+    }
+
+    function setVFIDEToken(address) external {}
+    function setProofLedger(address) external {}
+    function setDAORecoveryMultisig(address) external {}
+    function setRecoveryTimelock(uint256) external {}
+}
+
+/// @notice MockLedgerForEscrow — minimal IProofLedger stub
+/// @title MockLedgerForEscrow
+/// @author Vfide
+contract MockLedgerForEscrow {
+    function logSystemEvent(address, string calldata, address) external {}
+    function logEvent(address, string calldata, uint256, string calldata) external {}
+    function logTransfer(address, address, uint256, string calldata) external {}
 }
 
 /// @notice MockTokenForEscrow
@@ -67,19 +156,11 @@ contract MockTokenForEscrow {
     mapping(address => mapping(address => uint256)) public allowance;
 
     /// @notice Transfer
-    /// @param from from
-    /// @param to to
-    /// @param value value
     event Transfer(address indexed from, address indexed to, uint256 value);
     /// @notice Approval
-    /// @param owner owner
-    /// @param spender spender
-    /// @param value value
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
     /// @notice mint
-    /// @param to to
-    /// @param amount amount
     function mint(address to, uint256 amount) external {
         totalSupply += amount;
         balanceOf[to] += amount;
@@ -87,9 +168,6 @@ contract MockTokenForEscrow {
     }
 
     /// @notice approve
-    /// @param spender spender
-    /// @param amount amount
-    /// @return _bool _bool
     function approve(address spender, uint256 amount) external returns (bool) {
         allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
@@ -97,19 +175,12 @@ contract MockTokenForEscrow {
     }
 
     /// @notice transfer
-    /// @param to to
-    /// @param amount amount
-    /// @return _bool _bool
     function transfer(address to, uint256 amount) external returns (bool) {
         _transfer(msg.sender, to, amount);
         return true;
     }
 
     /// @notice transferFrom
-    /// @param from from
-    /// @param to to
-    /// @param amount amount
-    /// @return _bool _bool
     function transferFrom(address from, address to, uint256 amount) external returns (bool) {
         uint256 currentAllowance = allowance[from][msg.sender];
         require(currentAllowance >= amount, "ERC20: insufficient allowance");
@@ -120,10 +191,6 @@ contract MockTokenForEscrow {
         return true;
     }
 
-    /// @notice _transfer
-    /// @param from from
-    /// @param to to
-    /// @param amount amount
     function _transfer(address from, address to, uint256 amount) internal {
         require(to != address(0), "ERC20: transfer to zero");
         uint256 fromBalance = balanceOf[from];
