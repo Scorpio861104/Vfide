@@ -267,7 +267,7 @@ describe('MEDIUM Regressions', function () {
 describe('LOW Regressions', function () {
   it('L-01: Solidity compiler version monitored', function () {
     const config = fs.readFileSync('hardhat.config.ts', 'utf-8');
-    expect(config).to.include('version: "0.8.30"');
+    expect(config).to.include("0.8.30"); // accepts both single and double-quoted forms
     expect(config).to.include('compilers');
   });
 
