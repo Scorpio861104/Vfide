@@ -33,7 +33,7 @@ describe('Subscriptions page pathways', () => {
   it('renders subscriptions heading and default active tab', () => {
     renderSubscriptionsPage();
 
-    expect(screen.getByText(/^Subscriptions$/i)).toBeTruthy();
+    expect(screen.getByText(/Recurring Subscriptions/i)).toBeTruthy();
     expect(screen.getAllByText(/Recurring payments/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Active subscriptions content/i)).toBeTruthy();
   });
