@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { JetBrains_Mono } from 'next/font/google';
 import { headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import './globals.css';
 import '@/lib/ssr-animations.css';
 // FIX PERF-2: RainbowKit CSS must be imported once at the root layout.
@@ -9,6 +10,7 @@ import '@/lib/ssr-animations.css';
 // and layout reflow on first wallet-connect click.
 import '@rainbow-me/rainbowkit/styles.css';
 import { CoreProviders } from '@/lib/providers/CoreProviders';
+import { getHtmlLang, normalizeLocale } from '@/lib/i18n';
 
 // JetBrains Mono backs every numeric value across the product via the
 // <Numeric> component and the .font-numeric utility. Subsetted to latin
@@ -58,9 +60,14 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const nonce = (await headers()).get('x-nonce') ?? '';
+  // Resolve locale server-side from cookie for correct initial <html lang>
+  // Falls back to 'en' if cookie is absent or invalid.
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get('vfide_locale')?.value ?? '';
+  const serverLang = getHtmlLang(normalizeLocale(localeCookie));
 
   return (
-    <html lang="en" suppressHydrationWarning data-csp-nonce={nonce || undefined} className={jetbrainsMono.variable}>
+    <html lang={serverLang} suppressHydrationWarning data-csp-nonce={nonce || undefined} className={jetbrainsMono.variable}>
       <body className="bg-zinc-950 text-white antialiased">
         {/* Skip-to-content: accessibility — visible on focus for keyboard users */}
         <a href="#main" className="skip-to-content">
