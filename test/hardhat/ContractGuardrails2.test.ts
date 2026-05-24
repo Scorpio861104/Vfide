@@ -540,7 +540,7 @@ describe('DAO (F-21: emergency quorum rescue 10% floor)', () => {
 describe('MerchantPortal (scoped pull permits)', { concurrency: 1 }, () => {
   async function merchantPortalFixture() {
     const { ethers } = (await getUnlimitedConnection()) as any;
-    const [dao, merchant, customer, feeSink] = await ethers.getSigners();
+    const [dao, merchant, customer] = await ethers.getSigners();
 
     const VaultHub = await ethers.getContractFactory('VaultHubStub');
     const hub = await VaultHub.deploy();
@@ -559,13 +559,11 @@ describe('MerchantPortal (scoped pull permits)', { concurrency: 1 }, () => {
       dao.address,
       await hub.getAddress(),
       await seer.getAddress(),
-      ethers.ZeroAddress,
-      feeSink.address
+      ethers.ZeroAddress
     );
     await portal.waitForDeployment();
 
     await seer.setScore(merchant.address, 7000);
-    await portal.connect(dao).setProtocolFee(0);
     await portal.connect(dao).setAcceptedToken(await token.getAddress(), true);
     await portal.connect(merchant).registerMerchant('Merchant', 'Retail');
 

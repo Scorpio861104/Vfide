@@ -113,7 +113,6 @@ const PHASE1_CONTRACTS: ContractSpec[] = [
       deployed.VaultHub,
       deployed.Seer,
       deployed.ProofLedger,
-      ZERO_ADDRESS, // _feeSink (temp)
     ],
     description: "Commerce: Merchant onboarding & payment gateway",
   },
@@ -248,7 +247,6 @@ function validateConstructorArgs(): boolean {
       deployed.VaultHub || ZERO_ADDR,
       deployed.Seer || ZERO_ADDR,
       deployed.ProofLedger || ZERO_ADDR,
-      ZERO_ADDR,
     ],
     DAOTimelock: (_deployed) => [ZERO_ADDR],
     GovernanceHooks: (deployed) => [

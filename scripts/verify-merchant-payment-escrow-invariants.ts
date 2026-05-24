@@ -104,7 +104,6 @@ async function main() {
     await vaultHub.getAddress(),
     await seer.getAddress(),
     await ledger.getAddress(),
-    daoAddress // feeSink = dao address (non-zero, valid)
   )) as any;
   await portal.waitForDeployment();
 

@@ -150,7 +150,7 @@ The wiring (token module setters, system-exemptions, DAO role transfers, ProofLe
 
 ### B.5 Bootstrap addresses
 
-`scripts/deploy-full.ts` reads from a `bootstrap` object: `dao`, `admin`, `beneficiary`, `treasurySink`, `ledgerAdmin`, `poolAdmin`, `sanctumSink`, `burnSink`, `ecosystemSink`, `feeSink`, `faucetOwner`. Each must be the right multisig / EOA at mainnet time. Common mistakes:
+`scripts/deploy-full.ts` reads from a `bootstrap` object: `dao`, `admin`, `beneficiary`, `treasurySink`, `ledgerAdmin`, `poolAdmin`, `sanctumSink`, `burnSink`, `ecosystemSink`, `faucetOwner`. (Prior `feeSink` removed 2026-05-24 — `MerchantPortal` no longer takes a fee sink because `protocolFeeBps` is a hardcoded zero constant.) Each must be the right multisig / EOA at mainnet time. Common mistakes:
 
 - `bootstrap.dao` set to the deployer address (the script auto-rewires later — confirm `apply-full.ts` actually completes the rewire).
 - `bootstrap.admin` is the same as `bootstrap.dao` (intended for some flows, but verify per contract).

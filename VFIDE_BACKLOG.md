@@ -211,6 +211,8 @@ When Phase 3c began, `lib/abis/MerchantPortal.json` was stale relative to `contr
 
 **Fix applied in Phase 3c Turn 1:** Regenerated the ABI from the current contract source via `/tmp/abi-mp.js` (same pattern as Phase 2's `/tmp/abi-pqm.js`). All listed functions/events now present. Old ABI preserved as `MerchantPortal.json.bak` for reference.
 
+**Errata 2026-05-24 — soul-fidelity audit:** A subset of the entries listed above were subsequently *removed* from both the contract and the ABI as part of the merchant-fee soul-lock commit. Specifically removed: `setProtocolFee`, `applyProtocolFee`, `cancelProtocolFee`, `setFeeSink`, `pendingProtocolFeeBps`, `pendingProtocolFeeAt`, `PROTOCOL_FEE_CHANGE_DELAY`, `feeSink`, and events `FeeUpdated`, `ProtocolFeeProposed`, `ProtocolFeeCancelled`, `FeeSinkSet`. Rationale: the VFIDE Manual states `protocolFeeBps` is hardcoded zero. Making it a `public constant` and removing the mutator surface aligns the code with the manifesto. The `MerchantPortal` constructor signature changed from 5 args to 4 (dropped `_feeSink`).
+
 **Severity:** Medium. Was blocking Phase 3c. Resolved this turn.
 
 **Followup needed (release-gate item):** Add a CI step that diffs compiled ABIs against `lib/abis/*.json` and fails the build when they drift. Without this, future contract changes will land without ABI regeneration and the frontend will silently lose access to new functions.

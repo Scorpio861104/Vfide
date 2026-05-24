@@ -56,8 +56,7 @@ describe('MerchantPortal.payWithIntent edge cases', () => {
       dao.address,
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      await securityHub.getAddress(),
-      feeSink.address
+      await securityHub.getAddress()
     );
     await portal.waitForDeployment();
 
