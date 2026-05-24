@@ -1467,6 +1467,5 @@
 }
 
 /* Apply font scale to root so em-based sizing cascades correctly */
-:root {
-  font-size: calc(16px * var(--vf-font-scale));
-}
+/* Note: DO NOT set :root font-size — breaks browser zoom.
+   Component libraries that need font scale should apply calc() on their own. */
