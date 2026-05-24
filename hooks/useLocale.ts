@@ -11,7 +11,7 @@ import {
 
 /** RTL locales — extend as new locales are added to SUPPORTED_LOCALES */
 const RTL_LOCALES = new Set<SupportedLocale>([
-  // none in current 5-locale set; ready for Arabic / Hebrew expansion
+  'ar-SA',
 ]);
 
 function applyDocumentLocale(locale: SupportedLocale): void {
