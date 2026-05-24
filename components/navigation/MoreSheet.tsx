@@ -37,6 +37,7 @@ import {
   type NavItem,
 } from './navigationItems';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 interface MoreSheetProps {
   open: boolean;
@@ -196,6 +197,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
 
             {/* Footer with link to the full hub page */}
             <div className="flex items-center justify-between border-t border-white/10 px-4 py-2">
+              <LanguageSwitcher className="sm:hidden" />
               <span className="text-xs text-gray-500">
                 {filtered
                   ? `${filtered.length} match${filtered.length === 1 ? '' : 'es'}`
