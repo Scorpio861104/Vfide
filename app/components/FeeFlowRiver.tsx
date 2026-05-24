@@ -234,6 +234,36 @@ export function FeeFlowRiver() {
   const now = typeof performance !== 'undefined' ? performance.now() : 0;
   const startedAt = startedAtRef.current ?? now;
 
+  // Reduced motion: show static distribution bars — no SVG, no particles,
+  // no animation loops. Safer for users with vestibular disorders.
+  if (reduce) {
+    return (
+      <div id="fee-river" className="w-full rounded-3xl border border-white/10 bg-zinc-950/70 p-5 sm:p-7">
+        <div className="mb-4">
+          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
+            <Activity size={12} /> Fee distribution
+          </div>
+          <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
+          <p className="mt-1 max-w-2xl text-sm text-gray-400">
+            VFIDE collects fees from buyers, never merchants. Each fee splits five ways into pools that work for the network.
+          </p>
+        </div>
+        <div className="space-y-3 mt-4">
+          {POOLS.map((pool) => (
+            <div key={pool.id} className="flex items-center gap-3">
+              <div className="w-28 text-sm text-zinc-300 shrink-0">{pool.label}</div>
+              <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${pool.pct}%`, background: pool.hex }} />
+              </div>
+              <div className="w-10 text-sm font-semibold text-right" style={{ color: pool.hex }}>{pool.pct}%</div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-zinc-600">Animation disabled (prefers-reduced-motion). Numbers are illustrative until mainnet launch.</p>
+      </div>
+    );
+  }
+
   return (
     <div id="fee-river" className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-5 backdrop-blur-sm sm:p-7">
       <div className="mb-4 flex items-end justify-between gap-3">
