@@ -1,6 +1,6 @@
 import { safeLocalStorage } from '@/lib/utils';
 
-export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA'] as const;
+export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA', 'fil-PH', 'hi-IN', 'id-ID', 'th-TH', 'ja-JP', 'zh-CN'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
 
 export const DEFAULT_LOCALE: SupportedLocale = 'en-US';
@@ -12,6 +12,12 @@ export const LOCALE_OPTIONS: Array<{ value: SupportedLocale; label: string }> = 
   { value: 'fr-FR', label: 'Français' },
   { value: 'de-DE', label: 'Deutsch' },
   { value: 'ar-SA', label: 'العربية' },
+  { value: 'fil-PH', label: 'Filipino' },
+  { value: 'hi-IN', label: 'हिन्दी' },
+  { value: 'id-ID', label: 'Bahasa Indonesia' },
+  { value: 'th-TH', label: 'ไทย' },
+  { value: 'ja-JP', label: '日本語' },
+  { value: 'zh-CN', label: '中文' },
 ];
 
 const LANGUAGE_FALLBACKS: Record<string, SupportedLocale> = {
@@ -20,6 +26,12 @@ const LANGUAGE_FALLBACKS: Record<string, SupportedLocale> = {
   fr: 'fr-FR',
   de: 'de-DE',
   ar: 'ar-SA',
+  fil: 'fil-PH',
+  hi: 'hi-IN',
+  id: 'id-ID',
+  th: 'th-TH',
+  ja: 'ja-JP',
+  zh: 'zh-CN',
 };
 
 export function normalizeLocale(input?: string | null): SupportedLocale {
@@ -203,6 +215,12 @@ const homeEnglish: HomeCopy = {
   finalDescription: 'Join thousands of merchants and users building trust on VFIDE.',
   launchApp: 'Launch App',
   docsCta: 'Read Documentation',
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
@@ -280,6 +298,12 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     launchApp: 'App starten',
     docsCta: 'Dokumentation lesen',
   },
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 
@@ -454,6 +478,12 @@ const proofScoreEn: ProofScoreCopy = {
   improve: 'How to Improve',
   howItWorks: 'How ProofScore Works',
   tierNames: ['New', 'Trusted', 'Established', 'Verified', 'Seer'],
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 export const PROOFSCORE_TRANSLATIONS: TranslationMap<ProofScoreCopy> = {
@@ -543,6 +573,12 @@ const onboardingEn: OnboardingCopy = {
   finishButton: 'Get Started',
   welcomeTitle: 'You're all set!',
   welcomeSubtitle: 'Your wallet is connected. Start exploring VFIDE.',
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 export const ONBOARDING_TRANSLATIONS: TranslationMap<OnboardingCopy> = {
@@ -652,6 +688,12 @@ const merchantEn: MerchantCopy = {
   profileName: 'Business Name',
   profileDescription: 'Business Description',
   saveButton: 'Save Profile',
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
@@ -763,6 +805,12 @@ const remittanceEn: RemittanceCopy = {
   calculateButton: 'Calculate',
   connectToSend: 'Connect Wallet to Send',
   savingsVsTraditional: 'Savings vs. traditional wire',
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 export const REMITTANCE_TRANSLATIONS: TranslationMap<RemittanceCopy> = {
@@ -864,6 +912,12 @@ const aboutEn: AboutCopy = {
   proofScoreBody: 'On-chain reputation built through behavior, not identity. Consistent, honest behavior unlocks lower fees, higher limits, and a seat at governance tables.',
   teamTitle: 'Built in Public',
   teamBody: 'VFIDE is open source, audited, and built with radical transparency. Every contract, every decision, every tradeoff — documented and on-chain.',
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 export const ABOUT_TRANSLATIONS: TranslationMap<AboutCopy> = {
@@ -969,6 +1023,12 @@ const securityEn: SecurityCenterCopy = {
   noThreats: 'No threats detected',
   threatsFound: 'Threats detected — action required',
   scanButton: 'Run Security Scan',
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<SecurityCenterCopy> = {
@@ -1038,6 +1098,12 @@ export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<SecurityCenterCopy> = 
     threatsFound: 'Bedrohungen erkannt — Maßnahmen erforderlich',
     scanButton: 'Sicherheitsscan starten',
   },
+  'fil-PH': { },  // English fallback
+  'hi-IN': { },  // English fallback
+  'id-ID': { },  // English fallback
+  'th-TH': { },  // English fallback
+  'ja-JP': { },  // English fallback
+  'zh-CN': { },  // English fallback
 };
 
 // ─── STUB PAGE (shared for coming-soon pages) ─────────────────────────────────
@@ -1056,4 +1122,10 @@ export const STUB_TRANSLATIONS: TranslationMap<StubCopy> = {
   'fr-FR': { comingSoon: 'Bientôt disponible', description: 'Cette fonctionnalité est en cours de développement et sera disponible au lancement sur le réseau principal.', notifyMe: 'Me notifier', backToHome: 'Retour à l'accueil' },
   'ar-SA': { comingSoon: 'قريباً', description: 'هذه الميزة قيد التطوير النشط وستكون متاحة عند إطلاق الشبكة الرئيسية.', notifyMe: 'أخبرني', backToHome: 'العودة للرئيسية' },
   'de-DE': { comingSoon: 'Demnächst verfügbar', description: 'Diese Funktion befindet sich in aktiver Entwicklung und wird beim Mainnet-Launch verfügbar sein.', notifyMe: 'Benachrichtigen', backToHome: 'Zurück zur Startseite' },
+  'fil-PH': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
+  'hi-IN': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
+  'id-ID': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
+  'th-TH': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
+  'ja-JP': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
+  'zh-CN': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
 };
