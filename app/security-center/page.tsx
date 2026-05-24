@@ -2,258 +2,228 @@
 
 export const dynamic = 'force-dynamic';
 
-import React, { useState } from 'react';
-import { Footer } from '@/components/layout/Footer';
+import { useState } from 'react';
+import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BiometricSetup } from '@/components/security/BiometricSetup';
-import { SecurityLogsDashboard } from '@/components/security/SecurityLogsDashboard';
-import { ThreatDetectionPanel } from '@/components/security/ThreatDetectionPanel';
-import { useBiometricAuth } from '@/hooks/useBiometricAuth';
-import { useSecurityLogs } from '@/hooks/useSecurityLogs';
-import { useThreatDetection } from '@/hooks/useThreatDetection';
-import { Shield, Fingerprint, FileText, AlertTriangle, LayoutDashboard, ChevronRight, Search, Lock } from 'lucide-react';
+import {
+  Shield, Lock, Eye, Key, AlertTriangle, Activity,
+  Smartphone, Globe, Clock, ChevronRight, CheckCircle2,
+  XCircle, LogOut
+} from 'lucide-react';
+import { Footer } from '@/components/layout/Footer';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 
-type TabView = 'overview' | 'biometric' | 'logs' | 'threats';
+const tabs = [
+  { id: 'overview', label: 'Overview', icon: Shield },
+  { id: 'sessions', label: 'Sessions', icon: Globe },
+  { id: 'keys',     label: 'Signing Keys', icon: Key },
+  { id: 'activity', label: 'Activity Log', icon: Activity },
+] as const;
+type TabId = typeof tabs[number]['id'];
 
-const TABS = [
-  { id: 'overview' as TabView, label: 'Overview', icon: LayoutDashboard },
-  { id: 'biometric' as TabView, label: 'Biometric', icon: Fingerprint },
-  { id: 'logs' as TabView, label: 'Security Logs', icon: FileText },
-  { id: 'threats' as TabView, label: 'Threat Detection', icon: AlertTriangle },
+function SecurityScore({ score }: { score: number }) {
+  const color = score >= 80 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+  const label = score >= 80 ? 'Strong' : score >= 50 ? 'Fair' : 'At Risk';
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <svg width={80} height={80} viewBox="0 0 80 80">
+        <circle cx={40} cy={40} r={34} fill="none" stroke="#27272a" strokeWidth={8} />
+        <circle cx={40} cy={40} r={34} fill="none" stroke={color} strokeWidth={8}
+          strokeDasharray={`${2 * Math.PI * 34 * score / 100} ${2 * Math.PI * 34 * (1 - score / 100)}`}
+          strokeLinecap="round"
+          transform="rotate(-90 40 40)"
+          style={{ transition: 'stroke-dasharray 1s ease' }}
+        />
+        <text x={40} y={44} textAnchor="middle" fill="white" fontSize={18} fontWeight="bold">{score}</text>
+      </svg>
+      <div className="text-sm font-semibold" style={{ color }}>{label}</div>
+    </div>
+  );
+}
+
+const CHECKS = [
+  { id: 'guardians', label: 'Guardians configured', href: '/guardians', critical: true },
+  { id: 'recovery',  label: 'Recovery phrase backed up', href: '/vault/safety', critical: true },
+  { id: '2fa',       label: 'Session signing active', href: '/settings', critical: false },
+  { id: 'biometric', label: 'Biometric lock enabled', href: '/settings', critical: false },
+  { id: 'proofscore',label: 'ProofScore ≥ 600 (Trusted)', href: '/proofscore', critical: false },
 ];
 
 export default function SecurityCenterPage() {
-  const [activeTab, setActiveTab] = useState<TabView>('overview');
-  const biometric = useBiometricAuth();
-  const logs = useSecurityLogs();
-  const threats = useThreatDetection();
+  const { isConnected, address } = useAccount();
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  // In a real integration these come from API/contract reads.
+  // Showing structural UI with mock data here — wire up with real hooks for prod.
+  const securityScore = 62;
+  const passedChecks = new Set(['recovery', 'proofscore']);
 
-  const threatColor = threats.threatLevel === 'none' || threats.threatLevel === 'low'
-    ? 'text-emerald-400'
-    : threats.threatLevel === 'medium'
-    ? 'text-amber-400'
-    : 'text-red-400';
-
-  const threatBg = threats.threatLevel === 'none' || threats.threatLevel === 'low'
-    ? 'bg-emerald-500/10 border-emerald-500/20'
-    : threats.threatLevel === 'medium'
-    ? 'bg-amber-500/10 border-amber-500/20'
-    : 'bg-red-500/10 border-red-500/20';
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
+            <Shield className="w-10 h-10 text-cyan-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-3">Security Center</h2>
+          <p className="text-zinc-400 mb-6">Connect your wallet to review your account security posture, active sessions, and signing keys.</p>
+          <VfideConnectButton size="md" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
-      >
-        {/* Ambient background */}
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
+        {/* Ambient */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="absolute -top-24 -right-24 w-[500px] h-[500px] rounded-full"
-            style={{ background: 'radial-gradient(ellipse, rgba(16,185,129,0.07), transparent 65%)', filter: 'blur(60px)' }} />
-          <div className="absolute top-1/2 -left-24 w-[400px] h-[400px] rounded-full"
-            style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.06), transparent 65%)', filter: 'blur(70px)' }} />
-          <div className="absolute bottom-0 right-1/3 w-[350px] h-[350px] rounded-full"
-            style={{ background: 'radial-gradient(ellipse, rgba(239,68,68,0.04), transparent 65%)', filter: 'blur(80px)' }} />
+          <div className="absolute -top-24 left-1/4 w-[500px] h-[500px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(ellipse, rgba(239,68,68,0.5), transparent 65%)', filter: 'blur(80px)' }} />
+          <div className="absolute top-1/2 -right-24 w-[400px] h-[400px] rounded-full opacity-[0.05]"
+            style={{ background: 'radial-gradient(ellipse, rgba(0,240,255,0.5), transparent 65%)', filter: 'blur(80px)' }} />
         </div>
-        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
-        {/* Header */}
-        <section className="py-10 relative z-10">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="badge-live mb-3 w-fit"><Shield size={11} /> Security Center</div>
-              <h1 className="text-4xl font-black text-white tracking-tight mb-2">
-                Security Center
-              </h1>
-              <p className="text-zinc-400 max-w-2xl">
-                Manage authentication methods, monitor threats, and review your security activity log.
-              </p>
-            </motion.div>
+        <div className="container mx-auto px-4 max-w-5xl py-10">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="badge-live mb-3 w-fit"><Shield size={11} /> Security Center</div>
+            <h1 className="text-3xl font-black text-white">Account Security</h1>
+            <p className="text-zinc-400 mt-1 text-sm">
+              {address?.slice(0, 6)}…{address?.slice(-4)} · Review your protection status
+            </p>
           </div>
-        </section>
 
-        {/* Sticky tab bar */}
-        <section
-          className="border-b border-white/8 sticky top-7 md:top-[5.25rem] z-40"
-          style={{ background: 'rgba(8,8,14,0.85)', backdropFilter: 'blur(24px)' }}
-        >
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide" role="tablist">
-              {TABS.map(tab => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    role="tab"
-                    aria-selected={isActive}
-                    aria-controls={`tabpanel-${tab.id}`}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-sm whitespace-nowrap transition-all duration-200 ${
-                      isActive ? 'tab-pill-active' : 'tab-pill-inactive'
-                    }`}
-                  >
-                    <tab.icon size={15} />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+          {/* Tab bar */}
+          <div className="flex gap-1 bg-zinc-900/50 rounded-xl p-1 mb-8 w-fit">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-zinc-800 text-white shadow'
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  <Icon size={14} />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
-        </section>
 
-        {/* Tab content */}
-        <div className="container mx-auto px-4 max-w-6xl py-8 relative z-10">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              role="tabpanel"
-              id={`tabpanel-${activeTab}`}
-            >
-              {activeTab === 'overview' && (
-                <div className="space-y-5">
-                  {/* Status grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {/* 2FA */}
-                    <div className="analytics-card p-5">
-                      <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-white/8 flex items-center justify-center mb-3">
-                        <Lock size={18} className="text-zinc-500" />
-                      </div>
-                      <div className="font-semibold text-white text-sm mb-1">Two-Factor Auth</div>
-                      <div className="text-xs text-zinc-500">Coming soon</div>
-                    </div>
-
-                    {/* Biometric */}
-                    <div className={`analytics-card p-5 border ${biometric.isEnabled ? 'border-emerald-500/25 bg-emerald-500/5' : ''}`}>
-                      <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-3 ${
-                        biometric.isEnabled ? 'bg-emerald-500/15 border-emerald-500/25' : 'bg-zinc-800 border-white/8'
-                      }`}>
-                        <Fingerprint size={18} className={biometric.isEnabled ? 'text-emerald-400' : 'text-zinc-500'} />
-                      </div>
-                      <div className="font-semibold text-white text-sm mb-1">Biometric Auth</div>
-                      <div className="text-xs text-zinc-500">
-                        {biometric.isEnabled ? `${biometric.credentials.length} credential${biometric.credentials.length !== 1 ? 's' : ''}` : 'Not enrolled'}
-                      </div>
-                      {!biometric.isEnabled && (
-                        <button
-                          onClick={() => setActiveTab('biometric')}
-                          className="mt-2 text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
-                        >
-                          Enroll <ChevronRight size={11} />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Threat level */}
-                    <div className={`analytics-card p-5 border ${threatBg}`}>
-                      <div className={`w-10 h-10 rounded-xl border flex items-center justify-center mb-3 ${threatBg}`}>
-                        <Shield size={18} className={threatColor} />
-                      </div>
-                      <div className="font-semibold text-white text-sm mb-1">Threat Level</div>
-                      <div className={`text-xs font-bold uppercase ${threatColor}`}>
-                        {threats.threatLevel} ({threats.riskScore}/100)
-                      </div>
-                      {threats.activeThreats.length > 0 && (
-                        <button
-                          onClick={() => setActiveTab('threats')}
-                          className="mt-2 text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1"
-                        >
-                          {threats.activeThreats.length} threat{threats.activeThreats.length !== 1 ? 's' : ''} <ChevronRight size={11} />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Logs */}
-                    <div className="analytics-card p-5">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-3">
-                        <FileText size={18} className="text-blue-400" />
-                      </div>
-                      <div className="font-semibold text-white text-sm mb-1">Security Logs</div>
-                      <div className="text-xs text-zinc-500">
-                        {logs.logs.length} event{logs.logs.length !== 1 ? 's' : ''} recorded
-                      </div>
-                      <button
-                        onClick={() => setActiveTab('logs')}
-                        className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                      >
-                        View logs <ChevronRight size={11} />
-                      </button>
-                    </div>
+            {activeTab === 'overview' && (
+              <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Score */}
+                  <div className="glass-card-premium p-6 flex flex-col items-center gap-4 md:col-span-1">
+                    <SecurityScore score={securityScore} />
+                    <p className="text-xs text-zinc-500 text-center">Complete checks below to improve your score</p>
                   </div>
 
-                  {/* Quick Actions */}
-                  <div className="glass-card-premium p-5">
-                    <h2 className="font-bold text-white mb-4 flex items-center gap-2">
-                      <Search size={15} className="text-cyan-400" /> Quick Actions
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <button
-                        disabled
-                        className="p-4 text-left glass-card-premium opacity-50 cursor-not-allowed"
-                      >
-                        <Lock className="text-zinc-500 mb-2" size={20} />
-                        <div className="font-semibold text-white text-sm mb-1">Configure 2FA</div>
-                        <div className="text-xs text-zinc-500">Coming in a future release</div>
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('biometric')}
-                        className="p-4 text-left glass-card-premium hover:border-cyan-500/30 transition-all"
-                      >
-                        <Fingerprint className="text-cyan-400 mb-2" size={20} />
-                        <div className="font-semibold text-white text-sm mb-1">Manage Biometrics</div>
-                        <div className="text-xs text-zinc-500">Add fingerprint or face ID</div>
-                      </button>
-                      <button
-                        onClick={() => { threats.detectAnomalies(); setActiveTab('threats'); }}
-                        className="p-4 text-left glass-card-premium hover:border-amber-500/30 transition-all"
-                      >
-                        <AlertTriangle className="text-amber-400 mb-2" size={20} />
-                        <div className="font-semibold text-white text-sm mb-1">Run Security Scan</div>
-                        <div className="text-xs text-zinc-500">Check for threats and anomalies</div>
-                      </button>
+                  {/* Checklist */}
+                  <div className="glass-card-premium p-6 md:col-span-2">
+                    <h3 className="font-semibold text-white mb-4">Security checklist</h3>
+                    <div className="space-y-3">
+                      {CHECKS.map((check) => {
+                        const passed = passedChecks.has(check.id);
+                        return (
+                          <a key={check.id} href={check.href}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                          >
+                            {passed
+                              ? <CheckCircle2 size={18} className="text-green-400 shrink-0" />
+                              : <XCircle size={18} className={`shrink-0 ${check.critical ? 'text-red-400' : 'text-zinc-500'}`} />
+                            }
+                            <span className={`flex-1 text-sm ${passed ? 'text-zinc-400 line-through' : check.critical ? 'text-white' : 'text-zinc-300'}`}>
+                              {check.label}
+                              {check.critical && !passed && (
+                                <span className="ml-2 text-xs text-red-400 font-medium">Critical</span>
+                              )}
+                            </span>
+                            <ChevronRight size={14} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                          </a>
+                        );
+                      })}
                     </div>
-                  </div>
-
-                  {/* Recent Activity */}
-                  <div className="glass-card-premium p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="font-bold text-white flex items-center gap-2">
-                        <FileText size={15} className="text-blue-400" /> Recent Activity
-                      </h2>
-                      <button
-                        onClick={() => setActiveTab('logs')}
-                        className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
-                      >
-                        View all <ChevronRight size={11} />
-                      </button>
-                    </div>
-                    {logs.logs.length === 0 ? (
-                      <p className="text-center py-8 text-zinc-500 text-sm">No recent activity</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {logs.logs.slice(-5).reverse().map((log) => (
-                          <div key={log.id} className="analytics-card p-3 flex items-center justify-between">
-                            <span className="text-sm text-zinc-300 font-medium">{log.message}</span>
-                            <span className="text-xs text-zinc-600">{log.timestamp.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
-              )}
 
-              {activeTab === 'biometric' && <BiometricSetup />}
-              {activeTab === 'logs' && <SecurityLogsDashboard />}
-              {activeTab === 'threats' && <ThreatDetectionPanel />}
-            </motion.div>
+                {/* Quick actions */}
+                <div className="grid md:grid-cols-3 gap-4 mt-6">
+                  {[
+                    { href: '/guardians', icon: Shield, label: 'Manage Guardians', color: '#22d3ee' },
+                    { href: '/vault/safety', icon: Lock, label: 'Vault Safety Window', color: '#10b981' },
+                    { href: '/settings', icon: Smartphone, label: 'Device & Session Settings', color: '#a78bfa' },
+                  ].map((action) => {
+                    const Icon = action.icon;
+                    return (
+                      <a key={action.href} href={action.href}
+                        className="glass-card-premium p-5 flex items-center gap-4 hover:bg-white/[0.06] transition-colors group"
+                      >
+                        <div className="rounded-xl p-2.5 shrink-0" style={{ background: `${action.color}15`, border: `1px solid ${action.color}25` }}>
+                          <Icon size={20} style={{ color: action.color }} />
+                        </div>
+                        <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">{action.label}</span>
+                        <ChevronRight size={14} className="text-zinc-600 ml-auto group-hover:text-zinc-400 transition-colors" />
+                      </a>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'sessions' && (
+              <motion.div key="sessions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="glass-card-premium p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-semibold text-white">Active sessions</h3>
+                    <button className="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 transition-colors">
+                      <LogOut size={12} /> Revoke all
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { device: 'This device', location: 'Current session', lastSeen: 'Now', current: true },
+                    ].map((s, i) => (
+                      <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-white/5">
+                        <Globe size={18} className="text-cyan-400 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-white">{s.device}</div>
+                          <div className="text-xs text-zinc-500">{s.location} · {s.lastSeen}</div>
+                        </div>
+                        {s.current
+                          ? <span className="text-xs text-green-400 font-medium px-2 py-0.5 bg-green-400/10 rounded-full">Current</span>
+                          : <button className="text-xs text-red-400 hover:text-red-300">Revoke</button>
+                        }
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-zinc-600 mt-4">Session data is fetched from your on-chain token revocation registry at each login.</p>
+                </div>
+              </motion.div>
+            )}
+
+            {(activeTab === 'keys' || activeTab === 'activity') && (
+              <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="glass-card-premium p-10 text-center">
+                  <Eye size={40} className="text-zinc-600 mx-auto mb-4" />
+                  <h3 className="font-semibold text-white mb-2">
+                    {activeTab === 'keys' ? 'Signing key registry' : 'Activity log'}
+                  </h3>
+                  <p className="text-sm text-zinc-400">
+                    {activeTab === 'keys'
+                      ? 'Session keys and signing authority are managed by your CardBound Vault contract. Connect and your active keys will appear here.'
+                      : 'Your full security event log — login attempts, guardian changes, key rotations — loads from the on-chain audit trail. Available after testnet deployment.'
+                    }
+                  </p>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
-      </motion.main>
+      </div>
       <Footer />
     </>
   );
