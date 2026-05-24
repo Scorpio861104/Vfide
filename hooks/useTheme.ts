@@ -98,7 +98,19 @@ function applyTokens(tokens: ThemeTokens) {
   root.style.setProperty('--vf-font-scale',        tokens.fontScale);
 }
 
-export function useTheme() {
+export interface UseThemeReturn {
+  activePresetId: string;
+  activePreset: ThemePreset;
+  effectiveTokens: ThemeTokens;
+  customTokens: Partial<ThemeTokens>;
+  isDirty: boolean;
+  applyPreset: (presetId: string) => void;
+  updateCustomToken: <K extends keyof ThemeTokens>(key: K, value: ThemeTokens[K]) => void;
+  resetToPreset: () => void;
+  presets: ThemePreset[];
+}
+
+export function useTheme(): UseThemeReturn {
   const [activePresetId, setActivePresetId] = useState<string>('default-dark');
   const [customTokens, setCustomTokens] = useState<Partial<ThemeTokens>>({});
 
