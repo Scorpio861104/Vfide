@@ -1419,21 +1419,24 @@
 :root[data-locale="ja-JP"] body,
 :root[data-locale="ja-JP"] input,
 :root[data-locale="ja-JP"] button,
-:root[data-locale="ja-JP"] textarea {
+:root[data-locale="ja-JP"] textarea,
+:root[data-locale="ja-JP"] select {
   font-family: var(--font-ja), 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
 }
 
 :root[data-locale="zh-CN"] body,
 :root[data-locale="zh-CN"] input,
 :root[data-locale="zh-CN"] button,
-:root[data-locale="zh-CN"] textarea {
+:root[data-locale="zh-CN"] textarea,
+:root[data-locale="zh-CN"] select {
   font-family: var(--font-zh), 'PingFang SC', 'Microsoft YaHei', 'SimHei', sans-serif;
 }
 
 :root[data-locale="th-TH"] body,
 :root[data-locale="th-TH"] input,
 :root[data-locale="th-TH"] button,
-:root[data-locale="th-TH"] textarea {
+:root[data-locale="th-TH"] textarea,
+:root[data-locale="th-TH"] select {
   font-family: var(--font-th), 'Sarabun', 'Leelawadee UI', 'Tahoma', sans-serif;
 }
 
