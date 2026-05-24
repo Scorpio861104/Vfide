@@ -1450,3 +1450,23 @@
 :root[data-locale="ar-SA"] body {
   font-family: 'Noto Sans Arabic', 'Geeza Pro', 'Simplified Arabic', sans-serif;
 }
+
+/* ── VFIDE theme engine CSS variables ────────────────────────────────────────
+ * Defaults match the Default Dark preset.
+ * useTheme hook overrides these on <html> via element.style.setProperty()
+ * whenever the user switches preset or customises a token.
+ * ──────────────────────────────────────────────────────────────────────────── */
+:root {
+  --vf-accent:           #06b6d4;
+  --vf-accent-fg:        #09090b;
+  --vf-accent-secondary: #6366f1;
+  --vf-border-radius:    0.75rem;
+  --vf-card-bg:          rgba(255, 255, 255, 0.03);
+  --vf-card-border:      rgba(255, 255, 255, 0.08);
+  --vf-font-scale:       1;
+}
+
+/* Apply font scale to root so em-based sizing cascades correctly */
+:root {
+  font-size: calc(16px * var(--vf-font-scale));
+}
