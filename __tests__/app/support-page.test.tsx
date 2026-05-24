@@ -212,7 +212,7 @@ describe('Support page logic pathways', () => {
 
     renderSupportPage();
 
-    fireEvent.click(screen.getByRole('button', { name: /My Tickets/i }));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /My Tickets/i })); });
 
     await waitFor(() => {
       expect(screen.getByText('Stored ticket')).toBeTruthy();

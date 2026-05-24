@@ -11,12 +11,12 @@ describe('Remittance Page', () => {
 
   it('shows fee calculator interface', () => {
     render(<RemittancePage />);
-    expect(screen.getByText(/corridor|fee|Calculate/i)).toBeTruthy();
+    expect(screen.getAllByText(/corridor|fee|Calculate/i).length).toBeGreaterThan(0);
   });
 
   it('displays corridors and rates', () => {
     render(<RemittancePage />);
-    const pageText = screen.getByText(/corridor/i).closest('body')?.textContent || '';
+    const pageText = document.body.textContent ?? '';
     expect(pageText).toMatch(/fee|rate|corridor/i);
   });
 });

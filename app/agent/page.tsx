@@ -32,7 +32,7 @@ export default function Page() {
             <div className=&quot;text-left bg-zinc-900/50 rounded-xl p-5 mb-8&quot;>
               <p className=&quot;text-xs text-zinc-500 uppercase tracking-widest mb-3&quot;>What to expect</p>
               <ul className=&quot;space-y-2&quot;>
-                <li className=&quot;flex items-start gap-2 text-sm text-zinc-300&quot;><span className=&quot;text-cyan-400 mt-0.5&quot;>→</span>Natural-language commands: &quot;send $50 to Ana every Monday&quot;</li>
+                <li className=&quot;flex items-start gap-2 text-sm text-zinc-300&quot;><span className=&quot;text-cyan-400 mt-0.5&quot;>→</span>Natural-language commands: &ldquo;send $50 to Ana every Monday&rdquo;</li>
                 <li className=&quot;flex items-start gap-2 text-sm text-zinc-300&quot;><span className=&quot;text-cyan-400 mt-0.5&quot;>→</span>On-chain triggers and alerts based on your vault activity</li>
                 <li className=&quot;flex items-start gap-2 text-sm text-zinc-300&quot;><span className=&quot;text-cyan-400 mt-0.5&quot;>→</span>Privacy-preserving: agent never holds keys or custody</li>
               </ul>

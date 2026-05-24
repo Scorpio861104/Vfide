@@ -167,14 +167,14 @@ export default function Home() {
                   <Link
                     href="/marketplace"
                     className="btn-premium btn-premium-primary text-sm"
-                    aria-label="Browse the marketplace"
+                    aria-label="Shop on VFIDE"
                   >
                     <ShoppingBag size={16} aria-hidden="true" /> Shop
                   </Link>
                   <Link
                     href="/merchant/setup"
                     className="btn-premium btn-premium-primary text-sm"
-                    aria-label="Set up your merchant account"
+                    aria-label="Sell on VFIDE"
                   >
                     <Store size={16} aria-hidden="true" /> Sell
                   </Link>
