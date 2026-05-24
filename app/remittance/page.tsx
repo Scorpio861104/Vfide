@@ -9,6 +9,8 @@ import { ArrowRight, Globe, DollarSign, Users, Clock, Shield, ChevronDown, Plus 
 import { Footer } from '@/components/layout/Footer';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import Link from 'next/link';
+import { useLocale } from '@/hooks/useLocale';
+import { REMITTANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 const CORRIDORS = [
   { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$12 vs. Western Union' },
@@ -25,6 +27,8 @@ const STEPS = [
 ];
 
 export default function RemittancePage() {
+  const [locale] = useLocale();
+  const copy = pickLocaleCopy(REMITTANCE_TRANSLATIONS, locale); // remittance page i18n
   const { isConnected } = useAccount();
   const [amount, setAmount] = useState('100');
   const [selectedCorridor, setSelectedCorridor] = useState(0);
