@@ -68,7 +68,11 @@
     --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
     --shadow-elevated: 0 24px 80px -20px rgba(0, 0, 0, 0.6);
     
-    /* Standard Neutral Scale (Zinc) */
+    /* Typography CSS Variables */
+  --font-display: var(--font-geist-sans, 'Space Grotesk', 'Inter', system-ui, sans-serif);
+  --font-body: var(--font-geist-sans, 'Inter', system-ui, sans-serif);
+
+  /* Standard Neutral Scale (Zinc) */
     --neutral-50: #fafafa;
     --neutral-100: #f4f4f5;
     --neutral-200: #e4e4e7;
