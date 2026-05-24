@@ -116,6 +116,16 @@ contract SanctumVault is Ownable, ReentrancyGuard {
     uint64 public pendingDAOAt;
     /// @notice DAO_CHANGE_DELAY
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
+    /// @notice DISBURSEMENT_DELAY — minimum time between a disbursement proposal and its execution.
+    /// @dev Matches the VFIDE Manual v1.0 reference card: "SanctumVault disbursement delay = 1 day".
+    ///      Previously inlined as a magic number in executeDisbursement(); lifted to a named
+    ///      constant for ABI clarity and easier review against the public manual.
+    uint64 public constant DISBURSEMENT_DELAY = 1 days;
+    /// @notice PROPOSAL_EXPIRY — maximum age a disbursement proposal can have before it can no
+    ///         longer be executed. Forces stale proposals to be re-proposed with fresh approvals.
+    /// @dev Matches the VFIDE Manual v1.0 reference card: "SanctumVault proposal expiry = 90 days".
+    ///      Previously inlined as a magic number (SV-02); lifted to a named constant.
+    uint64 public constant PROPOSAL_EXPIRY = 90 days;
     /// @notice ledger
     IProofLedger public ledger;
     /// @notice seer
@@ -500,8 +510,8 @@ contract SanctumVault is Ownable, ReentrancyGuard {
         require(d.proposedAt != 0, "not found");
         require(!d.executed && !d.rejected, "already finalized");
         require(d.approvalCount >= approvalsRequired, "insufficient approvals");
-        require(block.timestamp >= d.proposedAt + 1 days, "SANCT: 24h delay");
-        require(block.timestamp <= d.proposedAt + 90 days, "SANCT: proposal expired"); // SV-02
+        require(block.timestamp >= d.proposedAt + DISBURSEMENT_DELAY, "SANCT: 24h delay");
+        require(block.timestamp <= d.proposedAt + PROPOSAL_EXPIRY, "SANCT: proposal expired"); // SV-02
         require(charities[d.charity].approved, "SANCT: charity removed"); // SV-03
 
         // Check balance again
