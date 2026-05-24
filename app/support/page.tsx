@@ -10,6 +10,8 @@ import { safeLocalStorage } from '@/lib/utils';
 import { FaqTab } from './components/FaqTab';
 import { TicketsTab } from './components/TicketsTab';
 import { NewTab } from './components/NewTab';
+import { useLocale } from '@/hooks/useLocale';
+import { SUPPORT_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 type TabId = 'faq' | 'tickets' | 'new';
 type LocaleId = 'en-US' | 'es-ES';
@@ -64,6 +66,8 @@ const FAQ_ITEMS = [
 ];
 
 export default function SupportPage() {
+  const [locale] = useLocale();
+  const copy = pickLocaleCopy(SUPPORT_TRANSLATIONS, locale);
   const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabId>('faq');
   const [locale, setLocale] = useState<LocaleId>('en-US');
