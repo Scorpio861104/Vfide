@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
  * everything else (it auto-mounts via WizardMount in ClientLayout).
  */
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight, Power } from 'lucide-react';
@@ -22,7 +22,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useWizardState } from '@/components/wizard';
 import { CHAPTERS } from '@/components/wizard';
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isConnected } = useAccount();
@@ -141,5 +141,13 @@ export default function OnboardingPage() {
       </motion.div>
       <Footer />
     </>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <OnboardingPageContent />
+    </Suspense>
   );
 }
