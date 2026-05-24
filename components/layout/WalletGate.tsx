@@ -7,7 +7,7 @@
  */
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
@@ -15,8 +15,20 @@ import { Wallet } from 'lucide-react';
 
 export function WalletGate({ children }: { children: ReactNode }) {
   const { isConnected, isConnecting } = useAccount();
+  const [connectTimedOut, setConnectTimedOut] = useState(false);
 
-  if (isConnecting) {
+  // If wagmi reconnect hangs (RPC down, extension unresponsive), stop
+  // spinning after 10 s and fall through to the connect prompt.
+  useEffect(() => {
+    if (!isConnecting) {
+      setConnectTimedOut(false);
+      return;
+    }
+    const t = setTimeout(() => setConnectTimedOut(true), 10_000);
+    return () => clearTimeout(t);
+  }, [isConnecting]);
+
+  if (isConnecting && !connectTimedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <motion.div
