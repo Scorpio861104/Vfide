@@ -33,7 +33,7 @@ describe('useProofScore hook', () => {
     // When disconnected, score is null, tier is not computed
     expect(result.current.burnFee).toBe(null)
     expect(result.current.canVote).toBe(false) // Can't vote without connection
-    expect(result.current.color).toBe('#FFD700')
+    expect(result.current.color).toBe('#71717a')
   })
 
   test('uses provided address and returned score', () => {

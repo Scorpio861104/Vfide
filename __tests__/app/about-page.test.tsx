@@ -8,7 +8,7 @@ describe('About Page', () => {
     render(<AboutPage />);
 
     // The about page now has full real content
-    expect(screen.getByRole('heading', { name: /About/i })).toBeTruthy();
+    expect(screen.getByText(/Our Mission/i)).toBeTruthy();
     expect(screen.getByText(/serving the unbanked/i)).toBeTruthy();
   });
 
@@ -16,7 +16,7 @@ describe('About Page', () => {
     render(<AboutPage />);
     
     // Real page content includes principles or mission statement
-    expect(screen.getByText(/Financial Inclusion|Accra|Dubai|Medellín/i)).toBeTruthy();
+    expect(screen.getByText(/Financial Inclusion/i)).toBeTruthy();
   });
 
   it('shows regional focus and team context', () => {

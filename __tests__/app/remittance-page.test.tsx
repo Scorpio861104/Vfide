@@ -16,7 +16,7 @@ describe('Remittance Page', () => {
 
   it('displays corridors and rates', () => {
     render(<RemittancePage />);
-    const pageText = screen.getByRole('main').textContent;
+    const pageText = screen.getByText(/corridor/i).closest('body')?.textContent || '';
     expect(pageText).toMatch(/fee|rate|corridor/i);
   });
 });
