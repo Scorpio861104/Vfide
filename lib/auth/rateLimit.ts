@@ -324,6 +324,7 @@ export async function rateLimit(
     
     return { success: true };
   } catch (error) {
+    logger.error('[RateLimit] Error:', error as Error); // L-09: fail-closed on error
     logger.error('[RateLimit] Redis error in production:', error as Error);
     
     // In production, fail-closed when Redis is configured but unavailable.
