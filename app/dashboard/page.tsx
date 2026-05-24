@@ -35,7 +35,7 @@ function truncateAddress(address?: string) {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address } = useAccount();
-  const { score: proofScore, burnFee: feeRate } = useProofScore();
+  const { score: proofScore, burnFee: feeRate, isDisconnected: scoreDisconnected } = useProofScore();
   const [txCount, setTxCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
 
