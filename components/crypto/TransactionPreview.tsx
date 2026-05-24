@@ -46,6 +46,8 @@ export function TransactionPreview({
   const handleConfirm = () => {
     if (!confirmed) {
       setConfirmed(true);
+      // Auto-reset after 5 seconds if user doesn't follow through
+      setTimeout(() => setConfirmed(false), 5000);
     } else {
       onConfirm();
     }
@@ -200,7 +202,11 @@ export function TransactionPreview({
           <button
             onClick={handleConfirm}
             disabled={!confirmed || isLoading || isEstimatingGas}
-            className="flex-1 px-4 py-2 text-sm font-medium text-white bg-cyan-500 rounded-xl hover:bg-cyan-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                confirmed 
+                  ? 'bg-green-500 hover:bg-green-400 ring-2 ring-green-400/50 shadow-lg shadow-green-500/20' 
+                  : 'bg-cyan-500 hover:bg-cyan-400'
+              }`"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
