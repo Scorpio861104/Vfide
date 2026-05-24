@@ -14,10 +14,10 @@ describe('Developer page pathways', () => {
     jest.clearAllMocks();
   });
 
-  it('renders integration center header and access links', () => {
+  it('renders developer portal header and access links', () => {
     renderDeveloperPage();
 
-    expect(screen.getByRole('heading', { name: /Integrations Center/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Developer Portal/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Access & Safety/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Open Merchant Portal/i }).getAttribute('href')).toBe('/merchant');
     expect(screen.getByRole('link', { name: /Review Security Center/i }).getAttribute('href')).toBe('/security-center');
