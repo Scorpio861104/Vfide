@@ -1,4 +1,4 @@
-import { safeGetItem } from '@/lib/storage';
+import { safeLocalStorage } from '@/lib/utils';
 
 export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA', 'fil-PH', 'hi-IN', 'id-ID', 'th-TH', 'ja-JP', 'zh-CN'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
