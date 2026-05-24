@@ -167,14 +167,14 @@ export default function Home() {
                   <Link
                     href="/marketplace"
                     className="btn-premium btn-premium-primary text-sm"
-                    aria-label={t.homeAriaShop}
+                    aria-label="Browse the marketplace"
                   >
                     <ShoppingBag size={16} aria-hidden="true" /> Shop
                   </Link>
                   <Link
                     href="/merchant/setup"
                     className="btn-premium btn-premium-primary text-sm"
-                    aria-label={t.homeAriaSell}
+                    aria-label="Set up your merchant account"
                   >
                     <Store size={16} aria-hidden="true" /> Sell
                   </Link>

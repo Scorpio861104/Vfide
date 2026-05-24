@@ -51,7 +51,7 @@ export function useLocale(): { locale: SupportedLocale } {
 export type TranslationMap<T> = Record<SupportedLocale, T>;
 
 // Helper functions
-export function pickLocaleCopy<T extends Record<string, unknown>>(
+export function pickLocaleCopy<T extends object>(
   map: TranslationMap<T>,
   locale: SupportedLocale
 ): T {
@@ -125,7 +125,7 @@ export const ABOUT_TRANSLATIONS: TranslationMap<AboutCopy> = {
   'th-TH': _en_about, 'ja-JP': _en_about, 'zh-CN': _en_about,
 };
 
-export interface HomeCopy { hero: string; subtitle: string; cta: string; }
+export interface HomeCopy { hero: string; subtitle: string; cta: string; homeAriaShop: string; homeAriaSell: string; }
 const _en_home: HomeCopy = { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started' };
 export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
   'en-US': _en_home, 'en-GB': _en_home, 'es-ES': _en_home, 'fr-FR': _en_home, 'de-DE': _en_home,
@@ -133,8 +133,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
   'th-TH': _en_home, 'ja-JP': _en_home, 'zh-CN': _en_home,
 };
 
-export interface MerchantCopy { heading: string; subtitle: string; }
-const _en_merchant: MerchantCopy = { heading: 'Merchant Hub', subtitle: 'Sell anything. Keep 100% of every payment.' };
+export interface MerchantCopy { heading: string; subtitle: string; getStarted: string; }
+const _en_merchant: MerchantCopy = { heading: 'Merchant Hub', subtitle: 'Sell anything. Keep 100% of every payment.', getStarted: 'Get started' };
 export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
   'en-US': _en_merchant, 'en-GB': _en_merchant, 'es-ES': _en_merchant, 'fr-FR': _en_merchant, 'de-DE': _en_merchant,
   'ar-SA': _en_merchant, 'fil-PH': _en_merchant, 'hi-IN': _en_merchant, 'id-ID': _en_merchant,
@@ -171,4 +171,12 @@ export const REMITTANCE_TRANSLATIONS: TranslationMap<RemittanceCopy> = {
   'en-US': _en_remittance, 'en-GB': _en_remittance, 'es-ES': _en_remittance, 'fr-FR': _en_remittance, 'de-DE': _en_remittance,
   'ar-SA': _en_remittance, 'fil-PH': _en_remittance, 'hi-IN': _en_remittance, 'id-ID': _en_remittance,
   'th-TH': _en_remittance, 'ja-JP': _en_remittance, 'zh-CN': _en_remittance,
+};
+
+export interface SecurityCenterCopy { heading: string; subtitle: string; }
+const _en_security: SecurityCenterCopy = { heading: 'Security Center', subtitle: 'Monitor sessions, signing keys, and protocol activity.' };
+export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<SecurityCenterCopy> = {
+  'en-US': _en_security, 'en-GB': _en_security, 'es-ES': _en_security, 'fr-FR': _en_security, 'de-DE': _en_security,
+  'ar-SA': _en_security, 'fil-PH': _en_security, 'hi-IN': _en_security, 'id-ID': _en_security,
+  'th-TH': _en_security, 'ja-JP': _en_security, 'zh-CN': _en_security,
 };

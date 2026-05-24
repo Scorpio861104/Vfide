@@ -177,7 +177,7 @@ export default function MeHubPage() {
               {isLoading ? (
                 <div className="h-14 w-14 animate-pulse rounded-full bg-white/5" />
               ) : (
-                <ProofScoreRing score={score} size="md" />
+                <ProofScoreRing score={score ?? 0} size="md" />
               )}
               <div>
                 <div className="text-[11px] uppercase tracking-widest text-gray-500">ProofScore</div>
