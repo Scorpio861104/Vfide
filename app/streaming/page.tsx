@@ -4,8 +4,12 @@ import { Footer } from '@/components/layout/Footer';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Clock } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { STUB_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 export default function Page() {
+  const [locale] = useLocale();
+  const copy = pickLocaleCopy(STUB_TRANSLATIONS, locale);
   return (
     <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
