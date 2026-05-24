@@ -1,6 +1,6 @@
 import { safeLocalStorage } from '@/lib/utils';
 
-export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE'] as const;
+export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
 
 export const DEFAULT_LOCALE: SupportedLocale = 'en-US';
@@ -11,6 +11,7 @@ export const LOCALE_OPTIONS: Array<{ value: SupportedLocale; label: string }> = 
   { value: 'es-ES', label: 'Español' },
   { value: 'fr-FR', label: 'Français' },
   { value: 'de-DE', label: 'Deutsch' },
+  { value: 'ar-SA', label: 'العربية' },
 ];
 
 const LANGUAGE_FALLBACKS: Record<string, SupportedLocale> = {
@@ -18,6 +19,7 @@ const LANGUAGE_FALLBACKS: Record<string, SupportedLocale> = {
   es: 'es-ES',
   fr: 'fr-FR',
   de: 'de-DE',
+  ar: 'ar-SA',
 };
 
 export function normalizeLocale(input?: string | null): SupportedLocale {
@@ -135,6 +137,20 @@ export const SUPPORT_TRANSLATIONS: TranslationMap<SupportCopy> = {
     newTicketDescription: 'Créer une nouvelle demande d’assistance',
     searchPlaceholder: 'Rechercher des réponses...',
   },
+  'ar-SA': {
+    badge: 'دعم على مدار الساعة',
+    heading: 'مركز المساعدة والدعم',
+    description: 'ابحث عن إجابات للأسئلة الشائعة أو افتح تذكرة دعم. فريقنا هنا لمساعدتك في أي مشكلة.',
+    languageLabel: 'اللغة',
+    faqTitle: 'الأسئلة الشائعة والأدلة',
+    faqDescription: 'تصفح الأسئلة الشائعة والدروس التعليمية',
+    ticketsTitle: 'تذاكري',
+    ticketsDescription: 'عرض وإدارة طلبات الدعم',
+    activeSuffix: 'نشطة',
+    newTicketTitle: 'تذكرة جديدة',
+    newTicketDescription: 'إنشاء طلب دعم جديد',
+    searchPlaceholder: 'ابحث عن إجابات...',
+  },
   'de-DE': {
     badge: '24/7-Support',
     heading: 'Hilfe- und Supportcenter',
@@ -228,6 +244,24 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     launchApp: 'Ouvrir l’app',
     docsCta: 'Lire la documentation',
   },
+  'ar-SA': {
+    languageLabel: 'اللغة',
+    liveBadge: 'متاح الآن على Base',
+    heroTitle: 'استقبل العملات الرقمية.',
+    heroAccent: 'بدون رسوم.',
+    heroDescription: 'أول بروتوكول دفع لا يتحمل فيه التجار أي رسوم معالجة. تحمل التحويلات رسوم سلوكية (0.25–5٪) تكافئ الثقة. امتلك أموالك وابنِ ProofScore لفتح رسوم أقل.',
+    valueProps: ['ادفع', 'ابنِ الثقة', 'افتح المكافآت'],
+    primaryCta: 'ابدأ الآن',
+    secondaryCta: 'استكشاف القروض السريعة P2P',
+    contractsBadge: '14 عقداً منشوراً',
+    auditBadge: 'مدقق ومفتوح المصدر',
+    settlementBadge: 'تسوية فورية',
+    chainBadge: 'مبني لـ Base • Polygon • zkSync',
+    finalTitle: 'هل أنت مستعد لامتلاك مدفوعاتك؟',
+    finalDescription: 'انضم إلى آلاف التجار والمستخدمين الذين يبنون الثقة على VFIDE.',
+    launchApp: 'تشغيل التطبيق',
+    docsCta: 'اقرأ التوثيق',
+  },
   'de-DE': {
     languageLabel: 'Language',
     liveBadge: 'Jetzt live auf Base',
@@ -268,6 +302,7 @@ export const NAV_TRANSLATIONS: TranslationMap<NavCopy> = {
   'es-ES': { home: 'Inicio', pay: 'Pagar', merchant: 'Tienda', social: 'Social', more: 'Más', close: 'Cerrar', search: 'Buscar en cualquier lugar…', openHub: 'Abrir hub completo' },
   'fr-FR': { home: 'Accueil', pay: 'Payer', merchant: 'Boutique', social: 'Social', more: 'Plus', close: 'Fermer', search: 'Trouver n'importe où…', openHub: 'Ouvrir le hub complet' },
   'de-DE': { home: 'Start', pay: 'Bezahlen', merchant: 'Shop', social: 'Sozial', more: 'Mehr', close: 'Schließen', search: 'Überall suchen…', openHub: 'Vollständiges Hub öffnen' },
+  'ar-SA': { home: 'الرئيسية', pay: 'الدفع', merchant: 'المتجر', social: 'اجتماعي', more: 'المزيد', close: 'إغلاق', search: 'ابحث في أي مكان…', openHub: 'فتح لوحة التحكم الكاملة' },
 };
 
 // ─── PAY PAGE ────────────────────────────────────────────────────────────────
@@ -353,6 +388,25 @@ export const PAY_TRANSLATIONS: TranslationMap<PayCopy> = {
     successTitle: 'Paiement envoyé',
     successDescription: 'Votre paiement a été soumis au réseau.',
   },
+  'ar-SA': {
+    title: 'إرسال دفعة',
+    subtitle: 'أرسل VFIDE إلى أي عنوان محفظة أو اسم ENS',
+    recipientLabel: 'المستلم',
+    recipientPlaceholder: '0x… أو name.eth',
+    amountLabel: 'المبلغ',
+    amountPlaceholder: '0.00',
+    noteLabel: 'ملاحظة (اختياري)',
+    notePlaceholder: 'ما الغرض من هذه الدفعة؟',
+    submitButton: 'مراجعة الدفعة',
+    connectWallet: 'اربط محفظتك للإرسال',
+    preview: 'معاينة الدفعة',
+    feeLabel: 'رسوم البروتوكول',
+    totalLabel: 'الإجمالي',
+    confirmButton: 'تأكيد وإرسال',
+    cancelButton: 'إلغاء',
+    successTitle: 'تم إرسال الدفعة',
+    successDescription: 'تم إرسال دفعتك إلى الشبكة.',
+  },
   'de-DE': {
     title: 'Zahlung senden',
     subtitle: 'Senden Sie VFIDE an eine beliebige Wallet-Adresse oder einen ENS-Namen',
@@ -428,6 +482,18 @@ export const PROOFSCORE_TRANSLATIONS: TranslationMap<ProofScoreCopy> = {
     improve: 'Comment s'améliorer',
     howItWorks: 'Comment fonctionne ProofScore',
     tierNames: ['Nouveau', 'Fiable', 'Établi', 'Vérifié', 'Seer'],
+  },
+  'ar-SA': {
+    title: 'ProofScore',
+    subtitle: 'سمعتك على السلسلة — مبنية على السلوك، لا على الهوية',
+    connectPrompt: 'اربط محفظتك لعرض ProofScore الخاص بك',
+    currentScore: 'النقاط الحالية',
+    tier: 'المستوى',
+    breakdown: 'تفصيل النقاط',
+    history: 'سجل النقاط',
+    improve: 'كيفية التحسين',
+    howItWorks: 'كيف يعمل ProofScore',
+    tierNames: ['جديد', 'موثوق', 'راسخ', 'معتمد', 'Seer'],
   },
   'de-DE': {
     title: 'ProofScore',
@@ -513,6 +579,22 @@ export const ONBOARDING_TRANSLATIONS: TranslationMap<OnboardingCopy> = {
     finishButton: 'Commencer',
     welcomeTitle: 'Tout est prêt !',
     welcomeSubtitle: 'Votre portefeuille est connecté. Commencez à explorer VFIDE.',
+  },
+  'ar-SA': {
+    title: 'مرحباً بك في VFIDE',
+    subtitle: 'دعنا نُعدّك في بضع خطوات',
+    step1Title: 'اربط محفظتك',
+    step1Description: 'اربط محفظة العملات الرقمية للوصول إلى جميع ميزات VFIDE. ندعم MetaMask وCoinbase Wallet والمزيد.',
+    step2Title: 'ابنِ ProofScore الخاص بك',
+    step2Description: 'يعكس ProofScore سلوكك على السلسلة. النقاط الأعلى تفتح رسوماً أقل ومزايا حصرية.',
+    step3Title: 'ابدأ التعاملات',
+    step3Description: 'أرسل واستقبل وأدر VFIDE بدون رسوم تجارية. احتفظ بملكية أموالك في كل خطوة.',
+    continueButton: 'متابعة',
+    backButton: 'رجوع',
+    skipButton: 'تخطي',
+    finishButton: 'ابدأ الآن',
+    welcomeTitle: 'كل شيء جاهز!',
+    welcomeSubtitle: 'محفظتك متصلة. ابدأ استكشاف VFIDE.',
   },
   'de-DE': {
     title: 'Willkommen bei VFIDE',
@@ -611,6 +693,24 @@ export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
     profileDescription: 'Description de l'entreprise',
     saveButton: 'Enregistrer le profil',
   },
+  'ar-SA': {
+    title: 'لوحة تحكم التاجر',
+    subtitle: 'بدون رسوم معالجة. تسوية فورية. أموالك، قواعدك.',
+    connectPrompt: 'اربط محفظتك للوصول إلى لوحة تحكم التاجر',
+    dashboardTitle: 'متجرك',
+    totalRevenue: 'إجمالي الإيرادات',
+    totalTransactions: 'المعاملات',
+    averageOrder: 'متوسط الطلب',
+    recentTransactions: 'المعاملات الأخيرة',
+    feeSavings: 'توفير في الرسوم',
+    feeSavingsDescription: 'المبلغ الموفر مقارنة بمعالجات الدفع التقليدية',
+    setupTitle: 'أعدّ متجرك',
+    setupDescription: 'أنشئ ملف التاجر الخاص بك لبدء قبول مدفوعات VFIDE بدون رسوم.',
+    createProfile: 'إنشاء ملف تاجر',
+    profileName: 'اسم الشركة',
+    profileDescription: 'وصف الشركة',
+    saveButton: 'حفظ الملف',
+  },
   'de-DE': {
     title: 'Händler-Dashboard',
     subtitle: 'Keine Bearbeitungsgebühren. Echtzeit-Abrechnung. Ihre Mittel, Ihre Regeln.',
@@ -697,6 +797,21 @@ export const REMITTANCE_TRANSLATIONS: TranslationMap<RemittanceCopy> = {
     calculateButton: 'Calculer',
     connectToSend: 'Connectez votre portefeuille pour envoyer',
     savingsVsTraditional: 'Économies vs. virement bancaire',
+  },
+  'ar-SA': {
+    title: 'تحويل الأموال',
+    subtitle: 'أرسل الأموال عبر الحدود — فوري، منخفض التكلفة، بدون بنك',
+    sendAmount: 'ترسل',
+    receiveAmount: 'يستلمون',
+    from: 'من',
+    to: 'إلى',
+    rate: 'سعر الصرف',
+    fee: 'الرسوم',
+    totalCost: 'التكلفة الإجمالية',
+    compareTitle: 'مقابل الخيارات التقليدية',
+    calculateButton: 'احسب',
+    connectToSend: 'اربط محفظتك للإرسال',
+    savingsVsTraditional: 'التوفير مقابل التحويل المصرفي',
   },
   'de-DE': {
     title: 'Geldüberweisung',
@@ -785,6 +900,22 @@ export const ABOUT_TRANSLATIONS: TranslationMap<AboutCopy> = {
     proofScoreBody: 'Réputation on-chain construite par le comportement, pas par l'identité. Un comportement cohérent et honnête débloque des frais réduits, des limites plus élevées et une place dans la gouvernance.',
     teamTitle: 'Construit en public',
     teamBody: 'VFIDE est open source, audité et construit avec une transparence radicale. Chaque contrat, chaque décision, chaque compromis — documentés et on-chain.',
+  },
+  'ar-SA': {
+    title: 'عن VFIDE',
+    subtitle: 'بروتوكول مالي مبني للمستبعدين — لا للمستغَلين',
+    missionTitle: 'مهمتنا',
+    missionBody: 'وُجد VFIDE لقلب النموذج الاستخراجي للتمويل التقليدي. نبني بنية تحتية حيث يدفع التجار صفراً من رسوم المعالجة، ويكسب المستخدمون الثقة من خلال السلوك، ولا تسيطر أي جهة — بما فيها نحن — على البروتوكول إلى الأبد.',
+    feeInversionTitle: 'عكس الرسوم',
+    feeInversionBody: 'تفرض معالجات الدفع التقليدية على التجار 2–4٪ لكل معاملة. يعكس VFIDE ذلك: التجار يدفعون صفراً. بدلاً من ذلك، تحمل تحويلات الرموز رسوماً سلوكية (0.25–5٪) تكافئ الثقة وتموّل المنظومة.',
+    seerTitle: 'دستور Seer',
+    seerBody: 'وثيقة حقوق على مستوى البروتوكول لكل مستخدم. تضمن حق الاعتراض والاستئناف واسترداد الأموال والخروج من البروتوكول — دون إذن من أي سلطة.',
+    keyBurnTitle: 'حرق مفاتيح المطور',
+    keyBurnBody: 'بعد ستة أشهر من إطلاق الشبكة الرئيسية، تُتلف مفاتيح المسؤول الخاصة بالمطور نهائياً. لا ترقيات. لا احتيال. يصبح البروتوكول مستقلاً تماماً — ملكاً للمجتمع.',
+    proofScoreTitle: 'ProofScore',
+    proofScoreBody: 'سمعة على السلسلة مبنية على السلوك، لا على الهوية. يفتح السلوك المتسق والصادق رسوماً أقل وحدوداً أعلى ومقعداً في الحوكمة.',
+    teamTitle: 'مبني بشفافية',
+    teamBody: 'VFIDE مفتوح المصدر ومدقق ومبني بشفافية جذرية. كل عقد، كل قرار، كل مقايضة — موثق وعلى السلسلة.',
   },
   'de-DE': {
     title: 'Über VFIDE',
@@ -875,6 +1006,22 @@ export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<SecurityCenterCopy> = 
     threatsFound: 'Menaces détectées — action requise',
     scanButton: 'Lancer une analyse de sécurité',
   },
+  'ar-SA': {
+    title: 'مركز الأمان',
+    subtitle: 'راقب وحمِ محفظة VFIDE ونشاطك على السلسلة',
+    connectPrompt: 'اربط محفظتك للوصول إلى مركز الأمان',
+    walletHealth: 'صحة المحفظة',
+    approvals: 'الموافقات النشطة',
+    revokeAll: 'إلغاء الكل',
+    emergencyFreeze: 'التجميد الطارئ',
+    guardians: 'الحراس',
+    addGuardian: 'إضافة حارس',
+    twoFactor: 'المصادقة الثنائية',
+    activityLog: 'سجل النشاط',
+    noThreats: 'لم يتم اكتشاف أي تهديدات',
+    threatsFound: 'تم اكتشاف تهديدات — يلزم اتخاذ إجراء',
+    scanButton: 'تشغيل فحص الأمان',
+  },
   'de-DE': {
     title: 'Sicherheitscenter',
     subtitle: 'Überwachen und schützen Sie Ihre VFIDE-Wallet und On-Chain-Aktivität',
@@ -907,5 +1054,6 @@ export const STUB_TRANSLATIONS: TranslationMap<StubCopy> = {
   'en-GB': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
   'es-ES': { comingSoon: 'Próximamente', description: 'Esta función está en desarrollo activo y estará disponible en el lanzamiento de la red principal.', notifyMe: 'Notifícame', backToHome: 'Volver al inicio' },
   'fr-FR': { comingSoon: 'Bientôt disponible', description: 'Cette fonctionnalité est en cours de développement et sera disponible au lancement sur le réseau principal.', notifyMe: 'Me notifier', backToHome: 'Retour à l'accueil' },
+  'ar-SA': { comingSoon: 'قريباً', description: 'هذه الميزة قيد التطوير النشط وستكون متاحة عند إطلاق الشبكة الرئيسية.', notifyMe: 'أخبرني', backToHome: 'العودة للرئيسية' },
   'de-DE': { comingSoon: 'Demnächst verfügbar', description: 'Diese Funktion befindet sich in aktiver Entwicklung und wird beim Mainnet-Launch verfügbar sein.', notifyMe: 'Benachrichtigen', backToHome: 'Zurück zur Startseite' },
 };
