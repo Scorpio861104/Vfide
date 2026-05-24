@@ -1,24 +1,41 @@
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
+
+/* ── Suppress React DOM prop warnings from framer-motion ── */
+const originalConsoleError = console.error;
+beforeEach(() => {
+  console.error = (...args: unknown[]) => {
+    const msg = String(args[0] ?? '');
+    if (msg.includes('whileInView') || msg.includes('whileinview') ||
+        msg.includes('React does not recognize') || msg.includes('Unknown prop')) {
+      return; // suppress known framer-motion test warnings
+    }
+    originalConsoleError(...args);
+  };
+});
 
 /* ── Mocks ── */
 jest.mock('framer-motion', () => {
   const React = require('react');
-  const MOTION_PROPS = new Set([
-    'initial','animate','exit','transition','variants','whileHover','whileTap',
-    'whileFocus','whileInView','viewport','layout','layoutId','custom',
-    'onAnimationStart','onAnimationComplete','onViewportEnter','onViewportLeave',
+  const SKIP = new Set([
+    'initial','animate','exit','transition','whileHover','whileTap','whileInView',
+    'viewport','layout','layoutId','custom','onAnimationStart','onAnimationComplete',
+    'onViewportEnter','onViewportLeave',
   ]);
-  const makeMotion = (tag: string) =>
-    React.forwardRef((props: Record<string, unknown>, ref: unknown) => {
-      const safe: Record<string, unknown> = { ref };
-      for (const k of Object.keys(props)) { if (!MOTION_PROPS.has(k)) safe[k] = props[k]; }
-      return React.createElement(tag, safe);
+  const make = (tag: string) =>
+    React.forwardRef((props: Record<string,unknown>, ref: unknown) => {
+      const s: Record<string,unknown> = { ref };
+      for (const k of Object.keys(props)) { if (!SKIP.has(k)) s[k] = props[k]; }
+      return React.createElement(tag, s);
     });
-  const motion = new Proxy({} as Record<string, unknown>, {
-    get: (t, prop) => { if (typeof prop !== 'string') return undefined; if (!t[prop]) t[prop] = makeMotion(prop); return t[prop]; },
+  const motion = new Proxy({} as Record<string,unknown>, {
+    get: (t, p) => {
+      if (typeof p !== 'string') return undefined;
+      if (!t[p]) t[p] = make(p === 'custom' ? 'div' : p);
+      return t[p];
+    },
   });
-  return { motion, AnimatePresence: ({ children }: { children: React.ReactNode }) => children };
+  return { motion, AnimatePresence: ({ children }: { children: unknown }) => children };
 });
 
 jest.mock('wagmi', () => ({
@@ -30,7 +47,7 @@ jest.mock('@/hooks/useLocale', () => ({
 }));
 
 jest.mock('@/lib/i18n', () => ({
-  pickLocaleCopy: (_map: unknown, _locale: unknown) => ({}),
+  pickLocaleCopy: () => ({}),
   ABOUT_TRANSLATIONS: {},
 }));
 
@@ -39,10 +56,10 @@ jest.mock('@/components/layout/Footer', () => ({
 }));
 
 jest.mock('lucide-react', () =>
-  new Proxy({}, {
+  new Proxy({} as Record<string,unknown>, {
     get: (_t, name) => {
       const React = require('react');
-      return ({ className }: { className?: string }) =>
+      return ({ className, size }: { className?: string; size?: number }) =>
         React.createElement('span', { 'data-testid': `icon-${String(name).toLowerCase()}`, className });
     },
   })
@@ -53,13 +70,14 @@ import AboutPage from '@/app/about/page';
 describe('About Page', () => {
   it('renders the full mission page with content', () => {
     render(<AboutPage />);
-    // Page h1 contains "for everyone" — mission is financial inclusion
+    // H1 says "Money should work...for everyone."
     expect(screen.getByText(/for everyone/i)).toBeTruthy();
     expect(screen.getByText(/unbanked/i)).toBeTruthy();
   });
 
   it('displays core principles', () => {
     render(<AboutPage />);
+    // Page includes financial inclusion language
     expect(screen.getByText(/Financial Inclusion/i)).toBeTruthy();
   });
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act } from 'react';
 import type React from 'react';
 
 let mockAddress: `0x${string}` | undefined = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -212,7 +213,7 @@ describe('Support page logic pathways', () => {
 
     renderSupportPage();
 
-    await act(async () => { fireEvent.click(screen.getByRole('button', { name: /My Tickets/i })); });
+    fireEvent.click(screen.getByRole('button', { name: /My Tickets/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Stored ticket')).toBeTruthy();
@@ -274,7 +275,7 @@ describe('Support page logic pathways', () => {
       expect(screen.getAllByText('Cannot settle payment').length).toBeGreaterThan(0);
     });
 
-    jest.advanceTimersByTime(1500);
+    await act(async () => { jest.advanceTimersByTime(1500); });
 
     await waitFor(() => {
       expect(screen.getByText(/VFIDE Support/i)).toBeTruthy();
