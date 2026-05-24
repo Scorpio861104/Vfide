@@ -53,6 +53,12 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
   const [search, setSearch] = useState('');
   const searchRef = useRef<HTMLInputElement | null>(null);
 
+  // Clear search immediately on pathname change (navigation happened).
+  // This ensures re-opening the sheet after a navigation shows a fresh state.
+  useEffect(() => {
+    setSearch('');
+  }, [pathname]);
+
   // Reset search when the sheet closes. Don't reset on every render —
   // a user typing "vault" who taps a result shouldn't return to see
   // the stale query if they re-open the sheet a second later (sheet
