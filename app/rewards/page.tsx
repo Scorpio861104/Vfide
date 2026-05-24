@@ -8,32 +8,37 @@ import { Footer } from '@/components/layout/Footer'
 import { motion } from 'framer-motion'
 import { Shield, Vote, Coins, Info, CheckCircle2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-
-const WHAT_YOU_GET = [
-  {
-    icon: Vote,
-    title: 'Governance Voting Rights',
-    description: 'Participate in DAO proposals and shape the direction of the protocol.',
-    color: 'text-violet-400',
-    bg: 'bg-violet-500/10 border-violet-500/20',
-  },
-  {
-    icon: Coins,
-    title: 'Protocol Access',
-    description: 'Use VFIDE tokens to pay commerce fees, vault fees, and access premium features.',
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10 border-cyan-500/20',
-  },
-  {
-    icon: Shield,
-    title: 'Governance Duty Points',
-    description: 'Non-transferable participation tracking that reflects your protocol contribution — not profit.',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10 border-emerald-500/20',
-  },
-];
+import { useLocale } from '@/hooks/useLocale'
+import { REWARDS_TRANSLATIONS } from '@/lib/i18n'
 
 export default function RewardsPage() {
+  const { locale } = useLocale()
+  const t = REWARDS_TRANSLATIONS[locale] ?? REWARDS_TRANSLATIONS['en-US']
+
+  const WHAT_YOU_GET = [
+    {
+      icon: Vote,
+      title: t.govVotingTitle,
+      description: t.govVotingDesc,
+      color: 'text-violet-400',
+      bg: 'bg-violet-500/10 border-violet-500/20',
+    },
+    {
+      icon: Coins,
+      title: t.protocolAccessTitle,
+      description: t.protocolAccessDesc,
+      color: 'text-cyan-400',
+      bg: 'bg-cyan-500/10 border-cyan-500/20',
+    },
+    {
+      icon: Shield,
+      title: t.dutyPointsTitle,
+      description: t.dutyPointsDesc,
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10 border-emerald-500/20',
+    },
+  ]
+
   return (
     <>
       <motion.main
@@ -63,19 +68,14 @@ export default function RewardsPage() {
                   <Shield size={24} className="text-violet-400" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-black text-white tracking-tight">No Token Rewards</h1>
-                  <p className="text-zinc-500 text-sm">By design — for your protection</p>
+                  <h1 className="text-2xl font-black text-white tracking-tight">{t.heading}</h1>
+                  <p className="text-zinc-500 text-sm">{t.subheading}</p>
                 </div>
               </div>
 
-              <p className="text-zinc-300 leading-relaxed mb-6">
-                VFIDE is a governance utility token. There are no referral bonuses,
-                merchant incentives, lock bonuses, or any other profit-distribution
-                mechanisms — by design, to ensure VFIDE is not classified as a
-                security under the Howey Test.
-              </p>
+              <p className="text-zinc-300 leading-relaxed mb-6">{t.body}</p>
 
-              <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3">What You Do Get</h2>
+              <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-3">{t.whatYouGet}</h2>
               <div className="space-y-3">
                 {WHAT_YOU_GET.map((item) => (
                   <div key={item.title} className="analytics-card p-4 flex items-start gap-3">
@@ -101,13 +101,8 @@ export default function RewardsPage() {
               <div className="flex items-start gap-3">
                 <Info size={16} className="text-blue-400 shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-bold text-white text-sm mb-1">Why no rewards?</h3>
-                  <p className="text-zinc-400 text-xs leading-relaxed">
-                    Referral bonuses, merchant incentives, and yield create an expectation
-                    of profits from the efforts of others — the third and fourth prongs of
-                    the Howey Test. VFIDE deliberately omits all such mechanisms so that
-                    holding or using the token cannot be construed as an investment contract.
-                  </p>
+                  <h3 className="font-bold text-white text-sm mb-1">{t.whyNoRewardsTitle}</h3>
+                  <p className="text-zinc-400 text-xs leading-relaxed">{t.whyNoRewardsBody}</p>
                 </div>
               </div>
             </motion.div>
@@ -119,10 +114,10 @@ export default function RewardsPage() {
               className="flex gap-3"
             >
               <Link href="/governance" className="btn-premium-primary flex items-center gap-2 flex-1 justify-center">
-                Go to Governance <ArrowRight size={15} />
+                {t.govCta} <ArrowRight size={15} />
               </Link>
               <Link href="/docs" className="btn-premium-ghost flex items-center gap-2 flex-1 justify-center">
-                Read the Docs
+                {t.docsCta}
               </Link>
             </motion.div>
           </div>
