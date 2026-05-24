@@ -2,176 +2,181 @@
 
 import { Footer } from "@/components/layout/Footer";
 import { motion } from "framer-motion";
-import { Shield, Users, Zap, Heart } from "lucide-react";
+import Link from "next/link";
+import { Shield, Users, Zap, Heart, ArrowRight, Globe, Lock, Flame, Vote } from "lucide-react";
+
+const PRINCIPLES = [
+  {
+    icon: Zap,
+    color: "#FFD700",
+    title: "Zero merchant fees",
+    body: "Sellers keep 100% of every sale. Buyers pay a trust fee that shrinks as their ProofScore grows — the protocol rewards honest behaviour with cheaper transactions.",
+  },
+  {
+    icon: Lock,
+    color: "#22d3ee",
+    title: "You hold the keys",
+    body: "Non-custodial by design. Your tokens live in your CardBound Vault, controlled by your wallet. VFIDE never holds, touches, or can freeze your funds.",
+  },
+  {
+    icon: Shield,
+    color: "#00FF88",
+    title: "Guardian-assisted recovery",
+    body: "Lose access to your wallet? Guardians you trust can help rotate your vault credentials — without ever gaining custody of your funds.",
+  },
+  {
+    icon: Heart,
+    color: "#ec4899",
+    title: "The Sanctum Fund",
+    body: "20% of every buyer fee goes directly into a protocol-level charity and emergency grant pool — not to VFIDE the company, but to the community it serves.",
+  },
+  {
+    icon: Vote,
+    color: "#a78bfa",
+    title: "The Seer Constitution",
+    body: "Users have enumerated, immutable rights baked into the protocol: the right to recovery, the right to contest fraud, the right to privacy. Not a terms-of-service — an on-chain guarantee.",
+  },
+  {
+    icon: Flame,
+    color: "#f97316",
+    title: "The key burn",
+    body: "Six months after mainnet launch, the developer master key is permanently destroyed. No admin backdoor, no upgrade path — the protocol becomes truly ownerless.",
+  },
+];
+
+const REGIONS = [
+  { flag: "🇬🇭", name: "Accra", detail: "Mobile-money native. No bank account needed." },
+  { flag: "🇦🇪", name: "Dubai", detail: "Crypto-forward. Low remittance costs." },
+  { flag: "🇨🇴", name: "Medellín", detail: "Underbanked population. High USD demand." },
+  { flag: "🇳🇬", name: "Lagos", detail: "Largest economy in Africa. Unmet fintech need." },
+  { flag: "🇮🇳", name: "Mumbai", detail: "World's largest remittance recipient." },
+  { flag: "🇵🇭", name: "Manila", detail: "10M+ OFWs sending money home monthly." },
+];
 
 export default function AboutPage() {
   return (
     <>
-      
-      <main className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
-        {/* Ambient orbs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
-          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
-            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+      <main className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
+        {/* Ambient */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-40 left-1/4 w-[700px] h-[700px] rounded-full opacity-[0.06]"
+            style={{ background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)" }} />
+          <div className="absolute bottom-0 right-1/3 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+            style={{ background: "radial-gradient(circle, #a78bfa 0%, transparent 70%)" }} />
         </div>
-        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
+
         {/* Hero */}
-        <section className="relative py-20 bg-gradient-to-b from-zinc-900/50 to-transparent border-b border-white/5">
-          <div className="container mx-auto px-3 sm:px-4">
-            <motion.div
-              initial={{ opacity: 1, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center max-w-4xl mx-auto"
-            >
-              <div className="badge-live mb-6 justify-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Protocol Story
+        <section className="relative pt-20 pb-16 px-4">
+          <div className="container mx-auto max-w-4xl text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
+                <Globe size={12} /> Built for the world's 1.4 billion unbanked
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-zinc-100 mb-6 tracking-tight">
-                About VFIDE
+              <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6">
+                Money should work<br />
+                <span className="text-transparent bg-clip-text" style={{
+                  backgroundImage: "linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%)"
+                }}>for everyone.</span>
               </h1>
-              <p className="text-xl md:text-2xl text-zinc-300 leading-relaxed mb-4">
-                VFIDE is a self-custodial payments and commerce protocol on Base,
-                with zero merchant fees and a reputation system that rewards honest users.
-              </p>
-              <p className="text-lg md:text-xl text-zinc-400 leading-relaxed">
-                We built it for the people platforms forgot — sellers tired of giving up
-                3–30% to gatekeepers, and buyers who want to know who they&apos;re dealing
-                with before they pay. Trust is earned here through actions, not capital.
+              <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                VFIDE is a self-custodial payments and commerce protocol built on Base. 
+                It exists because billions of people have been failed by traditional financial systems — 
+                through extraction, exclusion, and gatekeeping.
               </p>
             </motion.div>
           </div>
         </section>
 
-        {/* Mission */}
-        <section className="py-16">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <motion.div
-              initial={{ opacity: 1, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-zinc-800 border border-zinc-700 rounded-xl p-8 mb-12"
-            >
-              <h2 className="text-3xl font-[family-name:var(--font-display)] font-bold text-cyan-400 mb-6">
-                Our Mission
-              </h2>
-              <p className="text-lg text-zinc-100 leading-relaxed mb-4">
-                VFIDE exists to create a financial system that values <strong>integrity over wealth</strong>. 
-                We believe that trust should be earned through actions, not bought with money.
-              </p>
-              <p className="text-lg text-zinc-400 leading-relaxed">
-                Our ProofScore system rewards good behavior, community participation, and honest dealings - 
-                not the size of your wallet. A user with 1 VFIDE token can have the same influence as 
-                someone with 500,000 tokens if they&apos;ve demonstrated genuine trust and contribution.
-              </p>
+        {/* The problem */}
+        <section className="py-16 px-4 border-t border-white/5">
+          <div className="container mx-auto max-w-4xl">
+            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
+              <h2 className="text-3xl font-bold mb-6">The problem we're solving</h2>
+              <div className="grid md:grid-cols-3 gap-6 text-sm">
+                {[
+                  { stat: "2.6%+", label: "Average payment processor fee", sub: "Stripe, Square, PayPal — merchants absorb it or pass it on." },
+                  { stat: "$45B", label: "Lost to remittance fees annually", sub: "Families sending money home pay 6–10% just to move their own money." },
+                  { stat: "1.4B", label: "Adults without a bank account", sub: "Excluded not by choice — by geography, documentation, or poverty." },
+                ].map((item) => (
+                  <div key={item.stat} className="glass-card-premium p-6">
+                    <div className="text-4xl font-black text-cyan-400 mb-2">{item.stat}</div>
+                    <div className="font-semibold text-white mb-1">{item.label}</div>
+                    <div className="text-zinc-400">{item.sub}</div>
+                  </div>
+                ))}
+              </div>
             </motion.div>
+          </div>
+        </section>
 
-            {/* Core Values */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-              <motion.div
-                initial={{ opacity: 1, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="bg-zinc-800 border border-zinc-700 rounded-xl p-6"
-              >
-                <div className="w-12 h-12 bg-cyan-400/20 rounded-lg flex items-center justify-center mb-4">
-                  <Shield className="w-6 h-6 text-cyan-400" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-100 mb-2">Guardian-Protected Self-Custody</h3>
-                <p className="text-zinc-400">
-                  Your funds live in your vault and your wallet remains the primary control surface.
-                  Recovery, fraud review, and guardian protections add safety rails that users should understand before transacting.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 1, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="bg-zinc-800 border border-zinc-700 rounded-xl p-6"
-              >
-                <div className="w-12 h-12 bg-emerald-400/20 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6 text-emerald-400" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-100 mb-2">Community Governed</h3>
-                <p className="text-zinc-400">
-                  Every protocol decision is made by the community through DAO governance.
-                  No central authority, no hidden agendas.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 1, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="bg-zinc-800 border border-zinc-700 rounded-xl p-6"
-              >
-                <div className="w-12 h-12 bg-amber-400/20 rounded-lg flex items-center justify-center mb-4">
-                  <Zap className="w-6 h-6 text-amber-400" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-100 mb-2">No Processor Fees</h3>
-                <p className="text-zinc-400">
-                  Merchants pay no payment processing fees like Stripe/PayPal. Network burn fees (0.25-5%) and Base gas apply.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 1, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="bg-zinc-800 border border-zinc-700 rounded-xl p-6"
-              >
-                <div className="w-12 h-12 bg-red-600/20 rounded-lg flex items-center justify-center mb-4">
-                  <Heart className="w-6 h-6 text-red-600" />
-                </div>
-                <h3 className="text-xl font-bold text-zinc-100 mb-2">For Everyone</h3>
-                <p className="text-zinc-400">
-                  No KYC, no geo-restrictions, no minimums. If you have a wallet, you&apos;re in.
-                  Financial inclusion for all.
-                </p>
-              </motion.div>
+        {/* Principles */}
+        <section className="py-16 px-4 border-t border-white/5">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-3xl font-bold mb-10">How we're different</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {PRINCIPLES.map((p, i) => {
+                const Icon = p.icon;
+                return (
+                  <motion.div
+                    key={p.title}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="glass-card-premium p-6"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-xl p-2.5 shrink-0" style={{ background: `${p.color}18`, border: `1px solid ${p.color}30` }}>
+                        <Icon size={20} style={{ color: p.color }} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white mb-1">{p.title}</h3>
+                        <p className="text-sm text-zinc-400 leading-relaxed">{p.body}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
-
-            {/* Philosophy */}
-            <motion.div
-              initial={{ opacity: 1, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-r from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-8 text-center"
-            >
-              <h2 className="text-2xl font-bold text-cyan-400 mb-4">
-                &quot;This is not a system for the rich. This is for the forgotten and the struggling.&quot;
-              </h2>
-              <p className="text-zinc-400">
-                VFIDE Core Philosophy
-              </p>
-            </motion.div>
           </div>
         </section>
 
-        {/* Open Source */}
-        <section className="py-16 bg-zinc-800">
-          <div className="container mx-auto px-4 max-w-4xl text-center">
-            <h2 className="text-3xl font-bold text-zinc-100 mb-4">Open Source & Transparent</h2>
-            <p className="text-zinc-400 mb-8">
-              All VFIDE smart contracts are open source, professionally audited, and deployed on public blockchains.
-              Verify everything yourself.
+        {/* Who we're building for */}
+        <section className="py-16 px-4 border-t border-white/5">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-3xl font-bold mb-4">Who we're building for</h2>
+            <p className="text-zinc-400 mb-10 max-w-2xl">
+              Not for the Silicon Valley engineer with five bank accounts. For the street vendor in Accra who can't get a merchant account. For the OFW in Manila sending money home. For the freelancer in Medellín who gets hit with 8% on every dollar they earn.
             </p>
-            <a
-              href="https://github.com/Scorpio861104/Vfide"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-8 py-3 bg-gradient-to-r from-cyan-400 to-blue-500 text-zinc-900 rounded-lg font-bold hover:scale-105 transition-transform"
-            >
-              View Source Code on GitHub
-            </a>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {REGIONS.map((r) => (
+                <div key={r.name} className="glass-card-premium p-4">
+                  <div className="text-3xl mb-2">{r.flag}</div>
+                  <div className="font-semibold text-white">{r.name}</div>
+                  <div className="text-xs text-zinc-400 mt-1">{r.detail}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-20 px-4 border-t border-white/5 text-center">
+          <div className="container mx-auto max-w-2xl">
+            <h2 className="text-3xl font-bold mb-4">Ready to see it in action?</h2>
+            <p className="text-zinc-400 mb-8">Testnet is live. Connect a wallet and explore the protocol with no real funds.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/testnet" className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors">
+                Try testnet <ArrowRight size={16} />
+              </Link>
+              <Link href="/docs" className="inline-flex items-center gap-2 px-6 py-3 border border-white/10 hover:border-white/20 text-white rounded-xl transition-colors">
+                Read the docs
+              </Link>
+            </div>
           </div>
         </section>
       </main>
-
       <Footer />
     </>
   );
