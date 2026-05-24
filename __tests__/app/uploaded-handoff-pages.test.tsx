@@ -134,14 +134,14 @@ beforeEach(() => {
 });
 
 describe('Uploaded handoff pages', () => {
-  it('renders the lending workspace as a coming soon page', () => {
+  it('renders the lending page with DeFi borrowing info', () => {
     jest.isolateModules(() => {
       const pageModule = require('../../app/lending/page');
       const LendingPage = pageModule.default as React.ComponentType;
       render(<LendingPage />);
 
       // The lending page is a ComingSoonPage with title "Peer-to-Peer Lending"
-      expect(screen.getByRole('heading', { name: /peer-to-peer lending/i })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: /DeFi Lending/i })).toBeTruthy();
       expect(screen.getByText(/not available in this release/i)).toBeTruthy();
       expect(screen.getByText(/coming soon/i)).toBeTruthy();
     });
