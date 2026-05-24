@@ -102,3 +102,31 @@ Most others within ±10 lines. Phase-1 pool contracts and `ProofLedger` are exac
 - **Architectural "discrepancies" that turned out to be intentional, dated, documented:** 6 (all in `PRODUCTION_SET.md`).
 
 The shipping codebase is **ahead of** the manual, not behind it.
+
+---
+
+## 9. Errata addendum — 2026-05-24 audit pass
+
+A full contract-set audit on `main` (HEAD `2c44f0e`) against the manual's reference card found one additional discrepancy not previously documented in v1.1:
+
+### `CouncilManager.sol` — file does not exist; interface still in use
+
+The manual cites `CouncilManager.sol:54, 56, 177-191` for the `COUNCIL_MIN_SCORE`, `GRACE_PERIOD`, and member-removal logic (manual p. 50, Appendix 4 p. 102). No file by that name exists anywhere in the repo.
+
+Current state:
+- The `ICouncilManager` interface remains declared in `contracts/SharedInterfaces.sol:620`, exposing `getActiveMembers()`, `isActiveMember(address)`, `getCouncilSize()`.
+- `contracts/EcosystemVault.sol:302` holds an `ICouncilManager public councilManager` and calls `councilManager.getActiveMembers()` at line 1783, inside the council-salary stablecoin distribution path.
+- `contracts/future/CouncilElection.sol:35` is the concrete contract that tracks council membership, with `minCouncilScore = 7000` (line 222) and `getCouncilMembers()` (line 714). It does **not** declare `is ICouncilManager` and uses a different function name (`getCouncilMembers` vs `getActiveMembers`).
+- `scripts/deploy-full.ts` does not call `EcosystemVault.setCouncilManager()` — the council-salary distribution path is dormant on V1 mainnet.
+
+**Recommended manual edit:** wherever the manual cites `CouncilManager.sol`, change the citation to `CouncilElection.sol` and add a one-line note: "The `ICouncilManager` interface in `SharedInterfaces.sol` is satisfied by a future-phase adapter (or by renaming `CouncilElection.getCouncilMembers` → `getActiveMembers` and declaring `is ICouncilManager` when council-salary stablecoin distribution ships in a later phase). The council-salary path is dormant on V1; `setCouncilManager` is not wired by `deploy-full.ts`."
+
+**Why this is not a V1 blocker:**
+- The `councilManager` field is set via timelocked `setCouncilManager()` (24h pending change); a deployer would only wire it when CouncilElection is ready and the adapter pattern is chosen.
+- `EcosystemVault._distributeCouncilSalary` (the only consumer of `councilManager`) is part of the Phase-3+ stablecoin distribution surface, not V1 mainnet bootstrap.
+- The manual's three commitments — no freeze, no blacklist, no seize — are unaffected.
+
+### Cross-references to PRODUCTION_SET.md and the audit report
+
+- The `contracts/CircuitBreaker.sol` (5KB) orphan stub was deleted in `chore: delete orphan top-level CircuitBreaker.sol` (2026-05-24). The canonical reference copy remains at `contracts/legacy/CircuitBreaker.sol` as documented in `PRODUCTION_SET.md`.
+- `SanctumVault` `1 days` and `90 days` literals were lifted to named constants `DISBURSEMENT_DELAY` and `PROPOSAL_EXPIRY` in `chore(sanctum): lift inlined 1-day/90-day literals` (2026-05-24). Values unchanged; matches the manual reference card exactly.
