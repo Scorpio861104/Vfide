@@ -1383,7 +1383,7 @@ export const REWARDS_TRANSLATIONS: Record<string, {
   'fr-FR': {
     heading: 'Pas de Récompenses en Token',
     subheading: 'Par conception — pour votre protection',
-    body: 'VFIDE est un jeton utilitaire de gouvernance. Il n\'y a pas de bonus de parrainage, d\'incitations pour les marchands, de bonus de verrouillage ou d\'autres mécanismes de distribution de profits — par conception, pour s\'assurer que VFIDE n\'est pas classé comme un titre financier.',
+    body: 'VFIDE est un jeton utilitaire de gouvernance. Il n'y a pas de bonus de parrainage, d'incitations pour les marchands, de bonus de verrouillage ou d'autres mécanismes de distribution de profits — par conception, pour s'assurer que VFIDE n'est pas classé comme un titre financier.',
     whatYouGet: 'Ce que vous obtenez',
     govVotingTitle: 'Droits de Vote en Gouvernance',
     govVotingDesc: 'Participez aux propositions de la DAO et façonnez la direction du protocole.',
