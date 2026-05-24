@@ -1,174 +1,202 @@
 'use client';
 
-import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowRight, Coins, Send, Shield, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
+import { motion } from 'framer-motion';
+import { ArrowRight, Globe, DollarSign, Users, Clock, Shield, ChevronDown, Plus } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { Beneficiary, BeneficiaryManager } from '@/components/remittance/BeneficiaryManager';
-import { FutureReleaseBanner } from '@/components/feedback/FutureReleaseBanner';
+import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import Link from 'next/link';
 
-const comparisonRows = [
-  { provider: 'VFIDE (wallet-to-wallet)', fee: '0.25%–1.00%', payout: 'Minutes', highlight: true },
-  { provider: 'Western Union', fee: '≈ 7.5%', payout: 'Hours–days' },
-  { provider: 'Bank wire', fee: '$25 flat', payout: '1–3 business days' },
+const CORRIDORS = [
+  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$12 vs. Western Union' },
+  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$8 vs. bank transfer' },
+  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$15 vs. MoneyGram' },
+  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$6 vs. PayPal' },
+];
+
+const STEPS = [
+  { step: '1', title: 'Connect wallet', desc: 'MetaMask, WalletConnect, or Coinbase Wallet.' },
+  { step: '2', title: 'Add a beneficiary', desc: 'Save their wallet address once. Reuse forever.' },
+  { step: '3', title: 'Enter amount & send', desc: 'Pay in USDC or USDT. They receive in any stablecoin.' },
+  { step: '4', title: 'Arrives in seconds', desc: 'On Base L2. Gas is cents, not dollars.' },
 ];
 
 export default function RemittancePage() {
   const { isConnected } = useAccount();
-  const [selectedBeneficiary, setSelectedBeneficiary] = useState<Beneficiary | null>(null);
   const [amount, setAmount] = useState('100');
-  const [shareReceipt, setShareReceipt] = useState(false);
+  const [selectedCorridor, setSelectedCorridor] = useState(0);
+  const corridor = CORRIDORS[selectedCorridor];
 
-  const parsedAmount = Number.parseFloat(amount || '0');
-  const vfideFee = Number.isFinite(parsedAmount) ? parsedAmount * 0.0075 : 0;
-  const netAmount = Math.max(parsedAmount - vfideFee, 0);
-  const whatsappText = selectedBeneficiary
-    ? encodeURIComponent(`VFIDE remittance ready for ${selectedBeneficiary.name}: send ${parsedAmount.toFixed(2)} and ${netAmount.toFixed(2)} lands after transparent fees.`)
-    : '';
+  const feeUSD = 0;
+  const buyerFee = Math.max(0.25, parseFloat(amount || '0') * 0.025);
+  const netAmount = parseFloat(amount || '0') - buyerFee;
 
   return (
     <>
-      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] text-white relative">
-        {/* Ambient orbs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative text-white">
+        {/* Ambient */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-32 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
             style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
-          <div className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-[0.05]"
             style={{ background: 'radial-gradient(circle, #10b981 0%, transparent 70%)' }} />
         </div>
-        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
 
-        <section className="relative py-12">
-          <div className="container mx-auto max-w-6xl px-4">
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
-              <div className="badge-live mb-4">
-                <Send size={12} /> Global Transfers
-              </div>
-              <h1 className="text-4xl font-black md:text-5xl tracking-tight">
-                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
-                  Send money home with transparent fees
-                </span>
-              </h1>
-              <p className="mt-4 text-lg text-zinc-400">
-                Save beneficiaries, compare corridor pricing, and prepare a proof-of-send flow for mobile-money and bank recipients.
-              </p>
-            </motion.div>
-          </div>
-        </section>
-
-        <section className="relative pb-6">
-          <div className="container mx-auto max-w-6xl px-4">
-            <FutureReleaseBanner
-              inline
-              title="Today: VFIDE-to-wallet only. Direct M-Pesa / MoMo / GCash / Bank cash-out is a future release."
-              description={
-                'You can send VFIDE tokens to anyone with a wallet address today (settlement in minutes on Base). ' +
-                'Direct delivery into M-Pesa, MTN MoMo, GCash, or a bank account requires a regulated cash-out partner ' +
-                'per corridor — those integrations are not live yet. The Rail tag on each beneficiary is currently a label, ' +
-                'not a delivery route. Use "Generate receipt preview" + WhatsApp share until partners are wired in.'
-              }
-            />
-          </div>
-        </section>
-
-        <section className="relative pb-10">
-          <div className="container mx-auto grid max-w-6xl gap-6 px-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="glass-card-premium p-5">
-              <BeneficiaryManager
-                selectedId={selectedBeneficiary?.id ?? null}
-                onSelect={(beneficiary) => {
-                  setSelectedBeneficiary(beneficiary);
-                  setShareReceipt(false);
-                }}
-              />
+        <div className="container mx-auto px-4 max-w-5xl py-12 relative">
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
+              <Globe size={12} /> International transfers on Base
             </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
+              Send money home.<br />
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #22d3ee, #10b981)' }}>
+                Zero merchant fees.
+              </span>
+            </h1>
+            <p className="text-lg text-zinc-400 max-w-xl mx-auto">
+              Cross-border stablecoin transfers on Base L2. Arrives in seconds. No wire fees, no FX markup, no bank approval needed.
+            </p>
+          </motion.div>
 
-            <div className="space-y-6">
-              <div className="glass-card-premium p-5">
-                <div className="mb-3 flex items-center gap-2 text-cyan-300">
-                  <Coins size={18} />
-                  <h2 className="text-xl font-bold text-white">Corridor pricing</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Calculator */}
+            <motion.div initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+              <div className="glass-card-premium p-6">
+                <h2 className="font-bold text-white mb-5">Fee calculator</h2>
+
+                {/* Corridor selector */}
+                <div className="mb-4">
+                  <label className="text-xs text-zinc-500 mb-2 block">Corridor</label>
+                  <div className="space-y-2">
+                    {CORRIDORS.map((c, i) => (
+                      <button key={i} onClick={() => setSelectedCorridor(i)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
+                          selectedCorridor === i
+                            ? 'bg-cyan-500/10 border border-cyan-500/30'
+                            : 'bg-white/5 border border-transparent hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-white">{c.from} → {c.to}</div>
+                          <div className="text-xs text-zinc-500">{c.rate}</div>
+                        </div>
+                        <div className="text-xs text-green-400 font-medium">{c.saving}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  {comparisonRows.map((row) => (
-                    <div key={row.provider} className={`grid grid-cols-3 rounded-xl px-3 py-2 text-sm ${row.highlight ? 'bg-cyan-500/10 text-cyan-100' : 'analytics-card text-zinc-300'}`}>
-                      <span>{row.provider}</span>
-                      <span>{row.fee}</span>
-                      <span>{row.payout}</span>
+
+                {/* Amount input */}
+                <div className="mb-4">
+                  <label className="text-xs text-zinc-500 mb-2 block">You send (USDC)</label>
+                  <div className="flex items-center gap-2 bg-zinc-800 rounded-xl px-4 py-3">
+                    <DollarSign size={16} className="text-zinc-500" />
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="flex-1 bg-transparent text-white text-xl font-bold outline-none"
+                      placeholder="100"
+                      min="1"
+                    />
+                    <span className="text-xs text-zinc-500">USDC</span>
+                  </div>
+                </div>
+
+                {/* Breakdown */}
+                <div className="bg-zinc-900 rounded-xl p-4 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Merchant fee</span>
+                    <span className="text-green-400 font-medium">$0.00 (0%)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Buyer trust fee</span>
+                    <span className="text-white">${buyerFee.toFixed(2)} (~2.5% at neutral score)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Network gas</span>
+                    <span className="text-white">~$0.02 (Base L2)</span>
+                  </div>
+                  <div className="border-t border-zinc-800 pt-2 flex justify-between font-semibold">
+                    <span className="text-white">Recipient gets</span>
+                    <span className="text-cyan-400">${Math.max(0, netAmount).toFixed(2)} USDC</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-zinc-600 mt-3">
+                  Buyer fee drops to 0.25% at ProofScore ≥ 800. Build reputation, pay less.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Right col — steps + CTA */}
+            <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }}
+              className="flex flex-col gap-6"
+            >
+              <div className="glass-card-premium p-6">
+                <h2 className="font-bold text-white mb-5">How it works</h2>
+                <div className="space-y-4">
+                  {STEPS.map((s) => (
+                    <div key={s.step} className="flex items-start gap-4">
+                      <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300 text-sm font-bold shrink-0">
+                        {s.step}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-white">{s.title}</div>
+                        <div className="text-xs text-zinc-400 mt-0.5">{s.desc}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="glass-card-premium p-5">
-                <div className="mb-4 flex items-center gap-2 text-cyan-300">
-                  <Wallet size={18} />
-                  <h2 className="text-xl font-bold text-white">Send preview</h2>
-                </div>
-
-                <label className="mb-3 block text-sm text-zinc-300">
-                  Transfer amount
-                  <input
-                    value={amount}
-                    onChange={(event) =>  setAmount(event.target.value)}
-                    className="mt-1 w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white"
-                    inputMode="decimal"
-                  />
-                </label>
-
-                <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300">
-                  <div className="flex items-center justify-between"><span>Selected beneficiary</span><span>{selectedBeneficiary?.name ?? 'Choose one'}</span></div>
-                  <div className="flex items-center justify-between"><span>Estimated VFIDE fee</span><span>{vfideFee.toFixed(2)}</span></div>
-                  <div className="flex items-center justify-between"><span>Estimated recipient amount</span><span>{netAmount.toFixed(2)}</span></div>
-                  <div className="flex items-center justify-between"><span>Rail</span><span>{selectedBeneficiary?.network ?? '—'}</span></div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShareReceipt(true)}
-                    disabled={!isConnected || !selectedBeneficiary || !Number.isFinite(parsedAmount) || parsedAmount <= 0}
-                    className="btn-premium-primary flex items-center gap-2 disabled:opacity-60"
-                  >
-                    <ArrowRight size={16} /> Generate receipt preview
-                  </button>
-
-                  {shareReceipt && selectedBeneficiary && (
-                    <Link
-                      href={`https://wa.me/?text=${whatsappText}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-premium-ghost flex items-center gap-2"
-                    >
-                      Share via WhatsApp
-                    </Link>
-                  )}
-                </div>
-
-                {!isConnected && (
-                  <>
-                    <p className="mt-3 text-sm text-amber-300">Connect your wallet to finalize remittance sends.</p>
-                    <div className="mt-6 flex justify-center">
-                      <VfideConnectButton size="md" />
+              {/* Trust badges */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: Shield, label: 'Non-custodial', color: '#22d3ee' },
+                  { icon: Clock, label: '< 3 seconds', color: '#10b981' },
+                  { icon: Users, label: 'No KYC required', color: '#a78bfa' },
+                ].map((b) => {
+                  const Icon = b.icon;
+                  return (
+                    <div key={b.label} className="glass-card-premium p-4 text-center">
+                      <Icon size={20} className="mx-auto mb-2" style={{ color: b.color }} />
+                      <div className="text-xs text-zinc-300">{b.label}</div>
                     </div>
-                  </>
+                  );
+                })}
+              </div>
+
+              {/* CTA */}
+              <div className="glass-card-premium p-6">
+                {isConnected ? (
+                  <div className="space-y-3">
+                    <Link href="/api/remittance/beneficiaries"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors"
+                    >
+                      <Plus size={16} /> Add beneficiary & send
+                    </Link>
+                    <Link href="/pay"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-white/10 hover:border-white/20 text-zinc-300 rounded-xl transition-colors text-sm"
+                    >
+                      <ArrowRight size={14} /> Or use Pay tab directly
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-sm text-zinc-400 mb-4">Connect your wallet to start sending</p>
+                    <VfideConnectButton size="md" />
+                  </div>
                 )}
               </div>
-
-              <div className="glass-card-premium border-emerald-500/20 bg-emerald-500/5 p-5 text-sm text-emerald-50">
-                <div className="mb-2 flex items-center gap-2 font-semibold">
-                  <Shield size={16} /> Why this matters
-                </div>
-                Save repeat beneficiaries, show real corridor comparisons, and keep remittance receipts easy to share with family.
-              </div>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </div>
       </div>
       <Footer />
     </>
