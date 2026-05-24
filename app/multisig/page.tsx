@@ -1,33 +1,57 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
+import { Footer } from '@/components/layout/Footer';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { ArrowRight, Clock } from 'lucide-react';
 
-import { ComingSoonPage } from '@/components/feedback/ComingSoonPage';
-
-export default function MultisigPage() {
+export default function Page() {
   return (
-    <ComingSoonPage
-      title="Multi-Signature Wallet"
-      tagline="A shared wallet that requires multiple approvals before any payment goes out"
-      description={
-        'A multi-signature wallet (sometimes called a "multi-sig" or "Safe") is a shared wallet that requires several people to approve a transaction before it can run. ' +
-        'For example, a 2-of-3 multi-sig has three keyholders, and any two of them must sign before money moves. ' +
-        'Useful for treasuries, shared business accounts, DAOs, and high-value personal wallets that want defense against any single key being lost or compromised. ' +
-        'This page is reserved for that feature — it is designed and named in the navigation, but the per-user multi-sig vault is not yet shipped in this release.'
-      }
-      requirements={[
-        'Multi-sig factory contract (Safe-compatible) deployed to Base',
-        'Per-user multi-sig registry so the app can list which shared wallets a user belongs to',
-        'Proposal → confirmation → execution flow integrated with the existing payment pipeline',
-        'Recovery path that respects the M-of-N threshold (overlaps with Guardians)',
-      ]}
-      alternative={{
-        href: '/guardians',
-        label: 'Use Guardians instead — available today',
-        description:
-          'VFIDE\'s native protection against a lost or stolen wallet key is the Guardian system on your CardBoundVault. Guardians are people you choose who can collectively authorize you to rotate to a new key if your old one is compromised. It covers the same threat (single-key loss) with a different mechanism. Note: VFIDE\'s governance contract (AdminMultiSig) is a separate, protocol-level multi-sig for council actions and is unrelated to this user-facing feature.',
-      }}
-      backHref="/"
-    />
+    <>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
+
+        <div className="container mx-auto max-w-2xl px-4 py-20 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="glass-card-premium p-10 text-center"
+          >
+            <div className="text-6xl mb-6" aria-hidden="true">🔐</div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-5">
+              <Clock size={10} /> In development · Post-testnet
+            </div>
+            <h1 className="text-3xl font-black text-white mb-3">Multi-Signature Vaults</h1>
+            <p className="text-zinc-400 mb-2 text-sm font-medium">Require multiple signers before funds move.</p>
+            <p className="text-zinc-500 text-sm leading-relaxed mb-8">Multi-sig is scheduled for the post-testnet governance release. In the meantime, Guardian-assisted recovery provides a strong social recovery alternative.</p>
+
+            <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
+              <ul className="space-y-2">
+                                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Require M-of-N signatures before any vault transfer executes</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Business treasury controls with designated signatories</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Time-locked execution with Guardian override path</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/guardians"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors text-sm"
+              >
+                Set up Guardians now <ArrowRight size={14} />
+              </Link>
+              <Link href="/vault"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 hover:border-white/20 text-zinc-300 rounded-xl transition-colors text-sm"
+              >
+                Go back
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+      <Footer />
+    </>
   );
 }
