@@ -248,6 +248,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: '¿Listo para controlar tus pagos?',
     finalDescription: 'Únete a miles de comerciantes y usuarios que están construyendo confianza en VFIDE.',
     launchApp: 'Abrir app',
+    homeAriaShop: 'Comprar en VFIDE — explorar el mercado',
+    homeAriaSell: 'Vender en VFIDE — configurar una tienda',
     docsCta: 'Leer documentación',
   },
   'fr-FR': {
@@ -266,6 +268,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: 'Prêt à maîtriser vos paiements ?',
     finalDescription: 'Rejoignez des milliers de marchands et d’utilisateurs qui renforcent la confiance sur VFIDE.',
     launchApp: 'Ouvrir l’app',
+    homeAriaShop: 'Acheter sur VFIDE — parcourir le marché',
+    homeAriaSell: 'Vendre sur VFIDE — créer une boutique',
     docsCta: 'Lire la documentation',
   },
   'fil-PH': {
@@ -284,6 +288,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: 'Handa ka na bang Pagmamay-ari ang iyong Bayad?',
     finalDescription: 'Sumali sa libu-libong merchant at user na nagtatayo ng tiwala sa VFIDE.',
     launchApp: 'Ilunsad ang App',
+    homeAriaShop: 'Mamili sa VFIDE — i-browse ang marketplace',
+    homeAriaSell: 'Magbenta sa VFIDE — mag-set up ng tindahan',
     docsCta: 'Basahin ang Dokumentasyon',
   },
   'hi-IN': {
@@ -302,6 +308,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: 'अपने भुगतान का स्वामित्व लेने के लिए तैयार हैं?',
     finalDescription: 'हजारों व्यापारियों और उपयोगकर्ताओं से जुड़ें जो VFIDE पर विश्वास बना रहे हैं।',
     launchApp: 'ऐप लॉन्च करें',
+    homeAriaShop: 'VFIDE पर खरीदें — मार्केटप्लेस ब्राउज़ करें',
+    homeAriaSell: 'VFIDE पर बेचें — दुकान सेट अप करें',
     docsCta: 'दस्तावेज़ पढ़ें',
   },
   'id-ID': {
@@ -320,6 +328,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: 'Siap Memiliki Pembayaran Anda?',
     finalDescription: 'Bergabunglah dengan ribuan merchant dan pengguna yang membangun kepercayaan di VFIDE.',
     launchApp: 'Luncurkan Aplikasi',
+    homeAriaShop: 'Belanja di VFIDE — jelajahi marketplace',
+    homeAriaSell: 'Jual di VFIDE — siapkan toko',
     docsCta: 'Baca Dokumentasi',
   },
   'th-TH': {
@@ -338,6 +348,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: 'พร้อมเป็นเจ้าของการชำระเงินของคุณแล้วหรือยัง?',
     finalDescription: 'เข้าร่วมกับผู้ค้าและผู้ใช้หลายพันรายที่สร้างความไว้วางใจบน VFIDE',
     launchApp: 'เปิดแอป',
+    homeAriaShop: 'ช้อปบน VFIDE — เรียกดูมาร์เก็ตเพลส',
+    homeAriaSell: 'ขายบน VFIDE — ตั้งค่าร้านค้า',
     docsCta: 'อ่านเอกสาร',
   },
   'ja-JP': {
@@ -356,6 +368,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: '自分の決済を所有する準備はできていますか？',
     finalDescription: 'VFIDEで信頼を築いている何千もの加盟店とユーザーに参加しましょう。',
     launchApp: 'アプリを起動',
+    homeAriaShop: 'VFIDEで買い物 — マーケットプレイスを見る',
+    homeAriaSell: 'VFIDEで販売 — ショップを設定',
     docsCta: 'ドキュメントを読む',
   },
   'zh-CN': {
@@ -374,6 +388,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: '准备好拥有您的支付了吗？',
     finalDescription: '加入数千名在 VFIDE 上建立信任的商家和用户。',
     launchApp: '启动应用',
+    homeAriaShop: '在 VFIDE 购物 — 浏览市场',
+    homeAriaSell: '在 VFIDE 出售 — 设置商店',
     docsCta: '阅读文档',
   },
   'ar-SA': {
@@ -392,6 +408,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: 'هل أنت مستعد لامتلاك مدفوعاتك؟',
     finalDescription: 'انضم إلى آلاف التجار والمستخدمين الذين يبنون الثقة على VFIDE.',
     launchApp: 'تشغيل التطبيق',
+    homeAriaShop: 'تسوق على VFIDE — تصفح السوق',
+    homeAriaSell: 'بيع على VFIDE — إعداد متجر',
     docsCta: 'اقرأ التوثيق',
   },
   'de-DE': {
@@ -410,6 +428,8 @@ export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
     finalTitle: 'Bereit, Ihre Zahlungen selbst zu steuern?',
     finalDescription: 'Schließen Sie sich Tausenden von Händlern und Nutzern an, die Vertrauen auf VFIDE aufbauen.',
     launchApp: 'App starten',
+    homeAriaShop: 'Bei VFIDE einkaufen — Marktplatz erkunden',
+    homeAriaSell: 'Bei VFIDE verkaufen — Shop einrichten',
     docsCta: 'Dokumentation lesen',
   },
   'fil-PH': { },  // English fallback
