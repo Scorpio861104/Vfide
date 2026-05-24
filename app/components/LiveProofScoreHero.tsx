@@ -51,6 +51,13 @@ interface Tier {
   hex: string;
 }
 
+/**
+ * NOTE ON SCALE: The hero uses the internal on-chain 0–10,000 scale
+ * (matching what useProofScore returns from Seer.getScore()).
+ * The /proofscore page displays the same score in a 0–999 display format
+ * (dividing by 10). The tier boundaries here are ×10 of those shown there.
+ * Both are correct — they just use different display scales.
+ */
 const TIERS: Tier[] = [
   { min: 0,     max: 3500,  label: 'Risky',      tone: 'rose',     hex: '#fb7185' },
   { min: 3500,  max: 5000,  label: 'Low Trust',  tone: 'orange',   hex: '#fb923c' },
