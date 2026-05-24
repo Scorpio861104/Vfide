@@ -34,6 +34,8 @@ import { HubSection, type HubLink } from '@/components/navigation/HubGrid';
 import { MerchantDashboard } from '@/components/merchant/MerchantDashboard';
 import { PaymentInterface } from '@/components/merchant/PaymentInterface';
 import { PaymentQR } from '@/components/merchant/PaymentQR';
+import { useLocale } from '@/hooks/useLocale';
+import { MERCHANT_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 const SALES_MODULES: HubLink[] = [
   { href: '/merchant/inventory',      icon: Package,     label: 'Inventory',      description: 'Products, stock levels, low-stock alerts.' },
@@ -83,6 +85,8 @@ const processors = [
 ];
 
 export default function MerchantPage() {
+  const [locale] = useLocale();
+  const copy = pickLocaleCopy(MERCHANT_TRANSLATIONS, locale); // merchant page i18n
   const { address, isConnected } = useAccount();
 
   return (
