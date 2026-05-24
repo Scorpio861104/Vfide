@@ -138,7 +138,7 @@ export function getBrowserLocale(): SupportedLocale {
 export function getHtmlLang(locale?: SupportedLocale | undefined): string {
   // Get locale from storage directly (can't use useLocale hook in non-hook context)
   try {
-    const stored = safeGetItem('locale');
+    const stored = safeLocalStorage.getItem('locale');
     if (stored) return stored.split('-')[0];
   } catch { /* ignore */ }
   return 'en';
