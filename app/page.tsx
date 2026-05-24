@@ -15,6 +15,8 @@ import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
 import { Step } from './components/Step';
 import { PlainEnglishCard } from './components/PlainEnglishCard';
+import { useLocale } from '@/hooks/useLocale';
+import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 /* ── Marquee items ─────────────────────────────────────────── */
 const PROTOCOL_METRICS = [
@@ -82,6 +84,8 @@ const TRUST_POINTS = [
 ];
 
 export default function Home() {
+  const [locale] = useLocale();
+  const copy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
   const { state } = useOnboarding();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
