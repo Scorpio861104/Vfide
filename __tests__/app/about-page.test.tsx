@@ -7,8 +7,9 @@ beforeEach(() => {
   console.error = (...args: unknown[]) => {
     const msg = String(args[0] ?? '');
     if (msg.includes('whileInView') || msg.includes('whileinview') ||
-        msg.includes('React does not recognize') || msg.includes('Unknown prop')) {
-      return; // suppress known framer-motion test warnings
+        msg.includes('React does not recognize') || msg.includes('Unknown prop') ||
+        msg.includes('animate') || msg.includes('initial')) {
+      return;
     }
     originalConsoleError(...args);
   };
@@ -20,7 +21,7 @@ jest.mock('framer-motion', () => {
   const SKIP = new Set([
     'initial','animate','exit','transition','whileHover','whileTap','whileInView',
     'viewport','layout','layoutId','custom','onAnimationStart','onAnimationComplete',
-    'onViewportEnter','onViewportLeave',
+    'onViewportEnter','onViewportLeave','drag','dragConstraints',
   ]);
   const make = (tag: string) =>
     React.forwardRef((props: Record<string,unknown>, ref: unknown) => {
@@ -59,7 +60,7 @@ jest.mock('lucide-react', () =>
   new Proxy({} as Record<string,unknown>, {
     get: (_t, name) => {
       const React = require('react');
-      return ({ className, size }: { className?: string; size?: number }) =>
+      return ({ className }: { className?: string }) =>
         React.createElement('span', { 'data-testid': `icon-${String(name).toLowerCase()}`, className });
     },
   })
@@ -70,20 +71,25 @@ import AboutPage from '@/app/about/page';
 describe('About Page', () => {
   it('renders the full mission page with content', () => {
     render(<AboutPage />);
-    // H1 says "Money should work...for everyone."
+    // Hero h1: "Money should work...for everyone."
     expect(screen.getByText(/for everyone/i)).toBeTruthy();
     expect(screen.getByText(/unbanked/i)).toBeTruthy();
   });
 
   it('displays core principles', () => {
     render(<AboutPage />);
-    // Page includes financial inclusion language
-    expect(screen.getByText(/Financial Inclusion/i)).toBeTruthy();
+    // Real principle titles from the page
+    expect(screen.getByText(/Zero merchant fees/i)).toBeTruthy();
+    expect(screen.getByText(/You hold the keys/i)).toBeTruthy();
+    expect(screen.getByText(/Seer Constitution/i)).toBeTruthy();
   });
 
-  it('shows regional focus and team context', () => {
+  it('shows the problem section and target audience', () => {
     render(<AboutPage />);
+    // "The problem we're solving" heading (apostrophe escaped as &apos;)
+    expect(screen.getByText(/problem we/i)).toBeTruthy();
+    expect(screen.getByText(/building for/i)).toBeTruthy();
     const pageText = document.body.textContent ?? '';
-    expect(pageText).toMatch(/unbanked|developing|financial/i);
+    expect(pageText).toMatch(/unbanked|developing|financial|fee/i);
   });
 });
