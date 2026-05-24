@@ -412,7 +412,7 @@ const config: VfideHardhatConfig = {
   paths: {
     sources: ['./contracts', './test/contracts/helpers', './test/contracts/mocks'],
     tests: {
-      mocha: ['./test/contracts', './test/security'],
+      mocha: './test/{contracts,security}',
     },
     cache: './cache',
     artifacts: './artifacts',
