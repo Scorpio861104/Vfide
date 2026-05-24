@@ -115,7 +115,7 @@ export default function MerchantPage() {
                   href="/merchant/setup"
                   className="btn-premium btn-premium-primary mt-8 inline-flex"
                 >
-                  <Store size={16} /> 'Get started' <ArrowRight size={15} />
+                  <Store size={16} /> {copy.getStarted} <ArrowRight size={15} />
                 </Link>
               )}
             </motion.div>
