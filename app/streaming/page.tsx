@@ -1,31 +1,57 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
+import { Footer } from '@/components/layout/Footer';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { ArrowRight, Clock } from 'lucide-react';
 
-import { ComingSoonPage } from '@/components/feedback/ComingSoonPage';
-
-export default function StreamingPage() {
+export default function Page() {
   return (
-    <ComingSoonPage
-      title="Money Streaming"
-      tagline="Pay continuously instead of in lump sums"
-      description={
-        'Send VFIDE to a recipient at a defined rate-per-second over a period of time. ' +
-        'The recipient can withdraw at any moment and receive only what has accrued. ' +
-        'Useful for salaries, vesting schedules, subscriptions, and continuous service payments.'
-      }
-      requirements={[
-        'Streaming contract (Superfluid-style or Sablier-fork) deployed to Base',
-        'On-chain stream registry tied to VFIDEToken transfers',
-        'Frontend wired to read live withdrawable balances per second',
-        'Cancel/pause flows that respect the recipient\'s already-vested portion',
-      ]}
-      alternative={{
-        href: '/merchant/subscriptions',
-        label: 'Subscription plans',
-        description: 'For now, charge customers on a fixed schedule (weekly / monthly / quarterly / yearly) — the closest approximation today.',
-      }}
-      backHref="/"
-    />
+    <>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
+
+        <div className="container mx-auto max-w-2xl px-4 py-20 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="glass-card-premium p-10 text-center"
+          >
+            <div className="text-6xl mb-6" aria-hidden="true">💧</div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-5">
+              <Clock size={10} /> In development · Post-testnet
+            </div>
+            <h1 className="text-3xl font-black text-white mb-3">Payment Streaming</h1>
+            <p className="text-zinc-400 mb-2 text-sm font-medium">Continuous per-second USDC flows.</p>
+            <p className="text-zinc-500 text-sm leading-relaxed mb-8">Payment streaming is designed for payroll, vesting, and creator monetisation. It ships after the core payment layer is stable on mainnet.</p>
+
+            <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
+              <ul className="space-y-2">
+                                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Real-time per-second payment streams (à la Sablier)</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Vesting streams for contributor payouts</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Cancel or top-up a stream at any time</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/payroll"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors text-sm"
+              >
+                See Payroll instead <ArrowRight size={14} />
+              </Link>
+              <Link href="/pay"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 hover:border-white/20 text-zinc-300 rounded-xl transition-colors text-sm"
+              >
+                Go back
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+      <Footer />
+    </>
   );
 }
