@@ -459,7 +459,7 @@ export const NAV_TRANSLATIONS: TranslationMap<NavCopy> = {
   'en-GB': { home: 'Home', pay: 'Pay', merchant: 'Shop', social: 'Social', more: 'More', close: 'Close', search: 'Find anywhere...', openHub: 'Open full hub' },
   'es-ES': { home: 'Inicio', pay: 'Pagar', merchant: 'Tienda', social: 'Social', more: 'Más', close: 'Cerrar', search: 'Buscar en cualquier lugar...', openHub: 'Abrir hub completo' },
   'fr-FR': { home: 'Accueil', pay: 'Payer', merchant: 'Boutique', social: 'Social', more: 'Plus', close: 'Fermer', search: 'Trouver n'importe où...', openHub: 'Ouvrir le hub complet' },
-  'de-DE': { home: 'Start', pay: 'Bezahlen', merchant: 'Shop', social: 'Sozial', more: 'Mehr', close: 'Schließen', search: 'Überall suchen...', openHub: 'Vollständiges Hub öffnen' },
+  'de-DE': {home: 'Start', pay: 'Bezahlen', merchant: 'Shop', social: 'Sozial', more: 'Mehr', close: 'Schlieen', search: 'berall suchen...', openHub: 'Vollständiges Hub öffnen'}
   'fil-PH': { home: 'Tahanan', pay: 'Bayad', merchant: 'Tindahan', social: 'Sosyal', more: 'Higit pa', close: 'Isara', search: 'Hanapin kahit saan...', openHub: 'Buksan ang buong hub' },
   'hi-IN':  {home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search...', openHub: 'Open Hub'},
   'id-ID':  { home: 'Beranda', pay: 'Bayar', merchant: 'Toko', social: 'Sosial', more: 'Lainnya', close: 'Tutup', search: 'Cari di mana saja...', openHub: 'Buka hub lengkap' },
