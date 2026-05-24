@@ -1,31 +1,57 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
+import { Footer } from '@/components/layout/Footer';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { ArrowRight, Clock } from 'lucide-react';
 
-import { ComingSoonPage } from '@/components/feedback/ComingSoonPage';
-
-export default function TimeLocksPage() {
+export default function Page() {
   return (
-    <ComingSoonPage
-      title="Transaction Time Locks"
-      tagline="Configurable delays for high-value outgoing payments"
-      description={
-        'Set tiered delay windows on outgoing transactions based on amount: tiny payments execute immediately, ' +
-        'medium payments wait an hour, large payments wait a day. Gives you a window to cancel a transaction ' +
-        'if your key is compromised — the attacker has to wait before draining your wallet, and you can intervene.'
-      }
-      requirements={[
-        'User-configurable timelock contract per wallet (or integration with CardBoundVault\'s existing withdrawal queue)',
-        'Frontend cancel-pending-transaction UI with proper authorization checks',
-        'Notification path so the user is alerted to a pending high-value outflow they didn\'t expect',
-        'Integration with the existing 48-hour governance timelocks (consistent UX patterns)',
-      ]}
-      alternative={{
-        href: '/vault',
-        label: 'Vault withdrawal queue',
-        description: 'CardBoundVault already implements a withdrawal queue for high-value outflows. The user-configurable wallet-level timelock is the missing piece.',
-      }}
-      backHref="/"
-    />
+    <>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+        </div>
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
+
+        <div className="container mx-auto max-w-2xl px-4 py-20 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="glass-card-premium p-10 text-center"
+          >
+            <div className="text-6xl mb-6" aria-hidden="true">⏳</div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-5">
+              <Clock size={10} /> In development · Post-testnet
+            </div>
+            <h1 className="text-3xl font-black text-white mb-3">Time-Locked Transfers</h1>
+            <p className="text-zinc-400 mb-2 text-sm font-medium">Schedule payments to execute at a future time.</p>
+            <p className="text-zinc-500 text-sm leading-relaxed mb-8">Time-locks are live in the Vault safety window for pending transfers. Full scheduled-transfer UI is in the next release.</p>
+
+            <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
+              <ul className="space-y-2">
+                                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Schedule transfers to execute at a future timestamp</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>24-hour safety window: cancel any queued transfer before it executes</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Recurring payment schedules for payroll and subscriptions</li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/vault/pending-changes"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors text-sm"
+              >
+                View pending vault changes <ArrowRight size={14} />
+              </Link>
+              <Link href="/vault"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 hover:border-white/20 text-zinc-300 rounded-xl transition-colors text-sm"
+              >
+                Go back
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+      <Footer />
+    </>
   );
 }
