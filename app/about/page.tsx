@@ -51,7 +51,7 @@ const REGIONS = [
   { flag: "🇦🇪", name: "Dubai", detail: "Crypto-forward. Low remittance costs." },
   { flag: "🇨🇴", name: "Medellín", detail: "Underbanked population. High USD demand." },
   { flag: "🇳🇬", name: "Lagos", detail: "Largest economy in Africa. Unmet fintech need." },
-  { flag: "🇮🇳", name: "Mumbai", detail: "World&apos;s largest remittance recipient." },
+  { flag: "🇮🇳", name: "Mumbai", detail: "World's largest remittance recipient." },
   { flag: "🇵🇭", name: "Manila", detail: "10M+ OFWs sending money home monthly." },
 ];
 
