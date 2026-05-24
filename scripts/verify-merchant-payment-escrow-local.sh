@@ -24,20 +24,27 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for _ in $(seq 1 45); do
+# Wait until hardhat prints its ready message or the process dies (up to 90s).
+# We grep the log file rather than using curl, because curl -s returns exit 0
+# even on ECONNREFUSED, which causes a false-positive break from the wait loop.
+READY=0
+for _ in $(seq 1 90); do
   if ! kill -0 "${NODE_PID}" >/dev/null 2>&1; then
+    echo "Hardhat node exited unexpectedly. Log:" >&2
     cat "${LOG_FILE}" >&2 || true
-    echo "Hardhat node exited unexpectedly on port ${PORT}" >&2
     exit 1
   fi
-
-  if curl -s -X POST "${RPC_URL_VALUE}" \
-    -H "content-type: application/json" \
-    --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-    >/dev/null; then
+  if grep -q "Started HTTP and WebSocket JSON-RPC server" "${LOG_FILE}" 2>/dev/null; then
+    READY=1
     break
   fi
   sleep 1
 done
+
+if [[ "${READY}" -eq 0 ]]; then
+  echo "Hardhat node did not become ready within 90s. Log:" >&2
+  cat "${LOG_FILE}" >&2 || true
+  exit 1
+fi
 
 RPC_URL="${RPC_URL_VALUE}" npx tsx scripts/verify-merchant-payment-escrow-invariants.ts
