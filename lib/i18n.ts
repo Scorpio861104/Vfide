@@ -1,4 +1,10 @@
-import { safeLocalStorage } from '@/lib/utils';
+// Safe localStorage wrapper — avoids SSR crash when window is undefined
+function safeGet(key: string): string | null {
+  try { return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null; } catch { return null; }
+}
+function safeSet(key: string, val: string): void {
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(key, val); } catch { /* ignore */ }
+}
 
 export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA', 'fil-PH', 'hi-IN', 'id-ID', 'th-TH', 'ja-JP', 'zh-CN'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
@@ -20,17 +26,8 @@ export const LOCALE_OPTIONS: Array<{ value: SupportedLocale; label: string }> = 
 ];
 
 const LANGUAGE_FALLBACKS: Record<string, SupportedLocale> = {
-  en: 'en-US',
-  es: 'es-ES',
-  fr: 'fr-FR',
-  de: 'de-DE',
-  ar: 'ar-SA',
-  fil: 'fil-PH',
-  hi: 'hi-IN',
-  id: 'id-ID',
-  th: 'th-TH',
-  ja: 'ja-JP',
-  zh: 'zh-CN',
+  en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', ar: 'ar-SA',
+  fil: 'fil-PH', hi: 'hi-IN', id: 'id-ID', th: 'th-TH', ja: 'ja-JP', zh: 'zh-CN',
 };
 
 export function normalizeLocale(input?: string | null): SupportedLocale {
@@ -38,93 +35,23 @@ export function normalizeLocale(input?: string | null): SupportedLocale {
   const firstToken = input.split(',').map((part) => part.split(';')[0]?.trim()).find(Boolean);
   if (!firstToken) return DEFAULT_LOCALE;
   const sanitized = firstToken.replace('_', '-');
-  if (SUPPORTED_LOCALES.includes(sanitized as SupportedLocale)) {
-    return sanitized as SupportedLocale;
-  }
+  if (SUPPORTED_LOCALES.includes(sanitized as SupportedLocale)) return sanitized as SupportedLocale;
   const base = sanitized.split('-')[0]?.toLowerCase();
   return (base && LANGUAGE_FALLBACKS[base]) || DEFAULT_LOCALE;
 }
 
 export function useLocale(): { locale: SupportedLocale } {
-  const locale = safeLocalStorage.getItem('locale') || normalizeLocale(navigator?.language);
-  return { locale: locale as SupportedLocale };
+  const stored = safeGet('locale');
+  const locale = stored ? normalizeLocale(stored) : normalizeLocale(
+    typeof navigator !== 'undefined' ? navigator.language : undefined
+  );
+  return { locale };
 }
 
 export type TranslationMap<T> = Record<SupportedLocale, T>;
 
-// All translation types - using English text for all locales (localization pending)
-export interface SupportCopy {
-  heading: string;
-  subtitle: string;
-  tabs: { faq: string; tickets: string; new: string };
-}
-
-export const SUPPORT_TRANSLATIONS: TranslationMap<SupportCopy> = {
-  'en-US': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'en-GB': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'es-ES': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'fr-FR': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'de-DE': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'ar-SA': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'fil-PH': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'hi-IN': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'id-ID': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'th-TH': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'ja-JP': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-  'zh-CN': { heading: 'Help & Support Center', subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.', tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' } },
-};
-
-export interface NavCopy {
-  home: string;
-  pay: string;
-  merchant: string;
-  social: string;
-  more: string;
-  close: string;
-  search: string;
-  openHub: string;
-}
-
-export const NAV_TRANSLATIONS: TranslationMap<NavCopy> = {
-  'en-US': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'en-GB': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'es-ES': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'fr-FR': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'de-DE': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'ar-SA': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'fil-PH': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'hi-IN': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'id-ID': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'th-TH': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'ja-JP': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-  'zh-CN': { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' },
-};
-
-export interface StubCopy {
-  comingSoon: string;
-  description: string;
-  notifyMe: string;
-  backToHome: string;
-}
-
-export const STUB_TRANSLATIONS: TranslationMap<StubCopy> = {
-  'en-US': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'en-GB': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'es-ES': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'fr-FR': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'de-DE': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'ar-SA': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'fil-PH': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'hi-IN': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'id-ID': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'th-TH': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'ja-JP': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-  'zh-CN': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
-};
-
-
 // Helper functions
-export function pickLocaleCopy<T extends Record<string, any>>(
+export function pickLocaleCopy<T extends Record<string, unknown>>(
   map: TranslationMap<T>,
   locale: SupportedLocale
 ): T {
@@ -132,89 +59,116 @@ export function pickLocaleCopy<T extends Record<string, any>>(
 }
 
 export function getBrowserLocale(): SupportedLocale {
-  return normalizeLocale(navigator?.language);
+  return normalizeLocale(typeof navigator !== 'undefined' ? navigator.language : undefined);
 }
 
-export function getHtmlLang(locale?: SupportedLocale | undefined): string {
-  // Get locale from storage directly (can't use useLocale hook in non-hook context)
+export function getHtmlLang(_locale?: SupportedLocale): string {
   try {
-    const stored = safeLocalStorage.getItem('locale');
-    if (stored) return stored.split('-')[0];
+    const stored = safeGet('locale');
+    if (stored) return stored.split('-')[0] ?? 'en';
   } catch { /* ignore */ }
   return 'en';
 }
 
 export function persistLocale(locale: SupportedLocale): void {
-  safeLocalStorage.setItem('locale', locale);
+  safeSet('locale', locale);
+  try {
+    document.cookie = `locale=${locale};path=/;max-age=31536000`;
+  } catch { /* ignore */ }
 }
 
-export interface HomeAriaLabels {
-  homeAriaShop?: string;
-  homeAriaSell?: string;
-}
+// ─── Translation interfaces & maps ───────────────────────────────────────────
 
-export interface MerchantStartedLabel {
-  getStarted?: string;
-}
-
-export interface RewardsPageCopy {
+export interface SupportCopy {
   heading: string;
-  subheading: string;
-  body: string;
-  whatYouGet: string;
-  govVotingTitle: string;
-  govVotingDesc: string;
-  protocolAccessTitle: string;
-  protocolAccessDesc: string;
-  dutyPointsTitle: string;
-  dutyPointsDesc: string;
-  whyNoRewardsTitle: string;
-  whyNoRewardsBody: string;
-  govCta: string;
-  docsCta: string;
+  subtitle: string;
+  tabs: { faq: string; tickets: string; new: string };
 }
 
-export const HOME_ARIA_LABELS: TranslationMap<HomeAriaLabels> = {
-  'en-US': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'en-GB': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'es-ES': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'fr-FR': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'de-DE': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'ar-SA': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'fil-PH': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'hi-IN': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'id-ID': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'th-TH': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'ja-JP': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
-  'zh-CN': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+const _en_support: SupportCopy = {
+  heading: 'Help & Support Center',
+  subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.',
+  tabs: { faq: 'FAQ', tickets: 'My Tickets', new: 'New Ticket' },
+};
+export const SUPPORT_TRANSLATIONS: TranslationMap<SupportCopy> = {
+  'en-US': _en_support, 'en-GB': _en_support, 'es-ES': { heading: 'Centro de ayuda y soporte', subtitle: 'Encuentra respuestas, administra tickets y recibe ayuda directa del equipo VFIDE.', tabs: { faq: 'FAQ', tickets: 'Mis tickets', new: 'Nuevo ticket' } },
+  'fr-FR': _en_support, 'de-DE': _en_support, 'ar-SA': _en_support, 'fil-PH': _en_support,
+  'hi-IN': _en_support, 'id-ID': _en_support, 'th-TH': _en_support, 'ja-JP': _en_support, 'zh-CN': _en_support,
 };
 
-export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<any> = {
-  'en-US': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'en-GB': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'es-ES': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'fr-FR': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'de-DE': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'ar-SA': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'fil-PH': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'hi-IN': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'id-ID': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'th-TH': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'ja-JP': { title: 'Security Center', description: 'Manage your account security and devices' },
-  'zh-CN': { title: 'Security Center', description: 'Manage your account security and devices' },
+export interface NavCopy {
+  home: string; pay: string; merchant: string; social: string; more: string;
+  close: string; search: string; openHub: string;
+}
+const _en_nav: NavCopy = { home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search anywhere...', openHub: 'Open full hub' };
+export const NAV_TRANSLATIONS: TranslationMap<NavCopy> = {
+  'en-US': _en_nav, 'en-GB': _en_nav, 'es-ES': _en_nav, 'fr-FR': _en_nav, 'de-DE': _en_nav,
+  'ar-SA': _en_nav, 'fil-PH': _en_nav, 'hi-IN': _en_nav, 'id-ID': _en_nav,
+  'th-TH': _en_nav, 'ja-JP': _en_nav, 'zh-CN': _en_nav,
 };
 
-export const REWARDS_TRANSLATIONS: TranslationMap<RewardsPageCopy> = {
-  'en-US': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'en-GB': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'es-ES': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'fr-FR': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'de-DE': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'ar-SA': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'fil-PH': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'hi-IN': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'id-ID': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'th-TH': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'ja-JP': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
-  'zh-CN': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+export interface StubCopy {
+  comingSoon: string; description: string; notifyMe: string; backToHome: string;
+}
+const _en_stub: StubCopy = { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' };
+export const STUB_TRANSLATIONS: TranslationMap<StubCopy> = {
+  'en-US': _en_stub, 'en-GB': _en_stub, 'es-ES': _en_stub, 'fr-FR': _en_stub, 'de-DE': _en_stub,
+  'ar-SA': _en_stub, 'fil-PH': _en_stub, 'hi-IN': _en_stub, 'id-ID': _en_stub,
+  'th-TH': _en_stub, 'ja-JP': _en_stub, 'zh-CN': _en_stub,
+};
+
+export interface AboutCopy { heading: string; subtitle: string; mission: string; }
+const _en_about: AboutCopy = { heading: 'About VFIDE', subtitle: 'A non-custodial payment protocol built for the world\'s unbanked.', mission: 'Financial infrastructure that works for people, not against them.' };
+export const ABOUT_TRANSLATIONS: TranslationMap<AboutCopy> = {
+  'en-US': _en_about, 'en-GB': _en_about, 'es-ES': _en_about, 'fr-FR': _en_about, 'de-DE': _en_about,
+  'ar-SA': _en_about, 'fil-PH': _en_about, 'hi-IN': _en_about, 'id-ID': _en_about,
+  'th-TH': _en_about, 'ja-JP': _en_about, 'zh-CN': _en_about,
+};
+
+export interface HomeCopy { hero: string; subtitle: string; cta: string; }
+const _en_home: HomeCopy = { hero: 'Pay anyone. Zero merchant fees.', subtitle: 'The non-custodial payment protocol built for the world\'s unbanked — powered by ProofScore.', cta: 'Get started' };
+export const HOME_TRANSLATIONS: TranslationMap<HomeCopy> = {
+  'en-US': _en_home, 'en-GB': _en_home, 'es-ES': _en_home, 'fr-FR': _en_home, 'de-DE': _en_home,
+  'ar-SA': _en_home, 'fil-PH': _en_home, 'hi-IN': _en_home, 'id-ID': _en_home,
+  'th-TH': _en_home, 'ja-JP': _en_home, 'zh-CN': _en_home,
+};
+
+export interface MerchantCopy { heading: string; subtitle: string; }
+const _en_merchant: MerchantCopy = { heading: 'Merchant Hub', subtitle: 'Sell anything. Keep 100% of every payment.' };
+export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
+  'en-US': _en_merchant, 'en-GB': _en_merchant, 'es-ES': _en_merchant, 'fr-FR': _en_merchant, 'de-DE': _en_merchant,
+  'ar-SA': _en_merchant, 'fil-PH': _en_merchant, 'hi-IN': _en_merchant, 'id-ID': _en_merchant,
+  'th-TH': _en_merchant, 'ja-JP': _en_merchant, 'zh-CN': _en_merchant,
+};
+
+export interface OnboardingCopy { heading: string; subtitle: string; launch: string; reset: string; }
+const _en_onboarding: OnboardingCopy = { heading: 'Setup Wizard', subtitle: 'Get started with VFIDE in under 2 minutes.', launch: 'Open wizard', reset: 'Reset & restart' };
+export const ONBOARDING_TRANSLATIONS: TranslationMap<OnboardingCopy> = {
+  'en-US': _en_onboarding, 'en-GB': _en_onboarding, 'es-ES': _en_onboarding, 'fr-FR': _en_onboarding, 'de-DE': _en_onboarding,
+  'ar-SA': _en_onboarding, 'fil-PH': _en_onboarding, 'hi-IN': _en_onboarding, 'id-ID': _en_onboarding,
+  'th-TH': _en_onboarding, 'ja-JP': _en_onboarding, 'zh-CN': _en_onboarding,
+};
+
+export interface PayCopy { heading: string; subtitle: string; }
+const _en_pay: PayCopy = { heading: 'Send Payment', subtitle: 'Pay any wallet. Zero merchant fees.' };
+export const PAY_TRANSLATIONS: TranslationMap<PayCopy> = {
+  'en-US': _en_pay, 'en-GB': _en_pay, 'es-ES': _en_pay, 'fr-FR': _en_pay, 'de-DE': _en_pay,
+  'ar-SA': _en_pay, 'fil-PH': _en_pay, 'hi-IN': _en_pay, 'id-ID': _en_pay,
+  'th-TH': _en_pay, 'ja-JP': _en_pay, 'zh-CN': _en_pay,
+};
+
+export interface ProofscoreCopy { heading: string; subtitle: string; }
+const _en_proofscore: ProofscoreCopy = { heading: 'Your ProofScore', subtitle: 'On-chain reputation that earns you cheaper fees.' };
+export const PROOFSCORE_TRANSLATIONS: TranslationMap<ProofscoreCopy> = {
+  'en-US': _en_proofscore, 'en-GB': _en_proofscore, 'es-ES': _en_proofscore, 'fr-FR': _en_proofscore, 'de-DE': _en_proofscore,
+  'ar-SA': _en_proofscore, 'fil-PH': _en_proofscore, 'hi-IN': _en_proofscore, 'id-ID': _en_proofscore,
+  'th-TH': _en_proofscore, 'ja-JP': _en_proofscore, 'zh-CN': _en_proofscore,
+};
+
+export interface RemittanceCopy { heading: string; subtitle: string; }
+const _en_remittance: RemittanceCopy = { heading: 'Send Money Home', subtitle: 'International transfers at near-zero cost.' };
+export const REMITTANCE_TRANSLATIONS: TranslationMap<RemittanceCopy> = {
+  'en-US': _en_remittance, 'en-GB': _en_remittance, 'es-ES': _en_remittance, 'fr-FR': _en_remittance, 'de-DE': _en_remittance,
+  'ar-SA': _en_remittance, 'fil-PH': _en_remittance, 'hi-IN': _en_remittance, 'id-ID': _en_remittance,
+  'th-TH': _en_remittance, 'ja-JP': _en_remittance, 'zh-CN': _en_remittance,
 };

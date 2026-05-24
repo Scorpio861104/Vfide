@@ -15,20 +15,20 @@
 import { useCallback, useEffect, useState } from 'react';
 
 export interface ThemeTokens {
-  accent: string;        // e.g. '#06b6d4'
-  accentFg: string;      // foreground on accent bg — '#09090b' or '#ffffff'
+  accent: string;
+  accentFg: string;
   accentSecondary: string;
-  borderRadius: string;  // '0.75rem' | '0.5rem' | '1.25rem'
-  cardBg: string;        // e.g. 'rgba(255,255,255,0.03)'
-  cardBorder: string;    // e.g. 'rgba(255,255,255,0.08)'
-  fontScale: string;     // '1' | '1.05' | '0.95'
+  borderRadius: string;
+  cardBg: string;
+  cardBorder: string;
+  fontScale: string;
 }
 
 export interface ThemePreset {
   id: string;
   name: string;
   description: string;
-  swatches: string[];   // preview dots
+  swatches: string[];
   tokens: ThemeTokens;
 }
 
@@ -38,48 +38,25 @@ export const THEME_PRESETS: ThemePreset[] = [
     name: 'Default Dark',
     description: 'Balanced contrast for daily use across payments, social features, and dashboards.',
     swatches: ['#06b6d4', '#6366f1', '#e4e4e7'],
-    tokens: {
-      accent: '#06b6d4',
-      accentFg: '#09090b',
-      accentSecondary: '#6366f1',
-      borderRadius: '0.75rem',
-      cardBg: 'rgba(255,255,255,0.03)',
-      cardBorder: 'rgba(255,255,255,0.08)',
-      fontScale: '1',
-    },
+    tokens: { accent: '#06b6d4', accentFg: '#09090b', accentSecondary: '#6366f1', borderRadius: '0.75rem', cardBg: 'rgba(255,255,255,0.03)', cardBorder: 'rgba(255,255,255,0.08)', fontScale: '1' },
   },
   {
     id: 'high-contrast',
     name: 'High Contrast',
     description: 'Sharper separation between text and background for accessibility-focused browsing.',
     swatches: ['#ffffff', '#00e5ff', '#fbbf24'],
-    tokens: {
-      accent: '#00e5ff',
-      accentFg: '#000000',
-      accentSecondary: '#fbbf24',
-      borderRadius: '0.5rem',
-      cardBg: 'rgba(255,255,255,0.06)',
-      cardBorder: 'rgba(255,255,255,0.18)',
-      fontScale: '1.05',
-    },
+    tokens: { accent: '#00e5ff', accentFg: '#000000', accentSecondary: '#fbbf24', borderRadius: '0.5rem', cardBg: 'rgba(255,255,255,0.06)', cardBorder: 'rgba(255,255,255,0.18)', fontScale: '1.05' },
   },
   {
     id: 'creator-neon',
     name: 'Creator Neon',
     description: 'Brighter accent treatment for demo sessions, screenshots, and marketing previews.',
     swatches: ['#ec4899', '#a855f7', '#22d3ee'],
-    tokens: {
-      accent: '#ec4899',
-      accentFg: '#ffffff',
-      accentSecondary: '#a855f7',
-      borderRadius: '1.25rem',
-      cardBg: 'rgba(236,72,153,0.05)',
-      cardBorder: 'rgba(236,72,153,0.15)',
-      fontScale: '1',
-    },
+    tokens: { accent: '#ec4899', accentFg: '#ffffff', accentSecondary: '#a855f7', borderRadius: '1.25rem', cardBg: 'rgba(236,72,153,0.05)', cardBorder: 'rgba(236,72,153,0.15)', fontScale: '1' },
   },
 ];
 
+const DEFAULT_PRESET = THEME_PRESETS[0] as ThemePreset;
 const STORAGE_KEY = 'vfide-theme';
 
 interface PersistedTheme {
@@ -87,15 +64,20 @@ interface PersistedTheme {
   customTokens?: Partial<ThemeTokens>;
 }
 
+function findPreset(id: string): ThemePreset {
+  return THEME_PRESETS.find(p => p.id === id) ?? DEFAULT_PRESET;
+}
+
 function applyTokens(tokens: ThemeTokens) {
+  if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  root.style.setProperty('--vf-accent',            tokens.accent);
-  root.style.setProperty('--vf-accent-fg',         tokens.accentFg);
-  root.style.setProperty('--vf-accent-secondary',  tokens.accentSecondary);
-  root.style.setProperty('--vf-border-radius',     tokens.borderRadius);
-  root.style.setProperty('--vf-card-bg',           tokens.cardBg);
-  root.style.setProperty('--vf-card-border',       tokens.cardBorder);
-  root.style.setProperty('--vf-font-scale',        tokens.fontScale);
+  root.style.setProperty('--vf-accent',           tokens.accent);
+  root.style.setProperty('--vf-accent-fg',        tokens.accentFg);
+  root.style.setProperty('--vf-accent-secondary', tokens.accentSecondary);
+  root.style.setProperty('--vf-border-radius',    tokens.borderRadius);
+  root.style.setProperty('--vf-card-bg',          tokens.cardBg);
+  root.style.setProperty('--vf-card-border',      tokens.cardBorder);
+  root.style.setProperty('--vf-font-scale',       tokens.fontScale);
 }
 
 export interface UseThemeReturn {
@@ -128,7 +110,7 @@ export function useTheme(): UseThemeReturn {
 
   // Apply tokens whenever preset or custom overrides change
   useEffect(() => {
-    const preset = THEME_PRESETS.find(p => p.id === activePresetId) ?? THEME_PRESETS[0];
+    const preset = findPreset(activePresetId);
     const merged: ThemeTokens = { ...preset.tokens, ...customTokens };
     applyTokens(merged);
   }, [activePresetId, customTokens]);
@@ -152,19 +134,9 @@ export function useTheme(): UseThemeReturn {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ presetId: activePresetId, customTokens: {} }));
   }, [activePresetId]);
 
-  const activePreset: ThemePreset = THEME_PRESETS.find(p => p.id === activePresetId) ?? THEME_PRESETS[0];
+  const activePreset: ThemePreset = findPreset(activePresetId);
   const effectiveTokens: ThemeTokens = { ...activePreset.tokens, ...customTokens };
   const isDirty = Object.keys(customTokens).length > 0;
 
-  return {
-    activePresetId,
-    activePreset,
-    effectiveTokens,
-    customTokens,
-    isDirty,
-    applyPreset,
-    updateCustomToken,
-    resetToPreset,
-    presets: THEME_PRESETS,
-  };
+  return { activePresetId, activePreset, effectiveTokens, customTokens, isDirty, applyPreset, updateCustomToken, resetToPreset, presets: THEME_PRESETS };
 }

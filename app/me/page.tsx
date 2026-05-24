@@ -185,7 +185,7 @@ export default function MeHubPage() {
                   {isLoading ? (
                     <span className="font-numeric text-2xl text-gray-600">—</span>
                   ) : (
-                    <Numeric value={score} format="score" size="2xl" weight={700} className="text-white" />
+                    <Numeric value={score ?? 0} format="score" size="2xl" weight={700} className="text-white" />
                   )}
                   {!isLoading && (
                     <span className="text-sm text-cyan-300">{tierName}</span>
@@ -197,7 +197,7 @@ export default function MeHubPage() {
                     <span className="font-numeric text-gray-600">—</span>
                   ) : (
                     <Numeric
-                      value={burnFee}
+                      value={burnFee ?? 0}
                       format="percent"
                       size="xs"
                       weight={600}
@@ -223,7 +223,7 @@ export default function MeHubPage() {
           {!isLoading && (
             <div className="mt-12 glass-card-premium border-cyan-500/20 bg-cyan-500/5 p-5">
               <div className="mb-2 text-xs uppercase tracking-widest text-cyan-300">Next step</div>
-              <NextStep score={score} />
+              <NextStep score={score ?? 0} />
             </div>
           )}
         </div>

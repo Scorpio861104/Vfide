@@ -9,7 +9,7 @@ import { JetBrains_Mono, Noto_Sans, Noto_Sans_JP } from 'next/font/google';
 // CJK & Thai fonts — loaded with display:swap so Latin text renders immediately.
 // Each font is subsetted to its script only, keeping bundle size minimal.
 const notoSansJP = Noto_Sans_JP({
-  subsets: ['latin', 'japanese'],
+  subsets: ['latin'],
   weight: ['400', '500', '700'],
   display: 'swap',
   variable: '--font-ja',

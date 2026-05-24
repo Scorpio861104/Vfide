@@ -10,13 +10,11 @@ import {
 } from '@/lib/i18n';
 
 /** RTL locales — extend as new locales are added to SUPPORTED_LOCALES */
-const RTL_LOCALES = new Set<SupportedLocale>([
-  'ar-SA',
-]);
+const RTL_LOCALES = new Set<SupportedLocale>(['ar-SA']);
 
 function applyDocumentLocale(locale: SupportedLocale): void {
   if (typeof document === 'undefined') return;
-  const lang = locale.split('-')[0];
+  const lang = getHtmlLang(locale);
   const dir = RTL_LOCALES.has(locale) ? 'rtl' : 'ltr';
   document.documentElement.lang = lang;
   document.documentElement.dir = dir;
@@ -36,14 +34,14 @@ export function useLocale(): [SupportedLocale, (locale: SupportedLocale) => void
 
   // Hydrate from stored / browser locale on mount
   useEffect(() => {
-    const resolved = getBrowserLocale();
+    const resolved: SupportedLocale = getBrowserLocale();
     setLocaleState(resolved);
     applyDocumentLocale(resolved);
   }, []);
 
   const setLocale = useCallback((next: SupportedLocale) => {
-    persistLocale(next);       // → localStorage + cookie + document.cookie
-    applyDocumentLocale(next); // → <html lang dir data-locale>
+    persistLocale(next);
+    applyDocumentLocale(next);
     setLocaleState(next);
   }, []);
 

@@ -6,7 +6,6 @@ import { Footer } from '@/components/layout/Footer';
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAccount } from 'wagmi';
-import { safeLocalStorage } from '@/lib/utils';
 import { FaqTab } from './components/FaqTab';
 import { TicketsTab } from './components/TicketsTab';
 import { NewTab } from './components/NewTab';
@@ -14,7 +13,6 @@ import { useLocale } from '@/hooks/useLocale';
 import { SUPPORT_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 type TabId = 'faq' | 'tickets' | 'new';
-type LocaleId = 'en-US' | 'es-ES';
 
 type SupportMessage = {
   id: string;
@@ -70,7 +68,6 @@ export default function SupportPage() {
   const copy = pickLocaleCopy(SUPPORT_TRANSLATIONS, locale);
   const { address, isConnected } = useAccount();
   const [activeTab, setActiveTab] = useState<TabId>('faq');
-  const [locale, setLocale] = useState<LocaleId>('en-US');
   const [search, setSearch] = useState('');
   const [openQuestion, setOpenQuestion] = useState<string | null>(null);
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -78,12 +75,6 @@ export default function SupportPage() {
   const [subject, setSubject] = useState('');
   const [details, setDetails] = useState('');
 
-  useEffect(() => {
-    const storedLocale = safeLocalStorage.getItem('vfide_locale');
-    if (storedLocale === 'es-ES' || storedLocale === 'en-US') {
-      setLocale(storedLocale);
-    }
-  }, []);
 
   useEffect(() => {
     if (!address) {
@@ -95,7 +86,7 @@ export default function SupportPage() {
     let cancelled = false;
 
     try {
-      const stored = safeLocalStorage.getItem(`support_tickets_${address}`);
+      const stored = ((): string | null => { try { return typeof localStorage !== 'undefined' ? localStorage.getItem(`support_tickets_${address}`) : null; } catch { return null; } })();
       if (stored) {
         const parsed = JSON.parse(stored) as SupportTicket[];
         setTickets(parsed);
@@ -131,7 +122,7 @@ export default function SupportPage() {
 
   useEffect(() => {
     if (!address) return;
-    safeLocalStorage.setItem(`support_tickets_${address}`, JSON.stringify(tickets));
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem(`support_tickets_${address}`, JSON.stringify(tickets)); } catch { /* ignore */ }
   }, [address, tickets]);
 
   const filteredFaq = useMemo(() => {
@@ -141,12 +132,8 @@ export default function SupportPage() {
   }, [search]);
 
   const selectedTicket = tickets.find((ticket) => ticket.id === selectedTicketId) ?? tickets[0] ?? null;
-  const copy = COPY[locale];
 
-  const persistLocale = (nextLocale: LocaleId) => {
-    setLocale(nextLocale);
-    safeLocalStorage.setItem('vfide_locale', nextLocale);
-  };
+  const persistLocale = (_nextLocale: string) => { /* locale managed centrally by useLocale hook */ };
 
   const handleSubmitTicket = async () => {
     if (!subject.trim() || !details.trim()) {
@@ -280,7 +267,7 @@ export default function SupportPage() {
               <select
                 id="support-language"
                 value={locale}
-                onChange={(event) => persistLocale(event.target.value as LocaleId)}
+                onChange={(event) => persistLocale(event.target.value)}
                 className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white text-sm"
               >
                 <option value="en-US">English</option>

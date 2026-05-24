@@ -20,30 +20,19 @@ const EXPLORER_BASE = process.env.NEXT_PUBLIC_EXPLORER_URL ?? 'https://basescan.
 
 export function useOnChainToast() {
   const toastPending = useCallback((message: string) => {
-    toast({ title: message, variant: 'default' });
+    toast.info(message);
   }, []);
 
   const toastSuccess = useCallback((message: string, txHash?: string) => {
     const explorerUrl = txHash ? `${EXPLORER_BASE}/tx/${txHash}` : undefined;
-    toast({
-      title: message,
-      description: explorerUrl
-        ? `View on explorer →`
-        : undefined,
-      variant: 'success',
-      action: explorerUrl
-        ? { label: 'View', onClick: () => window.open(explorerUrl, '_blank') }
-        : undefined,
-    });
+    const detail = explorerUrl ? `${message} — View: ${explorerUrl}` : message;
+    toast.success(detail);
   }, []);
 
   const toastError = useCallback((message: string, error?: unknown) => {
     const detail = error instanceof Error ? error.message : String(error ?? '');
-    toast({
-      title: message,
-      description: detail.slice(0, 120) || undefined,
-      variant: 'destructive',
-    });
+    const full = detail ? `${message}: ${detail.slice(0, 120)}` : message;
+    toast.error(full);
   }, []);
 
   return { toastPending, toastSuccess, toastError };

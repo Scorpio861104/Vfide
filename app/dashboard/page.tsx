@@ -190,10 +190,10 @@ export default function DashboardPage() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.3 }}
             >
-              {activeTab === 'overview'  && <OverviewTab proofscore={proofScore!} feeRate={feeRate} address={address} />}
+              {activeTab === 'overview'  && <OverviewTab proofscore={proofScore ?? 0} feeRate={feeRate} address={address} />}
               {activeTab === 'badges'    && <BadgesTab address={address as `0x${string}` | undefined} />}
-              {activeTab === 'score'     && <ScoreSimulatorTab currentScore={proofScore} />}
-              {activeTab === 'fees'      && <FeeSimulatorTab currentScore={proofScore} />}
+              {activeTab === 'score'     && <ScoreSimulatorTab currentScore={proofScore ?? 0} />}
+              {activeTab === 'fees'      && <FeeSimulatorTab currentScore={proofScore ?? 0} />}
               {activeTab === 'activity'  && <RecentActivity />}
             </motion.div>
           </AnimatePresence>
