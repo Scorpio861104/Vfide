@@ -1,5 +1,31 @@
 import type { Metadata, Viewport } from 'next';
-import { JetBrains_Mono } from 'next/font/google';
+import { JetBrains_Mono, Noto_Sans_JP, Noto_Sans_SC, Noto_Sans_Thai } from 'next/font/google';
+
+// CJK & Thai fonts — loaded with display:swap so Latin text renders immediately.
+// Each font is subsetted to its script only, keeping bundle size minimal.
+const notoSansJP = Noto_Sans_JP({
+  subsets: ['latin', 'japanese'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-ja',
+  preload: false, // Only preload when locale is ja-JP
+});
+
+const notoSansSC = Noto_Sans_SC({
+  subsets: ['latin', 'chinese-simplified'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-zh',
+  preload: false,
+});
+
+const notoSansThai = Noto_Sans_Thai({
+  subsets: ['latin', 'thai'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-th',
+  preload: false,
+});
 import { headers } from 'next/headers';
 import { cookies } from 'next/headers';
 import './globals.css';
@@ -67,7 +93,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const serverLang = getHtmlLang(normalizeLocale(localeCookie));
 
   return (
-    <html lang={serverLang} suppressHydrationWarning data-csp-nonce={nonce || undefined} className={jetbrainsMono.variable}>
+    <html lang={serverLang} suppressHydrationWarning data-csp-nonce={nonce || undefined} className={`${jetbrainsMono.variable} ${notoSansJP.variable} ${notoSansSC.variable} ${notoSansThai.variable}`}>
       <body className="bg-zinc-950 text-white antialiased">
         {/* Skip-to-content: accessibility — visible on focus for keyboard users */}
         <a href="#main" className="skip-to-content">
