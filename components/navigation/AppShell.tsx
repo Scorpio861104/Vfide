@@ -11,6 +11,7 @@ import { OwnerChallengeBanner } from '@/components/security/OwnerChallengeBanner
 import { TierAurora } from '@/components/identity/TierAurora';
 import { TimeLattice } from '@/components/identity/TimeLattice';
 import { TransactionTrailLayer } from '@/components/payments/TransactionTrailLayer';
+import { Footer } from '@/components/layout/Footer';
 
 // The shared chrome (top nav, bottom tab bar on mobile, ticker, monument
 // corner) shows on every page except truly chrome-free surfaces —
@@ -65,7 +66,10 @@ export function AppShell({ children }: AppShellProps) {
       <TopNav />
       <ProtocolTicker />
       <TimeLattice />
-      <main id="main" role="main" className="pt-7 pb-20 md:pb-0 appshell-content" tabIndex={-1}>{children}</main>
+      <main id="main" role="main" className="pt-7 pb-20 md:pb-0 appshell-content" tabIndex={-1}>
+        {children}
+        <Footer />
+      </main>
       <BottomTabBar />
       <MonumentCorner />
       <RecoveryBeacon />
