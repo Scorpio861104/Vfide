@@ -1,3 +1,4 @@
+<!-- CI re-trigger: 1779599043.6223626 -->
 # VFIDE Frontend
 
 Next.js 16 frontend for the VFIDE trust-based payment protocol.
