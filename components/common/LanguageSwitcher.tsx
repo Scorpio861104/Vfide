@@ -11,6 +11,13 @@ const FLAG: Record<SupportedLocale, string> = {
   'es-ES': '🇪🇸',
   'fr-FR': '🇫🇷',
   'de-DE': '🇩🇪',
+  'ar-SA': '🇸🇦',
+  'fil-PH': '🇵🇭',
+  'hi-IN': '🇮🇳',
+  'id-ID': '🇮🇩',
+  'th-TH': '🇹🇭',
+  'ja-JP': '🇯🇵',
+  'zh-CN': '🇨🇳',
 };
 
 interface LanguageSwitcherProps {
