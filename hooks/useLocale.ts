@@ -16,7 +16,7 @@ const RTL_LOCALES = new Set<SupportedLocale>([
 
 function applyDocumentLocale(locale: SupportedLocale): void {
   if (typeof document === 'undefined') return;
-  const lang = getHtmlLang(locale);
+  const lang = locale.split('-')[0];
   const dir = RTL_LOCALES.has(locale) ? 'rtl' : 'ltr';
   document.documentElement.lang = lang;
   document.documentElement.dir = dir;
