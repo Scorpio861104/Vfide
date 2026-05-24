@@ -106,7 +106,7 @@ describe('About page logic pathways', () => {
   it('renders mission and core value content', () => {
     renderAboutPage();
 
-    expect(screen.getByRole('heading', { name: /About VFIDE/i })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /About/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Our Mission/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Guardian-Protected Self-Custody/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /Community Governed/i })).toBeTruthy();
