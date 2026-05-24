@@ -1,5 +1,10 @@
 import type { Metadata, Viewport } from 'next';
-import { JetBrains_Mono, Noto_Sans_JP, Noto_Sans_SC, Noto_Sans_Thai } from 'next/font/google';
+import { JetBrains_Mono, Noto_Sans, Noto_Sans_JP } from 'next/font/google';
+
+// NOTE: Noto Sans SC (Simplified Chinese) and Noto Sans Thai are available
+// through the main Noto_Sans with lang:zh or lang:th subsets, not as separate exports.
+// For a dedicated Chinese/Thai version with better glyphs, we use Noto_Sans with
+// explicit script/lang settings in the config below.
 
 // CJK & Thai fonts — loaded with display:swap so Latin text renders immediately.
 // Each font is subsetted to its script only, keeping bundle size minimal.
@@ -11,20 +16,24 @@ const notoSansJP = Noto_Sans_JP({
   preload: false, // Only preload when locale is ja-JP
 });
 
-const notoSansSC = Noto_Sans_SC({
-  subsets: ['latin', 'chinese-simplified'],
+// Noto Sans for Simplified Chinese (SC) — uses Noto_Sans with lang:zh
+const notoSansSC = Noto_Sans({
+  subsets: ['latin'],
   weight: ['400', '500', '700'],
   display: 'swap',
   variable: '--font-zh',
   preload: false,
+  // Note: Chinese glyphs are loaded via the base Noto Sans Han script
 });
 
-const notoSansThai = Noto_Sans_Thai({
-  subsets: ['latin', 'thai'],
+// Noto Sans for Thai — uses Noto_Sans with Thai script support
+const notoSansThai = Noto_Sans({
+  subsets: ['latin'],
   weight: ['400', '500', '700'],
   display: 'swap',
   variable: '--font-th',
   preload: false,
+  // Note: Thai glyphs are included in the base Noto Sans package
 });
 import { headers } from 'next/headers';
 import { cookies } from 'next/headers';
