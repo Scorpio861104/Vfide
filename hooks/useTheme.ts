@@ -152,7 +152,7 @@ export function useTheme(): UseThemeReturn {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ presetId: activePresetId, customTokens: {} }));
   }, [activePresetId]);
 
-  const activePreset = THEME_PRESETS.find(p => p.id === activePresetId) ?? THEME_PRESETS[0];
+  const activePreset: ThemePreset = THEME_PRESETS.find(p => p.id === activePresetId) ?? THEME_PRESETS[0];
   const effectiveTokens: ThemeTokens = { ...activePreset.tokens, ...customTokens };
   const isDirty = Object.keys(customTokens).length > 0;
 
