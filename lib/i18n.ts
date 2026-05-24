@@ -874,6 +874,7 @@ export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
     profileName: 'Nombre del negocio',
     profileDescription: 'Descripción del negocio',
     saveButton: 'Guardar perfil',
+    getStarted: 'Comenzar',
   },
   'fr-FR': {
     title: 'Tableau de bord marchand',
@@ -892,6 +893,7 @@ export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
     profileName: 'Nom de l'entreprise',
     profileDescription: 'Description de l'entreprise',
     saveButton: 'Enregistrer le profil',
+    getStarted: 'Commencer',
   },
   'fil-PH': { title: 'Dashboard ng Merchant', subtitle: 'Walang processing fee. Real-time settlement. Ang iyong pondo, ang iyong patakaran.', connectPrompt: 'I-connect ang wallet para ma-access ang merchant dashboard', dashboardTitle: 'Ang iyong Tindahan', totalRevenue: 'Kabuuang Kita', totalTransactions: 'Mga Transaksyon', averageOrder: 'Avg. Order', recentTransactions: 'Mga Kamakailang Transaksyon', feeSavings: 'Nakatipid sa Bayad', feeSavingsDescription: 'Halagang nakatipid kumpara sa tradisyonal na payment processor', setupTitle: 'I-set up ang iyong Tindahan', setupDescription: 'Gumawa ng merchant profile para magsimulang tumanggap ng VFIDE payments nang walang processing fee.', createProfile: 'Gumawa ng Merchant Profile', profileName: 'Pangalan ng Negosyo', profileDescription: 'Paglalarawan ng Negosyo', saveButton: 'I-save ang Profile' },
   'hi-IN':  { title: 'व्यापारी डैशबोर्ड', subtitle: 'शून्य प्रसंस्करण शुल्क। रियल-टाइम निपटान। आपके फंड, आपके नियम।', connectPrompt: 'व्यापारी डैशबोर्ड तक पहुँचने के लिए वॉलेट कनेक्ट करें', dashboardTitle: 'आपकी दुकान', totalRevenue: 'कुल राजस्व', totalTransactions: 'लेनदेन', averageOrder: 'औसत ऑर्डर', recentTransactions: 'हाल के लेनदेन', feeSavings: 'शुल्क बचत', feeSavingsDescription: 'पारंपरिक भुगतान प्रोसेसर की तुलना में बचाई गई राशि', setupTitle: 'अपनी दुकान सेटअप करें', setupDescription: 'शून्य शुल्क के साथ VFIDE भुगतान स्वीकार करने के लिए व्यापारी प्रोफाइल बनाएं।', createProfile: 'व्यापारी प्रोफाइल बनाएं', profileName: 'व्यवसाय का नाम', profileDescription: 'व्यवसाय का विवरण', saveButton: 'प्रोफाइल सहेजें' },
@@ -916,6 +918,7 @@ export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
     profileName: 'اسم الشركة',
     profileDescription: 'وصف الشركة',
     saveButton: 'حفظ الملف',
+    getStarted: 'ابدأ الآن',
   },
   'de-DE': {
     title: 'Händler-Dashboard',
@@ -934,6 +937,7 @@ export const MERCHANT_TRANSLATIONS: TranslationMap<MerchantCopy> = {
     profileName: 'Unternehmensname',
     profileDescription: 'Unternehmensbeschreibung',
     saveButton: 'Profil speichern',
+    getStarted: 'Loslegen',
   },
 };
 
