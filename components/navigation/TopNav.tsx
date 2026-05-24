@@ -35,6 +35,7 @@ import { NotificationBell } from '@/lib/notifications';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { MoreSheet } from './MoreSheet';
 import { ProofScoreCrystal } from '@/components/identity/ProofScoreCrystal';
+import { LanguageSwitcher } from '@/components/common/LanguageSwitcher';
 
 // T2-2: "Shop" renamed → "Marketplace" and points to /marketplace (buyer view).
 // Merchant sellers reach their portal via More → Merchant group.
@@ -183,7 +184,8 @@ export function TopNav() {
             </Link>
           )}
 
-          <VfideConnectButton size="sm" />
+          <LanguageSwitcher className="hidden sm:inline-flex" />
+              <VfideConnectButton size="sm" />
         </div>
       </nav>
 
