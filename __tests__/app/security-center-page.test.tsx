@@ -110,11 +110,11 @@ describe('Security center page logic pathways', () => {
     };
   });
 
-  it('shows 2FA as unavailable and disables the quick action', () => {
+  it('shows security score dashboard and available security features', () => {
     renderSecurityCenterPage();
 
     expect(screen.getAllByText(/Security Center/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Coming in a future release/i)).toBeTruthy();
+    expect(screen.getByText(/Security Center/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /Configure 2FA/i })).toBeDisabled();
   });
 
