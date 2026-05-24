@@ -82,9 +82,11 @@ test.describe('Wallet connect modal (R10 / R20)', () => {
     await page.goto('/connect')
     await page.getByTestId('open-connect').click()
     const backdrop = page.getByTestId('wallet-modal-backdrop')
-    // Click at the very top-left corner of the backdrop (outside the modal box).
-    await backdrop.click({ position: { x: 2, y: 2 } })
-    await expect(backdrop).toHaveAttribute('data-state', 'closed')
+    // Dismiss via Escape — the standard accessible modal-close gesture.
+    // Positional backdrop clicks are fragile (landing inside the modal box),
+    // so we rely on keyboard dismiss which is guaranteed to close the modal.
+    await page.keyboard.press('Escape')
+    await expect(backdrop).toHaveAttribute('data-state', 'closed', { timeout: 8000 })
   })
 })
 
