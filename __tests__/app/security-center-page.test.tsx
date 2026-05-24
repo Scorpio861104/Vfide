@@ -1,129 +1,42 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen } from '@testing-library/react';
-import type React from 'react';
+'use client';
 
-const mockDetectAnomalies = jest.fn();
+import { render, screen, fireEvent } from '@testing-library/react';
+import { useRouter } from 'next/navigation';
+import SecurityCenterPage from '@/app/security-center/page';
 
-let mockTwoFactorState: {
-  isEnabled: boolean;
-  method: string;
-};
+jest.mock('next/navigation');
 
-let mockBiometricState: {
-  isEnabled: boolean;
-  credentials: Array<{ id: string }>;
-};
-
-let mockLogsState: {
-  logs: Array<{ id: string; message: string; timestamp: Date }>;
-};
-
-let mockThreatState: {
-  threatLevel: 'none' | 'low' | 'medium' | 'high' | 'critical';
-  riskScore: number;
-  activeThreats: Array<{ id: string }>;
-  detectAnomalies: () => void;
-};
-
-const renderSecurityCenterPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/security-center/page');
-  const SecurityCenterPage = pageModule.default as React.ComponentType;
-  return render(<SecurityCenterPage />);
-};
-
-jest.mock('@/components/security/BiometricSetup', () => ({
-  BiometricSetup: () => <div data-testid="biometric-setup">BiometricSetup</div>,
-}));
-
-jest.mock('@/components/security/SecurityLogsDashboard', () => ({
-  SecurityLogsDashboard: () => <div data-testid="security-logs-dashboard">SecurityLogsDashboard</div>,
-}));
-
-jest.mock('@/components/security/ThreatDetectionPanel', () => ({
-  ThreatDetectionPanel: () => <div data-testid="threat-detection-panel">ThreatDetectionPanel</div>,
-}));
-
-jest.mock('@/hooks/useBiometricAuth', () => ({
-  useBiometricAuth: () => mockBiometricState,
-}));
-
-jest.mock('@/hooks/useSecurityLogs', () => ({
-  useSecurityLogs: () => mockLogsState,
-}));
-
-jest.mock('@/hooks/useThreatDetection', () => ({
-  useThreatDetection: () => mockThreatState,
-}));
-
-jest.mock('framer-motion', () => {
-  const React = require('react');
-  const __MOTION_PROPS = new Set(['initial','animate','exit','transition','variants','whileHover','whileTap','layout','layoutId','viewport','custom']);
-  const __makeMotion = (tag: string) => React.forwardRef((props: Record<string,unknown>, ref: unknown) => {
-    const sanitized: Record<string,unknown> = {};
-    for (const k of Object.keys(props || {})) { if (!__MOTION_PROPS.has(k)) sanitized[k] = props[k]; }
-    return React.createElement(tag, { ...sanitized, ref });
-  });
-  const motion = new Proxy({} as Record<string, unknown>, { get: (t, prop) => { if (typeof prop !== 'string') return undefined; if (!t[prop]) t[prop] = __makeMotion(prop); return t[prop]; } });
-  return { motion, AnimatePresence: ({ children }: { children: React.ReactNode }) => children };
-});
-
-jest.mock('lucide-react', () => {
-  const React = require('react');
-  return new Proxy({} as Record<string, unknown>, {
-    get: (_t, prop) => {
-      if (prop === '__esModule') return true;
-      if (typeof prop === 'symbol') return undefined;
-      const Icon = ({ className }: { className?: string }) => React.createElement('span', { 'data-testid': `icon-${String(prop)}`, className });
-      Icon.displayName = `LucideMock(${String(prop)})`;
-      return Icon;
-    },
-  });
-});
-
-describe.skip('Security center page logic pathways — replaced with real security dashboard', () => {
+describe('Security Center Page', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-
-    mockTwoFactorState = {
-      isEnabled: false,
-      method: 'totp',
-    };
-    mockBiometricState = {
-      isEnabled: false,
-      credentials: [],
-    };
-    mockLogsState = {
-      logs: [
-        {
-          id: '1',
-          message: 'Successful login',
-          timestamp: new Date('2026-01-01T00:00:00.000Z'),
-        },
-      ],
-    };
-    mockThreatState = {
-      threatLevel: 'medium',
-      riskScore: 45,
-      activeThreats: [{ id: 'threat-1' }],
-      detectAnomalies: mockDetectAnomalies,
-    };
+    (useRouter as jest.Mock).mockReturnValue({
+      push: jest.fn(),
+      pathname: '/security-center',
+    });
   });
 
-  it('shows security score dashboard and available security features', () => {
-    renderSecurityCenterPage();
+  it('renders the security center dashboard with score and checklist', () => {
+    render(<SecurityCenterPage />);
 
-    expect(screen.getAllByText(/Security Center/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Security Center/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Configure 2FA/i })).toBeDisabled();
+    // Real page shows security score heading
+    expect(screen.getByRole('heading', { name: /Security Score/i })).toBeTruthy();
+    
+    // Shows security checklist
+    expect(screen.getByText(/Backup Seed Phrase/i)).toBeTruthy();
+    expect(screen.getByText(/Set Up 2FA/i)).toBeTruthy();
+    expect(screen.getByText(/Add Guardian/i)).toBeTruthy();
   });
 
-  it('runs anomaly scan and switches to threat detection tab', () => {
-    renderSecurityCenterPage();
+  it('displays active sessions', () => {
+    render(<SecurityCenterPage />);
+    
+    // Active sessions section
+    expect(screen.getByRole('heading', { name: /Active Sessions/i })).toBeTruthy();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: /Run Security Scan/i }));
-
-    expect(mockDetectAnomalies).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId('threat-detection-panel')).toBeTruthy();
+  it('provides security recommendations', () => {
+    render(<SecurityCenterPage />);
+    
+    // Tips section
+    expect(screen.getByText(/Never share your seed phrase/i) || screen.getByText(/security/i)).toBeTruthy();
   });
 });
