@@ -133,7 +133,20 @@ function asMarkdownReport(url: string, payload: ReplayMetricsPayload, slo: SloEv
 async function main(): Promise<void> {
   const baseUrl = getEnv('SECURITY_MONITOR_BASE_URL') || getEnv('NEXT_PUBLIC_APP_URL');
   if (!baseUrl) {
-    throw new Error('SECURITY_MONITOR_BASE_URL (or NEXT_PUBLIC_APP_URL) is required');
+    // Pre-testnet skip mode — no deployment URL, write a stub report and exit cleanly.
+    const outputPath = process.argv[2] || 'security-replay-metrics-report.md';
+    const { writeFile } = await import('node:fs/promises');
+    const stub = [
+      '# Security Replay Metrics Report',
+      '',
+      '**Status:** Skipped — `SECURITY_MONITOR_BASE_URL` not configured.',
+      '',
+      'This report is generated only when a live deployment URL is available.',
+      'Configure the `SECURITY_MONITOR_BASE_URL` repository secret to enable monitoring.',
+    ].join('\n');
+    await writeFile(outputPath, stub, 'utf8');
+    process.stdout.write('⚠️  Replay metrics skipped: no deployment URL configured (pre-testnet).\n');
+    return;
   }
 
   const token = getEnv('SECURITY_MONITOR_API_TOKEN');
