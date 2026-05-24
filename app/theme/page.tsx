@@ -2,13 +2,15 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Eye, Palette, Sliders } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import type React from 'react';
 
 import { Footer } from '@/components/layout/Footer';
 
 import { AdvancedTab } from './components/AdvancedTab';
-import { PreviewTab } from './components/PreviewTab';
-import { PresetsTab } from './components/PresetsTab';
+import { PreviewTab }  from './components/PreviewTab';
+import { PresetsTab }  from './components/PresetsTab';
 
 type TabId = 'presets' | 'preview' | 'advanced';
 
@@ -18,8 +20,21 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'advanced', label: 'Advanced', icon: Sliders  },
 ];
 
+const VALID_TABS: TabId[] = ['presets', 'preview', 'advanced'];
+
 export default function ThemeManagementPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('presets');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabId | null;
+  const [activeTab, setActiveTab] = useState<TabId>(
+    tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'presets'
+  );
+
+  // Keep URL param in sync when it changes (e.g. /theme?tab=preview redirect)
+  useEffect(() => {
+    if (tabParam && VALID_TABS.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   return (
     <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
@@ -30,6 +45,7 @@ export default function ThemeManagementPage() {
           style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
         <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
       </div>
+
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
@@ -40,27 +56,41 @@ export default function ThemeManagementPage() {
           </h1>
           <p className="text-white/50 text-lg">Customize your VFIDE experience — colors, accents, and visual style.</p>
         </motion.div>
-        <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
-          style={{ background: 'rgba(9,9,11,0.85)' }}>
+
+        <div
+          className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
+          style={{ background: 'rgba(9,9,11,0.85)' }}
+        >
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {TABS.map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => setActiveTab(id)}
-                className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}>
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                aria-pressed={activeTab === id}
+                aria-label={`Switch to ${label} tab`}
+                className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}
+              >
                 <Icon size={14} />{label}
               </button>
             ))}
           </div>
         </div>
+
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+          >
             {activeTab === 'presets'  && <PresetsTab />}
             {activeTab === 'preview'  && <PreviewTab />}
             {activeTab === 'advanced' && <AdvancedTab />}
           </motion.div>
         </AnimatePresence>
       </div>
+
       <Footer />
     </div>
   );
