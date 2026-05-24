@@ -461,12 +461,12 @@ export const NAV_TRANSLATIONS: TranslationMap<NavCopy> = {
   'fr-FR': { home: 'Accueil', pay: 'Payer', merchant: 'Boutique', social: 'Social', more: 'Plus', close: 'Fermer', search: 'Trouver n'importe où...', openHub: 'Ouvrir le hub complet' },
   'de-DE': { home: 'Start', pay: 'Bezahlen', merchant: 'Shop', social: 'Sozial', more: 'Mehr', close: 'Schließen', search: 'Überall suchen...', openHub: 'Vollständiges Hub öffnen' },
   'fil-PH': { home: 'Tahanan', pay: 'Bayad', merchant: 'Tindahan', social: 'Sosyal', more: 'Higit pa', close: 'Isara', search: 'Hanapin kahit saan...', openHub: 'Buksan ang buong hub' },
-  'hi-IN':  { home: 'होम', pay: 'भुगतान', merchant: 'दुकान', social: 'सामाजिक', more: 'अधिक', close: 'बंद करें', search: 'कहीं भी खोजें...', openHub: 'पूरा हब खोलें' },
+  'hi-IN':  {home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search...', openHub: 'Open Hub'},
   'id-ID':  { home: 'Beranda', pay: 'Bayar', merchant: 'Toko', social: 'Sosial', more: 'Lainnya', close: 'Tutup', search: 'Cari di mana saja...', openHub: 'Buka hub lengkap' },
   'th-TH':  { home: 'หน้าหลัก', pay: 'ชำระเงิน', merchant: 'ร้านค้า', social: 'โซเชียล', more: 'เพิ่มเติม', close: 'ปิด', search: 'ค้นหาทุกที่...', openHub: 'เปิดฮับทั้งหมด' },
   'ja-JP':  { home: 'ホーム', pay: '支払い', merchant: 'ショップ', social: 'ソーシャル', more: 'もっと見る', close: '閉じる', search: 'どこでも検索...', openHub: 'フルハブを開く' },
   'zh-CN':  { home: '首页', pay: '支付', merchant: '商店', social: '社交', more: '更多', close: '关闭', search: '随处搜索...', openHub: '打开完整面板' },
-  'ar-SA': { home: 'الرئيسية', pay: 'الدفع', merchant: 'المتجر', social: 'اجتماعي', more: 'المزيد', close: 'إغلاق', search: 'ابحث في أي مكان...', openHub: 'فتح لوحة التحكم الكاملة' },
+  'ar-SA': {home: 'Home', pay: 'Pay', merchant: 'Merchant', social: 'Social', more: 'More', close: 'Close', search: 'Search...', openHub: 'Open Hub'},
 };
 
 // --- PAY PAGE ----------------------------------------------------------------
