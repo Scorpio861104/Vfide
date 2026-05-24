@@ -141,7 +141,8 @@ jobs:
             --config-file slither.config.json \
             --sarif reports/slither.sarif \
             --json reports/slither.json \
-            --solc "$(solc-select which 2>/dev/null || which solc)" || true
+            --solc "$(solc-select which 2>/dev/null || which solc)" \
+            --solc-args "--via-ir --optimize --optimize-runs 200" || true
           # Ensure sarif exists even if slither exited non-zero (findings present)
           if [ ! -f reports/slither.sarif ]; then
             echo '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > reports/slither.sarif
