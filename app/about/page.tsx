@@ -51,7 +51,7 @@ const REGIONS = [
   { flag: "🇦🇪", name: "Dubai", detail: "Crypto-forward. Low remittance costs." },
   { flag: "🇨🇴", name: "Medellín", detail: "Underbanked population. High USD demand." },
   { flag: "🇳🇬", name: "Lagos", detail: "Largest economy in Africa. Unmet fintech need." },
-  { flag: "🇮🇳", name: "Mumbai", detail: "World's largest remittance recipient." },
+  { flag: "🇮🇳", name: "Mumbai", detail: "World&apos;s largest remittance recipient." },
   { flag: "🇵🇭", name: "Manila", detail: "10M+ OFWs sending money home monthly." },
 ];
 
@@ -75,7 +75,7 @@ export default function AboutPage() {
           <div className="container mx-auto max-w-4xl text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
-                <Globe size={12} /> Built for the world's 1.4 billion unbanked
+                <Globe size={12} /> Built for the world&apos;s 1.4 billion unbanked
               </div>
               <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6">
                 Money should work<br />
@@ -96,7 +96,7 @@ export default function AboutPage() {
         <section className="py-16 px-4 border-t border-white/5">
           <div className="container mx-auto max-w-4xl">
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
-              <h2 className="text-3xl font-bold mb-6">The problem we're solving</h2>
+              <h2 className="text-3xl font-bold mb-6">The problem we&apos;re solving</h2>
               <div className="grid md:grid-cols-3 gap-6 text-sm">
                 {[
                   { stat: "2.6%+", label: "Average payment processor fee", sub: "Stripe, Square, PayPal — merchants absorb it or pass it on." },
@@ -117,7 +117,7 @@ export default function AboutPage() {
         {/* Principles */}
         <section className="py-16 px-4 border-t border-white/5">
           <div className="container mx-auto max-w-4xl">
-            <h2 className="text-3xl font-bold mb-10">How we're different</h2>
+            <h2 className="text-3xl font-bold mb-10">How we&apos;re different</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {PRINCIPLES.map((p, i) => {
                 const Icon = p.icon;
@@ -146,12 +146,12 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Who we're building for */}
+        {/* Who we&apos;re building for */}
         <section className="py-16 px-4 border-t border-white/5">
           <div className="container mx-auto max-w-4xl">
-            <h2 className="text-3xl font-bold mb-4">Who we're building for</h2>
+            <h2 className="text-3xl font-bold mb-4">Who we&apos;re building for</h2>
             <p className="text-zinc-400 mb-10 max-w-2xl">
-              Not for the Silicon Valley engineer with five bank accounts. For the street vendor in Accra who can't get a merchant account. For the OFW in Manila sending money home. For the freelancer in Medellín who gets hit with 8% on every dollar they earn.
+              Not for the Silicon Valley engineer with five bank accounts. For the street vendor in Accra who can&apos;t get a merchant account. For the OFW in Manila sending money home. For the freelancer in Medellín who gets hit with 8% on every dollar they earn.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {REGIONS.map((r) => (
