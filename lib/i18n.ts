@@ -1,4 +1,4 @@
-import { safeLocalStorage } from '@/lib/utils';
+import { safeGetItem } from '@/lib/storage';
 
 export const SUPPORTED_LOCALES = ['en-US', 'en-GB', 'es-ES', 'fr-FR', 'de-DE', 'ar-SA', 'fil-PH', 'hi-IN', 'id-ID', 'th-TH', 'ja-JP', 'zh-CN'] as const;
 export type SupportedLocale = typeof SUPPORTED_LOCALES[number];
@@ -138,7 +138,7 @@ export function getBrowserLocale(): SupportedLocale {
 export function getHtmlLang(): string {
   // Get locale from storage directly (can't use useLocale hook in non-hook context)
   try {
-    const stored = safeLocalStorage.getItem('locale');
+    const stored = safeGetItem('locale');
     if (stored) return stored.split('-')[0];
   } catch { /* ignore */ }
   return 'en';
