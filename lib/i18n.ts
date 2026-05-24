@@ -121,3 +121,95 @@ export const STUB_TRANSLATIONS: TranslationMap<StubCopy> = {
   'ja-JP': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
   'zh-CN': { comingSoon: 'Coming Soon', description: 'This feature is under active development and will be available on mainnet launch.', notifyMe: 'Notify Me', backToHome: 'Back to Home' },
 };
+
+
+// Helper functions
+export function pickLocaleCopy<T extends Record<string, any>>(
+  map: TranslationMap<T>,
+  locale: SupportedLocale
+): T {
+  return map[locale] || map[DEFAULT_LOCALE];
+}
+
+export function getBrowserLocale(): SupportedLocale {
+  return normalizeLocale(navigator?.language);
+}
+
+export function getHtmlLang(): string {
+  return useLocale().locale.split('-')[0];
+}
+
+export function persistLocale(locale: SupportedLocale): void {
+  safeLocalStorage.setItem('locale', locale);
+}
+
+export interface HomeAriaLabels {
+  homeAriaShop?: string;
+  homeAriaSell?: string;
+}
+
+export interface MerchantStartedLabel {
+  getStarted?: string;
+}
+
+export interface RewardsPageCopy {
+  heading: string;
+  subheading: string;
+  body: string;
+  whatYouGet: string;
+  govVotingTitle: string;
+  govVotingDesc: string;
+  protocolAccessTitle: string;
+  protocolAccessDesc: string;
+  dutyPointsTitle: string;
+  dutyPointsDesc: string;
+  whyNoRewardsTitle: string;
+  whyNoRewardsBody: string;
+  govCta: string;
+  docsCta: string;
+}
+
+export const HOME_ARIA_LABELS: TranslationMap<HomeAriaLabels> = {
+  'en-US': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'en-GB': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'es-ES': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'fr-FR': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'de-DE': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'ar-SA': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'fil-PH': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'hi-IN': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'id-ID': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'th-TH': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'ja-JP': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+  'zh-CN': { homeAriaShop: 'Shop on VFIDE', homeAriaSell: 'Sell on VFIDE' },
+};
+
+export const SECURITY_CENTER_TRANSLATIONS: TranslationMap<any> = {
+  'en-US': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'en-GB': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'es-ES': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'fr-FR': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'de-DE': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'ar-SA': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'fil-PH': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'hi-IN': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'id-ID': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'th-TH': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'ja-JP': { title: 'Security Center', description: 'Manage your account security and devices' },
+  'zh-CN': { title: 'Security Center', description: 'Manage your account security and devices' },
+};
+
+export const REWARDS_TRANSLATIONS: TranslationMap<RewardsPageCopy> = {
+  'en-US': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'en-GB': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'es-ES': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'fr-FR': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'de-DE': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'ar-SA': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'fil-PH': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'hi-IN': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'id-ID': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'th-TH': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'ja-JP': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+  'zh-CN': { heading: 'No Token Rewards', subheading: 'By design', body: 'VFIDE is a governance token only.', whatYouGet: 'What you get', govVotingTitle: 'Governance Voting', govVotingDesc: 'Vote on DAO proposals', protocolAccessTitle: 'Protocol Access', protocolAccessDesc: 'Use VFIDE tokens', dutyPointsTitle: 'Duty Points', dutyPointsDesc: 'Participation tracking', whyNoRewardsTitle: 'Why no rewards?', whyNoRewardsBody: 'To comply with securities law.', govCta: 'Go to Governance', docsCta: 'Read Docs' },
+};
