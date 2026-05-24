@@ -1,48 +1,27 @@
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { fireEvent, render, screen } from '@testing-library/react';
-import type React from 'react';
+'use client';
 
-const renderDeveloperPage = () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pageModule = require('../../app/developer/page');
-  const DeveloperPage = pageModule.default as React.ComponentType;
-  return render(<DeveloperPage />);
-};
+import { render, screen } from '@testing-library/react';
+import DeveloperPage from '@/app/developer/page';
 
-describe.skip('Developer page pathways — replaced with real developer portal', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+describe('Developer Portal Page', () => {
+  it('renders the developer portal with honest stub', () => {
+    render(<DeveloperPage />);
 
-  it('renders developer portal header and access links', () => {
-    renderDeveloperPage();
-
+    // The developer page is now an honest stub explaining post-testnet timeline
     expect(screen.getByRole('heading', { name: /Developer Portal/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Access & Safety/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /Open Merchant Portal/i }).getAttribute('href')).toBe('/merchant');
-    expect(screen.getByRole('link', { name: /Review Security Center/i }).getAttribute('href')).toBe('/security-center');
+    expect(screen.getByText(/in development/i)).toBeTruthy();
+    expect(screen.getByText(/APIs, SDKs, and tools for building on VFIDE/i)).toBeTruthy();
   });
 
-  it('switches to webhooks tab and shows merchant webhook guidance', () => {
-    renderDeveloperPage();
-
-    fireEvent.click(screen.getByRole('button', { name: /webhooks/i }));
-
-    expect(screen.getByRole('heading', { name: /Merchant Webhook Setup/i })).toBeTruthy();
-    expect(screen.getAllByRole('link', { name: /Open Merchant Portal/i })[1]?.getAttribute('href')).toBe('/merchant');
-    expect(screen.getByText(/GET \/api\/merchant\/webhooks/i)).toBeTruthy();
-    expect(screen.getAllByText(/X-Webhook-Signature/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/A payment was confirmed on-chain/i)).toBeTruthy();
+  it('shows post-testnet availability message', () => {
+    render(<DeveloperPage />);
+    expect(screen.getByText(/Post-testnet/i)).toBeTruthy();
   });
 
-  it('switches to api tab and displays endpoint + rate limit info', () => {
-    renderDeveloperPage();
-
-    fireEvent.click(screen.getByRole('button', { name: /^api$/i }));
-
-    expect(screen.getByRole('heading', { name: /REST API Endpoints/i })).toBeTruthy();
-    expect(screen.getByText('/v1/payments')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /Rate Limits/i })).toBeTruthy();
-    expect(screen.getByText(/Requests\/minute \(test\)/i)).toBeTruthy();
+  it('provides link to docs', () => {
+    render(<DeveloperPage />);
+    const docsLink = screen.getByRole('link', { name: /Read the docs/i });
+    expect(docsLink).toBeTruthy();
+    expect(docsLink.getAttribute('href')).toBe('/docs');
   });
 });
