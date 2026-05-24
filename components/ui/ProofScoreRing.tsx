@@ -6,6 +6,8 @@ import { xpLevelToProofScoreBonus } from "@/lib/gamification";
 
 interface ProofScoreRingProps {
   score: number;
+  /** When true, show a pulsing skeleton instead of the score ring */
+  isLoading?: boolean;
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   className?: string;
@@ -27,7 +29,7 @@ function getTierInfo(score: number) {
   return               { tier: 'RISKY',       color: '#FF4444', gradient: 'from-red-400 to-red-500'        };
 }
 
-export function ProofScoreRing({ score, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
+export function ProofScoreRing({ score, isLoading = false, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
   const config = sizeConfig[size];
   const radius = (config.outer - config.stroke) / 2;
   const circumference = 2 * Math.PI * radius;
