@@ -206,7 +206,7 @@ export function TransactionPreview({
                 confirmed 
                   ? 'bg-green-500 hover:bg-green-400 ring-2 ring-green-400/50 shadow-lg shadow-green-500/20' 
                   : 'bg-cyan-500 hover:bg-cyan-400'
-              }`"
+              }`
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
