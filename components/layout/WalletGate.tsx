@@ -51,9 +51,9 @@ export function WalletGate({ children }: { children: ReactNode }) {
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
             <Wallet className="w-10 h-10 text-cyan-400" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-3">Connect Your Wallet</h2>
-          <p className="text-gray-400 mb-6">
-            Connect your wallet to access your dashboard, vault, and all VFIDE features.
+          <h2 className="text-2xl font-bold text-white mb-3">Connect your wallet</h2>
+          <p className="text-zinc-400 mb-6">
+            Your keys. Your money. Connect a self-custodial wallet — MetaMask, WalletConnect, or Coinbase — to get started. No sign-up or bank account required.
           </p>
           <ConnectButton />
         </motion.div>
