@@ -1317,3 +1317,54 @@
       0 0 24px -8px rgba(139,92,246,0.15);
   }
 }
+
+
+/* ─── CJK & Thai typography ─────────────────────────────────────────────────
+ * Thai, Japanese, and Chinese do not use spaces between words.
+ * Without these rules, text overflows containers or truncates incorrectly.
+ * Apply .cjk-text to any element that renders locale-sensitive copy.
+ * The data-locale attribute is set automatically by useLocale → applyDocumentLocale.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/* Selector matches when the <html> element carries a CJK/Thai locale */
+:root[data-locale="th-TH"],
+:root[data-locale="ja-JP"],
+:root[data-locale="zh-CN"] {
+  /* Allow word breaks at any character boundary — prevents overflow */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  /* Use locale-aware line-breaking: loose = allow breaks at more positions */
+  line-break: loose;
+}
+
+/* Utility class for fine-grained control on specific elements */
+.cjk-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-break: loose;
+}
+
+/* Thai-specific: larger line-height for diacritics above/below base chars */
+:root[data-locale="th-TH"] body,
+:root[data-locale="th-TH"] .cjk-text {
+  line-height: 1.75;
+}
+
+/* Japanese/Chinese: tighten letter-spacing slightly for CJK ideographs */
+:root[data-locale="ja-JP"] body,
+:root[data-locale="zh-CN"] body {
+  letter-spacing: 0.02em;
+}
+
+/* Ensure truncated text (line-clamp) in hero/card titles degrades gracefully */
+:root[data-locale="th-TH"] .truncate,
+:root[data-locale="ja-JP"] .truncate,
+:root[data-locale="zh-CN"] .truncate {
+  overflow-wrap: break-word;
+  white-space: normal;
+  /* Re-enable ellipsis via line-clamp instead of single-line truncate */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
