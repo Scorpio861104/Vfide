@@ -16,13 +16,25 @@ const TIERS = [
 ]
 
 export default function ProofScorePage() {
-  const { address } = useAccount()
+  const { address, isConnected } = useAccount()
 
   return (
     <div className="min-h-screen bg-[#070813] text-white">
       {/* ── Hero ── */}
       <section className="flex flex-col items-center pt-10 pb-6">
-        <ProofScoreVisualizer address={address} />
+        {isConnected ? (
+          <ProofScoreVisualizer address={address} />
+        ) : (
+          <div className="flex flex-col items-center gap-4 py-12 text-center px-4">
+            <div className="w-24 h-24 rounded-full border-2 border-dashed border-zinc-700 flex items-center justify-center">
+              <span className="text-4xl">🔐</span>
+            </div>
+            <h2 className="text-2xl font-bold text-white">Connect your wallet</h2>
+            <p className="text-zinc-400 max-w-sm">
+              Your ProofScore is built on-chain. Connect a wallet to see your live reputation score, fee tier, and trust challenges.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* ── 7-Tier Table ── */}
