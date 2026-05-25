@@ -138,11 +138,14 @@ async function main() {
   // returns type(uint256).max so per-merchant pull limits stay binding.
   await (await vaultHub.connect(customer).ensureVault(customerAddress)).wait();
   const customerVaultAddress: string = await vaultHub.vaultOf(customerAddress);
+  // Bind a typed handle to the deployed vault. Cast to any so downstream
+  // dynamic method calls (approveToken) don't trigger TS2722 — the ABI is
+  // loaded at runtime from the compiled artifact.
   const customerVault = new Contract(
     customerVaultAddress,
     cardBoundVaultArtifact.abi as any,
     customer
-  );
+  ) as any;
 
   // Register tokens as accepted by the merchant portal (onlyDAO). Required by
   // _setMerchantPullPermit and processPayment paths whenever a non-zero token
