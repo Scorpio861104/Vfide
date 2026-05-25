@@ -327,7 +327,11 @@ describe('LOW Regressions', function () {
   it('L-09: Rate limit fails closed on error', function () {
     const source = fs.readFileSync('lib/auth/rateLimit.ts', 'utf-8');
     expect(source).to.include('[RateLimit] Error:');
-    expect(source).to.include('On error, allow the request to proceed');
+    // Behavior: in production with Redis configured, fail CLOSED (reject request)
+    // to prevent rate-limit bypass. The stale "fail open" comment was removed in
+    // favour of the explicit production fail-closed branch.
+    expect(source).to.include('fail-closed on error');
+    expect(source).to.include('rejecting request to prevent bypass');
   });
 
   it('L-10: Legacy localStorage token search removed', function () {
