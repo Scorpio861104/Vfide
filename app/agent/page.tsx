@@ -9,7 +9,7 @@ import { STUB_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 export default function Page() {
   const [locale] = useLocale();
-  const copy = pickLocaleCopy(STUB_TRANSLATIONS, locale);
+  const _copy = pickLocaleCopy(STUB_TRANSLATIONS, locale);
   return (
     <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">

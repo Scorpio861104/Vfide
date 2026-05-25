@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Shield, Lock, Eye, Key, AlertTriangle, Activity,
-  Smartphone, Globe, Clock, ChevronRight, CheckCircle2,
+ Shield, Lock, Eye, Key, Activity, 
+ Smartphone, Globe, ChevronRight, CheckCircle2, 
   XCircle, LogOut
 } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
@@ -53,7 +53,7 @@ const CHECKS = [
 
 export default function SecurityCenterPage() {
   const [locale] = useLocale();
-  const copy = pickLocaleCopy(SECURITY_CENTER_TRANSLATIONS, locale); // security center i18n
+  const _copy = pickLocaleCopy(SECURITY_CENTER_TRANSLATIONS, locale); // security center i18n
   const { isConnected, address } = useAccount();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   // In a real integration these come from API/contract reads.

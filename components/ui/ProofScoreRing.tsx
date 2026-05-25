@@ -29,7 +29,7 @@ function getTierInfo(score: number) {
   return               { tier: 'RISKY',       color: '#FF4444', gradient: 'from-red-400 to-red-500'        };
 }
 
-export function ProofScoreRing({ score, isLoading = false, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
+export function ProofScoreRing({ score, _isLoading = false, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
   const config = sizeConfig[size];
   const radius = (config.outer - config.stroke) / 2;
   const circumference = 2 * Math.PI * radius;

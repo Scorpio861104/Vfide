@@ -85,7 +85,7 @@ const TRUST_POINTS = [
 
 export default function Home() {
   const [locale] = useLocale();
-  const copy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
+  const _copy = pickLocaleCopy(HOME_TRANSLATIONS, locale);
   const { state } = useOnboarding();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });

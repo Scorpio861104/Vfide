@@ -148,7 +148,7 @@ function OnboardingPageContent() {
 
 export default function OnboardingPage() {
   const [locale] = useLocale();
-  const copy = pickLocaleCopy(ONBOARDING_TRANSLATIONS, locale); // onboarding page i18n
+  const _copy = pickLocaleCopy(ONBOARDING_TRANSLATIONS, locale); // onboarding page i18n
   return (
     <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
       <OnboardingPageContent />

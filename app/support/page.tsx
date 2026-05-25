@@ -35,7 +35,7 @@ type SupportTicket = {
 
 const TAB_IDS: TabId[] = ['faq', 'tickets', 'new'];
 
-const COPY = {
+const _COPY = {
   'en-US': {
     heading: 'Help & Support Center',
     subtitle: 'Find answers, manage tickets, and get direct support from the VFIDE team.',

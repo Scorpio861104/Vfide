@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
-import { ArrowRight, Globe, DollarSign, Users, Clock, Shield, ChevronDown, Plus } from 'lucide-react';
+import { ArrowRight, Globe, DollarSign, Users, Clock, Shield, Plus } from 'lucide-react'; 
 import { Footer } from '@/components/layout/Footer';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import Link from 'next/link';
@@ -28,13 +28,13 @@ const STEPS = [
 
 export default function RemittancePage() {
   const [locale] = useLocale();
-  const copy = pickLocaleCopy(REMITTANCE_TRANSLATIONS, locale); // remittance page i18n
+  const _copy = pickLocaleCopy(REMITTANCE_TRANSLATIONS, locale); // remittance page i18n
   const { isConnected } = useAccount();
   const [amount, setAmount] = useState('100');
   const [selectedCorridor, setSelectedCorridor] = useState(0);
-  const corridor = CORRIDORS[selectedCorridor];
+  const _corridor = CORRIDORS[selectedCorridor];
 
-  const feeUSD = 0;
+  const _feeUSD = 0;
   const buyerFee = Math.max(0.25, parseFloat(amount || '0') * 0.025);
   const netAmount = parseFloat(amount || '0') - buyerFee;
 
