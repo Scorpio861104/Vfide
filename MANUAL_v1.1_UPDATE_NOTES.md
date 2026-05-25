@@ -130,3 +130,24 @@ Current state:
 
 - The `contracts/CircuitBreaker.sol` (5KB) orphan stub was deleted in `chore: delete orphan top-level CircuitBreaker.sol` (2026-05-24). The canonical reference copy remains at `contracts/legacy/CircuitBreaker.sol` as documented in `PRODUCTION_SET.md`.
 - `SanctumVault` `1 days` and `90 days` literals were lifted to named constants `DISBURSEMENT_DELAY` and `PROPOSAL_EXPIRY` in `chore(sanctum): lift inlined 1-day/90-day literals` (2026-05-24). Values unchanged; matches the manual reference card exactly.
+
+---
+
+### 2026-05-24 (late) — CircuitBreaker.sol re-classification
+
+The top-level `contracts/CircuitBreaker.sol` was **not** an orphan stub.
+Initial audit only scanned imports inside `contracts/*.sol` and missed
+`contracts/scripts/deploy-phase1.ts:177`, which deploys it via
+`ethers.getContractFactory('CircuitBreaker')`. The ABI is also imported
+by `lib/abis/index.ts` and validated at startup.
+
+The deletion (commit `4287e1d9`) was reverted in commit `a00a2ff2` after CI
+exposed the regression (`ENOENT: contracts/CircuitBreaker.sol` in hardhat tests).
+
+**Lesson for future housekeeping passes:** before deleting a contract,
+grep for `getContractFactory('<Name>')` and `import.*<Name>.json` across
+the full repo (not just `contracts/`), including `scripts/` and `lib/`.
+
+CircuitBreaker remains in the codebase. Its decommissioning, if desired,
+is a separate, larger piece of work that must also remove the Phase 1
+deploy step and the ABI import — out of scope for this housekeeping pass.
