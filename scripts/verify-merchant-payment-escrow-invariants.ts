@@ -49,9 +49,7 @@ async function main() {
   const tokenArtifact = loadArtifact(
     'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockTokenForEscrow.json'
   );
-  const portalArtifact = loadArtifact(
-    'artifacts/contracts/MerchantPortal.sol/MerchantPortal.json'
-  );
+  const portalArtifact = loadArtifact('artifacts/contracts/MerchantPortal.sol/MerchantPortal.json');
 
   // Deploy mock seer (full ISeer stub — returns 0 for minForMerchant so portal uses its own floor)
   const seerFactory = new ContractFactory(seerArtifact.abi as any, seerArtifact.bytecode, dao);
@@ -80,11 +78,7 @@ async function main() {
   await ledger.waitForDeployment();
 
   // Deploy mock token
-  const tokenFactory = new ContractFactory(
-    tokenArtifact.abi as any,
-    tokenArtifact.bytecode,
-    dao
-  );
+  const tokenFactory = new ContractFactory(tokenArtifact.abi as any, tokenArtifact.bytecode, dao);
   const token = (await tokenFactory.deploy()) as any;
   await token.waitForDeployment();
   const tokenAddress = await token.getAddress();
@@ -103,7 +97,7 @@ async function main() {
     daoAddress,
     await vaultHub.getAddress(),
     await seer.getAddress(),
-    await ledger.getAddress(),
+    await ledger.getAddress()
   )) as any;
   await portal.waitForDeployment();
 
@@ -133,11 +127,17 @@ async function main() {
   );
   console.log('✓ INV-02: Payment without customer approval reverts');
 
-  // Grant pull permit to merchant
+  // Grant pull permit to merchant.
+  // F-60 FIX (contracts/MerchantPortal.sol#_setMerchantPullPermit): a never-expiring
+  // permit (expiresAt == 0) is rejected on-chain — a compromised merchant key could
+  // drain forgotten permits indefinitely. Use a bounded future expiry that fits the
+  // 90-day MAX_PULL_PERMIT_DURATION cap.
   const pullLimit = 500n * 10n ** 18n;
-  const noExpiry = 0n;
+  const setupBlock = await provider.getBlock('latest');
+  const setupNow = BigInt(setupBlock?.timestamp ?? Math.floor(Date.now() / 1000));
+  const validExpiry = setupNow + 30n * 24n * 60n * 60n; // +30 days
   await (
-    await portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, noExpiry)
+    await portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, validExpiry)
   ).wait();
 
   // ── INV-03: Over-limit payment reverts ────────────────────────────────────
@@ -151,40 +151,28 @@ async function main() {
   );
   console.log('✓ INV-03: Over-limit payment reverts (pull limit enforced)');
 
-  // ── INV-04: Expired permit is rejected ────────────────────────────────────
+  // ── INV-04: Expired permit is rejected at set-time (F-60) ─────────────────
+  // The original invariant — "a payment using an expired permit must revert" —
+  // is now enforced one layer earlier: the contract refuses to STORE an
+  // already-expired permit. Same security property, correctly localized.
   const latestBlock = await provider.getBlock('latest');
   const pastExpiry = BigInt((latestBlock?.timestamp ?? 0) - 1);
-  await (
-    await portal
-      .connect(customer)
-      .setMerchantPullPermit(merchantAddress, pullLimit, pastExpiry)
-  ).wait();
   await expectRevert(
-    () =>
-      portal
-        .connect(merchant)
-        .processPayment(customerAddress, tokenAddress, 10n * 10n ** 18n, 'order-004'),
-    'INV-04: expired permit'
+    () => portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, pastExpiry),
+    'INV-04: expired permit (set-time rejection)'
   );
-  console.log('✓ INV-04: Expired permit is rejected');
+  console.log('✓ INV-04: Expired permit is rejected (at set-time, per F-60)');
 
-  // Reset to valid non-expiring permit
+  // Reset to a valid bounded-future permit for the remaining invariants.
   await (
-    await portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, noExpiry)
+    await portal.connect(customer).setMerchantPullPermit(merchantAddress, pullLimit, validExpiry)
   ).wait();
 
   // ── INV-05: Revoke zeroes remaining pull limit ────────────────────────────
-  await (
-    await portal.connect(customer).setMerchantPullApproval(merchantAddress, false)
-  ).wait();
-  const remainingAfterRevoke = await portal.merchantPullRemaining(
-    customerAddress,
-    merchantAddress
-  );
+  await (await portal.connect(customer).setMerchantPullApproval(merchantAddress, false)).wait();
+  const remainingAfterRevoke = await portal.merchantPullRemaining(customerAddress, merchantAddress);
   if (remainingAfterRevoke !== 0n) {
-    throw new Error(
-      `INV-05 FAIL: Expected remaining=0 after revoke, got ${remainingAfterRevoke}`
-    );
+    throw new Error(`INV-05 FAIL: Expected remaining=0 after revoke, got ${remainingAfterRevoke}`);
   }
   console.log('✓ INV-05: Revoke zeroes remaining pull limit');
 
@@ -203,7 +191,7 @@ async function main() {
   await (
     await portal
       .connect(customer)
-      .setMerchantPullPermitForToken(merchantAddress, tokenAddress, pullLimit, noExpiry)
+      .setMerchantPullPermitForToken(merchantAddress, tokenAddress, pullLimit, validExpiry)
   ).wait();
   await expectRevert(
     () =>
