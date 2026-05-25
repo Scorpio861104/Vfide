@@ -214,21 +214,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         uint16 customerScore,
         PaymentChannel channel
     );
-    /// @notice Enhanced payment event with channel tracking
-    /// @param feeBasisPoints feeBasisPoints
-    event FeeUpdated(uint256 feeBasisPoints);
-    /// @notice ProtocolFeeProposed
-    /// @param newFeeBps newFeeBps
-    /// @param effectiveAt effectiveAt
-    event ProtocolFeeProposed(uint256 newFeeBps, uint64 effectiveAt); // H3
-    /// @notice ProtocolFeeCancelled
-    event ProtocolFeeCancelled(); // H3
     /// @notice MinScoreUpdated
     /// @param minScore minScore
     event MinScoreUpdated(uint16 minScore);
-    /// @notice FeeSinkSet
-    /// @param sink sink
-    event FeeSinkSet(address sink);
     /// @notice MinSwapOutputUpdated
     /// @param previousBps previousBps
     /// @param newBps newBps
@@ -276,14 +264,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice DAO_CHANGE_DELAY
     uint64 public constant DAO_CHANGE_DELAY = 48 hours;
 
-    // H3 FIX: Protocol fee changes require a 24h timelock to honor the
-    //         "zero merchant fees" guarantee against instant DAO action.
-    /// @notice pendingProtocolFeeBps
-    uint256 public pendingProtocolFeeBps;
-    /// @notice pendingProtocolFeeAt
-    uint64 public pendingProtocolFeeAt;
-    /// @notice PROTOCOL_FEE_CHANGE_DELAY
-    uint64 public constant PROTOCOL_FEE_CHANGE_DELAY = 24 hours;
     /// @notice fraudRegistry
     address public fraudRegistry;
     // N-L15 FIX: optional session-key spend-limit gate (zero address = disabled).
@@ -291,11 +271,12 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @notice sessionKeyManager
     address private sessionKeyManager;
 
-    /// Protocol fee (in basis points, e.g., 50 = 0.5%)
+    /// @notice The merchant protocol fee is hardcoded to zero and cannot be changed by
+    /// any role, including the DAO. This is one of the three constitutional commitments
+    /// described in the VFIDE Manual: merchants receive every cent of the listed price.
+    /// The code that would raise this fee does not exist — by deliberate omission.
     /// @notice protocolFeeBps
-    uint256 public protocolFeeBps = 0; // 0% - No merchant payment fee (burn fees apply on VFIDE transfers)
-    /// @notice feeSink
-    address public feeSink; // Where protocol fees go (could be treasury or burn)
+    uint256 public constant protocolFeeBps = 0;
 
     /// Merchant minimum ProofScore requirement (0-10000 scale)
     /// @notice minMerchantScore
@@ -412,23 +393,19 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @param _vaultHub _vaultHub
     /// @param _seer _seer
     /// @param _ledger _ledger
-    /// @param _feeSink _feeSink
     constructor(
         address _dao,
         address _vaultHub,
         address _seer,
-        address _ledger,
-        address _feeSink
+        address _ledger
     ) {
-        if (_dao == address(0) || _vaultHub == address(0) || _feeSink == address(0)) revert MERCH_InvalidConfig();
+        if (_dao == address(0) || _vaultHub == address(0)) revert MERCH_InvalidConfig();
         dao = _dao;
         vaultHub = IVaultHub(_vaultHub);
         seer = ISeer(_seer);
         ledger = IProofLedger(_ledger);
-        feeSink = _feeSink;
-        
+
         emit ModulesSet(_vaultHub, _seer, _ledger);
-        emit FeeSinkSet(_feeSink);
     }
 
     // ─────────────────────────── Admin: DAO controls
@@ -488,46 +465,6 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
     /// @param _skm _skm
     function setSessionKeyManager(address _skm) external onlyDAO {
         sessionKeyManager = _skm;
-    }
-
-    /// @notice Propose a protocol fee change. Takes effect after 24h timelock.
-    /// @dev H3 FIX: 24-hour delay gives merchants / community time to react.
-    /// @param _feeBps _feeBps
-    function setProtocolFee(uint256 _feeBps) external onlyDAO {
-        if (_feeBps > 500) revert MERCH_InvalidConfig(); // Max 5%
-        pendingProtocolFeeBps = _feeBps;
-        pendingProtocolFeeAt = uint64(block.timestamp) + PROTOCOL_FEE_CHANGE_DELAY;
-        emit ProtocolFeeProposed(_feeBps, pendingProtocolFeeAt);
-        _log("fee_pend");
-    }
-
-    /// @notice Apply a pending protocol fee change after the timelock.
-    function applyProtocolFee() external onlyDAO {
-        if (pendingProtocolFeeAt == 0) revert MERCH_NotConfigured();
-        if (block.timestamp < pendingProtocolFeeAt) revert MERCH_NotConfigured();
-        protocolFeeBps = pendingProtocolFeeBps;
-        delete pendingProtocolFeeBps;
-        delete pendingProtocolFeeAt;
-        emit FeeUpdated(protocolFeeBps);
-        _log("fee_upd");
-    }
-
-    /// @notice Cancel a pending protocol fee change.
-    function cancelProtocolFee() external onlyDAO {
-        if (pendingProtocolFeeAt == 0) revert MERCH_NotConfigured();
-        delete pendingProtocolFeeBps;
-        delete pendingProtocolFeeAt;
-        emit ProtocolFeeCancelled();
-        _log("fee_cancel");
-    }
-
-    /// @notice setFeeSink
-    /// @param _sink _sink
-    function setFeeSink(address _sink) external onlyDAO {
-        if (_sink == address(0)) revert MERCH_Zero();
-        feeSink = _sink;
-        emit FeeSinkSet(_sink);
-        _log("fee_sink");
     }
 
     /// @notice setMinMerchantScore
@@ -1319,26 +1256,21 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
                 recipient = vaultHub.ensureVault(merchant);
             }
 
-            // Calculate fee
-            uint256 fee = (amount * protocolFeeBps) / 10000;
-            netAmount = amount - fee;
-            
-            // Fee transfer FIRST
-            if (fee > 0 && feeSink != address(0)) {
-                IERC20(token).safeTransferFrom(customerVault, feeSink, fee);
-            }
-            
+            // Protocol fee is hardcoded to zero (constitutional commitment).
+            // Merchant receives the full payment amount.
+            netAmount = amount;
+
             // Transfer net amount (with STABLE-PAY auto-convert if enabled)
             _transferWithAutoConvert(token, customerVault, recipient, netAmount, merchant);
         }
         
-        // Emit payment event with channel tracking
+        // Emit payment event with channel tracking. Fee is always zero by constitutional commitment.
         emit PaymentProcessed(
             customer,
             merchant,
             token,
             amount,
-            amount - netAmount, // fee
+            0, // fee — hardcoded zero
             orderId,
             customerScore,
             channel

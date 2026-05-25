@@ -239,7 +239,6 @@ async function main() {
     sanctumSink: bootstrapAddress("BOOTSTRAP_SANCTUM_SINK_ADDRESS", "Bootstrap sanctum sink"),
     burnSink: bootstrapAddress("BOOTSTRAP_BURN_SINK_ADDRESS", "Bootstrap burn sink"),
     ecosystemSink: bootstrapAddress("BOOTSTRAP_ECOSYSTEM_SINK_ADDRESS", "Bootstrap ecosystem sink"),
-    feeSink: bootstrapAddress("BOOTSTRAP_FEE_SINK_ADDRESS", "Bootstrap merchant fee sink"),
     poolAdmin: bootstrapAddress("BOOTSTRAP_POOL_ADMIN_ADDRESS", "Bootstrap pool admin"),
     faucetOwner: bootstrapAddress("BOOTSTRAP_FAUCET_OWNER_ADDRESS", "Bootstrap faucet owner"),
     ledgerAdmin: bootstrapAddress("BOOTSTRAP_LEDGER_ADMIN_ADDRESS", "Bootstrap ProofLedger admin"),
@@ -393,7 +392,6 @@ async function main() {
     book.VaultHub,
     book.Seer,
     book.ProofLedger,
-    bootstrap.feeSink,
   );
 
   // ══════════════════════════════════════════════════════════════════════════

@@ -19,7 +19,7 @@ function PayFallback() {
 
 export default function PayPage() {
   const [locale] = useLocale();
-  const copy = pickLocaleCopy(PAY_TRANSLATIONS, locale); // pay page i18n
+  const _copy = pickLocaleCopy(PAY_TRANSLATIONS, locale); // pay page i18n
   return (
     <>
       <ErrorBoundary>

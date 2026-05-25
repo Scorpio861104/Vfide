@@ -19,7 +19,7 @@ const TIERS = [
 
 export default function ProofScorePage() {
   const [locale] = useLocale();
-  const copy = pickLocaleCopy(PROOFSCORE_TRANSLATIONS, locale); // proofscore page i18n
+  const _copy = pickLocaleCopy(PROOFSCORE_TRANSLATIONS, locale); // proofscore page i18n
   const { address, isConnected } = useAccount()
 
   return (

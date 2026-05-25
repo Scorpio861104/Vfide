@@ -429,9 +429,9 @@ contract CardBoundVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /// @notice NAME
-    string private constant NAME = "CardBoundVault";
+    string public constant NAME = "CardBoundVault";
     /// @notice VERSION
-    string private constant VERSION = "1";
+    string public constant VERSION = "1";
 
     /// @notice EIP712_DOMAIN_TYPEHASH
     bytes32 private constant EIP712_DOMAIN_TYPEHASH = keccak256(

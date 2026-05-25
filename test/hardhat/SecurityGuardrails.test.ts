@@ -342,12 +342,10 @@ describe('MerchantPortal (NEW-05: auto-convert safety hold)', () => {
     const TokenStub = await ethers.getContractFactory('TokenStub');
     const vaultHub = await Placeholder.deploy();
     const ledger = await Placeholder.deploy();
-    const feeSink = await Placeholder.deploy();
     const router = await Placeholder.deploy();
     const stablecoin = await TokenStub.deploy();
     await vaultHub.waitForDeployment();
     await ledger.waitForDeployment();
-    await feeSink.waitForDeployment();
     await router.waitForDeployment();
     await stablecoin.waitForDeployment();
 
@@ -356,8 +354,7 @@ describe('MerchantPortal (NEW-05: auto-convert safety hold)', () => {
       dao.address,
       await vaultHub.getAddress(),
       await seer.getAddress(),
-      await ledger.getAddress(),
-      await feeSink.getAddress()
+      await ledger.getAddress()
     );
     await portal.waitForDeployment();
 
