@@ -29,7 +29,7 @@ function getTierInfo(score: number) {
   return               { tier: 'RISKY',       color: '#FF4444', gradient: 'from-red-400 to-red-500'        };
 }
 
-export function ProofScoreRing({ score, isLoading: _isLoading = false, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
+export function ProofScoreRing({ score, _isLoading = false, size = "md", showLabel = true, className = "" }: ProofScoreRingProps) {
   const config = sizeConfig[size];
   const radius = (config.outer - config.stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -63,44 +63,6 @@ export function ProofScoreRing({ score, isLoading: _isLoading = false, size = "m
      
   }, [score]);
   
-  // Loading skeleton — pulsing ring placeholder
-  if (_isLoading) {
-    return (
-      <div
-        className={`relative inline-flex items-center justify-center ${className}`}
-        aria-busy="true"
-        aria-label="Loading ProofScore"
-      >
-        <svg width={config.outer} height={config.outer} className="animate-pulse">
-          <circle
-            cx={config.outer / 2}
-            cy={config.outer / 2}
-            r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth={config.stroke}
-          />
-          <circle
-            cx={config.outer / 2}
-            cy={config.outer / 2}
-            r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.15)"
-            strokeWidth={config.stroke}
-            strokeDasharray={circumference}
-            strokeDashoffset={circumference * 0.65}
-            strokeLinecap="round"
-            className="transform -rotate-90 origin-center"
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-          <div className={`animate-pulse rounded bg-white/10 ${config.textSize === 'text-5xl' ? 'h-10 w-16' : config.textSize === 'text-3xl' ? 'h-7 w-12' : 'h-5 w-8'}`} />
-          {showLabel && <div className="animate-pulse rounded bg-white/10 h-2.5 w-14" />}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
       {/* Glow effect */}

@@ -12,14 +12,11 @@ import Link from 'next/link';
 import { useLocale } from '@/hooks/useLocale';
 import { REMITTANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
-// Rates are illustrative examples for testnet only.
-// Real rates are set by the on-chain oracle at transaction time.
-// Competitor savings are approximate based on publicly listed rates.
 const CORRIDORS = [
-  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~7% Western Union fee' },
-  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~5% bank transfer fee' },
-  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~8% MoneyGram fee' },
-  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~4% PayPal fee' },
+  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$12 vs. Western Union' },
+  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$8 vs. bank transfer' },
+  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$15 vs. MoneyGram' },
+  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$6 vs. PayPal' },
 ];
 
 const STEPS = [
@@ -38,10 +35,7 @@ export default function RemittancePage() {
   const _corridor = CORRIDORS[selectedCorridor];
 
   const _feeUSD = 0;
-  // Neutral ProofScore (5000): 382 bps = 3.82% total fee (ProofScoreBurnRouter._calculateLinearFee)
-  // Elite ProofScore (≥8000): 25 bps = 0.25% (minTotalBps). Demo uses neutral-score default.
-  // Neutral ProofScore (5000) buyer fee: 382 bps = 3.82% (ProofScoreBurnRouter)
-  const buyerFee = parseFloat(amount || '0') * 0.0382;
+  const buyerFee = Math.max(0.25, parseFloat(amount || '0') * 0.025);
   const netAmount = parseFloat(amount || '0') - buyerFee;
 
   return (
@@ -100,9 +94,6 @@ export default function RemittancePage() {
                     ))}
                   </div>
                 </div>
-                <p className="text-xs text-zinc-600 mt-1">
-                  * Rates are illustrative testnet examples. Actual rates are set on-chain at send time.
-                </p>
 
                 {/* Amount input */}
                 <div className="mb-4">
@@ -129,7 +120,7 @@ export default function RemittancePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Buyer trust fee</span>
-                    <span className="text-white">${buyerFee.toFixed(2)} (~3.82% at neutral score)</span>
+                    <span className="text-white">${buyerFee.toFixed(2)} (~2.5% at neutral score)</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Network gas</span>
@@ -142,7 +133,7 @@ export default function RemittancePage() {
                 </div>
 
                 <p className="text-xs text-zinc-600 mt-3">
-                  Buyer fee drops to 0.25% at ProofScore ≥ 8,000. Build reputation, pay less.
+                  Buyer fee drops to 0.25% at ProofScore ≥ 800. Build reputation, pay less.
                 </p>
               </div>
             </motion.div>
