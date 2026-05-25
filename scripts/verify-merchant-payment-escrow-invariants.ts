@@ -1,4 +1,4 @@
-import { ContractFactory, FetchRequest, JsonRpcProvider } from 'ethers';
+import { Contract, ContractFactory, FetchRequest, JsonRpcProvider } from 'ethers';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -50,6 +50,11 @@ async function main() {
     'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockTokenForEscrow.json'
   );
   const portalArtifact = loadArtifact('artifacts/contracts/MerchantPortal.sol/MerchantPortal.json');
+  // F-60 path: customer vault is now a real contract; we need its ABI to drive
+  // approvals when the contract requires vault-side ERC20 allowance.
+  const cardBoundVaultArtifact = loadArtifact(
+    'artifacts/contracts/mocks/CommerceEscrowVerifierMocks.sol/MockCardBoundVaultForEscrow.json'
+  );
 
   // Deploy mock seer (full ISeer stub — returns 0 for minForMerchant so portal uses its own floor)
   const seerFactory = new ContractFactory(seerArtifact.abi as any, seerArtifact.bytecode, dao);
@@ -132,6 +137,17 @@ async function main() {
   // dailyTransferLimit() via ICardBoundVaultPermitView. The mock vault
   // returns type(uint256).max so per-merchant pull limits stay binding.
   await (await vaultHub.connect(customer).ensureVault(customerAddress)).wait();
+  const customerVaultAddress: string = await vaultHub.vaultOf(customerAddress);
+  const customerVault = new Contract(
+    customerVaultAddress,
+    cardBoundVaultArtifact.abi as any,
+    customer
+  );
+
+  // Register tokens as accepted by the merchant portal (onlyDAO). Required by
+  // _setMerchantPullPermit and processPayment paths whenever a non-zero token
+  // address is passed.
+  await (await portal.connect(dao).setAcceptedToken(tokenAddress, true)).wait();
 
   // Grant pull permit to merchant.
   // F-60 FIX (contracts/MerchantPortal.sol#_setMerchantPullPermit): a never-expiring
@@ -193,6 +209,17 @@ async function main() {
   const token2 = (await tokenFactory.deploy()) as any;
   await token2.waitForDeployment();
   const token2Address = await token2.getAddress();
+
+  // setMerchantPullPermitForToken (requireVaultAllowance branch) checks
+  // IERC20(token).allowance(customerVault, address(this)) >= maxAmount.
+  // The vault is the on-chain holder, so the approval must originate from
+  // the vault contract — not from the customer EOA.
+  await (
+    await customerVault.approveToken(tokenAddress, await portal.getAddress(), pullLimit)
+  ).wait();
+  // Register token2 as accepted so the wrong-token revert at processPayment time
+  // is what we test (rather than failing earlier at the token-not-accepted gate).
+  await (await portal.connect(dao).setAcceptedToken(token2Address, true)).wait();
 
   await (
     await portal
