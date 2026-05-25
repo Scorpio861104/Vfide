@@ -127,6 +127,12 @@ async function main() {
   );
   console.log('✓ INV-02: Payment without customer approval reverts');
 
+  // Provision a customer vault via mock VaultHub. F-60 path requires
+  // vaultHub.vaultOf(msg.sender) != 0 AND the vault to expose a non-zero
+  // dailyTransferLimit() via ICardBoundVaultPermitView. The mock vault
+  // returns type(uint256).max so per-merchant pull limits stay binding.
+  await (await vaultHub.connect(customer).ensureVault(customerAddress)).wait();
+
   // Grant pull permit to merchant.
   // F-60 FIX (contracts/MerchantPortal.sol#_setMerchantPullPermit): a never-expiring
   // permit (expiresAt == 0) is rejected on-chain — a compromised merchant key could

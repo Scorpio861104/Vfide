@@ -88,6 +88,27 @@ contract MockSeerForEscrow {
     }
 }
 
+/// @notice MockCardBoundVaultForEscrow — minimal ICardBoundVaultPermitView stub
+/// @title MockCardBoundVaultForEscrow
+/// @author Vfide
+/// @dev Satisfies the dailyTransferLimit() lookup that MerchantPortal performs
+///      when setting a pull permit. F-60 fix path requires the customer vault
+///      to expose a non-zero daily limit. Set high so invariant tests can
+///      exercise per-merchant pull limits without bumping into the vault cap.
+contract MockCardBoundVaultForEscrow {
+    address public immutable owner;
+    /// @notice dailyTransferLimit
+    /// @dev Returns a very high cap so per-merchant pullLimit (default 500e18)
+    ///      and per-token tests stay below the vault-level ceiling.
+    function dailyTransferLimit() external pure returns (uint256) {
+        return type(uint256).max;
+    }
+
+    constructor(address owner_) {
+        owner = owner_;
+    }
+}
+
 /// @notice MockVaultHubForEscrow — minimal IVaultHub stub
 /// @title MockVaultHubForEscrow
 /// @author Vfide
@@ -96,11 +117,16 @@ contract MockVaultHubForEscrow {
     mapping(address => address) private _owners;
     uint256 public totalVaultsCreated;
 
-    /// @notice ensureVault — creates a trivial vault record and returns owner address as vault
+    /// @notice ensureVault — deploys a MockCardBoundVaultForEscrow for owner_ if absent
+    /// @dev    Returns a real contract (not a self-referential address) so that
+    ///         downstream lookups against ICardBoundVaultPermitView resolve to
+    ///         a live dailyTransferLimit() function.
     function ensureVault(address owner_) external returns (address vault) {
         if (_vaults[owner_] == address(0)) {
-            _vaults[owner_] = owner_; // self-referential stub vault
-            _owners[owner_] = owner_;
+            MockCardBoundVaultForEscrow v = new MockCardBoundVaultForEscrow(owner_);
+            address vaultAddr = address(v);
+            _vaults[owner_] = vaultAddr;
+            _owners[vaultAddr] = owner_;
             totalVaultsCreated++;
         }
         return _vaults[owner_];
