@@ -255,7 +255,7 @@
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.2.6",
     "@nomicfoundation/hardhat-ethers": "^4.0.6",
-    "@nomicfoundation/hardhat-ethers-chai-matchers": "^3.0.8",
+    "@nomicfoundation/hardhat-ethers-chai-matchers": "^3.0.9",
     "@nomicfoundation/hardhat-mocha": "^3.0.17",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.8",
     "@openzeppelin/contracts": "^5.4.0",
