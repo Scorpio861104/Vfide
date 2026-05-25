@@ -262,7 +262,7 @@
     "@playwright/test": "^1.59.1",
     "@size-limit/preset-app": "^12.1.0",
     "@storybook/addon-a11y": "^10.3.6",
-    "@storybook/addon-essentials": "^8.6.17",
+    "@storybook/addon-essentials": "^8.6.18",
     "@storybook/addon-interactions": "^8.6.18",
     "@storybook/addon-links": "^10.2.10",
     "@storybook/addon-onboarding": "^10.3.6",
