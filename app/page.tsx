@@ -293,7 +293,7 @@ export default function Home() {
                 { value: 0,     label: 'Merchant fee',         suffix: '%',   color: 'cyan'    },
                 { value: 100,   label: 'Self-custody',         suffix: '%',   color: 'amber'   },
                 { value: 3,     label: 'Settlement (seconds)', suffix: '',    color: 'emerald' },
-                { value: 10,    label: 'Merchant competition pool',suffix: '%',   color: 'pink'    },
+                { value: 20,    label: 'Community & charity fund', suffix: '%',   color: 'pink'    },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}

@@ -60,8 +60,8 @@ interface Tier {
  * Both are correct — they just use different display scales.
  */
 const TIERS: Tier[] = [
-  { min: 0,     max: 3500,  label: 'Risky',      tone: 'rose',     hex: '#fb7185' },
-  { min: 3500,  max: 5000,  label: 'Low Trust',  tone: 'orange',   hex: '#fb923c' },
+  { min: 0,     max: 4000,  label: 'Risky',      tone: 'rose',     hex: '#fb7185' },
+  { min: 4000,  max: 5000,  label: 'Low Trust',  tone: 'orange',   hex: '#fb923c' },
   { min: 5000,  max: 5400,  label: 'Neutral',    tone: 'amber',    hex: '#fbbf24' },
   { min: 5400,  max: 5600,  label: 'Governance', tone: 'sky',      hex: '#38bdf8' },
   { min: 5600,  max: 7000,  label: 'Trusted',    tone: 'emerald',  hex: '#34d399' },

@@ -26,7 +26,7 @@ const TIERS = [
   {
     name: 'Risky',
     min: 0,
-    max: 3499,
+    max: 3999,
     hex: '#fb7185',
     feeRange: '5.00%',
     canVote: false,
@@ -36,7 +36,7 @@ const TIERS = [
   },
   {
     name: 'Low Trust',
-    min: 3500,
+    min: 4000,
     max: 4999,
     hex: '#fb923c',
     feeRange: '3.82%–5.00%',
