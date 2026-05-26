@@ -7,9 +7,11 @@
  *
  *   - Drag the score (0 → 10,000) and watch the burn fee curve move.
  *   - At the same moment a sample $50 payment recalculates: the fee
- *     splits via ProofScoreBurnRouter (40% burn / 10% Sanctum / 50% FeeDistributor).
- *     FeeDistributor sub-split: 35%→burn, 20%→Sanctum, 15%→payroll, 20%→merchant, 10%→headhunter.
- *     Net composite: 57.5% burn | 20% Sanctum | 7.5% payroll | 10% merchant | 5% headhunter.
+ *     FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
+ *     burnBps=3500 (35%) | sanctumBps=2000 (20%) | daoPayrollBps=1500 (15%)
+ *     merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%)
+ *     Note: BurnRouter also routes 10% of buyer fee directly to Sanctum + 40% to burn before
+ *     passing 50% to FeeDistributor. Net composite over full buyer fee: 57.5% burn | 20% Sanctum.
  *   - The Monument's vertex brightens with the score.
  *   - The tier badge changes label + colour as you cross thresholds.
  *

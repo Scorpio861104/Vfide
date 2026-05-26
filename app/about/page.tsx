@@ -30,7 +30,7 @@ const PRINCIPLES = [
     icon: Heart,
     color: "#ec4899",
     title: "The Sanctum Fund",
-    body: "20% of every buyer fee goes directly into a protocol-level charity and emergency grant pool — not to VFIDE the company, but to the community it serves.",
+    body: "20% of every buyer fee flows into a protocol-level charity and emergency grant pool — 10% locked in the BurnRouter and 10% from the FeeDistributor's default allocation. Not to VFIDE the company, but to the community it serves.",
   },
   {
     icon: Vote,

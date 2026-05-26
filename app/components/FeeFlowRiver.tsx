@@ -241,7 +241,7 @@ export function FeeFlowRiver() {
           </div>
           <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-400">
-            VFIDE collects fees from buyers, never merchants. Each fee splits five ways into pools that work for the network.
+            VFIDE collects fees from buyers, never merchants. The FeeDistributor routes each fee into five pools that work for the network.
           </p>
         </div>
         <div className="space-y-3 mt-4">
@@ -269,7 +269,7 @@ export function FeeFlowRiver() {
           </div>
           <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
           <p className="mt-1 max-w-2xl text-sm text-gray-400">
-            VFIDE collects fees from buyers, never merchants. Each fee splits five ways into pools that work for the network — supply burn, charity, top merchants, council pay, and referral rewards.
+            VFIDE collects fees from buyers, never merchants. The FeeDistributor routes each fee into five pools — supply burn, charity, top merchants, council pay, and referral rewards.
           </p>
         </div>
       </div>
@@ -401,7 +401,7 @@ export function FeeFlowRiver() {
       <div className="mt-4 flex items-start gap-2 text-[11px] text-gray-500">
         <Activity size={12} className="mt-0.5 flex-shrink-0" />
         <span>
-          Live demo with illustrative numbers — pre-mainnet. Composite end-to-end split across ProofScoreBurnRouter + FeeDistributor. Once VFIDE is live, this animates against real on-chain events.
+          Live demo with illustrative numbers — pre-mainnet. Reflects FeeDistributor.sol default allocation (DAO-adjustable). Once VFIDE is live, this animates against real on-chain events.
         </span>
       </div>
     </div>
