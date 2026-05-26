@@ -1,3 +1,4 @@
+import { deployVaultHub } from './utils/deployVaultHub';
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
@@ -13,7 +14,7 @@ async function getDefaultConnection() {
 
 async function getUnlimitedConnection() {
   unlimitedConnectionPromise ??= network.connect({
-    override: { allowUnlimitedContractSize: true },
+    override: { allowUnlimitedContractSize: true, hardfork: 'prague' },
   });
   return unlimitedConnectionPromise;
 }
@@ -32,12 +33,18 @@ describe('ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)', ()
     const seer = await SeerStub.deploy();
     await seer.waitForDeployment();
 
+    // ProofScoreBurnRouter now requires _token as 5th arg (BURN_Zero guard)
+    const TokenStubFact = await ethers.getContractFactory('TokenStub');
+    const routerToken = await TokenStubFact.deploy();
+    await routerToken.waitForDeployment();
+
     const Router = await ethers.getContractFactory('ProofScoreBurnRouter');
     const router = await Router.deploy(
       await seer.getAddress(),
       sanctum.address,
       burn.address,
-      eco.address
+      eco.address,
+      await routerToken.getAddress()
     );
     await router.waitForDeployment();
     return { ethers, router, owner };
@@ -104,14 +111,21 @@ describe('ProofScoreBurnRouter (F-27: fee policy cooldown & rate-of-change)', ()
     const { router, owner, ethers } = await deployRouter();
     const [, user] = await ethers.getSigners();
 
-    await router.connect(owner).setToken(owner.address);
+    // token is now immutable (set via constructor) — no setToken call needed
     await router.connect(owner).setSustainability(0n, 0n, 5);
 
     const amount = 1_000n * 10n ** 18n;
     const quoted = await router.computeFees(owner.address, user.address, amount);
+
+    // computeFeesAndReserve requires msg.sender == token — impersonate the token address
+    const tokenAddr = await router.token();
+    await ethers.provider.send('hardhat_impersonateAccount', [tokenAddr]);
+    await ethers.provider.send('hardhat_setBalance', [tokenAddr, '0xde0b6b3a7640000']);
+    const tokenSigner = await ethers.getSigner(tokenAddr);
     const reserved = await router
-      .connect(owner)
+      .connect(tokenSigner)
       .computeFeesAndReserve.staticCall(owner.address, user.address, amount);
+    await ethers.provider.send('hardhat_stopImpersonatingAccount', [tokenAddr]);
 
     assert.deepEqual([...reserved], [...quoted]);
   });
@@ -731,9 +745,7 @@ describe('VaultHub (guardian bootstrap hardening)', () => {
     const token = await Token.deploy();
     await token.waitForDeployment();
 
-    const VaultHub = await ethers.getContractFactory('VaultHub');
-    const hub = await VaultHub.deploy(await token.getAddress(), ethers.ZeroAddress, dao.address);
-    await hub.waitForDeployment();
+    const { hub: hub } = await deployVaultHub(ethers, await token.getAddress(), ethers.ZeroAddress, dao.address);
 
     return { ethers, dao, owner, recipient, hub };
   }

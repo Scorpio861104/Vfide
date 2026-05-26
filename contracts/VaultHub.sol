@@ -244,12 +244,16 @@ contract VaultHub is Ownable, Pausable, ReentrancyGuard {
     /// @param _vfideToken _vfideToken
     /// @param _ledger _ledger
     /// @param _dao _dao
-    constructor(address _vfideToken, address _ledger, address _dao) {
+    constructor(address _vfideToken, address _ledger, address _dao, address _vaultDeployer) {
         if (_vfideToken == address(0) || _dao == address(0)) revert VH_Zero();
+        // _vaultDeployer must be pre-deployed (CBVDeployer + SubManagerDeployer
+        // are deployed first in the deployment script to avoid embedding their
+        // initcode here and busting the Prague 49152-byte initcode limit).
+        require(_vaultDeployer != address(0), "VaultHub: zero vaultDeployer");
         vfideToken = _vfideToken;
         ledger = IProofLedger(_ledger);
         dao = _dao;
-        vaultDeployer = new CardBoundVaultDeployer();
+        vaultDeployer = CardBoundVaultDeployer(_vaultDeployer);
     }
 
     // ——— Module wiring

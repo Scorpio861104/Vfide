@@ -1030,7 +1030,11 @@ contract CardBoundVault is ReentrancyGuard {
         uint8 _guardianThreshold,
         uint256 _maxPerTransfer,
         uint256 _dailyTransferLimit,
-        address _ledger
+        address _ledger,
+        address _paymentQueueManager,
+        address _withdrawalQueueManager,
+        address _inheritanceManager,
+        address _adminManager
     ) {
         if (_hub == address(0) || _vfideToken == address(0) || _admin == address(0) || _activeWallet == address(0)) {
             revert CBV_Zero();
@@ -1075,17 +1079,20 @@ contract CardBoundVault is ReentrancyGuard {
         largeTransferThreshold = _dailyTransferLimit;
         emit LargeTransferThresholdSet(_dailyTransferLimit);
 
-        // C1 FIX: payment threshold = 5x transfer threshold so daily payments
-        // under that amount execute instantly while outliers are queued.
-        uint256 initialPaymentThreshold = _dailyTransferLimit * 5;
-        paymentQueueManager = address(new CardBoundVaultPaymentQueueManager(address(this), initialPaymentThreshold));
-        emit LargePaymentThresholdSet(0, initialPaymentThreshold);
+        // C1 FIX: Sub-managers are pre-deployed externally (by CardBoundVaultDeployer
+        // via CardBoundVaultSubManagerDeployer) and passed as constructor arguments to
+        // avoid embedding their initcode here, which would push CBV past the Prague
+        // 49152-byte initcode limit.
+        if (_paymentQueueManager == address(0) || _withdrawalQueueManager == address(0) ||
+            _inheritanceManager  == address(0) || _adminManager           == address(0))
+            revert CBV_Zero();
+        paymentQueueManager    = _paymentQueueManager;
+        withdrawalQueueManager = _withdrawalQueueManager;
+        inheritanceManager     = _inheritanceManager;
+        adminManager           = _adminManager;
 
-        withdrawalQueueManager = address(new CardBoundVaultWithdrawalQueueManager(address(this)));
-
-        inheritanceManager = address(new CardBoundVaultInheritanceManager(address(this)));
-
-        adminManager = address(new CardBoundVaultAdminManager(address(this)));
+        // Emit initial large-payment threshold (5x daily limit).
+        emit LargePaymentThresholdSet(0, _dailyTransferLimit * 5);
 
         _domainSeparator = keccak256(
             abi.encode(

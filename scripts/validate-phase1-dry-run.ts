@@ -79,13 +79,30 @@ const PHASE1_CONTRACTS: ContractSpec[] = [
     description: "Trust Engine: Routes proves to burn/distribution sinks",
   },
   {
+    name: "CardBoundVaultSubManagerDeployer",
+    layer: 2,
+    dependencies: [],
+    constructorArgs: () => [],
+    description: "Deploys CBV sub-managers without embedding their initcode in CBVDeployer",
+  },
+  {
+    name: "CardBoundVaultDeployer",
+    layer: 2,
+    dependencies: ["CardBoundVaultSubManagerDeployer"],
+    constructorArgs: (deployed) => [
+      deployed.CardBoundVaultSubManagerDeployer,
+    ],
+    description: "Factory: deploys CardBoundVault instances via CREATE2",
+  },
+  {
     name: "VaultHub",
     layer: 3,
-    dependencies: ["VFIDEToken", "ProofLedger"],
+    dependencies: ["VFIDEToken", "ProofLedger", "CardBoundVaultDeployer"],
     constructorArgs: (deployed) => [
       deployed.VFIDEToken,
       deployed.ProofLedger,
       ZERO_ADDRESS, // _dao (temp)
+      deployed.CardBoundVaultDeployer, // _vaultDeployer (pre-deployed)
     ],
     description: "Vault System: Central hub orchestrating all vault operations",
   },
@@ -232,6 +249,7 @@ function validateConstructorArgs(): boolean {
       deployed.VFIDEToken || ZERO_ADDR,
       deployed.ProofLedger || ZERO_ADDR,
       ZERO_ADDR,
+      deployed.CardBoundVaultDeployer || ZERO_ADDR,  // _vaultDeployer (pre-deployed)
     ],
     FeeDistributor: (deployed) => [
       deployed.VFIDEToken || ZERO_ADDR,

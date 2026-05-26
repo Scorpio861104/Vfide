@@ -475,3 +475,55 @@ contract SeerScoreStub {
         scores[subject] -= delta;
     }
 }
+
+
+/// @notice RecoveryAcceptingVaultStub
+/// @dev Minimal vault stub that accepts any executeRecoveryRotation call.
+///      Used to test VaultHub-layer quorum and delay logic in isolation,
+///      without requiring the full CardBoundVault guardian setup flow.
+contract RecoveryAcceptingVaultStub {
+    event RecoveryRotationExecuted(address indexed newWallet);
+
+    /// @notice Accept any hub-triggered recovery rotation — no internal guards.
+    function executeRecoveryRotation(address newWallet) external {
+        emit RecoveryRotationExecuted(newWallet);
+    }
+}
+
+/// @notice RecoveryStubVaultDeployer
+/// @dev A minimal CardBoundVaultDeployer-compatible stub for M-11 tests.
+///      Pre-deploys a RecoveryAcceptingVaultStub so predict() and deploy()
+///      both return the same deterministic address (the stub vault).
+contract RecoveryStubVaultDeployer {
+    address public vaultHub;
+    address private immutable _deployer;
+    // One stub vault shared for all predictions/deploys in this test instance
+    RecoveryAcceptingVaultStub private immutable _stub;
+
+    constructor() {
+        _deployer = msg.sender;
+        _stub = new RecoveryAcceptingVaultStub();
+    }
+
+    function initHub(address hub) external {
+        require(msg.sender == _deployer, "stub: not deployer");
+        require(vaultHub == address(0), "stub: already set");
+        vaultHub = hub;
+    }
+
+    // Mirror CardBoundVaultDeployer.predict() signature
+    function predict(
+        address, address, address,
+        uint8, uint256, uint256, address
+    ) external view returns (address) {
+        return address(_stub);
+    }
+
+    // Mirror CardBoundVaultDeployer.deploy() signature
+    function deploy(
+        address, address, address,
+        uint8, uint256, uint256, address
+    ) external returns (address) {
+        return address(_stub);
+    }
+}

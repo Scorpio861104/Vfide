@@ -1,32 +1,55 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {CardBoundVault} from "./CardBoundVault.sol";
+import {ICBVBytecodeProvider} from "./CardBoundVaultBytecodeProvider.sol";
+
+/// @dev Minimal interface so CBVDeployer can call SubManagerDeployer without
+///      importing it — breaks the initcode embedding chain.
+interface ISubManagerDeployer {
+    function deployManagers(address vaultAddr, uint256 dailyLimit)
+        external
+        returns (address pm, address wq, address im, address am);
+}
 
 /// @notice CardBoundVaultDeployer
-/// @title CardBoundVaultDeployer
+/// @title  CardBoundVaultDeployer
 /// @author Vfide
+/// @dev    Deploys CardBoundVault instances via CREATE2.
+///         Holds no vault initcode directly — delegates to CardBoundVaultBytecodeProvider
+///         so this contract stays under the EIP-170 24 KB limit.
 contract CardBoundVaultDeployer {
-    /// @notice vaultHub
-    address public immutable vaultHub;
+    /// @notice vaultHub — wired once via initHub() after VaultHub deploys
+    address public vaultHub;
 
-    /// @notice CBD_OnlyHub
+    /// @notice subManagerDeployer — injected at construction
+    ISubManagerDeployer public immutable subManagerDeployer;
+
+    /// @notice bytecodeProvider — holds CardBoundVault initcode; never embedded here
+    ICBVBytecodeProvider public immutable bytecodeProvider;
+
+    /// @notice original deployer — the only address permitted to call initHub()
+    address private immutable _deployer;
+
     error CBD_OnlyHub();
 
-    /// @notice constructor
-    constructor() {
-        vaultHub = msg.sender;
+    /// @param _subManagerDeployer Pre-deployed CardBoundVaultSubManagerDeployer address
+    /// @param _bytecodeProvider   Pre-deployed CardBoundVaultBytecodeProvider address
+    constructor(address _subManagerDeployer, address _bytecodeProvider) {
+        _deployer = msg.sender;
+        subManagerDeployer = ISubManagerDeployer(_subManagerDeployer);
+        bytecodeProvider = ICBVBytecodeProvider(_bytecodeProvider);
     }
 
-    /// @notice predict
-    /// @param hub hub
-    /// @param vfideToken vfideToken
-    /// @param owner_ owner_
-    /// @param guardianThreshold guardianThreshold
-    /// @param maxPerTransfer maxPerTransfer
-    /// @param dailyLimit dailyLimit
-    /// @param ledger ledger
-    /// @return predicted predicted
+    /// @notice initHub — one-time call to wire the VaultHub address after it deploys.
+    /// @dev    Can only be called once (vaultHub == 0) and only by the original deployer.
+    function initHub(address hub) external {
+        require(vaultHub == address(0), "CBD: hub already set");
+        require(msg.sender == _deployer, "CBD: not deployer");
+        require(hub != address(0), "CBD: zero hub");
+        vaultHub = hub;
+    }
+
+    /// @notice predict the CREATE2 vault address for the given parameters
     function predict(
         address hub,
         address vfideToken,
@@ -36,54 +59,25 @@ contract CardBoundVaultDeployer {
         uint256 dailyLimit,
         address ledger
     ) external view returns (address predicted) {
-        // XCHAIN-4 FIX: chain-aware CREATE2 prediction.
-        //
-        // Standard EVM (Base, Polygon, Optimism, Arbitrum, Mainnet)
-        // uses the formula:
-        //   address = keccak256(0xff || deployer || salt || keccak256(creationCode))[12:]
-        //
-        // zkSync Era uses a different formula:
-        //   address = keccak256(zksyncCreate2Prefix || deployer || salt
-        //              || keccak256(bytecodeHash) || keccak256(constructorInputHash))[12:]
-        // where zksyncCreate2Prefix = keccak256("zksyncCreate2") and
-        // bytecodeHash is the EraVM-specific bytecode-hash artifact
-        // produced by the zksolc compiler, NOT keccak256 of the
-        // creation bytecode. This artifact is not available from
-        // within Solidity at runtime — it lives only in the
-        // compilation output.
-        //
-        // Because the zksolc artifact isn't reachable from inside the
-        // contract, we do NOT attempt zkSync-formula prediction here.
-        // Instead, we detect the chain at runtime and:
-        //   - On standard EVM chains: return the EVM-formula prediction (existing behavior)
-        //   - On zkSync chains (324 mainnet, 300 testnet): revert with
-        //     a clear error directing the caller to use the off-chain
-        //     zkSync address-prediction utility (see lib/crypto/zkSyncAddress.ts)
-        //
-        // The frontend's `useVaultOperations` hook (and any other
-        // caller of `predict`) must check the chain ID first and route
-        // to the off-chain predictor on zkSync. This is enforced via
-        // the lib/crypto/zkSyncAddress.ts helper added in v19.11.
+        // XCHAIN-4: zkSync uses a different CREATE2 formula — off-chain only
         uint256 chainId = block.chainid;
-        if (chainId == 324 || chainId == 300) {
-            // zkSync mainnet (324) or zkSync Sepolia (300)
-            revert("CBD_zkSync_predict_off-chain_only");
-        }
+        if (chainId == 324 || chainId == 300) revert("CBD_zkSync_predict_off-chain_only");
+
+        address[] memory guardians = new address[](1);
+        guardians[0] = owner_;
 
         bytes32 salt = _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger);
-        bytes32 codeHash = keccak256(_creationCode(hub, vfideToken, owner_, guardianThreshold, maxPerTransfer, dailyLimit, ledger));
-        predicted = address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, codeHash)))));
+        bytes memory init = bytecodeProvider.creationCode(
+            hub, vfideToken, owner_, owner_, guardians,
+            guardianThreshold, maxPerTransfer, dailyLimit, ledger,
+            address(0), address(0), address(0), address(0)
+        );
+        predicted = address(uint160(uint256(keccak256(
+            abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(init))
+        ))));
     }
 
-    /// @notice deploy
-    /// @param hub hub
-    /// @param vfideToken vfideToken
-    /// @param owner_ owner_
-    /// @param guardianThreshold guardianThreshold
-    /// @param maxPerTransfer maxPerTransfer
-    /// @param dailyLimit dailyLimit
-    /// @param ledger ledger
-    /// @return vault vault
+    /// @notice deploy a new CardBoundVault via CREATE2 — only callable by vaultHub
     function deploy(
         address hub,
         address vfideToken,
@@ -98,51 +92,34 @@ contract CardBoundVaultDeployer {
         address[] memory guardians = new address[](1);
         guardians[0] = owner_;
 
-        vault = address(
-            new CardBoundVault{salt: _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger)}(
-                hub,
-                vfideToken,
-                owner_,
-                owner_,
-                guardians,
-                guardianThreshold,
-                maxPerTransfer,
-                dailyLimit,
-                ledger
-            )
+        bytes32 salt = _salt(owner_, hub, vfideToken, maxPerTransfer, dailyLimit, ledger);
+
+        // Predict the vault address so sub-managers can be wired before the vault deploys
+        bytes memory init = bytecodeProvider.creationCode(
+            hub, vfideToken, owner_, owner_, guardians,
+            guardianThreshold, maxPerTransfer, dailyLimit, ledger,
+            address(0), address(0), address(0), address(0)
         );
+        address predicted = address(uint160(uint256(keccak256(
+            abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(init))
+        ))));
+
+        (address pm, address wq, address im, address am) =
+            subManagerDeployer.deployManagers(predicted, dailyLimit);
+
+        // Deploy with real sub-manager addresses
+        bytes memory initWithManagers = bytecodeProvider.creationCode(
+            hub, vfideToken, owner_, owner_, guardians,
+            guardianThreshold, maxPerTransfer, dailyLimit, ledger,
+            pm, wq, im, am
+        );
+
+        assembly {
+            vault := create2(0, add(initWithManagers, 32), mload(initWithManagers), salt)
+        }
+        require(vault != address(0), "CBD: create2 failed");
     }
 
-    /// @notice _creationCode
-    /// @param hub hub
-    /// @param vfideToken vfideToken
-    /// @param owner_ owner_
-    /// @param guardianThreshold guardianThreshold
-    /// @param maxPerTransfer maxPerTransfer
-    /// @param dailyLimit dailyLimit
-    /// @param ledger ledger
-    function _creationCode(
-        address hub,
-        address vfideToken,
-        address owner_,
-        uint8 guardianThreshold,
-        uint256 maxPerTransfer,
-        uint256 dailyLimit,
-        address ledger
-    ) internal pure returns (bytes memory) {
-        address[] memory guardians = new address[](1);
-        guardians[0] = owner_;
-
-        return abi.encodePacked(type(CardBoundVault).creationCode, abi.encode(hub, vfideToken, owner_, owner_, guardians, guardianThreshold, maxPerTransfer, dailyLimit, ledger));
-    }
-
-    /// @notice _salt
-    /// @param owner_ owner_
-    /// @param hub hub
-    /// @param token token
-    /// @param maxPerTransfer maxPerTransfer
-    /// @param dailyLimit dailyLimit
-    /// @param ledger ledger
     function _salt(
         address owner_,
         address hub,
@@ -151,8 +128,7 @@ contract CardBoundVaultDeployer {
         uint256 dailyLimit,
         address ledger
     ) internal pure returns (bytes32) {
-        // F-04 FIX: Include configuration in salt so prefunded vault predictions remain reachable
-        // even if VaultHub defaults are updated. Each (owner, hub, token, limits, ledger) gets unique salt.
+        // F-04: Include configuration in salt so prefunded predictions remain reachable
         return keccak256(abi.encodePacked(owner_, hub, token, maxPerTransfer, dailyLimit, ledger));
     }
 }
