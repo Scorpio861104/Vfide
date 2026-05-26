@@ -29,6 +29,7 @@ export function SwapTab() {
   const [toToken, setToToken] = useState<Token>('VFIDE');
   const [amount, setAmount] = useState('1');
   const [prices, setPrices] = useState<{ vfideUsd: number; ethUsd: number }>({ vfideUsd: 0.1, ethUsd: 2000 });
+  const [usingFallbackPrice, setUsingFallbackPrice] = useState(false);
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [routeSummary, setRouteSummary] = useState<string | null>(null);
 
@@ -48,9 +49,12 @@ export function SwapTab() {
         if (!mounted) return;
         const vfideUsd = Number(priceData?.prices?.vfide?.usd ?? 0.1);
         const ethUsd = Number(priceData?.prices?.eth?.usd ?? 2000);
+        const vfideResolved = Number.isFinite(vfideUsd) && vfideUsd > 0 ? vfideUsd : null;
+        const ethResolved   = Number.isFinite(ethUsd)   && ethUsd   > 0 ? ethUsd   : null;
+        setUsingFallbackPrice(!vfideResolved || !ethResolved);
         setPrices({
-          vfideUsd: Number.isFinite(vfideUsd) && vfideUsd > 0 ? vfideUsd : 0.1,
-          ethUsd: Number.isFinite(ethUsd) && ethUsd > 0 ? ethUsd : 2000,
+          vfideUsd: vfideResolved ?? 0.1,
+          ethUsd:   ethResolved   ?? 2000,
         });
 
         const normalized: Record<string, number> = {};
@@ -59,6 +63,9 @@ export function SwapTab() {
           normalized[row.token_symbol.toUpperCase()] = Number(row.balance ?? 0);
         }
         setBalances(normalized);
+      })
+      .catch(() => {
+        if (mounted) setUsingFallbackPrice(true);
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -107,7 +114,14 @@ export function SwapTab() {
   return (
     <div className="space-y-5">
       <div className="bg-white/3 border border-white/10 rounded-2xl p-5 space-y-3">
-        <h3 className="text-sm font-semibold text-white">Swap Planner</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-white">Swap Planner</h3>
+          {usingFallbackPrice && (
+            <span className="text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+              ⚠ Using fallback prices — oracle unavailable
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>

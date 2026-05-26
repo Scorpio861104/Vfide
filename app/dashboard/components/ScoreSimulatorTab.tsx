@@ -52,15 +52,22 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
 };
 
 function project(currentScore: number, monthlyGain: number, months: number): number {
+  // Contract: Seer.decayPerMonth=100, decayStartDays=90.
+  // Decay only triggers after 90 consecutive days of inactivity.
+  // In this simulator, we apply decay only when the user selects "inactive" (monthlyGain === 0).
+  // Active users (any gain > 0) are assumed to reset their inactivity clock each month.
+  const applyDecay = monthlyGain === 0;
   let score = currentScore;
   for (let i = 0; i < months; i++) {
     // Apply gain
     score += monthlyGain;
-    // Apply decay toward NEUTRAL
-    if (score > NEUTRAL) {
-      score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
-    } else if (score < NEUTRAL) {
-      score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
+    // Apply decay toward NEUTRAL only when inactive
+    if (applyDecay) {
+      if (score > NEUTRAL) {
+        score = Math.max(NEUTRAL, score - DECAY_PER_MONTH);
+      } else if (score < NEUTRAL) {
+        score = Math.min(NEUTRAL, score + DECAY_PER_MONTH);
+      }
     }
     score = Math.max(0, Math.min(MAX_SCORE, score));
   }
@@ -117,8 +124,8 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
               DAO-approved operators issue score adjustments based on observed activity. There&apos;s no
               fixed &quot;100 points per transaction&quot; formula. The contract caps these adjustments at{' '}
               {MAX_SINGLE_REWARD} points per call, {MAX_DAILY_OPERATOR_REWARD} per operator-pair per day,
-              and {MAX_DAILY_SUBJECT_DELTA} total per day, with {DECAY_PER_MONTH}-point monthly decay
-              toward neutral ({NEUTRAL}).
+              and {MAX_DAILY_SUBJECT_DELTA} total per day. Inactive wallets (no activity for 90+ days) lose {DECAY_PER_MONTH} points per month
+              toward neutral ({NEUTRAL}); active wallets do not decay.
             </div>
           </div>
 
