@@ -176,7 +176,7 @@ export default function DashboardPage() {
               <FeeSavingsCard
                 totalVolume={totalVolume}
                 transactionCount={txCount}
-                buyerFeeBps={50}
+                buyerFeeBps={feeRate ?? 500}
               />
             </motion.div>
           </div>
