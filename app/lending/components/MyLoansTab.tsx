@@ -16,13 +16,14 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { formatUnits } from 'viem';
-import { Loader2, Coins, AlertCircle, X, Download, AlertTriangle } from 'lucide-react';
+import { Loader2, Coins, AlertCircle, X, Download, AlertTriangle, PenLine, Clock } from 'lucide-react';
 import {
   useTermLoanStats,
   useLoansBatch,
   useCancelLoan,
   useRepay,
   useClaimDefault,
+  useSignAsGuarantor,
   translateTermLoanError,
   LoanState,
   LOAN_STATE_LABEL,
@@ -57,7 +58,13 @@ export function MyLoansTab() {
       .filter((e): e is { id: bigint; loan: Loan } => !!e.loan)
       .filter(({ loan }) => {
         const a = address.toLowerCase();
-        return loan.lender.toLowerCase() === a || loan.borrower.toLowerCase() === a;
+        // Show loans the user is party to, OR any loan awaiting guardian co-sign
+        // (guardians need to find loans to sign; the contract enforces membership on-chain)
+        return (
+          loan.lender.toLowerCase() === a ||
+          loan.borrower.toLowerCase() === a ||
+          loan.state === LoanState.COSIGNING
+        );
       });
   }, [loans, address]);
 
@@ -79,6 +86,12 @@ export function MyLoansTab() {
     isConfirming: claimConfirming,
     isConfirmed: claimConfirmed,
   } = useClaimDefault();
+  const {
+    signAsGuarantor,
+    isPending: signPending,
+    isConfirming: signConfirming,
+    isConfirmed: signConfirmed,
+  } = useSignAsGuarantor();
 
   const [actingOn, setActingOn] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -107,6 +120,13 @@ export function MyLoansTab() {
       setActingOn(null);
     }
   }, [claimConfirmed, actingOn, refetch, refetchStats]);
+  useEffect(() => {
+    if (signConfirmed && actingOn) {
+      refetch();
+      refetchStats();
+      setActingOn(null);
+    }
+  }, [signConfirmed, actingOn, refetch, refetchStats]);
 
   if (!address) {
     return (
@@ -147,7 +167,7 @@ export function MyLoansTab() {
     );
   }
 
-  const busy = cancelPending || cancelConfirming || repayPending || repayConfirming || claimPending || claimConfirming;
+  const busy = cancelPending || cancelConfirming || repayPending || repayConfirming || claimPending || claimConfirming || signPending || signConfirming;
 
   async function actWith(promise: Promise<unknown>, id: bigint) {
     setError(null);
@@ -185,6 +205,7 @@ export function MyLoansTab() {
             onCancel={() => actWith(cancelLoan(id), id)}
             onClaimDefault={() => actWith(claimDefault(id), id)}
             onRepay={(amount) => actWith(repay(id, amount), id)}
+            onSignAsGuarantor={() => actWith(signAsGuarantor(id), id)}
           />
         ))}
       </div>
@@ -202,12 +223,15 @@ interface LoanRowProps {
   onCancel: () => void;
   onClaimDefault: () => void;
   onRepay: (amount: bigint) => void;
+  onSignAsGuarantor: () => void;
 }
 
-function LoanRow({ id, loan, userAddress, busy, actingOn, termLoanAddress, onCancel, onClaimDefault, onRepay }: LoanRowProps) {
+function LoanRow({ id, loan, userAddress, busy, actingOn, termLoanAddress, onCancel, onClaimDefault, onRepay, onSignAsGuarantor }: LoanRowProps) {
   const isLender = loan.lender.toLowerCase() === userAddress.toLowerCase();
   const isBorrower = loan.borrower.toLowerCase() === userAddress.toLowerCase();
   const isThisBusy = actingOn === id.toString();
+  // Note: guardian membership is checked on-chain; we surface the button for all
+  // users when a loan is in COSIGNING — the contract will revert if they're not a guardian.
 
   const { data: owedData } = useReadContract({
     address: termLoanAddress,
@@ -235,6 +259,9 @@ function LoanRow({ id, loan, userAddress, busy, actingOn, termLoanAddress, onCan
             <span className={`text-xs font-semibold ${stateColor}`}>{stateLabel}</span>
             {isLender && <span className="text-xs text-purple-400">as lender</span>}
             {isBorrower && <span className="text-xs text-emerald-400">as borrower</span>}
+            {loan.state === LoanState.COSIGNING && !isLender && !isBorrower && (
+              <span className="text-xs text-cyan-400">as guarantor?</span>
+            )}
           </div>
           <p className="text-sm font-mono text-white">
             {formatUnits(loan.principal, VFIDE_DECIMALS)} VFIDE · {(Number(loan.interestBps) / 100).toFixed(2)}% ·{' '}
@@ -252,6 +279,24 @@ function LoanRow({ id, loan, userAddress, busy, actingOn, termLoanAddress, onCan
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+        {/* COSIGNING state: guardian must co-sign to activate the loan */}
+        {loan.state === LoanState.COSIGNING && isBorrower && (
+          <div className="flex items-center gap-2 text-xs text-amber-300 w-full">
+            <Clock size={11} aria-hidden="true" />
+            Awaiting guardian co-sign — share this loan ID with one of your guardians.
+          </div>
+        )}
+        {loan.state === LoanState.COSIGNING && !isBorrower && (
+          <button
+            onClick={onSignAsGuarantor}
+            disabled={busy}
+            className="flex items-center gap-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 px-3 py-1.5 text-xs font-semibold text-cyan-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+            aria-label={`Sign as guarantor for loan ${id.toString()}`}
+          >
+            {isThisBusy ? <Loader2 size={11} className="animate-spin" aria-hidden="true" /> : <PenLine size={11} aria-hidden="true" />}
+            Sign as guarantor
+          </button>
+        )}
         {isLender && loan.state === LoanState.OPEN && (
           <button
             onClick={onCancel}
