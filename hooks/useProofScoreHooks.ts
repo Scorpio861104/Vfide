@@ -42,7 +42,7 @@ export function useProofScore(userAddress?: `0x${string}`) {
     scoreNum >= 5600 ? 'Trusted' :
     scoreNum >= 5400 ? 'Governance' :
     scoreNum >= 5000 ? 'Neutral' :
-    scoreNum >= 3500 ? 'Low Trust' : 'Risky'
+    scoreNum >= 4000 ? 'Low Trust' : 'Risky'
   
   // Total fees based on ProofScore (linear interpolation in contract)
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000

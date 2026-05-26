@@ -53,7 +53,7 @@ export function tierForScore(score: number): string {
   if (score >= 5600) return TIER_HEX.trusted;
   if (score >= 5400) return TIER_HEX.governance;
   if (score >= 5000) return TIER_HEX.neutral;
-  if (score >= 3500) return TIER_HEX.low;
+  if (score >= 4000) return TIER_HEX.low;
   return TIER_HEX.risky;
 }
 
@@ -67,7 +67,7 @@ export function tierKeyForScore(score: number): TierKey {
   if (score >= 5600) return 'trusted';
   if (score >= 5400) return 'governance';
   if (score >= 5000) return 'neutral';
-  if (score >= 3500) return 'low';
+  if (score >= 4000) return 'low';
   return 'risky';
 }
 

@@ -329,12 +329,12 @@ describe('getScoreTierColor', () => {
     expect(getScoreTierColor(6999)).toBe('#10B981')
   })
 
-  it('returns red for RISKY (<3500)', () => {
+  it('returns red for RISKY (<4000)', () => {
     expect(getScoreTierColor(0)).toBe('#EF4444')
     expect(getScoreTierColor(3499)).toBe('#EF4444')
   })
 
-  it('returns yellow for LOW TRUST (>=3500, <5000)', () => {
+  it('returns yellow for LOW TRUST (>=4000, <5000)', () => {
     expect(getScoreTierColor(3500)).toBe('#EAB308')
     expect(getScoreTierColor(4999)).toBe('#EAB308')
   })

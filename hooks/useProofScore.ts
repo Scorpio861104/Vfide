@@ -1,7 +1,7 @@
 import { useReadContract, useAccount } from 'wagmi'
 import { ProofScoreBurnRouterABI, SeerABI, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
-import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS, LOW_TRUST_THRESHOLD } from '@/lib/constants'
+import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
 
 const FEE_QUOTE_AMOUNT = 10_000n * 10n ** 18n
 
@@ -116,7 +116,7 @@ function getTierColor(score: number): string {
   if (score >= 8000) return '#00FF88' // Elite green
   if (score >= 7000) return '#00F0FF' // High trust cyan
   if (score >= 5000) return '#FFD700' // Neutral gold
-  if (score >= 3500) return '#FFA500' // Low trust orange
+  if (score >= 4000) return '#FFA500' // Low trust orange
   return '#FF4444' // Risky red
 }
 
@@ -158,7 +158,7 @@ export function useSeerThresholds() {
   return {
     minForGovernance: minForGovernance ? Number(minForGovernance) : PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
     minForMerchant: minForMerchant ? Number(minForMerchant) : PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
-    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : LOW_TRUST_THRESHOLD,
+    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : 4000,
     highTrustThreshold: highTrustThreshold ? Number(highTrustThreshold) : 8000,
   }
 }
