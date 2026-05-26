@@ -1394,8 +1394,8 @@
     --shadow-elevated: 0 24px 80px -20px rgba(0, 0, 0, 0.6);
     
     /* Typography CSS Variables */
-  --font-display: var(--font-geist-sans, 'Space Grotesk', 'Inter', system-ui, sans-serif);
-  --font-body: var(--font-geist-sans, 'Inter', system-ui, sans-serif);
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
 
   /* Standard Neutral Scale (Zinc) */
     --neutral-50: #fafafa;
