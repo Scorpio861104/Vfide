@@ -12,13 +12,15 @@ import Link from 'next/link';
 import { useLocale } from '@/hooks/useLocale';
 import { REMITTANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
+// Rates are illustrative examples for testnet only.
+// Real rates are set by the on-chain oracle at transaction time.
+// Competitor savings are approximate based on publicly listed rates.
 const CORRIDORS = [
-  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~7% Western Union fee' },
-  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~4% bank transfer fee' },
-  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~6% MoneyGram fee' },
-  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~3.5% PayPal fee' },
+  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~7% Western Union fee' },
+  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~5% bank transfer fee' },
+  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~8% MoneyGram fee' },
+  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~4% PayPal fee' },
 ];
-// * Indicative testnet rates only — not live FX data.
 
 const STEPS = [
   { step: '1', title: 'Connect wallet', desc: 'MetaMask, WalletConnect, or Coinbase Wallet.' },
@@ -54,12 +56,12 @@ export default function RemittancePage() {
         <div className="container mx-auto px-4 max-w-5xl py-12 relative">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs uppercase tracking-widest text-accent mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
               <Globe size={12} /> International transfers on Base
             </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
               Send money home.<br />
-              <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, var(--accent), #10b981)' }}>
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #22d3ee, #10b981)' }}>
                 Zero merchant fees.
               </span>
             </h1>
@@ -82,7 +84,7 @@ export default function RemittancePage() {
                       <button key={i} onClick={() => setSelectedCorridor(i)}
                         className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
                           selectedCorridor === i
-                            ? 'bg-accent/10 border border-accent/30'
+                            ? 'bg-cyan-500/10 border border-cyan-500/30'
                             : 'bg-white/5 border border-transparent hover:bg-white/10'
                         }`}
                       >
@@ -95,8 +97,8 @@ export default function RemittancePage() {
                     ))}
                   </div>
                 </div>
-                <p className="mt-2 text-xs text-zinc-600 leading-tight">
-                  * Indicative testnet rates only. Savings shown are fee-percentage comparisons vs. industry averages — not live FX quotes.
+                <p className="text-xs text-zinc-600 mt-1">
+                  * Rates are illustrative testnet examples. Actual rates are set on-chain at send time.
                 </p>
 
                 {/* Amount input */}
@@ -132,7 +134,7 @@ export default function RemittancePage() {
                   </div>
                   <div className="border-t border-zinc-800 pt-2 flex justify-between font-semibold">
                     <span className="text-white">Recipient gets</span>
-                    <span className="text-accent">${Math.max(0, netAmount).toFixed(2)} USDC</span>
+                    <span className="text-cyan-400">${Math.max(0, netAmount).toFixed(2)} USDC</span>
                   </div>
                 </div>
 
@@ -151,7 +153,7 @@ export default function RemittancePage() {
                 <div className="space-y-4">
                   {STEPS.map((s) => (
                     <div key={s.step} className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-accent text-sm font-bold shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300 text-sm font-bold shrink-0">
                         {s.step}
                       </div>
                       <div>
@@ -166,7 +168,7 @@ export default function RemittancePage() {
               {/* Trust badges */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { icon: Shield, label: 'Non-custodial', color: 'var(--accent)' },
+                  { icon: Shield, label: 'Non-custodial', color: '#22d3ee' },
                   { icon: Clock, label: '< 3 seconds', color: '#10b981' },
                   { icon: Users, label: 'No KYC required', color: '#a78bfa' },
                 ].map((b) => {
@@ -185,7 +187,7 @@ export default function RemittancePage() {
                 {isConnected ? (
                   <div className="space-y-3">
                     <Link href="/api/remittance/beneficiaries"
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors"
                     >
                       <Plus size={16} /> Add beneficiary & send
                     </Link>

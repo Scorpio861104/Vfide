@@ -175,6 +175,9 @@ export function LenderDashboardTab() {
             that borrows from your balance. You can withdraw anytime, as long as your funds
             aren&rsquo;t in the middle of a loan (which only lasts one transaction anyway).
           </p>
+          <p className="text-xs text-amber-400/80 mb-3">
+            ⚠ Minimum initial deposit: <strong>100 VFIDE</strong>. Deposits below this threshold will be rejected by the contract.
+          </p>
           <div className="flex gap-2">
             <input
               type="number"

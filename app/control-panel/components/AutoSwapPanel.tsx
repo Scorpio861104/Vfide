@@ -229,7 +229,7 @@ export function AutoSwapPanel() {
             />
             <div className="flex justify-between text-sm text-slate-400">
               <span>0.5%</span>
-              <span>5% (max)</span>
+              <span>5% (UI cap; protocol allows up to 20%)</span>
             </div>
           </div>
 

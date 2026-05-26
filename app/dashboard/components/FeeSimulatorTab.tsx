@@ -25,7 +25,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
       <motion.div variants={itemVariants}>
         <GlassCard className="p-8" hover={false}>
           <h2 className="mb-2 flex items-center gap-3 text-2xl font-bold text-white">
-            <Calculator className="text-accent" size={28} />
+            <Calculator className="text-cyan-400" size={28} />
             Fee Simulator
           </h2>
           <p className="mb-8 text-white/60">See how your ProofScore affects transaction fees</p>
@@ -37,13 +37,13 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
                 type="number"
                 value={amount}
                 onChange={(e) =>  setAmount(Number(e.target.value))}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-xl font-bold text-white transition-colors focus:border-accent/50 focus:outline-none"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-xl font-bold text-white transition-colors focus:border-cyan-500/50 focus:outline-none"
               />
             </div>
 
             <div>
               <label className="mb-3 block font-medium text-white/80">
-                Simulated ProofScore: <span className="text-accent">{simulatedScore}</span>
+                Simulated ProofScore: <span className="text-cyan-400">{simulatedScore}</span>
               </label>
               <input
                 type="range"
@@ -51,7 +51,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
                 max={10000}
                 value={simulatedScore}
                 onChange={(e) =>  setSimulatedScore(Number(e.target.value))}
-                className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-accent"
+                className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-500"
               />
               <div className="mt-2 flex justify-between text-xs text-white/40">
                 <span>0</span>
@@ -76,19 +76,15 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-accent/30 bg-accent/10 p-4">
-              <p className="text-sm text-accent">
+            <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 p-4">
+              <p className="text-sm text-cyan-400">
                 💡 <strong>Tip:</strong> Your current score of {currentScore} gives you a {calculateFee(currentScore).toFixed(2)}% fee rate.
                 {currentScore < 8000 && ' Increase your score to 8000 to unlock the minimum 0.25% rate!'}
               </p>
             </div>
-
-            <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/40 p-3 mt-2">
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                <strong className="text-zinc-400">Note:</strong> This simulator shows the base ProofScore fee curve only.
-                Your actual fee may vary based on the <strong className="text-zinc-400">adaptive volume multiplier</strong> —
-                a DAO-governed parameter that scales fees by transaction volume.
-                Defaults are set at deployment and can only be changed via a governance vote.
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs text-white/40">
+                <strong className="text-white/60">Note:</strong> This simulator shows fee rates at protocol defaults (5% max, 0.25% min). Actual fees may vary based on current network volume — the protocol applies an adaptive volume multiplier during high-activity periods. Default fee curve parameters are DAO-governed and subject to change. Values shown are for informational purposes only.
               </p>
             </div>
           </div>
