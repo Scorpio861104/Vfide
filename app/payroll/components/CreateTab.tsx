@@ -5,7 +5,9 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { Plus, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
-const TOKENS = ['VFIDE', 'USDC', 'USDT', 'ETH'];
+// Only tokens confirmed supported at deploy. USDT/ETH require DAO governance vote
+// (PayrollManager.supportedTokens mapping) before they can be added here.
+const TOKENS = ['VFIDE', 'USDC'];
 
 export function CreateTab() {
   const { address } = useAccount();
@@ -138,6 +140,7 @@ export function CreateTab() {
                 required
                 type="number"
                 min="1"
+                max="365"
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-cyan-500/50"
                 value={form.durationDays}
                 onChange={(e) => setForm((f) => ({ ...f, durationDays: e.target.value }))}

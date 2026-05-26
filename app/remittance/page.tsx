@@ -133,7 +133,7 @@ export default function RemittancePage() {
                 </div>
 
                 <p className="text-xs text-zinc-600 mt-3">
-                  Buyer fee drops to 0.25% at ProofScore ≥ 800. Build reputation, pay less.
+                  Buyer fee drops to 0.25% at ProofScore ≥ 8,000. Build reputation, pay less.
                 </p>
               </div>
             </motion.div>

@@ -33,7 +33,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
       color: 'border-amber-400/40 bg-amber-400/5',
       labelColor: 'text-amber-400',
       title: 'Headhunter Recognition',
-      description: 'Top 20 quarterly recruiters earn the Headhunter governance badge: +25% voting weight, proposal rights, and council eligibility.',
+      description: 'Qualifying recruiters earn the Headhunter governance badge (+35 duty points) — granting enhanced governance standing, proposal rights, and council eligibility. Awarded each quarter by the DAO.',
       cta: { label: 'Headhunter Program', href: '/headhunter' },
     },
     {
