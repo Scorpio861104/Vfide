@@ -10,6 +10,7 @@ import { useAccount } from 'wagmi';
 import { AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useRegisterMerchant } from '@/hooks/useMerchantHooks';
+import { useProofScore } from '@/hooks/useProofScore';
 import { toast } from '@/lib/toast';
 
 import { type QuickProduct, type Step, generateId, slugify } from './merchant-setup-types';
@@ -20,6 +21,8 @@ import { SetupStepSuccess } from './SetupStepSuccess';
 export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string) => void }) {
   const { address, isConnected } = useAccount();
   const { registerMerchant: registerOnChain } = useRegisterMerchant();
+  // Pre-flight ProofScore gate — contract requires MIN_MERCHANT = 5600
+  const { score, canMerchant, isLoading: scoreLoading } = useProofScore(address);
 
   const [step, setStep] = useState<Step>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,6 +151,25 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
     } catch { toast.error('Something went wrong. Please try again.'); }
     setIsSubmitting(false);
   };
+
+  // Show a gate if score is known and below MIN_MERCHANT
+  if (!scoreLoading && score !== null && !canMerchant) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[320px] text-center px-6 py-10">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mb-5">
+          <Check size={28} className="text-amber-400" />
+        </div>
+        <h2 className="text-xl font-bold text-white mb-2">ProofScore too low</h2>
+        <p className="text-gray-400 text-sm max-w-xs mb-3">
+          Merchant registration requires a ProofScore of <span className="text-amber-300 font-semibold">5,600</span> or above.
+          Your current score is <span className="text-white font-semibold">{score?.toLocaleString() ?? '—'}</span>.
+        </p>
+        <p className="text-gray-500 text-xs max-w-xs">
+          Complete payments and build trust to raise your score. You can check your progress on the ProofScore page.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
