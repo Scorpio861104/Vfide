@@ -39,7 +39,7 @@ const TIERS = [
     min: 3500,
     max: 4999,
     hex: '#fb923c',
-    feeRange: '3.81%–5.00%',
+    feeRange: '3.82%–5.00%',
     canVote: false,
     canMerchant: false,
     canCouncil: false,
@@ -50,7 +50,7 @@ const TIERS = [
     min: 5000,
     max: 5399,
     hex: '#fbbf24',
-    feeRange: '3.34%–3.81%',
+    feeRange: '3.34%–3.82%',
     canVote: false,
     canMerchant: false,
     canCouncil: false,
@@ -61,7 +61,7 @@ const TIERS = [
     min: 5400,
     max: 5599,
     hex: '#38bdf8',
-    feeRange: '3.10%–3.34%',
+    feeRange: '3.11%–3.34%',
     canVote: true,
     canMerchant: false,
     canCouncil: false,
@@ -83,7 +83,7 @@ const TIERS = [
     min: 7000,
     max: 7999,
     hex: '#22d3ee',
-    feeRange: '0.25%–1.44%',
+    feeRange: '0.26%–1.44%',
     canVote: true,
     canMerchant: true,
     canCouncil: true,
@@ -175,19 +175,19 @@ export function TiersTab() {
       {/* Explanation */}
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <h3 className="text-lg font-bold text-zinc-100 mb-4 flex items-center gap-2">
-          <Shield size={18} className="text-accent" />
+          <Shield size={18} className="text-cyan-400" />
           How tiers work
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-zinc-400">
           <div>
-            <h4 className="text-accent font-semibold mb-1">ProofScore (on-chain)</h4>
+            <h4 className="text-cyan-400 font-semibold mb-1">ProofScore (on-chain)</h4>
             <p>
               Your score is issued by DAO-approved Seer operators based on observed protocol activity.
               It lives entirely on-chain — no centralized scoring authority.
             </p>
           </div>
           <div>
-            <h4 className="text-accent font-semibold mb-1">Fee curve</h4>
+            <h4 className="text-cyan-400 font-semibold mb-1">Fee curve</h4>
             <p>
               Burn fee is a linear function of score between 0.25% (≥8,000 Elite) and 5.00% (≤4,000 Risky).
               The fee applies to buyers, never merchants.
