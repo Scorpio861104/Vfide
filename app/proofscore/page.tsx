@@ -10,9 +10,9 @@ import { PROOFSCORE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 // Canonical 7-tier system — 0–10,000 scale (matches Seer contract + ScoringConstants.sol)
 // LOW_FEE_FLOOR=4000, NEUTRAL=5000, MIN_GOVERNANCE=5400, MIN_MERCHANT=5600, HIGH_FEE_CEIL=8000
 const TIERS = [
-  { tier: 'Risky',      min: 0,    max: 3499,  color: 'bg-red-500',    desc: 'No verified identity. High risk. Max 5% fee.' },
-  { tier: 'Low Trust',  min: 3500, max: 4999,  color: 'bg-orange-400', desc: 'Minimal proof. Fee reduces toward 5%–3.8% once score exceeds 4,000.' },
-  { tier: 'Neutral',    min: 5000, max: 5399,  color: 'bg-yellow-400', desc: 'Basic address ownership verified. ~3.8%–3.3% fee.' },
+  { tier: 'Risky',      min: 0,    max: 3999,  color: 'bg-red-500',    desc: 'No verified identity. High risk. Flat 5% fee.' },
+  { tier: 'Low Trust',  min: 4000, max: 4999,  color: 'bg-orange-400', desc: 'Score above the 4,000 floor. Fee descends from 5.00% toward 3.82%.' },
+  { tier: 'Neutral',    min: 5000, max: 5399,  color: 'bg-yellow-400', desc: 'Basic address ownership verified. Fee: 3.82%–3.34%.' },
   { tier: 'Governance', min: 5400, max: 5599,  color: 'bg-lime-400',   desc: 'Eligible to vote and propose in the DAO.' },
   { tier: 'Trusted',    min: 5600, max: 6999,  color: 'bg-green-500',  desc: 'Multi-source trust. Merchant registration eligible.' },
   { tier: 'Council',    min: 7000, max: 7999,  color: 'bg-cyan-500',   desc: 'Council-eligible. Can endorse and mentor others.' },
