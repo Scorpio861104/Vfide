@@ -12,11 +12,14 @@ import Link from 'next/link';
 import { useLocale } from '@/hooks/useLocale';
 import { REMITTANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
+// Rates are illustrative examples for testnet only.
+// Real rates are set by the on-chain oracle at transaction time.
+// Competitor savings are approximate based on publicly listed rates.
 const CORRIDORS = [
-  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$12 vs. Western Union' },
-  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$8 vs. bank transfer' },
-  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$15 vs. MoneyGram' },
-  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$6 vs. PayPal' },
+  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~7% Western Union fee' },
+  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~5% bank transfer fee' },
+  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~8% MoneyGram fee' },
+  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~4% PayPal fee' },
 ];
 
 const STEPS = [
@@ -94,6 +97,9 @@ export default function RemittancePage() {
                     ))}
                   </div>
                 </div>
+                <p className="text-xs text-zinc-600 mt-1">
+                  * Rates are illustrative testnet examples. Actual rates are set on-chain at send time.
+                </p>
 
                 {/* Amount input */}
                 <div className="mb-4">

@@ -82,6 +82,11 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
                 {currentScore < 8000 && ' Increase your score to 8000 to unlock the minimum 0.25% rate!'}
               </p>
             </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <p className="text-xs text-white/40">
+                <strong className="text-white/60">Note:</strong> This simulator shows fee rates at protocol defaults (5% max, 0.25% min). Actual fees may vary based on current network volume — the protocol applies an adaptive volume multiplier during high-activity periods. Default fee curve parameters are DAO-governed and subject to change. Values shown are for informational purposes only.
+              </p>
+            </div>
           </div>
         </GlassCard>
       </motion.div>

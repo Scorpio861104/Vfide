@@ -4,7 +4,7 @@
  * SanctumOverviewTab — charity & impact fund overview.
  *
  * The Sanctum is VFIDE's on-chain charity fund (SanctumVault.sol):
- *   - Receives 20% of all protocol burn fees (FeeDistributor.sol: sanctumBps=2000)
+ *   - Receives 20% of all protocol fees by default (FeeDistributor.sol: sanctumBps=2000, DAO-adjustable)
  *   - Accepts voluntary donations from any address
  *   - Disburses ONLY to DAO-approved charitable organisations
  *   - NOT a token reward system; NOT a buyer-fraud reimbursement pool
@@ -42,7 +42,7 @@ export function OverviewTab() {
             {
               step: '1',
               title: 'Fee Collection',
-              desc: '20% of all VFIDE transaction fees flow automatically to The Sanctum (FeeDistributor.sol: sanctumBps = 2000)',
+              desc: '20% of all VFIDE transaction fees flow automatically to The Sanctum by default (FeeDistributor.sol: sanctumBps = 2000). The DAO may adjust this split within protocol bounds.',
             },
             {
               step: '2',

@@ -245,10 +245,12 @@ export default function VaultSafetyPage() {
             </p>
             <p>
               The flow is: you set up heirs and their inheritance shares once.
-              If you go inactive for the configured period (usually 180 days),
-              your guardians can initiate the inheritance claim. The vault
-              then enters a memorial state and the assets are distributed to
-              your heirs based on your configured shares.
+              When your guardians believe you are no longer able to access
+              your vault, they can initiate the inheritance claim on your behalf.
+              The vault then enters a 30-day veto period — during which you can
+              cancel it if you are still active — before entering a memorial state
+              where assets are distributed to your heirs based on your configured
+              shares.
             </p>
             <SubItem title="Why this is separate from recovery">
               Recovery assumes you&apos;re alive and trying to get your vault back.
