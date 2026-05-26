@@ -89,14 +89,14 @@ function burnFeePercent(score: number): number {
   return (MAX_BPS - ((score - 4000) * (MAX_BPS - MIN_BPS)) / 4000) / 100;
 }
 
-/** Composite end-to-end split: PSR (40 burn / 10 sanctum / 50 eco) → FeeDistributor (35/20/15/20/10 of eco).
- *  Net: 57.5% burn | 20% Sanctum | 7.5% payroll | 10% merchant | 5% headhunter = 100%. */
+/** FeeDistributor default split (FeeDistributor.sol L279, DAO-adjustable within protocol bounds):
+ *  burnBps=3500 (35%) | sanctumBps=2000 (20%) | daoPayrollBps=1500 (15%) | merchantPoolBps=2000 (20%) | headhunterPoolBps=1000 (10%) */
 const FEE_SPLITS: { id: string; label: string; pct: number; hex: string; help: string }[] = [
-  { id: 'burn',      label: 'Burn',           pct: 57.5, hex: '#f97316', help: 'Permanently removed from supply (40% direct + 17.5% via FeeDistributor)' },
-  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 20,   hex: '#ec4899', help: 'Charity + community grants (10% direct + 10% via FeeDistributor)' },
-  { id: 'merchant',  label: 'Merchant pool',  pct: 10,   hex: '#10b981', help: 'Volume rewards for top merchants (via FeeDistributor)' },
-  { id: 'payroll',   label: 'DAO payroll',    pct: 7.5,  hex: '#06b6d4', help: 'Pays elected council members (via FeeDistributor)' },
-  { id: 'headhunt',  label: 'Referral pool',  pct: 5,    hex: '#a855f7', help: 'Rewards for inviting active users (via FeeDistributor)' },
+  { id: 'burn',      label: 'Burn',           pct: 35,   hex: '#f97316', help: 'Permanently removed from supply — FeeDistributor default 35%' },
+  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 20,   hex: '#ec4899', help: 'Charity + community grants — FeeDistributor default 20%' },
+  { id: 'merchant',  label: 'Merchant pool',  pct: 20,   hex: '#10b981', help: 'Volume rewards for top merchants — FeeDistributor default 20%' },
+  { id: 'payroll',   label: 'DAO payroll',    pct: 15,   hex: '#06b6d4', help: 'Pays elected council members — FeeDistributor default 15%' },
+  { id: 'headhunt',  label: 'Referral pool',  pct: 10,   hex: '#a855f7', help: 'Rewards for inviting active users — FeeDistributor default 10%' },
 ];
 
 // ── Component ────────────────────────────────────────────────────────

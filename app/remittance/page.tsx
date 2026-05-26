@@ -16,10 +16,10 @@ import { REMITTANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 // Real rates are set by the on-chain oracle at transaction time.
 // Competitor savings are approximate based on publicly listed rates.
 const CORRIDORS = [
-  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~7% Western Union fee' },
-  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~5% bank transfer fee' },
-  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~8% MoneyGram fee' },
-  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~4% PayPal fee' },
+  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~7% Western Union fee' },
+  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~5% bank transfer fee' },
+  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~8% MoneyGram fee' },
+  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', merchantFee: '0%', time: '< 3 sec', saving: 'vs. ~4% PayPal fee' },
 ];
 
 const STEPS = [
@@ -40,7 +40,8 @@ export default function RemittancePage() {
   const _feeUSD = 0;
   // Neutral ProofScore (5000): 382 bps = 3.82% total fee (ProofScoreBurnRouter._calculateLinearFee)
   // Elite ProofScore (≥8000): 25 bps = 0.25% (minTotalBps). Demo uses neutral-score default.
-  const buyerFee = Math.max(parseFloat(amount || '0') * 0.0025, parseFloat(amount || '0') * 0.0382);
+  // Neutral ProofScore (5000) buyer fee: 382 bps = 3.82% (ProofScoreBurnRouter)
+  const buyerFee = parseFloat(amount || '0') * 0.0382;
   const netAmount = parseFloat(amount || '0') - buyerFee;
 
   return (
