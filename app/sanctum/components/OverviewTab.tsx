@@ -42,7 +42,7 @@ export function OverviewTab() {
             {
               step: '1',
               title: 'Fee Collection',
-              desc: '20% of all VFIDE transaction fees flow automatically to The Sanctum by default (FeeDistributor.sol: sanctumBps = 2000). The DAO may adjust this split within protocol bounds.',
+              desc: '20% of all VFIDE transaction fees flow automatically to The Sanctum — 10% via ProofScoreBurnRouter (sanctumBps = 1000/10000) and 10% via FeeDistributor (sanctumBps = 2000/10000). The DAO may adjust these splits within protocol bounds.',
             },
             {
               step: '2',
