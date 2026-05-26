@@ -42,7 +42,7 @@ const PRINCIPLES = [
     icon: Flame,
     color: "#f97316",
     title: "The key burn",
-    body: "Six months after mainnet launch, the developer master key is permanently destroyed. No admin backdoor, no upgrade path — the protocol becomes truly ownerless.",
+    body: "Six months after mainnet launch, the developer master key is permanently zeroed out and control passes to the DAO. No admin backdoor, no upgrade path — the protocol is governed entirely by its users.",
   },
 ];
 
