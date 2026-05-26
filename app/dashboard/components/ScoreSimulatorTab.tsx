@@ -67,11 +67,16 @@ function project(currentScore: number, monthlyGain: number, months: number): num
   return Math.round(score);
 }
 
+// Canonical 7-tier system (mirrors ScoringConstants.sol + lib/constants.ts PROOF_SCORE_TIERS)
+// Scale: 0–10,000 (on-chain Seer.getScore() scale)
 function getTier(score: number): { name: string; color: string } {
-  if (score >= 8000) return { name: 'Emerald (Trusted)', color: '#10B981' };
-  if (score >= 6500) return { name: 'Cyan (Building)', color: '#06B6D4' };
-  if (score >= 5000) return { name: 'Amber (Neutral)', color: '#F59E0B' };
-  return { name: 'Red (Low)', color: '#EF4444' };
+  if (score >= 8000) return { name: 'Elite',      color: '#a78bfa' };  // ≥8000
+  if (score >= 7000) return { name: 'Council',    color: '#22d3ee' };  // 7000–7999
+  if (score >= 5600) return { name: 'Trusted',    color: '#34d399' };  // 5600–6999
+  if (score >= 5400) return { name: 'Governance', color: '#38bdf8' };  // 5400–5599
+  if (score >= 5000) return { name: 'Neutral',    color: '#fbbf24' };  // 5000–5399
+  if (score >= 3500) return { name: 'Low Trust',  color: '#fb923c' };  // 3500–4999
+  return                     { name: 'Risky',     color: '#fb7185' };  // 0–3499
 }
 
 export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {

@@ -17,7 +17,7 @@ export function OverviewTab() {
         </h2>
         <div className="space-y-6">
           {[
-            { step: '1', title: 'Fee Collection', desc: '10% of all VFIDE transaction fees flow to The Sanctum' },
+            { step: '1', title: 'Fee Collection', desc: '20% of all VFIDE transaction fees flow to The Sanctum' },
             { step: '2', title: 'Charity Registration', desc: 'DAO approves vetted charitable organizations' },
             { step: '3', title: 'Proposal Creation', desc: 'Council members propose disbursements to charities' },
             { step: '4', title: 'Multi-Sig Approval', desc: 'Required approvers sign off on disbursement' },

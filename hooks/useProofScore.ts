@@ -48,12 +48,16 @@ export function useProofScore(userAddress?: `0x${string}`) {
   // Calculate burn fee based on ProofScore
   // Contract: minTotalBps=25 (0.25%) at score≥8000, maxTotalBps=500 (5%) at score≤4000
   // Neutral score (5000) sits at the midpoint → 2.5%
+  // Linear interpolation matching ProofScoreBurnRouter.sol computeFees():
+  //   score ≤ 4000 (LOW_SCORE_THRESHOLD) → maxTotalBps = 500 bps = 5.00%
+  //   score ≥ 8000 (HIGH_SCORE_THRESHOLD) → minTotalBps = 25 bps = 0.25%
+  //   4000–8000 → linear: maxBps - ((score - 4000) * (maxBps - minBps)) / 4000
+  const MIN_BPS = 25;   // 0.25% — ProofScoreBurnRouter.minTotalBps
+  const MAX_BPS = 500;  // 5.00% — ProofScoreBurnRouter.maxTotalBps
   const fallbackBurnFee = scoreNum === null ? null :
-    scoreNum >= 8000 ? 0.25 :
-    scoreNum >= 7000 ? 1.0 :
-    scoreNum >= 5000 ? 2.5 :
-    scoreNum >= 4000 ? 3.5 :
-    5.0
+    scoreNum >= 8000 ? MIN_BPS / 100 :
+    scoreNum <= 4000 ? MAX_BPS / 100 :
+    (MAX_BPS - ((scoreNum - 4000) * (MAX_BPS - MIN_BPS)) / 4000) / 100
   const burnFee = onChainFeeQuote !== undefined
     ? (() => {
         if (!Array.isArray(onChainFeeQuote)) return fallbackBurnFee

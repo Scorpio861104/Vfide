@@ -41,7 +41,7 @@ export function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigin
           <div className="flex justify-between items-center p-4 bg-white/5 border border-white/10 rounded-xl">
             <span className="text-gray-400">Current Milestone</span>
             <span className="text-white font-bold">
-              {vestingStatus ? `${vestingStatus[4]} / 48` : '-'}
+              {vestingStatus ? `${vestingStatus[4]} / 30` : '-'}
             </span>
           </div>
           <div className="flex justify-between items-center p-4 bg-white/5 border border-white/10 rounded-xl">
@@ -67,7 +67,7 @@ export function OverviewTab({ vestingStatus }: { vestingStatus?: readonly [bigin
         <div className="space-y-4">
           {[
             { title: 'Cliff Period', desc: '60-day cliff before first unlock begins', bgColor: 'bg-purple-500/20', iconColor: 'text-purple-400' },
-            { title: 'Linear Vesting', desc: 'Tokens unlock bi-monthly over 36 months', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
+            { title: 'Linear Vesting', desc: 'Tokens unlock bi-monthly over 60 months (5 years, 30 unlocks)', bgColor: 'bg-cyan-500/20', iconColor: 'text-cyan-400' },
             { title: 'Claim Anytime', desc: 'Claim vested tokens whenever convenient', bgColor: 'bg-emerald-500/20', iconColor: 'text-emerald-400' },
             { title: 'Beneficiary Only', desc: 'Only designated beneficiary can claim', bgColor: 'bg-amber-500/20', iconColor: 'text-amber-400' },
             { title: 'Protocol Sync', desc: 'Vesting starts from protocol launch', bgColor: 'bg-violet-500/20', iconColor: 'text-violet-400' },

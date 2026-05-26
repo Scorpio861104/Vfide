@@ -7,14 +7,16 @@ import { ProofScoreVisualizer } from '@/components/trust/ProofScoreVisualizer'
 import { useLocale } from '@/hooks/useLocale';
 import { PROOFSCORE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
+// Canonical 7-tier system — 0–10,000 scale (matches Seer contract + ScoringConstants.sol)
+// LOW_FEE_FLOOR=4000, NEUTRAL=5000, MIN_GOVERNANCE=5400, MIN_MERCHANT=5600, HIGH_FEE_CEIL=8000
 const TIERS = [
-  { tier: 'Risky',      min: 0,   max: 299, color: 'bg-red-500',    desc: 'No verified identity. High risk.' },
-  { tier: 'Low Trust',  min: 300, max: 499, color: 'bg-orange-400', desc: 'Minimal proof. Unstable trust.' },
-  { tier: 'Neutral',    min: 500, max: 599, color: 'bg-yellow-400', desc: 'Basic address ownership verified.' },
-  { tier: 'Governance', min: 600, max: 699, color: 'bg-lime-400',   desc: 'Governance participation active.' },
-  { tier: 'Trusted',    min: 700, max: 799, color: 'bg-green-500',  desc: 'Multi-source trust. Recognised.' },
-  { tier: 'Council',    min: 800, max: 899, color: 'bg-cyan-500',   desc: 'Council-level governance + staking.' },
-  { tier: 'Elite',      min: 900, max: 999, color: 'bg-violet-600', desc: 'Elite — top 1% verified wallets.' },
+  { tier: 'Risky',      min: 0,    max: 3499,  color: 'bg-red-500',    desc: 'No verified identity. High risk. Max 5% fee.' },
+  { tier: 'Low Trust',  min: 3500, max: 4999,  color: 'bg-orange-400', desc: 'Minimal proof. Fee reduces toward 5%–3.5%.' },
+  { tier: 'Neutral',    min: 5000, max: 5399,  color: 'bg-yellow-400', desc: 'Basic address ownership verified. ~2.5% fee.' },
+  { tier: 'Governance', min: 5400, max: 5599,  color: 'bg-lime-400',   desc: 'Eligible to vote and propose in the DAO.' },
+  { tier: 'Trusted',    min: 5600, max: 6999,  color: 'bg-green-500',  desc: 'Multi-source trust. Merchant registration eligible.' },
+  { tier: 'Council',    min: 7000, max: 7999,  color: 'bg-cyan-500',   desc: 'Council-eligible. Can endorse and mentor others.' },
+  { tier: 'Elite',      min: 8000, max: 10000, color: 'bg-violet-600', desc: 'Highest trust. Minimum 0.25% fee.' },
 ]
 
 export default function ProofScorePage() {

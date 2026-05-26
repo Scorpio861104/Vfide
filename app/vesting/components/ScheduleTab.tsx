@@ -78,8 +78,8 @@ export function ScheduleTab({ schedule }: { schedule?: readonly Milestone[] }) {
           </div>
           <div className="text-sm text-gray-400">
             <strong className="text-white">Dev Reserve Schedule:</strong> 25% of total supply allocated 
-            to developer reserve. Tokens vest linearly over 36 months starting from protocol launch, 
-            with a 60-day cliff period. Unlocks occur bi-monthly (every 60 days).
+            to developer reserve. Tokens vest linearly over 60 months (5 years) starting from protocol launch, 
+            with a 60-day cliff period. 30 bi-monthly unlocks of ~1,666,666 VFIDE each.
           </div>
         </div>
       </div>

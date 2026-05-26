@@ -73,20 +73,19 @@ function tierForScore(score: number): Tier {
 }
 
 /**
- * Burn-fee curve. Linear interpolation between the on-chain anchors:
- *   score ≤ 4000  →  5.00%
- *   score = 5000  →  2.50%
- *   score = 7000  →  1.00%
- *   score ≥ 8000  →  0.25%
- * Values between anchors are linear. Matches the fallback logic in
- * useProofScore.ts but smooths the curve so the slider feels live.
+ * Burn-fee curve. Mirrors ProofScoreBurnRouter.sol computeFees() exactly:
+ *   score ≤ 4000 (LOW_SCORE_THRESHOLD)  → maxTotalBps = 500 bps = 5.00%
+ *   score ≥ 8000 (HIGH_SCORE_THRESHOLD) → minTotalBps = 25 bps  = 0.25%
+ *   4000–8000 → linear: maxBps - ((score - 4000) * (maxBps - minBps)) / 4000
+ * Below 4000 the contract also returns maxTotalBps (flat 5%); shown here
+ * as flat for visual clarity.
  */
 function burnFeePercent(score: number): number {
-  if (score >= 8000) return 0.25;
-  if (score >= 7000) return 0.25 + (1.0 - 0.25) * (1 - (score - 7000) / 1000);
-  if (score >= 5000) return 1.0 + (2.5 - 1.0) * (1 - (score - 5000) / 2000);
-  if (score >= 4000) return 2.5 + (3.5 - 2.5) * (1 - (score - 4000) / 1000);
-  return 5.0 - (5.0 - 3.5) * (score / 4000);
+  const MIN_BPS = 25;   // ProofScoreBurnRouter.minTotalBps (0.25%)
+  const MAX_BPS = 500;  // ProofScoreBurnRouter.maxTotalBps (5.00%)
+  if (score >= 8000) return MIN_BPS / 100;
+  if (score <= 4000) return MAX_BPS / 100;
+  return (MAX_BPS - ((score - 4000) * (MAX_BPS - MIN_BPS)) / 4000) / 100;
 }
 
 /** Canonical 35 / 20 / 15 / 20 / 10 split (mirrors FeeDistributor.sol). */
