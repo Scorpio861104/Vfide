@@ -18,6 +18,8 @@ import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
 import { FeeSimulatorTab } from './components/FeeSimulatorTab';
 import { RecentActivity } from './components/RecentActivity';
 import { PageSkeleton } from '@/components/layout/PageSkeleton';
+import { useLocale } from '@/hooks/useLocale';
+import { DASHBOARD_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: Home },
@@ -37,6 +39,8 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address, isConnecting } = useAccount();
   const { score: proofScore, burnFee: feeRate, isDisconnected: _scoreDisconnected, isLoading: scoreLoading } = useProofScore();
+  const [locale] = useLocale();
+  const _dashCopy = pickLocaleCopy(DASHBOARD_TRANSLATIONS, locale);
   const [txCount, setTxCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
 
