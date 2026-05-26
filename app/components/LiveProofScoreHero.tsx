@@ -7,8 +7,9 @@
  *
  *   - Drag the score (0 → 10,000) and watch the burn fee curve move.
  *   - At the same moment a sample $50 payment recalculates: the fee
- *     splits into the five canonical streams (35% burn, 20% Sanctum,
- *     15% DAO payroll, 20% merchant comp, 10% headhunter).
+ *     splits via ProofScoreBurnRouter (40% burn / 10% Sanctum / 50% FeeDistributor).
+ *     FeeDistributor sub-split: 35%→burn, 20%→Sanctum, 15%→payroll, 20%→merchant, 10%→headhunter.
+ *     Net composite: 57.5% burn | 20% Sanctum | 7.5% payroll | 10% merchant | 5% headhunter.
  *   - The Monument's vertex brightens with the score.
  *   - The tier badge changes label + colour as you cross thresholds.
  *
@@ -18,7 +19,7 @@
  *
  * Math: matches the on-chain ProofScoreBurnRouter behaviour mirrored in
  * useProofScore.ts (minTotalBps=25 at score≥8000, maxTotalBps=500 at
- * score≤4000, neutral midpoint at 5000≈2.5%).
+ * score≤4000). Score 5000 → 3.82%; mid-range 2.5% occurs at score≈6100.
  *
  * Performance: a single requestAnimationFrame-driven counter for the
  * draggable input. No infinite loops, no per-frame DOM thrashing — the
@@ -88,13 +89,14 @@ function burnFeePercent(score: number): number {
   return (MAX_BPS - ((score - 4000) * (MAX_BPS - MIN_BPS)) / 4000) / 100;
 }
 
-/** Canonical 35 / 20 / 15 / 20 / 10 split (mirrors FeeDistributor.sol). */
+/** Composite end-to-end split: PSR (40 burn / 10 sanctum / 50 eco) → FeeDistributor (35/20/15/20/10 of eco).
+ *  Net: 57.5% burn | 20% Sanctum | 7.5% payroll | 10% merchant | 5% headhunter = 100%. */
 const FEE_SPLITS: { id: string; label: string; pct: number; hex: string; help: string }[] = [
-  { id: 'burn',      label: 'Burn',           pct: 35, hex: '#f97316', help: 'Permanently removed from supply' },
-  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 20, hex: '#ec4899', help: 'Charity + community grants' },
-  { id: 'merchant',  label: 'Merchant pool',  pct: 20, hex: '#10b981', help: 'Volume rewards for top merchants' },
-  { id: 'payroll',   label: 'DAO payroll',    pct: 15, hex: '#06b6d4', help: 'Pays elected council members' },
-  { id: 'headhunt',  label: 'Referral pool',  pct: 10, hex: '#a855f7', help: 'Rewards for inviting active users' },
+  { id: 'burn',      label: 'Burn',           pct: 57.5, hex: '#f97316', help: 'Permanently removed from supply (40% direct + 17.5% via FeeDistributor)' },
+  { id: 'sanctum',   label: 'Sanctum Fund',   pct: 20,   hex: '#ec4899', help: 'Charity + community grants (10% direct + 10% via FeeDistributor)' },
+  { id: 'merchant',  label: 'Merchant pool',  pct: 10,   hex: '#10b981', help: 'Volume rewards for top merchants (via FeeDistributor)' },
+  { id: 'payroll',   label: 'DAO payroll',    pct: 7.5,  hex: '#06b6d4', help: 'Pays elected council members (via FeeDistributor)' },
+  { id: 'headhunt',  label: 'Referral pool',  pct: 5,    hex: '#a855f7', help: 'Rewards for inviting active users (via FeeDistributor)' },
 ];
 
 // ── Component ────────────────────────────────────────────────────────

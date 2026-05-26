@@ -7,13 +7,10 @@
  * struck by the split point in the middle, and fan out into five
  * labeled pools on the right with running totals. The pools are the
  * five real contracts that inherit ServicePool in the on-chain
- * FeeDistributor:
- *
- *   35% burn        → permanently removed
- *   20% Sanctum     → charity + community grants
- *   20% merchant    → top-merchant volume rewards
- *   15% DAO payroll → elected council pay
- *   10% headhunter  → invite-people rewards
+ * Composite end-to-end fee split (ProofScoreBurnRouter + FeeDistributor):
+ *   ProofScoreBurnRouter: 40% direct burn | 10% Sanctum | 50% → FeeDistributor
+ *   FeeDistributor splits its 50% slice: 35% burn | 20% Sanctum | 15% payroll | 20% merchant | 10% headhunter
+ *   Net of total fee: 57.5% burn | 20% Sanctum | 7.5% DAO payroll | 10% merchant | 5% headhunter
  *
  * Why this matters on the landing page: most "fee distribution" charts
  * are a static pie hidden in a whitepaper. Showing the splits as a
@@ -54,11 +51,11 @@ interface Pool {
 }
 
 const POOLS: Pool[] = [
-  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 35, hex: '#f97316', y: 0.10 },
-  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 20, hex: '#ec4899', y: 0.30 },
-  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 20, hex: '#10b981', y: 0.50 },
-  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 15, hex: '#06b6d4', y: 0.70 },
-  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 10, hex: '#a855f7', y: 0.90 },
+  { id: 'burn',     label: 'Burn',          short: 'Burn',     pct: 57.5, hex: '#f97316', y: 0.10 }, // 40% direct + 35%×50% via FeeDistributor
+  { id: 'sanctum',  label: 'Sanctum Fund',  short: 'Sanctum',  pct: 20,   hex: '#ec4899', y: 0.30 }, // 10% direct + 20%×50% via FeeDistributor
+  { id: 'merchant', label: 'Merchant pool', short: 'Merchants', pct: 10,   hex: '#10b981', y: 0.50 }, // 20%×50% via FeeDistributor
+  { id: 'payroll',  label: 'DAO payroll',   short: 'Payroll',  pct: 7.5,  hex: '#06b6d4', y: 0.70 }, // 15%×50% via FeeDistributor
+  { id: 'headhunt', label: 'Referral pool', short: 'Referrals', pct: 5,    hex: '#a855f7', y: 0.90 }, // 10%×50% via FeeDistributor
 ];
 
 interface Particle {
