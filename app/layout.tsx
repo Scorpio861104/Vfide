@@ -68,13 +68,13 @@ export const metadata: Metadata = {
     description:
       'Zero merchant fees. You hold your keys. A reputation that lowers your fees the more you use it.',
     type: 'website',
-    images: [{ url: '/og-image.svg', width: 1200, height: 630, alt: 'VFIDE — Zero merchant fees. You hold your keys.' }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'VFIDE — Zero merchant fees. You hold your keys.' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'VFIDE — Self-custodial payments and commerce on Base',
     description: 'Zero merchant fees. You hold your keys. A reputation that lowers your fees the more you use it.',
-    images: ['/og-image.svg'],
+    images: ['/og-image.png'],
   },
   manifest: '/manifest.json',
   icons: {
