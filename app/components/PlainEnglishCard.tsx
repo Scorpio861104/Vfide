@@ -39,7 +39,7 @@ const TERMS = [
     icon: LifeBuoy,
     name: 'Sanctum',
     plain:
-      'A community-funded safety pool that helps reimburse buyers in confirmed fraud cases.',
+      'A protocol-level charity and impact fund. 20% of every transaction fee flows here and is disbursed — on-chain, transparently — to DAO-approved charitable organisations worldwide.',
     color: '#A78BFA',
   },
 ] as const;
