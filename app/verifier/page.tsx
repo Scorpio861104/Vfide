@@ -25,6 +25,7 @@ import { useVerifierVote } from '@/hooks/useVerifierVote';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import VaultRecoveryClaimABI from '@/lib/abis/VaultRecoveryClaim.json';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
+import { Footer } from '@/components/layout/Footer';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types mirroring VaultRecoveryClaim.RecoveryClaim struct
@@ -468,6 +469,7 @@ export default function VerifierConsolePage() {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

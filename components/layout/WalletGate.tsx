@@ -15,7 +15,14 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion } from 'framer-motion';
 import { Wallet } from 'lucide-react';
 
-export function WalletGate({ children }: { children: ReactNode }) {
+export function WalletGate({
+  children,
+  hint,
+}: {
+  children: ReactNode;
+  /** Optional context hint shown below the main description — e.g. 'You need a connected wallet to manage your vault.' */
+  hint?: string;
+}) {
   const { isConnected, isConnecting } = useAccount();
   const [connectTimedOut, setConnectTimedOut] = useState(false);
 
@@ -54,9 +61,15 @@ export function WalletGate({ children }: { children: ReactNode }) {
             <Wallet className="w-10 h-10 text-accent" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Connect your wallet</h2>
-          <p className="text-zinc-400 mb-6">
+          <p className="text-zinc-400 mb-3">
             Your keys. Your money. Connect a self-custodial wallet — MetaMask, WalletConnect, or Coinbase — to get started. No sign-up or bank account required.
           </p>
+          {hint && (
+            <p className="text-zinc-500 text-sm mb-6 px-2 py-2 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+              {hint}
+            </p>
+          )}
+          {!hint && <div className="mb-6" />}
           <ConnectButton />
         </motion.div>
       </div>
