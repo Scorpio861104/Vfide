@@ -38,7 +38,9 @@ export default function RemittancePage() {
   const _corridor = CORRIDORS[selectedCorridor];
 
   const _feeUSD = 0;
-  const buyerFee = Math.max(0.25, parseFloat(amount || '0') * 0.025);
+  // Neutral ProofScore (5000): 382 bps = 3.82% total fee (ProofScoreBurnRouter._calculateLinearFee)
+  // Elite ProofScore (≥8000): 25 bps = 0.25% (minTotalBps). Demo uses neutral-score default.
+  const buyerFee = Math.max(parseFloat(amount || '0') * 0.0025, parseFloat(amount || '0') * 0.0382);
   const netAmount = parseFloat(amount || '0') - buyerFee;
 
   return (
@@ -126,7 +128,7 @@ export default function RemittancePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Buyer trust fee</span>
-                    <span className="text-white">${buyerFee.toFixed(2)} (~2.5% at neutral score)</span>
+                    <span className="text-white">${buyerFee.toFixed(2)} (~3.82% at neutral score)</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Network gas</span>
