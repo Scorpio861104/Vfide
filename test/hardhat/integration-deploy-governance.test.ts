@@ -16,6 +16,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { network } from 'hardhat';
+import { deployVaultHub } from './utils/deployVaultHub';
 
 const H48 = 48 * 60 * 60; // 48 hours in seconds
 
@@ -77,13 +78,9 @@ async function deployGovernanceStack() {
 
   // VaultHub needs a deployed contract for _vfideToken (not necessarily VFIDEToken).
   // Use ProofLedger address as a stand-in (any non-zero contract address satisfies the check).
-  const VaultHub = await ethers.getContractFactory('VaultHub');
-  const vaultHub = await VaultHub.deploy(
-    await ledger.getAddress(), // _vfideToken (stub: any non-zero contract)
+  const { hub: vaultHub } = await deployVaultHub(ethers, await ledger.getAddress(), // _vfideToken (stub: any non-zero contract)
     await ledger.getAddress(), // _ledger
-    deployer.address // _dao (temp; transferred to multi-sig post-handover)
-  );
-  await vaultHub.waitForDeployment();
+    deployer.address // _dao (temp; transferred to multi-sig post-handover));
   console.log(`    ✅ VaultHub: ${await vaultHub.getAddress()}`);
 
   // ─── Layer 4: DAO Governance Multi-Sig ──────────────────────────────────
