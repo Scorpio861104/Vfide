@@ -592,9 +592,9 @@ interface IEcosystemVault {
     /// @return levelsPaid levelsPaid
     /// @return totalAmount totalAmount
     function processReferralLevelRewards(address worker, uint256 year, string calldata reason) external returns (uint8 levelsPaid, uint256 totalAmount);
-    /// @notice burnFunds
-    /// @param amount amount
-    function burnFunds(uint256 amount) external;
+    // burnFunds() REMOVED — non-custodial (soul commitment).
+    // Burning is handled exclusively by ProofScoreBurnRouter.
+    // function burnFunds(uint256 amount) external;
     /// @notice recordMerchantTransaction
     /// @param merchant merchant
     function recordMerchantTransaction(address merchant) external;

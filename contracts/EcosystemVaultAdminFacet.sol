@@ -195,7 +195,7 @@ abstract contract ECOStorageLayout {
     uint256 public totalCouncilPaid;
     uint256 public totalMerchantBonusPaid;
     uint256 public totalHeadhunterPaid;
-    uint256 public totalBurned;
+    uint256 public totalBurned; // RESERVED slot — always zero (soul: burn is BurnRouter-only)
     uint256 public totalExpensesPaid;
     uint256 public operationsExpenseEpochStartedAt;
     uint256 public operationsExpenseEpochBase;

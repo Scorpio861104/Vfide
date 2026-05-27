@@ -48,9 +48,6 @@ interface IEcosystemVaultView {
     /// @notice totalHeadhunterPaid
     /// @return _uint256 _uint256
     function totalHeadhunterPaid() external view returns (uint256);
-    /// @notice totalBurned
-    /// @return _uint256 _uint256
-    function totalBurned() external view returns (uint256);
     /// @notice totalExpensesPaid
     /// @return _uint256 _uint256
     function totalExpensesPaid() external view returns (uint256);
@@ -278,19 +275,19 @@ contract EcosystemVaultView {
     /// @return councilTotal councilTotal
     /// @return merchantTotal merchantTotal
     /// @return headhunterTotal headhunterTotal
-    /// @return burnedTotal burnedTotal
     /// @return expensesTotal expensesTotal
     /// @return grandTotal grandTotal
     function getSpendingSummary() external view returns (
         uint256 councilTotal, uint256 merchantTotal, uint256 headhunterTotal,
-        uint256 burnedTotal, uint256 expensesTotal, uint256 grandTotal
+        uint256 expensesTotal, uint256 grandTotal
     ) {
         councilTotal = vault.totalCouncilPaid();
         merchantTotal = vault.totalMerchantBonusPaid();
         headhunterTotal = vault.totalHeadhunterPaid();
-        burnedTotal = vault.totalBurned();
+        // burnedTotal removed — EcosystemVault is not a burn pathway (soul commitment).
+        // Burning is handled exclusively by ProofScoreBurnRouter.
         expensesTotal = vault.totalExpensesPaid();
-        grandTotal = councilTotal + merchantTotal + headhunterTotal + burnedTotal + expensesTotal;
+        grandTotal = councilTotal + merchantTotal + headhunterTotal + expensesTotal;
     }
 
     /// @notice getVaultHealth
@@ -312,10 +309,10 @@ contract EcosystemVaultView {
         uint256 tcp = vault.totalCouncilPaid();
         uint256 tmp = vault.totalMerchantBonusPaid();
         uint256 thp = vault.totalHeadhunterPaid();
-        uint256 tb = vault.totalBurned();
+        // tb (totalBurned) removed — EcosystemVault is not a burn pathway.
         uint256 te = vault.totalExpensesPaid();
-        totalIn = cp + mp + hp + op + tcp + tmp + thp + tb + te;
-        totalOut = tcp + tmp + thp + tb + te;
+        totalIn = cp + mp + hp + op + tcp + tmp + thp + te;
+        totalOut = tcp + tmp + thp + te;
         councilPoolBalance = cp;
         merchantPoolBalance = mp;
         headhunterPoolBalance = hp;

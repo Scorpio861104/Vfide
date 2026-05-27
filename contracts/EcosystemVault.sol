@@ -4,16 +4,6 @@ pragma solidity 0.8.30;
 import { IERC20, ISeer, ICouncilManager, ISwapRouter, SafeERC20, Ownable, ReentrancyGuard } from "./SharedInterfaces.sol";
 import { EcosystemVaultLib } from "./EcosystemVaultLib.sol";
 
-/// @dev Minimal interface for real token burn (H-10 fix)
-/// @notice IVFIDEBurnable
-/// @title IVFIDEBurnable
-/// @author Vfide
-interface IVFIDEBurnable {
-    /// @notice burn
-    /// @param amount amount
-    function burn(uint256 amount) external;
-}
-
 /// @dev Minimal interface for token decimals discovery (F-SC-030 fix).
 ///      Used by migrateRewardToken to require old- and new-token decimals
 ///      match before swapping the reward token, since pool balances are
@@ -113,9 +103,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
-    /// @notice FundsBurned
-    /// @param amount amount
-    event FundsBurned(uint256 amount);
     /// @notice ManagerSet
     /// @param manager manager
     /// @param active active
@@ -617,8 +604,6 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     uint256 public totalMerchantBonusPaid;
     /// @notice totalHeadhunterPaid
     uint256 public totalHeadhunterPaid;
-    /// @notice totalBurned
-    uint256 public totalBurned;
     /// @notice totalExpensesPaid
     uint256 public totalExpensesPaid;
     /// @notice operationsExpenseEpochStartedAt
@@ -1279,27 +1264,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         reason;
     }
 
-    // slither-disable-next-line reentrancy-events
-    /// @notice Permanently remove tokens from circulating supply.
-    /// @dev I-10 Note: Sends to 0xdEaD ("soft burn") because VFIDEToken has no public burn()
-    ///      function — transfer to address(0) reverts.  totalBurned tracks the removed amount
-    ///      so off-chain supply calculations can subtract it from totalSupply().
-    /// @param amount amount
-    function burnFunds(uint256 amount) external onlyManager {
-        if (amount == 0) revert ECO_Zero();
-
-        _allocateIncoming();
-        if (operationsPool < amount) revert ECO_InsufficientFunds();
-
-        operationsPool -= amount;
-        totalBurned += amount;
-
-        // C-9 FIX: Call VFIDEToken.burn() so totalSupply is correctly decremented.
-        // The dead-address "soft burn" path is removed — it left totalSupply unchanged,
-        // making the deflationary narrative false.
-        IVFIDEBurnable(address(rewardToken)).burn(amount);
-        emit FundsBurned(amount);
-    }
+    // REMOVED — non-custodial (soul commitment):
+    // burnFunds() was a manual manager-level burn pathway inside EcosystemVault.
+    // Burning is handled exclusively by ProofScoreBurnRouter on every transfer.
+    // No secondary burn pathway exists anywhere in the protocol.
+    // function burnFunds(uint256 amount) external onlyManager { ... }
 
 
 
