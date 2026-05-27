@@ -160,6 +160,7 @@ const DEPLOYMENT_CONTRACTS = [
   // Layer 11 — Commerce Suite
   "MerchantRegistry",
   "CommerceEscrow",
+  "SubscriptionManager",
 ] as const;
 
 function byteLength(hexData: string | undefined): number {
@@ -611,6 +612,16 @@ async function main() {
 
   if (book.MerchantRegistry) book.VFIDECommerce = book.MerchantRegistry;
 
+  // SubscriptionManager — self-contained; requires only VaultHub, DAO, Seer.
+  // Previously deferred to contracts/future/ under the phased-rollout strategy.
+  // Moved to Layer 11 Phase 1 (2026-05-27): no external provider dependencies.
+  await deploy(
+    "SubscriptionManager",
+    book.VaultHub,
+    bootstrap.dao,
+    book.Seer,
+  );
+
   saveBook(network, book);
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -635,6 +646,7 @@ async function main() {
     ["HeadhunterCompetitionPool", book.HeadhunterCompetitionPool],
     ["MerchantRegistry",     book.MerchantRegistry],
     ["CommerceEscrow",       book.CommerceEscrow],
+    ["SubscriptionManager",  book.SubscriptionManager],
   ];
   for (const [name, addr] of loggers) {
     if (!addr) continue;
@@ -666,6 +678,14 @@ async function main() {
     const registry = await ethers.getContractAt("MerchantRegistry", book.MerchantRegistry);
     await call("MerchantRegistry.setAuthorizedEscrow → CommerceEscrow", () =>
       registry.setAuthorizedEscrow(book.CommerceEscrow),
+    );
+  }
+
+  // SubscriptionManager → FraudRegistry (queued — 24h timelock via applyFraudRegistry)
+  if (book.SubscriptionManager && book.FraudRegistry) {
+    const subMgr = await ethers.getContractAt("SubscriptionManager", book.SubscriptionManager);
+    await call("SubscriptionManager.setFraudRegistry → FraudRegistry (queued 24h)", () =>
+      subMgr.setFraudRegistry(book.FraudRegistry),
     );
   }
 
