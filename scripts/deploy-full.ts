@@ -145,6 +145,7 @@ const DEPLOYMENT_CONTRACTS = [
   // Layer 7 — Safety
   "FraudRegistry",
   // Layer 8 — Governance Helpers
+  "VFIDEAccessControl",
   "OwnerControlPanel",
   "VaultRecoveryClaim",
   "SystemHandover",
@@ -557,6 +558,12 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 8: Governance Helpers ═══");
 
+  // VFIDEAccessControl-D1: Deploy standalone RBAC primitive with deployer as initial admin.
+  // Per manual page 69, VFIDEAccessControl belongs in the governance group.
+  // It currently has no production consumers in Phase 1 but must be on-chain as an
+  // upgradeable governance surface for post-handover DAO use.
+  await deploy("VFIDEAccessControl", deployer.address);
+
   for (const name of [
     "OwnerControlPanel",
     "VaultRecoveryClaim",
@@ -889,6 +896,7 @@ async function main() {
     ["NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS",     book.VFIDECommerce],
     ["NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS",    book.CommerceEscrow],
     ["NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS",     book.VaultRegistry],
+    ["NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS",book.VFIDEAccessControl],
     ["NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS",book.OwnerControlPanel],
     ["NEXT_PUBLIC_ADMIN_MULTISIG_ADDRESS",     book.AdminMultiSig],
     ["NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS",      book.SanctumVault],

@@ -42,6 +42,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_SEER_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_VFIDE_COMMERCE_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS', required: false, category: 'blockchain' },
+  { name: 'NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS', required: false, category: 'blockchain' },
   { name: 'NEXT_PUBLIC_PAYROLL_MANAGER_ADDRESS', required: false, category: 'blockchain', production: true },
   // SubscriptionManager is in contracts/future/ — NOT deployed for V1 mainnet.
@@ -72,6 +73,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_VAULT_RECOVERY_CLAIM_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_VAULT_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_PROOF_LEDGER_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_VFIDE_ACCESS_CONTROL_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_OWNER_CONTROL_PANEL_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_ECOSYSTEM_VAULT_VIEW_ADDRESS', required: false, category: 'blockchain', production: true },
