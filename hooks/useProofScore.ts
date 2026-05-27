@@ -1,7 +1,7 @@
 import { useReadContract, useAccount } from 'wagmi'
 import { ProofScoreBurnRouterABI, SeerABI, isConfiguredContractAddress } from '@/lib/contracts'
 import { useContractAddresses } from './useContractAddresses'
-import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS } from '@/lib/constants'
+import { PROOF_SCORE_PERMISSIONS, PROOF_SCORE_TIERS, LOW_TRUST_THRESHOLD } from '@/lib/constants'
 
 const FEE_QUOTE_AMOUNT = 10_000n * 10n ** 18n
 
@@ -158,7 +158,7 @@ export function useSeerThresholds() {
   return {
     minForGovernance: minForGovernance ? Number(minForGovernance) : PROOF_SCORE_PERMISSIONS.MIN_FOR_GOVERNANCE,
     minForMerchant: minForMerchant ? Number(minForMerchant) : PROOF_SCORE_PERMISSIONS.MIN_FOR_MERCHANT,
-    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : 3500,
+    lowTrustThreshold: lowTrustThreshold ? Number(lowTrustThreshold) : LOW_TRUST_THRESHOLD,
     highTrustThreshold: highTrustThreshold ? Number(highTrustThreshold) : 8000,
   }
 }

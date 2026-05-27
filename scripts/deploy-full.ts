@@ -763,6 +763,23 @@ async function main() {
 
   // ── Layer 12: Seer satellite wiring ──────────────────────────────────────
   // Wire Seer satellites into Seer contract (all onlyDAO, immediate — no timelock on these setters)
+
+  // SEER-D1 fix: setModules was never called — Seer.vaultHub was permanently address(0).
+  // Without this, any vault-balance-weighted score calculation silently falls back to NEUTRAL.
+  if (book.ProofLedger && book.VaultHub) {
+    await call("Seer.setModules → ProofLedger + VaultHub", () =>
+      seer.setModules(book.ProofLedger, book.VaultHub),
+    );
+  }
+
+  // SEER-D2 fix: setBurnRouter was never called — Seer score-change events never notified
+  // ProofScoreBurnRouter, meaning the burn router's internal score cache stayed stale.
+  if (book.ProofScoreBurnRouter) {
+    await call("Seer.setBurnRouter → ProofScoreBurnRouter", () =>
+      seer.setBurnRouter(book.ProofScoreBurnRouter),
+    );
+  }
+
   if (book.SeerSocial)     await call("Seer.setSeerSocial → SeerSocial",         () => seer.setSeerSocial(book.SeerSocial));
   if (book.SeerAutonomous) await call("Seer.setSeerAutonomous → SeerAutonomous", () => seer.setSeerAutonomous(book.SeerAutonomous));
   if (book.SeerPolicyGuard) await call("Seer.setPolicyGuard → SeerPolicyGuard",  () => seer.setPolicyGuard(book.SeerPolicyGuard));
