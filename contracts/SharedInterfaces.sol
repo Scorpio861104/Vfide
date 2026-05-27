@@ -435,15 +435,10 @@ interface IVFIDEToken is IERC20 {
     /// @notice policyLocked
     /// @return _bool _bool
     function policyLocked() external view returns (bool);
-    /// @notice circuitBreaker
-    /// @return _bool _bool
-    function circuitBreaker() external view returns (bool);
     /// @notice isCircuitBreakerActive
     /// @return _bool _bool
     function isCircuitBreakerActive() external view returns (bool);
-    /// @notice circuitBreakerExpiry
-    /// @return _uint256 _uint256
-    function circuitBreakerExpiry() external view returns (uint256);
+    // #311: circuitBreakerExpiry removed — circuit breaker state vars removed from token.
     // Anti-whale functions
     /// @notice setAntiWhale
     /// @param maxTransfer maxTransfer

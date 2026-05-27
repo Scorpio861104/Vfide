@@ -819,6 +819,20 @@ async function main() {
   await call("Token.setVaultHub (proposal)", () => token.setVaultHub(book.VaultHub));
   await call("Token.setBurnRouter (proposal)", () => token.setBurnRouter(book.ProofScoreBurnRouter));
   await call("Token.setFraudRegistry (proposal)", () => token.setFraudRegistry(book.FraudRegistry));
+  // VFIDEToken-T1: Wire SeerAutonomous into token so VF_SeerBlocked fires on every transfer.
+  // Without this, _enforceSeerAction returns early and Seer hard-blocks are silently skipped.
+  if (book.SeerAutonomous) {
+    await call("Token.setSeerAutonomous (proposal, 48h)", () =>
+      token.setSeerAutonomous(book.SeerAutonomous),
+    );
+  }
+  // VFIDEToken-T2: Wire EcosystemDistributor so eco fees route to FeeDistributor.receiveFee()
+  // rather than falling back silently to treasurySink.
+  if (book.FeeDistributor) {
+    await call("Token.setEcosystemDistributor (proposal, 48h)", () =>
+      token.setEcosystemDistributor(book.FeeDistributor),
+    );
+  }
 
   // ── BurnRouter sustainability seed (24h timelock) ─────────────────────────
   // dailyBurnCap = 500,000 VFIDE  |  minimumSupplyFloor = 50,000,000 VFIDE

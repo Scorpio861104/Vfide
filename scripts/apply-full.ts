@@ -116,7 +116,7 @@ async function main() {
   //  Token module timelocks (setVaultHub / setBurnRouter / setFraudRegistry)
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ Token Module Timelocks ═══");
-  for (const fn of ["applyVaultHub", "applyBurnRouter", "applyLedger", "applyFraudRegistry"]) {
+  for (const fn of ["applyVaultHub", "applyBurnRouter", "applyLedger", "applyFraudRegistry", "applySeerAutonomous", "applyEcosystemDistributor"]) {
     await call(fn, () => (token as any)[fn]());
   }
 
