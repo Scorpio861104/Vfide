@@ -106,7 +106,10 @@ error ECO_HeadhunterEpochCapExceeded();
 /// @author Vfide
 contract EcosystemVault is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-    
+
+    // ── Admin Facet — delegatecall target for all onlyOwner config setters ───
+    address public immutable adminFacet;
+
     // ═══════════════════════════════════════════════════════════════════════
     //                              EVENTS
     // ═══════════════════════════════════════════════════════════════════════
@@ -642,8 +645,10 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     /// @param _vfide _vfide
     /// @param _seer _seer
     /// @param _operationsWallet _operationsWallet
-    constructor(address _vfide, address _seer, address _operationsWallet) {
+    constructor(address _vfide, address _seer, address _operationsWallet, address _adminFacet) {
         if (_vfide == address(0) || _seer == address(0)) revert ECO_Zero();
+        if (_adminFacet == address(0)) revert ECO_Zero();
+        adminFacet = _adminFacet;
         vfide = IERC20(_vfide);
         rewardToken = IERC20(_vfide);
         seer = ISeer(_seer);
@@ -655,25 +660,22 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //                              ADMIN
+    //  ADMIN FACET — fallback delegates all onlyOwner config calls to
+    //  EcosystemVaultAdminFacet via delegatecall. address(this) inside the
+    //  facet = this contract's address, so storage writes land here.
     // ═══════════════════════════════════════════════════════════════════════
-    /// @notice setManager
-    /// @param manager manager
-    /// @param active active
-    function setManager(address manager, bool active) external onlyOwner {
-        if (_ownerGovernanceMediated()) {
-            _applyManagerChange(manager, active);
-            return;
+    fallback() external {
+        address facet = adminFacet;
+        assembly {
+            calldatacopy(0, 0, calldatasize())
+            let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)
+            returndatacopy(0, 0, returndatasize())
+            switch result
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
         }
-
-        pendingManagerChange = PendingManagerChange({
-            manager: manager,
-            active: active,
-            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
-        });
-
-        emit ManagerChangeQueued(manager, active, block.timestamp + SENSITIVE_CHANGE_DELAY);
     }
+
 
     /// @notice H-11 FIX: DAO can adjust per-epoch payout caps (in bps of pool).
     /// @dev T20 FIX: cap individual epoch caps at 5000 bps (50%). Allowing up to MAX_BPS
@@ -682,61 +684,11 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     ///      EXPENSE_EPOCH_CAP_BPS=2500 hardcoded ceiling for operations spend.
     uint16 public constant MAX_INDIVIDUAL_EPOCH_CAP_BPS = 5000;
 
-    /// @notice setEpochCaps
-    /// @param _merchantCapBps _merchantCapBps
-    /// @param _headhunterCapBps _headhunterCapBps
-    function setEpochCaps(uint16 _merchantCapBps, uint16 _headhunterCapBps) external onlyOwner {
-        if (_merchantCapBps > MAX_INDIVIDUAL_EPOCH_CAP_BPS || _headhunterCapBps > MAX_INDIVIDUAL_EPOCH_CAP_BPS) {
-            revert ECO_BpsTooHigh();
-        }
-        merchantEpochCapBps = _merchantCapBps;
-        headhunterEpochCapBps = _headhunterCapBps;
-    }
 
-    /// @notice executeManagerChange
-    function executeManagerChange() external onlyOwner {
-        PendingManagerChange memory pending = pendingManagerChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
-        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
 
-        delete pendingManagerChange;
-        _applyManagerChange(pending.manager, pending.active);
-    }
 
-    /// @notice cancelManagerChange
-    function cancelManagerChange() external onlyOwner {
-        PendingManagerChange memory pending = pendingManagerChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
 
-        delete pendingManagerChange;
-    }
 
-    /// @notice setSeer
-    /// @param _seer _seer
-    function setSeer(address _seer) external onlyOwner {
-        if (_seer == address(0)) revert ECO_Zero();
-        address oldSeer = address(seer);
-        seer = ISeer(_seer);
-        emit SeerUpdated(oldSeer, _seer);
-    }
-
-    /// @notice setRewardToken
-    /// @param token token
-    function setRewardToken(address token) external onlyOwner {
-        if (token == address(0)) revert ECO_Zero();
-        if (councilPool != 0 || merchantPool != 0 || headhunterPool != 0 || operationsPool != 0) revert ECO_InvalidConfig();
-        address oldToken = address(rewardToken);
-        rewardToken = IERC20(token);
-        emit RewardTokenUpdated(oldToken, token);
-    }
-
-    /// @notice setReferralVaultHub
-    /// @param hub hub
-    function setReferralVaultHub(address hub) external onlyOwner {
-        address oldHub = address(referralVaultHub);
-        referralVaultHub = IVaultHubReferral_ECO(hub);
-        emit ReferralVaultHubUpdated(oldHub, hub);
-    }
 
     // slither-disable-next-line reentrancy-no-eth
     /// @notice Migrate to a new reward token while preserving pool accounting.
@@ -784,192 +736,18 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit RewardTokenUpdated(oldToken, token);
     }
 
-    /// @notice setCouncilManager
-    /// @param _councilManager _councilManager
-    function setCouncilManager(address _councilManager) external onlyOwner {
-        if (_ownerGovernanceMediated()) {
-            _applyCouncilManagerChange(_councilManager);
-            return;
-        }
 
-        pendingCouncilManagerChange = PendingCouncilManagerChange({
-            councilManager: _councilManager,
-            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
-        });
 
-        emit CouncilManagerChangeQueued(_councilManager, block.timestamp + SENSITIVE_CHANGE_DELAY);
-    }
 
-    /// @notice executeCouncilManagerChange
-    function executeCouncilManagerChange() external onlyOwner {
-        PendingCouncilManagerChange memory pending = pendingCouncilManagerChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
-        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
 
-        delete pendingCouncilManagerChange;
-        _applyCouncilManagerChange(pending.councilManager);
-    }
 
-    /// @notice cancelCouncilManagerChange
-    function cancelCouncilManagerChange() external onlyOwner {
-        PendingCouncilManagerChange memory pending = pendingCouncilManagerChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
 
-        delete pendingCouncilManagerChange;
-    }
 
-    /// @notice setAllocations
-    /// @param _councilBps _councilBps
-    /// @param _merchantBps _merchantBps
-    /// @param _headhunterBps _headhunterBps
-    function setAllocations(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) external onlyOwner {
-        _validateAllocationConfig(_councilBps, _merchantBps, _headhunterBps);
 
-        if (_ownerGovernanceMediated()) {
-            _applyAllocationChange(_councilBps, _merchantBps, _headhunterBps);
-            return;
-        }
 
-        uint16 operationsAllocation = MAX_BPS - (_councilBps + _merchantBps + _headhunterBps);
-        pendingAllocationChange = PendingAllocationChange({
-            councilBps: _councilBps,
-            merchantBps: _merchantBps,
-            headhunterBps: _headhunterBps,
-            executeAfter: block.timestamp + SENSITIVE_CHANGE_DELAY
-        });
 
-        emit AllocationChangeQueued(
-            _councilBps,
-            _merchantBps,
-            _headhunterBps,
-            operationsAllocation,
-            block.timestamp + SENSITIVE_CHANGE_DELAY
-        );
-    }
 
-    /// @notice executeAllocationChange
-    function executeAllocationChange() external onlyOwner {
-        PendingAllocationChange memory pending = pendingAllocationChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
-        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
 
-        delete pendingAllocationChange;
-        _applyAllocationChange(pending.councilBps, pending.merchantBps, pending.headhunterBps);
-    }
-
-    /// @notice cancelAllocationChange
-    function cancelAllocationChange() external onlyOwner {
-        PendingAllocationChange memory pending = pendingAllocationChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
-
-        delete pendingAllocationChange;
-    }
-    
-    /**
-     * @notice Set operations wallet for team sustainability
-     * @param _wallet _wallet
-     */
-    function setOperationsWallet(address _wallet) external onlyOwner {
-        if (_wallet == address(0)) revert ECO_Zero();
-        uint256 executeAfter = block.timestamp + SENSITIVE_CHANGE_DELAY;
-        pendingOperationsWalletChange = PendingOperationsWalletChange({
-            wallet: _wallet,
-            executeAfter: executeAfter
-        });
-        emit OperationsWalletChangeQueued(_wallet, executeAfter);
-    }
-
-    /// @notice cancelOperationsWalletChange
-    function cancelOperationsWalletChange() external onlyOwner {
-        PendingOperationsWalletChange memory pending = pendingOperationsWalletChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
-
-        delete pendingOperationsWalletChange;
-    }
-
-    /// @notice applyOperationsWalletChange
-    function applyOperationsWalletChange() external onlyOwner {
-        PendingOperationsWalletChange memory pending = pendingOperationsWalletChange;
-        if (pending.executeAfter == 0) revert ECO_NoPendingChange();
-        if (block.timestamp < pending.executeAfter) revert ECO_ChangeNotReady();
-
-        address oldWallet = operationsWallet;
-        operationsWallet = pending.wallet;
-        delete pendingOperationsWalletChange;
-        emit OperationsWalletUpdated(oldWallet, pending.wallet);
-    }
-    
-    /**
-     * @notice Set operations allocation percentage
-     * @param _operationsBps _operationsBps
-     */
-    function setOperationsAllocation(uint16 _operationsBps) external onlyOwner {
-        if (_operationsBps < MIN_ALLOCATION_BPS) revert ECO_InvalidConfig();
-        if (_operationsBps > MAX_BPS - (3 * MIN_ALLOCATION_BPS)) revert ECO_ExceedsMax();
-
-        uint16 remaining = MAX_BPS - _operationsBps;
-        if (councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
-        if (merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
-        if (headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
-        if (councilBps + merchantBps + headhunterBps != remaining) revert ECO_InvalidConfig();
-        operationsBps = _operationsBps;
-        emit AllocationUpdated(councilBps, merchantBps, headhunterBps, _operationsBps);
-    }
-    
-    /**
-     * @notice Set operations withdrawal cooldown
-     * @param _cooldown _cooldown
-     */
-    function setOperationsCooldown(uint256 _cooldown) external onlyOwner {
-        if (_cooldown < 1 hours) revert ECO_InvalidConfig();
-        if (_cooldown > 90 days) revert ECO_InvalidConfig();
-        uint256 oldCooldown = operationsWithdrawalCooldown;
-        operationsWithdrawalCooldown = _cooldown;
-        emit OperationsCooldownSet(oldCooldown, _cooldown);
-    }
-    
-    /**
-     * @notice Configure automatic VFIDE to stablecoin conversion for reward payments.
-     * @dev Safe to enable once the VFIDE/stablecoin liquidity pool is established (phased
-     *      deployment guarantees this before rewards go live).  minOutputPerVfide must be set
-     *      first to prevent sandwich attacks without requiring a live oracle.
-     * @param _router DEX router address (Uniswap V2 compatible)
-     * @param _stablecoin Preferred stablecoin address (USDC, USDT, DAI, etc.)
-     * @param _enabled Whether to enable automatic conversion
-     * @param _maxSlippageBps Maximum slippage tolerance in basis points (100 = 1%)
-     */
-    function configureAutoSwap(
-        address _router,
-        address _stablecoin,
-        bool _enabled,
-        uint16 _maxSlippageBps
-    ) external onlyOwner {
-        if (_maxSlippageBps > 500) revert ECO_InvalidConfig(); // Max 5%
-        if (_enabled) {
-            if (_router == address(0)) revert ECO_Zero();
-            if (_stablecoin == address(0)) revert ECO_Zero();
-            if (minOutputPerVfide == 0) revert ECO_InvalidConfig();
-        }
-        swapRouter = _router;
-        preferredStablecoin = _stablecoin;
-        autoSwapEnabled = _enabled;
-        maxSlippageBps = _maxSlippageBps;
-        emit AutoSwapConfigured(_router, _stablecoin, _enabled, _maxSlippageBps);
-    }
-
-    /**
-     * @notice Set the floor price used as minAmountOut in DEX swaps to prevent sandwich attacks.
-     * @dev Express in stablecoin units per 1e18 VFIDE.
-     *      Example: 950000 means 0.95 USDC (6 decimals) per 1 VFIDE.
-     *      Keep this value current; if VFIDE price falls significantly, lower the floor so swaps
-     *      are not blocked.  Must be called before configureAutoSwap can be enabled.
-     * @param _minOutput Floor price in stablecoin units per 1e18 VFIDE.
-     */
-    function setMinOutputPerVfide(uint256 _minOutput) external onlyOwner {
-        if (_minOutput == 0) revert ECO_Zero();
-        minOutputPerVfide = _minOutput;
-        emit MinOutputPerVfideSet(_minOutput);
-    }
 
     /**
      * @notice Enable or disable stablecoin-only mode for non-reward payouts.
@@ -988,18 +766,7 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
     *      - preferredStablecoin must be set
     *      - Either the direct reserve must already be funded, or autoSwapEnabled must be active
      *
-    * @param _enabled True to require stablecoin payments for non-reward payouts; false to allow
-    *        those non-reward paths to use VFIDE again.
-     */
-    function setStablecoinOnlyMode(bool _enabled) external onlyOwner {
-        if (_enabled) {
-            if (preferredStablecoin == address(0) || (stablecoinReserves[preferredStablecoin] == 0 && !autoSwapEnabled)) {
-                revert ECO_InvalidConfig();
-            }
-        }
-        stablecoinOnlyMode = _enabled;
-        emit StablecoinOnlyModeSet(_enabled);
-    }
+
 
     // slither-disable-next-line reentrancy-benign
     /**
@@ -1019,113 +786,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit StablecoinDeposited(stablecoin, msg.sender, amount);
     }
 
-    /**
-     * @notice Emergency withdrawal of stablecoin reserve (owner only).
-     * @param stablecoin Token to withdraw.
-     * @param amount Amount to withdraw.
-     * @param recipient Destination address.
-     */
-    function withdrawStablecoinReserve(address stablecoin, uint256 amount, address recipient) external onlyOwner nonReentrant {
-        if (stablecoin == address(0) || recipient == address(0)) revert ECO_Zero();
-        if (amount == 0 || amount > stablecoinReserves[stablecoin]) revert ECO_InsufficientFunds();
-        stablecoinReserves[stablecoin] -= amount;
-        IERC20(stablecoin).safeTransfer(recipient, amount);
-        emit StablecoinReserveWithdrawn(stablecoin, amount, recipient);
-    }
 
-    /**
-     * @notice Configure automatic fixed work payouts
-     * @dev Automatic payouts are best-effort and will skip when the relevant pool has insufficient balance.
-     * @param enabled enabled
-     * @param merchantTxReward merchantTxReward
-     * @param merchantReferralReward merchantReferralReward
-     * @param userReferralReward userReferralReward
-     */
-    function configureAutoWorkPayout(
-        bool enabled,
-        uint256 merchantTxReward,
-        uint256 merchantReferralReward,
-        uint256 userReferralReward
-    ) external onlyOwner {
-        autoWorkPayoutEnabled = enabled;
-        autoMerchantTxReward = merchantTxReward;
-        autoMerchantReferralReward = merchantReferralReward;
-        autoUserReferralReward = userReferralReward;
 
-        emit AutoWorkPayoutConfigured(enabled, merchantTxReward, merchantReferralReward, userReferralReward);
-    }
 
-    /**
-     * @notice Configure sustainability guardrails for reward payouts.
-     * @dev Reserve bps prevent reward pools from draining to zero during burst activity.
-     * @param merchantReserve merchantReserve
-     * @param headhunterReserve headhunterReserve
-     * @param maxAutoPayout maxAutoPayout
-     */
-    function configureAutoPayoutSustainability(
-        uint16 merchantReserve,
-        uint16 headhunterReserve,
-        uint16 maxAutoPayout
-    ) external onlyOwner {
-        if (merchantReserve > 9000) revert ECO_ExceedsMax();
-        if (headhunterReserve > 9000) revert ECO_ExceedsMax();
-        if (maxAutoPayout == 0 || maxAutoPayout > 5000) revert ECO_InvalidConfig();
-
-        merchantPoolReserveBps = merchantReserve;
-        headhunterPoolReserveBps = headhunterReserve;
-        maxAutoPayoutBps = maxAutoPayout;
-
-        emit AutoPayoutSustainabilityConfigured(merchantReserve, headhunterReserve, maxAutoPayout);
-    }
-
-    /**
-     * @notice Configure fixed referral-work levels and payouts.
-     * @dev Uses absolute point thresholds and fixed amounts; this avoids rank/profit distribution mechanics.
-     * @param level1Points level1Points
-     * @param level2Points level2Points
-     * @param level3Points level3Points
-     * @param level4Points level4Points
-     * @param level1Reward level1Reward
-     * @param level2Reward level2Reward
-     * @param level3Reward level3Reward
-     * @param level4Reward level4Reward
-     */
-    function configureReferralWorkLevels(
-        uint16 level1Points,
-        uint16 level2Points,
-        uint16 level3Points,
-        uint16 level4Points,
-        uint256 level1Reward,
-        uint256 level2Reward,
-        uint256 level3Reward,
-        uint256 level4Reward
-    ) external onlyOwner {
-        if (level1Points == 0) revert ECO_InvalidConfig();
-        if (level1Points >= level2Points) revert ECO_InvalidConfig();
-        if (level2Points >= level3Points) revert ECO_InvalidConfig();
-        if (level3Points >= level4Points) revert ECO_InvalidConfig();
-
-        referralLevel1Points = level1Points;
-        referralLevel2Points = level2Points;
-        referralLevel3Points = level3Points;
-        referralLevel4Points = level4Points;
-
-        referralLevel1Reward = level1Reward;
-        referralLevel2Reward = level2Reward;
-        referralLevel3Reward = level3Reward;
-        referralLevel4Reward = level4Reward;
-
-        emit ReferralWorkLevelsConfigured(
-            level1Points,
-            level2Points,
-            level3Points,
-            level4Points,
-            level1Reward,
-            level2Reward,
-            level3Reward,
-            level4Reward
-        );
-    }
 
     // ═══════════════════════════════════════════════════════════════════════
     //                         RECEIVE & ALLOCATE
@@ -1638,60 +1301,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         emit FundsBurned(amount);
     }
 
-    /// @notice requestWithdraw
-    /// @param to to
-    /// @param amount amount
-    /// @return id id
-    function requestWithdraw(address to, uint256 amount) external onlyOwner returns (uint256 id) {
-        if (to == address(0)) revert ECO_Zero();
-        if (amount == 0) revert ECO_Zero();
-        uint256 bal = rewardToken.balanceOf(address(this));
-        if (amount + pendingWithdrawTotal > bal * maxWithdrawBps / 10_000) revert ECO_ExceedsMax();
-        
-        id = ++withdrawRequestCount;
-        withdrawRequests[id] = WithdrawRequest({
-            to: to,
-            amount: amount,
-            requestedAt: block.timestamp,
-            executed: false,
-            cancelled: false
-        });
-        pendingWithdrawTotal += amount;
-        
-        emit WithdrawRequested(id, to, amount);
-    }
-    
-    /// @notice cancelWithdraw
-    /// @param id id
-    function cancelWithdraw(uint256 id) external onlyOwner {
-        WithdrawRequest storage req = withdrawRequests[id];
-        if (req.executed) revert ECO_AlreadyExecuted();
-        if (req.cancelled) revert ECO_AlreadyCancelled();
-        req.cancelled = true;
-        pendingWithdrawTotal -= req.amount;
-        emit WithdrawCancelled(id);
-    }
-    
-    /// @notice executeWithdraw
-    /// @param id id
-    function executeWithdraw(uint256 id) external onlyOwner nonReentrant {
-        WithdrawRequest storage req = withdrawRequests[id];
-        if (req.executed) revert ECO_AlreadyExecuted();
-        if (req.cancelled) revert ECO_AlreadyCancelled();
-        if (block.timestamp < req.requestedAt + WITHDRAW_TIMELOCK) revert ECO_TimelockNotPassed();
 
-        req.executed = true;
-        pendingWithdrawTotal -= req.amount;
-        rewardToken.safeTransfer(req.to, req.amount);
-        emit WithdrawExecuted(id, req.to, req.amount);
-    }
 
-    /// @notice Allow owner to adjust max withdrawal percentage (in basis points, max 5000 = 50%)
-    /// @param _bps _bps
-    function setMaxWithdrawBps(uint256 _bps) external onlyOwner {
-        if (_bps == 0 || _bps > 5000) revert ECO_InvalidConfig();
-        maxWithdrawBps = _bps;
-    }
+
 
     /// @notice _ownerGovernanceMediated
     /// @return _bool _bool
@@ -1699,47 +1311,9 @@ contract EcosystemVault is Ownable, ReentrancyGuard {
         return owner.code.length > 0;
     }
 
-    /// @notice _applyManagerChange
-    /// @param manager manager
-    /// @param active active
-    function _applyManagerChange(address manager, bool active) internal {
-        isManager[manager] = active;
-        emit ManagerSet(manager, active);
-    }
 
-    /// @notice _applyCouncilManagerChange
-    /// @param _councilManager _councilManager
-    function _applyCouncilManagerChange(address _councilManager) internal {
-        address oldManager = address(councilManager);
-        councilManager = ICouncilManager(_councilManager);
-        emit CouncilManagerUpdated(oldManager, _councilManager);
-    }
 
-    /// @notice _applyAllocationChange
-    /// @param _councilBps _councilBps
-    /// @param _merchantBps _merchantBps
-    /// @param _headhunterBps _headhunterBps
-    function _applyAllocationChange(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) internal {
-        uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
-        councilBps = _councilBps;
-        merchantBps = _merchantBps;
-        headhunterBps = _headhunterBps;
-        operationsBps = MAX_BPS - nonOps;
-        emit AllocationUpdated(_councilBps, _merchantBps, _headhunterBps, MAX_BPS - nonOps);
-    }
 
-    /// @notice _validateAllocationConfig
-    /// @param _councilBps _councilBps
-    /// @param _merchantBps _merchantBps
-    /// @param _headhunterBps _headhunterBps
-    function _validateAllocationConfig(uint16 _councilBps, uint16 _merchantBps, uint16 _headhunterBps) internal pure {
-        uint16 nonOps = _councilBps + _merchantBps + _headhunterBps;
-        if (nonOps > MAX_BPS) revert ECO_InvalidConfig();
-        if (_councilBps < MIN_ALLOCATION_BPS) revert ECO_CouncilBelowMinimum();
-        if (_merchantBps < MIN_ALLOCATION_BPS) revert ECO_MerchantBelowMinimum();
-        if (_headhunterBps < MIN_ALLOCATION_BPS) revert ECO_HeadhunterBelowMinimum();
-        if (MAX_BPS - nonOps < MIN_ALLOCATION_BPS) revert ECO_InvalidConfig();
-    }
 
     /// @notice _rollExpenseEpochIfNeeded
     function _rollExpenseEpochIfNeeded() internal {

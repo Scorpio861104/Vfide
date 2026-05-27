@@ -17,6 +17,7 @@ own Etherscan source verification on mainnet.
 - DAO.sol
 - DAOTimelock.sol
 - DevReserveVestingVault.sol
+- EcosystemVaultAdminFacet.sol  (delegatecall target for EcosystemVault owner-only config; must be deployed before EcosystemVault)
 - EcosystemVault.sol
 - EmergencyControl.sol
 - FeeDistributor.sol

@@ -151,6 +151,7 @@ const DEPLOYMENT_CONTRACTS = [
   "EmergencyControl",
   // Layer 9 — Ecosystem / Badges
   "SanctumVault",
+  "EcosystemVaultAdminFacet",
   "EcosystemVault",
   "EcosystemVaultView",
   "VaultRegistry",
@@ -571,9 +572,23 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 9: Ecosystem / Badges ═══");
 
+  await deploy("SanctumVault", ...envArgs("SanctumVault"));
+
+  // EcosystemVaultAdminFacet must be pre-deployed so its address can be
+  // passed as the 4th immutable constructor argument of EcosystemVault.
+  const ecoAdminFacet = await deploy("EcosystemVaultAdminFacet");
+  log(`  EcosystemVaultAdminFacet → ${await ecoAdminFacet.getAddress()}`);
+
+  // EcosystemVault constructor: (vfide, seer, operationsWallet, adminFacet)
+  const ecoVaultArgs = envArgs("EcosystemVault");
+  if (ecoVaultArgs.length === 3) {
+    // Inject adminFacet as 4th arg when caller only provided the first 3
+    ecoVaultArgs.push(await ecoAdminFacet.getAddress());
+  }
+  const ecoVault = await deploy("EcosystemVault", ...ecoVaultArgs);
+  log(`  EcosystemVault          → ${await ecoVault.getAddress()}`);
+
   for (const name of [
-    "SanctumVault",
-    "EcosystemVault",
     "EcosystemVaultView",
     "VaultRegistry",
     "PayrollManager",
