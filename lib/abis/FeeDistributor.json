@@ -1526,5 +1526,28 @@
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "type": "function",
+    "name": "getSplit",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "daoPayrollBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "merchantPoolBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "headhunterPoolBps",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   }
 ]

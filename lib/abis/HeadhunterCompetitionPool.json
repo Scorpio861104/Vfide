@@ -1,0 +1,111 @@
+[
+  {
+    "type": "event",
+    "name": "ReferralRegistered",
+    "inputs": [
+      {
+        "name": "newUser",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "headhunter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ReferralQualified",
+    "inputs": [
+      {
+        "name": "period",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newUser",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "headhunter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyReferred",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SelfReferral",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotReferred",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyQualified",
+    "inputs": []
+  },
+  {
+    "type": "function",
+    "name": "getPeriodReferrals",
+    "inputs": [
+      {
+        "name": "period",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "headhunter",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_token",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_admin",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_maxPayoutPerPeriod",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  }
+]
