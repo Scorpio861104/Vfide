@@ -34,12 +34,11 @@ const BUFFER_EXCEPTIONS: Record<string, number> = {
 //   CardBoundVault (29 668 B): complex vault with 170+ functions. Fix: extract
 //     WalletRotationManager sub-contract and shrink error strings.
 const OVER_LIMIT_ACKNOWLEDGED: Record<string, number> = {
-  // CardBoundVaultDeployer: embeds type(CardBoundVault).creationCode in _creationCode().
-  //   Fix: refactor predict() to use a stored hash.
-  CardBoundVaultDeployer: 56_000,
-  // CardBoundVault reduced to 19 498 B via CardBoundVaultAdminFacet delegatecall extraction (PR #256).
-  //   Now well under EIP-170. Keeping a conservative ceiling to catch regressions.
-  // CardBoundVault: removed from OVER_LIMIT_ACKNOWLEDGED — now at 19 498 B (under 24 000 B buffer).
+  // CardBoundVaultDeployer: was 56_000 B when it embedded creationCode as a constant.
+  //   Since PR #256, creationCode is hosted by CardBoundVaultBytecodeProvider and
+  //   CBVDeployer is now only 2,553 B — well under the 24,000 B buffer.
+  //   Entry removed 2026-05-27.
+  // CardBoundVault: removed 2026-05-27 — now 19,341 B after AdminFacet extraction.
 };
 
 type ArtifactShape = {

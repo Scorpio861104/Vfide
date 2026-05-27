@@ -11,6 +11,9 @@ own Etherscan source verification on mainnet.
 
 - AdminMultiSig.sol
 - vault/CardBoundVault.sol
+- vault/CardBoundVaultAdminFacet.sol       ← delegatecall admin target; deployed standalone before VaultHub (PR #256)
+- vault/CardBoundVaultBytecodeProvider.sol ← holds CBV creationCode; deployed before CardBoundVaultDeployer (PR #256)
+- vault/CardBoundVaultSubManagerDeployer.sol ← spawns per-vault sub-managers; deployed before BytecodeProvider (PR #256)
 - DAO.sol
 - DAOTimelock.sol
 - DevReserveVestingVault.sol
@@ -21,6 +24,7 @@ own Etherscan source verification on mainnet.
 - GovernanceHooks.sol
 - LiquidityIncentives.sol
 - MerchantPortal.sol
+- MerchantPortalViewer.sol             ← EIP-170 view satellite; wired via setViewer() after deploy (PR #256)
 - OwnerControlPanel.sol
 - PayrollManager.sol
 - pools/DAOPayrollPool.sol
@@ -40,6 +44,7 @@ own Etherscan source verification on mainnet.
 - VFIDEPriceOracle.sol
 - VFIDETermLoan.sol
 - VFIDEToken.sol
+- VFIDETokenViewer.sol                  ← EIP-170 view satellite; wired via setViewer() after deploy (PR #256)
 - VaultHub.sol
 - VaultRecoveryClaim.sol
 - VaultRegistry.sol
@@ -60,10 +65,11 @@ with the deploy artifacts so the spawning `new <Module>(address(this), …)`
 calls succeed.
 
 - **`vault/CardBoundVaultDeployer.sol`**
-  Spawned by `VaultHub`'s constructor (see `VaultHub.sol:135`,
-  `vaultDeployer = new CardBoundVaultDeployer()`). The deployer becomes
-  `vaultHub = msg.sender` (immutable). One instance exists per `VaultHub`
-  deployment.
+  **No longer constructor-spawned by VaultHub.** As of PR #256, `VaultHub` receives
+  `_vaultDeployer` as an explicit constructor argument. The full CBV factory chain
+  (`CardBoundVaultAdminFacet` → `CardBoundVaultSubManagerDeployer` →
+  `CardBoundVaultBytecodeProvider` → `CardBoundVaultDeployer`) must be deployed
+  before `VaultHub`. `deploy-full.ts` handles this in LAYER 3. Updated 2026-05-27.
 
 - **Per-vault auxiliary modules** — each new `CardBoundVault` instance spawns
   these in its constructor (in `vault/CardBoundVault.sol`). They live at
@@ -83,7 +89,12 @@ all of them. The gap, with the status of each as of this writing:
 | Contract | In deploy-full.ts? | Notes |
 |---|---|---|
 | `VFIDEPriceOracle` | **YES (added 2026-05-14)** | Layer 6, inline. `ARGS_VFIDEPRICEORACLE` env supplies remaining 4 ctor args. Replaces the BSM-tangled `DeployPhase3Peripherals.deployPeripherals()` helper. |
-| `CardBoundVaultDeployer` | **YES (implicit)** | Constructor-spawned by `VaultHub` (`VaultHub.sol:135`, `vaultDeployer = new CardBoundVaultDeployer()`). One instance per VaultHub deployment. Always deployed alongside VaultHub. Original flag as "missing" was a false positive in the 2026-05-14 audit. |
+| `CardBoundVaultDeployer` | **YES (explicit, PR #256)** | No longer constructor-spawned. Pre-deployed in LAYER 3. VaultHub now takes `_vaultDeployer` as 4th constructor arg. `deploy-full.ts` updated 2026-05-27. |
+| `CardBoundVaultAdminFacet` | **YES (new, PR #256)** | EIP-170 delegatecall facet for CBV admin functions. Zero constructor args. First in LAYER 3. |
+| `CardBoundVaultBytecodeProvider` | **YES (new, PR #256)** | Hosts CBV creationCode. Constructor: `CardBoundVaultSubManagerDeployer`. |
+| `CardBoundVaultSubManagerDeployer` | **YES (new, PR #256)** | Spawns per-vault sub-managers. Constructor: `VFIDEToken`. |
+| `MerchantPortalViewer` | **YES (new, PR #256)** | Read-only view satellite. Constructor: `MerchantPortal`. Wired via `setViewer()` (DAO-gated). |
+| `VFIDETokenViewer` | **YES (new, PR #256)** | Read-only view satellite. Constructor: `VFIDEToken`. Wired via `setViewer()` (owner-gated). |
 | `EscrowManager` | **REMOVED 2026-05-15** | Superseded by `CommerceEscrow` (deployed at Layer 11). createEscrow was a revert stub (ESC_Deprecated); the contract was effectively unreachable since no function populated the `escrows` mapping. Deleted in Phase 3e turn 1. Restorable from git if a high-value/arbiter-based escrow product is needed later. |
 | `CircuitBreaker` | **MOVED TO `contracts/legacy/` 2026-05-16** | V1's actual circuit breaker is the token-level boolean flag `VFIDEToken.setCircuitBreaker(bool, uint256)` — that's what the UI (AdminDashboardClient, EmergencyPanel) calls. This standalone monitoring contract had no production callers in V1 (`recordVolume` / `recordSuspiciousActivity` were only invoked from test files). Retained in legacy for reference and potential reactivation if metric-driven auto-pause is added later. |
 | `DutyDistributor` | **DEFERRED TO FUTURE 2026-05-16** | Howey-compliant participation tracker, alternative `IGovernanceHooks` implementation. DAO can only wire one hooks contract; V1 keeps the already-deployed GovernanceHooks. Deploying DutyDistributor without wiring it as the DAO's hooks would be inert. Swapping out hooks is its own architectural change with design review, not a Tier-1-mainnet-prep decision. Frontend marketing copy in `HoweySafeModePanel` + `ProductionSetupPanel` trimmed to reflect V1 state. Re-enable in a future phase if/when Howey-safe participation tracking goes live. |

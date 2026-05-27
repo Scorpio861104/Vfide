@@ -117,10 +117,15 @@ const DEPLOYMENT_CONTRACTS = [
   "ProofLedger",
   "DevReserveVestingVault",
   "VFIDEToken",
+  "VFIDETokenViewer",
   // Layer 2 — Trust Engine
   "Seer",
   "ProofScoreBurnRouter",
   // Layer 3 — Vault System
+  "CardBoundVaultAdminFacet",
+  "CardBoundVaultSubManagerDeployer",
+  "CardBoundVaultBytecodeProvider",
+  "CardBoundVaultDeployer",
   "VaultHub",
   // Layer 4 — Commerce Core
   "DAOPayrollPool",
@@ -128,6 +133,7 @@ const DEPLOYMENT_CONTRACTS = [
   "HeadhunterCompetitionPool",
   "FeeDistributor",
   "MerchantPortal",
+  "MerchantPortalViewer",
   // Layer 5 — Governance
   "DAOTimelock",
   "GovernanceHooks",
@@ -319,7 +325,18 @@ async function main() {
     bootstrap.treasurySink,
   );
 
-  // ══════════════════════════════════════════════════════════════════════════
+  
+  // VFIDETokenViewer — read-only satellite; view functions extracted for EIP-170.
+  // Non-custodial: no state writes. setViewer wires the reference in the token contract.
+  await deploy("VFIDETokenViewer", book.VFIDEToken);
+  if (book.VFIDEToken && book.VFIDETokenViewer) {
+    const token = await ethers.getContractAt("VFIDEToken", book.VFIDEToken);
+    await call("VFIDEToken.setViewer(VFIDETokenViewer)", () =>
+      token.setViewer(book.VFIDETokenViewer),
+    );
+  }
+
+// ══════════════════════════════════════════════════════════════════════════
   //  LAYER 2: Trust Engine
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 2: Trust Engine ═══");
@@ -345,11 +362,27 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 3: Vault System ═══");
 
+  // CBV deployer chain — must pre-exist before VaultHub (passed as _vaultDeployer arg).
+  // Deploy order: AdminFacet → SubManagerDeployer → BytecodeProvider → Deployer → VaultHub
+  await deploy("CardBoundVaultAdminFacet");
+  await deploy("CardBoundVaultSubManagerDeployer", book.VFIDEToken);
+  await deploy(
+    "CardBoundVaultBytecodeProvider",
+    book.CardBoundVaultSubManagerDeployer,
+  );
+  await deploy(
+    "CardBoundVaultDeployer",
+    book.CardBoundVaultSubManagerDeployer,
+    book.CardBoundVaultBytecodeProvider,
+    book.CardBoundVaultAdminFacet,
+  );
+
   await deploy(
     "VaultHub",
     book.VFIDEToken,
     book.ProofLedger,
     bootstrap.dao,
+    book.CardBoundVaultDeployer,
   );
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -394,7 +427,19 @@ async function main() {
     book.ProofLedger,
   );
 
-  // ══════════════════════════════════════════════════════════════════════════
+  
+  // MerchantPortalViewer — read-only satellite; pure view functions extracted for EIP-170.
+  // Non-custodial: no state writes. setViewer is _checkDAO()-gated — call with DAO signer.
+  await deploy("MerchantPortalViewer", book.MerchantPortal);
+  if (book.MerchantPortal && book.MerchantPortalViewer) {
+    const mp = await ethers.getContractAt("MerchantPortal", book.MerchantPortal,
+      await ethers.getSigner(bootstrap.dao).catch(() => undefined));
+    await call("MerchantPortal.setViewer(MerchantPortalViewer) [DAO signer]", () =>
+      mp.setViewer(book.MerchantPortalViewer),
+    );
+  }
+
+// ══════════════════════════════════════════════════════════════════════════
   //  LAYER 5: Governance
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 5: Governance ═══");
@@ -700,6 +745,9 @@ async function main() {
     ["NEXT_PUBLIC_SANCTUM_VAULT_ADDRESS",      book.SanctumVault],
     ["NEXT_PUBLIC_ECOSYSTEM_VAULT_ADDRESS",    book.EcosystemVault],
     ["NEXT_PUBLIC_CARD_BOUND_VAULT_DEPLOYER_ADDRESS", book.CardBoundVaultDeployer],
+    ["NEXT_PUBLIC_CBV_ADMIN_FACET_ADDRESS",             book.CardBoundVaultAdminFacet],
+    ["NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS",      book.MerchantPortalViewer],
+    ["NEXT_PUBLIC_VFIDE_TOKEN_VIEWER_ADDRESS",          book.VFIDETokenViewer],
   ];
   for (const [key, val] of envPairs) {
     if (val) console.log(`${key}=${val}`);
