@@ -65,6 +65,7 @@ const REQUIRED_ENV_VARS: EnvironmentConfig[] = [
   { name: 'NEXT_PUBLIC_FLASH_LOAN_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_TERM_LOAN_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_MERCHANT_PORTAL_ADDRESS', required: false, category: 'blockchain', production: true },
+  { name: 'NEXT_PUBLIC_MERCHANT_PORTAL_VIEWER_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_MERCHANT_REGISTRY_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_COMMERCE_ESCROW_ADDRESS', required: false, category: 'blockchain', production: true },
   { name: 'NEXT_PUBLIC_LIQUIDITY_INCENTIVES_ADDRESS', required: false, category: 'blockchain', production: true },

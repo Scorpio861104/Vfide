@@ -52,7 +52,7 @@ import { useCallback } from 'react';
 import { useAccount, usePublicClient, useReadContract, useWriteContract } from 'wagmi';
 import { type Abi, type Address } from 'viem';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
-import { MerchantPortalABI } from '@/lib/abis';
+import { MerchantPortalABI, MerchantPortalViewerABI } from '@/lib/abis';
 
 export enum PaymentChannel {
   Online = 0,
@@ -163,6 +163,8 @@ export function useMerchantPayments(options: UseMerchantPaymentsOptions = {}) {
 
   const portalAddress = CONTRACT_ADDRESSES.MerchantPortal;
   const portalConfigured = isConfiguredContractAddress(portalAddress);
+  const viewerAddress = CONTRACT_ADDRESSES.MerchantPortalViewer;
+  const viewerConfigured = isConfiguredContractAddress(viewerAddress);
 
   const merchantTarget = options.merchantAddress;
   const customerTarget = options.customerAddress ?? connectedAddress;
@@ -171,6 +173,7 @@ export function useMerchantPayments(options: UseMerchantPaymentsOptions = {}) {
   // Read merchant stats — totalVolume, txCount, avgTxSize, trustScore.
   // ─────────────────────────────────────────────────────────────────
   const { data: statsRaw, refetch: refetchStats } = useReadContract({
+    // getMerchantStats retained on MerchantPortal for on-chain compatibility (pools, scripts).
     address: portalAddress,
     abi: MerchantPortalABI,
     functionName: 'getMerchantStats',
@@ -184,11 +187,12 @@ export function useMerchantPayments(options: UseMerchantPaymentsOptions = {}) {
   // read it via MerchantPortal which is what gets enforced on payment.
   // ─────────────────────────────────────────────────────────────────
   const { data: trustScoreRaw } = useReadContract({
-    address: portalAddress,
-    abi: MerchantPortalABI,
+    // getCustomerTrustScore moved to MerchantPortalViewer (EIP-170 extraction)
+    address: viewerAddress,
+    abi: MerchantPortalViewerABI,
     functionName: 'getCustomerTrustScore',
     args: customerTarget ? [customerTarget] : undefined,
-    query: { enabled: portalConfigured && !!customerTarget },
+    query: { enabled: viewerConfigured && !!customerTarget },
   });
   const customerTrustScore = trustScoreRaw !== undefined ? Number(trustScoreRaw) : undefined;
 
@@ -399,15 +403,16 @@ export function useMerchantPayments(options: UseMerchantPaymentsOptions = {}) {
  * checking "did the merchant complete the refund they promised?").
  */
 export function useRefundStatus(refundId: `0x${string}` | undefined) {
-  const portalAddress = CONTRACT_ADDRESSES.MerchantPortal;
-  const portalConfigured = isConfiguredContractAddress(portalAddress);
+  // getRefundStatus moved to MerchantPortalViewer (EIP-170 extraction)
+  const viewerAddress = CONTRACT_ADDRESSES.MerchantPortalViewer;
+  const viewerConfigured = isConfiguredContractAddress(viewerAddress);
 
   const { data, isLoading, refetch } = useReadContract({
-    address: portalAddress,
-    abi: MerchantPortalABI,
+    address: viewerAddress,
+    abi: MerchantPortalViewerABI,
     functionName: 'getRefundStatus',
     args: refundId ? [refundId] : undefined,
-    query: { enabled: portalConfigured && !!refundId },
+    query: { enabled: viewerConfigured && !!refundId },
   });
 
   return {

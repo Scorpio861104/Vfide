@@ -266,6 +266,10 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
 
     /// @notice fraudRegistry
     address public fraudRegistry;
+
+    /// @notice viewer — read-only satellite (MerchantPortalViewer) for extracted view queries.
+    ///         Zero address disables the satellite but leaves all read functions intact.
+    address public viewer;
     // N-L15 FIX: optional session-key spend-limit gate (zero address = disabled).
     // Kept private to avoid generating an extra public getter and reduce bytecode size.
     /// @notice sessionKeyManager
@@ -482,6 +486,15 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         if (_fr == address(0)) revert MERCH_Zero();
         fraudRegistry = _fr;
     }
+    /// @notice Set the read-only MerchantPortalViewer satellite address.
+    ///         Pass address(0) to unset. The viewer holds no assets and cannot
+    ///         modify protocol state — it is safe to update at any time.
+    /// @param _viewer _viewer
+    function setViewer(address _viewer) external onlyDAO {
+        viewer = _viewer;
+        _log("m_viewer_set");
+    }
+
     /// @notice setAcceptedToken
     /// @param token token
     /// @param accepted accepted
@@ -780,6 +793,9 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @return avgTxSize Average transaction size
      * @return trustScore Current trust score
      */
+    /// @notice getMerchantStats — delegates to MerchantPortalViewer (EIP-170 extraction).
+    ///         On-chain callers (pools, scripts) continue to call this address.
+    ///         Off-chain frontends should call MerchantPortalViewer directly for gas efficiency.
     function getMerchantStats(address merchant) external view returns (
         bool registered,
         bool suspended,
@@ -788,12 +804,13 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         uint256 avgTxSize,
         uint16 trustScore
     ) {
+        // Direct storage read — cheaper than delegating to viewer for on-chain callers.
         MerchantInfo storage m = merchants[merchant];
         registered = m.registered;
         suspended = m.suspended;
         totalVolume = m.totalVolume;
         txCount = m.txCount;
-        avgTxSize = m.txCount > 0 ? m.totalVolume / m.txCount : 0;
+        avgTxSize = txCount > 0 ? totalVolume / txCount : 0;
         trustScore = address(seer) != address(0) ? seer.getCachedScore(merchant) : 5000;
     }
 
@@ -1316,29 +1333,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @return lowTrust lowTrust
      * @return eligible eligible
      */
-    function getCustomerTrustScore(address customer) external view returns (
-        uint16 score,
-        bool highTrust,
-        bool lowTrust,
-        bool eligible
-    ) {
-        if (address(seer) == address(0)) {
-            return (500, false, false, true); // Neutral defaults
-        }
-        
-        score = seer.getCachedScore(customer);
-        uint16 highThreshold = seer.highTrustThreshold();
-        uint16 lowThreshold = seer.lowTrustThreshold();
-        
-        highTrust = score >= highThreshold;
-        lowTrust = score <= lowThreshold;
-        
-        // Check if customer has vault
-        address vault = vaultHub.vaultOf(customer);
-        eligible = vault != address(0);
-        
-        // SecurityHub lock check removed — non-custodial
-    }
+    // getCustomerTrustScore() MOVED → MerchantPortalViewer.getCustomerTrustScore(customer)
+    // Extracted for EIP-170 size compliance. Use the deployed MerchantPortalViewer satellite.
 
     /// @notice Deprecated on-chain quote helper retained for ABI compatibility.
     /// @return _uint256 _uint256
@@ -1381,19 +1377,8 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
      * @return approved approved
      * @return completed completed
      */
-    function getRefundStatus(bytes32 refundId) external view returns (
-        address customer,
-        address merchant,
-        address token,
-        uint256 amount,
-        string memory orderId,
-        uint64 requestTime,
-        bool approved,
-        bool completed
-    ) {
-        RefundRequest storage r = refundRequests[refundId];
-        return (r.customer, r.merchant, r.token, r.amount, r.orderId, r.requestTime, r.approved, r.completed);
-    }
+    // getRefundStatus() MOVED → MerchantPortalViewer.getRefundStatus(refundId)
+    // Extracted for EIP-170 size compliance. Use the deployed MerchantPortalViewer satellite.
     
     /**
      * @notice Deprecated heavy on-chain aggregation view.
@@ -1421,18 +1406,11 @@ contract MerchantPortal is Ownable, ReentrancyGuard {
         return false;
     }
 
-    /// @notice Returns all refund IDs initiated by the given customer.
-    /// R77: mappings made public to unblock frontend enumeration.
-    /// @param customer customer
-    function getCustomerRefunds(address customer) external view returns (bytes32[] memory) {
-        return customerRefunds[customer];
-    }
+    // getCustomerRefunds() MOVED → MerchantPortalViewer.getCustomerRefunds(customer, maxResults)
+    // Mappings (customerRefunds, merchantRefunds) remain public — viewer reads them directly.
 
-    /// @notice Returns all refund IDs initiated by the given merchant.
-    /// @param merchant merchant
-    function getMerchantRefunds(address merchant) external view returns (bytes32[] memory) {
-        return merchantRefunds[merchant];
-    }
+    // getMerchantRefunds() MOVED → MerchantPortalViewer.getMerchantRefunds(merchant, maxResults)
+    // Extracted for EIP-170 size compliance. Use the deployed MerchantPortalViewer satellite.
 
     /// @notice _rewardPaymentParticipants
     /// @param customer customer
