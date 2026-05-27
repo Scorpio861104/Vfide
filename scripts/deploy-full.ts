@@ -645,11 +645,22 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 11: Commerce Suite ═══");
 
-  for (const name of [
-    "MerchantRegistry",
-    "CommerceEscrow",
-  ] as const) {
-    await deploy(name, ...envArgs(name));
+  // CE-D5 FIX: MerchantRegistry + CommerceEscrow were deployed with bare envArgs() and
+  // no documented ARGS_ env vars, causing silent 0-arg deploy failures against 5-arg and 4-arg
+  // constructors respectively. Auto-inject from book when env vars not set.
+  {
+    const mrArgs = envArgs("MerchantRegistry");
+    await deploy(
+      "MerchantRegistry",
+      ...(mrArgs.length === 5 ? mrArgs : [bootstrap.dao, book.VFIDEToken, book.VaultHub, book.Seer, book.ProofLedger]),
+    );
+  }
+  {
+    const ceArgs = envArgs("CommerceEscrow");
+    await deploy(
+      "CommerceEscrow",
+      ...(ceArgs.length === 4 ? ceArgs : [bootstrap.dao, book.VFIDEToken, book.VaultHub, book.MerchantRegistry]),
+    );
   }
 
   if (book.MerchantRegistry) book.VFIDECommerce = book.MerchantRegistry;
@@ -759,6 +770,12 @@ async function main() {
   const merchant = await ethers.getContractAt("MerchantPortal", book.MerchantPortal);
   await call("MerchantPortal.setDAO → DAO", () => merchant.setDAO(book.DAO));
 
+  // SubscriptionManager → DAO  (SM-GOV1 FIX: was never rotated; immediate setDAO, no timelock)
+  if (book.SubscriptionManager && book.DAO) {
+    const subMgr = await ethers.getContractAt("SubscriptionManager", book.SubscriptionManager);
+    await call("SubscriptionManager.setDAO → DAO", () => subMgr.setDAO(book.DAO));
+  }
+
   // VFIDEFlashLoan → DAO
   const flash = await ethers.getContractAt("VFIDEFlashLoan", book.VFIDEFlashLoan);
   await call("VFIDEFlashLoan.setDAO → DAO", () => flash.setDAO(book.DAO));
@@ -766,6 +783,12 @@ async function main() {
   // VFIDETermLoan → DAO
   const term = await ethers.getContractAt("VFIDETermLoan", book.VFIDETermLoan);
   await call("VFIDETermLoan.setDAO → DAO", () => term.setDAO(book.DAO));
+
+  // CE-GOV1 NOTE: CommerceEscrow.sol has no setDAO() function. The dao address set at
+  // construction (bootstrap.dao EOA) is permanent. Governance proposals cannot rotate it.
+  // Mitigation: CommerceEscrow's privileged functions are limited to parameter updates
+  // (expiry, fee) that are bounded by constants. The main escrow flow is user-initiated.
+  // Track as a known limitation until CommerceEscrow v2 adds a timelocked setDAO.
 
   // MerchantRegistry ↔ CommerceEscrow
   if (book.MerchantRegistry && book.CommerceEscrow) {
