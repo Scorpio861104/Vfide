@@ -168,6 +168,9 @@ async function main() {
     { name: "VFIDEFlashLoan", bookKey: "VFIDEFlashLoan", factoryName: "VFIDEFlashLoan", fn: "applyDAO" },
     { name: "VFIDETermLoan",  bookKey: "VFIDETermLoan",  factoryName: "VFIDETermLoan",  fn: "applyDAO" },
     { name: "FraudRegistry",  bookKey: "FraudRegistry",  factoryName: "FraudRegistry",  fn: "applyDAO_FR" },
+    // PL-GOV1: ProofLedger.applyDAO() confirms the 48h-timelocked DAO rotation
+    //           (proposed in transfer-governance.ts by ledgerAdmin).
+    { name: "ProofLedger",    bookKey: "ProofLedger",    factoryName: "ProofLedger",    fn: "applyDAO" },
   ];
   for (const { name, bookKey, factoryName, fn } of moduleDaoTransfers) {
     const addr = book[bookKey];
