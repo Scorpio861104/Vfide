@@ -424,11 +424,10 @@ async function main() {
     ...poolArgs(ethers, "HeadhunterCompetitionPool", book.VFIDEToken, bootstrap.poolAdmin),
   );
 
+  // FeeDistributor: 3-channel ecosystem router (no burn/sanctum — those are upstream in BurnRouter)
   await deploy(
     "FeeDistributor",
     book.VFIDEToken,
-    bootstrap.burnSink,
-    bootstrap.sanctumSink,
     book.DAOPayrollPool,
     book.MerchantCompetitionPool,
     book.HeadhunterCompetitionPool,
