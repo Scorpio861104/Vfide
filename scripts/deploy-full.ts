@@ -161,6 +161,19 @@ const DEPLOYMENT_CONTRACTS = [
   "MerchantRegistry",
   "CommerceEscrow",
   "SubscriptionManager",
+  // Layer 12 — Ecosystem Satellites (promoted from contracts/future/ 2026-05-27)
+  "BadgeManager",
+  "VFIDEBadgeNFT",
+  "CouncilElection",
+  "CouncilSalary",
+  "SeerAutonomous",
+  "SeerGuardian",
+  "SeerPolicyGuard",
+  "SeerSocial",
+  "SeerWorkAttestation",
+  "VFIDEBenefits",
+  "VFIDEEnterpriseGateway",
+  "MainstreamPayments",
 ] as const;
 
 function byteLength(hexData: string | undefined): number {
@@ -622,6 +635,43 @@ async function main() {
     book.Seer,
   );
 
+  // ══════════════════════════════════════════════════════════════════════════
+  //  LAYER 12: Ecosystem Satellites (promoted from contracts/future/ 2026-05-27)
+  //  All have only internal constructor deps (DAO, Seer, VaultHub, Ledger).
+  // ══════════════════════════════════════════════════════════════════════════
+  console.log("\n═══ LAYER 12: Ecosystem Satellites ═══");
+
+  // Badge system
+  await deploy("BadgeManager",          book.DAO, book.Seer, book.BadgeQualificationRules ?? ethers.ZeroAddress);
+  await deploy("VFIDEBadgeNFT",         book.Seer, "");
+
+  // Council governance
+  await deploy("CouncilElection",       book.DAO, book.Seer, book.VaultHub, book.ProofLedger);
+  await deploy("CouncilSalary",         book.CouncilElection, book.Seer, book.VFIDEToken, book.DAO);
+
+  // Seer satellites
+  await deploy("SeerAutonomous",        book.DAO, book.Seer, book.ProofLedger);
+  await deploy("SeerGuardian",          book.DAO, book.Seer, book.VaultHub, book.ProofLedger);
+  await deploy("SeerPolicyGuard",       book.DAO, book.Seer);
+  await deploy("SeerSocial",            book.Seer);
+  await deploy("SeerWorkAttestation",   bootstrap.deployer);
+
+  // Utilities
+  await deploy("VFIDEBenefits",         book.DAO, book.Seer, book.ProofLedger);
+
+  // VFIDEEnterpriseGateway — oracle = VFIDEPriceOracle (Phase 1); swapRouter optional (DAO-activated post-deploy)
+  await deploy("VFIDEEnterpriseGateway",
+    book.DAO,
+    book.VFIDEToken,
+    book.Seer,
+    book.VaultHub,
+    book.VFIDEPriceOracle,
+    bootstrap.deployer,   // merchantWallet — transfer to ops multisig post-deploy
+  );
+
+  // MainstreamPayments — deploys as empty registry; providers register post-launch
+  await deploy("MainstreamPayments",    book.DAO, book.Seer, book.ProofLedger);
+
   saveBook(network, book);
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -647,6 +697,18 @@ async function main() {
     ["MerchantRegistry",     book.MerchantRegistry],
     ["CommerceEscrow",       book.CommerceEscrow],
     ["SubscriptionManager",  book.SubscriptionManager],
+    // Layer 12 satellites
+    ["BadgeManager",         book.BadgeManager],
+    ["CouncilElection",      book.CouncilElection],
+    ["CouncilSalary",        book.CouncilSalary],
+    ["SeerAutonomous",       book.SeerAutonomous],
+    ["SeerGuardian",         book.SeerGuardian],
+    ["SeerPolicyGuard",      book.SeerPolicyGuard],
+    ["SeerSocial",           book.SeerSocial],
+    ["SeerWorkAttestation",  book.SeerWorkAttestation],
+    ["VFIDEBenefits",        book.VFIDEBenefits],
+    ["VFIDEEnterpriseGateway", book.VFIDEEnterpriseGateway],
+    ["MainstreamPayments",   book.MainstreamPayments],
   ];
   for (const [name, addr] of loggers) {
     if (!addr) continue;
@@ -687,6 +749,26 @@ async function main() {
     await call("SubscriptionManager.setFraudRegistry → FraudRegistry (queued 24h)", () =>
       subMgr.setFraudRegistry(book.FraudRegistry),
     );
+  }
+
+  // ── Layer 12: Seer satellite wiring ──────────────────────────────────────
+  // Wire Seer satellites into Seer contract (all onlyDAO, immediate — no timelock on these setters)
+  if (book.SeerSocial)     await call("Seer.setSeerSocial → SeerSocial",         () => seer.setSeerSocial(book.SeerSocial));
+  if (book.SeerAutonomous) await call("Seer.setSeerAutonomous → SeerAutonomous", () => seer.setSeerAutonomous(book.SeerAutonomous));
+  if (book.SeerPolicyGuard) await call("Seer.setPolicyGuard → SeerPolicyGuard",  () => seer.setPolicyGuard(book.SeerPolicyGuard));
+
+  // SeerGuardian — wire internal modules (no external dep)
+  if (book.SeerGuardian && book.ProofLedger && book.VaultHub) {
+    const guardian = await ethers.getContractAt("SeerGuardian", book.SeerGuardian);
+    await call("SeerGuardian.setModules → Seer/VaultHub/Ledger", () =>
+      guardian.setModules(book.Seer, book.VaultHub, book.ProofLedger),
+    );
+  }
+
+  // CouncilSalary — set DAO (separate from constructor; timelocked)
+  if (book.CouncilSalary) {
+    const salary = await ethers.getContractAt("CouncilSalary", book.CouncilSalary);
+    await call("CouncilSalary.setDAO → DAO (queued)", () => salary.setDAO(book.DAO));
   }
 
   // ── Faucet ↔ EcosystemVault wiring ───────────────────────────────────────
