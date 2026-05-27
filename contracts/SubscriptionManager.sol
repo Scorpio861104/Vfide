@@ -16,7 +16,7 @@ pragma solidity 0.8.30;
  * - Subscription modification support
  */
 
-import {IVaultHub, IERC20, IEmergencyBreaker, ReentrancyGuard, SafeERC20} from "../SharedInterfaces.sol";
+import {IVaultHub, IERC20, IEmergencyBreaker, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
 using SafeERC20 for IERC20;
 

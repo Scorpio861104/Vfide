@@ -821,6 +821,21 @@ async function main() {
   await call("Token.setBurnRouter (proposal)", () => token.setBurnRouter(book.ProofScoreBurnRouter));
   await call("Token.setFraudRegistry (proposal)", () => token.setFraudRegistry(book.FraudRegistry));
 
+  // ── BurnRouter sustainability seed (24h timelock) ─────────────────────────
+  // dailyBurnCap = 500,000 VFIDE  |  minimumSupplyFloor = 50,000,000 VFIDE
+  // ecosystemMinBps = 5 (0.05%)
+  // applySustainability() is called in apply-full.ts after the 24h window.
+  {
+    const burnRouter = await ethers.getContractAt("ProofScoreBurnRouter", book.ProofScoreBurnRouter);
+    const DAILY_CAP   = ethers.parseUnits("500000",    18); // 500k VFIDE
+    const SUPPLY_FLOOR= ethers.parseUnits("50000000",  18); // 50M  VFIDE
+    const ECO_MIN_BPS = 5;                                  // 0.05%
+    await call(
+      "BurnRouter.setSustainability (proposal, 24h timelock)",
+      () => burnRouter.setSustainability(DAILY_CAP, SUPPLY_FLOOR, ECO_MIN_BPS)
+    );
+  }
+
   // Seer.setDAO — 48h timelock
   await call("Seer.setDAO → DAO (proposal)", () => seer.setDAO(book.DAO));
 

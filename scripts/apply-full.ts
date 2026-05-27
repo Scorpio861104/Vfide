@@ -121,6 +121,15 @@ async function main() {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  //  BurnRouter sustainability apply (24h timelock, proposed in deploy-full.ts)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (book.ProofScoreBurnRouter) {
+    console.log("\n═══ BurnRouter Sustainability Apply ═══");
+    const burnRouter = await ethers.getContractAt("ProofScoreBurnRouter", book.ProofScoreBurnRouter);
+    await call("BurnRouter.applySustainability", () => burnRouter.applySustainability());
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   //  Emergency ownership path must stay dormant (no emergency controllers)
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ Emergency Controller Safety ═══");

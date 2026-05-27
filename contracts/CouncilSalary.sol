@@ -15,7 +15,7 @@ pragma solidity 0.8.30;
  * - This contract does not perform on-chain asset swaps.
  */
 
-import {IERC20, ISeer, ICouncilElection, SafeERC20} from "../SharedInterfaces.sol";
+import {IERC20, ISeer, ICouncilElection, SafeERC20} from "./SharedInterfaces.sol";
 
 /// @notice CouncilSalary
 /// @title CouncilSalary

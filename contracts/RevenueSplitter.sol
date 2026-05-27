@@ -17,6 +17,15 @@ import { IERC20, SafeERC20, ReentrancyGuard } from "./SharedInterfaces.sol";
 /// @author Vfide
 contract RevenueSplitter is ReentrancyGuard {
     using SafeERC20 for IERC20;
+
+    // Custom errors (Hardhat-compatible revert decoding)
+    error RS_ZeroToken();
+    error RS_NoFunds();
+    error RS_ZeroOwner();
+    error RS_ZeroAddress();
+    error RS_ZeroShare();
+    error RS_LengthMismatch();
+    error RS_EmptyPayees();
     /// @notice owner
     address public immutable owner;
     
@@ -47,15 +56,15 @@ contract RevenueSplitter is ReentrancyGuard {
     /// @param _accounts _accounts
     /// @param _shares _shares
     constructor(address[] memory _accounts, uint256[] memory _shares) {
-        require(_accounts.length == _shares.length, "length mismatch");
-        require(_accounts.length > 0, "RS: no payees");
-        require(msg.sender != address(0), "RS: zero owner");
+        if (_accounts.length != _shares.length) revert RS_LengthMismatch();
+        if (_accounts.length == 0) revert RS_EmptyPayees();
+        if (msg.sender == address(0)) revert RS_ZeroOwner();
         owner = msg.sender;
         
         uint256 length = _accounts.length;
         for (uint i = 0; i < length; ++i) {
-            require(_accounts[i] != address(0), "zero address");
-            require(_shares[i] > 0, "zero share");
+            if (_accounts[i] == address(0)) revert RS_ZeroAddress();
+            if (_shares[i] == 0) revert RS_ZeroShare();
             payees.push(Payee({account: _accounts[i], shareBps: _shares[i]}));
             totalShares += _shares[i];
         }
@@ -66,9 +75,9 @@ contract RevenueSplitter is ReentrancyGuard {
     /// @notice distribute
     /// @param token token
     function distribute(address token) external nonReentrant {
-        require(token != address(0), "RS: zero token");
+        if (token == address(0)) revert RS_ZeroToken();
         uint256 balance = IERC20(token).balanceOf(address(this));
-        require(balance > 0, "no funds");
+        if (balance == 0) revert RS_NoFunds();
         // Removed hardcoded 1e18 minimum - was breaking 6-decimal tokens like USDC
 
         uint256 distributed = 0;
@@ -137,12 +146,12 @@ contract RevenueSplitter is ReentrancyGuard {
     /// @param _shares _shares
     function updatePayees(address[] calldata _accounts, uint256[] calldata _shares) external {
         require(msg.sender == owner, "RS: not owner");
-        require(_accounts.length == _shares.length, "length mismatch");
-        require(_accounts.length > 0, "RS: no payees");
+        if (_accounts.length != _shares.length) revert RS_LengthMismatch();
+        if (_accounts.length == 0) revert RS_EmptyPayees();
         uint256 totalBps = 0;
         for (uint256 i = 0; i < _accounts.length; ++i) {
-            require(_accounts[i] != address(0), "zero address");
-            require(_shares[i] > 0, "zero share");
+            if (_accounts[i] == address(0)) revert RS_ZeroAddress();
+            if (_shares[i] == 0) revert RS_ZeroShare();
             totalBps += _shares[i];
         }
         require(totalBps == 10000, "must equal 100%");

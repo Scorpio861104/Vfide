@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {IERC20, ISeer, ISwapRouter, IVaultHub, ReentrancyGuard, SafeERC20} from "../SharedInterfaces.sol";
+import {IERC20, ISeer, ISwapRouter, IVaultHub, ReentrancyGuard, SafeERC20} from "./SharedInterfaces.sol";
 
 /// @notice ENT_NotOracle
 error ENT_NotOracle();
