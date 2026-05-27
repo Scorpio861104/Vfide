@@ -26,6 +26,8 @@ contract CardBoundVaultDeployer {
 
     /// @notice bytecodeProvider — holds CardBoundVault initcode; never embedded here
     ICBVBytecodeProvider public immutable bytecodeProvider;
+    /// @notice adminFacet — CardBoundVaultAdminFacet address; threaded into every vault deployment.
+    address public immutable adminFacet;
 
     /// @notice original deployer — the only address permitted to call initHub()
     address private immutable _deployer;
@@ -34,10 +36,11 @@ contract CardBoundVaultDeployer {
 
     /// @param _subManagerDeployer Pre-deployed CardBoundVaultSubManagerDeployer address
     /// @param _bytecodeProvider   Pre-deployed CardBoundVaultBytecodeProvider address
-    constructor(address _subManagerDeployer, address _bytecodeProvider) {
+    constructor(address _subManagerDeployer, address _bytecodeProvider, address _adminFacet) {
         _deployer = msg.sender;
         subManagerDeployer = ISubManagerDeployer(_subManagerDeployer);
         bytecodeProvider = ICBVBytecodeProvider(_bytecodeProvider);
+        adminFacet          = _adminFacet;
     }
 
     /// @notice initHub — one-time call to wire the VaultHub address after it deploys.
@@ -70,7 +73,7 @@ contract CardBoundVaultDeployer {
         bytes memory init = bytecodeProvider.creationCode(
             hub, vfideToken, owner_, owner_, guardians,
             guardianThreshold, maxPerTransfer, dailyLimit, ledger,
-            address(0), address(0), address(0), address(0)
+            address(0), address(0), address(0), address(0), adminFacet
         );
         predicted = address(uint160(uint256(keccak256(
             abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(init))
@@ -98,7 +101,7 @@ contract CardBoundVaultDeployer {
         bytes memory init = bytecodeProvider.creationCode(
             hub, vfideToken, owner_, owner_, guardians,
             guardianThreshold, maxPerTransfer, dailyLimit, ledger,
-            address(0), address(0), address(0), address(0)
+            address(0), address(0), address(0), address(0), adminFacet
         );
         address predicted = address(uint160(uint256(keccak256(
             abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(init))
@@ -111,7 +114,7 @@ contract CardBoundVaultDeployer {
         bytes memory initWithManagers = bytecodeProvider.creationCode(
             hub, vfideToken, owner_, owner_, guardians,
             guardianThreshold, maxPerTransfer, dailyLimit, ledger,
-            pm, wq, im, am
+            pm, wq, im, am, adminFacet
         );
 
         assembly {

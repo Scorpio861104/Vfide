@@ -19,7 +19,8 @@ interface ICBVBytecodeProvider {
         address paymentManager,
         address withdrawalQueue,
         address inheritanceManager,
-        address accessManager
+        address accessManager,
+        address adminFacet
     ) external pure returns (bytes memory);
 }
 
@@ -43,14 +44,15 @@ contract CardBoundVaultBytecodeProvider is ICBVBytecodeProvider {
         address paymentManager,
         address withdrawalQueue,
         address inheritanceManager,
-        address accessManager
+        address accessManager,
+        address adminFacet
     ) external pure override returns (bytes memory) {
         return abi.encodePacked(
             type(CardBoundVault).creationCode,
             abi.encode(
                 hub, vfideToken, owner_, recoveryAddress, guardians,
                 guardianThreshold, maxPerTransfer, dailyLimit, ledger,
-                paymentManager, withdrawalQueue, inheritanceManager, accessManager
+                paymentManager, withdrawalQueue, inheritanceManager, accessManager, adminFacet
             )
         );
     }

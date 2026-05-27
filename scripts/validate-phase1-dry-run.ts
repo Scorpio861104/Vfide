@@ -79,6 +79,13 @@ const PHASE1_CONTRACTS: ContractSpec[] = [
     description: "Trust Engine: Routes proves to burn/distribution sinks",
   },
   {
+    name: "CardBoundVaultAdminFacet",
+    layer: 2,
+    dependencies: [],
+    constructorArgs: () => [],
+    description: "Delegatecall target for low-frequency CBV admin functions (no-constructor, zero-arg)",
+  },
+  {
     name: "CardBoundVaultSubManagerDeployer",
     layer: 2,
     dependencies: [],
@@ -88,9 +95,10 @@ const PHASE1_CONTRACTS: ContractSpec[] = [
   {
     name: "CardBoundVaultDeployer",
     layer: 2,
-    dependencies: ["CardBoundVaultSubManagerDeployer"],
+    dependencies: ["CardBoundVaultSubManagerDeployer", "CardBoundVaultAdminFacet"],
     constructorArgs: (deployed) => [
       deployed.CardBoundVaultSubManagerDeployer,
+      deployed.CardBoundVaultAdminFacet,
     ],
     description: "Factory: deploys CardBoundVault instances via CREATE2",
   },

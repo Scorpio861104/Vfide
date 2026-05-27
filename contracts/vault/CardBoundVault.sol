@@ -621,6 +621,8 @@ contract CardBoundVault is ReentrancyGuard {
     address public immutable withdrawalQueueManager;
     /// @notice adminManager
     address public immutable adminManager;
+    /// @notice adminFacet — delegatecall target for low-frequency admin functions.
+    address public immutable adminFacet;
 
     struct WalletRotation {
         address newWallet;
@@ -638,6 +640,13 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice inheritanceManager
     address public inheritanceManager;
+
+    // ── Storage mirrors (delegatecall-readable copies of immutables for adminFacet) ──
+    address private _adminManagerStore;
+    address private _paymentQueueManagerStore;
+    address private _withdrawalQueueManagerStore;
+    address private _hubStore;
+    address private _vfideTokenStore;
 
     struct TransferIntent {
         address vault;
@@ -1034,7 +1043,8 @@ contract CardBoundVault is ReentrancyGuard {
         address _paymentQueueManager,
         address _withdrawalQueueManager,
         address _inheritanceManager,
-        address _adminManager
+        address _adminManager,
+        address _adminFacet
     ) {
         if (_hub == address(0) || _vfideToken == address(0) || _admin == address(0) || _activeWallet == address(0)) {
             revert CBV_Zero();
@@ -1090,6 +1100,14 @@ contract CardBoundVault is ReentrancyGuard {
         withdrawalQueueManager = _withdrawalQueueManager;
         inheritanceManager     = _inheritanceManager;
         adminManager           = _adminManager;
+        if (_adminFacet == address(0)) revert CBV_Zero();
+        adminFacet             = _adminFacet;
+        // Set storage mirrors so adminFacet can read them via delegatecall
+        _adminManagerStore         = _adminManager;
+        _paymentQueueManagerStore  = _paymentQueueManager;
+        _withdrawalQueueManagerStore = _withdrawalQueueManager;
+        _hubStore                  = _hub;
+        _vfideTokenStore           = _vfideToken;
 
         // Emit initial large-payment threshold (5x daily limit).
         emit LargePaymentThresholdSet(0, _dailyTransferLimit * 5);
@@ -1150,23 +1168,13 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Propose a guardian change with 24-hour timelock (CBV-03)
     /// @param guardian guardian
     /// @param active active
-    function proposeGuardianChange(address guardian, bool active) external onlyAdmin {
-        if (guardian == address(0)) revert CBV_Zero();
-        IAdminManager(adminManager).proposeGuardianChange(guardian, active);
-        emit GuardianChangeProposed(guardian, active, uint64(block.timestamp) + 1 days);
-    }
+    // proposeGuardianChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Apply a previously proposed guardian change after timelock expires (CBV-03)
-    function applyGuardianChange() external onlyAdmin {
-        (address guardian, bool active) = IAdminManager(adminManager).applyGuardianChange();
-        _applyGuardianChange(guardian, active);
-    }
+    // applyGuardianChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Cancel a pending guardian change (CBV-03)
-    function cancelGuardianChange() external onlyAdmin {
-        (address guardian, bool active) = IAdminManager(adminManager).cancelGuardianChange();
-        emit GuardianChangeCancelled(guardian, active);
-    }
+    // cancelGuardianChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice _applyGuardianChange
     /// @param guardian guardian
@@ -1220,41 +1228,17 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param active True to set guardian active, false to remove.
     /// @dev C-2 FIX: After guardian setup is complete on VaultHub, admin must use
     ///      proposeGuardianChange + applyGuardianChange (24-hour timelock) instead.
-    function setGuardian(address guardian, bool active) external onlyAdmin {
-        // C-2 FIX: Block instant guardian changes after bootstrap
-        if (IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) revert CBV_UseProposeApply();
-        if (guardian == address(0)) revert CBV_Zero();
-        _applyGuardianChange(guardian, active);
-    }
+    // setGuardian() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Set required guardian approvals for sensitive wallet-rotation actions.
     /// @param threshold New guardian approval threshold.
     /// @dev C-2 FIX: Also gated to bootstrap-only to prevent instant threshold reduction.
-    function setGuardianThreshold(uint8 threshold) external onlyAdmin {
-        if (IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) revert CBV_UseProposeApply();
-        if (threshold == 0 || threshold > guardianCount) revert CBV_InvalidThreshold();
-        guardianThreshold = threshold;
-        emit GuardianThresholdSet(threshold);
-    }
+    // setGuardianThreshold() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Configure per-transfer and daily transfer limits.
     /// @param _maxPerTransfer Maximum VFIDE transferable in a single authorized transfer.
     /// @param _dailyTransferLimit Maximum VFIDE transferable during the active 24h window.
-    function setSpendLimits(uint256 _maxPerTransfer, uint256 _dailyTransferLimit) external onlyAdmin {
-        if (_maxPerTransfer == 0 || _dailyTransferLimit == 0 || _maxPerTransfer > _dailyTransferLimit) {
-            revert CBV_TransferLimit();
-        }
-
-        if (_guardianSetupComplete()) {
-            IAdminManager(adminManager).proposeSpendLimits(_maxPerTransfer, _dailyTransferLimit);
-            emit SpendLimitsChangeProposed(_maxPerTransfer, _dailyTransferLimit, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
-            return;
-        }
-
-        maxPerTransfer = _maxPerTransfer;
-        dailyTransferLimit = _dailyTransferLimit;
-        emit SpendLimitsSet(_maxPerTransfer, _dailyTransferLimit);
-    }
+    // setSpendLimits() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     // ─────────────────────────────────────────────────────────────────
     // TRUSTEE ROLE MANAGEMENT (R-8)
@@ -1273,36 +1257,20 @@ contract CardBoundVault is ReentrancyGuard {
     ///        2. Route the change through the same propose/timelock/apply
     ///           pipeline as guardian add/remove — see proposeTrusteeChange().
     ///           This direct setter is bootstrap-only (before guardianSetupComplete).
-    function setTrustee(address guardian, bool trustee) external onlyAdmin {
-        if (IVaultHubGuardianSetup(hub).guardianSetupComplete(address(this))) revert CBV_UseProposeApply();
-        if (guardian == address(0)) revert CBV_Zero();
-        if (!isGuardian[guardian]) revert CBV_NotGuardian();
-        _applyTrusteeChange(guardian, trustee);
-    }
+    // setTrustee() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Propose a trustee role change (post-bootstrap, timelocked).
     /// @dev Reuses the AdminManager guardian-change pipeline by encoding the
     ///      role bit into the propose call. The same 24-hour timelock applies.
     /// @param guardian guardian
     /// @param trustee trustee
-    function proposeTrusteeChange(address guardian, bool trustee) external onlyAdmin {
-        if (guardian == address(0)) revert CBV_Zero();
-        if (!isGuardian[guardian]) revert CBV_NotGuardian();
-        IAdminManager(adminManager).proposeTrusteeChange(guardian, trustee);
-        emit TrusteeChangeProposed(guardian, trustee, uint64(block.timestamp) + 1 days);
-    }
+    // proposeTrusteeChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Apply a previously proposed trustee change after timelock expires.
-    function applyTrusteeChange() external onlyAdmin {
-        (address guardian, bool trustee) = IAdminManager(adminManager).applyTrusteeChange();
-        _applyTrusteeChange(guardian, trustee);
-    }
+    // applyTrusteeChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Cancel a pending trustee change before it executes.
-    function cancelTrusteeChange() external onlyAdmin {
-        (address guardian, bool trustee) = IAdminManager(adminManager).cancelTrusteeChange();
-        emit TrusteeChangeCancelled(guardian, trustee);
-    }
+    // cancelTrusteeChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice _applyTrusteeChange
     /// @param guardian guardian
@@ -1360,14 +1328,7 @@ contract CardBoundVault is ReentrancyGuard {
     ///      5. NO timelock on this setter because shortening the window only
     ///         affects FUTURE claims, never an active one. The protection comes
     ///         from the snapshot, not from a delay.
-    function setChallengePeriodPreference(uint64 seconds_) external onlyAdmin {
-        if (seconds_ != 0) {
-            if (seconds_ < MIN_CHALLENGE_PERIOD) revert CBV_ChallengePeriodTooShort();
-            if (seconds_ > MAX_CHALLENGE_PERIOD) revert CBV_ChallengePeriodTooLong();
-        }
-        challengePeriodPreference = seconds_;
-        emit ChallengePeriodPreferenceSet(seconds_);
-    }
+    // setChallengePeriodPreference() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice External view: this vault's challenge period preference, or 0 if unset.
     /// @dev Called by VaultRecoveryClaim.initiateClaim. A return value of 0 means
@@ -1378,25 +1339,14 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     /// @notice applySpendLimits
-    function applySpendLimits() external onlyAdmin {
-        (uint256 maxPT, uint256 dailyTL) = IAdminManager(adminManager).applySpendLimits();
-        maxPerTransfer = maxPT;
-        dailyTransferLimit = dailyTL;
-        emit SpendLimitsSet(maxPT, dailyTL);
-    }
+    // applySpendLimits() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice cancelSpendLimitsChange
-    function cancelSpendLimitsChange() external onlyAdmin {
-        IAdminManager(adminManager).cancelSpendLimits();
-        emit SpendLimitsChangeCancelled();
-    }
+    // cancelSpendLimitsChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice setSeerAutonomous
     /// @param _seerAutonomous _seerAutonomous
-    function setSeerAutonomous(address _seerAutonomous) external onlyAdmin {
-        seerAutonomous = ISeerAutonomousVault(_seerAutonomous);
-        emit SeerAutonomousSet(_seerAutonomous);
-    }
+    // setSeerAutonomous() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice C-7 FIX: Returns true if this vault can receive `amount` more VFIDE without
     ///         guardian setup complete.  Once guardian setup is done the cap is lifted.
@@ -1420,12 +1370,7 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice approveVFIDE
     /// @param spender spender
     /// @param amount amount
-    function approveVFIDE(address spender, uint256 amount) external onlyAdmin whenNotPaused {
-        if (spender == address(0)) revert CBV_Zero();
-        _validateApprovalAmount(amount);
-        IAdminManager(adminManager).proposeTokenApproval(vfideToken, spender, amount);
-        emit TokenApprovalProposed(vfideToken, spender, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
-    }
+    // approveVFIDE() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice F-6 FIX: Approve a spender to pull any ERC20 from this vault.
     /// @dev Timelocked helper for explicit long-lived approvals.
@@ -1441,36 +1386,14 @@ contract CardBoundVault is ReentrancyGuard {
     /// @param token token
     /// @param spender spender
     /// @param amount amount
-    function approveERC20(address token, address spender, uint256 amount) external onlyAdmin whenNotPaused {
-        if (token == vfideToken) revert CBV_InvalidToken();
-        if (spender == address(0)) revert CBV_Zero();
-        if (token == address(0)) revert CBV_Zero();
-        _validateApprovalAmount(amount);
-        IAdminManager(adminManager).proposeTokenApproval(token, spender, amount);
-        emit TokenApprovalProposed(token, spender, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
-    }
+    // approveERC20() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     // slither-disable-next-line reentrancy-events
     /// @notice applyTokenApproval
-    function applyTokenApproval() external onlyAdmin whenNotPaused {
-        (address token, address spender, uint256 amount) = IAdminManager(adminManager).applyTokenApproval();
-
-        _validateApprovalAmount(amount);
-
-        IERC20(token).forceApprove(spender, amount);
-
-        if (token == vfideToken) {
-            emit VaultApprove(spender, amount);
-        } else {
-            emit ERC20Approve(token, spender, amount);
-        }
-    }
+    // applyTokenApproval() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice cancelTokenApproval
-    function cancelTokenApproval() external onlyAdmin {
-        (address token, address spender, uint256 amount) = IAdminManager(adminManager).cancelTokenApproval();
-        emit TokenApprovalCancelled(token, spender, amount);
-    }
+    // cancelTokenApproval() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Pause vault operations (admin or guardian emergency control).
     function pause() external {
@@ -1503,11 +1426,7 @@ contract CardBoundVault is ReentrancyGuard {
     }
 
     /// @notice Unpause vault operations (admin only).
-    function unpause() external onlyAdmin {
-        paused = false;
-        pauseUntil = 0;
-        emit PauseSet(false, msg.sender);
-    }
+    // unpause() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Propose active-wallet rotation with delay and guardian approvals.
     /// @param newWallet New wallet that will become active after finalization.
@@ -1795,26 +1714,14 @@ contract CardBoundVault is ReentrancyGuard {
 
     /// @notice Propose a new large-payment threshold (timelocked).
     /// @param _threshold _threshold
-    function setLargePaymentThreshold(uint256 _threshold) external onlyAdmin {
-        uint64 executeAfter = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .setLargePaymentThreshold(_threshold, SENSITIVE_ADMIN_DELAY);
-        emit LargePaymentThresholdProposed(_threshold, executeAfter);
-    }
+    // setLargePaymentThreshold() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Apply a pending large-payment threshold change.
-    function applyLargePaymentThreshold() external onlyAdmin {
-        (uint256 oldThreshold, uint256 newThreshold) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .applyLargePaymentThreshold();
-        emit LargePaymentThresholdSet(oldThreshold, newThreshold);
-    }
+    // applyLargePaymentThreshold() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice Cancel a pending large-payment threshold change (R77: completes apply+cancel symmetry).
     /// @dev Delegates to PaymentQueueManager.cancelLargePaymentThreshold().
-    function cancelLargePaymentThreshold() external onlyAdmin {
-        (uint256 threshold, uint64 executeAfter) = ICardBoundVaultPaymentQueueManager(paymentQueueManager)
-            .cancelLargePaymentThreshold();
-        emit LargePaymentThresholdCancelled(threshold, executeAfter);
-    }
+    // cancelLargePaymentThreshold() → delegated to adminFacet (CardBoundVaultAdminFacet)
     // ═══════════════════════════════════════════════════════════════
     //  WITHDRAWAL QUEUE — Large transfer protection
     // ═══════════════════════════════════════════════════════════════
@@ -1822,29 +1729,13 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Configure the threshold above which transfers are queued.
     /// @param _threshold Amount in VFIDE (with decimals). Set to 0 to disable queueing.
     /// @dev Example: 1000e18 = transfers of 1000+ VFIDE require a 7-day wait.
-    function setLargeTransferThreshold(uint256 _threshold) external onlyAdmin {
-        if (_guardianSetupComplete()) {
-            IAdminManager(adminManager).proposeLargeTransferThreshold(_threshold);
-            emit LargeTransferThresholdChangeProposed(_threshold, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
-            return;
-        }
-
-        largeTransferThreshold = _threshold;
-        emit LargeTransferThresholdSet(_threshold);
-    }
+    // setLargeTransferThreshold() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice applyLargeTransferThresholdChange
-    function applyLargeTransferThresholdChange() external onlyAdmin {
-        uint256 threshold = IAdminManager(adminManager).applyLargeTransferThreshold();
-        largeTransferThreshold = threshold;
-        emit LargeTransferThresholdSet(threshold);
-    }
+    // applyLargeTransferThresholdChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice cancelLargeTransferThresholdChange
-    function cancelLargeTransferThresholdChange() external onlyAdmin {
-        IAdminManager(adminManager).cancelLargeTransferThreshold();
-        emit LargeTransferThresholdChangeCancelled();
-    }
+    // cancelLargeTransferThresholdChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     // slither-disable-start reentrancy-no-eth
     /// @notice Execute a previously queued large withdrawal after the delay period.
@@ -2158,49 +2049,25 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice Rescue accidentally sent native token; vault custody remains token-based.
     /// @param to to
     /// @param amount amount
-    function rescueNative(address payable to, uint256 amount) external onlyAdmin {
-        if (to == address(0)) revert CBV_Zero();
-        IAdminManager(adminManager).proposeNativeRescue(to, amount);
-        emit NativeRescueProposed(to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
-    }
+    // rescueNative() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice applyRescueNative
-    function applyRescueNative() external onlyAdmin nonReentrant {
-        (address payable to, uint256 amount) = IAdminManager(adminManager).applyNativeRescue();
-
-        (bool ok, ) = to.call{value: amount}("");
-        if (!ok) revert CBV_TransferFailed();
-        emit NativeRescue(to, amount);
-    }
+    // applyRescueNative() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice cancelRescueNative
-    function cancelRescueNative() external onlyAdmin {
-        (address payable to, uint256 amount) = IAdminManager(adminManager).cancelNativeRescue();
-        emit NativeRescueCancelled(to, amount);
-    }
+    // cancelRescueNative() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice rescueERC20
     /// @param token token
     /// @param to to
     /// @param amount amount
-    function rescueERC20(address token, address to, uint256 amount) external onlyAdmin {
-        if (to == address(0)) revert CBV_Zero();
-        if (token == vfideToken) revert CBV_InvalidToken();
-        IAdminManager(adminManager).proposeERC20Rescue(token, to, amount);
-        emit ERC20RescueProposed(token, to, amount, uint64(block.timestamp) + SENSITIVE_ADMIN_DELAY);
-    }
+    // rescueERC20() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice applyRescueERC20
-    function applyRescueERC20() external onlyAdmin nonReentrant {
-        (address token, address to, uint256 amount) = IAdminManager(adminManager).applyERC20Rescue();
-        IERC20(token).safeTransfer(to, amount);
-    }
+    // applyRescueERC20() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice cancelRescueERC20
-    function cancelRescueERC20() external onlyAdmin {
-        (address token, address to, uint256 amount) = IAdminManager(adminManager).cancelERC20Rescue();
-        emit ERC20RescueCancelled(token, to, amount);
-    }
+    // cancelRescueERC20() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     // ═══════════════════════════════════════════════════════════════
     //  GUARDIAN-APPROVED RECOVERY ROTATION
@@ -2265,9 +2132,7 @@ contract CardBoundVault is ReentrancyGuard {
     // slither-disable-next-line missing-zero-check  // address(0) is a valid value to detach inheritance manager
     /// @notice setInheritanceManager
     /// @param manager manager
-    function setInheritanceManager(address manager) external onlyAdmin {
-        inheritanceManager = manager;
-    }
+    // setInheritanceManager() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice pendingRecoveryRotation
     /// @return _bool _bool
@@ -2284,60 +2149,40 @@ contract CardBoundVault is ReentrancyGuard {
     /// @notice proposeInheritanceConfig
     /// @param heirGuardians heirGuardians
     /// @param heirCommitments heirCommitments
-    function proposeInheritanceConfig(address[] calldata heirGuardians, bytes32[] calldata heirCommitments) external onlyAdmin {
-        ICardBoundVaultInheritanceManager(inheritanceManager).proposeInheritanceConfig(msg.sender, heirGuardians, heirCommitments);
-    }
+    // proposeInheritanceConfig() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice confirmInheritanceConfig
-    function confirmInheritanceConfig() external onlyAdmin {
-        ICardBoundVaultInheritanceManager(inheritanceManager).confirmInheritanceConfig(msg.sender);
-    }
+    // confirmInheritanceConfig() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice cancelInheritanceConfigChange
-    function cancelInheritanceConfigChange() external onlyAdmin {
-        ICardBoundVaultInheritanceManager(inheritanceManager).cancelInheritanceConfigChange(msg.sender);
-    }
+    // cancelInheritanceConfigChange() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice clearAllHeirs
-    function clearAllHeirs() external onlyAdmin {
-        ICardBoundVaultInheritanceManager(inheritanceManager).clearAllHeirs(msg.sender);
-    }
+    // clearAllHeirs() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice setProofOfLifeWallet
     /// @param polWallet polWallet
-    function setProofOfLifeWallet(address polWallet) external onlyAdmin {
-        ICardBoundVaultInheritanceManager(inheritanceManager).setProofOfLifeWallet(msg.sender, polWallet);
-    }
+    // setProofOfLifeWallet() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice R-3 — Register the DAO guardian for this vault. Once set, that
     ///         address cannot initiate inheritance claims (only veto).
     /// @param dao dao
-    function setDAOGuardian(address dao) external onlyAdmin {
-        ICardBoundVaultInheritanceManager(inheritanceManager).setDAOGuardian(msg.sender, dao);
-    }
+    // setDAOGuardian() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice R-1 — Guardian votes to cancel the active pending heir-config
     ///         proposal. Reaching the vault's current guardian threshold
     ///         clears the proposal. Backstop for owner-key compromise.
-    function cancelInheritanceConfigChangeByGuardians() external onlyGuardian {
-        ICardBoundVaultInheritanceManager(inheritanceManager).cancelInheritanceConfigChangeByGuardians(msg.sender);
-    }
+    // cancelInheritanceConfigChangeByGuardians() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice initiateInheritanceClaim
     /// @param reasonHash reasonHash
-    function initiateInheritanceClaim(bytes32 reasonHash) external onlyGuardian {
-        ICardBoundVaultInheritanceManager(inheritanceManager).initiateInheritanceClaim(msg.sender, reasonHash);
-    }
+    // initiateInheritanceClaim() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice vetoInheritanceClaim
-    function vetoInheritanceClaim() external onlyGuardian {
-        ICardBoundVaultInheritanceManager(inheritanceManager).vetoInheritanceClaim(msg.sender);
-    }
+    // vetoInheritanceClaim() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice ownerOverrideClaim
-    function ownerOverrideClaim() external {
-        ICardBoundVaultInheritanceManager(inheritanceManager).ownerOverrideClaim(msg.sender);
-    }
+    // ownerOverrideClaim() → delegated to adminFacet (CardBoundVaultAdminFacet)
 
     /// @notice claimHeirShare
     /// @param heirSecret heirSecret
@@ -2429,4 +2274,27 @@ contract CardBoundVault is ReentrancyGuard {
     receive() external payable {
         emit NativeReceived(msg.sender, msg.value);
     }
+    // ─────────────────────────────────────────────────────────────────────────
+    // AdminFacet delegatecall fallback
+    //
+    // Forwards any call whose selector does not match a function in this
+    // contract to CardBoundVaultAdminFacet via delegatecall. The facet
+    // sees this vault's storage, so all state changes apply here.
+    //
+    // SECURITY: Only admin-gated functions live in the facet. The facet's
+    // onlyAdmin/onlyGuardian modifiers use this contract's storage slots.
+    // ─────────────────────────────────────────────────────────────────────────
+    fallback() external payable {
+        address facet = adminFacet;
+        assembly {
+            calldatacopy(0, 0, calldatasize())
+            let result := delegatecall(gas(), facet, 0, calldatasize(), 0, 0)
+            returndatacopy(0, 0, returndatasize())
+            switch result
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
+        }
+    }
+
+
 }
