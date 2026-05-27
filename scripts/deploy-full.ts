@@ -382,11 +382,10 @@ async function main() {
   // CBV deployer chain — must pre-exist before VaultHub (passed as _vaultDeployer arg).
   // Deploy order: AdminFacet → SubManagerDeployer → BytecodeProvider → Deployer → VaultHub
   await deploy("CardBoundVaultAdminFacet");
-  await deploy("CardBoundVaultSubManagerDeployer", book.VFIDEToken);
-  await deploy(
-    "CardBoundVaultBytecodeProvider",
-    book.CardBoundVaultSubManagerDeployer,
-  );
+  // CBV-D1 FIX: CardBoundVaultSubManagerDeployer has no constructor; removed spurious book.VFIDEToken arg
+  await deploy("CardBoundVaultSubManagerDeployer");
+  // CBV-D2 FIX: CardBoundVaultBytecodeProvider has no constructor; removed spurious sub-manager arg
+  await deploy("CardBoundVaultBytecodeProvider");
   await deploy(
     "CardBoundVaultDeployer",
     book.CardBoundVaultSubManagerDeployer,
@@ -401,6 +400,21 @@ async function main() {
     bootstrap.dao,
     book.CardBoundVaultDeployer,
   );
+
+  // CBV-D3 FIX: CardBoundVaultDeployer.initHub() was never called — without it,
+  // vaultHub == address(0) in the deployer, causing every CardBoundVaultDeployer.deploy()
+  // call to revert with CBD_OnlyHub. No vault can ever be created until this is wired.
+  if (book.CardBoundVaultDeployer && book.VaultHub) {
+    const vaultDeployer = await ethers.getContractAt("CardBoundVaultDeployer", book.CardBoundVaultDeployer);
+    const currentHub = await vaultDeployer.vaultHub();
+    if (currentHub === ethers.ZeroAddress) {
+      await call("CardBoundVaultDeployer.initHub → VaultHub", () =>
+        vaultDeployer.initHub(book.VaultHub),
+      );
+    } else {
+      console.log(`  ⏭  CardBoundVaultDeployer.initHub already set (${currentHub})`);
+    }
+  }
 
   // ══════════════════════════════════════════════════════════════════════════
   //  LAYER 4: Commerce core
@@ -593,7 +607,15 @@ async function main() {
   // ══════════════════════════════════════════════════════════════════════════
   console.log("\n═══ LAYER 9: Ecosystem / Badges ═══");
 
-  await deploy("SanctumVault", ...envArgs("SanctumVault"));
+  // SV-D4 FIX: ARGS_SANCTUMVAULT was not documented and envArgs() returned [] when not set,
+  // causing deploy() to fail with "missing constructor arguments". Auto-inject from book.
+  {
+    const svArgs = envArgs("SanctumVault");
+    const sanctumArgs = svArgs.length === 3
+      ? svArgs
+      : [bootstrap.dao, book.ProofLedger, book.Seer];
+    await deploy("SanctumVault", ...sanctumArgs);
+  }
 
   // EcosystemVaultAdminFacet must be pre-deployed so its address can be
   // passed as the 4th immutable constructor argument of EcosystemVault.

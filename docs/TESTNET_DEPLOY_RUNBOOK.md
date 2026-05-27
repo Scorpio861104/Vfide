@@ -189,7 +189,7 @@ As of commit `4fb3fdd`, `EcosystemVault` requires a 4th constructor argument: th
 
 ```
 Layer 9 deploy order:
-  1. SanctumVault             (standalone)
+  1. SanctumVault             (dao + ProofLedger + Seer — auto-injected from book; no ARGS_ var needed)
   2. EcosystemVaultAdminFacet (no constructor args)
   3. EcosystemVault           (vfide, seer, operationsWallet, adminFacet ← auto-injected)
   4. EcosystemVaultView, VaultRegistry, PayrollManager, LiquidityIncentives
