@@ -171,6 +171,9 @@ async function main() {
     // PL-GOV1: ProofLedger.applyDAO() confirms the 48h-timelocked DAO rotation
     //           (proposed in transfer-governance.ts by ledgerAdmin).
     { name: "ProofLedger",    bookKey: "ProofLedger",    factoryName: "ProofLedger",    fn: "applyDAO" },
+    // GOV-D2 FIX: CouncilSalary.setDAO() is queued in deploy-full.ts but applyDAO() was never called.
+    // Without this, CouncilSalary.dao remains the bootstrap EOA permanently.
+    { name: "CouncilSalary",  bookKey: "CouncilSalary",  factoryName: "CouncilSalary",  fn: "applyDAO" },
   ];
   for (const { name, bookKey, factoryName, fn } of moduleDaoTransfers) {
     const addr = book[bookKey];

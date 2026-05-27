@@ -347,3 +347,25 @@ When you move from testnet to mainnet, the following must change:
 
 *This runbook is the canonical pre-testnet operator reference. Update whenever
 constructor signatures or deploy-layer ordering changes.*
+
+## Post-Deploy: Wire Council Election into DAO  (GOV-D1)
+
+`DAO.setCouncilElection()` is `onlyTimelock`, so it cannot be called directly in
+`deploy-full.ts`. After running `apply-full.ts` (48h delay), the bootstrap admin
+must queue this via `DAOTimelock.queueTx()`:
+
+```typescript
+// Run once, 48h after initial deploy:
+const iface = new ethers.Interface(["function setCouncilElection(address)"]);
+const data  = iface.encodeFunctionData("setCouncilElection", [book.CouncilElection]);
+await timelock.queueTx(book.DAO, 0n, data);
+// Wait 48h, then:
+await timelock.execute(timelockId);
+```
+
+Without this, `DAO.councilElection == address(0)` and `syncQuorumToCouncil()` reverts.
+The DAO remains fully functional for proposals and voting — this only affects dynamic
+quorum-profile syncing from council elections.
+
+---
+
