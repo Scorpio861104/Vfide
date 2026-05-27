@@ -166,6 +166,7 @@ const DEPLOYMENT_CONTRACTS = [
   "VFIDEBadgeNFT",
   "CouncilElection",
   "CouncilSalary",
+  "SeerAutonomousAdminFacet",
   "SeerAutonomous",
   "SeerGuardian",
   "SeerPolicyGuard",
@@ -650,7 +651,9 @@ async function main() {
   await deploy("CouncilSalary",         book.CouncilElection, book.Seer, book.VFIDEToken, book.DAO);
 
   // Seer satellites
-  await deploy("SeerAutonomous",        book.DAO, book.Seer, book.ProofLedger);
+  // EIP-170: deploy admin facet first, pass to SeerAutonomous constructor
+  await deploy("SeerAutonomousAdminFacet");
+  await deploy("SeerAutonomous",        book.DAO, book.Seer, book.ProofLedger, book.SeerAutonomousAdminFacet);
   await deploy("SeerGuardian",          book.DAO, book.Seer, book.VaultHub, book.ProofLedger);
   await deploy("SeerPolicyGuard",       book.DAO, book.Seer);
   await deploy("SeerSocial",            book.Seer);
@@ -701,6 +704,7 @@ async function main() {
     ["BadgeManager",         book.BadgeManager],
     ["CouncilElection",      book.CouncilElection],
     ["CouncilSalary",        book.CouncilSalary],
+    ["SeerAutonomousAdminFacet", book.SeerAutonomousAdminFacet],
     ["SeerAutonomous",       book.SeerAutonomous],
     ["SeerGuardian",         book.SeerGuardian],
     ["SeerPolicyGuard",      book.SeerPolicyGuard],

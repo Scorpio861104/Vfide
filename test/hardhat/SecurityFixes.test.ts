@@ -322,11 +322,16 @@ describe('Seer (M-18: circular delta guard)', { concurrency: 1 }, () => {
     const seer = await Seer.deploy(dao.address, ethers.ZeroAddress, ethers.ZeroAddress);
     await seer.waitForDeployment();
 
+    const SeerAutonomousAdminFacetFact = await ethers.getContractFactory('SeerAutonomousAdminFacet');
+    const saAdminFacet = await SeerAutonomousAdminFacetFact.deploy();
+    await saAdminFacet.waitForDeployment();
+
     const SeerAutonomous = await ethers.getContractFactory('SeerAutonomous');
     const autonomous = await SeerAutonomous.deploy(
       dao.address,
       await seer.getAddress(),
-      ethers.ZeroAddress
+      ethers.ZeroAddress,
+      await saAdminFacet.getAddress()
     );
     await autonomous.waitForDeployment();
 

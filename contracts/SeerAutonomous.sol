@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import { ReentrancyGuard, ISeer } from "../SharedInterfaces.sol";
+import { ReentrancyGuard, ISeer } from "./SharedInterfaces.sol";
 import { SeerAutonomousLib } from "./SeerAutonomousLib.sol";
 
 /**
@@ -348,6 +348,8 @@ contract SeerAutonomous is ReentrancyGuard {
     IRiskOracle_Auto public riskOracle;
     /// @notice EcosystemVault to monitor and trigger scheduled tasks on.
     address public ecosystemVault;
+    /// @notice adminFacet — satellite contract for large DAO-only admin functions (EIP-170).
+    address public immutable adminFacet;
     
     // Operator permissions (trusted contracts that can trigger checks)
     /// @notice operators
@@ -507,15 +509,16 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param _dao _dao
     /// @param _seer _seer
     /// @param _ledger _ledger
-    constructor(address _dao, address _seer, address _ledger) {
-        if (_dao == address(0) || _seer == address(0)) revert SA_Zero();
+    constructor(address _dao, address _seer, address _ledger, address _adminFacet) {
+        if (_dao == address(0) || _seer == address(0) || _adminFacet == address(0)) revert SA_Zero();
         dao = _dao;
         seer = ISeer(_seer);
         if (_ledger != address(0)) ledger = IProofLedger_Auto(_ledger);
-        
+        adminFacet = _adminFacet;
+
         // Initialize default rate limits
         _initializeRateLimits();
-        
+
         emit ModulesSet(_seer, _dao, _ledger);
     }
 
@@ -1112,23 +1115,9 @@ contract SeerAutonomous is ReentrancyGuard {
      * @param uphold True to apply restriction, false to dismiss
      */
     function resolveChallenge(address subject, bool uphold) external onlyDAO {
-        PendingChallenge storage ch = pendingChallenge[subject];
-        if (!ch.exists) revert SA_NoChallenge();
-
-        if (uphold) {
-            restrictionLevel[subject] = ch.targetLevel;
-            restrictionExpiry[subject] = uint64(block.timestamp + 7 days);
-            restrictionReason[subject] = ch.reason;
-            emit RestrictionApplied(subject, ch.targetLevel, 7 days, ch.reason);
-            emit RestrictionAppliedCode(subject, ch.targetLevel, 0, ch.reason);
-            emit ChallengeResolved(subject, true, ch.reason);
-            emit ChallengeResolvedCode(subject, true, 0, ch.reason);
-        } else {
-            emit ChallengeResolved(subject, false, ch.reason);
-            emit ChallengeResolvedCode(subject, false, 0, ch.reason);
-        }
-        delete pendingChallenge[subject];
-        delete challengeRequested[subject];
+        // EIP-170: body moved to SeerAutonomousAdminFacet.
+        (bool ok, bytes memory ret) = adminFacet.delegatecall(msg.data);
+        if (!ok) { assembly { revert(add(ret, 32), mload(ret)) } }
     }
 
     // _reasonCode removed: challenge-derived codes use 0; direct calls pass RC_ constants
@@ -1172,19 +1161,9 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @param subject subject
     /// @param reason reason
     function daoOverride(address subject, string calldata reason) external onlyDAO {
-        daoOverridden[subject] = true;
-        daoOverrideExpiry[subject] = uint64(block.timestamp + DAO_OVERRIDE_DURATION);
-
-        RestrictionLevel old = restrictionLevel[subject];
-        restrictionLevel[subject] = RestrictionLevel.None;
-        restrictionExpiry[subject] = 0;
-        restrictionReason[subject] = "dao_override";
-        if (old != RestrictionLevel.None) {
-            emit RestrictionLifted(subject, old);
-        }
-        
-        emit DAOOverride(subject, reason);
-        _log("dao_override");
+        // EIP-170: body moved to SeerAutonomousAdminFacet.
+        (bool ok, bytes memory ret) = adminFacet.delegatecall(msg.data);
+        if (!ok) { assembly { revert(add(ret, 32), mload(ret)) } }
     }
     
     /// @notice daoRemoveOverride
@@ -1207,29 +1186,9 @@ contract SeerAutonomous is ReentrancyGuard {
         uint16 _rateLimit,
         uint16 _sensitivity
     ) external onlyDAO {
-        if (_autoRestrict >= _autoLift) revert SA_InvalidThresholds();
-        if (_sensitivity > 100) revert SA_InvalidSensitivity();
-
-        uint16 oldAutoRestrict = autoRestrictThreshold;
-        uint16 oldAutoLift = autoLiftThreshold;
-        uint16 oldRateLimit = rateLimitThreshold;
-        uint16 oldSensitivity = patternSensitivity;
-        
-        autoRestrictThreshold = _autoRestrict;
-        autoLiftThreshold = _autoLift;
-        rateLimitThreshold = _rateLimit;
-        patternSensitivity = _sensitivity;
-
-        emit DAOThresholdsUpdated(
-            oldAutoRestrict,
-            _autoRestrict,
-            oldAutoLift,
-            _autoLift,
-            oldRateLimit,
-            _rateLimit,
-            oldSensitivity,
-            _sensitivity
-        );
+        // EIP-170: body moved to SeerAutonomousAdminFacet.
+        (bool ok, bytes memory ret) = adminFacet.delegatecall(msg.data);
+        if (!ok) { assembly { revert(add(ret, 32), mload(ret)) } }
     }
     
     /// @notice daoSetRateLimit
@@ -1269,39 +1228,9 @@ contract SeerAutonomous is ReentrancyGuard {
     /// @notice Apply a strict autonomy profile in one governance call.
     /// @dev Raises sensitivity and tightens rate limits to maximize automated enforcement.
     function daoApplyMaxAutonomyProfile() external onlyDAO {
-        uint16 oldAutoRestrict = autoRestrictThreshold;
-        uint16 oldAutoLift = autoLiftThreshold;
-        uint16 oldRateLimit = rateLimitThreshold;
-        uint16 oldSensitivity = patternSensitivity;
-
-        // Strict threshold profile
-        autoRestrictThreshold = 4500;
-        autoLiftThreshold = 6200;
-        rateLimitThreshold = 5200;
-        patternSensitivity = 100;
-
-        emit DAOThresholdsUpdated(
-            oldAutoRestrict,
-            autoRestrictThreshold,
-            oldAutoLift,
-            autoLiftThreshold,
-            oldRateLimit,
-            rateLimitThreshold,
-            oldSensitivity,
-            patternSensitivity
-        );
-
-        // Apply rate limits from library-supplied profile table
-        SeerAutonomousLib.RateLimitEntry[48] memory profile = SeerAutonomousLib.getMaxAutonomyProfile();
-        for (uint256 i = 0; i < 48; ++i) {
-            _setRateLimitWithEvent(
-                RestrictionLevel(profile[i].level),
-                ActionType(profile[i].action),
-                profile[i].limit
-            );
-        }
-
-        emit DAOMaxAutonomyProfileApplied(msg.sender);
+        // EIP-170: body moved to SeerAutonomousAdminFacet.
+        (bool ok, bytes memory ret) = adminFacet.delegatecall(msg.data);
+        if (!ok) { assembly { revert(add(ret, 32), mload(ret)) } }
     }
 
     /// @notice _setRateLimitWithEvent
