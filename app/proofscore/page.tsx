@@ -2,7 +2,8 @@
 
 import { useAccount } from 'wagmi';
 import { motion, useReducedMotion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useMonumentOverride } from '@/components/layout/MonumentOverrideContext';
 import {
   Shield, Zap, Vote, Store, Star, TrendingUp,
   ArrowRight, ExternalLink, Lock,
@@ -152,6 +153,14 @@ const FeeCurveBar: FC<{ score: number }> = ({ score }) => {
 /* ─── Disconnected: interactive simulator ─────────────────────────────────── */
 const DisconnectedHero: FC = () => {
   const [score, setScore] = useState(5000);
+  const { setOverride } = useMonumentOverride();
+
+  // Drive the global fixed monument with the simulator score
+  useEffect(() => {
+    setOverride({ score });
+    return () => setOverride(null); // clear when unmounted
+  }, [score, setOverride]);
+
   const tier = getTier(score);
   const nextTier = getNextTier(score);
   const hex = TIER_HEX[tier.name] ?? '#fff';
