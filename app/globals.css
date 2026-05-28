@@ -210,7 +210,7 @@
 
   /* Selection styling */
   ::selection {
-    background: rgba(0, 240, 255, 0.3);
+    background: var(--accent-glow, rgba(0, 240, 255, 0.3));
     color: #fff;
   }
 
@@ -510,7 +510,7 @@
     border-color: var(--border-accent);
     box-shadow: 
       var(--shadow-elevated),
-      0 0 40px -10px rgba(0, 240, 255, 0.15),
+      0 0 40px -10px var(--accent-subtle),
       inset 0 1px 0 var(--glass-highlight);
     transform: translateY(-4px);
   }
@@ -549,7 +549,7 @@
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 
-      0 4px 20px -4px rgba(0, 240, 255, 0.4),
+      0 4px 20px -4px var(--accent-glow, rgba(0, 240, 255, 0.4)),
       0 0 24px -8px rgba(255, 215, 0, 0.35),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
@@ -557,7 +557,7 @@
   .btn-primary:hover {
     transform: translateY(-2px) scale(1.02);
     box-shadow: 
-      0 8px 30px -4px rgba(0, 240, 255, 0.5),
+      0 8px 30px -4px var(--accent-glow, rgba(0, 240, 255, 0.5)),
       0 0 30px -10px rgba(255, 215, 0, 0.45),
       inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
@@ -590,7 +590,7 @@
   }
 
   .btn-secondary:hover {
-    background: rgba(0, 240, 255, 0.1);
+    background: var(--accent-subtle, rgba(0, 240, 255, 0.1));
     transform: translateY(-2px);
     box-shadow: 0 8px 30px -4px rgba(255, 215, 0, 0.2);
   }
@@ -601,7 +601,7 @@
 
   /* Glow effects */
   .glow-accent {
-    box-shadow: 0 0 60px -12px rgba(0, 240, 255, 0.5);
+    box-shadow: var(--shadow-glow, 0 0 60px -12px rgba(0, 240, 255, 0.5));
   }
 
   .glow-green {
@@ -631,10 +631,10 @@
 
   @keyframes pulse-glow {
     0%, 100% { 
-      box-shadow: 0 0 20px -5px rgba(0, 240, 255, 0.4);
+      box-shadow: 0 0 20px -5px var(--accent-glow, rgba(0, 240, 255, 0.4));
     }
     50% { 
-      box-shadow: 0 0 40px -5px rgba(0, 240, 255, 0.6);
+      box-shadow: 0 0 40px -5px var(--accent-glow, rgba(0, 240, 255, 0.6));
     }
   }
 
@@ -821,7 +821,7 @@
 
   .hover-lift:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 40px -10px rgba(0, 240, 255, 0.25);
+    box-shadow: 0 12px 40px -10px var(--accent-glow, rgba(0, 240, 255, 0.25));
   }
 
   .hover-glow {
@@ -893,10 +893,10 @@
   /* Pulse glow animation */
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px -8px rgba(0, 240, 255, 0.3);
+      box-shadow: 0 0 20px -8px var(--accent-glow, rgba(0, 240, 255, 0.3));
     }
     50% {
-      box-shadow: 0 0 40px -4px rgba(0, 240, 255, 0.6);
+      box-shadow: 0 0 40px -4px var(--accent-glow, rgba(0, 240, 255, 0.6));
     }
   }
 
@@ -1487,3 +1487,16 @@
 /* Apply font scale to root so em-based sizing cascades correctly */
 /* Note: DO NOT set :root font-size — breaks browser zoom.
    Component libraries that need font scale should apply calc() on their own. */
+
+/* ── Theme engine: border-radius propagation ──────────────────────────────────
+ * --vf-border-radius is written by useTheme.applyTokens() whenever the user
+ * changes the border-radius token. The rule below propagates it to semantic
+ * card containers. Buttons, badges, avatars, and pill inputs use their own
+ * fixed radius and are intentionally excluded. */
+.glass-card,
+.glass-card-hover,
+.glass-card-premium,
+.panel-section,
+.settings-card {
+  border-radius: var(--vf-border-radius, 0.75rem);
+}
