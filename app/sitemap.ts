@@ -43,9 +43,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/seer-service',   priority: 0.8, changeFrequency: 'weekly' },
     { path: '/dao-hub',        priority: 0.8, changeFrequency: 'weekly' },
     { path: '/treasury',       priority: 0.8, changeFrequency: 'daily'  },
-    { path: '/staking',        priority: 0.8, changeFrequency: 'weekly' },
+    // /staking → /wallet?tab=staking (redirect — removed from sitemap)
     { path: '/cross-chain',    priority: 0.8, changeFrequency: 'weekly' },
-    { path: '/remittance',     priority: 0.8, changeFrequency: 'weekly' },
+    // /remittance → /wallet?tab=remittance (redirect — removed from sitemap)
     { path: '/enterprise',     priority: 0.8, changeFrequency: 'weekly' },
     { path: '/developer',      priority: 0.8, changeFrequency: 'weekly' },
     { path: '/feed',           priority: 0.7, changeFrequency: 'daily'  },

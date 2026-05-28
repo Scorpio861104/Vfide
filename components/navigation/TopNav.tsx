@@ -49,7 +49,7 @@ const MAIN_SECTIONS = [
 const SECTION_MATCH: Record<string, string[]> = {
   home:        ['/dashboard', '/'],
   marketplace: ['/marketplace', '/merchants', '/store', '/product', '/checkout'],
-  pay:         ['/pay', '/remittance', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
+  pay:         ['/pay', '/remittance', '/wallet', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
   social:      ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'],
 };
 

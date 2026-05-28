@@ -5,14 +5,16 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import Link from 'next/link';
-import { ArrowRight, Clock, Code2, Rocket, Wallet } from 'lucide-react';
+import { ArrowRight, Clock, Code2, Rocket, Wallet, Users } from 'lucide-react';
 import { useLocale } from '@/hooks/useLocale';
 import { STUB_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
+import { SplitterTab } from './components/SplitterTab';
 
-type TabId = 'portal' | 'token-launch';
+type TabId = 'portal' | 'token-launch' | 'splitter';
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'portal',       label: 'Developer Portal', icon: Code2 },
   { id: 'token-launch', label: 'Token Launch',      icon: Rocket },
+  { id: 'splitter',     label: 'Rev. Splitter',   icon: Users },
 ];
 
 function DeveloperPortalTab() {
@@ -133,6 +135,7 @@ function DeveloperHubInner() {
               transition={{ duration: 0.18 }}>
               {activeTab === 'portal'       && <DeveloperPortalTab />}
               {activeTab === 'token-launch' && <TokenLaunchTab />}
+              {activeTab === 'splitter'     && <SplitterTab />}
             </motion.div>
           </AnimatePresence>
         </div>

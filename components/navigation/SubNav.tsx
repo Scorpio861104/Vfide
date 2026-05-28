@@ -44,7 +44,7 @@ const SUB_NAVS: Record<string, { title: string; items: SubNavItem[] }> = {
     title: 'Pay',
     items: [
       { href: '/pay', label: 'Send' },
-      { href: '/remittance', label: 'Remittance' },
+      { href: '/wallet?tab=remittance', label: 'Remittance' },
       { href: '/lending', label: 'Lending' },
       { href: '/escrow', label: 'Escrow' },
       { href: '/crypto', label: 'Wallet' },
