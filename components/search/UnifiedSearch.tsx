@@ -84,18 +84,18 @@ export function UnifiedSearch({
             {results.merchants.length > 0 && (
               <div className="p-3 border-b border-white/5">
                 <div className="text-xs text-gray-500 uppercase tracking-wider px-2 mb-2 flex items-center gap-1.5"><Store size={12} /> Merchants</div>
-                {results.merchants.map((m, i) => (
-                  <button key={m.merchant_address} onClick={() => goToMerchant(m.slug)}
+                {results.merchants.map((merchant, i) => (
+                  <button key={merchant.merchant_address} onClick={() => goToMerchant(merchant.slug)}
                     className={`w-full text-left px-3 py-3 rounded-xl transition-colors flex items-center gap-3 ${activeIndex === i ? 'bg-accent/10 border border-accent/20' : 'hover:bg-white/5 border border-transparent'}`}>
-                    {m.logo_url ? <Image src={m.logo_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0"  width={48} height={48} /> : (
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0" style={{ backgroundColor: m.theme_color || '#3B82F6' }}>{m.display_name[0]?.toUpperCase()}</div>
+                    {merchant.logo_url ? <Image src={merchant.logo_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0"  width={48} height={48} /> : (
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0" style={{ backgroundColor: merchant.theme_color || '#3B82F6' }}>{merchant.display_name[0]?.toUpperCase()}</div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="text-white font-medium truncate">{m.display_name}</div>
+                      <div className="text-white font-medium truncate">{merchant.display_name}</div>
                       <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-                        {m.avg_rating && <span className="flex items-center gap-0.5"><Star size={10} className="text-amber-400 fill-amber-400" />{m.avg_rating} ({m.review_count})</span>}
-                        {(m.city || m.country) && <span className="flex items-center gap-0.5"><MapPin size={10} />{[m.city, m.country].filter(Boolean).join(', ')}</span>}
-                        <span className="flex items-center gap-0.5"><Package size={10} />{m.product_count} products</span>
+                        {merchant.avg_rating && <span className="flex items-center gap-0.5"><Star size={10} className="text-amber-400 fill-amber-400" />{merchant.avg_rating} ({merchant.review_count})</span>}
+                        {(merchant.city || merchant.country) && <span className="flex items-center gap-0.5"><MapPin size={10} />{[merchant.city, merchant.country].filter(Boolean).join(', ')}</span>}
+                        <span className="flex items-center gap-0.5"><Package size={10} />{merchant.product_count} products</span>
                       </div>
                     </div>
                     <ArrowRight size={14} className="text-gray-600" />

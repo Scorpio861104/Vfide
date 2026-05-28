@@ -145,7 +145,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
     if (!selectedCircle) return;
 
     setCircleMembers(circleMembers.filter(
-      m => !(m.circleId === selectedCircle.id && m.friendAddress === friendAddress)
+      mbr => !(mbr.circleId === selectedCircle.id && mbr.friendAddress === friendAddress)
     ));
 
     const updatedCircles = circles.map(c =>
@@ -165,7 +165,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
     const circleId = pendingDeleteCircle;
     if (!circleId) return;
     setCircles(circles.filter(c => c.id !== circleId));
-    setCircleMembers(circleMembers.filter(m => m.circleId !== circleId));
+    setCircleMembers(circleMembers.filter(mbr => mbr.circleId !== circleId));
     if (selectedCircle?.id === circleId) {
       setSelectedCircle(null);
     }
@@ -173,7 +173,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
   };
 
   const getCircleMembers = (circleId: string) => {
-    return circleMembers.filter(m => m.circleId === circleId);
+    return circleMembers.filter(mbr => mbr.circleId === circleId);
   };
 
   const getFriendDetails = (address: string) => {
@@ -182,7 +182,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
 
   const _getMemberNickname = (friendAddress: string, circleId: string) => {
     const member = circleMembers.find(
-      m => m.friendAddress === friendAddress && m.circleId === circleId
+      mbr => mbr.friendAddress === friendAddress && mbr.circleId === circleId
     );
     return member?.nickname;
   };

@@ -47,7 +47,7 @@ const formatTimeAgo = (value: string | number | Date | undefined) => {
   if (Number.isNaN(timestamp)) return 'just now';
   const diffMinutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60000));
   if (diffMinutes < 1) return 'just now';
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffMinutes < 60) return `${diffMinutes}entry ago`;
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) return `${diffHours}h ago`;
   return `${Math.floor(diffHours / 24)}d ago`;
@@ -158,10 +158,10 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
       {/* Media */}
       {post.media && post.media.length > 0 && (
         <div className={`grid ${post.media.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-0.5`}>
-          {post.media.map((m, index) => (
+          {post.media.map((entry, index) => (
             <img
-              key={m.url}
-              src={m.url}
+              key={entry.url}
+              src={entry.url}
               alt={`Post image ${index + 1}`}
               className="w-full h-64 object-cover"
             />

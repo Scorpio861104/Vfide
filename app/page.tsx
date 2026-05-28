@@ -241,11 +241,11 @@ export default function Home() {
         <section className="py-5 border-y border-white/5 bg-zinc-950/80 backdrop-blur-sm overflow-hidden">
           <div className="marquee-wrapper">
             <div className="marquee-track">
-              {[...PROTOCOL_METRICS, ...PROTOCOL_METRICS].map((m, i) => (
+              {[...PROTOCOL_METRICS, ...PROTOCOL_METRICS].map((metric, i) => (
                 <div key={i} className="metric-chip mx-3">
-                  <span>{m.icon}</span>
-                  <span className="metric-chip-value">{m.value}</span>
-                  <span className="text-zinc-500">{m.label}</span>
+                  <span>{metric.icon}</span>
+                  <span className="metric-chip-value">{metric.value}</span>
+                  <span className="text-zinc-500">{metric.label}</span>
                 </div>
               ))}
             </div>
