@@ -97,7 +97,7 @@ export function RevenueTab() {
   };
   const feeSplit = decode<readonly [bigint, bigint, bigint]>(
     0,
-    [0n, 0n, 0n, 0n, 0n] as const,
+    [0n, 0n, 0n] as const,
   );
   const burnAddress = decode<Address>(1, '0x0000000000000000000000000000000000000000');
   const sanctumFund = decode<Address>(2, '0x0000000000000000000000000000000000000000');
