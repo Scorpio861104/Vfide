@@ -329,6 +329,24 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     needs: [api-tests, frontend-tests]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: vfide_db
+          POSTGRES_USER: vfide_user
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -337,6 +355,10 @@ jobs:
           cache: "npm"
       - run: npm ci --legacy-peer-deps
       - run: npx playwright install --with-deps
+      - name: Run migrations
+        run: npm run migrate:up
+        env:
+          DATABASE_URL: "postgresql://vfide_user:postgres@127.0.0.1:5432/vfide_db"
       - name: Start app
         run: |
           npm run build
@@ -357,6 +379,7 @@ jobs:
           NEXT_PUBLIC_CHAIN_ID: "8453"
           NEXT_PUBLIC_CONTRACT_ADDRESS: "0x0000000000000000000000000000000000000000"
           DATABASE_URL: "postgresql://vfide_user:postgres@127.0.0.1:5432/vfide_db"
+          REDIS_URL: redis://localhost:6379
           NEXT_PUBLIC_FRONTEND_ONLY: "true"
           NEXT_PUBLIC_NETWORK: "base"
           NEXT_PUBLIC_IS_TESTNET: "false"
