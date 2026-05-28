@@ -15,6 +15,7 @@ import { FeatureCard } from './components/FeatureCard';
 import { StatItem } from './components/StatItem';
 import { Step } from './components/Step';
 import { PlainEnglishCard } from './components/PlainEnglishCard';
+import { ConstitutionSection } from './components/ConstitutionSection';
 import { useLocale } from '@/hooks/useLocale';
 import { HOME_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
@@ -310,6 +311,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* ════════════════════════════════════════
+            CONSTITUTIONAL GUARANTEES
+        ════════════════════════════════════════ */}
+        <ConstitutionSection />
 
         {/* ════════════════════════════════════════
             FEATURES GRID
