@@ -12,11 +12,15 @@ import { FeeSavingsCard } from '@/components/fees';
 import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
 import { useProofScore } from '@/hooks/useProofScore';
+// PERF-5: Tab components lazy-loaded — only the active tab's JS is fetched.
+// OverviewTab is static (default tab). All others use dynamic() with ssr:false
+// so they don't block the initial page render or inflate the entry chunk.
 import { OverviewTab } from './components/OverviewTab';
-import { BadgesTab } from './components/BadgesTab';
-import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
-import { FeeSimulatorTab } from './components/FeeSimulatorTab';
-import { RecentActivity } from './components/RecentActivity';
+import nextDynamic from 'next/dynamic';
+const BadgesTab       = nextDynamic(() => import('./components/BadgesTab').then(m => m.BadgesTab), { ssr: false });
+const ScoreSimulatorTab = nextDynamic(() => import('./components/ScoreSimulatorTab').then(m => m.ScoreSimulatorTab), { ssr: false });
+const FeeSimulatorTab = nextDynamic(() => import('./components/FeeSimulatorTab').then(m => m.FeeSimulatorTab), { ssr: false });
+const RecentActivity  = nextDynamic(() => import('./components/RecentActivity').then(m => m.RecentActivity), { ssr: false });
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: Home },

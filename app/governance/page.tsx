@@ -22,6 +22,7 @@ import type React from 'react';
  * The old routes redirect here.
  */
 
+import nextDynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Vote, PlusCircle, Users, BarChart2, Clock,
@@ -38,26 +39,26 @@ import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 // CODE-1: CouncilTab is dead code — the consolidated council section uses CouncilOverviewTab etc.
 // import { CouncilTab }   from './components/CouncilTab';
 import { CreateTab }    from './components/CreateTab';
-import { HistoryTab }   from './components/HistoryTab';
+const HistoryTab = nextDynamic(() => import('./components/HistoryTab').then(m => m.HistoryTab), { ssr: false });
 import { ProposalsTab } from './components/ProposalsTab';
-import { StatsTab }     from './components/StatsTab';
+const StatsTab = nextDynamic(() => import('./components/StatsTab').then(m => m.StatsTab), { ssr: false });
 
 // DAO Hub tabs (from /dao-hub)
-import { OverviewTab as DaoOverviewTab }   from '@/app/dao-hub/components/OverviewTab';
-import { MembersTab  as DaoMembersTab }    from '@/app/dao-hub/components/MembersTab';
-import { TreasuryTab as DaoTreasuryTab }   from '@/app/dao-hub/components/TreasuryTab';
+const DaoOverviewTab = nextDynamic(() => import('@/app/dao-hub/components/OverviewTab').then(m => m.OverviewTab), { ssr: false });
+const DaoMembersTab = nextDynamic(() => import('@/app/dao-hub/components/MembersTab').then(m => m.MembersTab), { ssr: false });
+const DaoTreasuryTab = nextDynamic(() => import('@/app/dao-hub/components/TreasuryTab').then(m => m.TreasuryTab), { ssr: false });
 
 // Council detail tabs (from /council)
-import { OverviewTab  as CouncilOverviewTab } from '@/app/council/components/OverviewTab';
-import { MembersTab   as CouncilMembersTab  } from '@/app/council/components/MembersTab';
-import { SalaryTab    as CouncilSalaryTab   } from '@/app/council/components/SalaryTab';
-import { VotingTab    as CouncilVotingTab   } from '@/app/council/components/VotingTab';
+const CouncilOverviewTab = nextDynamic(() => import('@/app/council/components/OverviewTab').then(m => m.OverviewTab), { ssr: false });
+const CouncilMembersTab = nextDynamic(() => import('@/app/council/components/MembersTab').then(m => m.MembersTab), { ssr: false });
+const CouncilSalaryTab = nextDynamic(() => import('@/app/council/components/SalaryTab').then(m => m.SalaryTab), { ssr: false });
+const CouncilVotingTab = nextDynamic(() => import('@/app/council/components/VotingTab').then(m => m.VotingTab), { ssr: false });
 
 // Elections content — extracted tab component
-import { ElectionsTabContent } from './components/ElectionsTabContent';
+const ElectionsTabContent = nextDynamic(() => import('./components/ElectionsTabContent').then(m => m.ElectionsTabContent), { ssr: false });
 
 // Disputes content — extracted tab component
-import { DisputesTabContent } from './components/DisputesTabContent';
+const DisputesTabContent = nextDynamic(() => import('./components/DisputesTabContent').then(m => m.DisputesTabContent), { ssr: false });
 
 // ── Tab groups ────────────────────────────────────────────────────────────────
 

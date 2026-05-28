@@ -27,7 +27,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, ArrowUpRight, Flame, ArrowRight, Shield, Vote, TrendingUp } from 'lucide-react';
 import { useProtocolPulse, type PulseEvent } from '@/hooks/useProtocolPulse';
 import { Numeric } from '@/components/ui/Numeric';
@@ -78,7 +78,7 @@ export function MonumentCorner() {
             `key` change retriggers the animation cleanly. */}
         {!reduce && (
           <AnimatePresence>
-            <motion.span
+            <m.span
               key={pulseKey}
               aria-hidden="true"
               className="pointer-events-none absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full"
@@ -108,7 +108,7 @@ export function MonumentCorner() {
       {/* Peek overlay */}
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -160,7 +160,7 @@ export function MonumentCorner() {
                 Full activity <ArrowUpRight size={10} />
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

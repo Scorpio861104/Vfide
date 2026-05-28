@@ -28,7 +28,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Search, X, ArrowUpRight } from 'lucide-react';
 
 import {
@@ -128,7 +128,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
       {open && (
         <>
           {/* Backdrop — click to close. */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -139,7 +139,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
           />
 
           {/* The sheet. */}
-          <motion.div
+          <m.div
             initial={motionInitial}
             animate={motionAnimate}
             exit={motionExit}
@@ -211,7 +211,7 @@ export function MoreSheet({ open, onClose, variant = 'bottom' }: MoreSheetProps)
                 Open full hub <ArrowUpRight size={11} />
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>
