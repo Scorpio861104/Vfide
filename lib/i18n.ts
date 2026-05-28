@@ -185,7 +185,7 @@ export interface DashboardCopy { heading: string; subtitle: string; }
 const _en_dashboard: DashboardCopy = { heading: 'Dashboard', subtitle: 'Your VFIDE activity at a glance.' };
 export const DASHBOARD_TRANSLATIONS: TranslationMap<DashboardCopy> = {
   'en-US': _en_dashboard, 'en-GB': _en_dashboard, 'es-ES': { heading: 'Panel de control', subtitle: 'Tu actividad VFIDE de un vistazo.' },
-  'fr-FR': { heading: 'Tableau de bord', subtitle: 'Votre activité VFIDE en un coup d'œil.' },
+  'fr-FR': { heading: 'Tableau de bord', subtitle: 'Votre activité VFIDE en un coup d\'œil.' },
   'de-DE': { heading: 'Dashboard', subtitle: 'Ihre VFIDE-Aktivität auf einen Blick.' },
   'ar-SA': { heading: 'لوحة التحكم', subtitle: 'نشاطك في VFIDE بنظرة واحدة.' },
   'fil-PH': { heading: 'Dashboard', subtitle: 'Ang iyong aktibidad sa VFIDE sa isang tingin.' },
