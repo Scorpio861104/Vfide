@@ -36,7 +36,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/lending',        priority: 0.8, changeFrequency: 'weekly' },
     { path: '/marketplace',    priority: 0.8, changeFrequency: 'weekly' },
     { path: '/merchants',      priority: 0.8, changeFrequency: 'weekly' },
-    { path: '/leaderboard',    priority: 0.8, changeFrequency: 'daily'  },
     { path: '/explorer',       priority: 0.8, changeFrequency: 'daily'  },
     { path: '/proofscore',     priority: 0.8, changeFrequency: 'weekly' },
     { path: '/seer-academy',   priority: 0.8, changeFrequency: 'weekly' },

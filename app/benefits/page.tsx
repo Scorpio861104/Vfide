@@ -13,8 +13,6 @@ import { OverviewTab } from './components/OverviewTab';
 import { RewardsTab } from './components/RewardsTab';
 import { StatsTab } from './components/StatsTab';
 import { TiersTab } from './components/TiersTab';
-import { useLocale } from '@/hooks/useLocale';
-import { BENEFITS_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 const TABS = [
   { id: 'overview', label: 'Overview',          icon: Gift     },
@@ -28,8 +26,6 @@ type TabId = typeof TABS[number]['id'];
 export default function BenefitsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { isConnected, address } = useAccount();
-  const [locale] = useLocale();
-  const _benefitsCopy = pickLocaleCopy(BENEFITS_TRANSLATIONS, locale);
 
   return (
     <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
