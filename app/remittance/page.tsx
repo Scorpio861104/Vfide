@@ -59,7 +59,7 @@ export default function RemittancePage() {
             </div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
               Send money home.<br />
-              <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #22d3ee, #10b981)' }}>
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, var(--accent), #10b981)' }}>
                 Zero merchant fees.
               </span>
             </h1>
@@ -166,7 +166,7 @@ export default function RemittancePage() {
               {/* Trust badges */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { icon: Shield, label: 'Non-custodial', color: '#22d3ee' },
+                  { icon: Shield, label: 'Non-custodial', color: 'var(--accent)' },
                   { icon: Clock, label: '< 3 seconds', color: '#10b981' },
                   { icon: Users, label: 'No KYC required', color: '#a78bfa' },
                 ].map((b) => {

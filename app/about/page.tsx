@@ -16,7 +16,7 @@ const PRINCIPLES = [
   },
   {
     icon: Lock,
-    color: "#22d3ee",
+    color: "var(--accent)",
     title: "You hold the keys",
     body: "Non-custodial by design. Your tokens live in your CardBound Vault, controlled by your wallet. VFIDE never holds, touches, or can freeze your funds.",
   },
@@ -80,7 +80,7 @@ export default function AboutPage() {
               <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6">
                 Money should work<br />
                 <span className="text-transparent bg-clip-text" style={{
-                  backgroundImage: "linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%)"
+                  backgroundImage: "linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%)"
                 }}>for everyone.</span>
               </h1>
               <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">

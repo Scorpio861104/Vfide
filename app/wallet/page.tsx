@@ -60,7 +60,7 @@ export default function WalletHubPage() {
         : 'Connect MetaMask, WalletConnect, Coinbase Wallet, or Rainbow.',
       href: '/me',
       icon: Wallet,
-      color: '#22d3ee',
+      color: 'var(--accent)',
       badge: isConnected ? 'Connected' : 'Most Common',
       recommended: true,
       enabled: true,
@@ -114,7 +114,7 @@ export default function WalletHubPage() {
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
             className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, #22d3ee 0%, transparent 70%)' }}
+            style={{ background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)' }}
           />
           <div
             className="absolute bottom-0 -right-24 w-[500px] h-[500px] rounded-full opacity-[0.05]"

@@ -1127,7 +1127,7 @@
     transform: translateX(-50%);
     z-index: 9999;
     padding: 0.75rem 1.5rem;
-    background: #22d3ee;
+    background: var(--accent);
     color: #030712;
     font-weight: 700;
     font-size: 0.875rem;
@@ -1282,7 +1282,7 @@
 
   /* ── Gradient text helpers ────────────────────────────── */
   .text-gradient-cyan {
-    background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    background: linear-gradient(135deg, var(--accent), #3b82f6);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

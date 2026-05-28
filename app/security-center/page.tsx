@@ -157,7 +157,7 @@ export default function SecurityCenterPage() {
                 {/* Quick actions */}
                 <div className="grid md:grid-cols-3 gap-4 mt-6">
                   {[
-                    { href: '/guardians', icon: Shield, label: 'Manage Guardians', color: '#22d3ee' },
+                    { href: '/guardians', icon: Shield, label: 'Manage Guardians', color: 'var(--accent)' },
                     { href: '/vault/safety', icon: Lock, label: 'Vault Safety Window', color: '#10b981' },
                     { href: '/settings', icon: Smartphone, label: 'Device & Session Settings', color: '#a78bfa' },
                   ].map((action) => {
