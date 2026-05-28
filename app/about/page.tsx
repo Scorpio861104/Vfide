@@ -42,7 +42,7 @@ const PRINCIPLES = [
     icon: Flame,
     color: "#f97316",
     title: "The key burn",
-    body: "Six months after mainnet launch, the developer master key is permanently destroyed. No admin backdoor, no upgrade path — the protocol becomes truly ownerless.",
+    body: "Six months after mainnet launch, the developer admin key is zeroed out via SystemHandover. The protocol's devMultisig address is set to address(0) — the deployer cannot issue admin calls from that point forward. DAO governance remains in control: proposals, timelocks, and council elections continue normally. The protocol is not leaderless; it is developer-independent.",
   },
 ];
 

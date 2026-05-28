@@ -240,15 +240,17 @@ export default function VaultSafetyPage() {
               VFIDE has a separate system from recovery for the case where
               you&apos;re permanently unavailable, not just temporarily
               unreachable. Inheritance lets you designate heirs who can claim
-              your vault after a period of inactivity, but only with the
-              involvement of your guardians.
+              your vault, but only with the active involvement of your guardians
+              — there is no automatic on-chain inactivity detection.
             </p>
             <p>
               The flow is: you set up heirs and their inheritance shares once.
-              If you go inactive for the configured period (usually 180 days),
-              your guardians can initiate the inheritance claim. The vault
-              then enters a memorial state and the assets are distributed to
-              your heirs based on your configured shares.
+              A guardian must manually call <code className="font-mono text-xs text-zinc-400">initiateInheritanceClaim()</code> to start
+              the process. The vault then enters a 30-day veto window
+              (<code className="font-mono text-xs text-zinc-400">INHERITANCE_VETO_PERIOD</code>) during which
+              you — or any guardian — can cancel the claim. If the window elapses
+              unchallenged, the vault enters a memorial state and assets are
+              distributed to your heirs based on your configured shares.
             </p>
             <SubItem title="Why this is separate from recovery">
               Recovery assumes you&apos;re alive and trying to get your vault back.

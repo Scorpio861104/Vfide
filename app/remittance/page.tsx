@@ -13,11 +13,12 @@ import { useLocale } from '@/hooks/useLocale';
 import { REMITTANCE_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 const CORRIDORS = [
-  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$12 vs. Western Union' },
-  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$8 vs. bank transfer' },
-  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$15 vs. MoneyGram' },
-  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR', fee: '0.0%', time: '< 3 sec', saving: 'Save ~$6 vs. PayPal' },
+  { from: '🇺🇸 USD', to: '🇬🇭 GHS', rate: '1 USD ≈ 13.2 GHS*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~7% Western Union fee' },
+  { from: '🇦🇪 AED', to: '🇵🇭 PHP', rate: '1 AED ≈ 16.4 PHP*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~4% bank transfer fee' },
+  { from: '🇬🇧 GBP', to: '🇳🇬 NGN', rate: '1 GBP ≈ 2,010 NGN*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~6% MoneyGram fee' },
+  { from: '🇺🇸 USD', to: '🇮🇳 INR', rate: '1 USD ≈ 83.6 INR*', fee: '0.0%', time: '< 3 sec', saving: 'vs. ~3.5% PayPal fee' },
 ];
+// * Indicative testnet rates only — not live FX data.
 
 const STEPS = [
   { step: '1', title: 'Connect wallet', desc: 'MetaMask, WalletConnect, or Coinbase Wallet.' },
@@ -94,6 +95,9 @@ export default function RemittancePage() {
                     ))}
                   </div>
                 </div>
+                <p className="mt-2 text-xs text-zinc-600 leading-tight">
+                  * Indicative testnet rates only. Savings shown are fee-percentage comparisons vs. industry averages — not live FX quotes.
+                </p>
 
                 {/* Amount input */}
                 <div className="mb-4">

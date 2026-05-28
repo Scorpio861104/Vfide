@@ -82,6 +82,15 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
                 {currentScore < 8000 && ' Increase your score to 8000 to unlock the minimum 0.25% rate!'}
               </p>
             </div>
+
+            <div className="rounded-xl border border-zinc-700/50 bg-zinc-800/40 p-3 mt-2">
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                <strong className="text-zinc-400">Note:</strong> This simulator shows the base ProofScore fee curve only.
+                Your actual fee may vary based on the <strong className="text-zinc-400">adaptive volume multiplier</strong> —
+                a DAO-governed parameter that scales fees by transaction volume.
+                Defaults are set at deployment and can only be changed via a governance vote.
+              </p>
+            </div>
           </div>
         </GlassCard>
       </motion.div>

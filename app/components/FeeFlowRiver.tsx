@@ -405,7 +405,7 @@ export function FeeFlowRiver() {
       <div className="mt-4 flex items-start gap-2 text-[11px] text-gray-500">
         <Activity size={12} className="mt-0.5 flex-shrink-0" />
         <span>
-          Live demo with illustrative numbers — pre-mainnet. Splits match the on-chain <code className="font-mono text-gray-400">FeeDistributor</code>. Once VFIDE is live, this animates against real Transfer events.
+          Live demo with illustrative numbers — pre-mainnet. Splits reflect the two-stage on-chain distribution: <code className="font-mono text-gray-400">ProofScoreBurnRouter</code> (40% burn / 10% Sanctum / 50% ecosystem) then <code className="font-mono text-gray-400">FeeDistributor</code> (35/20/15/20/10 of the ecosystem share). Once VFIDE is live, this animates against real Transfer events.
         </span>
       </div>
     </div>
