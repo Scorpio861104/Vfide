@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart2, Play, RefreshCw, Star } from 'lucide-react';
+import { BarChart2, Play, RefreshCw, Star, Store } from 'lucide-react';
 import { useState } from 'react';
 import { DemoDataBanner } from '@/components/layout/DemoDataBanner';
 
@@ -11,13 +11,15 @@ const FeedTab = dynamic(() => import('./components/FeedTab').then((m) => m.FeedT
 const PremiumTab = dynamic(() => import('./components/PremiumTab').then((m) => m.PremiumTab), { ssr: false });
 const SubscriptionsTab = dynamic(() => import('./components/SubscriptionsTab').then((m) => m.SubscriptionsTab), { ssr: false });
 const DashboardTab = dynamic(() => import('./components/DashboardTab').then((m) => m.DashboardTab), { ssr: false });
+const MerchantTab = dynamic(() => import('./components/MerchantTab').then((m) => m.MerchantTab), { ssr: false });
 
-type TabId = 'feed' | 'premium' | 'subscriptions' | 'dashboard';
+type TabId = 'feed' | 'premium' | 'subscriptions' | 'merchant' | 'dashboard';
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: 'feed',          label: 'Feed',          icon: Play       },
   { id: 'premium',       label: 'Premium',       icon: Star       },
   { id: 'subscriptions', label: 'Subscriptions', icon: RefreshCw  },
+  { id: 'merchant',      label: 'Merchant Demo', icon: Store      },
   { id: 'dashboard',     label: 'Dashboard',     icon: BarChart2  },
 ];
 
@@ -62,6 +64,7 @@ export default function CryptoSocialDemo() {
             {activeTab === 'feed'          && <FeedTab />}
             {activeTab === 'premium'       && <PremiumTab />}
             {activeTab === 'subscriptions' && <SubscriptionsTab />}
+            {activeTab === 'merchant'      && <MerchantTab />}
             {activeTab === 'dashboard'     && <DashboardTab />}
           </motion.div>
         </AnimatePresence>
