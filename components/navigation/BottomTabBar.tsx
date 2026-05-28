@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, CreditCard, Shield, Store, MoreHorizontal } from 'lucide-react';
+import { Home, CreditCard, Shield, Vault, MoreHorizontal } from 'lucide-react';
 import { m } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { MoreSheet } from './MoreSheet';
@@ -19,15 +19,19 @@ type Tab = {
   action: TabAction;
 };
 
+// NAV-VAULT: Home / Pay / Vault / Trust / More
+// Vault is where the user's money lives — it belongs in primary nav.
+// Merchants reach /merchant portal via More → Merchant group.
+// "Trust" (ProofScore) moved to slot 4; it's discovery, not daily use.
 const MAIN_TABS: readonly Tab[] = [
-  { label: 'Home',      icon: Home,            matchPath: '/dashboard',  action: { kind: 'navigate', href: '/dashboard'  } },
-  { label: 'Pay',       icon: CreditCard,      matchPath: '/pay',        action: { kind: 'navigate', href: '/pay'        } },
-  { label: 'Trust',     icon: Shield,          matchPath: '/proofscore', action: { kind: 'navigate', href: '/proofscore' } },
-  { label: 'Merchants', icon: Store,           matchPath: '/merchants',  action: { kind: 'navigate', href: '/merchants'  } },
+  { label: 'Home',    icon: Home,            matchPath: '/dashboard',  action: { kind: 'navigate', href: '/dashboard'  } },
+  { label: 'Pay',     icon: CreditCard,      matchPath: '/pay',        action: { kind: 'navigate', href: '/pay'        } },
+  { label: 'Vault',   icon: Vault,           matchPath: '/vault',      action: { kind: 'navigate', href: '/vault'      } },
+  { label: 'Trust',   icon: Shield,          matchPath: '/proofscore', action: { kind: 'navigate', href: '/proofscore' } },
   // The "More" tab opens the MoreSheet drawer rather than navigating to a
   // /more route (no such route exists — the drawer is the canonical
   // "everything else" surface, mirroring TopNav on desktop).
-  { label: 'More',      icon: MoreHorizontal,  matchPath: '__more__',    action: { kind: 'open-more' } },
+  { label: 'More',    icon: MoreHorizontal,  matchPath: '__more__',    action: { kind: 'open-more' } },
 ] as const;
 
 export function BottomTabBar() {

@@ -4,10 +4,12 @@ export const dynamic = 'force-dynamic';
 
 import { Footer } from '@/components/layout/Footer';
 import { useState, useMemo, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { Search, SlidersHorizontal, Grid, List, Loader2, Package } from 'lucide-react';
+import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Search, SlidersHorizontal, Grid, List, Loader2, Package, Store, ArrowRight, Sparkles } from 'lucide-react';
 
 import { FilterContent } from './components/FilterContent';
+import { MarketplaceEmptyState } from './components/MarketplaceEmptyState';
 import { ProductGridCard } from './components/ProductGridCard';
 import { ProductListCard } from './components/ProductListCard';
 
@@ -96,7 +98,7 @@ export default function MarketplacePage() {
           {loading ? (
             <div className="text-center py-16"><Loader2 size={32} className="text-accent animate-spin mx-auto" /></div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16"><Package size={48} className="mx-auto mb-4 text-gray-600" /><p className="text-gray-400">No products found</p></div>
+            <MarketplaceEmptyState hasQuery={!!query} />
           ) : (
             <div className={view === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4' : 'space-y-3'}>
               {filtered.map((product: any) => view === 'grid'

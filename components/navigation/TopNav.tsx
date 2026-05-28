@@ -49,12 +49,12 @@ const MAIN_SECTIONS = [
 const SECTION_MATCH: Record<string, string[]> = {
   home:        ['/dashboard', '/'],
   marketplace: ['/marketplace', '/merchants', '/store', '/product', '/checkout'],
-  pay:         ['/pay', '/remittance', '/wallet', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
+  pay:         ['/pay', '/remittance', '/wallet', '/vault', '/lending', '/crypto', '/escrow', '/flashloans', '/buy'],
   social:      ['/feed', '/stories', '/social', '/endorsements', '/headhunter', '/social-hub', '/social-payments', '/social-messaging'],
 };
 
 const MORE_MATCH = [
-  '/me', '/profile', '/vault', '/settings', '/badges', '/achievements',
+  '/me', '/profile', '/settings', '/badges', '/achievements',
   '/guardians', '/governance', '/dao-hub', '/council', '/elections',
   '/disputes', '/sanctum', '/rewards', '/leaderboard', '/quests',
   '/proofscore', '/security-center', '/notifications', '/treasury',

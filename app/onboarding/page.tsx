@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, Power } from 'lucide-react';
+import { Sparkles, ArrowRight, Power, ExternalLink, Smartphone, Key, ShieldCheck } from 'lucide-react';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useAccount } from 'wagmi';
 
@@ -91,11 +91,43 @@ function OnboardingPageContent() {
             </div>
 
             {!isConnected ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <p className="text-sm text-zinc-400">
-                  Connect your wallet to start setup. The first chapter creates your CardBound
-                  vault — everything after is skippable.
+                  VFIDE uses a crypto wallet instead of a username and password — your
+                  wallet IS your account. You hold your own keys; no company controls your money.
                 </p>
+
+                {/* No wallet yet? 3-step explainer */}
+                <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4 space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+                    No wallet yet? Takes 2 minutes.
+                  </p>
+                  {[
+                    { icon: Smartphone, step: '1', text: 'Install Coinbase Wallet or MetaMask on your phone or browser.' },
+                    { icon: Key,        step: '2', text: 'Open the app and tap "Create new wallet". Write down your 12-word phrase and keep it safe.' },
+                    { icon: ShieldCheck, step: '3', text: "Come back here and tap \"Connect wallet\" below. That's it — no email, no KYC." },
+                  ].map(({ icon: Icon, step, text }) => (
+                    <div key={step} className="flex items-start gap-3">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/15 text-xs font-bold text-accent">
+                        {step}
+                      </span>
+                      <div className="flex items-start gap-2">
+                        <Icon size={14} className="text-zinc-400 shrink-0 mt-0.5" aria-hidden="true" />
+                        <p className="text-sm text-zinc-300">{text}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <a
+                    href="https://www.coinbase.com/wallet"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-1"
+                  >
+                    <ExternalLink size={11} aria-hidden="true" />
+                    Get Coinbase Wallet (free)
+                  </a>
+                </div>
+
                 <VfideConnectButton size="md" />
               </div>
             ) : (

@@ -147,10 +147,14 @@ export default function Home() {
                   and no company can freeze your account or reverse your transaction.
                   Ever.
                 </p>
+                <p className="text-base text-zinc-400 mb-2 max-w-md leading-relaxed">
+                  Built because billions of people have been failed by traditional
+                  financial systems — through extraction, exclusion, and gatekeeping.
+                  No bank account required. No middleman. No permission needed.
+                </p>
                 <p className="text-base text-zinc-400 mb-8 max-w-md leading-relaxed">
-                  Buyers pay a small fee that shrinks automatically as they build a
-                  reputation on the network — down to 0.25% at the top level.
-                  You hold your own wallet. No bank. No middleman. No permission needed.
+                  Buyers pay a small fee that drops automatically as their reputation
+                  grows — down to 0.25% at the highest trust level. Sellers pay nothing.
                 </p>
 
                 {/*
