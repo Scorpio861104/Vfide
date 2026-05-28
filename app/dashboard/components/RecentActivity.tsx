@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Activity, ArrowDownLeft, ArrowUpRight, Award, ChevronRight, Vote } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';
@@ -93,7 +93,7 @@ export function RecentActivitySection() {
       ) : (
         <div className="space-y-3">
           {activities.map((activity, index) => (
-            <motion.div
+            <m.div
               key={`${activity.type}-${activity.time}-${index}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -118,7 +118,7 @@ export function RecentActivitySection() {
                 <p className="text-xs text-white/40">{activity.time}</p>
               </div>
               <ChevronRight className="text-white/20" size={16} />
-            </motion.div>
+            </m.div>
           ))}
         </div>
       )}

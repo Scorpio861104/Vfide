@@ -23,7 +23,7 @@ import { AppLockSettings } from '@/components/security/AppLockSettings'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { Vault, Shield, Settings, Sliders, Fingerprint, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 export default function VaultSettingsPage() {
   return (
@@ -44,7 +44,7 @@ export default function VaultSettingsPage() {
           </div>
 
           {/* Emergency link — visible up top */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
@@ -62,11 +62,11 @@ export default function VaultSettingsPage() {
               </div>
               <span className="text-red-400 text-sm font-medium">Open →</span>
             </Link>
-          </motion.div>
+          </m.div>
 
           {/* Content Grid */}
           <div className="grid grid-cols-1 gap-8 mb-12">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <div className="flex items-center gap-2 mb-4">
                 <Settings className="w-6 h-6 text-purple-400" />
                 <h2 className="text-2xl font-bold">Transaction Controls</h2>
@@ -74,9 +74,9 @@ export default function VaultSettingsPage() {
               <ErrorBoundary>
                 <VaultSettingsPanel />
               </ErrorBoundary>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
@@ -88,9 +88,9 @@ export default function VaultSettingsPage() {
               <ErrorBoundary>
                 <SpendLimitsConfigurator />
               </ErrorBoundary>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -102,9 +102,9 @@ export default function VaultSettingsPage() {
               <ErrorBoundary>
                 <GuardianManagementPanel />
               </ErrorBoundary>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
@@ -116,7 +116,7 @@ export default function VaultSettingsPage() {
               <ErrorBoundary>
                 <AppLockSettings />
               </ErrorBoundary>
-            </motion.div>
+            </m.div>
           </div>
 
           {/* Features Grid — CardBound features only */}

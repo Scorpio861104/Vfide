@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { MerchantAnalytics } from '@/components/analytics/MerchantAnalytics';
 import { useAccount } from 'wagmi';
@@ -23,7 +23,7 @@ export default function MerchantAnalyticsPage() {
       </div>
 
       <div className="relative container mx-auto max-w-6xl px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Merchant Intelligence</span>
           </div>
@@ -33,7 +33,7 @@ export default function MerchantAnalyticsPage() {
             </span>
           </h1>
           <p className="text-white/50">Revenue, order flow, and product performance for your storefront.</p>
-        </motion.div>
+        </m.div>
 
         {address ? (
           <MerchantAnalytics merchantAddress={address} />

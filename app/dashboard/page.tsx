@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Home, BarChart3, Award, Calculator, Activity, Wallet2, TrendingUp, Zap } from 'lucide-react';
 import { ProofScoreRing, ProofScoreTierProgress } from '@/components/proofscore';
 import { FeeSavingsCard } from '@/components/fees';
@@ -73,7 +73,7 @@ export default function DashboardPage() {
           <div className="container mx-auto px-4 max-w-6xl py-10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
@@ -89,11 +89,11 @@ export default function DashboardPage() {
                       {truncateAddress(address)}
                     </p>
                   )}
-                </motion.div>
+                </m.div>
               </div>
 
               {/* Quick stats badges */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 }}
@@ -120,7 +120,7 @@ export default function DashboardPage() {
                     <p className="text-lg font-bold text-emerald-400 leading-none">{txCount}</p>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </div>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function DashboardPage() {
 
           {/* Score + Fee row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -140,9 +140,9 @@ export default function DashboardPage() {
               <div className="w-full mt-5">
                 <ProofScoreTierProgress score={proofScore!} />
               </div>
-            </motion.div>
+            </m.div>
 
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.18 }}
@@ -152,14 +152,14 @@ export default function DashboardPage() {
                 transactionCount={txCount}
                 buyerFeeBps={50}
               />
-            </motion.div>
+            </m.div>
           </div>
 
           {/* Non-custodial notice */}
           <NonCustodialNotice className="mb-6" />
 
           {/* Tab navigation */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.25 }}
@@ -179,11 +179,11 @@ export default function DashboardPage() {
                 {tab.label}
               </button>
             ))}
-          </motion.div>
+          </m.div>
 
           {/* Tab content */}
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={activeTab}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -195,7 +195,7 @@ export default function DashboardPage() {
               {activeTab === 'score'     && <ScoreSimulatorTab currentScore={proofScore ?? 0} />}
               {activeTab === 'fees'      && <FeeSimulatorTab currentScore={proofScore ?? 0} />}
               {activeTab === 'activity'  && <RecentActivity />}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
 
         </div>

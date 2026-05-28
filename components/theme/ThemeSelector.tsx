@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useThemeManager } from '@/hooks/useThemeManager';
 import { ThemeName, THEME_PRESETS } from '@/config/theme-manager';
 import { Check } from 'lucide-react';
@@ -19,7 +19,7 @@ export function ThemeSelector() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {Object.entries(THEME_PRESETS).map(([_key, preset]) => (
-          <motion.button
+          <m.button
             key={preset.id}
             onClick={() => setTheme(preset.id as ThemeName)}
             whileHover={{ scale: 1.05 }}
@@ -53,15 +53,15 @@ export function ThemeSelector() {
 
             {/* Checkmark */}
             {currentTheme === preset.id && (
-              <motion.div
+              <m.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute top-2 right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center"
               >
                 <Check className="w-3 h-3 text-white" />
-              </motion.div>
+              </m.div>
             )}
-          </motion.button>
+          </m.button>
         ))}
       </div>
     </div>

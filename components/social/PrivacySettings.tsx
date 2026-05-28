@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion as _motion } from 'framer-motion';
+import { m as _motion } from 'framer-motion';
 import {
   Shield,
   Lock,

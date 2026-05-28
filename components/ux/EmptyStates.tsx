@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Trophy,
   Users,
@@ -37,7 +37,7 @@ export interface EmptyStateProps {
 
 function InboxIllustration() {
   return (
-    <motion.svg
+    <m.svg
       width="120"
       height="120"
       viewBox="0 0 120 120"
@@ -46,7 +46,7 @@ function InboxIllustration() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.rect
+      <m.rect
         x="20"
         y="30"
         width="80"
@@ -59,7 +59,7 @@ function InboxIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.8 }}
       />
-      <motion.path
+      <m.path
         d="M20 50L60 75L100 50"
         stroke="#00FFB2"
         strokeWidth="2"
@@ -68,7 +68,7 @@ function InboxIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.6, delay: 0.3 }}
       />
-      <motion.circle
+      <m.circle
         cx="60"
         cy="55"
         r="8"
@@ -78,13 +78,13 @@ function InboxIllustration() {
         animate={{ scale: 1 }}
         transition={{ duration: 0.4, delay: 0.5 }}
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
 function SearchIllustration() {
   return (
-    <motion.svg
+    <m.svg
       width="120"
       height="120"
       viewBox="0 0 120 120"
@@ -93,7 +93,7 @@ function SearchIllustration() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.circle
+      <m.circle
         cx="50"
         cy="50"
         r="30"
@@ -104,7 +104,7 @@ function SearchIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.8 }}
       />
-      <motion.line
+      <m.line
         x1="72"
         y1="72"
         x2="95"
@@ -116,7 +116,7 @@ function SearchIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       />
-      <motion.path
+      <m.path
         d="M40 45C42 40 48 35 55 40"
         stroke="#374151"
         strokeWidth="2"
@@ -125,13 +125,13 @@ function SearchIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.3, delay: 0.6 }}
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
 function WalletIllustration() {
   return (
-    <motion.svg
+    <m.svg
       width="120"
       height="120"
       viewBox="0 0 120 120"
@@ -140,7 +140,7 @@ function WalletIllustration() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.rect
+      <m.rect
         x="15"
         y="35"
         width="90"
@@ -153,7 +153,7 @@ function WalletIllustration() {
         animate={{ scaleX: 1 }}
         transition={{ duration: 0.5 }}
       />
-      <motion.rect
+      <m.rect
         x="70"
         y="50"
         width="30"
@@ -167,7 +167,7 @@ function WalletIllustration() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
       />
-      <motion.circle
+      <m.circle
         cx="85"
         cy="62"
         r="5"
@@ -176,13 +176,13 @@ function WalletIllustration() {
         animate={{ scale: 1 }}
         transition={{ duration: 0.3, delay: 0.5 }}
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
 function MessagesIllustration() {
   return (
-    <motion.svg
+    <m.svg
       width="120"
       height="120"
       viewBox="0 0 120 120"
@@ -191,7 +191,7 @@ function MessagesIllustration() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.rect
+      <m.rect
         x="20"
         y="25"
         width="60"
@@ -204,7 +204,7 @@ function MessagesIllustration() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4 }}
       />
-      <motion.rect
+      <m.rect
         x="40"
         y="55"
         width="60"
@@ -218,7 +218,7 @@ function MessagesIllustration() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, delay: 0.2 }}
       />
-      <motion.line
+      <m.line
         x1="30"
         y1="38"
         x2="70"
@@ -230,7 +230,7 @@ function MessagesIllustration() {
         animate={{ scaleX: 1 }}
         transition={{ duration: 0.3, delay: 0.3 }}
       />
-      <motion.line
+      <m.line
         x1="30"
         y1="48"
         x2="55"
@@ -242,13 +242,13 @@ function MessagesIllustration() {
         animate={{ scaleX: 1 }}
         transition={{ duration: 0.3, delay: 0.4 }}
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
 function NotificationsIllustration() {
   return (
-    <motion.svg
+    <m.svg
       width="120"
       height="120"
       viewBox="0 0 120 120"
@@ -257,7 +257,7 @@ function NotificationsIllustration() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.path
+      <m.path
         d="M60 25C45 25 35 35 35 50V70L25 80H95L85 70V50C85 35 75 25 60 25Z"
         fill="#1F2937"
         stroke="#374151"
@@ -266,7 +266,7 @@ function NotificationsIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.6 }}
       />
-      <motion.circle
+      <m.circle
         cx="60"
         cy="90"
         r="8"
@@ -275,7 +275,7 @@ function NotificationsIllustration() {
         animate={{ scale: 1 }}
         transition={{ duration: 0.3, delay: 0.4 }}
       />
-      <motion.path
+      <m.path
         d="M60 25V18"
         stroke="#00FFB2"
         strokeWidth="3"
@@ -284,13 +284,13 @@ function NotificationsIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.3, delay: 0.5 }}
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
 function ActivityIllustration() {
   return (
-    <motion.svg
+    <m.svg
       width="120"
       height="120"
       viewBox="0 0 120 120"
@@ -299,7 +299,7 @@ function ActivityIllustration() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.path
+      <m.path
         d="M20 60H35L45 30L55 80L65 50L75 65L85 40L100 60"
         stroke="#00FFB2"
         strokeWidth="3"
@@ -310,7 +310,7 @@ function ActivityIllustration() {
         animate={{ pathLength: 1 }}
         transition={{ duration: 1 }}
       />
-      <motion.line
+      <m.line
         x1="20"
         y1="90"
         x2="100"
@@ -321,7 +321,7 @@ function ActivityIllustration() {
         animate={{ scaleX: 1 }}
         transition={{ duration: 0.5, delay: 0.5 }}
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
@@ -349,7 +349,7 @@ export function EmptyState({
   const Illustration = illustrations[illustration];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`flex flex-col items-center justify-center p-8 text-center ${className}`}
@@ -376,27 +376,27 @@ export function EmptyState({
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
         {action && (
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={action.onClick}
             className="px-6 py-2.5 bg-accent hover:bg-accent-dark text-white font-medium rounded-xl transition-colors"
           >
             {action.label}
-          </motion.button>
+          </m.button>
         )}
         {secondaryAction && (
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={secondaryAction.onClick}
             className="px-6 py-2.5 border border-gray-600 hover:border-gray-500 text-gray-300 font-medium rounded-xl transition-colors"
           >
             {secondaryAction.label}
-          </motion.button>
+          </m.button>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

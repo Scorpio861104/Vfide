@@ -5,7 +5,7 @@
 
 'use client';
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 interface VFIDEMarkProps {
   size?: number;
@@ -23,14 +23,14 @@ export function VFIDEMark({
   const height = Math.round(size * 1.1);
 
   return (
-    <motion.div
+    <m.div
       className={`relative ${className}`}
       initial={animated ? { opacity: 0, scale: 0.8 } : undefined}
       animate={animated ? { opacity: 1, scale: 1 } : undefined}
       transition={{ duration: 0.5 }}
     >
       {glowing && (
-        <motion.div
+        <m.div
           className="absolute inset-0 blur-2xl rounded-full"
           animate={{
             opacity: [0.2, 0.5, 0.2],
@@ -47,7 +47,7 @@ export function VFIDEMark({
         />
       )}
 
-      <motion.img
+      <m.img
         src="/icon.svg"
         alt="VFIDE v.Five logo"
         width={size}
@@ -57,7 +57,7 @@ export function VFIDEMark({
         animate={animated ? { opacity: 1, y: 0, scale: 1 } : undefined}
         transition={{ duration: 0.55, ease: 'easeOut' }}
       />
-    </motion.div>
+    </m.div>
   );
 }
 

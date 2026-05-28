@@ -3,7 +3,7 @@
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState, useMemo } from 'react';
 import { useAccount } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import { useGuardianWatchlist, useGuardianAttestations, mergeInboxEntries } from './hooks';
 import { GuardianPendingRecoveryCard } from './GuardianPendingRecoveryCard';
@@ -30,22 +30,22 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
 
   if (!isConnected) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+        <m.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
           <Shield className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-        </motion.div>
+        </m.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see pending guardian actions</p>
         <div className="mt-6 flex justify-center">
           <VfideConnectButton size="md" />
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
+      <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         className="bg-gradient-to-br from-accent/10 to-blue-500/10 border border-accent/30 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-accent mb-4 flex items-center gap-3">
           <Shield size={24} />
@@ -55,9 +55,9 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
           As a guardian, you may be asked to approve pending wallet rotations on CardBound vaults.
           Track vault addresses you guard and act when needed.
         </p>
-      </motion.div>
+      </m.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h3 className="text-xl font-bold text-white mb-2">Guardian Watchlist</h3>
         <p className="text-gray-400 text-sm mb-4">Add vault addresses you guard. This is local and private.</p>
@@ -95,11 +95,11 @@ export function PendingActionsTab({ isConnected }: { isConnected: boolean }) {
             ))}
           </div>
         )}
-      </motion.div>
+      </m.div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <GuardianPendingQueueWidget />
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

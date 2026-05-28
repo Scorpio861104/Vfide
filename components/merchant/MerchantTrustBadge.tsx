@@ -18,7 +18,7 @@
 import { useMemo } from 'react';
 import { useReadContract } from 'wagmi';
 import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Zap, TrendingUp, Clock, CheckCircle2, Award } from 'lucide-react';
 import { CONTRACT_ADDRESSES, MerchantPortalABI, isConfiguredContractAddress } from '@/lib/contracts';
 import { SeerABI } from '@/lib/abis';
@@ -109,7 +109,7 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
 
   // ── Full variant (for storefront headers) ───────────────────────────────
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-white/3 backdrop-blur-xl border border-white/10 rounded-2xl p-4 ${className}`}
@@ -152,6 +152,6 @@ export function MerchantTrustBadge({ merchantAddress, variant = 'full', classNam
         <CheckCircle2 size={10} className="text-emerald-400" />
         Merchant pays $0 — buyers pay {info.feeRate}% burn fee + gas
       </div>
-    </motion.div>
+    </m.div>
   );
 }

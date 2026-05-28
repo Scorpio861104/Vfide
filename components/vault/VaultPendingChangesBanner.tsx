@@ -25,7 +25,7 @@
 
 import Link from 'next/link';
 import { Hourglass, ChevronRight, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { usePendingChanges } from '@/hooks/usePendingChanges';
 import type { Address } from 'viem';
 
@@ -40,7 +40,7 @@ export function VaultPendingChangesBanner({ vaultAddress }: { vaultAddress: Addr
   const hasReady = readyCount > 0;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       className="mb-6"
@@ -84,6 +84,6 @@ export function VaultPendingChangesBanner({ vaultAddress }: { vaultAddress: Addr
           <ChevronRight className={hasReady ? 'text-emerald-300' : 'text-accent'} size={20} />
         </div>
       </Link>
-    </motion.div>
+    </m.div>
   );
 }

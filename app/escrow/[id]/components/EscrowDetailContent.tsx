@@ -23,7 +23,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { formatUnits, type Address } from 'viem';
 import {
   ArrowLeft,
@@ -300,7 +300,7 @@ export function EscrowDetailContent({ id }: Props) {
         </button>
 
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           className={`bg-white/3 border border-white/10 rounded-2xl p-6 ring-1 ${style.ring}`}
@@ -337,7 +337,7 @@ export function EscrowDetailContent({ id }: Props) {
               )}
             </div>
           )}
-        </motion.div>
+        </m.div>
 
         {/* Parties */}
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -396,14 +396,14 @@ export function EscrowDetailContent({ id }: Props) {
           </div>
         )}
         {actionMessage && !actionError && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 flex items-start gap-2"
           >
             <CheckCircle2 size={12} className="shrink-0 mt-0.5" />
             <span>{actionMessage}</span>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Primary actions (role-dependent) */}

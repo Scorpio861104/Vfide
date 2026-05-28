@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { DollarSign, Send, Loader2, Check, X } from 'lucide-react';
 import { sendPayment, tipMessage } from '@/lib/crypto';
 import { useAnnounce } from '@/lib/accessibility';
@@ -98,7 +98,7 @@ export function PaymentButton({
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={() => !sending && setShowModal(false)}
           >
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -234,7 +234,7 @@ export function PaymentButton({
                   </>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           </div>
         )}
       </AnimatePresence>

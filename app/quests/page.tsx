@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Target } from 'lucide-react';
 import DailyQuestsPanel from '@/components/gamification/DailyQuestsPanel';
 import OnboardingChecklist from '@/components/gamification/OnboardingChecklist';
@@ -22,7 +22,7 @@ export default function QuestsPage() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Daily Challenges</span>
           </div>
@@ -32,7 +32,7 @@ export default function QuestsPage() {
             </span>
           </h1>
           <p className="text-white/50 text-lg">Complete governance challenges and earn participation XP</p>
-        </motion.div>
+        </m.div>
 
         <DailyQuestsPanel />
       </div>

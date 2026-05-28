@@ -2,7 +2,7 @@
 
 import { logger } from '@/lib/logger';
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Bell,
   MessageCircle,
@@ -157,7 +157,7 @@ export function SocialNotifications() {
         {showNotifications && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -166,7 +166,7 @@ export function SocialNotifications() {
             />
 
             {/* Panel */}
-            <motion.div
+            <m.div
               id="notifications-panel"
               initial={{ opacity: 0, y: -20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -275,7 +275,7 @@ export function SocialNotifications() {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

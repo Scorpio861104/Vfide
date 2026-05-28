@@ -38,7 +38,9 @@ jest.mock('framer-motion', () => {
   const motion = new Proxy({} as Record<string,unknown>, {
     get: (t,p) => { if (typeof p !== 'string') return undefined; if (!t[p]) t[p] = make(p === 'custom' ? 'div' : p); return t[p]; }
   });
-  return { motion, AnimatePresence: ({ children }: { children: unknown }) => children };
+  return { motion,
+    m: motion,
+    AnimatePresence: ({ children }: { children: unknown }) => children };
 });
 
 jest.mock('@/components/crypto/VfideConnectButton', () => ({

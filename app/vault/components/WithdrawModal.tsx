@@ -13,7 +13,7 @@
  * but the user-facing copy is "Transfer to Vault" throughout.
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ArrowUpFromLine, X, Loader2 } from 'lucide-react';
 import { safeParseFloat } from '@/lib/validation';
 
@@ -38,14 +38,14 @@ export function WithdrawModal({
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
           onClick={() => !isWithdrawing && onClose()}
         >
-          <motion.div
+          <m.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -119,7 +119,7 @@ export function WithdrawModal({
               </div>
             </div>
 
-            <motion.button
+            <m.button
               data-trail-source="vault-transfer"
               whileHover={{ scale: isWithdrawing ? 1 : 1.02 }}
               whileTap={{ scale: isWithdrawing ? 1 : 0.98 }}
@@ -138,9 +138,9 @@ export function WithdrawModal({
                   Transfer to Vault
                 </>
               )}
-            </motion.button>
-          </motion.div>
-        </motion.div>
+            </m.button>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

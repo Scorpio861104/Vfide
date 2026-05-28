@@ -5,7 +5,7 @@
 
 'use client';
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 /**
  * VFIDE Shield Loader
@@ -22,7 +22,7 @@ export function ShieldLoader({
 }) {
   return (
     <div className={`flex flex-col items-center gap-4 ${className}`}>
-      <motion.svg
+      <m.svg
         width={size}
         height={size * 1.2}
         viewBox="0 0 100 120"
@@ -65,7 +65,7 @@ export function ShieldLoader({
         />
         
         {/* Animated scan line */}
-        <motion.rect
+        <m.rect
           x="15"
           width="70"
           height="4"
@@ -81,16 +81,16 @@ export function ShieldLoader({
             ease: "easeInOut"
           }}
         />
-      </motion.svg>
+      </m.svg>
       
       {text && (
-        <motion.span
+        <m.span
           className="text-zinc-400 text-sm"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}
         >
           {text}
-        </motion.span>
+        </m.span>
       )}
     </div>
   );
@@ -108,7 +108,7 @@ export function HexagonSpinner({
   className?: string;
 }) {
   return (
-    <motion.svg
+    <m.svg
       width={size}
       height={size}
       viewBox="0 0 50 50"
@@ -137,7 +137,7 @@ export function HexagonSpinner({
         strokeDasharray="100"
         strokeDashoffset="25"
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
@@ -157,7 +157,7 @@ export function PulseDotsLoader({
   return (
     <div className={`flex items-center gap-1 ${className}`}>
       {[0, 1, 2].map((i) => (
-        <motion.div
+        <m.div
           key={i}
           style={{
             width: size,
@@ -195,7 +195,7 @@ export function TrustRingLoader({
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size }}>
       {[0, 1, 2].map((i) => (
-        <motion.div
+        <m.div
           key={i}
           className="absolute inset-0 rounded-full border-2"
           style={{
@@ -237,7 +237,7 @@ export function BlockchainLoader({
       <div className="flex items-center gap-1">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="flex items-center">
-            <motion.div
+            <m.div
               style={{
                 width: blockSize,
                 height: blockSize,
@@ -255,7 +255,7 @@ export function BlockchainLoader({
               }}
             />
             {i < 3 && (
-              <motion.div
+              <m.div
                 style={{
                   width: blockSize / 2,
                   height: 2,
@@ -277,13 +277,13 @@ export function BlockchainLoader({
       </div>
       
       {text && (
-        <motion.span
+        <m.span
           className="text-zinc-400 text-sm text-center"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
           {text}
-        </motion.span>
+        </m.span>
       )}
     </div>
   );
@@ -303,14 +303,14 @@ export function SuccessCheckmark({
   className?: string;
 }) {
   return (
-    <motion.svg
+    <m.svg
       width={size}
       height={size}
       viewBox="0 0 50 50"
       className={className}
     >
       {/* Background circle */}
-      <motion.circle
+      <m.circle
         cx="25"
         cy="25"
         r="23"
@@ -323,7 +323,7 @@ export function SuccessCheckmark({
       />
       
       {/* Filled background */}
-      <motion.circle
+      <m.circle
         cx="25"
         cy="25"
         r="20"
@@ -334,7 +334,7 @@ export function SuccessCheckmark({
       />
       
       {/* Checkmark */}
-      <motion.path
+      <m.path
         d="M15 25 L22 32 L35 18"
         fill="none"
         stroke={color}
@@ -345,7 +345,7 @@ export function SuccessCheckmark({
         animate={{ pathLength: 1 }}
         transition={{ duration: 0.4, delay: 0.5, ease: "easeOut" }}
       />
-    </motion.svg>
+    </m.svg>
   );
 }
 
@@ -363,7 +363,7 @@ export function TypingIndicator({
   return (
     <div className={`flex items-center gap-1 px-3 py-2 bg-zinc-800 rounded-full ${className}`}>
       {[0, 1, 2].map((i) => (
-        <motion.div
+        <m.div
           key={i}
           style={{
             width: 6,

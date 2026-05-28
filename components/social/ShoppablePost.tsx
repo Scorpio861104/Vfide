@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ArrowRight, Heart, MessageCircle, Share2, Shield, ShoppingCart, Store, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { type ShoppablePostProps, formatTimeAgo } from './social-commerce-types';
@@ -48,7 +48,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
   const discountPct = hasDiscount ? Math.round((1 - parseFloat(product.price) / parseFloat(product.compareAtPrice!)) * 100) : 0;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-white/3 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden ${className}`}
@@ -150,7 +150,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
           <ShoppingCart size={12} /> Buy now
         </Link>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 

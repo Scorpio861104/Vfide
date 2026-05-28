@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, PanInfo } from 'framer-motion';
+import { m, AnimatePresence, useMotionValue, PanInfo } from 'framer-motion';
 import { 
   Maximize2, 
   Minimize2,
@@ -112,7 +112,7 @@ export function SwipeableRow({
       )}
 
       {/* Main Content */}
-      <motion.div
+      <m.div
         style={{ x }}
         drag="x"
         dragConstraints={{ left: -actionsWidth, right: actionsWidth }}
@@ -129,7 +129,7 @@ export function SwipeableRow({
         className="relative z-10 bg-zinc-900 cursor-grab active:cursor-grabbing"
       >
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -212,7 +212,7 @@ export function PullToRefresh({
   return (
     <div ref={containerRef} className="relative overflow-auto h-full">
       {/* Pull Indicator */}
-      <motion.div
+      <m.div
         className="absolute left-0 right-0 flex items-center justify-center z-10"
         style={{
           top: -60,
@@ -225,7 +225,7 @@ export function PullToRefresh({
       >
         {refreshIndicator || (
           <div className="flex flex-col items-center gap-2">
-            <motion.div
+            <m.div
               animate={{
                 rotate: isRefreshing ? 360 : progress * 180,
               }}
@@ -248,15 +248,15 @@ export function PullToRefresh({
             </span>
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Content */}
-      <motion.div
+      <m.div
         animate={{ y: pullDistance }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
       >
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }
@@ -320,7 +320,7 @@ export function BottomSheet({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -329,7 +329,7 @@ export function BottomSheet({
           />
 
           {/* Sheet */}
-          <motion.div
+          <m.div
             ref={sheetRef}
             initial={{ y: windowHeight }}
             animate={{ y: snapHeights[currentSnap] }}
@@ -363,7 +363,7 @@ export function BottomSheet({
             <div className="overflow-y-auto" style={{ maxHeight: windowHeight * 0.85 }}>
               {children}
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>
@@ -394,7 +394,7 @@ export function ExpandableCard({
   };
 
   return (
-    <motion.div
+    <m.div
       layout
       className="bg-zinc-800/50 border border-zinc-700 rounded-2xl overflow-hidden"
     >
@@ -421,17 +421,17 @@ export function ExpandableCard({
 
       <AnimatePresence>
         {isExpanded && (
-          <motion.div
+          <m.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             className="border-t border-zinc-700"
           >
             <div className="p-4">{expandedContent}</div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -499,7 +499,7 @@ export function ReorderableList({ items, onReorder, renderItem }: ReorderableLis
   return (
     <div className="space-y-2">
       {items.map((item, index) => (
-        <motion.div
+        <m.div
           key={item.id}
           layout
           draggable
@@ -535,7 +535,7 @@ export function ReorderableList({ items, onReorder, renderItem }: ReorderableLis
               <ArrowDown className="w-4 h-4 text-zinc-400" />
             </button>
           </div>
-        </motion.div>
+        </m.div>
       ))}
     </div>
   );
@@ -610,7 +610,7 @@ export function ContextMenu({ trigger, items, onOpenChange }: ContextMenuProps) 
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             ref={menuRef}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -645,7 +645,7 @@ export function ContextMenu({ trigger, items, onOpenChange }: ContextMenuProps) 
                 )}
               </button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

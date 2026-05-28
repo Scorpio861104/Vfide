@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 // Page transition wrapper
@@ -10,7 +10,7 @@ interface PageTransitionProps {
 
 export function PageTransition({ children }: PageTransitionProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -20,7 +20,7 @@ export function PageTransition({ children }: PageTransitionProps) {
       }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -33,7 +33,7 @@ interface StaggerContainerProps {
 
 export function StaggerContainer({ children, className = "", delay = 0 }: StaggerContainerProps) {
   return (
-    <motion.div
+    <m.div
       initial="hidden"
       animate="visible"
       variants={{
@@ -49,7 +49,7 @@ export function StaggerContainer({ children, className = "", delay = 0 }: Stagge
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -61,7 +61,7 @@ interface StaggerItemProps {
 
 export function StaggerItem({ children, className = "" }: StaggerItemProps) {
   return (
-    <motion.div
+    <m.div
       variants={{
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0 }
@@ -70,7 +70,7 @@ export function StaggerItem({ children, className = "" }: StaggerItemProps) {
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -93,7 +93,7 @@ export function PulseDot({ color = "#00F0FF", size = "md" }: PulseDotProps) {
         className={`${sizes[size]} rounded-full`}
         style={{ background: color }}
       />
-      <motion.span
+      <m.span
         className={`absolute inset-0 ${sizes[size]} rounded-full`}
         style={{ background: color }}
         animate={{ 
@@ -126,7 +126,7 @@ export function Shimmer({ className = "h-4 w-24", rounded = "md" }: ShimmerProps
   
   return (
     <div className={`relative overflow-hidden bg-zinc-900 ${roundedClasses[rounded]} ${className}`}>
-      <motion.div
+      <m.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-[#2A2A35] to-transparent"
         animate={{ x: ["-100%", "100%"] }}
         transition={{ 
@@ -149,14 +149,14 @@ export function SuccessCheck({ show, onComplete }: SuccessCheckProps) {
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0, opacity: 0 }}
           onAnimationComplete={onComplete}
           className="w-16 h-16 rounded-full bg-gradient-to-br from-[#22C55E] to-[#16A34A] flex items-center justify-center shadow-lg shadow-emerald-500/30"
         >
-          <motion.svg
+          <m.svg
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
             transition={{ duration: 0.4, delay: 0.2 }}
@@ -168,9 +168,9 @@ export function SuccessCheck({ show, onComplete }: SuccessCheckProps) {
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <motion.path d="M5 13l4 4L19 7" />
-          </motion.svg>
-        </motion.div>
+            <m.path d="M5 13l4 4L19 7" />
+          </m.svg>
+        </m.div>
       )}
     </AnimatePresence>
   );
@@ -215,7 +215,7 @@ export function Confetti({ trigger, colors = ["#00F0FF", "#00FF88", "#FFD700", "
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
       <AnimatePresence>
         {particles.map(particle => (
-          <motion.div
+          <m.div
             key={particle.id}
             initial={{ 
               x: "50vw", 
@@ -286,7 +286,7 @@ interface HoverCardEffectProps {
 
 export function HoverCardEffect({ children, className = "" }: HoverCardEffectProps) {
   return (
-    <motion.div
+    <m.div
       whileHover={{ 
         y: -8,
         transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
@@ -294,7 +294,7 @@ export function HoverCardEffect({ children, className = "" }: HoverCardEffectPro
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -318,7 +318,7 @@ export function Magnetic({ children, className = "", strength = 0.3 }: MagneticP
   const reset = () => setPosition({ x: 0, y: 0 });
   
   return (
-    <motion.div
+    <m.div
       animate={position}
       transition={{ type: "spring", stiffness: 150, damping: 15 }}
       onMouseMove={handleMouse}
@@ -326,7 +326,7 @@ export function Magnetic({ children, className = "", strength = 0.3 }: MagneticP
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -339,7 +339,7 @@ interface GlowHoverProps {
 
 export function GlowHover({ children, color = "#00F0FF", className = "" }: GlowHoverProps) {
   return (
-    <motion.div
+    <m.div
       whileHover={{
         boxShadow: `0 0 40px -10px ${color}`
       }}
@@ -347,6 +347,6 @@ export function GlowHover({ children, color = "#00F0FF", className = "" }: GlowH
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

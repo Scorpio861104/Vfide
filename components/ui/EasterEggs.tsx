@@ -6,7 +6,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
 /**
@@ -141,14 +141,14 @@ export function SecretModeOverlay({
   return (
     <AnimatePresence>
       {isActive && (
-        <motion.div
+        <m.div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-lg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             className="text-center p-8"
             initial={{ scale: 0.5, rotate: -10 }}
             animate={{ scale: 1, rotate: 0 }}
@@ -156,7 +156,7 @@ export function SecretModeOverlay({
             transition={{ type: "spring", damping: 15 }}
           >
             {/* Secret VFIDE logo */}
-            <motion.div
+            <m.div
               className="text-8xl mb-6"
               animate={{
                 rotate: [0, 10, -10, 0],
@@ -168,9 +168,9 @@ export function SecretModeOverlay({
               }}
             >
               🛡️✨
-            </motion.div>
+            </m.div>
             
-            <motion.h1
+            <m.h1
               className="text-4xl font-bold mb-4 bg-gradient-to-r from-[#00FFB2] via-[#00D4FF] to-[#7B61FF] bg-clip-text text-transparent"
               animate={{
                 backgroundPosition: ["0%", "100%", "0%"],
@@ -181,34 +181,34 @@ export function SecretModeOverlay({
               }}
             >
               You found the secret! 🎉
-            </motion.h1>
+            </m.h1>
             
             <p className="text-zinc-400 text-lg mb-6">
               You&apos;re a true VFIDE power user.
             </p>
             
             <div className="flex gap-4 justify-center flex-wrap">
-              <motion.div
+              <m.div
                 className="px-4 py-2 rounded-full bg-gradient-to-r from-[#00FFB2] to-[#00D4FF] text-zinc-950 font-semibold"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 +100 Secret Points 🏆
-              </motion.div>
-              <motion.div
+              </m.div>
+              <m.div
                 className="px-4 py-2 rounded-full bg-gradient-to-r from-[#7B61FF] to-[#7B61FF] text-white font-semibold"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 Easter Egg #1 Found 🥚
-              </motion.div>
+              </m.div>
             </div>
             
             <p className="text-zinc-500 text-sm mt-8">
               Click anywhere to close
             </p>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );
@@ -334,7 +334,7 @@ export function SparkleOnHover({
       
       <AnimatePresence>
         {sparkles.map(sparkle => (
-          <motion.div
+          <m.div
             key={sparkle.id}
             className="absolute pointer-events-none text-lg"
             style={{ left: sparkle.x, top: sparkle.y }}
@@ -344,7 +344,7 @@ export function SparkleOnHover({
             transition={{ duration: 1 }}
           >
             ✨
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
     </div>

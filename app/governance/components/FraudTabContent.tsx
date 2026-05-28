@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Flag, Search, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 
@@ -32,7 +32,7 @@ export default function FraudTabContent() {
         <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
       </div>
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live" style={{ '--badge-color': '#ef4444' } as React.CSSProperties}>
               <span className="badge-live-dot" />Trust & Safety
@@ -45,7 +45,7 @@ export default function FraudTabContent() {
           </h1>
           <p className="text-white/50 text-lg">Community-driven fraud reporting. Non-custodial — escrows delay transfers, never seize them.</p>
           <p className="text-white/30 text-sm mt-1">DAO-arbitrated: 3 complaints trigger review, the DAO decides the outcome, escrows release after 30 days.</p>
-        </motion.div>
+        </m.div>
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
           style={{ background: 'rgba(9,9,11,0.85)' }}>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -58,13 +58,13 @@ export default function FraudTabContent() {
           </div>
         </div>
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'lookup'  && <LookupTab />}
             {activeTab === 'report'  && <ReportTab />}
             {activeTab === 'escrows' && <MyEscrowsTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
     </div>

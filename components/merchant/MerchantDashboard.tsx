@@ -7,7 +7,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { m, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import {
   useIsMerchant,
   useRegisterMerchant,
@@ -35,7 +35,7 @@ function AnimatedCounter({ value, className }: { value: number; className?: stri
     return controls.stop;
   }, [value, count]);
   
-  return <motion.span className={className}>{rounded}</motion.span>;
+  return <m.span className={className}>{rounded}</m.span>;
 }
 
 export function MerchantDashboard() {
@@ -106,19 +106,19 @@ export function MerchantDashboard() {
 
   if (!address) {
     return (
-      <motion.div 
+      <m.div 
         className="bg-gray-900/50 border border-gray-800 rounded-xl p-8 text-center"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
       >
-        <motion.div
+        <m.div
           animate={{ y: [0, -5, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
           <Store className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-        </motion.div>
+        </m.div>
         <p className="text-gray-400">Connect wallet to access merchant dashboard</p>
-      </motion.div>
+      </m.div>
     )
   }
 
@@ -129,52 +129,52 @@ export function MerchantDashboard() {
         {/* Celebration Overlay */}
         <AnimatePresence>
           {showCelebration && (
-            <motion.div
+            <m.div
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <motion.div
+              <m.div
                 className="text-center"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
               >
-                <motion.div
+                <m.div
                   className="text-8xl mb-4"
                   animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.5, repeat: 3 }}
                 >
                   🎉
-                </motion.div>
+                </m.div>
                 <p className="text-3xl font-bold text-white">Welcome, Merchant!</p>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           )}
         </AnimatePresence>
 
         {/* Header */}
-        <motion.div 
+        <m.div 
           className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-2 border-purple-500/30 rounded-xl p-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center gap-4 mb-4">
-            <motion.div 
+            <m.div 
               className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl flex items-center justify-center"
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
               <Store className="w-8 h-8 text-white" />
-            </motion.div>
+            </m.div>
             <div>
               <h2 className="text-3xl font-bold">Become a Merchant</h2>
               <p className="text-gray-400">Accept VFIDE payments with 0% protocol fees</p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Requirements Check */}
-        <motion.div 
+        <m.div 
           className="bg-gray-900/50 border border-gray-700 rounded-xl p-6"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -182,41 +182,41 @@ export function MerchantDashboard() {
         >
           <h3 className="font-bold text-lg mb-4">Requirements</h3>
           <div className="space-y-3">
-            <motion.div 
+            <m.div 
               className={`flex items-center gap-3 ${score >= merchantMinScore ? 'text-green-400' : 'text-red-400'}`}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
               {score >= merchantMinScore ? (
-                <motion.div
+                <m.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500 }}
                 >
                   <CheckCircle2 className="w-5 h-5" />
-                </motion.div>
+                </m.div>
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               )}
               <span>ProofScore ≥ {merchantMinScore.toLocaleString()} (Current: <AnimatedCounter value={score} />)</span>
-            </motion.div>
+            </m.div>
             {!canMerchant && (
-              <motion.div 
+              <m.div 
                 className="bg-orange-900/20 border border-orange-500/30 rounded-lg p-3 text-sm text-orange-400"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
               >
                 Increase your ProofScore by: Receiving endorsements, participating in governance, or becoming a mentor
-              </motion.div>
+              </m.div>
             )}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Registration Form */}
         <AnimatePresence>
           {canMerchant && (
-            <motion.div 
+            <m.div 
               className="bg-gray-900/50 border border-gray-700 rounded-xl p-6"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -225,7 +225,7 @@ export function MerchantDashboard() {
               <h3 className="font-bold text-lg mb-4">Register Your Business</h3>
               
               <div className="space-y-4">
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
@@ -238,9 +238,9 @@ export function MerchantDashboard() {
                    
                     className="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-3 text-white  focus:border-purple-500 focus:outline-none transition-colors"
                   />
-                </motion.div>
+                </m.div>
 
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
@@ -257,9 +257,9 @@ export function MerchantDashboard() {
                       </option>
                     ))}
                   </select>
-                </motion.div>
+                </m.div>
 
-                <motion.button
+                <m.button
                   onClick={() => {
                     registerMerchant(businessName, category)
                     playNotification()
@@ -274,7 +274,7 @@ export function MerchantDashboard() {
                 >
                   {isRegistering ? (
                     <span className="flex items-center justify-center gap-2">
-                      <motion.div
+                      <m.div
                         className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -287,11 +287,11 @@ export function MerchantDashboard() {
                       Register as Merchant
                     </span>
                   )}
-                </motion.button>
+                </m.button>
 
                 <AnimatePresence>
                   {registrationSuccess && (
-                    <motion.div 
+                    <m.div 
                       className="bg-green-900/20 border border-green-500 rounded-lg p-3 text-center text-green-400 text-sm"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -303,11 +303,11 @@ export function MerchantDashboard() {
                       }}
                     >
                       ✅ Registration successful! Refreshing...
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -318,7 +318,7 @@ export function MerchantDashboard() {
             { icon: Zap, color: 'green', title: 'Fast Settlement', desc: 'QR and trusted payments settle instantly. Escrow stays available for buyer protection.' },
             { icon: Shield, color: 'purple', title: 'STABLE-PAY (Optional)', desc: 'Auto-convert to stablecoins via DEX. ~0.3% DEX swap fee + gas apply.' }
           ].map((benefit, index) => (
-            <motion.div 
+            <m.div 
               key={benefit.title}
               className={`bg-${benefit.color}-900/10 border border-${benefit.color}-500/20 rounded-lg p-4`}
               initial={{ opacity: 0, y: 20 }}
@@ -326,15 +326,15 @@ export function MerchantDashboard() {
               transition={{ delay: 0.3 + index * 0.1 }}
               whileHover={{ scale: 1.02, borderColor: `rgba(var(--${benefit.color}-500), 0.5)` }}
             >
-              <motion.div
+              <m.div
                 whileHover={{ rotate: [0, -10, 10, 0] }}
                 transition={{ duration: 0.3 }}
               >
                 <benefit.icon className={`w-8 h-8 text-${benefit.color}-400 mb-2`} />
-              </motion.div>
+              </m.div>
               <div className={`font-bold text-${benefit.color}-400 mb-1`}>{benefit.title}</div>
               <div className="text-xs text-gray-400">{benefit.desc}</div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>
@@ -345,43 +345,43 @@ export function MerchantDashboard() {
   return (
     <div className="space-y-6">
       {/* Status Header */}
-      <motion.div 
+      <m.div 
         className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border-2 border-green-500/30 rounded-xl p-6 relative overflow-hidden"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         {/* Animated background shimmer */}
-        <motion.div
+        <m.div
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
           animate={{ x: ['-100%', '200%'] }}
           transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }}
         />
         <div className="flex items-center justify-between mb-4 relative z-10">
           <div className="flex items-center gap-3">
-            <motion.div 
+            <m.div 
               className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center"
               whileHover={{ scale: 1.1, rotate: 5 }}
             >
               <Store className="w-6 h-6 text-white" />
-            </motion.div>
+            </m.div>
             <div>
               <div className="text-sm text-gray-400">Registered Merchant</div>
               <div className="text-2xl font-bold">{merchantInfo.businessName}</div>
             </div>
           </div>
           {merchantInfo.isSuspended && (
-            <motion.div 
+            <m.div 
               className="bg-red-600 px-4 py-2 rounded-lg font-bold"
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             >
               SUSPENDED
-            </motion.div>
+            </m.div>
           )}
         </div>
 
         <div className="grid grid-cols-3 gap-4 relative z-10">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -390,8 +390,8 @@ export function MerchantDashboard() {
               <AnimatedCounter value={parseFloat(merchantInfo.totalVolume) || 0} />
             </div>
             <div className="text-xs text-gray-400">Total Volume (VFIDE)</div>
-          </motion.div>
-          <motion.div
+          </m.div>
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -400,8 +400,8 @@ export function MerchantDashboard() {
               <AnimatedCounter value={merchantInfo.txCount || 0} />
             </div>
             <div className="text-xs text-gray-400">Transactions</div>
-          </motion.div>
-          <motion.div
+          </m.div>
+          <m.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -410,9 +410,9 @@ export function MerchantDashboard() {
               {merchantInfo.category.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
             </div>
             <div className="text-xs text-gray-400">Category</div>
-          </motion.div>
+          </m.div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Phase 3a Turn 2: registry-side identity + strike counters.
           MerchantStatusCard renders null if not registered, so safe to place
@@ -435,7 +435,7 @@ export function MerchantDashboard() {
 
           <div className="flex items-center justify-between mb-4">
             <span className="text-white">Auto-Convert Enabled</span>
-            <motion.button
+            <m.button
               onClick={() => {
                 setAutoConvert(!autoConvertEnabled)
                 playNotification()
@@ -446,12 +446,12 @@ export function MerchantDashboard() {
               } relative`}
               whileTap={{ scale: 0.95 }}
             >
-              <motion.div
+              <m.div
                 className="w-6 h-6 bg-white rounded-full absolute top-1"
                 animate={{ x: autoConvertEnabled ? 28 : 4 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
-            </motion.button>
+            </m.button>
           </div>
 
           {convertSuccess && (

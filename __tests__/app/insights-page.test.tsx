@@ -45,7 +45,9 @@ jest.mock('framer-motion', () => {
     return React.createElement(tag, { ...sanitized, ref });
   });
   const motion = new Proxy({} as Record<string, unknown>, { get: (t, prop) => { if (typeof prop !== 'string') return undefined; if (!t[prop]) t[prop] = makeMotion(prop); return t[prop]; } });
-  return { motion, AnimatePresence: ({ children }: { children: React.ReactNode }) => children, LazyMotion: ({ children }: { children: React.ReactNode }) => children, domAnimation: {} };
+  return { motion,
+    m: motion,
+    AnimatePresence: ({ children }: { children: React.ReactNode }) => children, LazyMotion: ({ children }: { children: React.ReactNode }) => children, domAnimation: {} };
 });
 
 jest.mock('lucide-react', () => {

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { lazy, Suspense, useState } from 'react';
 import { Footer } from "@/components/layout/Footer";
 import { useAccount } from "wagmi";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Shield, Users, Key, FileText, Clock, Heart } from "lucide-react";
 
 import type { TabType } from './components/types';
@@ -52,7 +52,7 @@ export default function GuardiansPage() {
 
   return (
     <>
-      <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden">
+      <m.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden">
         {/* Ambient background */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           <div className="absolute -top-24 -left-24 w-[500px] h-[500px] rounded-full"
@@ -65,7 +65,7 @@ export default function GuardiansPage() {
         {/* Header */}
         <section className="py-10 relative z-10">
           <div className="container mx-auto px-4">
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
+            <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
               <div className="badge-live mb-3 w-fit"><Shield size={11} /> Security System</div>
               <h1 className="text-4xl font-black text-white tracking-tight mb-2">
                 Guardian Dashboard
@@ -73,7 +73,7 @@ export default function GuardiansPage() {
               <p className="text-zinc-400 max-w-2xl">
                 Manage recoveries only for vaults where the owner explicitly selected you as guardian.
               </p>
-            </motion.div>
+            </m.div>
           </div>
         </section>
 
@@ -106,39 +106,39 @@ export default function GuardiansPage() {
           <Suspense fallback={<TabSkeleton />}>
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && (
-                <motion.div key="overview" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-overview">
+                <m.div key="overview" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-overview">
                   <OverviewTab />
-                </motion.div>
+                </m.div>
               )}
               {activeTab === 'my-guardians' && (
-                <motion.div key="my-guardians" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-my-guardians">
+                <m.div key="my-guardians" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-my-guardians">
                   <MyGuardiansTab isConnected={isConnected} />
-                </motion.div>
+                </m.div>
               )}
               {activeTab === 'recovery' && (
-                <motion.div key="recovery" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-recovery">
+                <m.div key="recovery" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-recovery">
                   <RecoveryTab isConnected={isConnected} />
-                </motion.div>
+                </m.div>
               )}
               {activeTab === 'responsibilities' && (
-                <motion.div key="responsibilities" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-responsibilities">
+                <m.div key="responsibilities" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-responsibilities">
                   <ResponsibilitiesTab isConnected={isConnected} />
-                </motion.div>
+                </m.div>
               )}
               {activeTab === 'pending' && (
-                <motion.div key="pending" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-pending">
+                <m.div key="pending" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-pending">
                   <PendingActionsTab isConnected={isConnected} />
-                </motion.div>
+                </m.div>
               )}
               {activeTab === 'inheritance' && (
-                <motion.div key="inheritance" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-inheritance">
+                <m.div key="inheritance" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} role="tabpanel" id="tabpanel-inheritance">
                   <InheritanceActionsTab isConnected={isConnected} />
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
           </Suspense>
         </div>
-      </motion.main>
+      </m.main>
 
       <Footer />
     </>

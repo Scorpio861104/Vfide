@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Star, MapPin, ShoppingBag, Package, Briefcase, Download } from 'lucide-react';
@@ -140,79 +140,79 @@ export default function MerchantDirectoryPage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {merchants.map((m) => (
-            <Link key={m.merchant_address} href={`/store/${m.slug}`}>
-              <motion.div
+          {merchants.map((merchant) => (
+            <Link key={merchant.merchant_address} href={`/store/${merchant.slug}`}>
+              <m.div
                 className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
                 whileHover={{ y: -2 }}
               >
                 {/* Color bar */}
-                <div className="h-2" style={{ backgroundColor: m.theme_color || '#3B82F6' }} />
+                <div className="h-2" style={{ backgroundColor: merchant.theme_color || '#3B82F6' }} />
 
                 <div className="p-5">
                   <div className="flex items-start gap-3">
-                    {m.logo_url ? (
-                      <Image src={m.logo_url} alt={`${m.display_name} logo`} width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
+                    {merchant.logo_url ? (
+                      <Image src={merchant.logo_url} alt={`${merchant.display_name} logo`} width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
                     ) : (
                       <div
                         className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-                        style={{ backgroundColor: m.theme_color || '#3B82F6' }}
+                        style={{ backgroundColor: merchant.theme_color || '#3B82F6' }}
                       >
-                        {m.display_name[0]?.toUpperCase()}
+                        {merchant.display_name[0]?.toUpperCase()}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-gray-900 dark:text-white truncate">{m.display_name}</h3>
-                        {m.featured && (
+                        <h3 className="font-bold text-gray-900 dark:text-white truncate">{merchant.display_name}</h3>
+                        {merchant.featured && (
                           <span className="px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs rounded font-medium">
                             Featured
                           </span>
                         )}
                       </div>
-                      {m.tagline && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">{m.tagline}</p>
+                      {merchant.tagline && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">{merchant.tagline}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 mt-4 text-sm text-gray-500 dark:text-gray-400">
-                    {m.avg_rating !== null && (
+                    {merchant.avg_rating !== null && (
                       <span className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        {m.avg_rating} ({m.review_count})
+                        {merchant.avg_rating} ({merchant.review_count})
                       </span>
                     )}
-                    {(m.city || m.country) && (
+                    {(merchant.city || merchant.country) && (
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3.5 h-3.5" />
-                        {[m.city, m.country].filter(Boolean).join(', ')}
+                        {[merchant.city, merchant.country].filter(Boolean).join(', ')}
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 mt-3 flex-wrap">
                     <span className="flex items-center gap-1 text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                      <Package className="w-3 h-3" /> {m.product_count} products
+                      <Package className="w-3 h-3" /> {merchant.product_count} products
                     </span>
-                    {m.shipping_enabled && (
+                    {merchant.shipping_enabled && (
                       <span className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded">
                         Ships
                       </span>
                     )}
-                    {m.services_enabled && (
+                    {merchant.services_enabled && (
                       <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded flex items-center gap-1">
                         <Briefcase className="w-3 h-3" /> Services
                       </span>
                     )}
-                    {m.digital_goods_enabled && (
+                    {merchant.digital_goods_enabled && (
                       <span className="text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-1 rounded flex items-center gap-1">
                         <Download className="w-3 h-3" /> Digital
                       </span>
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             </Link>
           ))}
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { forwardRef, useRef, useState, useCallback, useEffect, useId } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   Check, 
   AlertCircle, 
@@ -170,23 +170,23 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
           )}
 
           {!isValidating && showSuccessIndicator && isSuccess && !hasError && (
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className="text-green-400"
             >
               <Check className="w-4 h-4" />
-            </motion.div>
+            </m.div>
           )}
 
           {hasError && (
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className="text-red-400"
             >
               <AlertCircle className="w-4 h-4" />
-            </motion.div>
+            </m.div>
           )}
 
           {isPassword && (
@@ -209,7 +209,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
       <div className="flex items-center justify-between">
         <AnimatePresence mode="wait">
           {hasError ? (
-            <motion.p
+            <m.p
               key="error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -220,9 +220,9 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
             >
               <AlertCircle className="w-3 h-3" />
               {errorMessage}
-            </motion.p>
+            </m.p>
           ) : helperText ? (
-            <motion.p
+            <m.p
               key="helper"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -230,7 +230,7 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
               className="text-xs text-zinc-500"
             >
               {helperText}
-            </motion.p>
+            </m.p>
           ) : (
             <span />
           )}
@@ -368,7 +368,7 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
       <div className="flex items-center justify-between">
         <AnimatePresence mode="wait">
           {hasError ? (
-            <motion.p
+            <m.p
               key="error"
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -379,15 +379,15 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
             >
               <AlertCircle className="w-3 h-3" />
               {errorMessage}
-            </motion.p>
+            </m.p>
           ) : helperText ? (
-            <motion.p
+            <m.p
               key="helper"
               id={`${id}-helper`}
               className="text-xs text-zinc-500"
             >
               {helperText}
-            </motion.p>
+            </m.p>
           ) : (
             <span />
           )}
@@ -504,7 +504,7 @@ export function MultiStepForm({
       {showProgressBar && (
         <div className="relative">
           <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-            <motion.div
+            <m.div
               className="h-full bg-gradient-to-r from-accent to-purple-500"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -552,7 +552,7 @@ export function MultiStepForm({
 
       {/* Step Content */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={currentStepData?.id}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -564,7 +564,7 @@ export function MultiStepForm({
             <p className="text-zinc-400 mb-4">{currentStepData.description}</p>
           )}
           {currentStepData?.content}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* Navigation Buttons */}
@@ -685,7 +685,7 @@ export function TagInput({
         onClick={() => inputRef.current?.focus()}
       >
         {value.map((tag, index) => (
-          <motion.span
+          <m.span
             key={`${tag}-${index}`}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -703,7 +703,7 @@ export function TagInput({
             >
               <X className="w-3 h-3" />
             </button>
-          </motion.span>
+          </m.span>
         ))}
 
         <input
@@ -724,7 +724,7 @@ export function TagInput({
       {/* Suggestions */}
       <AnimatePresence>
         {showSuggestions && filteredSuggestions.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -740,7 +740,7 @@ export function TagInput({
                 {suggestion}
               </button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

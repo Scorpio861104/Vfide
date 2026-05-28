@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { m, AnimatePresence, PanInfo } from 'framer-motion';
 import { 
   Bell, 
   BellOff,
@@ -197,7 +197,7 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
   }, [onArchive, onRead]);
 
   return (
-    <motion.div
+    <m.div
       className="relative overflow-hidden group"
       drag="x"
       dragConstraints={{ left: -100, right: 100 }}
@@ -216,7 +216,7 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
       </div>
 
       {/* Content */}
-      <motion.div style={{ x: swipeX }}>
+      <m.div style={{ x: swipeX }}>
         <div
           className={`relative p-4 border-b border-zinc-700 hover:bg-zinc-700/50 transition-colors ${
             !notification.read ? 'bg-accent/5' : ''
@@ -297,8 +297,8 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
             </button>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 
@@ -516,13 +516,13 @@ export function NotificationCenter() {
         <Bell size={20} />
         {unreadCount > 0 && (
           <>
-            <motion.span
+            <m.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-accent to-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
-            </motion.span>
+            </m.span>
             {/* Pulse animation */}
             <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-accent rounded-full animate-ping opacity-30" />
           </>
@@ -534,7 +534,7 @@ export function NotificationCenter() {
         {isOpen && (
           <>
             {/* Backdrop */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -543,7 +543,7 @@ export function NotificationCenter() {
             />
             
             {/* Panel */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -689,7 +689,7 @@ export function NotificationCenter() {
                   Clear archived
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

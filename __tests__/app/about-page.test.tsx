@@ -36,7 +36,7 @@ jest.mock('framer-motion', () => {
       return t[p];
     },
   });
-  return { motion, AnimatePresence: ({ children }: { children: unknown }) => children };
+  return { motion, m: motion, AnimatePresence: ({ children }: { children: unknown }) => children, LazyMotion: ({ children }: any) => children, domAnimation: {} };
 });
 
 jest.mock('wagmi', () => ({

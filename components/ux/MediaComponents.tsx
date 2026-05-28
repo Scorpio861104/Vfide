@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ImageOff, Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 import { usePrefersReducedMotion, useInView } from '@/lib/ux/uxUtils';
 
@@ -151,7 +151,7 @@ export function OptimizedImage({
 
       {/* Main image */}
       {isInView && !hasError && (
-        <motion.img
+        <m.img
           src={optimizedSrc}
           alt={alt}
           width={width}
@@ -422,7 +422,7 @@ export function VideoPlayer({
       {/* Loading state */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-          <motion.div
+          <m.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full"
@@ -451,7 +451,7 @@ export function VideoPlayer({
       {/* Custom controls */}
       {controls && (
         <AnimatePresence>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -512,7 +512,7 @@ export function VideoPlayer({
               }}
               className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
             >
-              <motion.div
+              <m.div
                 className="h-full bg-accent rounded-full"
                 style={{ width: `${progress}%` }}
               />
@@ -554,7 +554,7 @@ export function VideoPlayer({
                 <Maximize className="w-5 h-5" />
               </button>
             </div>
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       )}
 
@@ -568,13 +568,13 @@ export function VideoPlayer({
           "
           aria-label="Play video"
         >
-          <motion.div
+          <m.div
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
           >
             <Play className="w-8 h-8 text-white ml-1" fill="white" />
-          </motion.div>
+          </m.div>
         </button>
       )}
     </div>
@@ -662,7 +662,7 @@ export function ImageGallery({
         style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
       >
         {images.map((image, index) => (
-          <motion.button
+          <m.button
             key={index}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -675,21 +675,21 @@ export function ImageGallery({
               className="w-full h-full"
               objectFit="cover"
             />
-          </motion.button>
+          </m.button>
         ))}
       </div>
 
       {/* Lightbox */}
       <AnimatePresence>
         {selectedIndex !== null && images[selectedIndex] && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedIndex(null)}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
           >
-            <motion.img
+            <m.img
               key={selectedIndex}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -699,7 +699,7 @@ export function ImageGallery({
               className="max-w-full max-h-full object-contain"
               onClick={(e) => e.stopPropagation()}
             />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

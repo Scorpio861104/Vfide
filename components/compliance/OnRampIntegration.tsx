@@ -17,7 +17,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { CreditCard, ExternalLink, X } from 'lucide-react';
 import { OnRampDisclaimer } from './ProtocolDisclaimers';
 
@@ -154,14 +154,14 @@ function OnRampModal({
   onClose: () => void;
 }) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
-      <motion.div
+      <m.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
@@ -207,7 +207,7 @@ function OnRampModal({
         <div className="px-5 pb-5">
           <OnRampDisclaimer providerName="the selected provider" />
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

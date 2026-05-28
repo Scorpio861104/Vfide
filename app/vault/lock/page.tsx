@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import { LockVaultPanel } from '@/components/vault/LockVaultPanel';
 import { Footer } from '@/components/layout/Footer';
@@ -13,7 +13,7 @@ export default function LockVaultPage() {
     <>
       <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black text-white md:pt-[3.5rem]">
         <div className="container mx-auto px-4 py-12 max-w-3xl">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-10"
@@ -27,7 +27,7 @@ export default function LockVaultPage() {
             <p className="text-lg text-gray-400 max-w-xl mx-auto">
               Emergency dashboard for when your wallet may be compromised or your device is lost.
             </p>
-          </motion.div>
+          </m.div>
 
           <ErrorBoundary>
             <LockVaultPanel />

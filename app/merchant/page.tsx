@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import {
   Store, ArrowRight, FileText, Package, CalendarDays, Repeat,
@@ -99,7 +99,7 @@ function MerchantHubInner() {
             <div className="mesh-orb-cyan" style={{ width: '50%', height: '50%', top: '-10%', right: '-5%' }} />
           </div>
           <div className="container mx-auto max-w-6xl px-4">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
               <div className="badge-live mb-5 mx-auto w-fit">
                 <Store size={12} className="mr-1" /> Merchant Portal
               </div>
@@ -116,7 +116,7 @@ function MerchantHubInner() {
                   <Store size={16} /> {copy.getStarted} <ArrowRight size={15} />
                 </Link>
               )}
-            </motion.div>
+            </m.div>
 
             {/* ─── Tab bar ─────────────────────────────────────────────────── */}
             <div
@@ -142,7 +142,7 @@ function MerchantHubInner() {
 
             {/* ─── Tab panels ──────────────────────────────────────────────── */}
             <AnimatePresence mode="wait">
-              <motion.div
+              <m.div
                 key={activeTab}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -238,7 +238,7 @@ function MerchantHubInner() {
                 {activeTab === 'escrow'     && <EscrowTab />}
                 {activeTab === 'flashloans' && <FlashloansTab />}
                 {activeTab === 'payroll'    && <PayrollTab />}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           </div>
         </section>

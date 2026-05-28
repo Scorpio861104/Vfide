@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 // ==================== RESPONSIVE CONTEXT ====================
 
@@ -247,7 +247,7 @@ export function TouchButton({
   };
 
   return (
-    <motion.button
+    <m.button
       onClick={onClick}
       disabled={disabled}
       whileTap={{ scale: isTouch ? 0.95 : 0.98 }}
@@ -259,7 +259,7 @@ export function TouchButton({
       `}
     >
       {children}
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -314,14 +314,14 @@ export function BottomSheet({ isOpen, onClose, children, title, className = '' }
     return (
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
             onClick={onClose}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -334,8 +334,8 @@ export function BottomSheet({ isOpen, onClose, children, title, className = '' }
                 </div>
               )}
               <div className="p-6">{children}</div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     );
@@ -347,7 +347,7 @@ export function BottomSheet({ isOpen, onClose, children, title, className = '' }
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -355,7 +355,7 @@ export function BottomSheet({ isOpen, onClose, children, title, className = '' }
             onClick={onClose}
           />
           {/* Sheet */}
-          <motion.div
+          <m.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -379,7 +379,7 @@ export function BottomSheet({ isOpen, onClose, children, title, className = '' }
               </div>
             )}
             <div className="p-6">{children}</div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>
@@ -419,7 +419,7 @@ export function ResponsiveImage({
       {!loaded && (
         <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse" />
       )}
-      <motion.img
+      <m.img
         src={imageSrc}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}

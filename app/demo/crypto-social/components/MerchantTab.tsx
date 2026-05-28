@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Store,
   ShoppingBag,
@@ -144,7 +144,7 @@ export function MerchantTab() {
 
       {/* Step panels */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={activeStep}
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -318,13 +318,13 @@ export function MerchantTab() {
                   </button>
 
                   {paid && (
-                    <motion.p
+                    <m.p
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-center text-xs text-zinc-500"
                     >
                       Transaction confirmed · Redirecting to receipt…
-                    </motion.p>
+                    </m.p>
                   )}
                 </div>
               </div>
@@ -424,7 +424,7 @@ export function MerchantTab() {
               </div>
             </div>
           )}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   );

@@ -12,7 +12,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Video, Shield, Heart, Send, X, Package, Sparkles } from 'lucide-react';
 
 interface LiveProduct {
@@ -31,7 +31,7 @@ interface LivePurchase {
 
 function PurchaseToast({ purchase }: { purchase: LivePurchase }) {
   return (
-    <motion.div
+    <m.div
       initial={{ x: -200, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: 300, opacity: 0 }}
@@ -41,7 +41,7 @@ function PurchaseToast({ purchase }: { purchase: LivePurchase }) {
       <Sparkles size={12} className="text-emerald-400" />
       <span className="text-emerald-400 text-xs font-bold">{purchase.buyer} bought {purchase.productName}!</span>
       <span className="text-white text-xs font-mono">{purchase.amount}</span>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -122,7 +122,7 @@ export function LiveViewer({
         <div className="absolute right-6 bottom-40 pointer-events-none">
           <AnimatePresence>
             {floatingHearts.map(id => (
-              <motion.div
+              <m.div
                 key={id}
                 initial={{ opacity: 1, y: 0, scale: 1, x: 0 }}
                 animate={{ opacity: 0, y: -150, scale: 0.5, x: Math.random() * 40 - 20 }}
@@ -131,7 +131,7 @@ export function LiveViewer({
                 className="absolute bottom-0"
               >
                 <Heart size={24} fill="#EC4899" stroke="#EC4899" />
-              </motion.div>
+              </m.div>
             ))}
           </AnimatePresence>
         </div>
@@ -145,21 +145,21 @@ export function LiveViewer({
 
         {/* Product showcase button */}
         {products.length > 0 && (
-          <motion.button
+          <m.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowProducts(!showProducts)}
             className="absolute bottom-4 left-3 flex items-center gap-2 px-3 py-2 bg-accent/80 backdrop-blur rounded-xl"
           >
             <Package size={16} className="text-white" />
             <span className="text-white text-xs font-bold">{products.length} Products</span>
-          </motion.button>
+          </m.button>
         )}
       </div>
 
       {/* Product shelf (slides up) */}
       <AnimatePresence>
         {showProducts && (
-          <motion.div
+          <m.div
             initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }}
             className="bg-zinc-900 border-t border-white/10 overflow-hidden"
           >
@@ -176,7 +176,7 @@ export function LiveViewer({
                 </div>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -218,7 +218,7 @@ interface GoLiveButtonProps {
 
 export function GoLiveButton({ onGoLive, isLive }: GoLiveButtonProps) {
   return (
-    <motion.button
+    <m.button
       whileTap={{ scale: 0.95 }}
       onClick={onGoLive}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm ${
@@ -232,6 +232,6 @@ export function GoLiveButton({ onGoLive, isLive }: GoLiveButtonProps) {
       ) : (
         <><Video size={16} />Go Live</>
       )}
-    </motion.button>
+    </m.button>
   );
 }

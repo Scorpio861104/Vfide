@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, useSpring, useTransform } from "framer-motion";
+import { m, useSpring, useTransform } from "framer-motion";
 import { useEffect, useState } from "react";
 import { xpLevelToProofScoreBonus } from "@/lib/gamification";
 
@@ -99,7 +99,7 @@ export function ProofScoreRing({ score, isLoading: _isLoading = false, size = "m
         </defs>
         
         {/* Progress arc */}
-        <motion.circle
+        <m.circle
           cx={config.outer / 2}
           cy={config.outer / 2}
           r={radius}
@@ -114,12 +114,12 @@ export function ProofScoreRing({ score, isLoading: _isLoading = false, size = "m
       
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <motion.div 
+        <m.div 
           className={`font-bold ${config.textSize}`}
           style={{ color: tierInfo.color }}
         >
           {displayScore.toLocaleString()}
-        </motion.div>
+        </m.div>
         
         {showLabel && (
           <div 
@@ -178,7 +178,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
         
         <div className="flex-1 space-y-3">
           {breakdown.map((item, idx) => (
-            <motion.div
+            <m.div
               key={idx}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -192,7 +192,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
               <span className="font-medium text-zinc-50">
                 +{Math.round(Math.max(0, item.value)).toLocaleString()}
               </span>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>
@@ -208,7 +208,7 @@ export function ProofScoreCard({ score, feeRate, xpLevel, className = "" }: Proo
             className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#EF4444] via-[#FFD700] to-[#22C55E] rounded-full"
             style={{ width: `${(score / 10000) * 100}%` }}
           />
-          <motion.div
+          <m.div
             className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg"
             style={{ left: `calc(${(score / 10000) * 100}% - 6px)` }}
             animate={{ scale: [1, 1.2, 1] }}

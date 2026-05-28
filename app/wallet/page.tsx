@@ -17,7 +17,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
+import { m, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import {
   Wallet, HardDrive, FileText, Shield, Users, ArrowRight, CheckCircle2,
   Lock, Activity, EyeOff, ArrowLeftRight, Coins, Globe,
@@ -220,7 +220,7 @@ function OverviewTab() {
         {WALLET_OPTIONS.filter(o => o.enabled).map((option, i) => {
           const Icon = option.icon;
           return (
-            <motion.a
+            <m.a
               key={option.id}
               href={option.href}
               initial={{ opacity: 0, y: 20 }}
@@ -251,7 +251,7 @@ function OverviewTab() {
               <div className="flex items-center gap-1 text-accent text-sm font-semibold group-hover:gap-2 transition-all">
                 Get started <ArrowRight size={14} />
               </div>
-            </motion.a>
+            </m.a>
           );
         })}
       </div>
@@ -328,7 +328,7 @@ function WalletHubInner() {
 
           {/* Tab content */}
           <AnimatePresence mode="wait">
-            <motion.div key={activeTab}
+            <m.div key={activeTab}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -339,7 +339,7 @@ function WalletHubInner() {
               {activeTab === 'cross-chain'&& <CrossChainTab />}
               {activeTab === 'staking'     && <StakingTab />}
               {activeTab === 'remittance'  && <RemittanceTab />}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
       </div>

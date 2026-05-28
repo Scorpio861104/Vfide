@@ -22,7 +22,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { TrendingDown, Shield } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 
@@ -77,7 +77,7 @@ export function FeeSavingsCard({ totalVolume, transactionCount, buyerFeeBps, cla
   const avgSaved = savings.reduce((s, c) => s + c.saved, 0) / savings.length;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`bg-gradient-to-br from-emerald-500/10 to-accent/10 border border-emerald-500/20 rounded-2xl p-6 ${className}`}
@@ -113,7 +113,7 @@ export function FeeSavingsCard({ totalVolume, transactionCount, buyerFeeBps, cla
                 <span className="text-emerald-400 font-bold font-mono">{formatCurrency(competitor.saved)}</span>
               </div>
               <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   initial={{ width: 0 }}
                   animate={{ width: `${barWidth}%` }}
                   transition={{ duration: 0.8, delay: 0.2 }}
@@ -129,7 +129,7 @@ export function FeeSavingsCard({ totalVolume, transactionCount, buyerFeeBps, cla
       <div className="mt-4 text-xs text-gray-500 text-center">
         Your VFIDE fee: {(buyerFeeBps / 100).toFixed(2)}% • Merchant fee: 0%
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -221,7 +221,7 @@ export function FeeSavingsCalculator() {
 
       {/* Results */}
       {volume > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
           {/* VFIDE row */}
           <div className="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -264,7 +264,7 @@ export function FeeSavingsCalculator() {
             </div>
             <div className="text-gray-500 text-xs mt-2">That&apos;s money back in your pocket, not theirs.</div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </div>
   );

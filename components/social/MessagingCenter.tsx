@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Send,
   Lock,
@@ -480,7 +480,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
               // Don't render deleted messages from UI (still in data for audit)
               if (message.deletedAt) {
                 return (
-                  <motion.div
+                  <m.div
                     key={message.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -489,12 +489,12 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                     <div className="px-4 py-2 text-sm text-gray-500 italic">
                       Message deleted
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               }
               
               return (
-                <motion.div
+                <m.div
                   key={message.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -567,7 +567,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                       onReport={handleReportMessage}
                     />
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
             <div ref={messagesEndRef} />

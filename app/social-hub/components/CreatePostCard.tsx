@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { ImageIcon, MapPin, Send, Smile, Video } from 'lucide-react';
 
 export function CreatePostCard({ onPost }: { onPost: (content: string) => void }) {
@@ -17,7 +17,7 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
   };
 
   return (
-    <motion.div
+    <m.div
       layout
       className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700 rounded-2xl p-4 ring-effect"
     >
@@ -37,7 +37,7 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
           
           <AnimatePresence>
             {isFocused && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -86,11 +86,11 @@ export function CreatePostCard({ onPost }: { onPost: (content: string) => void }
                     Post
                   </button>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
-import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
+import { m, AnimatePresence, MotionConfig } from 'framer-motion';
 import { usePrefersReducedMotion } from '@/lib/ux/uxUtils';
 import { safeLocalStorage } from '@/lib/utils';
 
@@ -437,7 +437,7 @@ export function AccessibleModal({
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
         >
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -447,7 +447,7 @@ export function AccessibleModal({
 
           {/* Modal */}
           <FocusTrap active={isOpen}>
-            <motion.div
+            <m.div
               initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
               animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1 }}
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
@@ -468,7 +468,7 @@ export function AccessibleModal({
               <div className="mt-4">
                 {children}
               </div>
-            </motion.div>
+            </m.div>
           </FocusTrap>
         </div>
       )}
@@ -559,7 +559,7 @@ export function AccessibleTabs({
           >
             {tab.label}
             {activeTab === tab.id && (
-              <motion.div
+              <m.div
                 layoutId="tab-indicator"
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
               />
@@ -635,7 +635,7 @@ export function AccessibleTooltip({
 
       <AnimatePresence>
         {isVisible && (
-          <motion.div
+          <m.div
             id={id}
             role="tooltip"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -648,7 +648,7 @@ export function AccessibleTooltip({
             `}
           >
             {content}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

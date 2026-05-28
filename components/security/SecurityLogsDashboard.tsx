@@ -3,7 +3,7 @@
 import { formatSecurityEventType } from '@/config/security-advanced';
 import { useSecurityLogs } from '@/hooks/useSecurityLogs';
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { FileText, Download, Trash2, Search, Filter, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 
@@ -31,7 +31,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header & Filters */}
-      <motion.div 
+      <m.div 
         className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -47,15 +47,15 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
             </p>
           </div>
           <div className="flex gap-2">
-            <motion.button
+            <m.button
               onClick={handleExport}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Download className="w-4 h-4" /> Export
-            </motion.button>
-            <motion.button
+            </m.button>
+            <m.button
               onClick={() => {
                 logs.clearLogs();
                 playError();
@@ -65,7 +65,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
               whileTap={{ scale: 0.95 }}
             >
               <Trash2 className="w-4 h-4" /> Clear All
-            </motion.button>
+            </m.button>
           </div>
         </div>
 
@@ -95,7 +95,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
             <option value="warning">Warning</option>
             <option value="critical">Critical</option>
           </select>
-          <motion.button
+          <m.button
             onClick={() => {
               logs.clearFilters();
               setSearchQuery('');
@@ -106,7 +106,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
             whileTap={{ scale: 0.98 }}
           >
             <Filter className="w-4 h-4" /> Clear Filters
-          </motion.button>
+          </m.button>
         </div>
 
         {/* Stats */}
@@ -116,7 +116,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
             { label: 'Warnings', count: logs.getLogCount('warning'), color: 'yellow', icon: AlertTriangle },
             { label: 'Critical', count: logs.getLogCount('critical'), color: 'red', icon: AlertCircle }
           ].map((stat, index) => (
-            <motion.div 
+            <m.div 
               key={stat.label}
               className={`p-4 bg-${stat.color}-50 dark:bg-${stat.color}-900/20 rounded-lg`}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -129,13 +129,13 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
                 {stat.count}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Logs List */}
-      <motion.div 
+      <m.div 
         className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -143,19 +143,19 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
       >
         <div className="max-h-150 overflow-y-auto">
           {logs.filteredLogs.length === 0 ? (
-            <motion.div 
+            <m.div 
               className="p-12 text-center text-gray-500 dark:text-gray-400"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
             >
               <div className="text-4xl mb-3">📝</div>
               <p>No security logs found</p>
-            </motion.div>
+            </m.div>
           ) : (
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               <AnimatePresence>
               {logs.filteredLogs.map((log, index) => (
-                <motion.div 
+                <m.div 
                   key={log.id} 
                   className="p-4 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
                   initial={{ opacity: 0, x: -20 }}
@@ -164,7 +164,7 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
                   transition={{ delay: index * 0.02 }}
                 >
                   <div className="flex items-start gap-3">
-                    <motion.div 
+                    <m.div 
                       className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
                         log.severity === 'critical' ? 'bg-red-500' :
                         log.severity === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
@@ -204,13 +204,13 @@ export function SecurityLogsDashboard({ className = '' }: SecurityLogsDashboardP
                       )}
                     </div>
                   </div>
-                </motion.div>
+                </m.div>
               ))}
               </AnimatePresence>
             </div>
           )}
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };

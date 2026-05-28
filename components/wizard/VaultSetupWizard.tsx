@@ -23,7 +23,7 @@
  *     user explicitly asks to relaunch the wizard.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { ChevronRight, X, Pause, Play, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
@@ -163,7 +163,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         key="wizard-backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -173,7 +173,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
         aria-modal="true"
         aria-labelledby="vfide-wizard-title"
       >
-        <motion.div
+        <m.div
           key="wizard-panel"
           initial={{ opacity: 0, y: 24, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -218,7 +218,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
 
           {/* Progress bar */}
           <div className="h-1 w-full bg-white/5">
-            <motion.div
+            <m.div
               className="h-full bg-gradient-to-r from-accent to-blue-500"
               animate={{
                 width: `${Math.min(100, ((currentIndex + (showContinuePrompt ? 1 : 0)) / (CHAPTER_ORDER.length - 1)) * 100)}%`,
@@ -243,8 +243,8 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }
@@ -264,7 +264,7 @@ function ContinuePrompt({
   const nextMeta = CHAPTERS.find((c) => c.id === nextChapter);
 
   return (
-    <motion.div
+    <m.div
       key="continue-prompt-body"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
@@ -307,6 +307,6 @@ function ContinuePrompt({
       <p className="text-center text-xs text-white/40">
         You can re-open the wizard any time from Settings.
       </p>
-    </motion.div>
+    </m.div>
   );
 }

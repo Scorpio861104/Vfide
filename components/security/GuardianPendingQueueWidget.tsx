@@ -7,7 +7,7 @@ import {
   useWatchContractEvent,
   useWriteContract,
 } from 'wagmi';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { formatUnits } from 'viem';
 import { X, Loader2, Inbox, Shield } from 'lucide-react';
 import CardBoundVaultABI from '@/lib/abis/CardBoundVault.json';
@@ -46,19 +46,19 @@ export function GuardianPendingQueueWidget() {
 
   if (!isConnected) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="rounded-xl border border-gray-700 bg-gray-900/40 p-6 text-center text-gray-400 text-sm"
       >
         Connect a wallet to see queued items on vaults you guard.
-      </motion.div>
+      </m.div>
     );
   }
 
   if (!entries.length) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="rounded-xl border border-gray-700 bg-gray-900/40 p-6 text-center"
@@ -68,7 +68,7 @@ export function GuardianPendingQueueWidget() {
           You don&apos;t have any vaults in your Guardian Watchlist yet. Add a vault
           address above to see its pending queue here.
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
@@ -287,7 +287,7 @@ function PendingQueueRow({ vault, label, connectedAddress: _connectedAddress }: 
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="rounded-xl border border-gray-700 bg-gray-900/50 p-4"
@@ -374,6 +374,6 @@ function PendingQueueRow({ vault, label, connectedAddress: _connectedAddress }: 
           })}
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

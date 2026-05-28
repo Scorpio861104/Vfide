@@ -9,7 +9,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Save, User, Mail, MapPin, Link as LinkIcon, Calendar, Shield, Wallet } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { AvatarUpload } from './AvatarUpload';
@@ -252,22 +252,22 @@ export function ProfileSettings() {
           <div className="flex items-center justify-between">
             <div>
               {saveSuccess && (
-                <motion.p
+                <m.p
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="text-sm text-green-400"
                 >
                   ✓ Profile saved successfully
-                </motion.p>
+                </m.p>
               )}
               {saveError && (
-                <motion.p
+                <m.p
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   className="text-sm text-red-400"
                 >
                   {saveError}
-                </motion.p>
+                </m.p>
               )}
               {error && (
                 <p className="text-sm text-red-400">

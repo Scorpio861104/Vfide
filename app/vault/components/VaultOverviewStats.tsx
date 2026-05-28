@@ -23,7 +23,7 @@
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { containerVariants, itemVariants } from '@/lib/motion-presets';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { DollarSign, Users } from 'lucide-react';
 import { safeParseFloat } from '@/lib/validation';
 
@@ -37,9 +37,9 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
   return (
     <section className="py-8 relative z-10">
       <div className="container mx-auto px-4 max-w-6xl">
-        <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <m.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Balance */}
-          <motion.div variants={itemVariants}>
+          <m.div variants={itemVariants}>
             <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-white/60 text-sm">Total Balance</span>
@@ -61,10 +61,10 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
                 </>
               )}
             </GlassCard>
-          </motion.div>
+          </m.div>
 
           {/* Guardians */}
-          <motion.div variants={itemVariants}>
+          <m.div variants={itemVariants}>
             <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-white/60 text-sm">Guardians</span>
@@ -84,8 +84,8 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
                 CardBound wallet rotation needs at least 2 guardians
               </div>
             </GlassCard>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -239,7 +239,7 @@ const WarningCard: React.FC<WarningCardProps> = ({ warning }) => {
                warning.level === 'medium' ? AlertCircle : Info;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`border rounded-lg p-3 ${getRiskLevelBg(warning.level)}`}
@@ -255,7 +255,7 @@ const WarningCard: React.FC<WarningCardProps> = ({ warning }) => {
               {warning.title}
             </p>
             {expanded && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -266,7 +266,7 @@ const WarningCard: React.FC<WarningCardProps> = ({ warning }) => {
                     💡 {warning.recommendation}
                   </p>
                 )}
-              </motion.div>
+              </m.div>
             )}
           </div>
         </div>
@@ -276,7 +276,7 @@ const WarningCard: React.FC<WarningCardProps> = ({ warning }) => {
           <ChevronDown className="w-4 h-4 text-gray-500 mt-1" />
         )}
       </button>
-    </motion.div>
+    </m.div>
   );
 };
 
@@ -383,7 +383,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
 
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -539,7 +539,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
           
           <AnimatePresence>
             {isAdvancedOpen && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -565,7 +565,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
                   <span className="text-gray-500">Chain ID</span>
                   <span className="text-gray-300 font-mono">{chainId}</span>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -628,7 +628,7 @@ export const TransactionPreview: React.FC<TransactionPreviewProps> = ({
           </label>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

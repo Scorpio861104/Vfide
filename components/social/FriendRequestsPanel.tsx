@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   UserPlus,
   Check,
@@ -134,7 +134,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
               const isPending = request.status === 'pending';
 
               return (
-                <motion.div
+                <m.div
                   key={request.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -216,7 +216,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                       </div>
                     )}
                   </div>
-                </motion.div>
+                </m.div>
               );
             })
           )}

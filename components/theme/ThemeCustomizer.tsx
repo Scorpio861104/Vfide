@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useThemeManager } from '@/hooks/useThemeManager';
 import {
   ThemeMode,
@@ -62,7 +62,7 @@ export function ThemeCustomizer() {
             </label>
             <div className="grid grid-cols-3 gap-2">
               {themeModes.map((mode) => (
-                <motion.button
+                <m.button
                   key={mode.value}
                   onClick={() => setMode(mode.value as ThemeMode)}
                   whileHover={{ scale: 1.02 }}
@@ -75,7 +75,7 @@ export function ThemeCustomizer() {
                   title={mode.hint}
                 >
                   <div className="text-sm font-medium text-white">{mode.label}</div>
-                </motion.button>
+                </m.button>
               ))}
             </div>
           </div>
@@ -87,7 +87,7 @@ export function ThemeCustomizer() {
             </label>
             <div className="grid grid-cols-3 gap-2">
               {densityOptions.map((option) => (
-                <motion.button
+                <m.button
                   key={option.value}
                   onClick={() => setColorDensity(option.value as ColorDensity)}
                   whileHover={{ scale: 1.02 }}
@@ -100,7 +100,7 @@ export function ThemeCustomizer() {
                   title={option.hint}
                 >
                   <div className="text-sm font-medium text-white">{option.label}</div>
-                </motion.button>
+                </m.button>
               ))}
             </div>
           </div>
@@ -112,7 +112,7 @@ export function ThemeCustomizer() {
             </label>
             <div className="grid grid-cols-3 gap-2">
               {radiusOptions.map((option) => (
-                <motion.button
+                <m.button
                   key={option.value}
                   onClick={() => setBorderRadius(option.value as BorderRadius)}
                   whileHover={{ scale: 1.02 }}
@@ -125,7 +125,7 @@ export function ThemeCustomizer() {
                   title={option.hint}
                 >
                   <div className="text-sm font-medium text-white">{option.label}</div>
-                </motion.button>
+                </m.button>
               ))}
             </div>
           </div>
@@ -200,7 +200,7 @@ export function ThemeCustomizer() {
                
                 className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm"
               />
-              <motion.button
+              <m.button
                 onClick={() => copyToClipboard(primaryColor)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -211,7 +211,7 @@ export function ThemeCustomizer() {
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
-              </motion.button>
+              </m.button>
             </div>
             <p className="text-xs text-slate-500 mt-2">
               Enter a valid hex color (#RRGGBB)
@@ -234,28 +234,28 @@ export function ThemeCustomizer() {
       <h3 className="text-lg font-semibold text-white mb-4">Customize Theme</h3>
 
       {sections.map((section) => (
-        <motion.div
+        <m.div
           key={section.id}
           className="rounded-lg border border-slate-700 bg-slate-900/50"
         >
-          <motion.button
+          <m.button
             onClick={() =>
               setExpandedSection(expandedSection === section.id ? null : section.id)
             }
             className="w-full flex items-center justify-between p-4 hover:bg-slate-800/50 transition-colors"
           >
             <span className="text-sm font-medium text-white">{section.title}</span>
-            <motion.div
+            <m.div
               animate={{ rotate: expandedSection === section.id ? 180 : 0 }}
               transition={{ duration: 0.2 }}
             >
               <ChevronDown className="w-4 h-4 text-slate-400" />
-            </motion.div>
-          </motion.button>
+            </m.div>
+          </m.button>
 
           <AnimatePresence>
             {expandedSection === section.id && (
-              <motion.div
+              <m.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -263,10 +263,10 @@ export function ThemeCustomizer() {
                 className="overflow-hidden border-t border-slate-700"
               >
                 <div className="p-4">{section.content}</div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </m.div>
       ))}
     </div>
   );

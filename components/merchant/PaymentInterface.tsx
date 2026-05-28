@@ -7,7 +7,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import {
   usePayMerchant,
   useCustomerTrustScore,
@@ -272,7 +272,7 @@ export function PaymentInterface() {
 
           {/* Error Display */}
           {combinedError && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-red-900/20 border-2 border-red-500 rounded-xl p-4"
@@ -287,11 +287,11 @@ export function PaymentInterface() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
 
           {(isSuccess || escrowSuccess) && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-green-900/20 border-2 border-green-500 rounded-xl p-4 text-center"
@@ -302,7 +302,7 @@ export function PaymentInterface() {
                 {isEscrowMode ? 'Protected Checkout Submitted!' : 'Payment Successful!'}
               </div>
               <div className="text-sm text-gray-400 mt-1">Order ID: {orderId}</div>
-            </motion.div>
+            </m.div>
           )}
         </div>
       </div>

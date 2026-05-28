@@ -5,7 +5,7 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Search, X, Store, Package, Star, MapPin, ArrowRight, Clock } from 'lucide-react';
 import { useUnifiedSearch } from './useUnifiedSearch';
 
@@ -63,7 +63,7 @@ export function UnifiedSearch({
 
       <AnimatePresence>
         {showDropdown && (
-          <motion.div initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
+          <m.div initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.15 }}
             className="absolute z-50 top-full mt-2 w-full bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden max-h-[70vh] overflow-y-auto">
 
@@ -134,7 +134,7 @@ export function UnifiedSearch({
 
             {isLoading && !hasResults && <div className="px-4 py-8 text-center text-gray-500 text-sm">Searching...</div>}
             {!isLoading && query.length >= 2 && !hasResults && <div className="px-4 py-8 text-center text-gray-500 text-sm">No merchants or products found for &ldquo;{query}&rdquo;</div>}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { ReactNode, useEffect, useId, useRef } from 'react'
 import { X } from 'lucide-react'
 // A11Y FOLLOW-UP FIX: focus trap. The base Modal component is the
@@ -75,7 +75,7 @@ export function Modal({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -85,7 +85,7 @@ export function Modal({
 
           {/* Modal Container */}
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
+            <m.div
               ref={dialogRef}
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -117,13 +117,13 @@ export function Modal({
                     )}
                   </div>
                   {showCloseButton && (
-                    <motion.button
+                    <m.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={onClose}
                       className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-zinc-100 transition-colors" aria-label="Close">
                       <X size={20} />
-                    </motion.button>
+                    </m.button>
                   )}
                 </div>
               )}
@@ -132,7 +132,7 @@ export function Modal({
               <div className="p-6">
                 {children}
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </>
       )}
@@ -186,7 +186,7 @@ export function Button({
   }
 
   return (
-    <motion.button
+    <m.button
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
@@ -203,7 +203,7 @@ export function Button({
       `}
     >
       {loading && (
-        <motion.span
+        <m.span
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="w-4 h-4 border-2 border-current border-t-transparent rounded-full"
@@ -212,7 +212,7 @@ export function Button({
       {!loading && icon && iconPosition === 'left' && icon}
       {children}
       {!loading && icon && iconPosition === 'right' && icon}
-    </motion.button>
+    </m.button>
   )
 }
 
@@ -479,7 +479,7 @@ export function ProgressBar({
         </div>
       )}
       <div className={`w-full bg-white/10 rounded-full overflow-hidden ${sizes[size]}`}>
-        <motion.div
+        <m.div
           initial={animated ? { width: 0 } : undefined}
           animate={{ width: `${percentage}%` }}
           transition={{ duration: 1, ease: "easeOut" }}
@@ -525,7 +525,7 @@ export function Alert({
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
@@ -549,7 +549,7 @@ export function Alert({
           </button>
         )}
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 

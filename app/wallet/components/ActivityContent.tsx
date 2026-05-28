@@ -2,7 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Wallet, TrendingUp, History, LayoutDashboard } from 'lucide-react';
 import { useAccount, useBalance } from 'wagmi';
 import { formatUnits } from 'viem';
@@ -55,32 +55,32 @@ export function ActivityContent() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="analytics-card p-6">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="analytics-card p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-gray-400 text-sm">ETH Balance</span>
             <Wallet className="w-5 h-5 text-accent" />
           </div>
           <div className="text-white text-3xl font-black mb-1">{formattedBalance}</div>
           <div className="text-gray-400 text-sm">USD conversion unavailable</div>
-        </motion.div>
+        </m.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="analytics-card p-6">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="analytics-card p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-gray-400 text-sm">VFIDE Tokens</span>
             <Wallet className="w-5 h-5 text-violet-400" />
           </div>
           <div className="text-white text-3xl font-black mb-1">0</div>
           <div className="text-gray-400 text-sm">Governance utility</div>
-        </motion.div>
+        </m.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="analytics-card p-6">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="analytics-card p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-gray-400 text-sm">Activity</span>
             <TrendingUp className="w-5 h-5 text-emerald-400" />
           </div>
           <div className="text-white text-3xl font-black mb-1">Active</div>
           <div className="text-gray-400 text-sm">Governance participant</div>
-        </motion.div>
+        </m.div>
       </div>
 
       <div>

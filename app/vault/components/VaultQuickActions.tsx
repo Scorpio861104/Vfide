@@ -18,7 +18,7 @@
  */
 
 import { GlassCard } from '@/components/ui/GlassCard';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Zap, RefreshCw } from 'lucide-react';
 
 interface VaultQuickActionsProps {
@@ -38,7 +38,7 @@ export function VaultQuickActions({ onTransfer }: VaultQuickActionsProps) {
             Move funds between vaults instantly using a signed vault-to-vault transfer.
           </p>
 
-          <motion.button
+          <m.button
             onClick={onTransfer}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
@@ -46,7 +46,7 @@ export function VaultQuickActions({ onTransfer }: VaultQuickActionsProps) {
           >
             <RefreshCw size={20} />
             Transfer to Vault
-          </motion.button>
+          </m.button>
         </GlassCard>
       </div>
     </section>

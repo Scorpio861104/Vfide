@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { VFIDEMark } from '@/components/ui';
 import {
@@ -66,7 +66,7 @@ function CompactTile({
   const delay = index * 0.03;
   
   return (
-    <motion.button
+    <m.button
       initial={{ opacity: 0, x: 50, scale: 0.8 }}
       animate={{ 
         opacity: 1, 
@@ -127,7 +127,7 @@ function CompactTile({
       
       {/* Pulse glow for active items */}
       {(isActive || isHovered) && (
-        <motion.div
+        <m.div
           className="absolute inset-0 rounded-xl pointer-events-none"
           animate={{ opacity: [0.1, 0.35, 0.1], scale: [1, 1.01, 1] }}
           transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
@@ -139,7 +139,7 @@ function CompactTile({
 
       {/* Scan line effect on hover */}
       {isHovered && (
-        <motion.div
+        <m.div
           initial={{ x: '-100%' }}
           animate={{ x: '200%' }}
           transition={{ duration: 0.6, ease: 'easeInOut' }}
@@ -152,7 +152,7 @@ function CompactTile({
       {isHovered && (
         <div className="absolute inset-0 pointer-events-none">
           {Array.from({ length: PARTICLE_TRAIL.count }).map((_, trail) => (
-            <motion.span
+            <m.span
               key={`trail-${item.id}-${trail}`}
               className="absolute top-1/2 w-1 h-1 rounded-full"
               style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }}
@@ -197,7 +197,7 @@ function CompactTile({
         />
         {/* Inner glow effect */}
         {(isActive || isHovered) && (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             className="absolute inset-0 rounded-lg blur-sm"
@@ -240,7 +240,7 @@ function CompactTile({
       
       {/* Has children indicator */}
       {item.children && item.children.length > 0 && (
-        <motion.div
+        <m.div
           animate={{ x: isHovered ? 2 : 0 }}
           className="w-4 h-4 flex items-center justify-center shrink-0"
         >
@@ -249,9 +249,9 @@ function CompactTile({
             className="rotate-180 transition-colors duration-200"
             style={{ color: isHovered ? item.color : '#4A4A4F' }}
           />
-        </motion.div>
+        </m.div>
       )}
-    </motion.button>
+    </m.button>
   );
 }
 
@@ -275,7 +275,7 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
 
   return (
     <ProofScoreRing score={proofScore} size={56}>
-      <motion.button
+      <m.button
         ref={buttonRef}
         onClick={onClick}
         {...longPress}
@@ -330,7 +330,7 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
       
       {/* Rotating border effect when open */}
       {isOpen && (
-        <motion.div
+        <m.div
           animate={{ rotate: 360 }}
           transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
           className="absolute inset-0"
@@ -343,7 +343,7 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
 
       {/* Pulse glow */}
       {isOpen && (
-        <motion.div
+        <m.div
           className="absolute inset-0 rounded-2xl"
           animate={{ opacity: [0.25, 0.6, 0.25], scale: [1, 1.08, 1] }}
           transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
@@ -356,7 +356,7 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
       {/* Orbiting accent dots */}
       {isOpen && (
         <>
-          <motion.div
+          <m.div
             className="absolute inset-0 pointer-events-none"
             animate={{ rotate: 360 }}
             transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
@@ -369,8 +369,8 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
                 transform: 'translateX(-50%)',
               }}
             />
-          </motion.div>
-          <motion.div
+          </m.div>
+          <m.div
             className="absolute inset-0 pointer-events-none"
             animate={{ rotate: -360 }}
             transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
@@ -383,13 +383,13 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
                 transform: 'translateX(-50%)',
               }}
             />
-          </motion.div>
+          </m.div>
         </>
       )}
 
       {/* Orbiting active icon */}
       {isOpen && activeCategory?.icon && (
-        <motion.div
+        <m.div
           className="absolute inset-0 pointer-events-none"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1, rotate: 360 }}
@@ -408,14 +408,14 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
               style: { color: activeCategory?.color || '#6366f1' },
             })}
           </div>
-        </motion.div>
+        </m.div>
       )}
       
       {/* Inner content */}
       <div className="relative z-10 flex items-center justify-center w-full h-full">
         <AnimatePresence mode="wait">
           {isOpen ? (
-            <motion.div
+            <m.div
               key="close"
               initial={{ rotate: -90, opacity: 0 }}
               animate={{ rotate: 0, opacity: 1 }}
@@ -423,9 +423,9 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
               transition={{ duration: 0.15 }}
             >
               <X size={20} className="text-red-400" />
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="logo"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -433,11 +433,11 @@ function TriggerButton({ isOpen, onClick, onLongPress, activeCategory, proofScor
               transition={{ duration: 0.15 }}
             >
               <VFIDEMark size={24} glowing={false} animated={false} className="opacity-90" />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>
-    </motion.button>
+    </m.button>
     </ProofScoreRing>
   );
 }
@@ -633,7 +633,7 @@ export function PieMenu() {
       {/* Backdrop */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -648,7 +648,7 @@ export function PieMenu() {
         {/* Slide-out Menu Panel */}
         <AnimatePresence>
           {isOpen && (
-            <motion.div
+            <m.div
                 id="pie-menu-panel"
               initial={{ opacity: 0, x: 60, scale: 0.95 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -740,7 +740,7 @@ export function PieMenu() {
               {/* Header for submenu */}
               <AnimatePresence>
                 {activeCategory && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -762,12 +762,12 @@ export function PieMenu() {
                         )`,
                       }}
                     />
-                    <motion.button
+                    <m.button
                       onClick={handleBack}
                       whileTap={{ scale: 0.98 }}
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-left group relative z-10"
                     >
-                      <motion.div
+                      <m.div
                         animate={{ x: [-2, 0, -2] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                       >
@@ -775,22 +775,22 @@ export function PieMenu() {
                           size={16} 
                           style={{ color: activeCategory.color }}
                         />
-                      </motion.div>
+                      </m.div>
                       <span 
                         className="text-sm font-semibold"
                         style={{ color: activeCategory.color }}
                       >
                         {activeCategory.label}
                       </span>
-                    </motion.button>
-                  </motion.div>
+                    </m.button>
+                  </m.div>
                 )}
               </AnimatePresence>
               
               {/* Menu Items */}
               <div className="py-2 max-h-[60vh] overflow-y-auto scrollbar-hide">
                 <AnimatePresence mode="wait">
-                  <motion.div
+                  <m.div
                     key={activeCategory?.id || 'main'}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -810,7 +810,7 @@ export function PieMenu() {
                         isSubmenu={!!activeCategory}
                       />
                     ))}
-                  </motion.div>
+                  </m.div>
                 </AnimatePresence>
               </div>
               
@@ -829,7 +829,7 @@ export function PieMenu() {
                   background: 'linear-gradient(to top, rgba(0,0,0,0.3), transparent)',
                 }}
               />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
         

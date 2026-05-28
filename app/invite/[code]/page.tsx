@@ -4,7 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Gift, Shield, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function InvitePage() {
@@ -23,7 +23,7 @@ export default function InvitePage() {
   return (
     <>
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] flex items-center justify-center px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm" aria-live="polite" aria-busy={status === 'loading'}>
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md w-full bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm" aria-live="polite" aria-busy={status === 'loading'}>
           {status === 'loading' && (
             <>
               <Loader2 size={48} className="text-accent animate-spin mx-auto mb-6" />
@@ -52,7 +52,7 @@ export default function InvitePage() {
               </div>
             </>
           )}
-        </motion.div>
+        </m.div>
       </div>
       <Footer />
     </>

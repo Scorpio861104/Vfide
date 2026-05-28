@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Award,
   Shield,
@@ -182,7 +182,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
               {endorsements.slice(0, 5).map((endorsement) => {
                 const color = getCategoryColor(endorsement.category);
                 return (
-                  <motion.div
+                  <m.div
                     key={endorsement.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -218,7 +218,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                         </p>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>
@@ -245,7 +245,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
             {badges.map((badge) => {
               const color = getRarityColor(badge.rarity);
               return (
-                <motion.div
+                <m.div
                   key={badge.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -280,7 +280,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
                       {new Date(badge.earnedAt).toLocaleDateString()}
                     </span>
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>
@@ -289,7 +289,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
 
       {/* Guardian Status */}
       {endorsements.filter(e => e.category === 'trustworthy').length >= 5 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-4 bg-gradient-to-r from-emerald-500/20 to-accent/20 border border-emerald-500/30 rounded-xl"
@@ -308,7 +308,7 @@ export function EndorsementsBadges({ userAddress, showGiveEndorsement, onGiveEnd
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </div>
   );

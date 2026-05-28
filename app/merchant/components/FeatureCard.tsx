@@ -1,7 +1,7 @@
 'use client';
 
 import type { ElementType } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 interface FeatureCardProps {
   icon: ElementType;
@@ -28,7 +28,7 @@ export function FeatureCard({
   const c = colorClasses[color];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -44,6 +44,6 @@ export function FeatureCard({
         <h3 className={`mb-2 text-lg font-bold ${c.text}`}>{title}</h3>
         <p className="text-sm leading-relaxed text-gray-400">{description}</p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

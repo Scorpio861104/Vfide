@@ -6,7 +6,7 @@
 
 'use client';
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
 interface TrustRingProps {
@@ -118,7 +118,7 @@ export function TrustRing({
     <div className={`relative inline-flex items-center justify-center ${className}`}>
       {/* Glow effect */}
       {animated && (
-        <motion.div
+        <m.div
           className="absolute inset-0 rounded-full blur-xl"
           animate={{
             opacity: [0.3, 0.6, 0.3],
@@ -161,7 +161,7 @@ export function TrustRing({
         />
 
         {/* Progress ring */}
-        <motion.circle
+        <m.circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -200,7 +200,7 @@ export function TrustRing({
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <motion.span
+        <m.span
           className="text-2xl font-bold"
           style={{ color: colors.primary }}
           initial={animated ? { scale: 0.5, opacity: 0 } : undefined}
@@ -208,17 +208,17 @@ export function TrustRing({
           transition={{ delay: 0.5, duration: 0.3 }}
         >
           {displayScore}
-        </motion.span>
+        </m.span>
         
         {showLabel && (
-          <motion.span
+          <m.span
             className="text-xs text-zinc-400 uppercase tracking-wider"
             initial={animated ? { opacity: 0 } : undefined}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.3 }}
           >
             {label}
-          </motion.span>
+          </m.span>
         )}
       </div>
     </div>
@@ -285,7 +285,7 @@ export function TrustRings({
               />
 
               {/* Progress ring */}
-              <motion.circle
+              <m.circle
                 cx={size / 2}
                 cy={size / 2}
                 r={radius}
@@ -333,7 +333,7 @@ export function TrustRipple({
       {trigger && (
         <>
           {[0, 1, 2].map((i) => (
-            <motion.div
+            <m.div
               key={i}
               className={`absolute inset-0 rounded-full border-2 ${className}`}
               style={{ borderColor: color }}

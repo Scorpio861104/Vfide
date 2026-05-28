@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Banknote,
   ChevronRight,
@@ -80,13 +80,13 @@ export function GlassCard({
   hover?: boolean;
 }) {
   return (
-    <motion.div
+    <m.div
       whileHover={hover ? { scale: 1.02, y: -4 } : {}}
       transition={{ type: 'spring', stiffness: 400 }}
       className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 ${hover ? 'ring-effect' : ''} ${className}`}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -161,7 +161,7 @@ export function QuickAction({
 
   return (
     <Link href={href}>
-      <motion.div
+      <m.div
         whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.98 }}
         className={`ring-effect flex flex-col items-center gap-3 rounded-2xl p-4 text-center font-semibold transition-all ${
@@ -174,7 +174,7 @@ export function QuickAction({
           <Icon size={24} />
         </div>
         <span className="text-sm">{label}</span>
-      </motion.div>
+      </m.div>
     </Link>
   );
 }

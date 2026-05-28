@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ActiveTab } from '@/app/appeals/components/ActiveTab';
 import { ResolvedTab } from '@/app/appeals/components/ResolvedTab';
 import { SubmitTab } from '@/app/appeals/components/SubmitTab';
@@ -33,7 +33,7 @@ export default function AppealsTabContent() {
 
       <div className="relative container mx-auto max-w-5xl px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Dispute Resolution</span>
           </div>
@@ -43,7 +43,7 @@ export default function AppealsTabContent() {
             </span>
           </h1>
           <p className="text-white/50">Dispute review and trusted appeal handling for flagged actions.</p>
-        </motion.div>
+        </m.div>
 
         {/* Sticky tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
@@ -59,13 +59,13 @@ export default function AppealsTabContent() {
 
         {/* Tab content */}
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'active' && <ActiveTab />}
             {activeTab === 'submit' && <SubmitTab />}
             {activeTab === 'resolved' && <ResolvedTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
     </div>

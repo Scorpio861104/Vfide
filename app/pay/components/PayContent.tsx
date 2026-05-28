@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { CreditCard, Loader2, Shield } from 'lucide-react';
 import { useProofScore, getScoreTierObject } from '@/hooks/useProofScore';
 import { useAccount } from 'wagmi';
@@ -266,7 +266,7 @@ export function PayContent() {
   };
 
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
@@ -283,14 +283,14 @@ export function PayContent() {
       {/* Header */}
       <section className="py-12 relative z-10">
         <div className="container mx-auto px-4 text-center">
-          <motion.div 
+          <m.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="badge-live mb-4 mx-auto w-fit"
           >
             <CreditCard className="w-3 h-3" />
             <span>Secure Checkout</span>
-          </motion.div>
+          </m.div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
             Complete <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-blue-400">Payment</span>
           </h1>
@@ -303,7 +303,7 @@ export function PayContent() {
       {/* Payment Form */}
       <section className="py-12 relative z-10">
         <div className="container mx-auto px-4 max-w-2xl">
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-8"
@@ -399,7 +399,7 @@ export function PayContent() {
                   { id: 'usdc' as const, label: 'USDC', desc: 'Stablecoin • Phase 2 (select VFIDE for now)' },
                   { id: 'usdt' as const, label: 'USDT', desc: 'Stablecoin • Phase 2 (select VFIDE for now)' },
                 ].map((method) => (
-                  <motion.button 
+                  <m.button 
                     key={method.id}
                     onClick={() => setSelectedMethod(method.id)}
                     whileHover={{ scale: 1.01 }}
@@ -419,7 +419,7 @@ export function PayContent() {
                         <span className="text-accent font-bold text-sm">SELECTED</span>
                       )}
                     </div>
-                  </motion.button>
+                  </m.button>
                 ))}
               </div>
             </div>
@@ -446,7 +446,7 @@ export function PayContent() {
             </div>
 
             {/* Pay Button */}
-            <motion.button 
+            <m.button 
               data-trail-source="payment"
               onClick={handlePayment}
               disabled={effectiveProcessing || !merchant || !hasValidAmount || !qrReadyForPayment}
@@ -470,10 +470,10 @@ export function PayContent() {
                     : "Amount required"
                   : "Merchant required"
               )}
-            </motion.button>
+            </m.button>
 
             {/* Security Notice */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -500,30 +500,30 @@ export function PayContent() {
                   <div className="text-gray-400 text-sm">{settlementTone.noticeText}</div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
 
             {combinedError && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="mt-4 bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm"
               >
                 {combinedError}
-              </motion.div>
+              </m.div>
             )}
 
             {paymentSuccess && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="mt-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-emerald-300 text-sm"
               >
                 Payment recorded successfully for order {orderId}.
-              </motion.div>
+              </m.div>
             )}
-          </motion.div>
+          </m.div>
         </div>
       </section>
-    </motion.div>
+    </m.div>
   );
 }

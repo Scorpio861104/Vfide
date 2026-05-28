@@ -22,7 +22,7 @@ import type React from 'react';
  * The old routes redirect here.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import {
   Vote, PlusCircle, Users, BarChart2, Clock,
   Crown, ScrollText, Gavel, Landmark, LayoutDashboard,
@@ -120,7 +120,7 @@ export default function GovernancePage() {
 
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />DAO Governance</span>
           </div>
@@ -153,7 +153,7 @@ export default function GovernancePage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Primary tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-6"
@@ -176,7 +176,7 @@ export default function GovernancePage() {
         <AnimatePresence mode="wait">
           {/* ── PROPOSALS ── */}
           {mainTab === 'proposals' && (
-            <motion.div key="proposals"
+            <m.div key="proposals"
               role="tabpanel" id="gov-panel-proposals" aria-labelledby="gov-tab-proposals"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
@@ -199,21 +199,21 @@ export default function GovernancePage() {
                 ))}
               </div>
               <AnimatePresence mode="wait">
-                <motion.div key={proposalSub}
+                <m.div key={proposalSub}
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}>
                   {proposalSub === 'list'    && <ProposalsTab onCreateProposal={() => setProposalSub('create')} />}
                   {proposalSub === 'create'  && <CreateTab />}
                   {proposalSub === 'stats'   && <StatsTab />}
                   {proposalSub === 'history' && <HistoryTab />}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
-            </motion.div>
+            </m.div>
           )}
 
           {/* ── DAO HUB ── */}
           {mainTab === 'dao' && (
-            <motion.div key="dao"
+            <m.div key="dao"
               role="tabpanel" id="gov-panel-dao" aria-labelledby="gov-tab-dao"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
@@ -230,20 +230,20 @@ export default function GovernancePage() {
                 ))}
               </div>
               <AnimatePresence mode="wait">
-                <motion.div key={daoSub}
+                <m.div key={daoSub}
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}>
                   {daoSub === 'overview' && <DaoOverviewTab />}
                   {daoSub === 'members'  && <DaoMembersTab  />}
                   {daoSub === 'treasury' && <DaoTreasuryTab />}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
-            </motion.div>
+            </m.div>
           )}
 
           {/* ── COUNCIL ── */}
           {mainTab === 'council' && (
-            <motion.div key="council"
+            <m.div key="council"
               role="tabpanel" id="gov-panel-council" aria-labelledby="gov-tab-council"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
@@ -261,56 +261,56 @@ export default function GovernancePage() {
                 ))}
               </div>
               <AnimatePresence mode="wait">
-                <motion.div key={councilSub}
+                <m.div key={councilSub}
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}>
                   {councilSub === 'overview' && <CouncilOverviewTab />}
                   {councilSub === 'members'  && <CouncilMembersTab  />}
                   {councilSub === 'salary'   && <CouncilSalaryTab   isConnected={isConnected} />}
                   {councilSub === 'voting'   && <CouncilVotingTab   isConnected={isConnected} />}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
-            </motion.div>
+            </m.div>
           )}
 
           {/* ── ELECTIONS ── */}
           {mainTab === 'elections' && (
-            <motion.div key="elections"
+            <m.div key="elections"
               role="tabpanel" id="gov-panel-elections" aria-labelledby="gov-tab-elections"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <ElectionsTabContent />
-            </motion.div>
+            </m.div>
           )}
 
           {/* ── DISPUTES ── */}
           {mainTab === 'disputes' && (
-            <motion.div key="disputes"
+            <m.div key="disputes"
               role="tabpanel" id="gov-panel-disputes" aria-labelledby="gov-tab-disputes"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <DisputesTabContent />
-            </motion.div>
+            </m.div>
           )}
 
           {/* ── APPEALS ── */}
           {mainTab === 'appeals' && (
-            <motion.div key="appeals"
+            <m.div key="appeals"
               role="tabpanel" id="gov-panel-appeals" aria-labelledby="gov-tab-appeals"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <AppealsTabContent />
-            </motion.div>
+            </m.div>
           )}
 
           {/* ── FRAUD ── */}
           {mainTab === 'fraud' && (
-            <motion.div key="fraud"
+            <m.div key="fraud"
               role="tabpanel" id="gov-panel-fraud" aria-labelledby="gov-tab-fraud"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18 }}>
               <FraudTabContent />
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

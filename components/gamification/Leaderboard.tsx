@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Trophy, TrendingUp, Award, Crown, Zap, Users } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { getProgress as _getProgress, getAllUserProgress } from '@/lib/gamification';
@@ -244,7 +244,7 @@ export function Leaderboard() {
               const rankLabel = `Rank ${entry.rank} - ${entry.alias || `${entry.address.slice(0, 6)}...${entry.address.slice(-4)}`}`;
               
               return (
-                <motion.div
+                <m.div
                   key={entry.address}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -285,7 +285,7 @@ export function Leaderboard() {
                     <p className="text-sm font-bold text-zinc-100">{getCategoryValue(entry)}</p>
                     <p className="text-xs text-zinc-500">{entry.achievementCount} achievements</p>
                   </div>
-                </motion.div>
+                </m.div>
               );
             })}
           </div>

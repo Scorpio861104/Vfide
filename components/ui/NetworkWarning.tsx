@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { CURRENT_CHAIN_ID } from '@/lib/testnet';
 import { getChainByChainId, isTestnetChainId } from '@/lib/chains';
 import { safeLocalStorage } from '@/lib/utils';
@@ -68,7 +68,7 @@ export function NetworkWarning() {
   return (
     <AnimatePresence>
       {showWarning && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -97,7 +97,7 @@ export function NetworkWarning() {
               </button>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

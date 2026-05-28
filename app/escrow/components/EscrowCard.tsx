@@ -21,7 +21,7 @@
  * page — they apply to edge-case states and benefit from richer UI than a card.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Link from 'next/link';
 import {
   Lock,
@@ -106,7 +106,7 @@ export function EscrowCard({
   const showActions = canBuyerRelease || canBuyerDispute || canMerchantRefund || canMerchantDispute;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/3 border border-white/10 rounded-xl p-4 space-y-3"
@@ -185,6 +185,6 @@ export function EscrowCard({
           <span>Awaiting DAO resolution. Funds remain held in escrow.</span>
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

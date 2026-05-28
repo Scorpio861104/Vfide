@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Plus,
@@ -602,7 +602,7 @@ export function GroupMessaging() {
                 messages.map((msg) => {
                   const isMe = msg.from === address;
                   return (
-                    <motion.div
+                    <m.div
                       key={msg.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -632,7 +632,7 @@ export function GroupMessaging() {
                           )}
                         </div>
                       </div>
-                    </motion.div>
+                    </m.div>
                   );
                 })
               )}
@@ -786,14 +786,14 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
   const colors = ['#00F0FF', '#A78BFA', '#FFD700', '#50C878', '#FF8C42', '#FF6B9D'];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
-      <motion.div
+      <m.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -917,7 +917,7 @@ function CreateGroupModal({ onClose, onCreate, userAddress }: CreateGroupModalPr
             </button>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

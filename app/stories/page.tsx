@@ -9,7 +9,7 @@ import { StoryRing } from '@/components/social/StoryRing';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { useAccount } from 'wagmi';
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Plus, Camera, Sparkles } from 'lucide-react';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
@@ -91,7 +91,7 @@ export default function StoriesPage() {
 
       <div className="relative max-w-4xl mx-auto px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />24h Community</span>
           </div>
@@ -108,32 +108,32 @@ export default function StoriesPage() {
             <span className="text-accent">→</span>
             <span>Inspire</span>
           </div>
-        </motion.div>
+        </m.div>
 
         {!isConnected ? (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-12">
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-12">
             <div className="glass-card-premium p-10 max-w-md mx-auto">
               <div className="text-6xl mb-4">📸</div>
               <h2 className="text-xl font-bold text-white mb-3">Connect Your Wallet</h2>
               <p className="text-white/50 mb-6">Connect your wallet to view and share stories with the community.</p>
               <VfideConnectButton size="md" />
             </div>
-          </motion.div>
+          </m.div>
         ) : (
           <div>
             {/* Stories Row */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               className="glass-card-premium p-6 mb-8">
               <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                 {/* Add Story */}
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                <m.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                   onClick={() => setShowCreator(true)}>
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-violet-400/20 border-2 border-dashed border-accent/50 flex items-center justify-center hover:bg-accent/10 transition-colors">
                     <Plus size={28} className="text-accent" />
                   </div>
                   <p className="text-accent text-xs font-medium">Add Story</p>
-                </motion.div>
+                </m.div>
 
                 {myStories.length > 0 && (
                   <StoryRing userId={address || ''} userName="Your Story" userAvatar="✨"
@@ -148,10 +148,10 @@ export default function StoriesPage() {
                     onClick={() => setViewingStories({ stories: user.stories, index: 0 })} size="md" />
                 ))}
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Tips */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
               className="grid md:grid-cols-3 gap-4 mb-8">
               {[
                 { emoji: '✍️', title: 'Text Stories', desc: 'Share thoughts with beautiful gradient backgrounds' },
@@ -164,10 +164,10 @@ export default function StoriesPage() {
                   <p className="text-white/40 text-sm">{tip.desc}</p>
                 </div>
               ))}
-            </motion.div>
+            </m.div>
 
             {userStories.length === 0 && myStories.length === 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+              <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
                 <div className="text-6xl mb-4">📭</div>
                 <h3 className="text-xl font-bold text-white mb-2">No Stories Yet</h3>
                 <p className="text-white/40 mb-6">Be the first to share a story with the community!</p>
@@ -175,7 +175,7 @@ export default function StoriesPage() {
                   className="btn-premium-primary inline-flex items-center gap-2">
                   <Camera size={18} />Create Your First Story
                 </button>
-              </motion.div>
+              </m.div>
             )}
           </div>
         )}

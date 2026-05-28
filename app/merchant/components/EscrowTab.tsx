@@ -4,7 +4,7 @@
  * Re-uses the existing /escrow component tree via dynamic imports.
  */
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { CheckCircle2, FileText, Lock, PlusCircle } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 
@@ -52,7 +52,7 @@ export function EscrowTab() {
 
       {/* Tab content */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={activeTab}
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -63,7 +63,7 @@ export function EscrowTab() {
           {activeTab === 'create'    && <CreateTab />}
           {activeTab === 'completed' && <CompletedTab />}
           {activeTab === 'disputes'  && <DisputesTab />}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   );

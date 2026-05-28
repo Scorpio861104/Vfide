@@ -34,7 +34,7 @@
 
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import {
   AlertCircle,
   ArrowRight,
@@ -115,7 +115,7 @@ export function ClaimFlowModal({
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -123,13 +123,13 @@ export function ClaimFlowModal({
       onClick={onClose}
     >
       {/* Backdrop */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
       />
 
-      <motion.div
+      <m.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -141,7 +141,7 @@ export function ClaimFlowModal({
         {/* Header with animated gradient */}
         <div className="relative p-8 bg-gradient-to-br from-accent/20 via-blue-500/15 to-purple-500/10 border-b border-white/10 overflow-hidden">
           {/* Animated background orbs */}
-          <motion.div
+          <m.div
             animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
             transition={{ duration: 5, repeat: Infinity }}
             className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-3xl"
@@ -149,32 +149,32 @@ export function ClaimFlowModal({
 
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <motion.div
+              <m.div
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
                 className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-accent/30"
               >
                 <Key className="h-8 w-8 text-white" />
-              </motion.div>
+              </m.div>
               <div>
                 <h2 className="text-2xl font-bold text-white">Claim Your Vault</h2>
                 <p className="text-sm text-gray-400">Step {step} of 3 • Secure Recovery</p>
               </div>
             </div>
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
               className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/20 transition-colors" aria-label="Close">
               <XCircle className="h-5 w-5" />
-            </motion.button>
+            </m.button>
           </div>
 
           {/* Animated progress bar */}
           <div className="flex gap-2 mt-6">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
-                <motion.div
+                <m.div
                   initial={{ width: 0 }}
                   animate={{ width: s <= step ? '100%' : '0%' }}
                   transition={{ duration: 0.5, delay: s * 0.1 }}
@@ -189,7 +189,7 @@ export function ClaimFlowModal({
         <div className="p-8">
           <AnimatePresence mode="wait">
             {step === 1 && (
-              <motion.div
+              <m.div
                 key="step1"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -227,11 +227,11 @@ export function ClaimFlowModal({
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {step === 2 && (
-              <motion.div
+              <m.div
                 key="step2"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -278,7 +278,7 @@ export function ClaimFlowModal({
                 </div>
 
                 {submissionError && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="p-4 rounded-xl bg-red-500/10 border border-red-500/30"
@@ -291,13 +291,13 @@ export function ClaimFlowModal({
                         <p className="text-xs text-gray-300 leading-relaxed">{submissionError}</p>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 )}
-              </motion.div>
+              </m.div>
             )}
 
             {step === 3 && (
-              <motion.div
+              <m.div
                 key="step3"
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -305,41 +305,41 @@ export function ClaimFlowModal({
                 className="text-center py-4"
                 data-testid="rc-success"
               >
-                <motion.div
+                <m.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring' as const, stiffness: 200, delay: 0.2 }}
                   className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-accent to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-accent/30"
                 >
                   <CheckCircle2 className="h-12 w-12 text-white" />
-                </motion.div>
+                </m.div>
 
-                <motion.h3
+                <m.h3
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
                   className="text-2xl font-bold text-white mb-2"
                 >
                   Claim Submitted
-                </motion.h3>
-                <motion.p
+                </m.h3>
+                <m.p
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                   className="text-gray-400 mb-4"
                 >
                   Your recovery process has begun
-                </motion.p>
+                </m.p>
 
                 {txHash && (
-                  <motion.p
+                  <m.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.55 }}
                     className="text-xs font-mono text-gray-500 mb-6 break-all px-4"
                   >
                     tx: {txHash}
-                  </motion.p>
+                  </m.p>
                 )}
 
                 <div className="space-y-3">
@@ -348,7 +348,7 @@ export function ClaimFlowModal({
                     { icon: Clock, title: 'Challenge Period', desc: challengePeriodLabel ? `${challengePeriodLabel} window` : 'Original wallet can contest', color: 'amber' },
                     { icon: Unlock, title: 'Ownership Transfer', desc: 'Vault transfers to new wallet', color: 'emerald' },
                   ].map((item, i) => (
-                    <motion.div
+                    <m.div
                       key={item.title}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -378,18 +378,18 @@ export function ClaimFlowModal({
                         <p className="text-sm font-semibold text-white">{item.title}</p>
                         <p className="text-xs text-gray-500">{item.desc}</p>
                       </div>
-                      <motion.div
+                      <m.div
                         animate={{ opacity: [0.3, 1, 0.3] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                         className="w-2 h-2 rounded-full bg-gray-500"
                       />
-                    </motion.div>
+                    </m.div>
                   ))}
                 </div>
 
                 {/* Phase 1.5: link to the new status page so the user knows
                     where to come back to finalize when ready. */}
-                <motion.p
+                <m.p
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 1.0 }}
@@ -406,8 +406,8 @@ export function ClaimFlowModal({
                     your recovery status page
                   </a>{' '}
                   to track progress and finalize when ready.
-                </motion.p>
-              </motion.div>
+                </m.p>
+              </m.div>
             )}
           </AnimatePresence>
         </div>
@@ -415,7 +415,7 @@ export function ClaimFlowModal({
         {/* Footer */}
         <div className="p-6 border-t border-white/10 flex justify-between bg-black/20">
           {step > 1 && step < 3 ? (
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.02, x: -4 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setStep(step - 1)}
@@ -424,13 +424,13 @@ export function ClaimFlowModal({
             >
               <ChevronRight className="h-4 w-4 rotate-180" />
               Back
-            </motion.button>
+            </m.button>
           ) : (
             <div />
           )}
 
           {step < 3 ? (
-            <motion.button
+            <m.button
               whileHover={{ scale: isWritePending ? 1 : 1.02 }}
               whileTap={{ scale: isWritePending ? 1 : 0.98 }}
               onClick={() => {
@@ -461,10 +461,10 @@ export function ClaimFlowModal({
                   </>
                 )}
               </span>
-              <motion.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-            </motion.button>
+              <m.div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+            </m.button>
           ) : (
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onClose}
@@ -472,10 +472,10 @@ export function ClaimFlowModal({
             >
               <CheckCircle2 className="h-4 w-4" />
               Done
-            </motion.button>
+            </m.button>
           )}
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

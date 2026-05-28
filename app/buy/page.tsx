@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Footer } from '@/components/layout/Footer';
 import { BuyTab } from './components/BuyTab';
 import { HistoryTab } from './components/HistoryTab';
@@ -34,7 +34,7 @@ export default function BuyPage() {
 
       <div className="relative container mx-auto max-w-5xl px-4">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />On-Ramp</span>
           </div>
@@ -44,7 +44,7 @@ export default function BuyPage() {
             </span>
           </h1>
           <p className="text-white/50">Plan a VFIDE purchase, then execute via Uniswap on Base. Direct fiat on-ramp is a future release.</p>
-        </motion.div>
+        </m.div>
 
         {/* Sticky tab bar */}
         <div className="sticky top-7 md:top-[5.25rem] z-30 backdrop-blur-xl bg-zinc-950/80 border-b border-white/5 -mx-4 px-4 mb-8 py-3">
@@ -60,13 +60,13 @@ export default function BuyPage() {
 
         {/* Tab content */}
         <AnimatePresence mode="wait">
-          <motion.div key={activeTab}
+          <m.div key={activeTab}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}>
             {activeTab === 'buy' && <BuyTab />}
             {activeTab === 'swap' && <SwapTab />}
             {activeTab === 'history' && <HistoryTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 

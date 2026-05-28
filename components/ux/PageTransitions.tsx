@@ -7,7 +7,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { m, AnimatePresence, type Variants } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 
 // ==================== TRANSITION VARIANTS ====================
@@ -117,7 +117,7 @@ export function PageTransitionProvider({
   return (
     <PageTransitionContext.Provider value={{ transition, setTransition, isTransitioning }}>
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={pathname}
           initial={pageTransitions[transition].initial}
           animate={pageTransitions[transition].animate}
@@ -125,7 +125,7 @@ export function PageTransitionProvider({
           transition={pageTransitions[transition].transition}
         >
           {children}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </PageTransitionContext.Provider>
   );
@@ -145,7 +145,7 @@ export function AnimatedPage({
   className = '',
 }: AnimatedPageProps) {
   return (
-    <motion.div
+    <m.div
       initial={pageTransitions[transition].initial}
       animate={pageTransitions[transition].animate}
       exit={pageTransitions[transition].exit}
@@ -153,7 +153,7 @@ export function AnimatedPage({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -167,7 +167,7 @@ export interface StaggeredListProps {
 
 export function StaggeredList({ children, className = '', delay = 0 }: StaggeredListProps) {
   return (
-    <motion.div
+    <m.div
       initial="hidden"
       animate="show"
       variants={{
@@ -183,18 +183,18 @@ export function StaggeredList({ children, className = '', delay = 0 }: Staggered
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
 export function StaggeredItem({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <motion.div
+    <m.div
       variants={staggerItem}
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -223,7 +223,7 @@ export function RevealOnScroll({
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, ...directionOffset[direction] }}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={{ once, margin: '-50px' }}
@@ -231,7 +231,7 @@ export function RevealOnScroll({
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -253,12 +253,12 @@ export function Parallax({ children, speed = 0.5, className = '' }: ParallaxProp
   }, []);
 
   return (
-    <motion.div
+    <m.div
       style={{ y: scrollY * speed }}
       className={className}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 

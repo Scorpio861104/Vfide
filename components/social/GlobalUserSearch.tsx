@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Search,
   Users,
@@ -68,7 +68,7 @@ export function GlobalUserSearch() {
             Found {searchResults.length} user{searchResults.length !== 1 ? 's' : ''}
           </p>
           {searchResults.map((user) => (
-            <motion.div
+            <m.div
               key={user.address}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -113,7 +113,7 @@ export function GlobalUserSearch() {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       ) : searchQuery.trim().length >= 2 ? (

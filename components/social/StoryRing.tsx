@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import { Story, isStoryExpired } from '@/lib/storiesSystem';
 
@@ -47,7 +47,7 @@ export function StoryRing({
       : null;
 
   return (
-    <motion.div 
+    <m.div 
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       className="flex flex-col items-center gap-2 cursor-pointer group" 
@@ -86,7 +86,7 @@ export function StoryRing({
       <p className="text-zinc-100 text-sm text-center max-w-20 truncate group-hover:text-accent transition-colors">
         {userName}
       </p>
-    </motion.div>
+    </m.div>
   );
 }
 

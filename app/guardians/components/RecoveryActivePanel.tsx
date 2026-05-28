@@ -16,7 +16,7 @@
  * frontend doesn't need to enforce a frontend-side 7-day wait.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AlertCircle } from 'lucide-react';
 
 interface RecoveryActivePanelProps {
@@ -43,7 +43,7 @@ export function RecoveryActivePanel({
   onApprove,
 }: RecoveryActivePanelProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className="bg-gradient-to-br from-amber-500/10 to-red-500/10 border border-amber-500/30 rounded-2xl p-6"
@@ -77,7 +77,7 @@ export function RecoveryActivePanel({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onFinalize}
@@ -85,11 +85,11 @@ export function RecoveryActivePanel({
           className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-green-500/25 disabled:opacity-50"
         >
           Finalize Rotation
-        </motion.button>
+        </m.button>
       </div>
 
       {isUserGuardian && (
-        <motion.button
+        <m.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
           onClick={onApprove}
@@ -97,8 +97,8 @@ export function RecoveryActivePanel({
           className="w-full mt-3 py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50"
         >
           Approve Rotation (Guardian)
-        </motion.button>
+        </m.button>
       )}
-    </motion.div>
+    </m.div>
   );
 }

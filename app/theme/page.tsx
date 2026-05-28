@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Eye, Palette, Sliders } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -47,7 +47,7 @@ export default function ThemeManagementPage() {
       </div>
 
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Visual Customization</span>
           </div>
@@ -55,7 +55,7 @@ export default function ThemeManagementPage() {
             <span className="bg-gradient-to-r from-pink-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">Theme</span>
           </h1>
           <p className="text-white/50 text-lg">Customize your VFIDE experience — colors, accents, and visual style.</p>
-        </motion.div>
+        </m.div>
 
         <div
           className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
@@ -77,7 +77,7 @@ export default function ThemeManagementPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          <motion.div
+          <m.div
             key={activeTab}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -87,7 +87,7 @@ export default function ThemeManagementPage() {
             {activeTab === 'presets'  && <PresetsTab />}
             {activeTab === 'preview'  && <PreviewTab />}
             {activeTab === 'advanced' && <AdvancedTab />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
 

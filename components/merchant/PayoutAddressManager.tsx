@@ -16,7 +16,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { isAddress, type Address, zeroAddress } from 'viem';
 import { Clock, AlertTriangle, CheckCircle2, X, Loader2, ArrowRight } from 'lucide-react';
 import { usePayoutAddressChange } from '@/hooks/usePayoutAddressChange';
@@ -157,7 +157,7 @@ export function PayoutAddressManager({ currentPayoutAddress }: PayoutAddressMana
 
       {/* Pending proposal: show state-aware UI */}
       {hasPending && pending && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           className={`p-3 rounded-lg border ${
@@ -203,7 +203,7 @@ export function PayoutAddressManager({ currentPayoutAddress }: PayoutAddressMana
               Cancel proposal
             </button>
           </div>
-        </motion.div>
+        </m.div>
       )}
 
       {actionError && (

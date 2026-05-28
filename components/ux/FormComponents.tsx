@@ -8,7 +8,7 @@
  */
 
 import React, { forwardRef, useState, useCallback, useId } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { 
   Eye, 
   EyeOff, 
@@ -131,7 +131,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
         </label>
       )}
 
-      <motion.div
+      <m.div
         animate={isFocused && !reducedMotion ? { scale: 1.01 } : { scale: 1 }}
         className={`
           relative flex items-center rounded-xl border transition-colors
@@ -185,7 +185,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
             {success !== undefined ? (
               <AnimatePresence mode="wait">
                 {success ? (
-                  <motion.div
+                  <m.div
                     key="success"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -193,9 +193,9 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
                     className="text-green-400"
                   >
                     <Check className="w-5 h-5" />
-                  </motion.div>
+                  </m.div>
                 ) : error ? (
-                  <motion.div
+                  <m.div
                     key="error"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -203,7 +203,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
                     className="text-red-400"
                   >
                     <X className="w-5 h-5" />
-                  </motion.div>
+                  </m.div>
                 ) : null}
               </AnimatePresence>
             ) : (
@@ -211,12 +211,12 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
             )}
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -226,9 +226,9 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
-          <motion.p
+          <m.p
             key="hint"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -237,7 +237,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
             className="text-sm text-gray-500"
           >
             {hint}
-          </motion.p>
+          </m.p>
         ) : null}
       </AnimatePresence>
     </div>
@@ -312,7 +312,7 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>((
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -322,15 +322,15 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>((
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
-          <motion.p
+          <m.p
             key="hint"
             id={`${id}-hint`}
             className="text-sm text-gray-500"
           >
             {hint}
-          </motion.p>
+          </m.p>
         ) : null}
       </AnimatePresence>
     </div>
@@ -406,7 +406,7 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -416,11 +416,11 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
-          <motion.p key="hint" id={`${id}-hint`} className="text-sm text-gray-500">
+          <m.p key="hint" id={`${id}-hint`} className="text-sm text-gray-500">
             {hint}
-          </motion.p>
+          </m.p>
         ) : null}
       </AnimatePresence>
     </div>
@@ -564,7 +564,7 @@ export function FormToggle({
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
-        <motion.span
+        <m.span
           initial={false}
           animate={{ x: checked ? '100%' : '0%' }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
@@ -617,7 +617,7 @@ export function SearchInput({
       />
       <AnimatePresence>
         {value && (
-          <motion.button
+          <m.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
@@ -626,7 +626,7 @@ export function SearchInput({
             aria-label="Clear search"
           >
             <X className="w-4 h-4" />
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
     </div>
@@ -703,7 +703,7 @@ export function AddressInput({
 
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {isResolving && (
-            <motion.div
+            <m.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full"
@@ -737,7 +737,7 @@ export function AddressInput({
       {/* Error or hint */}
       <AnimatePresence mode="wait">
         {error ? (
-          <motion.p
+          <m.p
             key="error"
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -746,7 +746,7 @@ export function AddressInput({
           >
             <AlertCircle className="w-4 h-4" />
             {error}
-          </motion.p>
+          </m.p>
         ) : hint ? (
           <p className="text-sm text-gray-500">{hint}</p>
         ) : null}

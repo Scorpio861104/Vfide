@@ -20,7 +20,7 @@
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { useAccount } from 'wagmi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Wallet, Shield, Check, Loader2, Info } from 'lucide-react';
 import { useLocale } from '@/lib/locale/LocaleProvider';
 import { usePayMerchant } from '@/lib/vfide-hooks';
@@ -159,7 +159,7 @@ export function CheckoutPanel({
       <AnimatePresence mode="wait">
         {/* ── Review Step ──────────────────────────────────────────────── */}
         {step === 'review' && (
-          <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
+          <m.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
             {/* Merchant header */}
             <div className="flex items-center gap-3 mb-6 p-4 bg-white/3 border border-white/10 rounded-xl">
               <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-bold">
@@ -267,31 +267,31 @@ export function CheckoutPanel({
                 Cancel
               </button>
             )}
-          </motion.div>
+          </m.div>
         )}
 
         {/* ── Paying Step ─────────────────────────────────────────────── */}
         {step === 'paying' && (
-          <motion.div key="paying" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          <m.div key="paying" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-center py-12">
             <Loader2 size={48} className="text-accent animate-spin mx-auto mb-6" />
             <h3 className="text-xl font-bold text-white mb-2">Processing payment...</h3>
             <p className="text-gray-400">Confirm the transaction in your wallet</p>
-          </motion.div>
+          </m.div>
         )}
 
         {/* ── Complete Step ────────────────────────────────────────────── */}
         {step === 'complete' && (
-          <motion.div key="complete" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          <m.div key="complete" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="text-center py-8">
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
               className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center"
             >
               <Check size={40} className="text-emerald-400" />
-            </motion.div>
+            </m.div>
             <h3 className="text-2xl font-bold text-white mb-2">Payment complete</h3>
             <p className="text-gray-400 mb-6">{formatCurrency(total)} paid to {merchantName}</p>
             {txHash && (
@@ -302,7 +302,7 @@ export function CheckoutPanel({
             <div className="text-sm text-emerald-400 mb-6">
               You saved {formatCurrency(feeSavedVsSquare)} in fees vs traditional payment
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

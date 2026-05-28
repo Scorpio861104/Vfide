@@ -31,7 +31,7 @@
 
 import Link from 'next/link';
 import { ShieldAlert, ShieldCheck, ChevronRight, Clock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useReadContract } from 'wagmi';
 import type { Address } from 'viem';
 import { CONTRACT_ADDRESSES, VAULT_HUB_ABI, isConfiguredContractAddress } from '@/lib/contracts';
@@ -110,7 +110,7 @@ export function VaultGuardianSetupBanner({ vaultAddress }: { vaultAddress: Addre
   return (
     <section className="py-2 relative z-10">
       <div className="container mx-auto px-4 max-w-6xl">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -131,7 +131,7 @@ export function VaultGuardianSetupBanner({ vaultAddress }: { vaultAddress: Addre
               <ChevronRight className={iconColor} size={20} />
             </div>
           </Link>
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

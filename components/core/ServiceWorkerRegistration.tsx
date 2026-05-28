@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { RefreshCcw, X } from 'lucide-react';
 import { getEnv } from '@/lib/env';
 import { registerServiceWorker } from '@/lib/serviceWorkerRegistration';
@@ -61,7 +61,7 @@ export function ServiceWorkerRegistration() {
   return (
     <AnimatePresence>
       {updateAvailable && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
@@ -91,7 +91,7 @@ export function ServiceWorkerRegistration() {
               <X size={14} />
             </button>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { AlertTriangle, CheckCircle2 as CheckCircle, Clock, Vote } from 'lucide-react';
 import { SampleDataBanner } from '@/components/ui/SampleDataBanner';
 
@@ -20,7 +20,7 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
     <div className="space-y-8">
       <SampleDataBanner label="Member-removal voting requires the council governance contracts, which launch in a future release. The entries below are illustrative placeholders — no live removal votes exist at V1." />
       {/* Voting Overview */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-500/10 to-orange-500/5 backdrop-blur-xl border border-red-500/20 p-4 sm:p-6 md:p-8"
@@ -38,10 +38,10 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
           <p className="text-amber-400 text-sm font-bold">Vote Threshold: &gt;50% (7/12)</p>
           <p className="text-gray-400 text-sm">At least 7 council members must vote for removal</p>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Active Removal Votes */}
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.1 }}
@@ -76,7 +76,7 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
                   </div>
                 </div>
                 <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-4">
-                  <motion.div 
+                  <m.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${(vote.votesFor / vote.votesNeeded) * 100}%` }}
                     className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
@@ -84,20 +84,20 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
                 </div>
                 {isConnected ? (
                   <div className="flex gap-3">
-                    <motion.button 
+                    <m.button 
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-2 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all"
                     >
                       Vote For Removal
-                    </motion.button>
-                    <motion.button 
+                    </m.button>
+                    <m.button 
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="flex-1 bg-white/5 border border-white/10 text-white font-bold py-2 rounded-xl hover:bg-white/10 transition-colors"
                     >
                       Abstain
-                    </motion.button>
+                    </m.button>
                   </div>
                 ) : (
                   <p className="text-center text-gray-400 text-sm">Connect wallet to vote</p>
@@ -113,11 +113,11 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
             <p className="text-gray-400">No active removal votes</p>
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Initiate Removal (Council Only) */}
       {isConnected && (
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -146,15 +146,15 @@ export function VotingTab({ isConnected }: { isConnected: boolean }) {
                aria-label="Describe why this member should be removed..." />
             </div>
           </div>
-          <motion.button 
+          <m.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-red-500/25 hover:shadow-red-500/40 transition-all flex items-center justify-center gap-2"
           >
             <AlertTriangle size={18} />
             Propose Removal
-          </motion.button>
-        </motion.div>
+          </m.button>
+        </m.div>
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import {
   Users,
   Plus,
@@ -220,7 +220,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
           const memberCount = circle.members.length;
 
           return (
-            <motion.button
+            <m.button
               key={circle.id}
               onClick={() => setSelectedCircle(circle)}
               whileHover={{ scale: 1.02 }}
@@ -280,7 +280,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                   {memberCount} {memberCount === 1 ? 'member' : 'members'}
                 </span>
               </div>
-            </motion.button>
+            </m.button>
           );
         })}
       </div>
@@ -406,14 +406,14 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
       {/* Create Circle Modal */}
       <AnimatePresence>
         {showCreateCircle && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
             onClick={() => setShowCreateCircle(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -489,22 +489,22 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Add Members Modal */}
       <AnimatePresence>
         {showAddMembers && selectedCircle && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
             onClick={() => setShowAddMembers(false)}
           >
-            <motion.div
+            <m.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -597,8 +597,8 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                   Cancel
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 

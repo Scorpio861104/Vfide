@@ -10,7 +10,7 @@
 import Link from 'next/link';
 import { ArrowLeft, AlertCircle, ArrowRight, CheckCircle2, Clock } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 export interface ComingSoonPageProps {
   title: string;
@@ -54,7 +54,7 @@ export function ComingSoonPage({
             </Link>
 
             {/* Coming soon notice */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 mb-6"
@@ -69,10 +69,10 @@ export function ComingSoonPage({
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Header */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
@@ -85,10 +85,10 @@ export function ComingSoonPage({
                 <span className="bg-gradient-to-r from-white to-amber-300 bg-clip-text text-transparent">{title}</span>
               </h1>
               {tagline && <p className="text-lg text-gray-400">{tagline}</p>}
-            </motion.div>
+            </m.div>
 
             {/* Description */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
@@ -96,11 +96,11 @@ export function ComingSoonPage({
             >
               <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-3">What this will do</h2>
               <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{description}</p>
-            </motion.div>
+            </m.div>
 
             {/* Requirements */}
             {requirements.length > 0 && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
@@ -115,12 +115,12 @@ export function ComingSoonPage({
                     </li>
                   ))}
                 </ul>
-              </motion.div>
+              </m.div>
             )}
 
             {/* Alternative */}
             {alternative && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -141,7 +141,7 @@ export function ComingSoonPage({
                   </div>
                   <ArrowRight size={18} className="text-emerald-400 group-hover:translate-x-1 transition-transform" />
                 </Link>
-              </motion.div>
+              </m.div>
             )}
           </div>
         </section>

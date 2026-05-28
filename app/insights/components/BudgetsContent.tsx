@@ -6,7 +6,7 @@ import React, { useState, useCallback } from 'react';
 import { useFinancialIntelligence, Budget } from '@/lib/financialIntelligence';
 import { useAccount } from 'wagmi';
 import { toast } from '@/lib/toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { PieChart, PlusCircle, Edit2, Trash2, BarChart3 } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
@@ -81,14 +81,14 @@ export default function BudgetsContent() {
 
       <div className="relative container mx-auto px-4 max-w-4xl space-y-6">
         {/* Device-only notice */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+        <m.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl border border-accent/20 bg-accent/5 p-3 text-xs text-accent">
           Budgets are saved on this device only — they won&apos;t appear on other devices you sign in from.
           Spending totals are still computed from your full transaction history.
-        </motion.div>
+        </m.div>
 
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -105,12 +105,12 @@ export default function BudgetsContent() {
             className="btn-premium-primary flex items-center gap-2">
             <PlusCircle size={16} />Create Budget
           </button>
-        </motion.div>
+        </m.div>
 
         {/* Budget Cards */}
         <div className="grid gap-4 md:grid-cols-2">
           {budgets.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               className="col-span-2 text-center py-16 glass-card-premium">
               <div className="text-5xl mb-4">📊</div>
               <h3 className="font-semibold text-white mb-2">No budgets yet</h3>
@@ -118,7 +118,7 @@ export default function BudgetsContent() {
               <button onClick={() => setShowCreateModal(true)} className="btn-premium-primary">
                 Create First Budget
               </button>
-            </motion.div>
+            </m.div>
           ) : (
             budgets.map(budget => {
               const progress = getProgress(budget);
@@ -126,7 +126,7 @@ export default function BudgetsContent() {
               const isOverBudget = spent > budget.limit;
 
               return (
-                <motion.div key={budget.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                <m.div key={budget.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   className="glass-card-premium p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-semibold text-white">{budget.category}</h3>
@@ -159,14 +159,14 @@ export default function BudgetsContent() {
                       <Trash2 size={14} />
                     </button>
                   </div>
-                </motion.div>
+                </m.div>
               );
             })
           )}
         </div>
 
         {/* Spending Overview */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           className="glass-card-premium p-5">
           <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
             <BarChart3 size={16} className="text-accent" />Spending by Category
@@ -187,17 +187,17 @@ export default function BudgetsContent() {
               ))}
             </div>
           )}
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Create / Edit Modal */}
       <AnimatePresence>
         {showCreateModal && (
           <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
               onClick={() => { setShowCreateModal(false); setEditingId(null); setNewBudget({ category: '', limit: '', period: 'monthly' }); }} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+            <m.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-x-4 top-1/2 -translate-y-1/2 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-full md:max-w-md glass-card-premium p-6 z-50 space-y-4">
               <h2 className="text-xl font-bold text-white">{editingId ? 'Edit Budget' : 'Create Budget'}</h2>
               <div>
@@ -233,7 +233,7 @@ export default function BudgetsContent() {
                   {editingId ? 'Save' : 'Create'}
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

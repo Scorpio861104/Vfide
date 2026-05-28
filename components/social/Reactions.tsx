@@ -8,7 +8,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 
 const REACTIONS = ['❤️', '🔥', '💪', '🙌', '😂', '🤝', '💰', '🎉'];
 
@@ -40,14 +40,14 @@ export function ReactionsBar({ reactions, onReact, compact = false }: ReactionsB
   return (
     <div className="relative flex items-center gap-1 flex-wrap">
       {activeReactions.map(r => (
-        <motion.button key={r.emoji} whileTap={{ scale: 0.9 }}
+        <m.button key={r.emoji} whileTap={{ scale: 0.9 }}
           onClick={() => handleReact(r.emoji)}
           className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs transition-all ${
             r.reacted ? 'bg-accent/15 border border-accent/30' : 'bg-white/5 border border-white/5'
           }`}>
           <span className={compact ? 'text-[10px]' : 'text-xs'}>{r.emoji}</span>
           <span className={`font-bold ${r.reacted ? 'text-accent' : 'text-gray-500'} ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{r.count}</span>
-        </motion.button>
+        </m.button>
       ))}
 
       {/* Add reaction button */}
@@ -59,32 +59,32 @@ export function ReactionsBar({ reactions, onReact, compact = false }: ReactionsB
       {/* Picker */}
       <AnimatePresence>
         {showPicker && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.8, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 8 }}
             className="absolute bottom-full left-0 mb-1 flex gap-0.5 px-2 py-1.5 bg-zinc-900 border border-white/10 rounded-xl shadow-xl z-10"
           >
             {REACTIONS.map(emoji => (
-              <motion.button key={emoji} whileHover={{ scale: 1.3 }} whileTap={{ scale: 0.9 }}
+              <m.button key={emoji} whileHover={{ scale: 1.3 }} whileTap={{ scale: 0.9 }}
                 onClick={() => handleReact(emoji)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-base">
                 {emoji}
-              </motion.button>
+              </m.button>
             ))}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Flying emoji animation */}
       <AnimatePresence>
         {flyingEmoji && (
-          <motion.span
+          <m.span
             initial={{ opacity: 1, scale: 1, y: 0 }}
             animate={{ opacity: 0, scale: 2, y: -40 }}
             exit={{ opacity: 0 }}
             className="absolute left-4 bottom-0 text-lg pointer-events-none"
-          >{flyingEmoji}</motion.span>
+          >{flyingEmoji}</m.span>
         )}
       </AnimatePresence>
     </div>

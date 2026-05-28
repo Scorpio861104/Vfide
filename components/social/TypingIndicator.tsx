@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useWebSocket, getWebSocketURL } from '@/lib/websocket';
 
 interface TypingIndicatorProps {
@@ -58,31 +58,31 @@ export function TypingIndicator({ conversationId, currentUserAddress, otherUserN
   return (
     <AnimatePresence>
       {isTyping && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
           className="flex items-center gap-2 px-4 py-2 text-sm text-zinc-500"
         >
           <div className="flex gap-1">
-            <motion.div
+            <m.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
               className="w-2 h-2 bg-accent rounded-full"
             />
-            <motion.div
+            <m.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
               className="w-2 h-2 bg-accent rounded-full"
             />
-            <motion.div
+            <m.div
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
               className="w-2 h-2 bg-accent rounded-full"
             />
           </div>
           <span>{otherUserName || 'User'} is typing...</span>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

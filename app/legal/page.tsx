@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Footer } from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Scale, Lock, FileText } from "lucide-react";
 import { PageSkeleton } from '@/components/layout/PageSkeleton';
 
@@ -32,7 +32,7 @@ function LegalPageContent() {
 
   return (
     <>
-      <motion.main
+      <m.main
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden"
@@ -47,7 +47,7 @@ function LegalPageContent() {
         {/* Header */}
         <section className="py-10 relative z-10">
           <div className="container mx-auto px-4 max-w-4xl">
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+            <m.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
               <div className="badge-live mb-3 w-fit"><Scale size={11} /> Legal</div>
               <h1 className="text-4xl font-black text-white tracking-tight mb-2">
                 Legal & Policies
@@ -55,7 +55,7 @@ function LegalPageContent() {
               <p className="text-zinc-400">
                 Important legal information, privacy policy, and terms of service.
               </p>
-            </motion.div>
+            </m.div>
           </div>
         </section>
 
@@ -86,7 +86,7 @@ function LegalPageContent() {
         {/* Tab Content */}
         <div className="container mx-auto px-4 max-w-4xl py-10 relative z-10">
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={activeTab}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -98,10 +98,10 @@ function LegalPageContent() {
               {activeTab === 'legal' && <LegalDisclaimersTab />}
               {activeTab === 'privacy' && <PrivacyPolicyTab />}
               {activeTab === 'terms' && <TermsOfServiceTab />}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
-      </motion.main>
+      </m.main>
       <Footer />
     </>
   );

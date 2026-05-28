@@ -18,7 +18,7 @@
 'use client';
 
 import { type ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 // ── Named gradient presets ──────────────────────────────────────────────────
 const GRADIENT_MAP = {
@@ -78,7 +78,7 @@ export function GlassCard({
     : undefined;
 
   return (
-    <motion.div
+    <m.div
       whileHover={hover ? { y: -2, scale: 1.005 } : undefined}
       whileTap={onClick ? { scale: 0.98 } : undefined}
       onClick={onClick}
@@ -88,6 +88,6 @@ export function GlassCard({
       style={glowStyle}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

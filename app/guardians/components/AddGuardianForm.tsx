@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { isAddress } from 'viem';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { UserPlus, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface AddGuardianFormProps {
@@ -25,22 +25,22 @@ export function AddGuardianForm({
   }, [newGuardianAddress]);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
       className="bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-white flex items-center gap-2">
           <UserPlus size={20} className="text-accent" /> Add Guardian
         </h3>
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+        <m.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25">
           {showForm ? 'Cancel' : '+ Add Guardian'}
-        </motion.button>
+        </m.button>
       </div>
 
       <AnimatePresence>
         {showForm && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+          <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             className="space-y-4 pt-4 border-t border-white/10">
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4">
               <p className="text-yellow-400 text-sm">
@@ -64,14 +64,14 @@ export function AddGuardianForm({
                 <p className="mt-1 text-sm text-green-400 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Valid address</p>
               )}
             </div>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            <m.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={onAdd} disabled={!isValidAddress || isWritePending || !hasVault}
               className="w-full py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50 disabled:cursor-not-allowed">
               {isWritePending ? 'Processing...' : 'Add Guardian'}
-            </motion.button>
-          </motion.div>
+            </m.button>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }

@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Search, Share2, Grid, List, Package } from 'lucide-react';
 import { MerchantTrustBadge } from '@/components/merchant/MerchantTrustBadge';
 import { Footer } from '@/components/layout/Footer';
@@ -189,7 +189,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
             }>
               <AnimatePresence mode="popLayout">
                 {filtered.map((product, i) => (
-                  <motion.div
+                  <m.div
                     key={product.id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
@@ -203,7 +203,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
                       viewMode={viewMode}
                       themeColor={merchant.theme_color}
                     />
-                  </motion.div>
+                  </m.div>
                 ))}
               </AnimatePresence>
             </div>

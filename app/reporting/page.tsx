@@ -1,7 +1,7 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Clock } from 'lucide-react';
 import { useLocale } from '@/hooks/useLocale';
@@ -19,7 +19,7 @@ export default function Page() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
         <div className="container mx-auto max-w-2xl px-4 py-20 relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="glass-card-premium p-10 text-center"
           >
             <div className="text-6xl mb-6" aria-hidden="true">📊</div>
@@ -49,7 +49,7 @@ export default function Page() {
                 Go back
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </div>
       <Footer />

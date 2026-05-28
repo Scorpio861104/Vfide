@@ -25,7 +25,7 @@ import type React from 'react';
  */
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import {
   Hash,
   MessageCircle,
@@ -185,7 +185,7 @@ export default function SocialHubPage() {
 
       <div className="relative container mx-auto px-4 max-w-6xl py-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Community</span>
           </div>
@@ -214,7 +214,7 @@ export default function SocialHubPage() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Main tab bar */}
         <div
@@ -238,7 +238,7 @@ export default function SocialHubPage() {
 
         {/* Gate: require wallet */}
         {!isConnected ? (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="glass-card-premium max-w-lg mx-auto text-center py-16 px-8">
             <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
               <Sparkles className="text-accent" size={28} />
@@ -248,12 +248,12 @@ export default function SocialHubPage() {
             <div className="flex justify-center">
               <VfideConnectButton size="md" />
             </div>
-          </motion.div>
+          </m.div>
         ) : (
           <AnimatePresence mode="wait">
             {/* ── FEED ── */}
             {mainTab === 'feed' && (
-              <motion.div key="feed"
+              <m.div key="feed"
                 role="tabpanel" id="social-panel-feed" aria-labelledby="social-tab-feed"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
@@ -271,10 +271,10 @@ export default function SocialHubPage() {
                     <CreatePostCard onPost={handlePost} />
                     <AnimatePresence>
                       {postError && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                           className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
                           {postError}
-                        </motion.div>
+                        </m.div>
                       )}
                     </AnimatePresence>
                     {filteredPosts.map((post, i) => (
@@ -292,12 +292,12 @@ export default function SocialHubPage() {
                     <TrendingSidebar trending={[]} suggested={[]} />
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── MESSAGES ── */}
             {mainTab === 'messages' && (
-              <motion.div key="messages"
+              <m.div key="messages"
                 role="tabpanel" id="social-panel-messages" aria-labelledby="social-tab-messages"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
@@ -314,12 +314,12 @@ export default function SocialHubPage() {
                 {msgTab === 'circles'  && <CirclesTab  />}
                 {msgTab === 'groups'   && <GroupsTab   />}
                 {msgTab === 'discover' && <DiscoverTab />}
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── PAY FRIENDS ── */}
             {mainTab === 'pay' && (
-              <motion.div key="pay"
+              <m.div key="pay"
                 role="tabpanel" id="social-panel-pay" aria-labelledby="social-tab-pay"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
@@ -328,20 +328,20 @@ export default function SocialHubPage() {
                   <p className="text-white/40 text-sm">Send crypto to contacts, split bills, and view social payment activity.</p>
                 </div>
                 <UnifiedActivityFeed />
-              </motion.div>
+              </m.div>
             )}
 
             {/* ── ANALYTICS ── */}
             {mainTab === 'stories' && (
-              <motion.div key="stories"
+              <m.div key="stories"
                 role="tabpanel" id="social-panel-stories" aria-labelledby="social-tab-stories"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
                 <StoriesContent />
-              </motion.div>
+              </m.div>
             )}
             {mainTab === 'analytics' && (
-              <motion.div key="analytics"
+              <m.div key="analytics"
                 role="tabpanel" id="social-panel-analytics" aria-labelledby="social-tab-analytics"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}>
@@ -356,7 +356,7 @@ export default function SocialHubPage() {
                 {analyticsTab === 'overview'   && <SocialOverviewTab />}
                 {analyticsTab === 'engagement' && <EngagementTab />}
                 {analyticsTab === 'growth'     && <GrowthTab />}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         )}

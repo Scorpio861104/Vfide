@@ -104,7 +104,7 @@ export function TransactionPreview({
           {/* ETH Value */}
           {transaction.value && transaction.value > 0n && (
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-zinc-400">
                 ETH Amount
               </span>
               <span className="text-sm font-semibold text-white">
@@ -116,7 +116,7 @@ export function TransactionPreview({
           {/* Token Amount */}
           {tokenAmount && (
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-zinc-400">
                 Token Amount
               </span>
               <span className="text-sm font-semibold text-white">
@@ -128,7 +128,7 @@ export function TransactionPreview({
           {/* Function Name */}
           {transaction.functionName && (
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="text-sm text-zinc-400">
                 Function
               </span>
               <span className="text-sm font-mono text-white">
@@ -142,7 +142,7 @@ export function TransactionPreview({
             <span className="text-sm text-zinc-400">
               Estimated Gas Cost
             </span>
-            <span className="text-sm text-gray-900 dark:text-white">
+            <span className="text-sm text-zinc-200">
               {isEstimatingGas ? (
                 <span className="animate-pulse">Calculating...</span>
               ) : (
@@ -183,7 +183,7 @@ export function TransactionPreview({
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-1 mr-3 h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+            className="mt-1 mr-3 h-4 w-4 accent-[#17E8F0] rounded focus:ring-2 focus:ring-[#17E8F0]/50"
           />
           <span className="text-sm text-zinc-300">
             I have reviewed the transaction details and confirm they are correct

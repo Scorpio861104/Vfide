@@ -10,7 +10,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { TrendingUp, DollarSign, ShoppingCart, Package, Calendar, ArrowUp, ArrowDown } from 'lucide-react';
 import { ExportCSVButton } from '@/components/export/ExportCSVButton';
 import { Numeric } from '@/components/ui/Numeric';
@@ -154,7 +154,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
               const maxAmount = Math.max(...data.dailyRevenue.map(d => d.amount), 1);
               const heightPct = (day.amount / maxAmount) * 100;
               return (
-                <motion.div
+                <m.div
                   key={day.date}
                   initial={{ height: 0 }}
                   animate={{ height: `${heightPct}%` }}
@@ -190,7 +190,7 @@ function StatCard({ label, value, change, icon: Icon, color }: {
   const c = colorMap[color];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white/3 border border-white/10 rounded-2xl p-5"
@@ -209,6 +209,6 @@ function StatCard({ label, value, change, icon: Icon, color }: {
           <span className="text-gray-500 font-normal ml-1">vs prior period</span>
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

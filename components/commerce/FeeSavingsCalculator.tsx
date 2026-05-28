@@ -6,7 +6,7 @@
 'use client'
 
 import { useFeeCalculator, useProofScore } from '@/lib/vfide-hooks'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useState } from 'react'
 import { safeParseFloat } from '@/lib/validation'
 
@@ -56,7 +56,7 @@ export function FeeSavingsCalculator() {
       {/* Comparison Grid */}
       <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
         {/* Stripe/Traditional */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className="relative group"
@@ -86,7 +86,7 @@ export function FeeSavingsCalculator() {
             {/* Animated bars showing fee proportion */}
             <div className="space-y-1 hidden sm:block">
               <div className="h-1.5 sm:h-2 bg-red-500/20 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   className="h-full bg-red-500"
                   initial={{ width: 0 }}
                   animate={{ width: `${stripeFeePercent}%` }}
@@ -98,10 +98,10 @@ export function FeeSavingsCalculator() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
         
         {/* VFIDE */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="relative group"
@@ -145,7 +145,7 @@ export function FeeSavingsCalculator() {
             {/* Animated bars showing fee proportion */}
             <div className="space-y-1 hidden sm:block">
               <div className="h-1.5 sm:h-2 bg-accent/20 rounded-full overflow-hidden">
-                <motion.div
+                <m.div
                   className="h-full"
                   style={{ backgroundColor: color }}
                   initial={{ width: 0 }}
@@ -158,11 +158,11 @@ export function FeeSavingsCalculator() {
               </p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
       
       {/* MASSIVE Savings Highlight */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="relative"
@@ -183,7 +183,7 @@ export function FeeSavingsCalculator() {
           
           {/* Annual Savings Calculator */}
           {amountNum > 0 && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -195,14 +195,14 @@ export function FeeSavingsCalculator() {
               <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-emerald-400 mt-1 sm:mt-2">
                 ${(safeParseFloat(calculator.savings, 0) * 12).toFixed(2)}/year saved!
               </p>
-            </motion.div>
+            </m.div>
           )}
         </div>
-      </motion.div>
+      </m.div>
       
       {/* ProofScore Improvement Callout */}
       {score < 8000 && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-amber-400/10 border border-amber-400/30 rounded-xl p-2 sm:p-3 md:p-4 text-center"
@@ -213,7 +213,7 @@ export function FeeSavingsCalculator() {
           <p className="text-[10px] sm:text-xs text-zinc-100/50 mt-0.5 sm:mt-1">
             {tier === 'Neutral' ? 'Reach 8000 for 0.25% fees' : tier === 'High Trust' ? 'Almost there! Reach 8000 for lowest fees' : 'Build trust for 0.25% fees'}
           </p>
-        </motion.div>
+        </m.div>
       )}
     </div>
   )

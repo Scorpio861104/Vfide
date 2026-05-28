@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { formatEther } from 'viem';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -167,7 +167,7 @@ export function DisbursementsTab({ isConnected: _isConnected }: { isConnected: b
           const status = deriveDisbursementStatus(d, approvalsRequired);
           const isCurrentAction = pendingActionId === d.id;
           return (
-            <motion.div
+            <m.div
               key={d.id.toString()}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -193,7 +193,7 @@ export function DisbursementsTab({ isConnected: _isConnected }: { isConnected: b
                   )}
                 </div>
               )}
-            </motion.div>
+            </m.div>
           );
         })}
       </div>

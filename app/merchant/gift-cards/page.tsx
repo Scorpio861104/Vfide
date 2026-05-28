@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Gift, Plus, Copy, Check, MessageCircle, Clock, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { Footer } from '@/components/layout/Footer';
 import { useLocale } from '@/lib/locale/LocaleProvider';
@@ -154,7 +154,7 @@ export default function MerchantGiftCardsPage() {
 
             <AnimatePresence>
               {showCreate && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5">
+                <m.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mb-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-5">
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="text-sm text-gray-300">
                       Amount
@@ -197,7 +197,7 @@ export default function MerchantGiftCardsPage() {
                   >
                     Save gift card
                   </button>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 

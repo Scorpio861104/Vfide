@@ -4,7 +4,7 @@
  * Re-uses the existing /flashloans component tree via dynamic imports.
  */
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { History, Info, Users, Zap } from 'lucide-react';
 import nextDynamic from 'next/dynamic';
 
@@ -49,7 +49,7 @@ export function FlashloansTab() {
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={activeTab}
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -60,7 +60,7 @@ export function FlashloansTab() {
           {activeTab === 'lenders' && <LendersTab />}
           {activeTab === 'info'    && <BorrowInfoTab />}
           {activeTab === 'history' && <HistoryTab />}
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   );

@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Trophy, Star, Award, Flame, Gift, Zap, Share2, Copy, Check, ChevronUp, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
+import { m, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion';
 import { useTransactionSounds } from '@/hooks/useTransactionSounds';
 import { safeWindowOpen } from '@/lib/security/urlValidation';
 
@@ -130,7 +130,7 @@ function ShareMenu({ notification, onClose: _onClose }: { notification: Achievem
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.9, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 10 }}
@@ -161,7 +161,7 @@ function ShareMenu({ notification, onClose: _onClose }: { notification: Achievem
           </button>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -201,7 +201,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
   }, [notification.id, notification.type, rarity, isLegendary, onDismiss, isHovered, playSound]);
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -50, scale: 0.8, rotateX: -15 }}
       animate={{ opacity: 1, y: position * 10, scale: 1, rotateX: 0 }}
       exit={{ opacity: 0, x: 300, scale: 0.8, rotateX: 15 }}
@@ -212,7 +212,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
     >
       {/* Legendary Glow Effect */}
       {isLegendary && (
-        <motion.div
+        <m.div
           className="absolute inset-0 bg-gradient-to-r from-yellow-500/30 via-orange-500/30 to-yellow-500/30 rounded-2xl blur-xl"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -224,7 +224,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
         {showConfetti && (
           <div className="absolute inset-0 pointer-events-none overflow-visible rounded-2xl z-10">
             {[...Array(isLegendary ? 40 : 25)].map((_, i) => (
-              <motion.div
+              <m.div
                 key={i}
                 initial={{ 
                   y: 0, 
@@ -258,19 +258,19 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
         <div className={`bg-zinc-900 rounded-2xl p-4 min-w-95 border-2 ${rarityColors[rarity]} border-opacity-50`}>
           {/* Combo Multiplier Badge */}
           {notification.comboMultiplier && notification.comboMultiplier > 1 && (
-            <motion.div
+            <m.div
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
               className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1"
             >
               <ChevronUp className="w-3 h-3" />
               {notification.comboMultiplier}x COMBO
-            </motion.div>
+            </m.div>
           )}
 
           {/* Rarity Banner */}
           {rarity !== 'common' && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className={`text-[10px] font-bold uppercase tracking-wider mb-2 ${
@@ -280,12 +280,12 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
               }`}
             >
               ✨ {rarity} Achievement
-            </motion.div>
+            </m.div>
           )}
 
           <div className="flex items-start gap-4">
             {/* Icon */}
-            <motion.div 
+            <m.div 
               className={`bg-gradient-to-br ${colorMap[notification.type]} rounded-xl p-3 text-white shrink-0 shadow-lg`}
               animate={isLegendary ? { 
                 rotate: [0, 5, -5, 0],
@@ -298,7 +298,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
               ) : (
                 iconMap[notification.type]
               )}
-            </motion.div>
+            </m.div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
@@ -311,30 +311,30 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
 
               {/* Rewards with Animated Counters */}
               {notification.reward && (
-                <motion.div 
+                <m.div 
                   className="flex items-center gap-2 flex-wrap mt-3"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
                   {notification.reward.xp && (
-                    <motion.span 
+                    <m.span 
                       className="text-sm bg-purple-500/20 text-purple-400 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
                       whileHover={{ scale: 1.05 }}
                     >
                       <Star className="w-4 h-4" />
                       <AnimatedCounter value={notification.reward.xp} suffix=" XP" />
-                    </motion.span>
+                    </m.span>
                   )}
                   {notification.reward.badge && (
-                    <motion.span 
+                    <m.span 
                       className="text-sm bg-blue-500/20 text-blue-400 font-bold px-3 py-1.5 rounded-lg"
                       whileHover={{ scale: 1.05 }}
                     >
                       🏆 {notification.reward.badge}
-                    </motion.span>
+                    </m.span>
                   )}
-                </motion.div>
+                </m.div>
               )}
             </div>
 
@@ -365,23 +365,23 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
 
           {/* Progress Bar (for streaks/quests) */}
           {(notification.type === 'streak' || notification.type === 'quest') && (
-            <motion.div 
+            <m.div 
               className="mt-3 h-1 bg-zinc-800 rounded-full overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <motion.div
+              <m.div
                 className={`h-full bg-gradient-to-r ${colorMap[notification.type]}`}
                 initial={{ width: 0 }}
                 animate={{ width: '100%' }}
                 transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
               />
-            </motion.div>
+            </m.div>
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -425,7 +425,7 @@ export function AchievementToastContainer() {
       {/* Combo Counter */}
       <AnimatePresence>
         {comboCount >= 2 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.5, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.5, y: -20 }}
@@ -434,7 +434,7 @@ export function AchievementToastContainer() {
             <span className="text-white font-bold text-sm">
               🔥 {comboCount}x Streak!
             </span>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

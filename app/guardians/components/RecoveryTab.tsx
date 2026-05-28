@@ -15,7 +15,7 @@ import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { isAddress } from 'viem';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { Key } from 'lucide-react';
 import { useVaultHub } from '@/hooks/useVaultHub';
 import { useVaultRecovery } from '@/hooks/useVaultRecovery';
@@ -83,19 +83,19 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
 
   if (!isConnected) {
     return (
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+      <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
+        <m.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
           <Key className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-        </motion.div>
+        </m.div>
         <h2 className="text-2xl font-bold text-white mb-4">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to manage wallet rotation</p>
         <div className="mt-6 flex justify-center"><VfideConnectButton size="md" /></div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
+    <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 max-w-4xl mx-auto">
       {!hasVault && !isLoadingVault && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-amber-400 mb-2">Create Vault First</h3>
@@ -124,7 +124,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
       )}
 
       {/* About wallet rotation */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-gradient-to-br from-accent/10 to-blue-500/10 border border-accent/30 rounded-2xl p-6"
@@ -142,7 +142,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
             Requires guardian approval plus a timelocked finalization.
           </p>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Active rotation OR request form */}
       {recoveryStatus.isActive ? (
@@ -159,7 +159,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
           }
         />
       ) : (
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -167,7 +167,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
         >
           <div className="flex items-center justify-between mb-4 gap-3">
             <h3 className="text-xl font-bold text-white min-w-0">Propose Wallet Rotation</h3>
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowRequestForm(!showRequestForm)}
@@ -175,7 +175,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
               className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50 flex-shrink-0"
             >
               {showRequestForm ? 'Cancel' : 'Start Rotation'}
-            </motion.button>
+            </m.button>
           </div>
           <p className="text-gray-400 mb-4">
             No pending wallet rotation. Propose a new active wallet address to start the guarded rotation flow.
@@ -193,7 +193,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
 
           <AnimatePresence>
             {showRequestForm && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -213,7 +213,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                     className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 font-mono transition-all"
                   />
                 </div>
-                <motion.button
+                <m.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => void handleRequestRecovery()}
@@ -221,17 +221,17 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                   className="w-full py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50"
                 >
                   Propose Wallet Rotation
-                </motion.button>
+                </m.button>
                 <p className="text-gray-500 text-xs text-center">
                   Rotation finalization is timelocked and requires guardian approvals.
                 </p>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </m.div>
       )}
 
       <RecoveryTimeline />
-    </motion.div>
+    </m.div>
   );
 }

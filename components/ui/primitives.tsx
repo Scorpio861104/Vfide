@@ -1,7 +1,7 @@
 'use client';
 
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function SurfaceCard({
@@ -21,7 +21,7 @@ export function SurfaceCard({
     glow: "bg-gradient-to-br from-[#0F1624] via-[#0B111C] to-zinc-900 border border-zinc-800 shadow-[0_20px_60px_-24px_rgba(0,240,255,0.35)]",
   }[variant];
 
-  const Comp = interactive ? motion.div : "div";
+  const Comp = interactive ? m.div : "div";
   const motionProps = interactive
     ? { whileHover: { y: -4, scale: 1.01 }, transition: { type: "spring" as const, stiffness: 350, damping: 28 } }
     : {};

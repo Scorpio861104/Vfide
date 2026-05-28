@@ -6,7 +6,7 @@
 'use client'
 
 import { useSystemStats } from '@/lib/vfide-hooks'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useState, ReactNode } from 'react'
 import { Lock, Building2, Store, Zap } from 'lucide-react'
 
@@ -24,7 +24,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
   const [isHovered, setIsHovered] = useState(false)
   
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.05, y: -5 }}
@@ -33,7 +33,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
       className="relative group"
     >
       {/* Glow effect */}
-      <motion.div
+      <m.div
         className="absolute inset-0 rounded-xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"
         style={{ backgroundColor: color }}
       />
@@ -50,7 +50,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
           {/* Header */}
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-xs md:text-sm text-zinc-100/60 truncate pr-1">{label}</span>
-            <motion.div
+            <m.div
               className="text-lg sm:text-xl md:text-2xl shrink-0"
               animate={{
                 scale: isHovered ? [1, 1.2, 1] : 1,
@@ -59,7 +59,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
               transition={{ duration: 0.5 }}
             >
               {icon}
-            </motion.div>
+            </m.div>
           </div>
           
           {/* Value */}
@@ -77,7 +77,7 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
             )}
             
             {trend && trendPercent !== undefined && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-1 text-xs font-bold"
@@ -87,12 +87,12 @@ function StatCard({ label, value, subValue, icon, color, trend, trendPercent }: 
               >
                 <span>{trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'}</span>
                 <span>{trendPercent.toFixed(1)}%</span>
-              </motion.div>
+              </m.div>
             )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   )
 }
 
@@ -111,14 +111,14 @@ export function LiveSystemStats() {
     <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
       <div className="text-center space-y-1 sm:space-y-2">
-        <motion.h2
+        <m.h2
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-100"
         >
           Network Statistics
-        </motion.h2>
-        <motion.div
+        </m.h2>
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -126,7 +126,7 @@ export function LiveSystemStats() {
         >
           <div className="w-2 h-2 bg-emerald-400 rounded-full" />
           Live updates every 5 seconds
-        </motion.div>
+        </m.div>
         
         <StatCard
           label="Total Value Locked"
@@ -170,7 +170,7 @@ export function LiveSystemStats() {
       </div>
       
       {/* Additional Info Bar */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -194,7 +194,7 @@ export function LiveSystemStats() {
             <p className="text-base sm:text-lg md:text-xl font-bold text-amber-400">$2.1M</p>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }

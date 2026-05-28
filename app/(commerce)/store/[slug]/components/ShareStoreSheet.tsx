@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { X, Copy, Check, MessageCircle, Share2, QrCode } from 'lucide-react';
 // v19.10 BCOMPAT-1 FIX: in-app browser clipboard fallback.
 import { copyToClipboardSafe } from '@/lib/clipboardSafe';
@@ -42,14 +42,14 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
   return (
     <AnimatePresence>
       {show && (
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
@@ -100,8 +100,8 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
                 <span className="text-xs text-gray-400 font-medium">QR Code</span>
               </button>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

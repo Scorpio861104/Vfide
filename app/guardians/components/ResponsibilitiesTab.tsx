@@ -2,7 +2,7 @@
 
 import { VfideConnectButton } from '@/components/crypto/VfideConnectButton';
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Users } from 'lucide-react';
 import { useAccount } from 'wagmi';
 
@@ -29,23 +29,23 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
 
   if (!isConnected) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="py-16 text-center"
       >
-        <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+        <m.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
           <Shield className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-        </motion.div>
+        </m.div>
         <h2 className="mb-4 text-2xl font-bold text-white">Connect Wallet</h2>
         <p className="text-gray-400">Connect your wallet to see vaults you&apos;re guarding</p>
         <div className="mt-6 flex justify-center"><VfideConnectButton size="md" /></div>
-      </motion.div>
+      </m.div>
     );
   }
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="mx-auto max-w-4xl space-y-6"
@@ -105,7 +105,7 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
         )}
       </div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -118,8 +118,8 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
           <li>• <strong>Never approve</strong> if you can&apos;t verify the request is legitimate</li>
           <li>• <strong>Report suspicious</strong> activity if you suspect fraud</li>
         </ul>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 

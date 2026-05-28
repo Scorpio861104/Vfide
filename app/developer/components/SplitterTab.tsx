@@ -11,7 +11,7 @@ import {
   Search,
   RefreshCw,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import RevenueSplitterABI from '@/lib/abis/RevenueSplitter.json';
 import { CONTRACT_ADDRESSES, isConfiguredContractAddress } from '@/lib/contracts';
 import { toast } from '@/lib/toast';
@@ -204,7 +204,7 @@ export function SplitterTab() {
         <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
       </div>
       <div className="relative container mx-auto px-4 max-w-3xl py-8 space-y-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
+        <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-2">
           <div className="flex items-center gap-3 mb-3">
             <span className="badge-live"><span className="badge-live-dot" />Revenue Distribution</span>
           </div>
@@ -214,7 +214,7 @@ export function SplitterTab() {
             </span>
           </h1>
           <p className="text-white/50">Trigger payouts from a deployed splitter contract.</p>
-        </motion.div>
+        </m.div>
 
           {/* Inputs */}
           <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 space-y-4">

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Shield, Clock } from 'lucide-react';
 import { GuardianConstellation } from '@/components/security/GuardianConstellation';
 
@@ -13,7 +13,7 @@ export function OverviewTab() {
   ];
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -66,7 +66,7 @@ export function OverviewTab() {
         </h2>
         <div className="space-y-4">
           {recoverySteps.map((item, i) => (
-            <motion.div
+            <m.div
               key={item.step}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -80,12 +80,12 @@ export function OverviewTab() {
                 <div className="text-white font-bold">{item.title}</div>
                 <div className="text-gray-400 text-sm">{item.desc}</div>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </div>
 
-      <motion.div
+      <m.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         whileHover={{ scale: 1.02 }}
@@ -101,8 +101,8 @@ export function OverviewTab() {
         <p className="text-gray-400 text-sm">
           CardBound vaults keep funds in the vault while guardians approve a wallet rotation to a new signer address.
         </p>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }
 

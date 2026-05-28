@@ -2,7 +2,7 @@
 
 import { logger } from '@/lib/logger';
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Activity,
   MessageCircle,
@@ -99,7 +99,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
   const renderActivityRow = (activity: ActivityItem, padded = false) => {
     const color = getColor(activity.type);
     const content = (
-      <motion.div
+      <m.div
         key={activity.id}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -137,7 +137,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     );
 
     return padded ? <div className="h-full pb-2">{content}</div> : content;

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ErrorLog, ErrorCategory, getErrorCategoryLabel } from '@/config/performance-dashboard';
 import { Trash2, Download, Filter, X } from 'lucide-react';
 import { useState, useMemo } from 'react';
@@ -77,16 +77,16 @@ export function ErrorTracker({
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-slate-900/50 border border-slate-800 rounded-lg p-4"
         >
           <div className="text-xs text-slate-400 mb-2">Total Errors</div>
           <div className="text-2xl font-bold text-white">{stats.total}</div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -94,9 +94,9 @@ export function ErrorTracker({
         >
           <div className="text-xs text-red-400 mb-2">Critical</div>
           <div className="text-2xl font-bold text-red-400">{stats.critical}</div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -104,9 +104,9 @@ export function ErrorTracker({
         >
           <div className="text-xs text-yellow-400 mb-2">Warning</div>
           <div className="text-2xl font-bold text-yellow-400">{stats.warning}</div>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -114,7 +114,7 @@ export function ErrorTracker({
         >
           <div className="text-xs text-blue-400 mb-2">Info</div>
           <div className="text-2xl font-bold text-blue-400">{stats.info}</div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Filters and Actions */}
@@ -173,16 +173,16 @@ export function ErrorTracker({
       {/* Error List */}
       <div className="space-y-2">
         {filteredErrors.length === 0 ? (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-12 text-slate-400"
           >
             <p>No errors found</p>
-          </motion.div>
+          </m.div>
         ) : (
           filteredErrors.map((error) => (
-            <motion.div
+            <m.div
               key={error.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -227,7 +227,7 @@ export function ErrorTracker({
 
               {/* Expanded Details */}
               {expandedErrors.has(error.id) && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -248,9 +248,9 @@ export function ErrorTracker({
                       </pre>
                     </div>
                   )}
-                </motion.div>
+                </m.div>
               )}
-            </motion.div>
+            </m.div>
           ))
         )}
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useAccount } from 'wagmi';
 import { 
   Fingerprint, 
@@ -137,7 +137,7 @@ export function WalletSettings() {
   return (
     <div className="space-y-6">
       {/* Stay Connected */}
-      <motion.div 
+      <m.div 
         className="p-6 bg-zinc-900/50 rounded-xl border border-zinc-700"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -161,7 +161,7 @@ export function WalletSettings() {
               stayConnected ? 'bg-accent' : 'bg-zinc-600'
             }`}
           >
-            <motion.div
+            <m.div
               className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full"
               animate={{ x: stayConnected ? 28 : 0 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -170,7 +170,7 @@ export function WalletSettings() {
         </div>
         
         {stayConnected && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             className="mt-4 p-3 bg-accent/10 rounded-lg"
@@ -179,12 +179,12 @@ export function WalletSettings() {
               <Check size={16} />
               <span>Your wallet will stay connected across browser sessions</span>
             </div>
-          </motion.div>
+          </m.div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Auto-Disconnect on Inactivity */}
-      <motion.div 
+      <m.div 
         className="p-6 bg-zinc-900/50 rounded-xl border border-zinc-700"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -209,7 +209,7 @@ export function WalletSettings() {
               autoDisconnect ? 'bg-orange-500' : 'bg-zinc-600'
             }`}
           >
-            <motion.div
+            <m.div
               className="absolute top-1 left-1 w-5 h-5 bg-white rounded-full"
               animate={{ x: autoDisconnect ? 28 : 0 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -218,7 +218,7 @@ export function WalletSettings() {
         </div>
         
         {autoDisconnect && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             className="mt-4"
@@ -239,12 +239,12 @@ export function WalletSettings() {
                 </button>
               ))}
             </div>
-          </motion.div>
+          </m.div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Biometric Login */}
-      <motion.div 
+      <m.div 
         className="p-6 bg-zinc-900/50 rounded-xl border border-zinc-700"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -288,12 +288,12 @@ export function WalletSettings() {
               >
                 {isEnrolling ? (
                   <>
-                    <motion.div
+                    <m.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                     >
                       <Shield size={18} />
-                    </motion.div>
+                    </m.div>
                     <span>Setting up...</span>
                   </>
                 ) : (
@@ -329,10 +329,10 @@ export function WalletSettings() {
             )}
           </div>
         )}
-      </motion.div>
+      </m.div>
 
       {/* Current Wallet */}
-      <motion.div 
+      <m.div 
         className="p-6 bg-zinc-900/50 rounded-xl border border-zinc-700"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -353,7 +353,7 @@ export function WalletSettings() {
             <span>Connected</span>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }
