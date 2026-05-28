@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Calculator } from 'lucide-react';
 
 import { GlassCard, containerVariants, itemVariants } from './shared';
@@ -21,8 +21,8 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
   const netAmount = amount - feeAmount;
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-2xl space-y-6">
-      <motion.div variants={itemVariants}>
+    <m.div variants={containerVariants} initial="hidden" animate="show" className="mx-auto max-w-2xl space-y-6">
+      <m.div variants={itemVariants}>
         <GlassCard className="p-8" hover={false}>
           <h2 className="mb-2 flex items-center gap-3 text-2xl font-bold text-white">
             <Calculator className="text-cyan-400" size={28} />
@@ -89,7 +89,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
             </div>
           </div>
         </GlassCard>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

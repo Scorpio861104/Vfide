@@ -8,7 +8,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { AnimatePresence } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, ShieldAlert, TrendingUp } from 'lucide-react';
 import { useRegisterMerchant } from '@/hooks/useMerchantHooks';
 import { useProofScore } from '@/hooks/useProofScore';
 import { toast } from '@/lib/toast';
@@ -157,16 +157,28 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
     return (
       <div className="flex flex-col items-center justify-center min-h-[320px] text-center px-6 py-10">
         <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mb-5">
-          <Check size={28} className="text-amber-400" />
+          <ShieldAlert size={28} className="text-amber-400" />
         </div>
-        <h2 className="text-xl font-bold text-white mb-2">ProofScore too low</h2>
-        <p className="text-gray-400 text-sm max-w-xs mb-3">
-          Merchant registration requires a ProofScore of <span className="text-amber-300 font-semibold">5,600</span> or above.
-          Your current score is <span className="text-white font-semibold">{score?.toLocaleString() ?? '—'}</span>.
+        <h2 className="text-xl font-bold text-white mb-2">ProofScore needed</h2>
+        <p className="text-gray-400 text-sm max-w-xs mb-1">
+          Selling requires a ProofScore of <span className="text-amber-300 font-semibold">5,600</span>.
+          Yours is <span className="text-white font-semibold">{score?.toLocaleString() ?? '—'}</span>.
         </p>
-        <p className="text-gray-500 text-xs max-w-xs">
-          Complete payments and build trust to raise your score. You can check your progress on the ProofScore page.
+        <div className="w-full max-w-xs bg-white/[0.04] rounded-full h-2 mb-4 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all"
+            style={{ width: `${Math.min(100, ((score ?? 0) / 5600) * 100).toFixed(1)}%` }}
+          />
+        </div>
+        <p className="text-gray-500 text-xs max-w-xs mb-5">
+          Make a few payments and build trust — each transaction moves you closer.
         </p>
+        <a
+          href="/proofscore"
+          className="inline-flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-sm font-semibold px-5 py-2.5 hover:bg-amber-500/25 transition-colors"
+        >
+          <TrendingUp size={14} /> See your ProofScore
+        </a>
       </div>
     );
   }

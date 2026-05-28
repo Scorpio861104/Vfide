@@ -19,7 +19,7 @@
  *   the site, to signal gravity. This is the part that matters.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Lock, FileCode2, Flame, ExternalLink, ShieldCheck } from 'lucide-react';
 
 interface Guarantee {
@@ -82,7 +82,7 @@ const GUARANTEES: Guarantee[] = [
 function GuaranteeCard({ g, index }: { g: Guarantee; index: number }) {
   const Icon = g.icon;
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-60px' }}
@@ -127,7 +127,7 @@ function GuaranteeCard({ g, index }: { g: Guarantee; index: number }) {
         <ExternalLink size={12} aria-hidden="true" />
         {g.verifyLabel}
       </a>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -151,7 +151,7 @@ export function ConstitutionSection() {
       <div className="container mx-auto px-4 max-w-6xl">
 
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -178,7 +178,7 @@ export function ConstitutionSection() {
             make that promise — it makes it structurally impossible to break.
             Here&apos;s exactly how, with the code to verify it.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Three guarantee cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-14">
@@ -188,7 +188,7 @@ export function ConstitutionSection() {
         </div>
 
         {/* Closing statement — the emotional anchor */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -214,7 +214,7 @@ export function ConstitutionSection() {
               Read the contracts.
             </a>
           </p>
-        </motion.div>
+        </m.div>
 
       </div>
     </section>

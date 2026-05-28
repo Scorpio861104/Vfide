@@ -36,7 +36,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { ShieldCheck, Sparkles, ArrowDownRight, Info } from 'lucide-react';
 
 import { Numeric } from '@/components/ui/Numeric';
@@ -274,7 +274,7 @@ export function LiveProofScoreHero() {
               <div key={a.id} className="flex items-center gap-2">
                 <div className="w-16 shrink-0 text-xs text-gray-400 truncate">{a.label}</div>
                 <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/5">
-                  <motion.div
+                  <m.div
                     className="absolute inset-y-0 left-0 rounded-full"
                     style={{ background: a.hex }}
                     animate={{ width: `${a.pct}%` }}
@@ -376,7 +376,7 @@ function FeeCurve({ score, hex, reduce }: { score: number; hex: string; reduce: 
       <path d={path} fill="none" stroke={hex} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       {/* Cursor */}
       <line x1={cursorX} x2={cursorX} y1={4} y2={H} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
-      <motion.circle
+      <m.circle
         cx={cursorX}
         cy={cursorY}
         r={5}

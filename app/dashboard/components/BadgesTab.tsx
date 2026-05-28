@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { ChevronRight, Trophy } from 'lucide-react';
 
 import { BadgeGallery } from '@/components/badge/BadgeGallery';
@@ -14,8 +14,8 @@ export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
   const { badgeIds: _badgeIds, isLoading } = useUserBadges(address);
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
-      <motion.div variants={itemVariants}>
+    <m.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
+      <m.div variants={itemVariants}>
         <GlassCard className="p-6" hover={false}>
           <div className="mb-6 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-bold text-white">
@@ -29,7 +29,7 @@ export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
 
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <motion.div
+              <m.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 className="h-8 w-8 rounded-full border-2 border-accent/20 border-t-accent"
@@ -44,7 +44,7 @@ export function BadgesTab({ address }: { address: `0x${string}` | undefined }) {
             </>
           )}
         </GlassCard>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

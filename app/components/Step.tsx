@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Clock } from 'lucide-react';
 
 interface StepProps {
@@ -13,7 +13,7 @@ interface StepProps {
 
 export function Step({ number, title, description, time, index }: StepProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, x: -24 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: '-40px' }}
@@ -29,13 +29,13 @@ export function Step({ number, title, description, time, index }: StepProps) {
       )}
 
       {/* Step number badge */}
-      <motion.div
+      <m.div
         whileHover={{ scale: 1.08, rotate: 4 }}
         transition={{ type: 'spring', stiffness: 400, damping: 20 }}
         className="step-number-badge shrink-0"
       >
         {number}
-      </motion.div>
+      </m.div>
 
       {/* Content */}
       <div className="flex-1 pb-10 pt-1">
@@ -52,6 +52,6 @@ export function Step({ number, title, description, time, index }: StepProps) {
           {description}
         </p>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

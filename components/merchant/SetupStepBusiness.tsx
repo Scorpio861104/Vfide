@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Store, ArrowRight } from 'lucide-react';
 import { CATEGORIES } from './merchant-setup-types';
 
@@ -20,7 +20,7 @@ export function SetupStepBusiness({
   onNext, isValid,
 }: SetupStepBusinessProps) {
   return (
-    <motion.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+    <m.div key="step1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <Store className="text-accent" size={24} /> Your business
@@ -123,6 +123,6 @@ export function SetupStepBusiness({
           Add products <ArrowRight size={18} />
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

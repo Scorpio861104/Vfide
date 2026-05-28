@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Image from 'next/image';
 import { Package, Camera, Plus, X, ArrowLeft, Rocket, Loader2 } from 'lucide-react';
 import { type QuickProduct } from './merchant-setup-types';
@@ -33,7 +33,7 @@ export function SetupStepProducts({
   };
 
   return (
-    <motion.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
+    <m.div key="step2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <Package className="text-accent" size={24} /> Add your products
@@ -43,7 +43,7 @@ export function SetupStepProducts({
 
       <div className="space-y-4">
         {products.map((product, _idx) => (
-          <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          <m.div key={product.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             className="bg-white/3 border border-white/10 rounded-xl p-4">
             <div className="flex items-start gap-3">
               <button onClick={() => handleImageCapture(product.id)}
@@ -110,7 +110,7 @@ export function SetupStepProducts({
                 <X size={16} />
               </button>
             </div>
-          </motion.div>
+          </m.div>
         ))}
 
         <button onClick={addProduct}
@@ -130,6 +130,6 @@ export function SetupStepProducts({
           {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Creating store...</> : <><Rocket size={18} /> Go live</>}
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

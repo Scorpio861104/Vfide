@@ -31,7 +31,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { Activity } from 'lucide-react';
 
 import { Numeric } from '@/components/ui/Numeric';
@@ -383,7 +383,7 @@ export function FeeFlowRiver() {
                 </span>
               </div>
               <div className="mt-1 text-lg text-white">
-                <motion.span
+                <m.span
                   key={Math.floor(totals[p.id] * 100)}
                   initial={{ opacity: 0.5, y: -2 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -391,7 +391,7 @@ export function FeeFlowRiver() {
                   className="inline-block"
                 >
                   <Numeric value={totals[p.id]} format="currency" size="lg" weight={500} />
-                </motion.span>
+                </m.span>
               </div>
             </div>
           ))}

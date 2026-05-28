@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, Suspense, useEffect } from 'react';
+import { LazyMotion, domAnimation } from 'framer-motion';
 import { registerServiceWorker } from '@/lib/sw-register';
 import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
@@ -100,6 +101,7 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   useRouteAnnouncement(pathname);
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <RealtimeProvider wsUrl={process.env.NEXT_PUBLIC_WEBSOCKET_URL}>
       <UserProvider address={address}>
         <LiveProofScoreProvider>
@@ -113,5 +115,6 @@ export function ClientLayout({ children }: ClientLayoutProps) {
         </LiveProofScoreProvider>
       </UserProvider>
     </RealtimeProvider>
+    </LazyMotion>
   );
 }

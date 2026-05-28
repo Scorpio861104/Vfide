@@ -17,7 +17,7 @@
  *  - Plain English first, proper noun in parens or after a colon.
  */
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Trophy, Shield, LifeBuoy } from 'lucide-react';
 
 const TERMS = [
@@ -70,7 +70,7 @@ export function PlainEnglishCard() {
           {TERMS.map((term, i) => {
             const Icon = term.icon;
             return (
-              <motion.div
+              <m.div
                 key={term.name}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -93,7 +93,7 @@ export function PlainEnglishCard() {
                 <p className="text-sm leading-relaxed text-zinc-400">
                   {term.plain}
                 </p>
-              </motion.div>
+              </m.div>
             );
           })}
         </div>

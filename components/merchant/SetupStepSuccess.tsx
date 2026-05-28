@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { CheckCircle2, ExternalLink, Share2, QrCode, Check, Copy } from 'lucide-react';
 
 interface SetupStepSuccessProps {
@@ -19,11 +19,11 @@ export function SetupStepSuccess({ businessName, slug }: SetupStepSuccessProps) 
   };
 
   return (
-    <motion.div key="step3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
+    <m.div key="step3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-8">
+      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
         className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
         <CheckCircle2 size={40} className="text-white" />
-      </motion.div>
+      </m.div>
 
       <h2 className="text-3xl font-bold text-white mb-2">You&apos;re live!</h2>
       <p className="text-gray-400 mb-8">{businessName} is ready to accept payments</p>
@@ -54,6 +54,6 @@ export function SetupStepSuccess({ businessName, slug }: SetupStepSuccessProps) 
           <QrCode size={18} /> Open POS
         </a>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { Footer } from "@/components/layout/Footer";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Link from "next/link";
 import { Shield, Zap, Heart, ArrowRight, Globe, Lock, Flame, Vote } from "lucide-react"; 
 import { useLocale } from '@/hooks/useLocale';
@@ -73,7 +73,7 @@ export default function AboutPage() {
         {/* Hero */}
         <section className="relative pt-20 pb-16 px-4">
           <div className="container mx-auto max-w-4xl text-center">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
                 <Globe size={12} /> Built for the world&apos;s 1.4 billion unbanked
               </div>
@@ -88,14 +88,14 @@ export default function AboutPage() {
                 It exists because billions of people have been failed by traditional financial systems — 
                 through extraction, exclusion, and gatekeeping.
               </p>
-            </motion.div>
+            </m.div>
           </div>
         </section>
 
         {/* The problem */}
         <section className="py-16 px-4 border-t border-white/5">
           <div className="container mx-auto max-w-4xl">
-            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
+            <m.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}>
               <h2 className="text-3xl font-bold mb-6">The problem we&apos;re solving</h2>
               <div className="grid md:grid-cols-3 gap-6 text-sm">
                 {[
@@ -126,7 +126,7 @@ export default function AboutPage() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </section>
 
@@ -138,7 +138,7 @@ export default function AboutPage() {
               {PRINCIPLES.map((p, i) => {
                 const Icon = p.icon;
                 return (
-                  <motion.div
+                  <m.div
                     key={p.title}
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -155,7 +155,7 @@ export default function AboutPage() {
                         <p className="text-sm text-zinc-400 leading-relaxed">{p.body}</p>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>

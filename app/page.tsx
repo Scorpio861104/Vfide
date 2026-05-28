@@ -1,7 +1,7 @@
 'use client';
 
 import { Footer } from '@/components/layout/Footer';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { m, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, ChevronRight, CheckCircle2, ShoppingBag, Store } from 'lucide-react';
 import Link from 'next/link';
 import { FeeSavingsCalculator } from '@/components/fees';
@@ -114,27 +114,27 @@ export default function Home() {
 
           <MonumentBackdrop variant="hero" />
 
-          <motion.div
+          <m.div
             style={{ y: heroY, opacity: heroOpacity }}
             className="container mx-auto px-4 max-w-6xl relative"
           >
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center">
               {/* Text column */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7 }}
                 className="lg:col-span-5"
               >
                 {/* Animated badge */}
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="badge-live mb-6 w-fit"
                 >
                   Buy and sell anything · Zero seller fees · Your keys, always
-                </motion.div>
+                </m.div>
 
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] tracking-tight">
                   Payments for people,{' '}
@@ -191,7 +191,7 @@ export default function Home() {
                 {/* Trust points */}
                 <div className="space-y-2">
                   {TRUST_POINTS.map((point, i) => (
-                    <motion.div
+                    <m.div
                       key={point}
                       initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -200,13 +200,13 @@ export default function Home() {
                     >
                       <CheckCircle2 size={14} className="text-accent shrink-0" aria-hidden="true" />
                       {point}
-                    </motion.div>
+                    </m.div>
                   ))}
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* Widget column */}
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 32 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.25 }}
@@ -219,9 +219,9 @@ export default function Home() {
                   Live demo · Drag the slider to see how your reputation
                   (ProofScore) lowers your fee in real time.
                 </p>
-              </motion.div>
+              </m.div>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Bottom glow */}
           <div className="hero-glow-bottom" aria-hidden="true" />
@@ -276,19 +276,49 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="py-16 border-y border-white/5">
           <div className="container mx-auto px-4 max-w-6xl">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="mb-12 text-center"
+              className="mb-8 text-center"
             >
-              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Protocol stats</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">The problem</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-white">
-                Numbers that{' '}
-                <span className="gradient-text-cyan-blue">matter</span>
+                The global financial system{' '}
+                <span className="gradient-text-hero">is failing billions</span>
               </h2>
-            </motion.div>
+            </m.div>
+
+            {/* Problem stats row */}
+            <m.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10 rounded-2xl border border-red-500/10 bg-red-500/[0.03] p-6"
+            >
+              {[
+                { stat: "1.4B",    label: "adults excluded from banking",        sub: "World Bank Findex 2024"    },
+                { stat: "$58B",    label: "lost to remittance fees each year",   sub: "World Bank 2024"           },
+                { stat: "2.9–4.4%",label: "average merchant fee (PayPal/Stripe)",sub: "Square 2025"              },
+              ].map((item) => (
+                <div key={item.stat} className="text-center">
+                  <div className="text-3xl font-black text-red-400/90 mb-1">{item.stat}</div>
+                  <div className="text-sm text-zinc-300 font-semibold leading-snug mb-0.5">{item.label}</div>
+                  <div className="text-xs text-zinc-600">Source: {item.sub}</div>
+                </div>
+              ))}
+            </m.div>
+
+            {/* Divider with VFIDE answer */}
+            <div className="flex items-center gap-4 mb-10">
+              <div className="flex-1 h-px bg-white/5" />
+              <div className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/[0.07] px-4 py-1.5">
+                <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">VFIDE&apos;s answer</span>
+              </div>
+              <div className="flex-1 h-px bg-white/5" />
+            </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
@@ -297,7 +327,7 @@ export default function Home() {
                 { value: 3,     label: 'Settlement (seconds)', suffix: '',    color: 'emerald' },
                 { value: 20,    label: 'Community & charity fund', suffix: '%',   color: 'pink'    },
               ].map((stat, i) => (
-                <motion.div
+                <m.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -311,7 +341,7 @@ export default function Home() {
                     suffix={stat.suffix}
                     color={stat.color}
                   />
-                </motion.div>
+                </m.div>
               ))}
             </div>
           </div>
@@ -331,7 +361,7 @@ export default function Home() {
           </div>
 
           <div className="container mx-auto px-4 max-w-6xl relative">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -347,7 +377,7 @@ export default function Home() {
                 Three primitives that compose into a complete financial layer: a vault you control,
                 a reputation engine that rewards honesty, and a fee model that funds the network.
               </p>
-            </motion.div>
+            </m.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {FEATURES.map((feature) => (
@@ -362,7 +392,7 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="py-24 bg-zinc-950/60">
           <div className="container mx-auto px-4">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -374,7 +404,7 @@ export default function Home() {
                 See how much you{' '}
                 <span className="text-glow-cyan">save</span>
               </h2>
-            </motion.div>
+            </m.div>
             <FeeSavingsCalculator />
           </div>
         </section>
@@ -384,7 +414,7 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section id="how-it-works" className="py-24 scroll-mt-24">
           <div className="container mx-auto px-4 max-w-4xl">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -396,7 +426,7 @@ export default function Home() {
                 Get started in{' '}
                 <span className="gradient-text-cyan-blue">60 seconds</span>
               </h2>
-            </motion.div>
+            </m.div>
 
             <div className="space-y-5">
               <Step number={1} title="Create your account"  description="Connect your wallet — that's it. No email, no KYC for basic use, no approval wait."  time="10 sec" index={0} />
@@ -411,7 +441,7 @@ export default function Home() {
         ════════════════════════════════════════ */}
         <section className="py-24 px-4">
           <div className="container mx-auto max-w-4xl">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -448,7 +478,7 @@ export default function Home() {
               <p className="mt-8 text-xs text-zinc-500">
                 No credit card. No bank account. Just your wallet.
               </p>
-            </motion.div>
+            </m.div>
           </div>
         </section>
 
