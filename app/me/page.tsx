@@ -69,7 +69,7 @@ const IDENTITY: HubLink[] = [
 const MONEY: HubLink[] = [
   { href: '/vault',             icon: Wallet,    label: 'Vault',          description: 'Your non-custodial vault — balance, queue, spend limits.' },
   { href: '/merchant/payouts',  icon: Briefcase, label: 'Earnings',       description: 'Confirmed revenue and cash-out, for merchants.' },
-  { href: '/rewards',           icon: Gift,      label: 'Rewards',        description: 'Pool earnings from merchant + referral programs.' },
+  { href: '/rewards',           icon: Gift,      label: 'Rewards',        description: 'Stablecoin service fee distributions for verified merchant and referral work.' },
   { href: '/sanctum',           icon: Heart,     label: 'Sanctum',        description: 'Charity allocations and grants funded by protocol fees.' },
 ];
 
@@ -93,7 +93,7 @@ const GOVERNANCE: HubLink[] = [
 ];
 
 const ENGAGEMENT: HubLink[] = [
-  { href: '/quests', icon: Target, label: 'Quests', description: 'Time-bound objectives that earn ProofScore and tokens.' },
+  { href: '/quests', icon: Target, label: 'Quests', description: 'Time-bound objectives that build ProofScore through verified on-chain activity.' },
 ];
 
 // ── Page ────────────────────────────────────────────────────────────
@@ -278,7 +278,7 @@ function NextStep({ score }: { score: number }) {
         <Link href="/merchant/setup" className="text-cyan-300 hover:text-cyan-200">
           opening a store <ArrowRight size={12} className="inline" />
         </Link>{' '}
-        or earning more through{' '}
+        or building a higher ProofScore through{' '}
         <Link href="/quests" className="text-cyan-300 hover:text-cyan-200">
           quests <ArrowRight size={12} className="inline" />
         </Link>
