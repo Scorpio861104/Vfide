@@ -17,9 +17,6 @@ import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
 import { FeeSimulatorTab } from './components/FeeSimulatorTab';
 import { RecentActivity } from './components/RecentActivity';
-import { PageSkeleton } from '@/components/layout/PageSkeleton';
-import { useLocale } from '@/hooks/useLocale';
-import { DASHBOARD_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
 const tabs = [
   { id: 'overview', label: 'Overview', icon: Home },
@@ -37,10 +34,8 @@ function truncateAddress(address?: string) {
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
-  const { address, isConnecting } = useAccount();
-  const { score: proofScore, burnFee: feeRate, isDisconnected: _scoreDisconnected, isLoading: scoreLoading } = useProofScore();
-  const [locale] = useLocale();
-  const _dashCopy = pickLocaleCopy(DASHBOARD_TRANSLATIONS, locale);
+  const { address } = useAccount();
+  const { score: proofScore, burnFee: feeRate, isDisconnected: _scoreDisconnected } = useProofScore();
   const [txCount, setTxCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
 
@@ -59,12 +54,6 @@ export default function DashboardPage() {
       .catch(() => { /* leave defaults */ });
     return () => { cancelled = true; };
   }, [address]);
-
-  // Show skeleton while wagmi reconnects or score hook is loading initial data
-  if (isConnecting || scoreLoading) {
-    return <PageSkeleton showHero cards={3} />;
-  }
-
 
   return (
     <>
@@ -161,7 +150,7 @@ export default function DashboardPage() {
               <FeeSavingsCard
                 totalVolume={totalVolume}
                 transactionCount={txCount}
-                buyerFeeBps={feeRate ?? 500}
+                buyerFeeBps={50}
               />
             </motion.div>
           </div>

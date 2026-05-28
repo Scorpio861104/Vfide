@@ -1,119 +1,58 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
-import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, HandshakeIcon, Landmark, ListChecks } from 'lucide-react';
-import { useState } from 'react';
 import { Footer } from '@/components/layout/Footer';
-import { BrowseTab } from './components/BrowseTab';
-import { MyLoansTab } from './components/MyLoansTab';
-import { OfferTab } from './components/OfferTab';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { ArrowRight, Clock } from 'lucide-react';
+import { useLocale } from '@/hooks/useLocale';
+import { STUB_TRANSLATIONS, pickLocaleCopy } from '@/lib/i18n';
 
-type TabId = 'browse' | 'my-loans' | 'offer';
-
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: 'browse',   label: 'Browse Offers', icon: BookOpen        },
-  { id: 'my-loans', label: 'My Loans',       icon: ListChecks      },
-  { id: 'offer',    label: 'Lend',           icon: Landmark        },
-];
-
-export default function LendingPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('browse');
-
+export default function Page() {
+  const [locale] = useLocale();
+  const _copy = pickLocaleCopy(STUB_TRANSLATIONS, locale);
   return (
-    <div className="relative min-h-screen bg-zinc-950 md:pt-[3.5rem]">
-      {/* Ambient background */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
-          style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
-        <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.04]"
-          style={{ background: 'radial-gradient(circle, #a855f7 0%, transparent 70%)' }} />
-        <div className="grid-pattern absolute inset-0 opacity-[0.03]" />
-      </div>
-
-      <div className="relative container mx-auto px-4 max-w-6xl py-8">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="badge-live"><span className="badge-live-dot" />Trust-Based Lending</span>
-          </div>
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-400 bg-clip-text text-transparent">
-                  P2P Lending
-                </span>
-              </h1>
-              <p className="text-white/50 text-lg">
-                Your ProofScore is your collateral — no tokens locked, no credit check.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-cyan-400">$0</div>
-                <div className="text-xs text-white/40">Token Collateral</div>
-              </div>
-              <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-purple-400">12%</div>
-                <div className="text-xs text-white/40">Max Interest</div>
-              </div>
-              <div className="analytics-card text-center px-5 py-3">
-                <div className="text-xl font-bold text-amber-400">1–30</div>
-                <div className="text-xs text-white/40">Days Duration</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Trust model info banner */}
-          <div className="mt-5 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-            <div className="flex items-start gap-3">
-              <HandshakeIcon size={18} className="text-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
-              <div className="text-sm text-zinc-300 leading-relaxed">
-                <span className="text-white font-semibold">How it works: </span>
-                Your ProofScore sets your borrow ceiling. After you accept an offer, one of your guardians
-                must co-sign to activate the loan. Default penalties are graduated — a completed payment plan
-                costs far less than a full default. Interest is capped at 12%, duration at 30 days,
-                with a 3-day grace period built in.
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Sticky Tab Bar */}
-        <div
-          className="sticky top-7 md:top-[5.25rem] z-30 -mx-4 px-4 py-3 backdrop-blur-xl border-b border-white/5 mb-8"
-          style={{ background: 'rgba(9,9,11,0.85)' }}
-        >
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            {TABS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={activeTab === id ? 'tab-pill-active' : 'tab-pill-inactive'}
-              >
-                <Icon size={14} />{label}
-              </button>
-            ))}
-          </div>
+    <>
+      <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative overflow-hidden text-white">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-40 left-1/3 w-[600px] h-[600px] rounded-full opacity-[0.06]"
+            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
         </div>
-
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+        <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" aria-hidden="true" />
+        <div className="container mx-auto max-w-2xl px-4 py-20 relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            className="glass-card-premium p-10 text-center"
           >
-            {activeTab === 'browse'   && <BrowseTab />}
-            {activeTab === 'my-loans' && <MyLoansTab />}
-            {activeTab === 'offer'    && <OfferTab />}
+            <div className="text-6xl mb-6" aria-hidden="true">🏦</div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-300 mb-5">
+              <Clock size={10} /> In development · Post-testnet
+            </div>
+            <h1 className="text-3xl font-black text-white mb-3">DeFi Lending</h1>
+            <p className="text-zinc-400 mb-2 text-sm font-medium">Collateral-backed loans against your vault balance.</p>
+            <p className="text-zinc-500 text-sm leading-relaxed mb-8">Protocol-native lending against VFIDE vault collateral is planned for V2. ProofScore-gated credit limits are the key differentiator. In the meantime, explore existing DeFi lending protocols on Base.</p>
+            <div className="text-left bg-zinc-900/50 rounded-xl p-5 mb-8">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest mb-3">What to expect</p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Borrow USDC against vault collateral at ProofScore-adjusted rates</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>No credit check — collateral and reputation are your credit score</li>
+                <li className="flex items-start gap-2 text-sm text-zinc-300"><span className="text-cyan-400 mt-0.5">→</span>Liquidation protection with Guardian-triggered top-ups</li>
+              </ul>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/proofscore"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors text-sm"
+              >
+                Build your ProofScore now <ArrowRight size={14} />
+              </Link>
+              <Link href="/vault"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 hover:border-white/20 text-zinc-300 rounded-xl transition-colors text-sm"
+              >
+                Go back
+              </Link>
+            </div>
           </motion.div>
-        </AnimatePresence>
+        </div>
       </div>
       <Footer />
-    </div>
+    </>
   );
 }
