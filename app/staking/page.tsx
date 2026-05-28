@@ -274,7 +274,7 @@ export default function StakingPage() {
                     aria-label="Select staking pool"
                     value={effectiveLp ?? ''}
                     onChange={(e) => setSelectedLp(e.target.value as Address)}
-                    className="w-full appearance-none bg-zinc-900 border border-white/10 rounded-lg px-3 py-2.5 pr-9 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                    className="w-full appearance-none bg-zinc-900 border border-white/10 rounded-lg px-3 py-2.5 pr-9 text-white text-sm focus:outline-none focus:border-accent/50"
                   >
                     {activePools.map((p) => (
                       <option key={p.lpToken} value={p.lpToken}>
@@ -362,7 +362,7 @@ export default function StakingPage() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.0"
-                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-3 text-xl text-white font-mono focus:outline-none focus:border-cyan-500/50"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-3 text-xl text-white font-mono focus:outline-none focus:border-accent/50"
                   />
                   {amountError && (
                     <div className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
@@ -376,7 +376,7 @@ export default function StakingPage() {
                         type="button"
                         onClick={() => setAmount(formatUnits(lpBalance, 18))}
                         disabled={lpBalance === 0n}
-                        className="text-cyan-400 hover:text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 rounded"
+                        className="text-cyan-400 hover:text-cyan-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 rounded"
                       >
                         Max
                       </button>
@@ -390,7 +390,7 @@ export default function StakingPage() {
                       type="button"
                       onClick={handleApprove}
                       disabled={approving || amountBn === 0n || !!amountError || amountBn > lpBalance}
-                      className="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
+                      className="col-span-2 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
                     >
                       {approving ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : null}
                       {amountBn > lpBalance ? 'Insufficient LP balance' : 'Approve LP token'}
@@ -407,7 +407,7 @@ export default function StakingPage() {
                           !selectedPool?.active ||
                           amountBn > lpBalance
                         }
-                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
                       >
                         {staking ? <Loader2 className="animate-spin" size={16} aria-hidden="true" /> : null}
                         {amountBn > lpBalance ? 'Insufficient' : 'Stake'}

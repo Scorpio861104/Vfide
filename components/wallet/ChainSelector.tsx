@@ -110,7 +110,7 @@ export function ChainSelector({ className = '' }: ChainSelectorProps) {
           'rounded-lg text-sm font-medium transition-colors',
           'bg-zinc-800 border border-zinc-700 text-zinc-200',
           'hover:bg-zinc-700 hover:border-zinc-600',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
           'disabled:opacity-50 disabled:cursor-not-allowed',
         ].join(' ')}
       >
@@ -158,7 +158,7 @@ export function ChainSelector({ className = '' }: ChainSelectorProps) {
                   'w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors',
                   'min-h-[44px] text-left',
                   isActive
-                    ? 'bg-cyan-500/10 text-cyan-300'
+                    ? 'bg-accent/10 text-accent'
                     : 'text-zinc-300 hover:bg-zinc-800 hover:text-white',
                 ].join(' ')}
               >

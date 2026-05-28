@@ -22,7 +22,7 @@ export function RewardsTab({ isConnected: _isConnected = false }: { isConnected?
     },
     {
       icon: '🔬',
-      color: 'border-cyan-500/40 bg-cyan-500/5',
+      color: 'border-accent/40 bg-accent/5',
       labelColor: 'text-cyan-400',
       title: 'Early Feature Access',
       description: 'Reach Level 10 to opt in to beta features and new platform capabilities before public release.',

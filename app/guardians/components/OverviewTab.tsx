@@ -33,7 +33,7 @@ export function OverviewTab() {
       </div>
 
       {/* What is a Guardian */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-cyan-500/30 p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 backdrop-blur-xl border border-accent/30 p-8">
         <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-6 flex items-center gap-3">
           <Shield className="w-7 h-7 text-cyan-400" />
           What is a Guardian?
@@ -48,7 +48,7 @@ export function OverviewTab() {
             They can only approve a wallet rotation that moves the active signer for the vault to a new address.
           </p>
         </div>
-        <div className="bg-cyan-500/10 rounded-xl p-4 border border-cyan-500/30 mt-3">
+        <div className="bg-cyan-500/10 rounded-xl p-4 border border-accent/30 mt-3">
           <p className="text-cyan-200 text-sm">
             Guardians are a private trust list chosen by each vault holder (typically family/friends). This is not an open guardian network.
           </p>
@@ -89,7 +89,7 @@ export function OverviewTab() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         whileHover={{ scale: 1.02 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/30 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-accent/30 p-6"
       >
         <div className="flex items-center gap-2 mb-4">
           <span className="text-3xl">🔑</span>

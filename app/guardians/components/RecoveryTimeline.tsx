@@ -15,7 +15,7 @@ const TIMELINE_STEPS = [
   {
     icon: Key,
     bgColor: 'bg-cyan-500/20',
-    borderColor: 'border-cyan-500/50',
+    borderColor: 'border-accent/50',
     iconColor: 'text-cyan-400',
     title: 'Rotation Proposed',
     desc: 'The current CardBound vault admin proposes a new active wallet for the vault.',
@@ -47,7 +47,7 @@ const TIMELINE_STEPS = [
   {
     icon: ArrowRightCircle,
     bgColor: 'bg-cyan-500/20',
-    borderColor: 'border-cyan-500/50',
+    borderColor: 'border-accent/50',
     iconColor: 'text-cyan-400',
     title: 'Wallet Updated',
     desc: 'The vault keeps custody while the new wallet becomes the active signer.',

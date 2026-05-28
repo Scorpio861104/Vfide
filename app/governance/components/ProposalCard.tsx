@@ -30,7 +30,7 @@ interface ProposalCardProps {
 function statusBadge(status?: ProposalStatus): { bg: string; text: string; Icon: typeof Clock } {
   switch (status) {
     case ProposalStatus.Active:
-      return { bg: 'bg-cyan-500/10 border-cyan-500/30', text: 'text-cyan-300', Icon: Sparkles };
+      return { bg: 'bg-cyan-500/10 border-accent/30', text: 'text-cyan-300', Icon: Sparkles };
     case ProposalStatus.Ended:
       return { bg: 'bg-zinc-500/10 border-zinc-500/30', text: 'text-zinc-300', Icon: Clock };
     case ProposalStatus.Succeeded:
@@ -108,7 +108,7 @@ export function ProposalCard({
               </div>
             )}
             {viewer?.hasVoted && isActive && (
-              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border bg-cyan-500/10 border-cyan-500/30 text-cyan-200">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border bg-cyan-500/10 border-accent/30 text-cyan-200">
                 <CheckCircle2 size={10} /> You voted
               </div>
             )}

@@ -127,7 +127,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
           ) : (
             <div className="flex-1 flex items-center justify-center h-full">
               <button onClick={startCamera} className="flex flex-col items-center gap-3 p-8">
-                <div className="w-20 h-20 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center"><Camera size={32} className="text-cyan-400" /></div>
+                <div className="w-20 h-20 rounded-2xl bg-cyan-500/20 border border-accent/30 flex items-center justify-center"><Camera size={32} className="text-cyan-400" /></div>
                 <span className="text-white font-bold">Take Product Photo</span>
                 <span className="text-gray-500 text-xs">AI will generate the listing for you</span>
               </button>
@@ -142,7 +142,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
 
             {generating ? (
               <div className="flex items-center justify-center gap-3 py-8">
-                <div className="w-6 h-6 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-accent/20 border-t-cyan-500 rounded-full animate-spin" />
                 <span className="text-cyan-400 text-sm">AI is analyzing your product...</span>
               </div>
             ) : listing ? (
@@ -151,14 +151,14 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
                   <label className="text-[10px] text-gray-500 uppercase tracking-wider">Product Name</label>
                   {editing ? (
                     <input value={listing.name} onChange={e =>  setListing({ ...listing, name: e.target.value })}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mt-1 focus:outline-none focus:border-cyan-500/50" />
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mt-1 focus:outline-none focus:border-accent/50" />
                   ) : <p className="text-white font-bold">{listing.name}</p>}
                 </div>
                 <div>
                   <label className="text-[10px] text-gray-500 uppercase tracking-wider">Description</label>
                   {editing ? (
                     <textarea value={listing.description} onChange={e =>  setListing({ ...listing, description: e.target.value })}
-                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mt-1 h-16 resize-none focus:outline-none focus:border-cyan-500/50" />
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm mt-1 h-16 resize-none focus:outline-none focus:border-accent/50" />
                   ) : <p className="text-gray-300 text-sm">{listing.description}</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -166,7 +166,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
                     <label className="text-[10px] text-gray-500 uppercase tracking-wider">Price</label>
                     {editing ? (
                       <input value={listing.suggestedPrice} onChange={e =>  setListing({ ...listing, suggestedPrice: parseFloat(e.target.value) || 0 })} type="number"
-                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white font-mono text-sm mt-1 focus:outline-none focus:border-cyan-500/50" />
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white font-mono text-sm mt-1 focus:outline-none focus:border-accent/50" />
                     ) : <p className="text-cyan-400 font-mono font-bold">{listing.currency}{listing.suggestedPrice}</p>}
                   </div>
                   <div>

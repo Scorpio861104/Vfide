@@ -412,7 +412,7 @@ function CreateSlotModal({ services, onClose, onCreated, onError }: {
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Service</span>
-            <select value={productId} onChange={(e) => setProductId(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none">
+            <select value={productId} onChange={(e) => setProductId(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none">
               {services.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>

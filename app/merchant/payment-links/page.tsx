@@ -245,7 +245,7 @@ function PaymentLinkRow({ link, copied, onCopy, onPause, onResume, onArchive, on
         <div className="mt-2 font-mono text-xs text-zinc-500 break-all">{fullUrl}</div>
       </div>
       <div className="flex gap-2 flex-wrap">
-        <button onClick={onCopy} className="text-xs px-3 py-1.5 border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 rounded hover:bg-cyan-500/20 inline-flex items-center gap-1">
+        <button onClick={onCopy} className="text-xs px-3 py-1.5 border border-accent/30 bg-accent/10 text-accent rounded hover:bg-cyan-500/20 inline-flex items-center gap-1">
           {copied ? <Check size={12} /> : <Copy size={12} />}
           {copied ? 'Copied' : 'Copy'}
         </button>
@@ -348,11 +348,11 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Title *</span>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Saturday haircut deposit" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Saturday haircut deposit" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Description (optional)</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
 
           <div>

@@ -102,7 +102,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
               {post.author.verified && (
                 <Shield className="w-4 h-4 text-cyan-400" />
               )}
-              <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-400/20 text-cyan-400">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent">
                 {post.author.proofScore} PS
               </span>
             </div>

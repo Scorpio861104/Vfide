@@ -60,7 +60,7 @@ export function StreamsTab() {
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
-              filter === f ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/3 border border-white/10 text-gray-400 hover:border-white/20'
+              filter === f ? 'bg-accent/20 text-accent border border-accent/30' : 'bg-white/3 border border-white/10 text-gray-400 hover:border-white/20'
             }`}
           >
             {f}

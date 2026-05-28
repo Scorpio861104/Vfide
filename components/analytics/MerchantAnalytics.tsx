@@ -74,7 +74,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
           {(['7d', '30d', '90d'] as const).map(p => (
             <button key={p} onClick={() => setPeriod(p)}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-                period === p ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
+                period === p ? 'bg-accent/20 text-accent border border-accent/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
               }`}>
               {p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
             </button>

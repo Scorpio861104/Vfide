@@ -124,7 +124,7 @@ export function AccountTab() {
           <div>
             <label className="text-xs text-gray-400 mb-1.5 block">Username</label>
             <input
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-accent/50"
              
               value={form.username}
               onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
@@ -133,7 +133,7 @@ export function AccountTab() {
           <div>
             <label className="text-xs text-gray-400 mb-1.5 block">Display Name</label>
             <input
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-accent/50"
              
               value={form.display_name}
               onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))}
@@ -143,7 +143,7 @@ export function AccountTab() {
             <label className="text-xs text-gray-400 mb-1.5 block">Bio</label>
             <textarea
               rows={3}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-cyan-500/50 resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-accent/50 resize-none"
              
               value={form.bio}
               onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
@@ -152,7 +152,7 @@ export function AccountTab() {
           <div>
             <label className="text-xs text-gray-400 mb-1.5 block">Avatar URL</label>
             <input
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white  focus:outline-none focus:border-accent/50"
              
               value={form.avatar_url}
               onChange={(e) => setForm((f) => ({ ...f, avatar_url: e.target.value }))}
@@ -173,7 +173,7 @@ export function AccountTab() {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             {saving ? 'Saving…' : 'Save Changes'}

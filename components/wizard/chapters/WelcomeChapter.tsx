@@ -25,7 +25,7 @@ export function WelcomeChapter({ onContinue, onSkipAll }: WelcomeChapterProps) {
     >
       {/* Wallet connect prompt — shown only when not connected */}
       {!isConnected && (
-        <div className="mb-4 flex flex-col items-center gap-3 rounded-xl border border-cyan-500/30 bg-cyan-500/8 p-4 text-center">
+        <div className="mb-4 flex flex-col items-center gap-3 rounded-xl border border-accent/30 bg-cyan-500/8 p-4 text-center">
           <Wallet className="text-cyan-300" size={28} aria-hidden />
           <p className="text-sm text-white/80 font-medium">
             Connect your wallet to begin setup

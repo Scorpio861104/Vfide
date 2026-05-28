@@ -146,7 +146,7 @@ function StateBanner({
       : state === 1 || state === 2
         ? 'border-amber-500/30 bg-amber-500/5 text-amber-200'
         : state === 3
-          ? 'border-cyan-500/30 bg-cyan-500/5 text-cyan-200'
+          ? 'border-accent/30 bg-accent/5 text-accent'
           : 'border-gray-500/30 bg-gray-500/5 text-gray-400';
   return (
     <div className={`rounded-xl border p-4 ${tone}`}>
@@ -207,7 +207,7 @@ function PendingProposalPanel({
   }
 
   return (
-    <section className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
+    <section className="rounded-xl border border-accent/30 bg-accent/5 p-4">
       <div className="flex items-center gap-2 text-cyan-300">
         <Clock size={16} />
         <h2 className="text-sm font-semibold uppercase tracking-wider">
@@ -307,7 +307,7 @@ function ConfirmedHeirsPanel({
         </p>
         <a
           href="/inheritance/setup"
-          className="mt-3 inline-block rounded-lg bg-cyan-500/20 px-3 py-2 text-sm text-cyan-300 hover:bg-cyan-500/30"
+          className="mt-3 inline-block rounded-lg bg-cyan-500/20 px-3 py-2 text-sm text-cyan-300 hover:bg-accent/30"
         >
           Set up inheritance
         </a>
@@ -474,7 +474,7 @@ function ProofOfLifePanel({
           type="button"
           onClick={() => handleSet(input)}
           disabled={isWritePending || !input}
-          className="rounded-lg bg-cyan-500/20 px-3 py-2 text-xs text-cyan-300 hover:bg-cyan-500/30 disabled:opacity-50"
+          className="rounded-lg bg-cyan-500/20 px-3 py-2 text-xs text-cyan-300 hover:bg-accent/30 disabled:opacity-50"
         >
           {hasWallet ? 'Replace' : 'Set'}
         </button>

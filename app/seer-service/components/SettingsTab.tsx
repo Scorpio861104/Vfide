@@ -46,7 +46,7 @@ export function SettingsTab() {
               onClick={() => setWindow(opt.value)}
               className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                 window === opt.value
-                  ? 'bg-cyan-500/20 text-cyan-400'
+                  ? 'bg-accent/20 text-accent'
                   : 'text-gray-500 hover:text-gray-300'
               }`}
             >

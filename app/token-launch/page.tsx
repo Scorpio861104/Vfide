@@ -29,7 +29,7 @@ export default function TokenLaunchPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               Token Distribution
             </div>
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-accent/30 flex items-center justify-center mx-auto mb-6">
               <Zap size={36} className="text-cyan-300" />
             </div>
             <h1 className="text-4xl font-black mb-4 tracking-tight">

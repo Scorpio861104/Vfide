@@ -165,7 +165,7 @@ export function LenderDashboardTab() {
   if (!info?.registered) {
     return (
       <div className="space-y-5">
-        <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-6">
+        <div className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-6">
           <div className="flex items-center gap-2 mb-3">
             <Wallet size={16} className="text-cyan-400" aria-hidden="true" />
             <h3 className="text-white font-semibold">Become a Lender</h3>
@@ -185,12 +185,12 @@ export function LenderDashboardTab() {
               onChange={(e) => setDepositInput(e.target.value)}
               placeholder="Amount in VFIDE"
               aria-label="Initial deposit amount"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
             <button
               onClick={handleDeposit}
               disabled={depositPending || depositConfirming || !depositInput}
-              className="flex items-center gap-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 px-4 py-2 text-sm font-semibold text-cyan-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="flex items-center gap-2 rounded-lg bg-accent/20 hover:bg-accent/30 px-4 py-2 text-sm font-semibold text-cyan-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {depositPending || depositConfirming ? (
                 <Loader2 size={14} className="animate-spin" aria-hidden="true" />
@@ -270,12 +270,12 @@ export function LenderDashboardTab() {
               onChange={(e) => setDepositInput(e.target.value)}
               placeholder="Amount"
               aria-label="Top-up amount in VFIDE"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
             <button
               onClick={handleDeposit}
               disabled={depositPending || depositConfirming || !depositInput}
-              className="rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 px-3 py-2 text-sm font-semibold text-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="rounded-lg bg-accent/20 hover:bg-accent/30 px-3 py-2 text-sm font-semibold text-cyan-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {depositPending || depositConfirming ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : 'Add'}
             </button>
@@ -297,12 +297,12 @@ export function LenderDashboardTab() {
               onChange={(e) => setWithdrawInput(e.target.value)}
               placeholder="Amount"
               aria-label="Withdraw amount in VFIDE"
-              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
             <button
               onClick={handleWithdraw}
               disabled={withdrawPending || withdrawConfirming || !withdrawInput}
-              className="rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 px-3 py-2 text-sm font-semibold text-emerald-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 px-3 py-2 text-sm font-semibold text-emerald-400 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               {withdrawPending || withdrawConfirming ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : 'Pull'}
             </button>

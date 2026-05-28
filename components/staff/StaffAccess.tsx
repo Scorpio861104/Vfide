@@ -34,7 +34,7 @@ const ROLES: Record<StaffMember['role'], { label: string; permissions: string[];
   cashier: {
     label: 'Cashier',
     permissions: ['pos', 'orders'],
-    colorClass: 'bg-cyan-500/20 text-cyan-400',
+    colorClass: 'bg-accent/20 text-accent',
   },
 };
 
@@ -65,7 +65,7 @@ export function StaffManager({ staff = [], onAdd, onRemove }: StaffManagerProps)
         </h2>
         <button
           onClick={() => setShowAdd((value) => !value)}
-          className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/20 px-4 py-2 text-sm font-bold text-cyan-400"
+          className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-cyan-500/20 px-4 py-2 text-sm font-bold text-cyan-400"
         >
           <Plus size={14} />
           Add Staff

@@ -85,7 +85,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
                
                 value={amount}
                 onChange={(e) =>  setAmount(e.target.value)}
-                className="w-full px-4 py-3 pr-24 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-lg font-bold focus:border-cyan-400 focus:outline-none"
+                className="w-full px-4 py-3 pr-24 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-lg font-bold focus:border-accent focus:outline-none"
               />
               <select
                 value={token}
@@ -109,7 +109,7 @@ export function PaymentModal({ friend, type, onClose, onSubmit }: PaymentModalPr
               value={message}
               onChange={(e) =>  setMessage(e.target.value)}
               rows={3}
-              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
+              className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none resize-none"
             />
           </div>
 
@@ -172,7 +172,7 @@ export function TransactionButtons({ friend, onPaymentRequest, onPaymentSend }: 
       <div className="flex gap-2">
         <button
           onClick={() => setShowModal('send')}
-          className="flex-1 px-4 py-2 bg-cyan-400/20 text-cyan-400 border border-cyan-400/30 rounded-lg font-semibold hover:bg-cyan-400/30 transition-colors flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-2 bg-accent/20 text-accent border border-accent/30 rounded-lg font-semibold hover:bg-cyan-400/30 transition-colors flex items-center justify-center gap-2"
         >
           <Send className="w-4 h-4" />
           <span className="hidden sm:inline">Send Payment</span>

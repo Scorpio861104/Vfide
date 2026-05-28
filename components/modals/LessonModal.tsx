@@ -79,7 +79,7 @@ export default function LessonModal({ isOpen, onClose, lesson }: LessonModalProp
           ))}
 
           {/* Key Takeaways */}
-          <div className="bg-gradient-to-br from-cyan-400/10 to-emerald-400/10 rounded-xl p-6 border border-cyan-400/30">
+          <div className="bg-gradient-to-br from-cyan-400/10 to-emerald-400/10 rounded-xl p-6 border border-accent/30">
             <h3 className="text-lg font-bold text-cyan-400 mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5" />
               Key Takeaways

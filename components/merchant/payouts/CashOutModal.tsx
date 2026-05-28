@@ -202,7 +202,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
             <button
               type="button"
               onClick={handleOpenProvider}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-400"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-400"
             >
               Open {PAYOUT_PROVIDERS.find((p) => p.id === provider)?.label}
               <ExternalLink size={14} />
@@ -229,7 +229,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                 value={provider}
                 onChange={(e) => setProvider(e.target.value as ProviderId)}
                 disabled={submitting}
-                className="mt-1.5 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-cyan-500/50 focus:outline-none disabled:opacity-50"
+                className="mt-1.5 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-accent/50 focus:outline-none disabled:opacity-50"
               >
                 {PAYOUT_PROVIDERS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -246,7 +246,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                 value={network}
                 onChange={(e) => setNetwork(e.target.value as NetworkId)}
                 disabled={submitting}
-                className="mt-1.5 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-cyan-500/50 focus:outline-none disabled:opacity-50"
+                className="mt-1.5 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-accent/50 focus:outline-none disabled:opacity-50"
               >
                 {PAYOUT_NETWORKS.map((n) => (
                   <option key={n.id} value={n.id}>
@@ -271,7 +271,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                 onChange={(e) => setMobileNumber(e.target.value)}
                 disabled={submitting}
                 placeholder={network === 'bank' ? 'IBAN or account number' : '+254 7XX XXX XXX'}
-                className="mt-1.5 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-cyan-500/50 focus:outline-none disabled:opacity-50"
+                className="mt-1.5 w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-accent/50 focus:outline-none disabled:opacity-50"
               />
               <p className="text-xs text-gray-500 mt-1.5 flex items-start gap-1.5">
                 <ShieldCheck size={12} className="text-emerald-400 mt-0.5 flex-shrink-0" />
@@ -300,7 +300,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                   onChange={(e) => setAmount(e.target.value)}
                   disabled={submitting}
                   placeholder="0.00"
-                  className="w-full rounded-lg border border-white/10 bg-zinc-950 pl-3 pr-16 py-2 text-sm text-white focus:border-cyan-500/50 focus:outline-none disabled:opacity-50"
+                  className="w-full rounded-lg border border-white/10 bg-zinc-950 pl-3 pr-16 py-2 text-sm text-white focus:border-accent/50 focus:outline-none disabled:opacity-50"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">
                   {token.label}
@@ -332,7 +332,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                 type="button"
                 onClick={() => void handleSubmit()}
                 disabled={!canSubmit}
-                className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>

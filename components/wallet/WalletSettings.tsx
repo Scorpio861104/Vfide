@@ -158,7 +158,7 @@ export function WalletSettings() {
           <button
             onClick={() => handleStayConnectedChange(!stayConnected)}
             className={`relative w-14 h-7 rounded-full transition-colors ${
-              stayConnected ? 'bg-cyan-500' : 'bg-zinc-600'
+              stayConnected ? 'bg-accent' : 'bg-zinc-600'
             }`}
           >
             <motion.div

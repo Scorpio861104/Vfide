@@ -63,7 +63,7 @@ export function EcosystemTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Ecosystem Overview */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-accent/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Users className="w-12 h-12 text-cyan-400" />
           <div>

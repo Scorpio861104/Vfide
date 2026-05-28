@@ -22,7 +22,7 @@ export function CouncilTab() {
   return (
     <section className="py-8">
       <div className="container mx-auto px-3 sm:px-4 max-w-3xl space-y-6">
-        <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-6">
+        <div className="bg-cyan-500/5 border border-accent/20 rounded-2xl p-6">
           <div className="flex items-start gap-3">
             <Users size={20} className="text-cyan-400 shrink-0 mt-1" />
             <div className="flex-1">

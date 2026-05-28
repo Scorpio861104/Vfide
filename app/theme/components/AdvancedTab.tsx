@@ -35,7 +35,7 @@ function TokenField({ label, tokenKey, description, type, options, effectiveToke
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={value.startsWith('#') ? value : '#06b6d4'}
+              value={value.startsWith('#') ? value : '#00f0ff'}
               onChange={(e) => onChange(tokenKey, e.target.value)}
               className="w-10 h-9 rounded-lg border border-white/10 bg-transparent cursor-pointer p-0.5"
               aria-label={`Color picker for ${label}`}

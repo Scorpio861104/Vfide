@@ -61,14 +61,14 @@ export function ResponsibilitiesTab({ isConnected }: { isConnected: boolean }) {
            
             value={vaultInput}
             onChange={(e) => setVaultInput(e.target.value)}
-            className="font-mono md:col-span-2 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
+            className="font-mono md:col-span-2 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-accent/50 focus:outline-none"
           />
           <input
             type="text"
            
             value={vaultLabel}
             onChange={(e) => setVaultLabel(e.target.value)}
-            className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-cyan-500/50 focus:outline-none"
+            className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-white focus:border-accent/50 focus:outline-none"
           />
         </div>
         <button

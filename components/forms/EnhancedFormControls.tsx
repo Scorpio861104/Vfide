@@ -100,9 +100,9 @@ export const EnhancedInput = forwardRef<HTMLInputElement, FormFieldProps>(functi
   }, [onBlur]);
 
   const variantClasses = {
-    default: 'bg-zinc-900/50 border-zinc-700 focus:border-cyan-500',
-    filled: 'bg-zinc-800 border-transparent focus:border-cyan-500',
-    outlined: 'bg-transparent border-zinc-600 focus:border-cyan-500',
+    default: 'bg-zinc-900/50 border-zinc-700 focus:border-accent',
+    filled: 'bg-zinc-800 border-transparent focus:border-accent',
+    outlined: 'bg-transparent border-zinc-600 focus:border-accent',
   };
 
   return (
@@ -312,9 +312,9 @@ export const EnhancedTextarea = forwardRef<HTMLTextAreaElement, EnhancedTextarea
   }, [onBlur]);
 
   const variantClasses = {
-    default: 'bg-zinc-900/50 border-zinc-700 focus:border-cyan-500',
-    filled: 'bg-zinc-800 border-transparent focus:border-cyan-500',
-    outlined: 'bg-transparent border-zinc-600 focus:border-cyan-500',
+    default: 'bg-zinc-900/50 border-zinc-700 focus:border-accent',
+    filled: 'bg-zinc-800 border-transparent focus:border-accent',
+    outlined: 'bg-transparent border-zinc-600 focus:border-accent',
   };
 
   return (
@@ -527,7 +527,7 @@ export function MultiStepForm({
             className={`
               flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all
               ${index === currentStep
-                ? 'bg-cyan-500/20 text-cyan-400 font-medium'
+                ? 'bg-accent/20 text-accent font-medium'
                 : step.isCompleted
                   ? 'bg-green-500/20 text-green-400 cursor-pointer hover:bg-green-500/30'
                   : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
@@ -600,7 +600,7 @@ export function MultiStepForm({
             type="button"
             onClick={handleNext}
             disabled={isLoading}
-            className="px-6 py-2 bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-2 bg-accent hover:bg-accent-dark text-zinc-900 font-semibold rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             {isLastStep ? 'Complete' : 'Continue'}
@@ -690,7 +690,7 @@ export function TagInput({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
-            className="inline-flex items-center gap-1 px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm"
+            className="inline-flex items-center gap-1 px-2 py-1 bg-accent/20 text-accent rounded-lg text-sm"
           >
             {tag}
             <button

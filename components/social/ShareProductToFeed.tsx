@@ -60,7 +60,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
     <>
       <button
         onClick={() => setShowModal(true)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all text-sm ${className}`}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-cyan-400 hover:border-accent/30 transition-all text-sm ${className}`}
       >
         <Share2 size={14} />
         Share to feed
@@ -124,7 +124,7 @@ export function ShareProductToFeed({ product, className = '' }: ShareProductToFe
                  
                   maxLength={500}
                   rows={3}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none resize-none"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-accent/50 focus:outline-none resize-none"
                 />
                 <div className="text-xs text-gray-500 text-right mt-1">{caption.length}/500</div>
               </div>

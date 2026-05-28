@@ -205,8 +205,8 @@ export function CommunityBoard({ merchants, products, onMerchant, onProduct }: C
           <Flame size={14} className="text-amber-400" />Trending this week
         </h3>
         <div className="flex gap-1">
-          <button onClick={() => setTab('merchants')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'merchants' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}>Merchants</button>
-          <button onClick={() => setTab('products')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'products' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}>Products</button>
+          <button onClick={() => setTab('merchants')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'merchants' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}>Merchants</button>
+          <button onClick={() => setTab('products')} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${tab === 'products' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}>Products</button>
         </div>
       </div>
 

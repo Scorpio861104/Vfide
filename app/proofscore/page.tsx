@@ -15,7 +15,7 @@ const TIERS = [
   { tier: 'Neutral',    min: 5000, max: 5399,  color: 'bg-yellow-400', desc: 'Basic address ownership verified. ~2.5% fee.' },
   { tier: 'Governance', min: 5400, max: 5599,  color: 'bg-lime-400',   desc: 'Eligible to vote and propose in the DAO.' },
   { tier: 'Trusted',    min: 5600, max: 6999,  color: 'bg-green-500',  desc: 'Multi-source trust. Merchant registration eligible.' },
-  { tier: 'Council',    min: 7000, max: 7999,  color: 'bg-cyan-500',   desc: 'Council-eligible. Can endorse and mentor others.' },
+  { tier: 'Council',    min: 7000, max: 7999,  color: 'bg-accent',   desc: 'Council-eligible. Can endorse and mentor others.' },
   { tier: 'Elite',      min: 8000, max: 10000, color: 'bg-violet-600', desc: 'Highest trust. Minimum 0.25% fee.' },
 ]
 

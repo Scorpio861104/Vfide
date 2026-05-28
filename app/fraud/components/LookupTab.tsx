@@ -167,12 +167,12 @@ export function LookupTab() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="0x…"
             onKeyDown={(e) => e.key === 'Enter' && void handleSearch()}
-            className="flex-1 min-w-[280px] bg-black/40 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm font-mono"
+            className="flex-1 min-w-[280px] bg-black/40 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm font-mono"
           />
           <button
             onClick={() => void handleSearch()}
             disabled={loading || !input.trim()}
-            className="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold text-sm rounded-lg transition-colors inline-flex items-center gap-2"
+            className="px-6 py-2.5 bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold text-sm rounded-lg transition-colors inline-flex items-center gap-2"
           >
             {loading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
             Search

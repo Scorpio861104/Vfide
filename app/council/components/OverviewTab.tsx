@@ -65,7 +65,7 @@ export function OverviewTab() {
             label: 'Council Seats',
             sub: 'set at contract deploy',
             gradient: 'from-cyan-500/20 to-blue-500/10',
-            border: 'border-cyan-500/20',
+            border: 'border-accent/20',
             text: 'text-cyan-400',
           },
           {
@@ -142,7 +142,7 @@ export function OverviewTab() {
               icon: Shield,
               color: 'text-cyan-400',
               bg: 'from-cyan-500/20 to-cyan-500/5',
-              border: 'border-cyan-500/20',
+              border: 'border-accent/20',
               title: 'Protocol Security',
               desc: 'Monitor and respond to security incidents, manage emergency controls',
             },

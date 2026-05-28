@@ -217,7 +217,7 @@ export function MobileDrawer({ items = [], logo, onNavClick, children, className
                   aria-hidden
                   tabIndex={-1}
                   role="presentation"
-                  className="w-full px-4 py-2 bg-cyan-400/20 text-cyan-400 rounded-lg text-sm font-medium hover:bg-cyan-400/30 transition-colors"
+                  className="w-full px-4 py-2 bg-accent/20 text-accent rounded-lg text-sm font-medium hover:bg-cyan-400/30 transition-colors"
                   onClick={() => setIsOpen(false)}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

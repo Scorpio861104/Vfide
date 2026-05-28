@@ -88,7 +88,7 @@ export function DisputesTabContent() {
           <div className="text-3xl font-bold text-white">{loading ? '…' : merchantCases.length}</div>
           <div className="text-sm text-gray-300 mt-1">{loading ? 'Loading…' : `${merchantCases.length} total cases`}</div>
         </div>
-        <div className="analytics-card p-4 border border-cyan-500/20 bg-cyan-500/5">
+        <div className="analytics-card p-4 border border-accent/20 bg-cyan-500/5">
           <div className="text-xs uppercase tracking-[0.2em] text-cyan-200 mb-2">Awaiting Review</div>
           <div className="text-3xl font-bold text-white">{loading ? '…' : awaitingReview}</div>
           <div className="text-sm text-gray-300 mt-1">Can still be resolved directly</div>
@@ -116,7 +116,7 @@ export function DisputesTabContent() {
           <h3 className="text-xl font-semibold text-white">Merchant Returns</h3>
           <p className="mt-2 text-sm text-white/50">Handle returns and exchanges before escalating to formal appeals.</p>
           <Link href="/merchant/returns"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
             Merchant Returns <ArrowRight size={14} />
           </Link>
         </div>

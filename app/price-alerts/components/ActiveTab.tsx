@@ -244,7 +244,7 @@ export function ActiveTab() {
             );
             return (
               <div key={a.id} className={`p-4 rounded-xl border ${
-                triggered ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-white/3 border-white/10'
+                triggered ? 'bg-cyan-500/10 border-accent/30' : 'bg-white/3 border-white/10'
               }`}>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">

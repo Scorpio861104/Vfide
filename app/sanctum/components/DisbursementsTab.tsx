@@ -345,7 +345,7 @@ function ApproverActions({
                 ? `Execution unlocks ${new Date(cooloffEndsAtMs).toLocaleString()}.`
                 : ''
           }
-          className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-accent/20 hover:bg-accent/30 text-cyan-300 border border-accent/30 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Coins className="w-4 h-4" />}
           {isExpired ? 'Expired' : inCooloff ? 'In cooloff' : 'Execute'}

@@ -77,7 +77,7 @@ function OnboardingPageContent() {
             className="glass-card-premium p-8"
           >
             <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/20 p-3">
+              <div className="rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-accent/20 p-3">
                 <Sparkles className="text-cyan-300" size={24} aria-hidden />
               </div>
               <div>
@@ -100,7 +100,7 @@ function OnboardingPageContent() {
             ) : (
               <div className="space-y-4">
                 {hasProgress && (
-                  <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-sm text-cyan-100">
+                  <div className="rounded-xl border border-accent/20 bg-cyan-500/5 p-4 text-sm text-cyan-100">
                     <p className="font-semibold text-white">Resuming where you left off</p>
                     <p className="mt-1 text-zinc-400">
                       {completedCount} of {totalChapters} chapters completed

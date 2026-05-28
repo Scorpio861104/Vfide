@@ -103,7 +103,7 @@ export function RecentActivitySection() {
               <div
                 className={`shrink-0 rounded-xl p-2 ${
                   activity.color === 'cyan'
-                    ? 'bg-cyan-500/20 text-cyan-400'
+                    ? 'bg-accent/20 text-accent'
                     : activity.color === 'emerald'
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : activity.color === 'amber'

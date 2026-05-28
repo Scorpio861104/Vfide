@@ -60,7 +60,7 @@ interface InvoiceSummary {
 const STATUS_META: Record<InvoiceStatus, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
   draft:     { label: 'Draft',     icon: FileText,      color: 'text-zinc-300',    bg: 'bg-zinc-700/30 border-zinc-600/30' },
   sent:      { label: 'Sent',      icon: Mail,          color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/30' },
-  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-cyan-300',    bg: 'bg-cyan-500/10 border-cyan-500/30' },
+  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-cyan-300',    bg: 'bg-cyan-500/10 border-accent/30' },
   paid:      { label: 'Paid',      icon: CheckCircle2,  color: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/30' },
   overdue:   { label: 'Overdue',   icon: AlertTriangle, color: 'text-amber-300',   bg: 'bg-amber-500/10 border-amber-500/30' },
   cancelled: { label: 'Cancelled', icon: XCircle,       color: 'text-zinc-400',    bg: 'bg-zinc-800/40 border-zinc-700/40' },
@@ -382,15 +382,15 @@ function CreateInvoiceModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Customer name</span>
-              <input type="text" value={customer.name} onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))} placeholder="Acme Co." className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="text" value={customer.name} onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))} placeholder="Acme Co." className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Email (optional)</span>
-              <input type="email" autoComplete="email" inputMode="email" value={customer.email} onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))} placeholder="billing@acme.co" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="email" autoComplete="email" inputMode="email" value={customer.email} onChange={(e) => setCustomer((c) => ({ ...c, email: e.target.value }))} placeholder="billing@acme.co" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block sm:col-span-2">
               <span className="text-xs text-zinc-400 mb-1 block">Customer wallet (optional)</span>
-              <input type="text" value={customer.address} onChange={(e) => setCustomer((c) => ({ ...c, address: e.target.value }))} placeholder="0x…" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none" />
+              <input type="text" value={customer.address} onChange={(e) => setCustomer((c) => ({ ...c, address: e.target.value }))} placeholder="0x…" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-accent outline-none" />
             </label>
           </div>
 
@@ -413,7 +413,7 @@ function CreateInvoiceModal({
                     value={it.description}
                     onChange={(e) => setItems((arr) => arr.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))}
                     placeholder="Description"
-                    className="col-span-6 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="col-span-6 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   />
                   <input
                     type="number"
@@ -422,7 +422,7 @@ function CreateInvoiceModal({
                     value={it.quantity}
                     onChange={(e) => setItems((arr) => arr.map((x, i) => i === idx ? { ...x, quantity: Number(e.target.value) } : x))}
                     placeholder="Qty"
-                    className="col-span-2 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="col-span-2 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   />
                   <input
                     type="number"
@@ -431,7 +431,7 @@ function CreateInvoiceModal({
                     value={it.unit_price}
                     onChange={(e) => setItems((arr) => arr.map((x, i) => i === idx ? { ...x, unit_price: Number(e.target.value) } : x))}
                     placeholder="Unit"
-                    className="col-span-3 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                    className="col-span-3 bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                   />
                   <button
                     onClick={() => setItems((arr) => arr.length > 1 ? arr.filter((_, i) => i !== idx) : arr)}
@@ -450,16 +450,16 @@ function CreateInvoiceModal({
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Tax rate (%)</span>
-              <input type="number" min={0} max={100} step={0.01} value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="number" min={0} max={100} step={0.01} value={taxRate} onChange={(e) => setTaxRate(Number(e.target.value))} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
             <label className="block">
               <span className="text-xs text-zinc-400 mb-1 block">Due date (optional)</span>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
             </label>
           </div>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Memo (optional)</span>
-            <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={memo} onChange={(e) => setMemo(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
 
           {/* Totals */}

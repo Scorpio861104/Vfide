@@ -75,7 +75,7 @@ export const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
             rounded-lg
             text-zinc-100
             
-            focus:border-cyan-400
+            focus:border-accent
             focus:outline-none
             transition-colors
             min-h-[44px]
@@ -283,7 +283,7 @@ export const MobileSelect = React.forwardRef<
           border-2 border-zinc-700
           rounded-lg
           text-zinc-100
-          focus:border-cyan-400
+          focus:border-accent
           focus:outline-none
           transition-colors
           min-h-[44px]

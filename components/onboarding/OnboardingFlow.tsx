@@ -304,7 +304,7 @@ function RewardModal({ reward, onClose }: RewardModalProps) {
 
   const colors = {
     badge: 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30',
-    points: 'from-cyan-500/20 to-blue-500/20 border-cyan-500/30',
+    points: 'from-cyan-500/20 to-blue-500/20 border-accent/30',
     feature: 'from-purple-500/20 to-pink-500/20 border-purple-500/30',
   };
 

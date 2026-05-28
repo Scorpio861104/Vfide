@@ -92,7 +92,7 @@ export function InvoiceManager({ merchantAddress: _merchantAddress, invoices = [
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
           <input type="text" value={search} onChange={e =>  setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
+            className="w-full pl-9 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-accent/50 focus:outline-none" />
         </div>
         <select value={filter} onChange={e =>  setFilter(e.target.value as any)}
           className="px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-gray-400 text-sm">
@@ -130,7 +130,7 @@ function InvoiceRow({ invoice, formatCurrency, formatDate, onSend, onCancel: _on
 }) {
   const [_showActions, _setShowActions] = useState(false);
   const statusColors: Record<string, string> = {
-    draft: 'bg-gray-500/20 text-gray-400', sent: 'bg-cyan-500/20 text-cyan-400', viewed: 'bg-blue-500/20 text-blue-400',
+    draft: 'bg-gray-500/20 text-gray-400', sent: 'bg-accent/20 text-accent', viewed: 'bg-blue-500/20 text-blue-400',
     paid: 'bg-emerald-500/20 text-emerald-400', overdue: 'bg-red-500/20 text-red-400', cancelled: 'bg-gray-500/20 text-gray-500',
   };
 
@@ -151,7 +151,7 @@ function InvoiceRow({ invoice, formatCurrency, formatDate, onSend, onCancel: _on
       <div className="flex items-center gap-3">
         <span className="text-white font-mono font-bold">{formatCurrency(invoice.total)}</span>
         {invoice.status === 'draft' && (
-          <button onClick={() => onSend?.(invoice.id, 'link')} className="px-3 py-1.5 bg-cyan-500/20 text-cyan-400 rounded-lg text-xs font-bold">
+          <button onClick={() => onSend?.(invoice.id, 'link')} className="px-3 py-1.5 bg-accent/20 text-accent rounded-lg text-xs font-bold">
             <Send size={12} className="inline mr-1" /> Send
           </button>
         )}
@@ -197,10 +197,10 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Customer</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input type="text" value={customerName} onChange={e =>  setCustomerName(e.target.value)}
-            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
+            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-accent/50 focus:outline-none" />
           <input type="tel" value={customerPhone} onChange={e =>  setCustomerPhone(e.target.value)}
             autoComplete="tel" inputMode="tel"
-            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
+            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-accent/50 focus:outline-none" />
         </div>
       </div>
 
@@ -210,11 +210,11 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-3">
             <input type="text" value={item.description} onChange={e =>  updateItem(i, 'description', e.target.value)}
-              className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-cyan-500/50 focus:outline-none" />
+              className="flex-1 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  focus:border-accent/50 focus:outline-none" />
             <input type="number" value={item.quantity || ''} onChange={e =>  updateItem(i, 'quantity', e.target.value)} min="1"
-              className="w-20 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-cyan-500/50 focus:outline-none" />
+              className="w-20 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-accent/50 focus:outline-none" />
             <input type="number" value={item.unitPrice || ''} onChange={e =>  updateItem(i, 'unitPrice', e.target.value)} step="0.01"
-              className="w-28 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-right font-mono focus:border-cyan-500/50 focus:outline-none" />
+              className="w-28 px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-right font-mono focus:border-accent/50 focus:outline-none" />
             <span className="w-24 text-right text-cyan-400 font-mono text-sm">{formatCurrency(item.quantity * item.unitPrice)}</span>
             {items.length > 1 && <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-red-400"><X size={16} /></button>}
           </div>
@@ -228,7 +228,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Tax rate (%)</label>
             <input type="number" value={taxRate || ''} onChange={e =>  setTaxRate(parseFloat(e.target.value) || 0)} min="0" max="30" step="0.1"
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-cyan-500/50 focus:outline-none" />
+              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:border-accent/50 focus:outline-none" />
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Due in (days)</label>
@@ -240,7 +240,7 @@ function CreateInvoiceForm({ onSubmit, onCancel }: {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Notes</label>
             <textarea value={notes} onChange={e =>  setNotes(e.target.value)} rows={3}
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  resize-none focus:border-cyan-500/50 focus:outline-none" />
+              className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm  resize-none focus:border-accent/50 focus:outline-none" />
           </div>
         </div>
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3 self-start">

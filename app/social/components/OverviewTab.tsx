@@ -84,7 +84,7 @@ export function OverviewTab() {
                 <p className="text-xs text-gray-400 w-28 capitalize">{type}</p>
                 <div className="flex-1 bg-white/5 rounded-full h-1.5">
                   <div
-                    className="h-1.5 rounded-full bg-cyan-500"
+                    className="h-1.5 rounded-full bg-accent"
                     style={{ width: `${(count / activities.length) * 100}%` }}
                   />
                 </div>

@@ -233,7 +233,7 @@ function LimitField({
         min={0}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-cyan-400"
+        className="rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-accent"
       />
       <span className="text-white/40">{hint}</span>
     </label>

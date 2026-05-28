@@ -127,7 +127,7 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
               onClick={() => setPeriod(currentPeriod)}
               className={`rounded-xl border px-3 py-2 text-sm font-bold capitalize transition-colors ${
                 period === currentPeriod
-                  ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-400'
+                  ? 'border-accent/40 bg-accent/20 text-accent'
                   : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white'
               }`}
             >
@@ -146,7 +146,7 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
           </button>
           <button
             onClick={() => setShowAdd((value) => !value)}
-            className="flex items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/20 px-3 py-2 text-sm font-bold text-cyan-400"
+            className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-cyan-500/20 px-3 py-2 text-sm font-bold text-cyan-400"
           >
             <Plus size={14} />
             Add Expense
@@ -169,7 +169,7 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
             {formatCurrency(profit)}
           </div>
         </div>
-        <div className="rounded-xl border border-cyan-500/15 bg-cyan-500/5 p-4">
+        <div className="rounded-xl border border-accent/15 bg-accent/5 p-4">
           <div className="mb-1 text-xs text-gray-400">Margin</div>
           <div className="text-xl font-bold text-cyan-400">{margin.toFixed(1)}%</div>
         </div>

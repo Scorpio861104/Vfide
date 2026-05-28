@@ -83,7 +83,7 @@ export default function ExplorerPage() {
               value={searchQuery}
               onChange={(e) =>  setSearchQuery(e.target.value)}
               placeholder="Search by wallet address (0x...)"
-              className="w-full bg-zinc-900/60 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500/50 transition-colors"
+              className="w-full bg-zinc-900/60 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white placeholder-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
             />
           </div>
         </motion.form>
@@ -94,7 +94,7 @@ export default function ExplorerPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-6"
+            className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-accent/20 rounded-xl p-6"
           >
             <div className="flex items-center gap-3 mb-3">
               <div className="p-2 bg-cyan-500/20 rounded-lg">
@@ -168,7 +168,7 @@ export default function ExplorerPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       activity.type === 'payment' 
-                        ? 'bg-cyan-500/20 text-cyan-400' 
+                        ? 'bg-accent/20 text-accent' 
                         : 'bg-purple-500/20 text-purple-400'
                     }`}>
                       {activity.type}

@@ -109,7 +109,7 @@ export function OverviewTab() {
           value={formatVFIDECompact(totalTreasury)}
           sub={`${formatEther(totalTreasury)} VFIDE`}
           gradient="from-cyan-500/20 to-blue-500/10"
-          border="border-cyan-500/20"
+          border="border-accent/20"
           text="text-cyan-400"
           live={!loadingAny}
         />
@@ -190,7 +190,7 @@ export function OverviewTab() {
               sub="DAO payroll + merchant + headhunter"
               color="text-cyan-400"
               bg="from-cyan-500/10 to-blue-500/5"
-              border="border-cyan-500/20"
+              border="border-accent/20"
             />
           </div>
         )}

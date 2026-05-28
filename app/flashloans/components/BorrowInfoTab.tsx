@@ -52,7 +52,7 @@ export function BorrowInfoTab() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+      <div className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-5">
         <div className="flex items-start gap-3">
           <Info size={18} className="text-cyan-400 mt-0.5 shrink-0" aria-hidden="true" />
           <div>
@@ -89,7 +89,7 @@ export function BorrowInfoTab() {
             onChange={(e) => setAmountInput(e.target.value)}
             placeholder="Amount in VFIDE"
             aria-label="Flash loan amount to quote"
-            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+            className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
           />
         </div>
 

@@ -80,7 +80,7 @@ export function ChapterShell({
           className={`flex items-start gap-3 rounded-xl border p-3 text-sm ${
             notice.tone === 'error'
               ? 'border-red-500/40 bg-red-500/10 text-red-200'
-              : 'border-cyan-500/30 bg-cyan-500/10 text-cyan-100'
+              : 'border-accent/30 bg-accent/10 text-accent'
           }`}
         >
           <AlertTriangle

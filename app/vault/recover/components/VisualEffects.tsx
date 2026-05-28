@@ -99,7 +99,7 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
         <motion.div
           animate={isSearching ? { rotate: 360 } : { rotate: 0 }}
           transition={{ duration: 3, repeat: isSearching ? Infinity : 0, ease: 'linear' }}
-          className="absolute inset-0 rounded-full border-2 border-cyan-500/30 border-dashed"
+          className="absolute inset-0 rounded-full border-2 border-accent/30 border-dashed"
         />
         <motion.div
           animate={isSearching ? { rotate: -360 } : { rotate: 0 }}
@@ -127,7 +127,7 @@ export function VaultKeyVisualization({ isSearching }: { isSearching: boolean })
                 : '0 0 40px rgba(6, 182, 212, 0.3)',
             }}
             transition={{ duration: 1, repeat: Infinity }}
-            className="flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-500/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/30 backdrop-blur-xl md:h-20 md:w-20"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl border border-accent/50 bg-gradient-to-br from-cyan-500/30 to-blue-600/30 backdrop-blur-xl md:h-20 md:w-20"
           >
             <KeyRound className="h-8 w-8 text-cyan-400 md:h-10 md:w-10" />
           </motion.div>

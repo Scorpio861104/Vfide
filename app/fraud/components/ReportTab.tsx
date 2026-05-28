@@ -190,7 +190,7 @@ export function ReportTab() {
             value={target}
             onChange={(e) => setTarget(e.target.value)}
             placeholder="0x…"
-            className="w-full bg-black/40 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm font-mono"
+            className="w-full bg-black/40 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm font-mono"
           />
           {targetIsValid && checking && (
             <p className="text-xs text-zinc-500 mt-1.5 inline-flex items-center gap-1">
@@ -216,7 +216,7 @@ export function ReportTab() {
             onChange={(e) => setReason(e.target.value.slice(0, MAX_REASON_LENGTH))}
             rows={5}
             placeholder="Describe the alleged fraud. Include transaction hashes or relevant context where possible."
-            className="w-full bg-black/40 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-600 focus:border-cyan-500 focus:outline-none text-sm resize-none"
+            className="w-full bg-black/40 border border-zinc-700 rounded-lg px-4 py-2.5 text-white placeholder:text-zinc-600 focus:border-accent focus:outline-none text-sm resize-none"
           />
           <p className="text-xs text-zinc-500 text-right mt-1">
             {reason.length} / {MAX_REASON_LENGTH}
@@ -253,7 +253,7 @@ export function ReportTab() {
         <button
           onClick={() => void handleSubmit()}
           disabled={!canSubmit}
-          className="w-full py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold text-sm transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold text-sm transition-colors flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>

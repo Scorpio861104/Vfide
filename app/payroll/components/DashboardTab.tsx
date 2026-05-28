@@ -91,7 +91,7 @@ export function DashboardTab() {
                     <p className="text-xs text-white font-semibold">{parseFloat(s.total_amount).toFixed(2)} {s.token}</p>
                   </div>
                   <div className="w-full bg-white/5 rounded-full h-1">
-                    <div className="h-1 rounded-full bg-cyan-500" style={{ width: `${progress}%` }} />
+                    <div className="h-1 rounded-full bg-accent" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               );

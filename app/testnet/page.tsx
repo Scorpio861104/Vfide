@@ -166,7 +166,7 @@ export default function TestnetPage() {
               <button
                 onClick={claimVFIDE}
                 disabled={!address || isClaiming}
-                className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 rounded-lg font-medium transition-colors mb-6"
+                className="w-full bg-accent hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed px-4 py-3 rounded-lg font-medium transition-colors mb-6"
               >
                 {isClaiming ? 'Claiming…' : address ? 'Claim 10,000 VFIDE' : 'Connect wallet to claim'}
               </button>

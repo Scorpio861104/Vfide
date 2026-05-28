@@ -133,7 +133,7 @@ function ClaimInner() {
               type="button"
               onClick={submitVault}
               disabled={!isAddress(vaultInput.trim())}
-              className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 hover:bg-cyan-500/30 disabled:opacity-50"
+              className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 hover:bg-accent/30 disabled:opacity-50"
             >
               Continue
             </button>
@@ -293,7 +293,7 @@ function ClaimWorkflow({
                 type="button"
                 onClick={() => claim.finalizeDistribution()}
                 disabled={claim.isWritePending}
-                className="rounded-lg bg-cyan-500/20 px-3 py-2 text-sm text-cyan-300 hover:bg-cyan-500/30 disabled:opacity-50"
+                className="rounded-lg bg-cyan-500/20 px-3 py-2 text-sm text-cyan-300 hover:bg-accent/30 disabled:opacity-50"
               >
                 {claim.isWritePending ? (
                   <span className="inline-flex items-center gap-1.5">
@@ -673,7 +673,7 @@ function StateBanner({
       : state === 1
         ? 'border-amber-500/30 bg-amber-500/5 text-amber-200'
         : state === 2
-          ? 'border-cyan-500/30 bg-cyan-500/5 text-cyan-200'
+          ? 'border-accent/30 bg-accent/5 text-accent'
           : state === 3
             ? 'border-gray-500/30 bg-gray-500/5 text-gray-300'
             : 'border-gray-700/30 bg-gray-700/5 text-gray-500';
@@ -717,7 +717,7 @@ function NoticeCard({
 }) {
   const toneClass = {
     amber: 'border-amber-500/30 bg-amber-500/5 text-amber-200',
-    cyan: 'border-cyan-500/30 bg-cyan-500/5 text-cyan-200',
+    cyan: 'border-accent/30 bg-accent/5 text-accent',
     emerald: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-200',
     gray: 'border-gray-500/30 bg-gray-500/5 text-gray-300',
   }[tone];

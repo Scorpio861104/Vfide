@@ -20,7 +20,7 @@ export function StatsTab({ isConnected = false, address }: { isConnected?: boole
   return (
     <div className="space-y-8">
       {/* User Summary */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-8">
+      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-accent/30 rounded-xl p-8">
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full flex items-center justify-center text-3xl font-bold text-white">
             G

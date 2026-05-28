@@ -201,7 +201,7 @@ export function FeeSavingsCalculator() {
               type="number"
               value={monthlyVolume}
               onChange={e =>  setMonthlyVolume(e.target.value)}
-              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-cyan-500/50 focus:outline-none"
+              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-accent/50 focus:outline-none"
             />
           </div>
         </div>
@@ -213,7 +213,7 @@ export function FeeSavingsCalculator() {
               type="number"
               value={avgTransaction}
               onChange={e =>  setAvgTransaction(e.target.value)}
-              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-cyan-500/50 focus:outline-none"
+              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-accent/50 focus:outline-none"
             />
           </div>
         </div>
@@ -257,7 +257,7 @@ export function FeeSavingsCalculator() {
           })}
 
           {/* Annual savings callout */}
-          <div className="bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 border border-cyan-500/20 rounded-xl p-6 text-center mt-6">
+          <div className="bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 border border-accent/20 rounded-xl p-6 text-center mt-6">
             <div className="text-gray-400 text-sm mb-1">Estimated annual savings vs Square</div>
             <div className="text-4xl font-bold text-emerald-400 font-mono">
               {formatCurrency((results.find(r => r.name === 'Square')?.yearlyFee || 0) - vfideFeeYearly)}

@@ -106,7 +106,9 @@ function applyTokens(tokens: ThemeTokens) {
     // glow = rgba at 30% opacity
     root.style.setProperty('--accent-glow',   `rgba(${r}, ${g}, ${b}, 0.30)`);
     // subtle = rgba at 8% opacity
-    root.style.setProperty('--accent-subtle', `rgba(${r}, ${g}, ${b}, 0.08)`);
+    root.style.setProperty('--accent-subtle',    `rgba(${r}, ${g}, ${b}, 0.08)`);
+    root.style.setProperty('--accent-grid-line', `rgba(${r}, ${g}, ${b}, 0.03)`);
+    root.style.setProperty('--accent-dot',       `rgba(${r}, ${g}, ${b}, 0.15)`);
   }
 
   // Secondary accent (maps to --accent-purple slot used by gradient classes)

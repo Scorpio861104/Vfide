@@ -80,7 +80,7 @@ export default function MerchantLocationsPage() {
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><MapPin className="text-cyan-400" /> Store locations</h1>
               <p className="mt-2 text-gray-400">Register each market stall, branch, or pickup point so staff and buyers know where orders are fulfilled.</p>
             </div>
-            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
+            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-200">
               <Plus size={16} /> Add location
             </button>
           </div>

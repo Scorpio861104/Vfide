@@ -122,7 +122,7 @@ export function VaultTab() {
           <p className="text-xs text-gray-400 mb-3">Active Badges</p>
           <div className="flex flex-wrap gap-2">
             {state.badges.map((b) => (
-              <span key={b} className="px-2 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs border border-cyan-500/20">{b}</span>
+              <span key={b} className="px-2 py-1 rounded-full bg-accent/10 text-accent text-xs border border-accent/20">{b}</span>
             ))}
           </div>
         </div>

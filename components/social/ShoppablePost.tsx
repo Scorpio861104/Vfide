@@ -76,7 +76,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
 
       {/* Product card */}
       <Link href={`/store/${product.merchantSlug}`}>
-        <div className="mx-4 mb-3 bg-white/3 border border-white/10 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-colors cursor-pointer">
+        <div className="mx-4 mb-3 bg-white/3 border border-white/10 rounded-xl overflow-hidden hover:border-accent/30 transition-colors cursor-pointer">
           {product.imageUrl && (
             <div className="relative h-48 bg-white/5">
               <Image src={product.imageUrl} alt={product.name} className="w-full h-full object-cover"  width={48} height={48} />

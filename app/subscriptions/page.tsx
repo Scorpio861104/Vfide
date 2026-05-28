@@ -42,7 +42,7 @@ export default function Page() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/merchant/subscriptions"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors text-sm"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors text-sm"
               >
                 Configure subscriptions (merchant) <ArrowRight size={14} />
               </Link>

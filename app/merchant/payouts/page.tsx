@@ -328,7 +328,7 @@ export default function MerchantPayoutsPage() {
                             type="button"
                             onClick={() => openCashOut(b.tokenConfig)}
                             disabled={!canCashOut}
-                            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/15 border border-cyan-500/30 px-3 py-2 text-sm font-medium text-cyan-200 transition-colors hover:bg-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/15 border border-accent/30 px-3 py-2 text-sm font-medium text-cyan-200 transition-colors hover:bg-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <ArrowUpRight size={14} />
                             Cash out

@@ -79,7 +79,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
 
           {loading ? (
             <div className="py-24 text-center text-gray-500">
-              <div className="w-6 h-6 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-3" />Loading product...
+              <div className="w-6 h-6 border-2 border-accent/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-3" />Loading product...
             </div>
           ) : !product ? (
             <div className="py-24 text-center text-gray-500">Product not found</div>
@@ -94,7 +94,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                 <div className="md:w-1/2 p-6 flex flex-col">
                   {product.product_type && (
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded text-cyan-400 capitalize flex items-center gap-1">
+                      <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-cyan-400 capitalize flex items-center gap-1">
                         {(() => { const Icon = typeIcons[product.product_type]; return <Icon size={10} />; })()}
                         {typeLabels[product.product_type]}
                       </span>
@@ -127,7 +127,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                       <div className="flex flex-wrap gap-2">
                         {product.variants.map(v => (
                           <button key={v.id} onClick={() => setSelectedVariant(v.id)}
-                            className={`px-3 py-1.5 rounded-lg text-sm transition-all border ${selectedVariant === v.id ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'}`}>
+                            className={`px-3 py-1.5 rounded-lg text-sm transition-all border ${selectedVariant === v.id ? 'bg-accent/15 border-accent/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'}`}>
                             {v.label}
                           </button>
                         ))}
@@ -155,7 +155,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                     merchantSlug: product.merchant_slug, merchantName: product.merchant_name, merchantAddress: product.merchant_address }} className="mb-4" />
 
                   <Link href={`/store/${product.merchant_slug}`} className="mt-auto">
-                    <div className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-cyan-500/20 transition-colors">
+                    <div className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-accent/20 transition-colors">
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs bg-blue-500">{product.merchant_name[0]?.toUpperCase()}</div>
                       <div className="flex-1"><div className="text-white text-sm font-medium">{product.merchant_name}</div><div className="text-xs text-gray-500">View all products</div></div>
                       <ChevronRight size={16} className="text-gray-600" />

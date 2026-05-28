@@ -114,7 +114,7 @@ export default function MeHubPage() {
           </div>
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-sm text-cyan-300 mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               Account Hub
             </div>
@@ -221,7 +221,7 @@ export default function MeHubPage() {
 
           {/* Quick "what to do next" suggestion based on score tier */}
           {!isLoading && (
-            <div className="mt-12 glass-card-premium border-cyan-500/20 bg-cyan-500/5 p-5">
+            <div className="mt-12 glass-card-premium border-accent/20 bg-cyan-500/5 p-5">
               <div className="mb-2 text-xs uppercase tracking-widest text-cyan-300">Next step</div>
               <NextStep score={score ?? 0} />
             </div>

@@ -109,7 +109,7 @@ export function WalletSwitcher() {
         <button
           onClick={handleAddWallet}
           disabled={!bestConnector}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Plus size={14} />
           <span>Add Wallet</span>
@@ -127,7 +127,7 @@ export function WalletSwitcher() {
               layout
               className={`p-3 rounded-lg border transition-colors ${
                 isCurrentWallet 
-                  ? 'bg-cyan-500/10 border-cyan-500/30' 
+                  ? 'bg-cyan-500/10 border-accent/30' 
                   : 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-600'
               }`}
             >
@@ -157,7 +157,7 @@ export function WalletSwitcher() {
                         spellCheck={false}
                         inputMode="text"
                         aria-label="Wallet label"
-                        className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none focus:border-cyan-500 min-h-[44px]"
+                        className="flex-1 px-2 py-1 text-sm bg-zinc-700 border border-zinc-600 rounded text-white focus:outline-none focus:border-accent min-h-[44px]"
                         autoFocus
                       />
                       <button
@@ -180,7 +180,7 @@ export function WalletSwitcher() {
                           {wallet.label || formatAddress(wallet.address)}
                         </span>
                         {wallet.isPrimary && (
-                          <span className="px-1.5 py-0.5 text-[10px] bg-cyan-500/20 text-cyan-400 rounded">
+                          <span className="px-1.5 py-0.5 text-[10px] bg-accent/20 text-accent rounded">
                             Primary
                           </span>
                         )}

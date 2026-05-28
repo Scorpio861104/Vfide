@@ -58,7 +58,7 @@ function stateBadgeStyle(state: EscrowState): { bg: string; text: string; border
     case EscrowState.Open:
       return { bg: 'bg-amber-500/10', text: 'text-amber-300', border: 'border-amber-500/30', Icon: Clock };
     case EscrowState.Funded:
-      return { bg: 'bg-cyan-500/10', text: 'text-cyan-300', border: 'border-cyan-500/30', Icon: Lock };
+      return { bg: 'bg-cyan-500/10', text: 'text-cyan-300', border: 'border-accent/30', Icon: Lock };
     case EscrowState.Released:
       return { bg: 'bg-emerald-500/10', text: 'text-emerald-300', border: 'border-emerald-500/30', Icon: CheckCircle2 };
     case EscrowState.Refunded:

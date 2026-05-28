@@ -309,7 +309,7 @@ export function PayContent() {
               </div>
               <div className="mt-2 text-xs text-gray-400">Order: <span className="font-mono text-gray-300">{orderId}</span></div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <div className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-bold">
+                <div className="px-3 py-1 bg-cyan-500/20 border border-accent/30 rounded-lg text-cyan-400 text-sm font-bold">
                   TRUSTED • ProofScore 845
                 </div>
                 <div className={`px-3 py-1 rounded-lg text-sm font-bold ${

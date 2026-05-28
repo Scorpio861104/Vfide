@@ -77,7 +77,7 @@ function formatStatusBadge(status: RefundEntry['status']) {
   switch (status) {
     case 'initiated':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 text-xs font-semibold">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent/20 text-accent text-xs font-semibold">
           <Clock size={10} />
           Initiated
         </span>
@@ -266,7 +266,7 @@ export default function MerchantRefundsPage() {
                       value={customer}
                       onChange={(e) => setCustomer(e.target.value)}
                       placeholder="0x..."
-                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 font-mono text-sm"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -277,7 +277,7 @@ export default function MerchantRefundsPage() {
                         value={tokenAddress}
                         onChange={(e) => setTokenAddress(e.target.value)}
                         placeholder="0x..."
-                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 font-mono text-sm"
+                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 font-mono text-sm"
                       />
                     </div>
                     <div>
@@ -287,7 +287,7 @@ export default function MerchantRefundsPage() {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="1.0"
-                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 text-sm"
+                        className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 text-sm"
                       />
                     </div>
                   </div>
@@ -298,7 +298,7 @@ export default function MerchantRefundsPage() {
                       value={orderId}
                       onChange={(e) => setOrderId(e.target.value)}
                       placeholder="The order this refund is for"
-                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 text-sm"
+                      className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 text-sm"
                     />
                   </div>
 
@@ -340,7 +340,7 @@ export default function MerchantRefundsPage() {
           )}
 
           {actionMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-200 break-all">
+            <div className="mb-4 p-3 rounded-lg bg-cyan-500/10 border border-accent/30 text-xs text-cyan-200 break-all">
               {actionMessage}
             </div>
           )}

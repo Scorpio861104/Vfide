@@ -171,7 +171,7 @@ export function LiveViewer({
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-cyan-400 font-mono text-xs font-bold">{p.currency}{p.price}</span>
                     <button onClick={() => onBuy?.(p.id)}
-                      className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-[10px] font-bold">Buy</button>
+                      className="px-2 py-1 bg-accent/20 text-accent rounded text-[10px] font-bold">Buy</button>
                   </div>
                 </div>
               ))}

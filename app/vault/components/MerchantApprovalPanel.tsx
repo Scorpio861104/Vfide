@@ -219,7 +219,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
                 value={stablecoinAddress}
                 onChange={(event) => setStablecoinAddress(event.target.value.trim())}
                
-                className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-400"
+                className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-white outline-none transition focus:border-accent"
               />
               <p className="mt-3 text-sm text-white/70">
                 Current allowance: {currentStablecoinAllowance > 0n ? currentStablecoinAllowance.toString() : '0'} base units

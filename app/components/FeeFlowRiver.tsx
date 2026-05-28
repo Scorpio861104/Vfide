@@ -240,7 +240,7 @@ export function FeeFlowRiver() {
     return (
       <div id="fee-river" className="w-full rounded-3xl border border-white/10 bg-zinc-950/70 p-5 sm:p-7">
         <div className="mb-4">
-          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
+          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
             <Activity size={12} /> Fee distribution
           </div>
           <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>
@@ -268,7 +268,7 @@ export function FeeFlowRiver() {
     <div id="fee-river" className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-5 backdrop-blur-sm sm:p-7">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
+          <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-xs uppercase tracking-widest text-cyan-300">
             <Activity size={12} /> Live fee flow
           </div>
           <h3 className="text-2xl font-bold text-white">Every fee is accounted for</h3>

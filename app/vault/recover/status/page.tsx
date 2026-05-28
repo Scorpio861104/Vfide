@@ -195,7 +195,7 @@ export default function RecoveryStatusPage() {
                   value={lookupInput}
                   onChange={(e) => setLookupInput(e.target.value)}
                   placeholder="0x... or recovery ID"
-                  className="flex-1 px-4 py-3 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 font-mono"
+                  className="flex-1 px-4 py-3 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 font-mono"
                 />
                 <button
                   onClick={() => void handleLookup()}

@@ -49,7 +49,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
   if (viewMode === 'list') {
     return (
       <Link href={`/store/${merchantSlug}?product=${product.slug}`}
-        className="flex items-center gap-4 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-cyan-500/20 transition-colors">
+        className="flex items-center gap-4 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-accent/20 transition-colors">
         <div className="w-16 h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
           {product.images[0] ? (
             <Image src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover"  width={48} height={48} />
@@ -76,7 +76,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
 
   return (
     <Link href={`/store/${merchantSlug}?product=${product.slug}`}
-      className="group block bg-white/3 border border-white/5 rounded-xl overflow-hidden hover:border-cyan-500/20 transition-all">
+      className="group block bg-white/3 border border-white/5 rounded-xl overflow-hidden hover:border-accent/20 transition-all">
       <div className="aspect-square bg-white/5 relative overflow-hidden">
         {product.images[0] ? (
           <Image src={getImageUrl(product.images[0])} alt={product.name}

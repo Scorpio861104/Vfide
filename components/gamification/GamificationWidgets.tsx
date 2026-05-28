@@ -143,7 +143,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-3 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-cyan-500/20 rounded-lg p-3"
+            className="mt-3 bg-gradient-to-r from-cyan-500/10 to-violet-500/10 border border-accent/20 rounded-lg p-3"
           >
             <div className="text-xs text-zinc-400 mb-1 uppercase tracking-wider">Unlock at Level {nextPerk.level}</div>
             <div className="flex items-center gap-2">

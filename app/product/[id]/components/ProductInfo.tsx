@@ -47,7 +47,7 @@ export function ProductInfo({ product }: { product: Product }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/20 rounded text-cyan-400 capitalize flex items-center gap-1">
+        <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-cyan-400 capitalize flex items-center gap-1">
           <TypeIcon size={10} /> {product.product_type}
         </span>
       </div>
@@ -74,7 +74,7 @@ export function ProductInfo({ product }: { product: Product }) {
           <div className="flex flex-wrap gap-2">
             {product.variants.map(v => (
               <button key={v.id} onClick={() => setSelectedVariant(v.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm border ${selectedVariant === v.id ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400'}`}>
+                className={`px-3 py-1.5 rounded-lg text-sm border ${selectedVariant === v.id ? 'bg-accent/15 border-accent/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400'}`}>
                 {v.label}
               </button>
             ))}
@@ -98,7 +98,7 @@ export function ProductInfo({ product }: { product: Product }) {
       </div>
 
       {product.merchant_slug && (
-        <Link href={`/store/${product.merchant_slug}`} className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-cyan-500/20">
+        <Link href={`/store/${product.merchant_slug}`} className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-accent/20">
           <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs">{product.merchant_name[0]}</div>
           <div className="flex-1"><div className="text-white text-sm font-medium">{product.merchant_name}</div><div className="text-xs text-gray-500">View store</div></div>
         </Link>
@@ -109,7 +109,7 @@ export function ProductInfo({ product }: { product: Product }) {
           <div className="text-white font-semibold mb-1">{totalItems} item in cart</div>
           <button
             onClick={() => setShowCheckout(true)}
-            className="w-full mt-2 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30"
+            className="w-full mt-2 py-2.5 rounded-lg bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30"
           >
             Checkout now
           </button>

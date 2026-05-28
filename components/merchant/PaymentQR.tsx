@@ -183,7 +183,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-cyan-400/10 to-blue-500/10 border-2 border-cyan-400/30 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-cyan-400/10 to-blue-500/10 border-2 border-accent/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <QrCode className="w-8 h-8 text-cyan-400" />
           <div>
@@ -325,7 +325,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 step="0.01"
                 min="0"
                 aria-describedby="payment-amount-help"
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg pl-10 pr-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
               />
             </div>
             <div id="payment-amount-help" className="text-sm text-zinc-300 mt-1">
@@ -361,7 +361,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               onChange={(e) => setOrderId(e.target.value)}
              
               aria-describedby="payment-order-help"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
             />
             <div id="payment-order-help" className="mt-1 text-sm text-zinc-300">
               Add a customer-facing reference so the payment stays easy to reconcile.

@@ -81,7 +81,7 @@ export function CreateTab() {
              
               required
               pattern="^0x[a-fA-F0-9]{40}$"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white  text-sm focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white  text-sm focus:outline-none focus:border-accent/50"
             />
           </div>
           <div>
@@ -93,7 +93,7 @@ export function CreateTab() {
              
               required
               maxLength={100}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white  text-sm focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white  text-sm focus:outline-none focus:border-accent/50"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -107,7 +107,7 @@ export function CreateTab() {
                 required
                 min="0.000001"
                 step="any"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white  text-sm focus:outline-none focus:border-cyan-500/50"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white  text-sm focus:outline-none focus:border-accent/50"
               />
             </div>
             <div>
@@ -115,7 +115,7 @@ export function CreateTab() {
               <select
                 value={interval}
                 onChange={(e) => setInterval(e.target.value as Interval)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent/50"
               >
                 {INTERVALS.map((i) => (
                   <option key={i} value={i} className="bg-gray-900 capitalize">{i}</option>
@@ -126,7 +126,7 @@ export function CreateTab() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl bg-accent hover:bg-accent-light disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold text-sm transition-colors flex items-center justify-center gap-2"
           >
             {submitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
             {submitting ? 'Creating...' : 'Create Subscription'}

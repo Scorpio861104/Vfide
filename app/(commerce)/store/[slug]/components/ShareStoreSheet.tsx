@@ -86,7 +86,7 @@ export function ShareStoreSheet({ show, onClose, storeName, slug }: ShareStoreSh
 
               <button
                 onClick={shareNative}
-                className="flex flex-col items-center gap-2 p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/20 transition-colors"
+                className="flex flex-col items-center gap-2 p-4 bg-cyan-500/10 border border-accent/20 rounded-xl hover:bg-cyan-500/20 transition-colors"
               >
                 <Share2 size={24} className="text-cyan-400" />
                 <span className="text-xs text-cyan-400 font-medium">Share</span>

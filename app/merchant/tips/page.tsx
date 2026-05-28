@@ -230,7 +230,7 @@ export default function MerchantTipsPage() {
                           onChange={(e) => setSettings((s) => ({ ...s, prompt_text: e.target.value || null }))}
                           placeholder="Add a tip for your stylist?"
                           maxLength={200}
-                          className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                          className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
                         />
                         <span className="text-xs text-zinc-500 mt-1 block">Shown above the preset buttons. Leave blank for default.</span>
                       </label>

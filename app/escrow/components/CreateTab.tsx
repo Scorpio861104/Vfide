@@ -120,7 +120,7 @@ export function CreateTab() {
 
   return (
     <div className="space-y-5 max-w-xl">
-      <div className="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-5">
+      <div className="bg-cyan-500/5 border border-accent/20 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-2">
           <ShieldCheck size={18} className="text-cyan-400" />
           <h3 className="text-white font-semibold">Pay with escrow protection</h3>
@@ -140,7 +140,7 @@ export function CreateTab() {
             value={merchantOwner}
             onChange={(e) => setMerchantOwner(e.target.value)}
             placeholder="0x…"
-            className="w-full bg-black/40 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder:text-gray-600 focus:border-cyan-500 focus:outline-none text-sm font-mono"
+            className="w-full bg-black/40 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder:text-gray-600 focus:border-accent focus:outline-none text-sm font-mono"
           />
           {merchantValid && !merchantRegistry.isLoadingInfo && merchantRegistry.isRegistered && !merchantRegistry.isSuspended && !merchantRegistry.isDelisted && (
             <p className="mt-1 text-xs text-emerald-300/80 inline-flex items-center gap-1">
@@ -174,7 +174,7 @@ export function CreateTab() {
             placeholder="0.00"
             step="0.01"
             min="0"
-            className="w-full bg-black/40 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder:text-gray-600 focus:border-cyan-500 focus:outline-none text-sm tabular-nums"
+            className="w-full bg-black/40 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder:text-gray-600 focus:border-accent focus:outline-none text-sm tabular-nums"
           />
         </div>
 
@@ -185,7 +185,7 @@ export function CreateTab() {
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Order details, terms, anything that helps you remember what this escrow is for."
             rows={3}
-            className="w-full bg-black/40 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder:text-gray-600 focus:border-cyan-500 focus:outline-none text-xs"
+            className="w-full bg-black/40 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder:text-gray-600 focus:border-accent focus:outline-none text-xs"
           />
           <p className="mt-1 text-xs text-gray-500 inline-flex items-start gap-1">
             <Info size={10} className="mt-0.5 shrink-0" />

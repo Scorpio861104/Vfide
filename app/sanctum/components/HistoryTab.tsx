@@ -412,7 +412,7 @@ function KindBadge({ kind }: { kind: EventKind }) {
     );
   }
   return (
-    <span className="px-2 py-1 rounded text-xs font-bold bg-cyan-500/20 text-cyan-400 inline-flex items-center gap-1">
+    <span className="px-2 py-1 rounded text-xs font-bold bg-accent/20 text-accent inline-flex items-center gap-1">
       <PlusCircle size={10} /> CHARITY ADDED
     </span>
   );

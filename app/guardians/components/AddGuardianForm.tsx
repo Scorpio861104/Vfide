@@ -55,7 +55,7 @@ export function AddGuardianForm({
                 className={`w-full px-4 py-3 bg-black/30 border rounded-xl text-white focus:outline-none focus:ring-2 font-mono transition-all ${
                   isValidAddress === false ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' :
                   isValidAddress === true ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20' :
-                  'border-white/10 focus:border-cyan-500 focus:ring-cyan-500/20'
+                  'border-white/10 focus:border-accent focus:ring-accent/20'
                 }`} />
               {isValidAddress === false && (
                 <p className="mt-1 text-sm text-red-400 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> Please enter a valid Ethereum address (0x...)</p>

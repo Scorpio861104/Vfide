@@ -35,7 +35,7 @@ export function SearchMethodButton({
   badge?: string;
 }) {
   const colors = {
-    cyan: { bg: 'bg-cyan-500/20', border: 'border-cyan-500/50', text: 'text-cyan-400', shadow: 'shadow-cyan-500/30', glow: 'from-cyan-500/30' },
+    cyan: { bg: 'bg-cyan-500/20', border: 'border-accent/50', text: 'text-cyan-400', shadow: 'shadow-cyan-500/30', glow: 'from-cyan-500/30' },
     gold: { bg: 'bg-amber-500/20', border: 'border-amber-500/50', text: 'text-amber-400', shadow: 'shadow-amber-500/30', glow: 'from-amber-500/30' },
     purple: { bg: 'bg-purple-500/20', border: 'border-purple-500/50', text: 'text-purple-400', shadow: 'shadow-purple-500/30', glow: 'from-purple-500/30' },
     green: { bg: 'bg-emerald-500/20', border: 'border-emerald-500/50', text: 'text-emerald-400', shadow: 'shadow-emerald-500/30', glow: 'from-emerald-500/30' }

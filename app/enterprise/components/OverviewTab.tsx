@@ -45,7 +45,7 @@ export function OverviewTab() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-violet-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8 text-center">
+      <div className="bg-gradient-to-br from-cyan-900/20 to-violet-900/20 border border-accent/30 rounded-xl p-4 sm:p-6 md:p-8 text-center">
         <Building2 className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
         <h2 className="text-2xl sm:text-3xl font-bold text-zinc-100 mb-4">Enterprise-Grade Infrastructure</h2>
         <p className="text-zinc-400 max-w-2xl mx-auto">

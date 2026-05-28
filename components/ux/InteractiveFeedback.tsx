@@ -82,7 +82,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
   }, [disabled, loading, haptic, sound, onClick]);
 
   const variants = {
-    primary: 'bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg shadow-cyan-500/20',
+    primary: 'bg-accent hover:bg-accent-dark text-white shadow-lg shadow-accent/20',
     secondary: 'bg-gray-700 hover:bg-gray-600 text-white',
     ghost: 'bg-transparent hover:bg-gray-800 text-gray-300',
     danger: 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20',
@@ -109,7 +109,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
         relative overflow-hidden rounded-xl font-medium
         transition-colors duration-200
         disabled:opacity-50 disabled:cursor-not-allowed
-        focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900
+        focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900
         ${variants[variant]}
         ${sizes[size]}
         ${className}

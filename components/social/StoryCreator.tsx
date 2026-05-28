@@ -133,7 +133,7 @@ export function StoryCreator({
             onClick={() => setMode('text')}
             className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'text'
-                ? 'bg-cyan-400/10 text-cyan-400 border-b-2 border-cyan-400'
+                ? 'bg-accent/10 text-accent border-b-2 border-accent'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -144,7 +144,7 @@ export function StoryCreator({
             onClick={() => setMode('media')}
             className={`flex-1 py-3 font-semibold transition-colors flex items-center justify-center gap-2 ${
               mode === 'media'
-                ? 'bg-cyan-400/10 text-cyan-400 border-b-2 border-cyan-400'
+                ? 'bg-accent/10 text-accent border-b-2 border-accent'
                 : 'text-zinc-400 hover:text-white'
             }`}
           >
@@ -265,7 +265,7 @@ export function StoryCreator({
                     value={caption}
                     onChange={(e) =>  setCaption(e.target.value)}
                    
-                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-cyan-400 focus:outline-none"
+                    className="w-full px-4 py-3 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100  focus:border-accent focus:outline-none"
                     maxLength={100}
                   />
                 </div>

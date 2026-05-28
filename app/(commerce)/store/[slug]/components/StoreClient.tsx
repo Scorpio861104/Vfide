@@ -99,7 +99,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
                 value={search}
                 onChange={(e) =>  setSearch(e.target.value)}
                
-                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-cyan-500/50 focus:outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm  focus:border-accent/50 focus:outline-none"
               />
             </div>
 
@@ -118,13 +118,13 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
             <div className="flex border border-white/10 rounded-xl overflow-hidden">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2.5 ${viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                className={`p-2.5 ${viewMode === 'grid' ? 'bg-accent/20 text-accent' : 'text-gray-500 hover:text-white'}`}
               >
                 <Grid size={16} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2.5 ${viewMode === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500 hover:text-white'}`}
+                className={`p-2.5 ${viewMode === 'list' ? 'bg-accent/20 text-accent' : 'text-gray-500 hover:text-white'}`}
               >
                 <List size={16} />
               </button>
@@ -152,7 +152,7 @@ export function StoreClient({ merchant, initialProducts, slug }: StoreClientProp
               </div>
               <button
                 onClick={() => setShowCheckout(true)}
-                className="px-4 py-2.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30"
+                className="px-4 py-2.5 rounded-lg bg-accent/20 text-accent border border-accent/30 hover:bg-accent/30"
               >
                 Checkout
               </button>

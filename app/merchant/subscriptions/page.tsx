@@ -304,11 +304,11 @@ function CreatePlanModal({ onClose, onCreated, onError }: { onClose: () => void;
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Name *</span>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="VIP Monthly" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="VIP Monthly" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Description (optional)</span>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none resize-none" />
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none resize-none" />
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label className="block">

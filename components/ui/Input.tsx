@@ -46,7 +46,7 @@ const inputVariants = cva(
     'w-full rounded-lg text-white placeholder:text-zinc-500',
     'transition-colors duration-150',
     'outline-none',
-    'focus-visible:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-400/30',
+    'focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/30',
     'disabled:opacity-50 disabled:cursor-not-allowed',
     'aria-[invalid=true]:border-red-500 aria-[invalid=true]:focus-visible:border-red-500 aria-[invalid=true]:focus-visible:ring-red-400/30',
   ].join(' '),

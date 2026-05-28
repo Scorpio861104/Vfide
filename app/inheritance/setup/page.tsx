@@ -402,7 +402,7 @@ function Header({ step }: { step: number }) {
           <div key={s.n} className="flex items-center gap-2">
             <div
               className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold ${
-                step >= s.n ? 'bg-cyan-500 text-white' : 'bg-zinc-800 text-gray-500'
+                step >= s.n ? 'bg-accent text-white' : 'bg-zinc-800 text-gray-500'
               }`}
             >
               {step > s.n ? <CheckCircle2 size={12} /> : s.n}
@@ -639,7 +639,7 @@ function Step3Secrets({
                 type="button"
                 onClick={() => onDownload(heir, i)}
                 disabled={!heir.secret}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-500/15 px-3 py-1.5 text-xs text-cyan-300 hover:bg-cyan-500/25 disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-accent/15 px-3 py-1.5 text-xs text-cyan-300 hover:bg-accent/25 disabled:opacity-50"
               >
                 <Download size={12} /> Envelope
               </button>
@@ -730,7 +730,7 @@ function Step4Review({
         ))}
       </div>
 
-      <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-3 text-xs text-cyan-200">
+      <div className="rounded-xl border border-accent/30 bg-accent/5 p-3 text-xs text-cyan-200">
         After you click <strong>Propose</strong>, a 30-day cooldown starts. You
         can cancel during that window. After 30 days, return to this tab and
         click <strong>Confirm</strong> to make the configuration active.
@@ -790,7 +790,7 @@ function NavButtons({
           type="button"
           onClick={onNext}
           disabled={nextDisabled || !onNext}
-          className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 transition hover:bg-cyan-500/30 disabled:opacity-30"
+          className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-cyan-300 transition hover:bg-accent/30 disabled:opacity-30"
         >
           Next
         </button>
@@ -935,7 +935,7 @@ function ProposalSuccessPage({
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs ${
                 downloaded.has(heir.id)
                   ? 'bg-emerald-500/15 text-emerald-300'
-                  : 'bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25'
+                  : 'bg-accent/15 text-accent hover:bg-accent/25'
               }`}
             >
               {downloaded.has(heir.id) ? (

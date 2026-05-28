@@ -124,7 +124,7 @@ export default function WalletHubPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
 
         <div className="container mx-auto max-w-5xl px-4 py-8 relative">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-300">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-300">
             <Lock className="w-3 h-3" /> Self-custodial · Non-custodial · Howey-compliant
           </div>
           <h1 className="mb-2 text-4xl font-black text-white tracking-tight">Wallet Hub</h1>
@@ -168,7 +168,7 @@ export default function WalletHubPage() {
                       <span
                         className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                           opt.recommended
-                            ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
+                            ? 'border-accent/30 bg-accent/15 text-accent'
                             : isDisabled
                               ? 'border-white/10 bg-white/5 text-white/50'
                               : 'border-white/10 bg-white/5 text-white/70'
@@ -190,7 +190,7 @@ export default function WalletHubPage() {
               );
 
               return (
-                <Link key={opt.id} href={opt.href} className="block focus:outline-none focus:ring-2 focus:ring-cyan-500/50 rounded-2xl">
+                <Link key={opt.id} href={opt.href} className="block focus:outline-none focus:ring-2 focus:ring-accent/50 rounded-2xl">
                   {Card}
                 </Link>
               );

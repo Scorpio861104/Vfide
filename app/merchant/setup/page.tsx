@@ -50,7 +50,7 @@ export default function MerchantSetupPage() {
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30 rounded-full mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 border border-accent/30 rounded-full mb-4">
               <Store size={16} className="text-cyan-400" />
               <span className="text-sm text-cyan-400 font-medium">Merchant setup</span>
             </div>

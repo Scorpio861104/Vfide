@@ -116,7 +116,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
   const getBorderColor = () => {
     if (error) return 'border-red-500 focus-within:border-red-500';
     if (success) return 'border-green-500 focus-within:border-green-500';
-    return 'focus-within:border-cyan-500';
+    return 'focus-within:border-accent';
   };
 
   return (
@@ -290,7 +290,7 @@ export const FormTextarea = forwardRef<HTMLTextAreaElement, FormTextareaProps>((
             w-full min-h-25 px-4 py-3 bg-gray-900 border rounded-xl
             text-white 
             outline-none transition-colors resize-y
-            ${error ? 'border-red-500' : success ? 'border-green-500' : 'border-gray-700 focus:border-cyan-500'}
+            ${error ? 'border-red-500' : success ? 'border-green-500' : 'border-gray-700 focus:border-accent'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
           aria-invalid={!!error}
@@ -379,7 +379,7 @@ export const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
             text-white pl-4 pr-10
             outline-none transition-colors cursor-pointer
             ${sizes[size]}
-            ${error ? 'border-red-500' : 'border-gray-700 focus:border-cyan-500'}
+            ${error ? 'border-red-500' : 'border-gray-700 focus:border-accent'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
           aria-invalid={!!error}
@@ -459,8 +459,8 @@ export const FormCheckbox = forwardRef<HTMLInputElement, FormCheckboxProps>(({
             disabled={disabled}
             className={`
               peer appearance-none bg-gray-900 border-2 border-gray-600 rounded
-              checked:bg-cyan-500 checked:border-cyan-500
-              focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-0
+              checked:bg-accent checked:border-accent
+              focus:ring-2 focus:ring-accent/50 focus:ring-offset-0
               transition-colors cursor-pointer
               ${sizes[size]}
               ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
@@ -558,9 +558,9 @@ export function FormToggle({
         className={`
           relative inline-flex shrink-0 rounded-full
           transition-colors duration-200
-          focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900
+          focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-gray-900
           ${sizes[size].track}
-          ${checked ? 'bg-cyan-500' : 'bg-gray-700'}
+          ${checked ? 'bg-accent' : 'bg-gray-700'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
@@ -612,7 +612,7 @@ export function SearchInput({
         className="
           w-full h-11 pl-10 pr-10 bg-gray-900 border border-gray-700 rounded-xl
           text-white 
-          outline-none focus:border-cyan-500 transition-colors
+          outline-none focus:border-accent transition-colors
         "
       />
       <AnimatePresence>
@@ -696,7 +696,7 @@ export function AddressInput({
             w-full h-11 px-4 pr-20 bg-gray-900 border rounded-xl
             text-white font-mono text-sm 
             outline-none transition-colors
-            ${error ? 'border-red-500' : isValidAddress ? 'border-green-500' : 'border-gray-700 focus:border-cyan-500'}
+            ${error ? 'border-red-500' : isValidAddress ? 'border-green-500' : 'border-gray-700 focus:border-accent'}
           `}
           {...props}
         />
@@ -706,7 +706,7 @@ export function AddressInput({
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full"
+              className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full"
             />
           )}
 
@@ -810,7 +810,7 @@ export function AmountInput({
 
       <div className={`
         relative flex items-center bg-gray-900 border rounded-xl
-        ${error ? 'border-red-500' : 'border-gray-700 focus-within:border-cyan-500'}
+        ${error ? 'border-red-500' : 'border-gray-700 focus-within:border-accent'}
       `}>
         <input
           id={id}
@@ -830,7 +830,7 @@ export function AmountInput({
             <button
               type="button"
               onClick={handleMax}
-              className="px-2 py-1 text-xs font-medium text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 rounded-lg transition-colors"
+              className="px-2 py-1 text-xs font-medium text-accent hover:text-accent-light bg-accent/10 rounded-lg transition-colors"
             >
               MAX
             </button>

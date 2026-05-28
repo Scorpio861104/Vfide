@@ -82,7 +82,7 @@ export default function SeerAcademyPage() {
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-8">
-          <section className="rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-zinc-900 to-emerald-500/10 p-8">
+          <section className="rounded-2xl border border-accent/20 bg-gradient-to-br from-cyan-500/10 via-zinc-900 to-emerald-500/10 p-8">
             <div className="badge-live mb-4">
               <Compass className="w-4 h-4" /> Seer Academy
             </div>

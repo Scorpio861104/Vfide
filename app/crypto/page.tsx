@@ -35,7 +35,7 @@ export default function CryptoDashboard() {
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative flex items-center justify-center min-h-[calc(100vh-4.5rem)] p-4">
             <div className="glass-card-premium p-8 max-w-md w-full text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-cyan-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-accent/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Wallet className="w-8 h-8 text-cyan-300" />
               </div>
               <div className="badge-live mb-4 justify-center">

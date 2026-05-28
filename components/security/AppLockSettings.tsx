@@ -127,7 +127,7 @@ export function AppLockSettings() {
         <h2 className="text-2xl font-bold text-white">App Lock</h2>
       </div>
 
-      <div className="rounded-lg bg-cyan-500/10 border border-cyan-500/30 p-3 text-xs text-cyan-100 flex gap-2">
+      <div className="rounded-lg bg-cyan-500/10 border border-accent/30 p-3 text-xs text-cyan-100 flex gap-2">
         <Info size={14} className="flex-shrink-0 mt-0.5" />
         <span>
           App Lock is a <em>device-only</em> speed-bump. It prompts on this device
@@ -196,7 +196,7 @@ export function AppLockSettings() {
         )}
 
         {showPinSetup && (
-          <div className="rounded-lg border border-cyan-500/30 bg-gray-900/60 p-4 space-y-3">
+          <div className="rounded-lg border border-accent/30 bg-gray-900/60 p-4 space-y-3">
             <div className="text-sm text-white font-medium">
               {pinReady ? 'Change your PIN' : 'Create a PIN'}
             </div>
@@ -222,7 +222,7 @@ export function AppLockSettings() {
               <button
                 onClick={submitPinSetup}
                 disabled={pinSaving}
-                className="flex-1 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-cyan-600 hover:bg-accent text-white text-sm font-medium disabled:opacity-50"
               >
                 {pinSaving ? 'Saving…' : 'Save PIN'}
               </button>
@@ -266,7 +266,7 @@ export function AppLockSettings() {
           <span className="self-center text-gray-400 text-sm">VFIDE</span>
           <button
             onClick={saveThreshold}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium"
+            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-accent text-white text-sm font-medium"
           >
             Save
           </button>

@@ -120,7 +120,7 @@ export function ReactionPicker({ onSelect, onClose, customImages = [] }: Reactio
             onClick={() => setActiveTab('emoji')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               activeTab === 'emoji'
-                ? 'bg-cyan-500/20 text-cyan-400'
+                ? 'bg-accent/20 text-accent'
                 : 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
             }`}
           >
@@ -286,7 +286,7 @@ export function ReactionDisplay({ reactions, currentUserAddress, onToggle }: Rea
             })}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm transition-all ${
               isActive
-                ? 'bg-cyan-500/20 border border-cyan-500/50 text-cyan-300'
+                ? 'bg-cyan-500/20 border border-accent/50 text-cyan-300'
                 : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
             }`}
             title={reaction.users.map(u => u.username || u.address.slice(0, 8)).join(', ')}

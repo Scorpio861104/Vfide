@@ -103,7 +103,7 @@ export default function MerchantReturnsPage() {
                   key={value}
                   type="button"
                   onClick={() => setFilter(value)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold capitalize ${filter === value ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-white/5 text-gray-400'}`}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold capitalize ${filter === value ? 'border-accent/40 bg-accent/10 text-accent' : 'border-white/10 bg-white/5 text-gray-400'}`}
                 >
                   {value}
                 </button>

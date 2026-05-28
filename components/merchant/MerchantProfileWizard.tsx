@@ -224,7 +224,7 @@ export function MerchantProfileWizard({
                   isComplete
                     ? 'bg-emerald-500 text-white'
                     : isCurrent
-                    ? 'bg-cyan-500 text-white'
+                    ? 'bg-accent text-white'
                     : 'bg-white/10 text-gray-500'
                 }`}
               >
@@ -432,7 +432,7 @@ export function MerchantProfileWizard({
                       <button
                         onClick={addLink}
                         type="button"
-                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-cyan-500/30 hover:text-cyan-300 hover:bg-cyan-500/5 transition-colors"
+                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-accent/30 hover:text-cyan-300 hover:bg-cyan-500/5 transition-colors"
                       >
                         + Add link
                       </button>
@@ -552,7 +552,7 @@ export function MerchantProfileWizard({
 
               {/* In-flight + error — glassmorphic status panels */}
               {hookStep !== 'idle' && !error && (
-                <div className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-md px-4 py-3 text-sm text-cyan-200">
+                <div className="mb-4 rounded-xl border border-accent/30 bg-cyan-500/10 backdrop-blur-md px-4 py-3 text-sm text-cyan-200">
                   {hookStep === 'uploading-avatar' && 'Uploading avatar…'}
                   {hookStep === 'storing-profile' && 'Saving profile…'}
                   {hookStep === 'awaiting-signature' && 'Please confirm the transaction in your wallet.'}

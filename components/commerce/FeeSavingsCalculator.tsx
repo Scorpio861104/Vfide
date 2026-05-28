@@ -34,7 +34,7 @@ export function FeeSavingsCalculator() {
       {/* Amount Input */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-xl blur-xl opacity-20" />
-        <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border border-cyan-400/30">
+        <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-xl p-3 sm:p-4 md:p-6 border border-accent/30">
           <label className="block text-[10px] sm:text-xs md:text-sm text-zinc-100/70 mb-1 sm:mb-2">
             Payment Amount (USD)
           </label>
@@ -187,7 +187,7 @@ export function FeeSavingsCalculator() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="pt-2 sm:pt-3 md:pt-4 mt-2 sm:mt-3 md:mt-4 border-t border-cyan-400/20"
+              className="pt-2 sm:pt-3 md:pt-4 mt-2 sm:mt-3 md:mt-4 border-t border-accent/20"
             >
               <p className="text-[10px] sm:text-xs text-zinc-100/50">
                 If you process ${amount} monthly:

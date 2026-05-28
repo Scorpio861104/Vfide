@@ -248,7 +248,7 @@ export function ClaimsTab() {
                   onClick={() => handleClaim(q)}
                   disabled={!canClaim || isClaiming || isPending}
                   aria-label={`Claim Q${q.quarter} ${q.year} reward`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 text-sm font-bold transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 text-sm font-bold transition-colors"
                 >
                   {isClaiming ? (
                     <Loader2 className="animate-spin" size={14} aria-hidden="true" />

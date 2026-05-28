@@ -32,7 +32,7 @@ export default function AdminError({
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-cyan-500 text-zinc-900 rounded-lg font-bold hover:bg-cyan-400 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent text-zinc-900 rounded-lg font-bold hover:bg-accent-light transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Retry

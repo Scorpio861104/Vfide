@@ -83,7 +83,7 @@ export default function BudgetsPage() {
       <div className="relative container mx-auto px-4 max-w-4xl space-y-6">
         {/* Device-only notice */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-3 text-xs text-cyan-200">
+          className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-3 text-xs text-cyan-200">
           Budgets are saved on this device only — they won&apos;t appear on other devices you sign in from.
           Spending totals are still computed from your full transaction history.
         </motion.div>
@@ -204,7 +204,7 @@ export default function BudgetsPage() {
               <div>
                 <label className="text-xs text-white/50 block mb-1.5 uppercase tracking-wider">Category</label>
                 <select value={newBudget.category} onChange={e => setNewBudget({ ...newBudget, category: e.target.value })}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50">
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-accent/50">
                   <option value="">Select category</option>
                   {['DeFi', 'NFT', 'Gaming', 'Transfers', 'Exchange', 'Gas', 'Other'].map(c => (
                     <option key={c} value={c}>{c}</option>
@@ -214,12 +214,12 @@ export default function BudgetsPage() {
               <div>
                 <label className="text-xs text-white/50 block mb-1.5 uppercase tracking-wider">Monthly Limit ($)</label>
                 <input type="number" value={newBudget.limit} onChange={e => setNewBudget({ ...newBudget, limit: e.target.value })}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-accent/50" />
               </div>
               <div>
                 <label className="text-xs text-white/50 block mb-1.5 uppercase tracking-wider">Period</label>
                 <select value={newBudget.period} onChange={e => setNewBudget({ ...newBudget, period: e.target.value as typeof newBudget.period })}
-                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50">
+                  className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-accent/50">
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                   <option value="monthly">Monthly</option>

@@ -308,7 +308,7 @@ export default function ChallengeWindowPage() {
                     onChange={(e) => setCustomDays(e.target.value)}
                     placeholder={`${MIN_DAYS}–${MAX_DAYS}`}
                     disabled={isWritePending}
-                    className="w-32 px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 disabled:opacity-50"
+                    className="w-32 px-3 py-2 rounded-lg bg-black/30 border border-white/20 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 disabled:opacity-50"
                   />
                   <span className="ml-3 text-sm text-gray-400">days</span>
                   {!customIsValid && customDays && (

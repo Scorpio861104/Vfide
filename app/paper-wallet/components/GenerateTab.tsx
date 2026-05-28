@@ -71,7 +71,7 @@ export function GenerateTab() {
         {!wallet ? (
           <button
             onClick={generate}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm font-semibold transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-accent/20 hover:bg-accent/30 text-cyan-400 text-sm font-semibold transition-colors"
           >
             <RefreshCw size={16} /> Generate Wallet
           </button>

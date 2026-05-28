@@ -31,7 +31,7 @@ export function NotificationStats({ stats }: NotificationStatsProps) {
     [NotificationType.GOVERNANCE]: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
     [NotificationType.REWARD]: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
     [NotificationType.ALERT]: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    [NotificationType.SYSTEM]: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+    [NotificationType.SYSTEM]: 'bg-accent/10 text-accent border-accent/20',
     [NotificationType.SOCIAL]: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
     [NotificationType.MARKET]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   };

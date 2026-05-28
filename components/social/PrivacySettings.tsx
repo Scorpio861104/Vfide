@@ -269,7 +269,7 @@ export function PrivacySettings() {
                 type="checkbox"
                 checked={settings.requireProofScoreForRequests}
                 onChange={(e) =>  setSettings({ ...settings, requireProofScoreForRequests: e.target.checked })}
-                className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
+                className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-accent focus:ring-offset-0"
               />
               <div>
                 <div className="text-sm font-semibold text-zinc-100">
@@ -302,7 +302,7 @@ export function PrivacySettings() {
                 type="checkbox"
                 checked={settings.autoRejectLowTrust}
                 onChange={(e) =>  setSettings({ ...settings, autoRejectLowTrust: e.target.checked })}
-                className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-cyan-400 focus:ring-offset-0"
+                className="mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-950 text-cyan-400 focus:ring-accent focus:ring-offset-0"
               />
               <div>
                 <div className="text-sm font-semibold text-zinc-100">

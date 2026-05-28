@@ -103,7 +103,7 @@ export function BuyTab() {
               min="1"
               value={usdBudget}
               onChange={(e) => setUsdBudget(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent/50"
             />
           </div>
           <div>
@@ -115,7 +115,7 @@ export function BuyTab() {
                   onClick={() => setFeeTier(tier)}
                   className={`rounded-lg px-2 py-2 text-xs font-semibold capitalize transition-colors ${
                     feeTier === tier
-                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      ? 'bg-accent/20 text-accent border border-accent/30'
                       : 'bg-white/5 text-gray-400 border border-white/10 hover:text-white'
                   }`}
                 >

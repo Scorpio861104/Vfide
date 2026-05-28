@@ -545,7 +545,7 @@ export function MerchantPOS() {
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Product Grid - Left Side */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
                 <h2 className="text-2xl font-bold text-zinc-100 mb-4">Products</h2>
                 
                 {/* Category Filter */}
@@ -558,7 +558,7 @@ export function MerchantPOS() {
                       className={`px-4 py-2 rounded-lg transition-colors text-sm ${
                         selectedCategory === cat
                           ? 'bg-cyan-400 text-zinc-950 font-semibold'
-                          : 'bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20'
+                          : 'bg-accent/10 text-accent hover:bg-accent/20'
                       }`}
                     >
                       {cat}
@@ -574,7 +574,7 @@ export function MerchantPOS() {
                       onClick={() => addToCart(product)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="bg-zinc-950 border border-cyan-400/30 rounded-xl p-4 text-left hover:border-cyan-400 transition-all"
+                      className="bg-zinc-950 border border-accent/30 rounded-xl p-4 text-left hover:border-cyan-400 transition-all"
                     >
                       <div className="text-2xl mb-2">☕</div>
                       <h3 className="font-bold text-zinc-100 mb-1">{product.name}</h3>
@@ -589,7 +589,7 @@ export function MerchantPOS() {
             {/* Cart & Checkout - Right Side */}
             <div className="space-y-4">
               {/* Cart */}
-              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold text-zinc-100">Cart</h2>
                   {cart.length && (
@@ -645,7 +645,7 @@ export function MerchantPOS() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20 space-y-4"
+                  className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20 space-y-4"
                 >
                   <div className="space-y-2">
                     <div className="flex justify-between text-zinc-100/60">
@@ -674,7 +674,7 @@ export function MerchantPOS() {
                   </div>
                   
                   {/* Processor Comparison */}
-                  <div className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 space-y-3">
+                  <div className="bg-zinc-950 border border-accent/30 rounded-lg p-4 space-y-3">
                     <p className="text-xs text-zinc-100/60 mb-2">Fee Comparison</p>
                     
                     <div className="space-y-2 text-sm">
@@ -756,7 +756,7 @@ export function MerchantPOS() {
         
         {activeTab === 'products' && (
           /* PRODUCTS MANAGEMENT VIEW */
-          <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+          <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-zinc-100">Manage Products</h2>
               <button
@@ -772,7 +772,7 @@ export function MerchantPOS() {
               {products.map(product => (
                 <div
                   key={product.id}
-                  className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 flex items-center justify-between"
+                  className="bg-zinc-950 border border-accent/30 rounded-lg p-4 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-3xl">☕</div>
@@ -801,7 +801,7 @@ export function MerchantPOS() {
           <div className="space-y-6">
             {/* Today's Summary */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+              <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
                 <p className="text-sm text-zinc-100/60 mb-2">Today&apos;s Sales</p>
                 <p className="text-3xl font-bold text-cyan-400">{todaysSales.length}</p>
               </div>
@@ -820,7 +820,7 @@ export function MerchantPOS() {
             </div>
             
             {/* Sales History */}
-            <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-cyan-400/20">
+            <div className="bg-zinc-950/80 backdrop-blur-xl rounded-xl p-6 border border-accent/20">
               <h2 className="text-2xl font-bold text-zinc-100 mb-4">Recent Transactions</h2>
               
               {salesHistory.length === 0 ? (
@@ -832,7 +832,7 @@ export function MerchantPOS() {
                       key={sale.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="bg-zinc-950 border border-cyan-400/30 rounded-lg p-4 hover:border-cyan-400 transition-colors cursor-pointer"
+                      className="bg-zinc-950 border border-accent/30 rounded-lg p-4 hover:border-cyan-400 transition-colors cursor-pointer"
                       onClick={() => {
                         setCurrentSale(sale)
                         setShowReceipt(true)
@@ -881,7 +881,7 @@ export function MerchantPOS() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-950 border border-cyan-400/30 rounded-2xl p-8 max-w-md w-full"
+              className="bg-zinc-950 border border-accent/30 rounded-2xl p-8 max-w-md w-full"
             >
               <h3 className="text-2xl font-bold text-zinc-100 mb-6">Add New Product</h3>
               
@@ -893,7 +893,7 @@ export function MerchantPOS() {
                     value={newProduct.name}
                     onChange={(e) =>  setNewProduct({...newProduct, name: e.target.value})}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
@@ -905,7 +905,7 @@ export function MerchantPOS() {
                     value={newProduct.price}
                     onChange={(e) =>  setNewProduct({...newProduct, price: e.target.value})}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
@@ -916,7 +916,7 @@ export function MerchantPOS() {
                     value={newProduct.category}
                     onChange={(e) =>  setNewProduct({...newProduct, category: e.target.value})}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
@@ -927,7 +927,7 @@ export function MerchantPOS() {
                     onChange={(e) =>  setNewProduct({...newProduct, description: e.target.value})}
                    
                     rows={3}
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none resize-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none resize-none"
                   />
                 </div>
                 
@@ -940,7 +940,7 @@ export function MerchantPOS() {
                   </button>
                   <button
                     onClick={() => setShowAddProduct(false)}
-                    className="px-6 bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
+                    className="px-6 bg-zinc-950 border border-accent/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
                   >
                     Cancel
                   </button>
@@ -1091,7 +1091,7 @@ export function MerchantPOS() {
               <div className="space-y-3">
                 <button
                   onClick={() => setShowQRPayment(false)}
-                  className="w-full bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-4 rounded-xl hover:border-cyan-400 transition-colors"
+                  className="w-full bg-zinc-950 border border-accent/30 text-zinc-100 font-bold py-4 rounded-xl hover:border-cyan-400 transition-colors"
                 >
                   Cancel Payment
                 </button>
@@ -1138,11 +1138,11 @@ export function MerchantPOS() {
                     value={customerEmail}
                     onChange={(e) =>  setCustomerEmail(e.target.value)}
                    
-                    className="w-full bg-zinc-950 border border-cyan-400/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-cyan-400 outline-none"
+                    className="w-full bg-zinc-950 border border-accent/30 rounded-lg px-4 py-3 text-zinc-100 focus:border-accent outline-none"
                   />
                 </div>
                 
-                <div className="bg-cyan-400/10 border border-cyan-400/30 rounded-lg p-3">
+                <div className="bg-cyan-400/10 border border-accent/30 rounded-lg p-3">
                   <p className="text-xs text-zinc-100/70">
                     ✅ Instant email delivery<br />
                     ✅ Itemized receipt with totals<br />
@@ -1154,7 +1154,7 @@ export function MerchantPOS() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => completeSale()}
-                    className="bg-zinc-950 border border-cyan-400/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
+                    className="bg-zinc-950 border border-accent/30 text-zinc-100 font-bold py-3 rounded-lg hover:border-cyan-400 transition-colors"
                   >
                     Skip
                   </button>

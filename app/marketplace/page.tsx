@@ -76,15 +76,15 @@ export default function MarketplacePage() {
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
               <input type="text" value={query} onChange={e =>  setQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-cyan-500/50 focus:outline-none" />
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white  focus:border-accent/50 focus:outline-none" />
             </div>
             <button onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-xl border font-bold ${showFilters ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>
+              className={`px-4 py-3 rounded-xl border font-bold ${showFilters ? 'bg-accent/20 text-accent border-accent/30' : 'bg-white/5 text-gray-400 border-white/10'}`}>
               <SlidersHorizontal size={20} />
             </button>
             <div className="flex border border-white/10 rounded-xl overflow-hidden">
-              <button onClick={() => setView('grid')} className={`p-3 ${view === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}><Grid size={18} /></button>
-              <button onClick={() => setView('list')} className={`p-3 ${view === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-500'}`}><List size={18} /></button>
+              <button onClick={() => setView('grid')} className={`p-3 ${view === 'grid' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}><Grid size={18} /></button>
+              <button onClick={() => setView('list')} className={`p-3 ${view === 'list' ? 'bg-accent/20 text-accent' : 'text-gray-500'}`}><List size={18} /></button>
             </div>
           </div>
 

@@ -130,7 +130,7 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
     <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] px-4 text-white">
       <div className="container mx-auto max-w-md py-8">
         <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-300">
             <Link2 size={12} /> Payment link
           </div>
 
@@ -157,7 +157,7 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
                     onChange={(e) => setCustomAmount(e.target.value)}
                     placeholder="0.00"
                     autoFocus
-                    className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-3 py-2.5 text-2xl font-bold focus:border-cyan-500 outline-none"
+                    className="flex-1 bg-zinc-950 border border-white/10 rounded-lg px-3 py-2.5 text-2xl font-bold focus:border-accent outline-none"
                   />
                   <span className="text-zinc-400">{l.currency_display ?? 'VFIDE'}</span>
                 </div>
@@ -183,7 +183,7 @@ export function PayLinkContent({ linkId }: { linkId: string }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none"
               />
               <span className="text-xs text-zinc-500 mt-1 block">For the receipt</span>
             </label>

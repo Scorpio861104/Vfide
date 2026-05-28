@@ -189,7 +189,7 @@ export function OnboardingPathChooser() {
           whileHover={{ scale: 1.02, y: -2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => choosePath('buyer')}
-          className="p-6 bg-white/3 border-2 border-white/10 rounded-2xl hover:border-cyan-500/40 transition-colors text-left"
+          className="p-6 bg-white/3 border-2 border-white/10 rounded-2xl hover:border-accent/40 transition-colors text-left"
         >
           <ShoppingCart size={32} className="text-cyan-400 mb-3" />
           <div className="text-white font-bold text-lg mb-1">I want to buy</div>
@@ -235,7 +235,7 @@ export function OnboardingProgressBar() {
               <div key={step.id} className="flex items-center gap-1.5">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   step.completed ? 'bg-emerald-500 text-white' :
-                  step.current ? 'bg-cyan-500 text-white ring-2 ring-cyan-500/30' :
+                  step.current ? 'bg-accent text-white ring-2 ring-cyan-500/30' :
                   'bg-white/10 text-gray-500'
                 }`}>
                   {step.completed ? <Check size={12} /> : i + 1}

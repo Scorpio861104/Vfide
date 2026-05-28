@@ -43,7 +43,7 @@ export function SurfaceCard({
 
 export function AccentBadge({ label, color = "cyan", className = "" }: { label: string; color?: "cyan" | "emerald" | "amber" | "purple"; className?: string }) {
   const palette = {
-    cyan: "bg-cyan-400/15 text-cyan-400 border border-cyan-400/30",
+    cyan: "bg-accent/15 text-accent border border-accent/30",
     emerald: "bg-emerald-500/15 text-emerald-300 border border-emerald-400/30",
     amber: "bg-amber-500/15 text-amber-300 border border-amber-400/30",
     purple: "bg-purple-500/15 text-purple-300 border border-purple-400/30",

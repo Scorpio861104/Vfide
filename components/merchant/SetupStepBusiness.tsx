@@ -45,7 +45,7 @@ export function SetupStepBusiness({
             autoComplete="organization"
             autoCapitalize="sentences"
             autoCorrect="off"
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </div>
 
@@ -55,7 +55,7 @@ export function SetupStepBusiness({
             {CATEGORIES.map(cat => (
               <button key={cat.value} type="button" onClick={() => setCategory(cat.value)}
                 className={`p-3 rounded-xl text-center text-sm transition-all border ${
-                  category === cat.value ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'
+                  category === cat.value ? 'bg-accent/15 border-accent/40 text-cyan-400' : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'
                 }`}>
                 <div className="text-lg mb-1">{cat.emoji}</div>
                 <div className="text-xs leading-tight">{cat.label}</div>
@@ -78,7 +78,7 @@ export function SetupStepBusiness({
               inputMode="text"
               autoComplete="address-level2"
               autoCapitalize="words"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-accent/50 focus:outline-none"
             />
           </div>
           <div>
@@ -91,7 +91,7 @@ export function SetupStepBusiness({
               inputMode="text"
               autoComplete="country-name"
               autoCapitalize="words"
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-accent/50 focus:outline-none"
             />
           </div>
         </div>
@@ -110,7 +110,7 @@ export function SetupStepBusiness({
             autoComplete="off"
             autoCapitalize="sentences"
             autoCorrect="off"
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-cyan-500/50 focus:outline-none"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white min-h-[44px] focus:border-accent/50 focus:outline-none"
           />
         </div>
       </div>

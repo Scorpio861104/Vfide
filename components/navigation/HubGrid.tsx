@@ -64,7 +64,7 @@ function HubCard({ link }: { link: HubLink }) {
   return (
     <Link
       href={link.href}
-      className="group rounded-xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/5"
+      className="group rounded-xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:border-accent/30 hover:bg-cyan-500/5"
     >
       <div className="flex items-start gap-3">
         <div className="rounded-lg bg-zinc-900 p-2 transition-colors group-hover:bg-cyan-500/10">

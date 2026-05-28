@@ -230,7 +230,7 @@ export default function SocialHubPage() {
         {!isConnected ? (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="glass-card-premium max-w-lg mx-auto text-center py-16 px-8">
-            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
               <Sparkles className="text-cyan-400" size={28} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Join the Conversation</h2>

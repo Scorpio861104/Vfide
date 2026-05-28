@@ -82,7 +82,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           </ul>
         </div>
 
-        <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4 text-sm text-cyan-100">
+        <div className="rounded-xl border border-accent/30 bg-cyan-500/5 p-4 text-sm text-cyan-100">
           <p className="font-semibold text-white">Your first payment</p>
           <p className="mt-1 text-white/80">
             Each completed payment, on-time loan repayment, and merchant endorsement nudges your

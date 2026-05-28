@@ -120,7 +120,7 @@ export function TopNav() {
                 onClick={() => setMoreOpen(false)}
                 className={`topnav-active-pill relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-cyan-500/12 text-cyan-400'
+                    ? 'bg-accent/10 text-accent'
                     : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'
                 }`}
               >
@@ -148,7 +148,7 @@ export function TopNav() {
             aria-expanded={moreOpen}
             className={`relative flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
               activeSection === 'more'
-                ? 'bg-cyan-500/12 text-cyan-400'
+                ? 'bg-accent/10 text-accent'
                 : 'text-zinc-400 hover:bg-white/5 hover:text-zinc-100'
             }`}
           >
@@ -177,7 +177,7 @@ export function TopNav() {
           {isConnected && (
             <Link
               href="/proofscore"
-              className="hidden lg:flex items-center rounded-lg border border-white/8 bg-white/4 px-2.5 py-1 hover:bg-white/8 hover:border-cyan-500/20 transition-all"
+              className="hidden lg:flex items-center rounded-lg border border-white/8 bg-white/4 px-2.5 py-1 hover:bg-white/8 hover:border-accent/20 transition-all"
               title="ProofScore"
             >
               <ProofScoreCrystal size={28} showScore />

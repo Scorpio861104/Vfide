@@ -155,7 +155,7 @@ export function VaultQueueSection({
                     value={spendLimitPerTransfer}
                     onChange={(event) => setSpendLimitPerTransfer(event.target.value)}
                     placeholder="Per-transfer VFIDE"
-                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50"
                   />
                   <input
                     type="number"
@@ -163,7 +163,7 @@ export function VaultQueueSection({
                     value={spendLimitPerDay}
                     onChange={(event) => setSpendLimitPerDay(event.target.value)}
                     placeholder="Daily VFIDE"
-                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                    className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50"
                   />
                 </div>
                 <button
@@ -192,7 +192,7 @@ export function VaultQueueSection({
                     value={largeTransferThresholdInput}
                     onChange={(event) => setLargeTransferThresholdInput(event.target.value)}
                     placeholder="Queue threshold VFIDE"
-                    className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500/50"
+                    className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white focus:outline-none focus:border-accent/50"
                   />
                   <button
                     type="button"
@@ -225,7 +225,7 @@ export function VaultQueueSection({
                       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-cyan-300">
+                            <span className="rounded-full border border-accent/30 bg-cyan-400/10 px-2 py-1 text-cyan-300">
                               Queue #{item.index.toString()}
                             </span>
                             <span className={`rounded-full px-2 py-1 ${isReady ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>

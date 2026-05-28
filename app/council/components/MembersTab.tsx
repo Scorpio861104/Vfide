@@ -108,7 +108,7 @@ export function MembersTab() {
                     ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                     : member.role === 'Open'
                     ? 'bg-white/5 text-gray-400 border-white/10'
-                    : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
+                    : 'bg-accent/20 text-accent border-accent/30'
                 }`}>
                   {member.role}
                 </span>
@@ -137,7 +137,7 @@ export function MembersTab() {
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-xl border border-white/10 p-6"
       >
         <div className="flex items-center gap-4 mb-4">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-accent/20">
             <TrendingUp className="text-cyan-400" size={20} />
           </div>
           <div>

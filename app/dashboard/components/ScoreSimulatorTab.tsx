@@ -132,7 +132,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                     onClick={() => setActivity(level)}
                     className={`rounded-lg border px-3 py-2 text-xs font-medium capitalize transition-colors ${
                       activity === level
-                        ? 'border-cyan-500 bg-cyan-500/15 text-cyan-200'
+                        ? 'border-cyan-500 bg-accent/15 text-accent'
                         : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
                     }`}
                   >
@@ -169,7 +169,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                 </div>
                 <div className="text-xs text-white/60 mt-1">{currentTier.name}</div>
               </div>
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4">
+              <div className="rounded-xl border border-accent/30 bg-accent/5 p-4">
                 <div className="text-xs uppercase tracking-wide text-cyan-300 mb-1">In {months} months</div>
                 <div className="text-3xl font-bold" style={{ color: tier.color }}>
                   {finalScore.toLocaleString()}

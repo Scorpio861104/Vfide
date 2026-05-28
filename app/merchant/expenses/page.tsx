@@ -214,7 +214,7 @@ export default function MerchantExpensesPage() {
                     </div>
                     <div className="mt-1 text-xs text-gray-500">Revenue minus expenses</div>
                   </div>
-                  <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+                  <div className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-4">
                     <div className="mb-1 text-xs text-gray-400">Profit Margin</div>
                     <div className="text-2xl font-bold text-cyan-400">{summary.margin.toFixed(1)}%</div>
                     <div className="mt-1 text-xs text-gray-500">Current period view</div>

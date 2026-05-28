@@ -256,7 +256,7 @@ function LoanRow({ id, loan, userAddress, busy, actingOn, termLoanAddress, onCan
           <button
             onClick={onCancel}
             disabled={busy}
-            className="flex items-center gap-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+            className="flex items-center gap-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 px-3 py-1.5 text-xs font-semibold text-red-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
           >
             {isThisBusy ? <Loader2 size={11} className="animate-spin" aria-hidden="true" /> : <X size={11} aria-hidden="true" />}
             Cancel offer
@@ -278,7 +278,7 @@ function LoanRow({ id, loan, userAddress, busy, actingOn, termLoanAddress, onCan
           <button
             onClick={onClaimDefault}
             disabled={busy}
-            className="flex items-center gap-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 px-3 py-1.5 text-xs font-semibold text-amber-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+            className="flex items-center gap-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 px-3 py-1.5 text-xs font-semibold text-amber-400 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
           >
             {isThisBusy ? <Loader2 size={11} className="animate-spin" aria-hidden="true" /> : <AlertTriangle size={11} aria-hidden="true" />}
             Claim default

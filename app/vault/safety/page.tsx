@@ -378,7 +378,7 @@ function Section({
 
 function SubItem({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-3 pl-3 border-l-2 border-cyan-500/30">
+    <div className="mt-3 pl-3 border-l-2 border-accent/30">
       <div className="font-semibold text-white text-sm">{title}</div>
       <div className="text-xs text-gray-400 mt-1 leading-relaxed">{children}</div>
     </div>

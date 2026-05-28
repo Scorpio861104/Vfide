@@ -127,7 +127,7 @@ export default function VaultRecoveryPage() {
         <div className="container mx-auto px-4 max-w-5xl">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 mb-8">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-accent/30 mb-8">
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
                 <Sparkles className="h-4 w-4 text-cyan-400" />
               </motion.div>
@@ -168,7 +168,7 @@ export default function VaultRecoveryPage() {
                     <div className="absolute left-5 top-1/2 -translate-y-1/2"><Search className="h-5 w-5 text-cyan-400" /></div>
                     <input type={searchMethod === "email" ? "email" : "text"} value={searchQuery} onChange={(e) =>  setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                      
-                      className="w-full pl-14 pr-6 py-5 rounded-2xl bg-white/5 border-2 border-white/10 text-white  focus:outline-none focus:border-cyan-500/50 text-lg transition-all" />
+                      className="w-full pl-14 pr-6 py-5 rounded-2xl bg-white/5 border-2 border-white/10 text-white  focus:outline-none focus:border-accent/50 text-lg transition-all" />
                   </div>
                   <motion.button onClick={handleSearch} disabled={isSearching} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                     className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-2xl font-bold text-white flex items-center justify-center gap-3 disabled:opacity-50 sm:min-w-50 shadow-lg shadow-cyan-500/30 relative overflow-hidden group">

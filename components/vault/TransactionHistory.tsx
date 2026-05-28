@@ -211,7 +211,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
         </div>
       ) : usePerformanceMode ? (
         <div className="space-y-3">
-          <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-100">
+          <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-cyan-100">
             Performance mode active — long transaction histories are windowed for smoother scrolling.
           </div>
           <VirtualizedList

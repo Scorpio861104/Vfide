@@ -241,7 +241,7 @@ export default function SplitterPage() {
                   placeholder="0x… (the merchant's deployed RevenueSplitter)"
                   value={splitterInput}
                   onChange={(e) => setSplitterInput(e.target.value.trim())}
-                  className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-cyan-500/50"
+                  className="w-full pl-9 pr-4 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent/50"
                 />
               </div>
               {splitterInput && !splitter && (
@@ -269,7 +269,7 @@ export default function SplitterPage() {
                 }
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value.trim())}
-                className="w-full px-3 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-cyan-500/50"
+                className="w-full px-3 py-2.5 bg-zinc-900 border border-white/10 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-accent/50"
               />
               {tokenInput && !token && (
                 <div className="text-xs text-amber-400 mt-1 flex items-center gap-1">
@@ -374,7 +374,7 @@ export default function SplitterPage() {
                 onClick={handleDistribute}
                 disabled={!validInputs || balanceZero || submitting || isPending || isConfirming || payees.length === 0}
                 aria-label="Distribute splitter balance to payees"
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-accent hover:bg-accent-light disabled:opacity-40 disabled:cursor-not-allowed text-zinc-950 font-bold transition-colors"
               >
                 {submitting || isPending || isConfirming ? (
                   <Loader2 className="animate-spin" size={16} aria-hidden="true" />

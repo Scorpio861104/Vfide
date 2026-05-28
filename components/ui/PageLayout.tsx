@@ -119,7 +119,7 @@ export function PageHeader({
   title, 
   subtitle,
   badge,
-  badgeColor = 'bg-cyan-400/20 text-cyan-400',
+  badgeColor = 'bg-accent/20 text-accent',
   children 
 }: PageHeaderProps) {
   return (
@@ -214,7 +214,7 @@ export function StatItem({ label, value, icon, trend, color = '#00F0FF', delay =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      className="glass-card p-6 text-center group hover:border-cyan-400/30 transition-all duration-300"
+      className="glass-card p-6 text-center group hover:border-accent/30 transition-all duration-300"
     >
       {icon && (
         <div 
@@ -353,7 +353,7 @@ export function TabNavigation({
             {tab.badge !== undefined && tab.badge > 0 && (
               <span className={`
                 px-2 py-0.5 text-xs rounded-full
-                ${activeTab === tab.id ? 'bg-black/20' : 'bg-cyan-400/20 text-cyan-400'}
+                ${activeTab === tab.id ? 'bg-black/20' : 'bg-accent/20 text-accent'}
               `}>
                 {tab.badge}
               </span>
@@ -380,7 +380,7 @@ export function TabNavigation({
               {tab.icon}
               <span>{tab.label}</span>
               {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="px-2 py-0.5 text-xs rounded-full bg-cyan-400/20 text-cyan-400">
+                <span className="px-2 py-0.5 text-xs rounded-full bg-accent/20 text-accent">
                   {tab.badge}
                 </span>
               )}
@@ -516,7 +516,7 @@ export function PageLoading() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-2 border-cyan-400/20 border-t-[#00F0FF] rounded-full mx-auto mb-4"
+          className="w-12 h-12 border-2 border-accent/20 border-t-[#00F0FF] rounded-full mx-auto mb-4"
         />
         <p className="text-zinc-400">Loading...</p>
       </motion.div>

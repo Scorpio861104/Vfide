@@ -74,7 +74,7 @@ export default function AboutPage() {
         <section className="relative pt-20 pb-16 px-4">
           <div className="container mx-auto max-w-4xl text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-cyan-300 mb-6">
                 <Globe size={12} /> Built for the world&apos;s 1.4 billion unbanked
               </div>
               <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6">
@@ -171,7 +171,7 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold mb-4">Ready to see it in action?</h2>
             <p className="text-zinc-400 mb-8">Testnet is live. Connect a wallet and explore the protocol with no real funds.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/testnet" className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl transition-colors">
+              <Link href="/testnet" className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-light text-zinc-900 font-bold rounded-xl transition-colors">
                 Try testnet <ArrowRight size={16} />
               </Link>
               <Link href="/docs" className="inline-flex items-center gap-2 px-6 py-3 border border-white/10 hover:border-white/20 text-white rounded-xl transition-colors">

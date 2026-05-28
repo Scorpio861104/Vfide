@@ -223,7 +223,7 @@ export function NextMilestoneBanner() {
   if (!nextMilestone || showAll) return null;
 
   return (
-    <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-4 flex items-center gap-4">
+    <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-accent/20 rounded-xl p-4 flex items-center gap-4">
       <div className="p-2 rounded-xl bg-cyan-500/20">
         <Award size={20} className="text-cyan-400" />
       </div>

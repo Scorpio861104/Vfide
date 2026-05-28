@@ -179,7 +179,7 @@ export function PromptModal({
                     maxLength={maxLength}
                     disabled={isLoading}
                     rows={4}
-                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 resize-y disabled:opacity-60"
+                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-accent resize-y disabled:opacity-60"
                   />
                 ) : (
                   <input
@@ -195,7 +195,7 @@ export function PromptModal({
                     placeholder={placeholder}
                     maxLength={maxLength}
                     disabled={isLoading}
-                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-400 disabled:opacity-60"
+                    className="w-full bg-zinc-800 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-accent disabled:opacity-60"
                   />
                 )}
                 <div className="mt-1.5 flex items-center justify-between text-xs">

@@ -145,7 +145,7 @@ export function LendersTab() {
               onClick={() => setPage((p) => (p > 0n ? p - 1n : 0n))}
               disabled={page === 0n}
               aria-label="Previous page"
-              className="flex items-center gap-1 rounded-lg bg-white/5 hover:bg-white/10 px-3 py-1.5 text-xs text-zinc-300 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="flex items-center gap-1 rounded-lg bg-white/5 hover:bg-white/10 px-3 py-1.5 text-xs text-zinc-300 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               <ChevronLeft size={12} aria-hidden="true" /> Prev
             </button>
@@ -153,7 +153,7 @@ export function LendersTab() {
               onClick={() => setPage((p) => (p + 1n < totalPages ? p + 1n : p))}
               disabled={page + 1n >= totalPages}
               aria-label="Next page"
-              className="flex items-center gap-1 rounded-lg bg-white/5 hover:bg-white/10 px-3 py-1.5 text-xs text-zinc-300 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              className="flex items-center gap-1 rounded-lg bg-white/5 hover:bg-white/10 px-3 py-1.5 text-xs text-zinc-300 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
             >
               Next <ChevronRight size={12} aria-hidden="true" />
             </button>

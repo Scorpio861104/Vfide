@@ -207,7 +207,7 @@ export function AccountSettings() {
                     ? 'border-pink-400 focus:border-pink-400'
                     : usernameAvailable === true
                     ? 'border-emerald-500 focus:border-emerald-500'
-                    : 'border-zinc-700 focus:border-cyan-400'
+                    : 'border-zinc-700 focus:border-accent'
                   : 'border-zinc-800 cursor-not-allowed'
               }`}
             />

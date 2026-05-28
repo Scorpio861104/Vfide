@@ -222,7 +222,7 @@ export function GuardianPendingRecoveryCard({
               Remove
             </button>
           ) : (
-            <span className="px-3 py-1 border border-cyan-500/40 text-cyan-300 rounded-lg text-xs font-bold">
+            <span className="px-3 py-1 border border-accent/40 text-cyan-300 rounded-lg text-xs font-bold">
               Attested
             </span>
           )}

@@ -513,7 +513,7 @@ export function VideoPlayer({
               className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3 focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-2"
             >
               <motion.div
-                className="h-full bg-cyan-500 rounded-full"
+                className="h-full bg-accent rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -667,7 +667,7 @@ export function ImageGallery({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setSelectedIndex(index)}
-            className="relative aspect-square overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="relative aspect-square overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <OptimizedImage
               src={image.src}

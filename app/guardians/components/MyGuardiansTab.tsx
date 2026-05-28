@@ -492,7 +492,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       )}
 
       {guardianSetupComplete && hasPendingGuardianChange && (
-        <div className="rounded-2xl p-6 border border-cyan-500/30 bg-cyan-500/10">
+        <div className="rounded-2xl p-6 border border-accent/30 bg-cyan-500/10">
           <h3 className="text-lg font-bold text-white mb-2">Pending Guardian Change</h3>
           <p className="text-sm text-gray-200 mb-3">
             {pendingGuardianActive ? 'Add guardian' : 'Remove guardian'} {pendingGuardianAddress}. This proposal can be applied after the 24-hour timelock expires or cancelled before then.
@@ -637,7 +637,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                   <div className="flex items-center gap-3">
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                       onClick={() => void handleIssueAttestation(guardian as `0x${string}`)} disabled={!isOwner || !hasVault}
-                      className="p-2 border border-cyan-500/50 text-cyan-300 rounded-lg hover:bg-cyan-500/10 transition-colors disabled:opacity-50"
+                      className="p-2 border border-accent/50 text-cyan-300 rounded-lg hover:bg-accent/10 transition-colors disabled:opacity-50"
                       title="Issue owner-signed guardian attestation"><FileText size={18} /></motion.button>
                     {/* R-8 trustee promote/demote: toggle role with timelock */}
                     <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}

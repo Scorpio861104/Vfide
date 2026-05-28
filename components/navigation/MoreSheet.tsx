@@ -337,7 +337,7 @@ function ItemRow({
       onClick={onPick}
       className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition ${
         active
-          ? 'bg-cyan-500/10 text-cyan-200'
+          ? 'bg-accent/10 text-accent'
           : 'text-gray-300 hover:bg-white/5 hover:text-white'
       }`}
     >

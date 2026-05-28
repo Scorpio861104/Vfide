@@ -177,7 +177,7 @@ export default function MerchantTraining({ onComplete, onSkip }: MerchantTrainin
 
   return (
     <div className="space-y-4">
-      <Card className="border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
+      <Card className="border-accent/30 bg-gradient-to-br from-cyan-500/10 to-blue-500/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Sparkles className="h-5 w-5 text-cyan-300" />

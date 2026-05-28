@@ -6,7 +6,7 @@ const COLOR_STYLES = {
   blue: 'from-blue-500/15 to-cyan-500/10 border-blue-500/30 text-blue-300',
   purple: 'from-purple-500/15 to-fuchsia-500/10 border-purple-500/30 text-purple-300',
   orange: 'from-orange-500/15 to-amber-500/10 border-orange-500/30 text-orange-300',
-  cyan: 'from-cyan-500/20 to-blue-500/15 border-cyan-500/40 text-cyan-200',
+  cyan: 'from-cyan-500/20 to-blue-500/15 border-accent/40 text-cyan-200',
 } as const;
 
 interface ComparisonRowProps {

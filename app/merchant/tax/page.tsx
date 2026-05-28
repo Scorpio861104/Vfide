@@ -320,7 +320,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
         <div className="space-y-4">
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Name *</span>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="California Sales Tax" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-cyan-500 outline-none" />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="California Sales Tax" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-accent outline-none" />
           </label>
 
           <label className="block">
@@ -332,7 +332,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
               step={0.01}
               value={ratePercent}
               onChange={(e) => setRatePercent(Number(e.target.value))}
-              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none"
+              className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-accent outline-none"
             />
             <span className="text-xs text-zinc-500 mt-1 block">
               Stored internally as {Math.round(ratePercent * 100)} basis points.
@@ -356,7 +356,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
 
           <label className="block">
             <span className="text-xs text-zinc-400 mb-1 block">Postal code pattern (regex, optional)</span>
-            <input type="text" value={postalPattern} onChange={(e) => setPostalPattern(e.target.value)} placeholder="^9[0-1]\\d{3}" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none" />
+            <input type="text" value={postalPattern} onChange={(e) => setPostalPattern(e.target.value)} placeholder="^9[0-1]\\d{3}" className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono focus:border-accent outline-none" />
             <span className="text-xs text-zinc-500 mt-1 block">e.g. <code className="bg-zinc-900 px-1 rounded">^90\d{3}</code> for 90xxx ZIPs.</span>
           </label>
 

@@ -248,7 +248,7 @@ export function ClaimFlowModal({
                     onChange={(e) => setRecoveryId(e.target.value)}
                     placeholder="The recovery ID you set when creating your vault"
                     disabled={isWritePending}
-                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 transition-colors text-lg disabled:opacity-50"
+                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 transition-colors text-lg disabled:opacity-50"
                   />
                   <p className="text-xs text-gray-500 mt-2 ml-1">
                     The secret phrase you set when creating your vault
@@ -267,7 +267,7 @@ export function ClaimFlowModal({
                     rows={3}
                     maxLength={500}
                     disabled={isWritePending}
-                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-cyan-500/50 transition-colors resize-none disabled:opacity-50"
+                    className="w-full px-5 py-4 rounded-xl bg-white/5 border-2 border-white/10 text-white placeholder:text-gray-600 focus:outline-none focus:border-accent/50 transition-colors resize-none disabled:opacity-50"
                   />
                   <p className="text-xs text-gray-500 mt-2 ml-1">
                     Stored on-chain. Be honest — this becomes a permanent record.

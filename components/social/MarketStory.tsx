@@ -162,7 +162,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                 <div key={product.id}
                   className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
                     selectedProduct === product.id
-                      ? 'bg-cyan-500/10 border-cyan-500/20'
+                      ? 'bg-cyan-500/10 border-accent/20'
                       : 'bg-white/2 border-white/5'
                   }`}
                 >
@@ -181,7 +181,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                     <span className="text-cyan-400 font-mono font-bold text-sm">{product.currency}{product.price}</span>
                     {product.inStock && onBuy && (
                       <button onClick={() => { setSelectedProduct(product.id); onBuy(product.id); }}
-                        className="px-3 py-1.5 bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 rounded-lg text-xs font-bold">
+                        className="px-3 py-1.5 bg-cyan-500/20 border border-accent/30 text-cyan-400 rounded-lg text-xs font-bold">
                         Buy
                       </button>
                     )}

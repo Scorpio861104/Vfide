@@ -433,7 +433,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                    
                     value={circleName}
                     onChange={(e) =>  setCircleName(e.target.value)}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none"
+                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
@@ -445,7 +445,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                     value={circleDescription}
                     onChange={(e) =>  setCircleDescription(e.target.value)}
                     rows={2}
-                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-cyan-400 focus:outline-none resize-none"
+                    className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 focus:border-accent focus:outline-none resize-none"
                   />
                 </div>
                 <div>
@@ -570,7 +570,7 @@ export function FriendCirclesManager({ friends }: FriendCirclesManagerProps) {
                                 [friend.address]: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none"
+                            className="w-full px-3 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm focus:border-accent focus:outline-none"
                           />
                         )}
                       </div>

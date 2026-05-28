@@ -97,7 +97,7 @@ export function VaultHeader({
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-6 h-6 border-2 border-cyan-500/20 border-t-cyan-500 rounded-full"
+                className="w-6 h-6 border-2 border-accent/20 border-t-cyan-500 rounded-full"
               />
               <p className="text-white/60">Loading vault information...</p>
             </div>
@@ -191,7 +191,7 @@ export function VaultHeader({
         {hasVault && (
           <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
             <motion.div variants={itemVariants}>
-              <GlassCard className="p-5 border-cyan-500/30" gradient="cyan">
+              <GlassCard className="p-5 border-accent/30" gradient="cyan">
                 <div className="flex items-center gap-3 mb-2">
                   <Key className="text-cyan-400" size={24} />
                   <span className="text-cyan-400 font-bold">Wallet Rotation</span>

@@ -172,7 +172,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             className={`p-2 rounded-lg transition-colors ${
               showAddFriend 
                 ? 'bg-cyan-400 text-zinc-950' 
-                : 'bg-cyan-400/10 text-cyan-400 hover:bg-cyan-400/20'
+                : 'bg-accent/10 text-accent hover:bg-accent/20'
             }`}
           >
             {showAddFriend ? <X className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
@@ -187,7 +187,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
            
             value={searchQuery}
             onChange={(e) =>  setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-zinc-950 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-accent focus:outline-none transition-colors"
           />
         </div>
 
@@ -250,14 +250,14 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                
                 value={newFriendAddress}
                 onChange={(e) =>  setNewFriendAddress(e.target.value)}
-                className="w-full px-3 py-2.5 mb-2 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full px-3 py-2.5 mb-2 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-accent focus:outline-none transition-colors"
               />
               <input
                 type="text"
                
                 value={newFriendAlias}
                 onChange={(e) =>  setNewFriendAlias(e.target.value)}
-                className="w-full px-3 py-2.5 mb-3 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-cyan-400 focus:outline-none transition-colors"
+                className="w-full px-3 py-2.5 mb-3 bg-zinc-900 border border-zinc-700 rounded-xl text-zinc-100 text-sm focus:border-accent focus:outline-none transition-colors"
               />
               <motion.button
                 whileHover={{ scale: 1.02 }}

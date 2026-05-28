@@ -38,7 +38,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
   return (
     <div className="space-y-8">
       {/* Gateway Overview */}
-      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30 rounded-xl p-4 sm:p-6 md:p-8">
+      <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-accent/30 rounded-xl p-4 sm:p-6 md:p-8">
         <div className="flex items-center gap-4 mb-6">
           <Globe className="w-12 h-12 text-cyan-400" />
           <div>
@@ -74,7 +74,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
                 value={orderId}
                 onChange={(e) =>  setOrderId(e.target.value)}
                
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
               />
             </div>
             <div>
@@ -84,7 +84,7 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
                 value={amount}
                 onChange={(e) =>  setAmount(e.target.value)}
                
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
               />
             </div>
           </div>
@@ -95,13 +95,13 @@ export function GatewayTab({ isConnected }: { isConnected: boolean }) {
               value={metadata}
               onChange={(e) =>  setMetadata(e.target.value)}
              
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-cyan-400 focus:outline-none"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-zinc-100  focus:border-accent focus:outline-none"
             />
           </div>
           <button 
             onClick={handleCreateOrder}
             disabled={isCreating || !orderId || !amount}
-            className="w-full bg-cyan-400 hover:bg-cyan-500 text-zinc-950 font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-accent hover:bg-accent-dark text-zinc-950 font-bold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCreating ? 'Creating...' : 'Create Order'}
           </button>

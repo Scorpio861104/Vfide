@@ -141,7 +141,7 @@ export default function LiveDemoPage() {
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
+              className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-accent/20"
             >
               <FeeSavingsCalculator />
             </motion.div>
@@ -152,7 +152,7 @@ export default function LiveDemoPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-cyan-400/20"
+            className="bg-zinc-950/50 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 border border-accent/20"
           >
             <LiveActivityFeed />
             
@@ -189,7 +189,7 @@ export default function LiveDemoPage() {
           className="relative"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-[#00FF88] to-amber-400 rounded-2xl blur-2xl opacity-20" />
-          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-cyan-400/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
+          <div className="relative bg-zinc-950/80 backdrop-blur-xl rounded-2xl p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-accent/30 text-center space-y-3 sm:space-y-4 md:space-y-6">
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-zinc-100">
               Ready for No Processor Fees?
             </h2>

@@ -93,7 +93,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
           <UserPlus className="w-5 h-5 text-cyan-400" />
           Friend Requests
           {pendingCount > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-cyan-400/20 text-cyan-400 rounded-full text-xs font-bold">
+            <span className="ml-2 px-2 py-0.5 bg-accent/20 text-accent rounded-full text-xs font-bold">
               {pendingCount}
             </span>
           )}

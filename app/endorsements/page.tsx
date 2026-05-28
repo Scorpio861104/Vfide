@@ -100,7 +100,7 @@ export default function EndorsementsPage() {
         {/* Connected notice */}
         {address && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="mb-6 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
+            className="mb-6 rounded-2xl border border-accent/20 bg-cyan-500/5 p-4">
             <div className="flex items-center gap-2 text-cyan-300 mb-1 text-sm font-medium">
               ✓ Logged in as {address.slice(0, 6)}...{address.slice(-4)}
             </div>

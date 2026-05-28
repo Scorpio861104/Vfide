@@ -92,7 +92,7 @@ export default function MerchantInstallmentsPage() {
 
           {activePlans.length > 0 && (
             <div className="mb-6 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-4 text-center">
+              <div className="rounded-xl border border-accent/20 bg-cyan-500/5 p-4 text-center">
                 <div className="text-xs text-gray-400">Active Plans</div>
                 <div className="text-2xl font-bold text-cyan-300">{activePlans.length}</div>
               </div>

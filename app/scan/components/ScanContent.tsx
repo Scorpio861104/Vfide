@@ -216,7 +216,7 @@ export function ScanContent() {
               <p className="text-sm text-zinc-400">{state.message}</p>
               <button
                 onClick={() => void start()}
-                className="mt-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 rounded-lg text-sm font-medium"
+                className="mt-2 px-4 py-2 bg-accent hover:bg-accent-light rounded-lg text-sm font-medium"
               >
                 Try again
               </button>
@@ -237,7 +237,7 @@ export function ScanContent() {
               </code>
               <button
                 onClick={() => void start()}
-                className="mt-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-400 rounded-lg text-sm font-medium"
+                className="mt-2 px-4 py-2 bg-accent hover:bg-accent-light rounded-lg text-sm font-medium"
               >
                 Scan again
               </button>

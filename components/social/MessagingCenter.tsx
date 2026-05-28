@@ -619,7 +619,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
               aria-label="Message input"
               rows={1}
               disabled={!canEncryptForRecipient}
-              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm resize-none focus:border-cyan-400 focus:outline-none"
+              className="w-full px-4 py-2 bg-zinc-950 border border-zinc-700 rounded-lg text-zinc-100 text-sm resize-none focus:border-accent focus:outline-none"
               style={{ minHeight: '40px', maxHeight: '120px' }}
             />
           </div>

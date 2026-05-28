@@ -131,7 +131,7 @@ export function ProductReel({ reel, isActive, onLike, onBuy, onComment, onShare,
             style={{ borderColor: scoreColor }}>
             {reel.creator.avatar || reel.creator.name[0]}
           </div>
-          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center text-white text-[10px] font-bold border-2 border-black">+</div>
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-accent flex items-center justify-center text-white text-[10px] font-bold border-2 border-black">+</div>
         </button>
 
         {/* Like */}

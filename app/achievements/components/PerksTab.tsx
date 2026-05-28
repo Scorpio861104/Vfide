@@ -34,7 +34,7 @@ export function PerksTab() {
             const categoryColors: Record<string, string> = {
               fee: 'border-emerald-500/40 bg-emerald-500/5',
               governance: 'border-violet-500/40 bg-violet-500/5',
-              feature: 'border-cyan-500/40 bg-cyan-500/5',
+              feature: 'border-accent/40 bg-accent/5',
               status: 'border-amber-400/40 bg-amber-400/5',
             };
             const categoryLabels: Record<string, string> = {

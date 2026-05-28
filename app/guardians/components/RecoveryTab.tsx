@@ -127,7 +127,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl p-6"
+        className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-accent/30 rounded-2xl p-6"
       >
         <h2 className="text-xl font-bold text-cyan-400 mb-4 flex items-center gap-3">
           <Key size={24} />
@@ -210,7 +210,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                     type="text"
                     value={newAddress}
                     onChange={(e) => setNewAddress(e.target.value)}
-                    className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 font-mono transition-all"
+                    className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 font-mono transition-all"
                   />
                 </div>
                 <motion.button

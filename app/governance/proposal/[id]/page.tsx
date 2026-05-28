@@ -320,7 +320,7 @@ function ErrorPanel({ title, body }: { title: string; body: React.ReactNode }) {
 
 function StatusBadge({ status }: { status: ProposalStatus }) {
   const styles: Record<ProposalStatus, { bg: string; text: string; Icon: typeof Clock }> = {
-    [ProposalStatus.Active]: { bg: 'bg-cyan-500/15 border-cyan-500/30', text: 'text-cyan-300', Icon: Sparkles },
+    [ProposalStatus.Active]: { bg: 'bg-cyan-500/15 border-accent/30', text: 'text-cyan-300', Icon: Sparkles },
     [ProposalStatus.Ended]: { bg: 'bg-zinc-500/15 border-zinc-500/30', text: 'text-zinc-300', Icon: Clock },
     [ProposalStatus.Expired]: { bg: 'bg-zinc-500/15 border-zinc-500/30', text: 'text-zinc-300', Icon: Clock },
     [ProposalStatus.Succeeded]: { bg: 'bg-emerald-500/15 border-emerald-500/30', text: 'text-emerald-300', Icon: CheckCircle2 },

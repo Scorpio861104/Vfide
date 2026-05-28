@@ -98,7 +98,7 @@ export default function MerchantDirectoryPage() {
                 type="text"
                 value={search}
                 onChange={(e) =>  setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-lg text-white bg-white/5 border border-white/10 focus:ring-2 focus:ring-cyan-500/30 outline-none"
+                className="w-full pl-10 pr-4 py-3 rounded-lg text-white bg-white/5 border border-white/10 focus:ring-2 focus:ring-accent/30 outline-none"
                 maxLength={100}
               />
             </div>
