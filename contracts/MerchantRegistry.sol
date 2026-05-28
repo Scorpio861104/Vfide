@@ -83,6 +83,10 @@ error COM_BadState();
 error COM_NotAllowed();
 /// @notice R-4 — neither party's vault is in MEMORIAL state.
 error COM_NotInheritanceActive();
+/// @notice COM_LockActive — buyer attempted to dispute before their ProofScore-tiered lock period elapsed.
+error COM_LockActive();
+/// @notice COM_HighValueTimelock — DAO attempted to resolve a high-value escrow before ARBITER_TIMELOCK elapsed.
+error COM_HighValueTimelock();
 
 /// @title MerchantRegistry
 /// @notice On-chain merchant directory: registration, profile metadata,
