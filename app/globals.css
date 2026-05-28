@@ -12,17 +12,13 @@
      * ========================================== */
     
     /* Primary Accent (Cyan) */
-    --accent: #00F0FF;
-    --accent-light: #5BFAFF;
-    --accent-dark: #0080FF;
-    --accent-glow: rgba(0, 240, 255, 0.3);
-    --accent-subtle: rgba(0, 240, 255, 0.08);
+    /* --accent family is now bridged from --vf-accent by the theme engine block below.
+       Hardcoded values removed — they would override the user's selected theme. */
     
     /* Secondary Accents */
     --accent-green: #00FF88;
     --accent-green-glow: rgba(0, 255, 136, 0.3);
-    --accent-purple: #A78BFA;
-    --accent-purple-glow: rgba(167, 139, 250, 0.3);
+    /* --accent-purple now bridged from --vf-accent-secondary by the theme engine block below */
     --accent-gold: #FFD700;
     --accent-gold-glow: rgba(255, 215, 0, 0.3);
     
@@ -61,7 +57,7 @@
     
     /* Border Colors */
     --border: #1F1F2A;
-    --border-accent: rgba(0, 240, 255, 0.2);
+    --border-accent: rgba(0, 240, 255, 0.2); /* overwritten by applyTokens via --accent-subtle */
     
     /* Shadows */
     --shadow-glow: 0 0 60px -12px rgba(0, 240, 255, 0.4);
@@ -1457,6 +1453,7 @@
  * whenever the user switches preset or customises a token.
  * ──────────────────────────────────────────────────────────────────────────── */
 :root {
+  /* ── VFIDE theme engine — primary source of truth ── */
   --vf-accent:           #06b6d4;
   --vf-accent-fg:        #09090b;
   --vf-accent-secondary: #6366f1;
@@ -1464,6 +1461,22 @@
   --vf-card-bg:          rgba(255, 255, 255, 0.03);
   --vf-card-border:      rgba(255, 255, 255, 0.08);
   --vf-font-scale:       1;
+
+  /* ── Bridge to Tailwind accent utilities ── */
+  /* JS (useTheme.applyTokens) writes --accent directly; these fallbacks
+     ensure the correct value is present on SSR before hydration. */
+  --accent:        var(--vf-accent,           #06b6d4);
+  --accent-light:  #5BFAFF;    /* overwritten by applyTokens on hydration */
+  --accent-dark:   #0080FF;
+  --accent-glow:   rgba(0, 182, 212, 0.30);
+  --accent-subtle: rgba(0, 182, 212, 0.08);
+
+  /* Secondary accent (overwritten by applyTokens to --vf-accent-secondary) */
+  --accent-purple:      var(--vf-accent-secondary, #6366f1);
+  --accent-purple-glow: rgba(99, 102, 241, 0.30);
+
+  /* Border accent — driven from accent-subtle */
+  --border-accent: var(--accent-subtle, rgba(0, 182, 212, 0.20));
 }
 
 /* Apply font scale to root so em-based sizing cascades correctly */

@@ -68,9 +68,19 @@ function findPreset(id: string): ThemePreset {
   return THEME_PRESETS.find(p => p.id === id) ?? DEFAULT_PRESET;
 }
 
+/** Parse a #rrggbb hex string into [r, g, b] integers. */
+function hexToRgb(hex: string): [number, number, number] | null {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const n = parseInt(m[1]!, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
 function applyTokens(tokens: ThemeTokens) {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
+
+  // ── vf-* namespace (internal / PreviewTab inline styles) ──────────────
   root.style.setProperty('--vf-accent',           tokens.accent);
   root.style.setProperty('--vf-accent-fg',        tokens.accentFg);
   root.style.setProperty('--vf-accent-secondary', tokens.accentSecondary);
@@ -78,6 +88,30 @@ function applyTokens(tokens: ThemeTokens) {
   root.style.setProperty('--vf-card-bg',          tokens.cardBg);
   root.style.setProperty('--vf-card-border',      tokens.cardBorder);
   root.style.setProperty('--vf-font-scale',       tokens.fontScale);
+
+  // ── Live app CSS vars — Tailwind accent utilities read these ───────────
+  // Primary accent family
+  root.style.setProperty('--accent', tokens.accent);
+  const rgb = hexToRgb(tokens.accent);
+  if (rgb) {
+    const [r, g, b] = rgb;
+    // light = blend toward white (add ~40% white)
+    root.style.setProperty('--accent-light',  `rgb(${Math.min(255, r + 60)}, ${Math.min(255, g + 60)}, ${Math.min(255, b + 60)})`);
+    // dark = blend toward black (subtract ~30%)
+    root.style.setProperty('--accent-dark',   `rgb(${Math.max(0, r - 30)}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)})`);
+    // glow = rgba at 30% opacity
+    root.style.setProperty('--accent-glow',   `rgba(${r}, ${g}, ${b}, 0.30)`);
+    // subtle = rgba at 8% opacity
+    root.style.setProperty('--accent-subtle', `rgba(${r}, ${g}, ${b}, 0.08)`);
+  }
+
+  // Secondary accent (maps to --accent-purple slot used by gradient classes)
+  root.style.setProperty('--accent-purple', tokens.accentSecondary);
+  const rgb2 = hexToRgb(tokens.accentSecondary);
+  if (rgb2) {
+    const [r2, g2, b2] = rgb2;
+    root.style.setProperty('--accent-purple-glow', `rgba(${r2}, ${g2}, ${b2}, 0.30)`);
+  }
 }
 
 export interface UseThemeReturn {
