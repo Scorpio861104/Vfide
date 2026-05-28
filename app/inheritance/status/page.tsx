@@ -307,7 +307,7 @@ function ConfirmedHeirsPanel({
         </p>
         <a
           href="/inheritance/setup"
-          className="mt-3 inline-block rounded-lg bg-cyan-500/20 px-3 py-2 text-sm text-accent hover:bg-accent/30"
+          className="mt-3 inline-block rounded-lg bg-accent/20 px-3 py-2 text-sm text-accent hover:bg-accent/30"
         >
           Set up inheritance
         </a>
@@ -345,7 +345,7 @@ function ConfirmedHeirsPanel({
               </div>
             </div>
             <div className="text-right">
-              <div className="inline-flex items-center gap-1 rounded-md bg-cyan-500/10 px-2 py-0.5 text-[10px] text-accent">
+              <div className="inline-flex items-center gap-1 rounded-md bg-accent/10 px-2 py-0.5 text-[10px] text-accent">
                 <Eye size={10} /> share hidden
               </div>
             </div>
@@ -474,7 +474,7 @@ function ProofOfLifePanel({
           type="button"
           onClick={() => handleSet(input)}
           disabled={isWritePending || !input}
-          className="rounded-lg bg-cyan-500/20 px-3 py-2 text-xs text-accent hover:bg-accent/30 disabled:opacity-50"
+          className="rounded-lg bg-accent/20 px-3 py-2 text-xs text-accent hover:bg-accent/30 disabled:opacity-50"
         >
           {hasWallet ? 'Replace' : 'Set'}
         </button>

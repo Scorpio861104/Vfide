@@ -102,7 +102,7 @@ export function SettingsTab() {
                 </div>
                 <div className="w-full bg-white/5 rounded-full h-2">
                   <div
-                    className="h-2 rounded-full bg-gradient-to-r from-green-500 to-cyan-500"
+                    className="h-2 rounded-full bg-gradient-to-r from-green-500 to-accent"
                     style={{ width: `${(analytics.allowed_events / analytics.total_events) * 100}%` }}
                   />
                 </div>

@@ -99,7 +99,7 @@ function MemorialInner() {
               type="button"
               onClick={submitVault}
               disabled={!isAddress(vaultInput.trim())}
-              className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
+              className="rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
             >
               View memorial
             </button>

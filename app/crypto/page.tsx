@@ -39,7 +39,7 @@ export default function CryptoDashboard() {
                 <Wallet className="w-8 h-8 text-accent" />
               </div>
               <div className="badge-live mb-4 justify-center">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Wallet Required
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Wallet Required
               </div>
               <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Connect Your Wallet</h2>
               <p className="text-gray-400 mb-6">
@@ -74,7 +74,7 @@ export default function CryptoDashboard() {
                 <LayoutDashboard size={12} /> Wallet Overview
               </div>
               <h1 className="text-3xl font-black text-white mb-1 tracking-tight">
-                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Crypto Dashboard</span>
+                <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">Crypto Dashboard</span>
               </h1>
               <p className="text-gray-400">Manage your wallet and payments</p>
             </div>

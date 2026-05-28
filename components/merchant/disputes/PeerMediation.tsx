@@ -69,7 +69,7 @@ export default function PeerMediation({
         <p className="text-sm text-gray-300">
           No live mediation case is available yet. Start with merchant returns, then sync a real dispute to preview mediation details.
         </p>
-        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-accent">
+        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
           Merchant returns <ArrowRight size={14} />
         </Link>
       </div>
@@ -178,7 +178,7 @@ export default function PeerMediation({
         <button onClick={onEscalate} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white">
           Escalate to appeals <ArrowRight size={14} />
         </button>
-        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-accent">
+        <Link href="/merchant/returns" className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
           Merchant returns <ArrowRight size={14} />
         </Link>
       </div>

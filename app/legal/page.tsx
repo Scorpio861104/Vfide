@@ -125,7 +125,7 @@ function LegalDisclaimersTab() {
         </div>
       </div>
 
-      <div className="bg-zinc-800 border border-cyan-400 rounded-xl p-8">
+      <div className="bg-zinc-800 border border-accent rounded-xl p-8">
         <h2 className="text-2xl font-bold text-accent mb-6">✓ What VFIDE Tokens ARE</h2>
         <ul className="space-y-3 text-zinc-100">
           <li>✓ <strong>Governance Rights:</strong> Vote on protocol proposals and parameter changes</li>
@@ -161,7 +161,7 @@ function LegalDisclaimersTab() {
 function PrivacyPolicyTab() {
   return (
     <div className="space-y-8">
-      <div className="bg-cyan-400/10 border-2 border-cyan-400 rounded-xl p-6">
+      <div className="bg-accent/10 border-2 border-accent rounded-xl p-6">
         <h2 className="text-2xl font-bold text-accent mb-4">Key Privacy Points</h2>
         <ul className="space-y-3 text-zinc-100">
           <li>✓ <strong>No KYC Required:</strong> We do not collect personal identification documents</li>

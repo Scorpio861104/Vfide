@@ -148,7 +148,7 @@ export function LiveViewer({
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowProducts(!showProducts)}
-            className="absolute bottom-4 left-3 flex items-center gap-2 px-3 py-2 bg-cyan-500/80 backdrop-blur rounded-xl"
+            className="absolute bottom-4 left-3 flex items-center gap-2 px-3 py-2 bg-accent/80 backdrop-blur rounded-xl"
           >
             <Package size={16} className="text-white" />
             <span className="text-white text-xs font-bold">{products.length} Products</span>

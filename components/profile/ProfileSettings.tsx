@@ -89,7 +89,7 @@ export function ProfileSettings() {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-zinc-400">Loading profile...</p>
         </div>
       </div>
@@ -276,7 +276,7 @@ export function ProfileSettings() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-6 py-3 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {isSaving ? (
                 <>
@@ -298,7 +298,7 @@ export function ProfileSettings() {
       <div className="mt-6">
         <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-8">
           <div className="mb-6 flex items-center gap-3">
-            <div className="p-2 bg-cyan-500/20 rounded-lg">
+            <div className="p-2 bg-accent/20 rounded-lg">
               <Wallet className="w-5 h-5 text-accent" />
             </div>
             <div>

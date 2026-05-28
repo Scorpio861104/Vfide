@@ -144,7 +144,7 @@ export function FeeSavingsCalculator() {
             
             {/* Animated bars showing fee proportion */}
             <div className="space-y-1 hidden sm:block">
-              <div className="h-1.5 sm:h-2 bg-cyan-400/20 rounded-full overflow-hidden">
+              <div className="h-1.5 sm:h-2 bg-accent/20 rounded-full overflow-hidden">
                 <motion.div
                   className="h-full"
                   style={{ backgroundColor: color }}

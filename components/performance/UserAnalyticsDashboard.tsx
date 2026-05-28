@@ -80,7 +80,7 @@ export function UserAnalyticsDashboard({ analytics }: UserAnalyticsDashboardProp
 
         <motion.div
           variants={itemVariants}
-          className="bg-cyan-500/10 border border-accent/20 rounded-lg p-6"
+          className="bg-accent/10 border border-accent/20 rounded-lg p-6"
         >
           <div className="flex items-center justify-between">
             <div>

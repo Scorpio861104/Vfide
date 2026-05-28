@@ -219,7 +219,7 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
       <motion.div style={{ x: swipeX }}>
         <div
           className={`relative p-4 border-b border-zinc-700 hover:bg-zinc-700/50 transition-colors ${
-            !notification.read ? 'bg-cyan-400/5' : ''
+            !notification.read ? 'bg-accent/5' : ''
           }`}
         >
           {/* Priority indicator */}
@@ -257,7 +257,7 @@ function NotificationItem({ notification, onRead, onArchive, onSnooze, onClose }
                     {formatTimeAgo(notification.timestamp)}
                   </span>
                   {!notification.read && (
-                    <div className="w-2 h-2 rounded-full bg-cyan-400" />
+                    <div className="w-2 h-2 rounded-full bg-accent" />
                   )}
                 </div>
               </div>

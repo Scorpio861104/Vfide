@@ -142,7 +142,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
 
         {/* Product count badge */}
         <button onClick={() => setShowProducts(!showProducts)}
-          className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1.5 bg-cyan-500/80 backdrop-blur text-white rounded-full text-xs font-bold">
+          className="absolute bottom-3 right-3 flex items-center gap-1 px-2.5 py-1.5 bg-accent/80 backdrop-blur text-white rounded-full text-xs font-bold">
           <ShoppingCart size={12} />{story.products.length} items
           {showProducts ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
         </button>
@@ -162,7 +162,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                 <div key={product.id}
                   className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
                     selectedProduct === product.id
-                      ? 'bg-cyan-500/10 border-accent/20'
+                      ? 'bg-accent/10 border-accent/20'
                       : 'bg-white/2 border-white/5'
                   }`}
                 >
@@ -181,7 +181,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
                     <span className="text-accent font-mono font-bold text-sm">{product.currency}{product.price}</span>
                     {product.inStock && onBuy && (
                       <button onClick={() => { setSelectedProduct(product.id); onBuy(product.id); }}
-                        className="px-3 py-1.5 bg-cyan-500/20 border border-accent/30 text-accent rounded-lg text-xs font-bold">
+                        className="px-3 py-1.5 bg-accent/20 border border-accent/30 text-accent rounded-lg text-xs font-bold">
                         Buy
                       </button>
                     )}
@@ -208,7 +208,7 @@ export function MarketStory({ story, onBuy, onWhatsApp, onView, compact = false 
         <button onClick={handleWhatsApp} className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10" aria-label="Send via WhatsApp">
           <MessageCircle size={16} />
         </button>
-        <button onClick={() => setShowProducts(!showProducts)} className="p-1.5 rounded-lg text-gray-500 hover:text-accent hover:bg-cyan-500/10">
+        <button onClick={() => setShowProducts(!showProducts)} className="p-1.5 rounded-lg text-gray-500 hover:text-accent hover:bg-accent/10">
           <ShoppingCart size={16} />
         </button>
       </div>

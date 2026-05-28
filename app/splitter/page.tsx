@@ -213,7 +213,7 @@ export default function SplitterPage() {
             <span className="badge-live"><span className="badge-live-dot" />Revenue Distribution</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent via-teal-400 to-emerald-400 bg-clip-text text-transparent">
               Revenue Splitter
             </span>
           </h1>

@@ -70,7 +70,7 @@ export function ServiceWorkerRegistration() {
           role="status"
           aria-live="polite"
         >
-          <div className="flex items-center gap-3 bg-zinc-900 border border-accent/30 rounded-2xl px-4 py-3 shadow-2xl shadow-cyan-500/10">
+          <div className="flex items-center gap-3 bg-zinc-900 border border-accent/30 rounded-2xl px-4 py-3 shadow-2xl shadow-accent/10">
             <RefreshCcw size={18} className="text-accent shrink-0" />
             <div className="flex-1 text-sm text-zinc-200">
               A new version is available.

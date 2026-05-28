@@ -35,7 +35,7 @@ function getScoreTier(score: number): { label: string; color: string; bgColor: s
   if (score >= 8000) return { label: 'ELITE',      color: 'text-amber-400',   bgColor: 'bg-amber-500/15 border-amber-500/30' };
   if (score >= 7000) return { label: 'COUNCIL',    color: 'text-purple-400',  bgColor: 'bg-purple-500/15 border-purple-500/30' };
   if (score >= 5600) return { label: 'TRUSTED',    color: 'text-emerald-400', bgColor: 'bg-emerald-500/15 border-emerald-500/30' };
-  if (score >= 5400) return { label: 'GOVERNANCE', color: 'text-accent',    bgColor: 'bg-cyan-500/15 border-accent/30' };
+  if (score >= 5400) return { label: 'GOVERNANCE', color: 'text-accent',    bgColor: 'bg-accent/15 border-accent/30' };
   if (score >= 5000) return { label: 'NEUTRAL',    color: 'text-blue-400',    bgColor: 'bg-blue-500/15 border-blue-500/30' };
   if (score >= 3500) return { label: 'LOW TRUST',  color: 'text-yellow-400',  bgColor: 'bg-yellow-500/15 border-yellow-500/30' };
   return                     { label: 'RISKY',     color: 'text-red-400',     bgColor: 'bg-red-500/15 border-red-500/30' };

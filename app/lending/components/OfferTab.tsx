@@ -173,7 +173,7 @@ export function OfferTab() {
         <h3 className="text-white font-semibold">New Loan Offer</h3>
       </div>
 
-      <div className="mb-5 flex items-start gap-2 rounded-lg border border-accent/20 bg-cyan-500/5 p-3 text-xs text-zinc-300">
+      <div className="mb-5 flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3 text-xs text-zinc-300">
         <Info size={14} className="text-accent mt-0.5 shrink-0" aria-hidden="true" />
         <span>
           Two-tx flow: approve the TermLoan contract for the principal, then post the offer. Your VFIDE

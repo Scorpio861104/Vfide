@@ -127,7 +127,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
           ) : (
             <div className="flex-1 flex items-center justify-center h-full">
               <button onClick={startCamera} className="flex flex-col items-center gap-3 p-8">
-                <div className="w-20 h-20 rounded-2xl bg-cyan-500/20 border border-accent/30 flex items-center justify-center"><Camera size={32} className="text-accent" /></div>
+                <div className="w-20 h-20 rounded-2xl bg-accent/20 border border-accent/30 flex items-center justify-center"><Camera size={32} className="text-accent" /></div>
                 <span className="text-white font-bold">Take Product Photo</span>
                 <span className="text-gray-500 text-xs">AI will generate the listing for you</span>
               </button>
@@ -142,7 +142,7 @@ export function AIProductListing({ onPublish, onClose }: AIProductListingProps) 
 
             {generating ? (
               <div className="flex items-center justify-center gap-3 py-8">
-                <div className="w-6 h-6 border-2 border-accent/20 border-t-cyan-500 rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
                 <span className="text-accent text-sm">AI is analyzing your product...</span>
               </div>
             ) : listing ? (

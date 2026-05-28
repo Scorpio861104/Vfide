@@ -245,7 +245,7 @@ function PaymentLinkRow({ link, copied, onCopy, onPause, onResume, onArchive, on
         <div className="mt-2 font-mono text-xs text-zinc-500 break-all">{fullUrl}</div>
       </div>
       <div className="flex gap-2 flex-wrap">
-        <button onClick={onCopy} className="text-xs px-3 py-1.5 border border-accent/30 bg-accent/10 text-accent rounded hover:bg-cyan-500/20 inline-flex items-center gap-1">
+        <button onClick={onCopy} className="text-xs px-3 py-1.5 border border-accent/30 bg-accent/10 text-accent rounded hover:bg-accent/20 inline-flex items-center gap-1">
           {copied ? <Check size={12} /> : <Copy size={12} />}
           {copied ? 'Copied' : 'Copy'}
         </button>
@@ -358,10 +358,10 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
           <div>
             <span className="text-xs text-zinc-400 mb-2 block">Amount</span>
             <div className="flex gap-2 mb-2">
-              <button onClick={() => setAmountMode('fixed')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'fixed' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setAmountMode('fixed')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'fixed' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 Fixed
               </button>
-              <button onClick={() => setAmountMode('open')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'open' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setAmountMode('open')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${amountMode === 'open' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 Customer enters
               </button>
             </div>
@@ -376,7 +376,7 @@ function CreateLinkModal({ onClose, onCreated, onError }: { onClose: () => void;
           </div>
 
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={singleUse} onChange={(e) => setSingleUse(e.target.checked)} className="accent-cyan-500" />
+            <input type="checkbox" checked={singleUse} onChange={(e) => setSingleUse(e.target.checked)} className="accent-accent" />
             <span>Single-use (link expires after first successful payment)</span>
           </label>
 

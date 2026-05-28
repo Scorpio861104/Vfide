@@ -35,7 +35,7 @@ export function SearchMethodButton({
   badge?: string;
 }) {
   const colors = {
-    cyan: { bg: 'bg-cyan-500/20', border: 'border-accent/50', text: 'text-accent', shadow: 'shadow-cyan-500/30', glow: 'from-cyan-500/30' },
+    cyan: { bg: 'bg-accent/20', border: 'border-accent/50', text: 'text-accent', shadow: 'shadow-accent/30', glow: 'from-accent/30' },
     gold: { bg: 'bg-amber-500/20', border: 'border-amber-500/50', text: 'text-amber-400', shadow: 'shadow-amber-500/30', glow: 'from-amber-500/30' },
     purple: { bg: 'bg-purple-500/20', border: 'border-purple-500/50', text: 'text-purple-400', shadow: 'shadow-purple-500/30', glow: 'from-purple-500/30' },
     green: { bg: 'bg-emerald-500/20', border: 'border-emerald-500/50', text: 'text-emerald-400', shadow: 'shadow-emerald-500/30', glow: 'from-emerald-500/30' }
@@ -136,7 +136,7 @@ export function SearchResultCard({
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring" as const, stiffness: 200, delay: 0.2 }}
-            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-accent/30"
           >
             <ShieldCheck className="h-8 w-8 text-white" />
           </motion.div>
@@ -168,7 +168,7 @@ export function SearchResultCard({
               onClick={onClaimClick}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+              className="px-6 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 shadow-lg shadow-accent/30 relative overflow-hidden group"
             >
               <Key className="h-5 w-5" />
               <span>Claim Vault</span>
@@ -223,7 +223,7 @@ export function SearchResultCard({
           className="grid grid-cols-4 gap-3 p-4 rounded-xl bg-black/20 border border-white/10"
         >
           <div className="text-center">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-accent/20 flex items-center justify-center">
               <Activity className="h-5 w-5 text-accent" />
             </div>
             <p className="text-xl font-bold text-white">{vault.proofScore}</p>

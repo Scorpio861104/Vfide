@@ -143,7 +143,7 @@ export function ClaimFlowModal({
           <motion.div
             animate={{ x: [0, 20, 0], y: [0, -10, 0] }}
             transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-0 right-0 w-40 h-40 bg-cyan-500/20 rounded-full blur-3xl"
+            className="absolute top-0 right-0 w-40 h-40 bg-accent/20 rounded-full blur-3xl"
           />
 
           <div className="relative flex items-center justify-between">
@@ -151,7 +151,7 @@ export function ClaimFlowModal({
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-accent/30"
               >
                 <Key className="h-8 w-8 text-white" />
               </motion.div>
@@ -304,7 +304,7 @@ export function ClaimFlowModal({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring' as const, stiffness: 200, delay: 0.2 }}
-                  className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-cyan-500/30"
+                  className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-accent to-emerald-500 flex items-center justify-center mb-6 shadow-lg shadow-accent/30"
                 >
                   <CheckCircle2 className="h-12 w-12 text-white" />
                 </motion.div>
@@ -353,7 +353,7 @@ export function ClaimFlowModal({
                       <div
                         className={`w-10 h-10 rounded-xl flex items-center justify-center ${
                           item.color === 'cyan'
-                            ? 'bg-cyan-500/20'
+                            ? 'bg-accent/20'
                             : item.color === 'amber'
                               ? 'bg-amber-500/20'
                               : 'bg-emerald-500/20'
@@ -439,7 +439,7 @@ export function ClaimFlowModal({
                 }
               }}
               disabled={isWritePending || (step === 2 && (!recoveryId || !reason))}
-              className="px-8 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/30 relative overflow-hidden group"
+              className="px-8 py-3 bg-gradient-to-r from-accent to-blue-500 rounded-xl font-bold text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-accent/30 relative overflow-hidden group"
             >
               <span className="relative z-10 flex items-center gap-2">
                 {isWritePending ? (

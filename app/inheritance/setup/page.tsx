@@ -790,7 +790,7 @@ function NavButtons({
           type="button"
           onClick={onNext}
           disabled={nextDisabled || !onNext}
-          className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent transition hover:bg-accent/30 disabled:opacity-30"
+          className="rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent transition hover:bg-accent/30 disabled:opacity-30"
         >
           Next
         </button>
@@ -816,7 +816,7 @@ function ExistingConfigNotice() {
         </p>
         <a
           href="/inheritance/status"
-          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
+          className="mt-4 inline-block rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent"
         >
           Open status page
         </a>
@@ -836,7 +836,7 @@ function NoVaultNotice() {
         </p>
         <a
           href="/vault"
-          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
+          className="mt-4 inline-block rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent"
         >
           Deploy vault
         </a>
@@ -857,7 +857,7 @@ function NoGuardiansNotice() {
         </p>
         <a
           href="/guardians"
-          className="mt-4 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
+          className="mt-4 inline-block rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent"
         >
           Manage guardians
         </a>
@@ -954,7 +954,7 @@ function ProposalSuccessPage({
 
       <a
         href="/inheritance/status"
-        className="mt-6 inline-block rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent"
+        className="mt-6 inline-block rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent"
       >
         Go to status page
       </a>

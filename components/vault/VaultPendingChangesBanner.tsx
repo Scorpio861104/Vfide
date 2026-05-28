@@ -50,14 +50,14 @@ export function VaultPendingChangesBanner({ vaultAddress }: { vaultAddress: Addr
         className={`block rounded-2xl p-4 border-2 transition-colors ${
           hasReady
             ? 'bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border-emerald-500/30 hover:border-emerald-400/50'
-            : 'bg-gradient-to-br from-accent/10 to-blue-500/5 border-accent/30 hover:border-cyan-400/50'
+            : 'bg-gradient-to-br from-accent/10 to-blue-500/5 border-accent/30 hover:border-accent/50'
         }`}
       >
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                hasReady ? 'bg-emerald-500/20' : 'bg-cyan-500/20'
+                hasReady ? 'bg-emerald-500/20' : 'bg-accent/20'
               }`}
             >
               {hasReady ? (

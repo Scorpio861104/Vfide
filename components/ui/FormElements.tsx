@@ -518,7 +518,7 @@ export function Alert({
   className = ''
 }: AlertProps) {
   const variants = {
-    info: 'bg-cyan-400/10 border-accent/30 text-accent',
+    info: 'bg-accent/10 border-accent/30 text-accent',
     success: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500',
     warning: 'bg-amber-400/10 border-amber-400/30 text-amber-400',
     danger: 'bg-red-500/10 border-red-500/30 text-red-500',

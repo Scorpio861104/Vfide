@@ -327,7 +327,7 @@ function RecoveryStatusBody({
                 : claimStatus === RecoveryClaimStatus.Approved
                   ? 'bg-emerald-500/20'
                   : claimStatus === RecoveryClaimStatus.GuardianApproved
-                    ? 'bg-cyan-500/20'
+                    ? 'bg-accent/20'
                     : claimStatus === RecoveryClaimStatus.Pending
                       ? 'bg-amber-500/20'
                       : 'bg-red-500/20'

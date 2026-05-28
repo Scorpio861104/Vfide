@@ -188,7 +188,7 @@ export default function MerchantTraining({ onComplete, onSkip }: MerchantTrainin
           <Progress value={quickProgress} className="h-2" />
           <div className="rounded-xl border border-white/10 bg-black/20 p-4">
             <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-xl bg-cyan-500/10 p-2 text-accent">
+              <div className="rounded-xl bg-accent/10 p-2 text-accent">
                 <StepIcon className="h-5 w-5" />
               </div>
               <div>

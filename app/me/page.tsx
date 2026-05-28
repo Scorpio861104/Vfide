@@ -114,8 +114,8 @@ export default function MeHubPage() {
           </div>
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-sm text-accent mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-sm text-accent mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               Account Hub
             </div>
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
@@ -163,7 +163,7 @@ export default function MeHubPage() {
                 <User size={12} /> Account Hub
               </div>
               <h1 className="text-4xl font-black sm:text-5xl tracking-tight">
-                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Your VFIDE</span>
+                <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">Your VFIDE</span>
               </h1>
               {address && (
                 <div className="mt-2 font-mono text-sm text-gray-500">
@@ -221,7 +221,7 @@ export default function MeHubPage() {
 
           {/* Quick "what to do next" suggestion based on score tier */}
           {!isLoading && (
-            <div className="mt-12 glass-card-premium border-accent/20 bg-cyan-500/5 p-5">
+            <div className="mt-12 glass-card-premium border-accent/20 bg-accent/5 p-5">
               <div className="mb-2 text-xs uppercase tracking-widest text-accent">Next step</div>
               <NextStep score={score ?? 0} />
             </div>

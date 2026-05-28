@@ -124,7 +124,7 @@ export default function WalletHubPage() {
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
 
         <div className="container mx-auto max-w-5xl px-4 py-8 relative">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-accent">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
             <Lock className="w-3 h-3" /> Self-custodial · Non-custodial · Howey-compliant
           </div>
           <h1 className="mb-2 text-4xl font-black text-white tracking-tight">Wallet Hub</h1>

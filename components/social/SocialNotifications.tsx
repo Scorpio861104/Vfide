@@ -221,7 +221,7 @@ export function SocialNotifications() {
                           <div
                             key={notif.id}
                             className={`p-4 hover:bg-zinc-800 transition-colors ${
-                              !notif.read ? 'bg-cyan-400/5' : ''
+                              !notif.read ? 'bg-accent/5' : ''
                             }`}
                           >
                             <div className="flex items-start gap-3">
@@ -240,7 +240,7 @@ export function SocialNotifications() {
                                     {notif.title}
                                   </h4>
                                   {!notif.read && (
-                                    <div className="w-2 h-2 bg-cyan-400 rounded-full shrink-0 mt-1" />
+                                    <div className="w-2 h-2 bg-accent rounded-full shrink-0 mt-1" />
                                   )}
                                 </div>
                                 <p className="text-sm text-zinc-400 mb-2">

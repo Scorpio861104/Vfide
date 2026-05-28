@@ -56,7 +56,7 @@ export function Footer() {
     <footer className="footer-premium overflow-hidden">
       {/* Ambient background glow */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-cyan-400/4 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-accent/4 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 left-1/4 w-[400px] h-[200px] bg-violet-400/3 rounded-full blur-[100px]" />
       </div>
 
@@ -84,7 +84,7 @@ export function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center text-zinc-400 hover:text-accent hover:border-cyan-400/25 hover:bg-cyan-400/5 transition-all"
+                  className="w-9 h-9 rounded-xl bg-white/4 border border-white/8 flex items-center justify-center text-zinc-400 hover:text-accent hover:border-accent/25 hover:bg-accent/5 transition-all"
                   aria-label={social.label}
                 >
                   <social.icon className="w-4 h-4" />

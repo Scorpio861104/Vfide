@@ -34,7 +34,7 @@ export function WalletGate({ children }: { children: ReactNode }) {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 border-2 border-accent/20 border-t-cyan-500 rounded-full"
+          className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full"
         />
       </div>
     );

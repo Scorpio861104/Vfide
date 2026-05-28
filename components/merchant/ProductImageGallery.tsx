@@ -46,7 +46,7 @@ export function ProductImageGallery({ images, name, currentImage, setCurrentImag
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
           {images.map((_, i) => (
             <button key={i} onClick={() => setCurrentImage(i)}
-              className={`w-2 h-2 rounded-full transition-all ${i === currentImage ? 'bg-cyan-400 w-5' : 'bg-white/30'}`} />
+              className={`w-2 h-2 rounded-full transition-all ${i === currentImage ? 'bg-accent w-5' : 'bg-white/30'}`} />
           ))}
         </div>
       )}

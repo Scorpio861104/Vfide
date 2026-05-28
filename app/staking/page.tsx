@@ -145,7 +145,7 @@ export default function StakingPage() {
           <div className="relative container mx-auto px-4 max-w-3xl py-8">
             <div className="mb-6">
               <span className="badge-live mb-3 inline-flex"><span className="badge-live-dot" />Liquidity Pools</span>
-              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
+              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
             </div>
             <div className="glass-card-premium p-8 text-center">
               <Coins className="mx-auto text-zinc-600 mb-3" size={40} aria-hidden="true" />
@@ -169,7 +169,7 @@ export default function StakingPage() {
           <div className="relative container mx-auto px-4 max-w-3xl py-8">
             <div className="mb-6">
               <span className="badge-live mb-3 inline-flex"><span className="badge-live-dot" />Liquidity Pools</span>
-              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
+              <h1 className="text-4xl font-bold"><span className="bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent">Staking</span></h1>
             </div>
             <div className="glass-card-premium p-8 text-center">
               <Wallet className="mx-auto text-zinc-600 mb-3" size={40} aria-hidden="true" />
@@ -239,7 +239,7 @@ export default function StakingPage() {
               <span className="badge-live"><span className="badge-live-dot" />Liquidity Pools</span>
             </div>
             <h1 className="text-4xl font-bold mb-2">
-              <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
+              <span className="bg-gradient-to-r from-accent via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
                 <Coins size={32} className="text-accent" />Staking
               </span>
             </h1>

@@ -348,7 +348,7 @@ export function PullToRefresh({
           style={{ rotate: isRefreshing ? undefined : spinnerRotation }}
           animate={isRefreshing ? { rotate: 360 } : {}}
           transition={isRefreshing ? { duration: 1, repeat: Infinity, ease: 'linear' } : {}}
-          className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full"
+          className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full"
         />
       </motion.div>
 

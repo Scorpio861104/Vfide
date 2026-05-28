@@ -48,7 +48,7 @@ const PRESETS: SpendLimitPreset[] = [
     maxPerTransferVfide: '50',
     dailyTransferLimitVfide: '200',
     icon: <Lock size={18} />,
-    accent: 'border-cyan-500 text-accent bg-cyan-500/10',
+    accent: 'border-accent text-accent bg-accent/10',
   },
   {
     id: 'balanced',
@@ -340,7 +340,7 @@ export function SpendLimitsConfigurator({
       )}
 
       {/* Help block */}
-      <div className="rounded-lg bg-cyan-500/10 border border-accent/30 p-3 text-xs text-accent flex gap-2">
+      <div className="rounded-lg bg-accent/10 border border-accent/30 p-3 text-xs text-accent flex gap-2">
         <Clock size={14} className="flex-shrink-0 mt-0.5" />
         <span>
           <strong>How the queue works:</strong> a withdrawal at or above your

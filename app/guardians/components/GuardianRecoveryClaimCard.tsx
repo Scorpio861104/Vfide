@@ -232,7 +232,7 @@ export function GuardianRecoveryClaimCard({ entry }: { entry: WatchedVault }) {
         )}
 
         {isApproved && !hasVoted && (
-          <div className="px-4 py-2.5 rounded-lg bg-cyan-500/10 border border-accent/30 text-accent text-sm">
+          <div className="px-4 py-2.5 rounded-lg bg-accent/10 border border-accent/30 text-accent text-sm">
             Approvals threshold met. Claim is in the challenge window — your vote is no longer needed.
           </div>
         )}

@@ -26,7 +26,7 @@ export function PurchaseProofEvent({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 border border-emerald-500/20 rounded-2xl p-4 ${className}`}
+      className={`bg-gradient-to-r from-emerald-500/5 to-accent/5 border border-emerald-500/20 rounded-2xl p-4 ${className}`}
     >
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">

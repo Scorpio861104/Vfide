@@ -81,7 +81,7 @@ export default function MerchantInstallmentsPage() {
           </Link>
 
           <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> BNPL
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> BNPL
             </div>
             <div className="mb-6">
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
@@ -92,7 +92,7 @@ export default function MerchantInstallmentsPage() {
 
           {activePlans.length > 0 && (
             <div className="mb-6 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-accent/20 bg-cyan-500/5 p-4 text-center">
+              <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-center">
                 <div className="text-xs text-gray-400">Active Plans</div>
                 <div className="text-2xl font-bold text-accent">{activePlans.length}</div>
               </div>
@@ -142,7 +142,7 @@ export default function MerchantInstallmentsPage() {
                     </button>
 
                     <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-                      <div className="h-full rounded-full bg-cyan-400" style={{ width: `${Math.min(progress, 100)}%` }} />
+                      <div className="h-full rounded-full bg-accent" style={{ width: `${Math.min(progress, 100)}%` }} />
                     </div>
 
                     {expandedPlan === plan.id && (

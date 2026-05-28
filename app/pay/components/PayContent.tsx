@@ -309,7 +309,7 @@ export function PayContent() {
               </div>
               <div className="mt-2 text-xs text-gray-400">Order: <span className="font-mono text-gray-300">{orderId}</span></div>
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <div className="px-3 py-1 bg-cyan-500/20 border border-accent/30 rounded-lg text-accent text-sm font-bold">
+                <div className="px-3 py-1 bg-accent/20 border border-accent/30 rounded-lg text-accent text-sm font-bold">
                   TRUSTED • ProofScore 845
                 </div>
                 <div className={`px-3 py-1 rounded-lg text-sm font-bold ${
@@ -378,7 +378,7 @@ export function PayContent() {
                     whileTap={{ scale: 0.99 }}
                     className={`w-full p-4 bg-white/5 border-2 rounded-xl text-left transition-all ${
                       selectedMethod === method.id 
-                        ? 'border-cyan-400 bg-cyan-500/10' 
+                        ? 'border-accent bg-accent/10' 
                         : 'border-white/10 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
@@ -420,7 +420,7 @@ export function PayContent() {
               disabled={effectiveProcessing || !merchant || !hasValidAmount || !qrReadyForPayment}
               whileHover={{ scale: effectiveProcessing ? 1 : 1.02 }}
               whileTap={{ scale: effectiveProcessing ? 1 : 0.98 }}
-              className="w-full px-8 py-4 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-8 py-4 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {effectiveProcessing ? (
                 <>

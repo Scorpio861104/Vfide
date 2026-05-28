@@ -177,7 +177,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
             onClick={() => setFilter(option.value)}
             className={`px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${
               filter === option.value
-                ? 'bg-cyan-400 text-zinc-950'
+                ? 'bg-accent text-zinc-950'
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
@@ -196,7 +196,7 @@ export function ActivityFeed({ userAddress }: ActivityFeedProps) {
         <div className="space-y-3">
           {usePerformanceMode ? (
             <>
-              <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-accent">
+              <div className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm text-accent">
                 Performance mode active — long activity feeds are virtualized for smoother scrolling.
               </div>
               <VirtualizedList

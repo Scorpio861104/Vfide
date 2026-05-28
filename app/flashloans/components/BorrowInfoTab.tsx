@@ -52,7 +52,7 @@ export function BorrowInfoTab() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-5">
+      <div className="rounded-2xl border border-accent/20 bg-accent/5 p-5">
         <div className="flex items-start gap-3">
           <Info size={18} className="text-accent mt-0.5 shrink-0" aria-hidden="true" />
           <div>
@@ -60,9 +60,9 @@ export function BorrowInfoTab() {
             <p className="text-zinc-300 text-sm leading-relaxed">
               Flash loans are atomic: the entire borrow + use + repay happens in a single transaction.
               You can&rsquo;t borrow directly from a normal wallet — you need to deploy a contract that
-              implements <code className="text-accent bg-cyan-500/10 px-1 rounded">IERC3156FlashBorrower</code>.
-              Your contract calls <code className="text-accent bg-cyan-500/10 px-1 rounded">flashLoan(lender, receiver, amount, maxFeeBps, data)</code>,
-              the protocol sends the tokens to it, runs <code className="text-accent bg-cyan-500/10 px-1 rounded">onFlashLoan</code>,
+              implements <code className="text-accent bg-accent/10 px-1 rounded">IERC3156FlashBorrower</code>.
+              Your contract calls <code className="text-accent bg-accent/10 px-1 rounded">flashLoan(lender, receiver, amount, maxFeeBps, data)</code>,
+              the protocol sends the tokens to it, runs <code className="text-accent bg-accent/10 px-1 rounded">onFlashLoan</code>,
               and reverts the whole transaction if your contract hasn&rsquo;t paid back
               amount + fee by the end.
             </p>

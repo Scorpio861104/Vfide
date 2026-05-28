@@ -55,7 +55,7 @@ export function ShoppablePost({ product, postedBy, timestamp, caption, likes = 0
     >
       {/* Post header */}
       <div className="px-4 py-3 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center text-xs font-bold text-accent">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accent/30 to-blue-500/30 flex items-center justify-center text-xs font-bold text-accent">
           {postedBy.name[0]?.toUpperCase() || '?'}
         </div>
         <div className="flex-1 min-w-0">

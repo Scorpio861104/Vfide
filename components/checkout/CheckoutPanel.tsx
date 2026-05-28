@@ -160,7 +160,7 @@ export function CheckoutPanel({
           <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, x: -20 }}>
             {/* Merchant header */}
             <div className="flex items-center gap-3 mb-6 p-4 bg-white/3 border border-white/10 rounded-xl">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-accent font-bold">
+              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center text-accent font-bold">
                 {merchantName[0]?.toUpperCase()}
               </div>
               <div className="flex-1">

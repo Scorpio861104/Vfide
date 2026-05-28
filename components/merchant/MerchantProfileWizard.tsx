@@ -432,7 +432,7 @@ export function MerchantProfileWizard({
                       <button
                         onClick={addLink}
                         type="button"
-                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-accent/30 hover:text-accent hover:bg-cyan-500/5 transition-colors"
+                        className="rounded-xl border border-dashed border-white/10 bg-white/5 backdrop-blur-sm px-3 py-2 text-sm text-gray-400 hover:border-accent/30 hover:text-accent hover:bg-accent/5 transition-colors"
                       >
                         + Add link
                       </button>
@@ -542,7 +542,7 @@ export function MerchantProfileWizard({
                     type="checkbox"
                     checked={acknowledgedPrivacy}
                     onChange={(e) => setAcknowledgedPrivacy(e.target.checked)}
-                    className="mt-1 h-4 w-4 cursor-pointer accent-cyan-500"
+                    className="mt-1 h-4 w-4 cursor-pointer accent-accent"
                   />
                   <span className="text-sm text-gray-100">
                     I understand my business identity will be publicly visible.
@@ -552,7 +552,7 @@ export function MerchantProfileWizard({
 
               {/* In-flight + error — glassmorphic status panels */}
               {hookStep !== 'idle' && !error && (
-                <div className="mb-4 rounded-xl border border-accent/30 bg-cyan-500/10 backdrop-blur-md px-4 py-3 text-sm text-accent">
+                <div className="mb-4 rounded-xl border border-accent/30 bg-accent/10 backdrop-blur-md px-4 py-3 text-sm text-accent">
                   {hookStep === 'uploading-avatar' && 'Uploading avatar…'}
                   {hookStep === 'storing-profile' && 'Saving profile…'}
                   {hookStep === 'awaiting-signature' && 'Please confirm the transaction in your wallet.'}
@@ -576,7 +576,7 @@ export function MerchantProfileWizard({
                 <button
                   onClick={handleSubmit}
                   disabled={!canSubmit}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 backdrop-blur-sm px-6 py-2.5 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-accent backdrop-blur-sm px-6 py-2.5 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:shadow-emerald-500/50 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
                 >
                   <Check size={16} />
                   {isSubmitting

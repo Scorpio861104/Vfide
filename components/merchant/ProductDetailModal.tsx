@@ -79,7 +79,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
 
           {loading ? (
             <div className="py-24 text-center text-gray-500">
-              <div className="w-6 h-6 border-2 border-accent/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-3" />Loading product...
+              <div className="w-6 h-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin mx-auto mb-3" />Loading product...
             </div>
           ) : !product ? (
             <div className="py-24 text-center text-gray-500">Product not found</div>
@@ -94,7 +94,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                 <div className="md:w-1/2 p-6 flex flex-col">
                   {product.product_type && (
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-accent capitalize flex items-center gap-1">
+                      <span className="text-xs px-2 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent capitalize flex items-center gap-1">
                         {(() => { const Icon = typeIcons[product.product_type]; return <Icon size={10} />; })()}
                         {typeLabels[product.product_type]}
                       </span>
@@ -176,7 +176,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
                         role="button"
                         tabIndex={0}
                         aria-label={`View ${r.name}`}
-                        className="flex-shrink-0 w-36 cursor-pointer group focus-visible:outline-2 focus-visible:outline-cyan-400 rounded-lg"
+                        className="flex-shrink-0 w-36 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent rounded-lg"
                         onClick={() => loadRelated(r.id)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {

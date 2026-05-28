@@ -350,7 +350,7 @@ function AchievementToast({ notification, onDismiss, position }: ToastProps) {
               <div className="relative">
                 <button
                   onClick={() => setShowShare(!showShare)}
-                  className="p-1.5 text-zinc-400 hover:text-accent hover:bg-cyan-400/10 rounded-lg transition-colors"
+                  className="p-1.5 text-zinc-400 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                 </button>

@@ -195,7 +195,7 @@ export function TransactionPreview(props: TransactionPreviewProps) {
                 <div key={i} className={`flex items-start gap-2 p-3 rounded-xl text-xs ${
                   risk.level === 'danger' ? 'bg-red-500/10 border border-red-500/30 text-red-400' :
                   risk.level === 'warning' ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' :
-                  'bg-cyan-500/10 border border-accent/30 text-accent'
+                  'bg-accent/10 border border-accent/30 text-accent'
                 }`}>
                   {risk.level === 'danger' ? <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" /> :
                    risk.level === 'warning' ? <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" /> :

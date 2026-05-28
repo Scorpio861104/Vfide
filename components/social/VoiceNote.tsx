@@ -139,14 +139,14 @@ export function VoiceNotePlayer({ audioUrl, duration, fromSelf = false }: VoiceN
   };
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl max-w-[240px] ${fromSelf ? 'bg-cyan-500/20' : 'bg-white/5'}`}>
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-2xl max-w-[240px] ${fromSelf ? 'bg-accent/20' : 'bg-white/5'}`}>
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       <button onClick={toggle} className={`p-1.5 rounded-full ${fromSelf ? 'bg-accent/30 text-accent' : 'bg-white/10 text-white'}`}>
         {playing ? <Pause size={14} /> : <Play size={14} />}
       </button>
       <div className="flex-1">
         <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-cyan-400 rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
+          <div className="h-full bg-accent rounded-full transition-all" style={{ width: `${progress * 100}%` }} />
         </div>
       </div>
       <span className={`text-[10px] font-mono ${fromSelf ? 'text-accent' : 'text-gray-500'}`}>{Math.floor(duration)}s</span>

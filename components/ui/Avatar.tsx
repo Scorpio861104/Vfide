@@ -103,7 +103,7 @@ export function Avatar({
   if (name && name.length > 0) {
     return (
       <div
-        className={`${baseRound} bg-gradient-to-br from-cyan-500/30 to-violet-500/30 border border-white/10 flex items-center justify-center font-bold text-accent`}
+        className={`${baseRound} bg-gradient-to-br from-accent/30 to-violet-500/30 border border-white/10 flex items-center justify-center font-bold text-accent`}
         role="img"
         aria-label={label}
       >

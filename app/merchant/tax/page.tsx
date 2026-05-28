@@ -369,7 +369,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
                     type="checkbox"
                     checked={applies[k]}
                     onChange={(e) => setApplies((a) => ({ ...a, [k]: e.target.checked }))}
-                    className="accent-cyan-500"
+                    className="accent-accent"
                   />
                   <span className="capitalize">{k}</span>
                 </label>
@@ -378,7 +378,7 @@ function CreateTaxRateModal({ onClose, onCreated, onError }: { onClose: () => vo
           </div>
 
           <label className="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="accent-cyan-500 mt-1" />
+            <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} className="accent-accent mt-1" />
             <div>
               <div className="font-medium text-sm">Make this the default rate</div>
               <div className="text-xs text-zinc-500">

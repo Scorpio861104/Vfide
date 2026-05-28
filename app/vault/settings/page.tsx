@@ -125,7 +125,7 @@ export default function VaultSettingsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 bg-cyan-600/20 border-2 border-cyan-500 rounded-xl flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-3 bg-accent/20 border-2 border-accent rounded-xl flex items-center justify-center">
                   <span className="text-3xl">🔑</span>
                 </div>
                 <div className="font-bold text-accent mb-2">Wallet Rotation</div>

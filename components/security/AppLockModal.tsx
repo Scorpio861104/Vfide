@@ -136,7 +136,7 @@ export function AppLockModal({
               <button
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                   tab === 'webauthn'
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-accent-dark text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}
                 onClick={() => {
@@ -148,7 +148,7 @@ export function AppLockModal({
               </button>
               <button
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                  tab === 'pin' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                  tab === 'pin' ? 'bg-accent-dark text-white' : 'text-gray-400 hover:text-white'
                 }`}
                 onClick={() => {
                   setTab('pin');
@@ -175,7 +175,7 @@ export function AppLockModal({
                     <div className="mt-3 text-red-400 text-xs">{error}</div>
                   )}
                   <button
-                    className="mt-4 px-4 py-2 rounded-lg bg-cyan-600 hover:bg-accent text-white text-sm font-medium"
+                    className="mt-4 px-4 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white text-sm font-medium"
                     onClick={async () => {
                       setBusy(true);
                       setError(null);
@@ -219,7 +219,7 @@ export function AppLockModal({
               <button
                 onClick={submitPin}
                 disabled={busy || lockoutRemainingMs > 0}
-                className="w-full mt-4 py-3 rounded-lg bg-cyan-600 hover:bg-accent text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full mt-4 py-3 rounded-lg bg-accent-dark hover:bg-accent text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {busy ? 'Verifying…' : 'Unlock'}
               </button>

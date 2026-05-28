@@ -170,7 +170,7 @@ export function VaultQueueSection({
                   type="button"
                   onClick={() => onSetSpendLimits()}
                   disabled={isUpdatingSpendLimits || !spendLimitPerTransfer || !spendLimitPerDay}
-                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-cyan-500/20 px-4 py-2 text-sm font-medium text-accent disabled:cursor-not-allowed disabled:opacity-50"
+                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-accent/20 px-4 py-2 text-sm font-medium text-accent disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isUpdatingSpendLimits ? 'Updating Spend Limits...' : 'Update Spend Limits'}
                 </button>
@@ -225,7 +225,7 @@ export function VaultQueueSection({
                       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-2 text-sm">
-                            <span className="rounded-full border border-accent/30 bg-cyan-400/10 px-2 py-1 text-accent">
+                            <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-accent">
                               Queue #{item.index.toString()}
                             </span>
                             <span className={`rounded-full px-2 py-1 ${isReady ? 'bg-emerald-500/15 text-emerald-300' : 'bg-amber-500/15 text-amber-300'}`}>

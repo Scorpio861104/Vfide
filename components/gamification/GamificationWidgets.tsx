@@ -41,7 +41,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${xpProgress}%` }}
-            className="h-full bg-gradient-to-r from-cyan-400 to-violet-400"
+            className="h-full bg-gradient-to-r from-accent to-violet-400"
           />
         </div>
       </div>
@@ -108,7 +108,7 @@ export function UserStatsWidget({ userAddress, compact = false }: UserStatsWidge
           initial={{ width: 0 }}
           animate={{ width: `${xpProgress}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
-          className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 to-violet-400"
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-accent to-violet-400"
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-xs font-bold text-zinc-100 drop-shadow-lg">
@@ -207,7 +207,7 @@ export function AchievementsList({ userAddress }: { userAddress: string }) {
     switch (rarity) {
       case 'legendary': return 'from-amber-400 to-orange-500';
       case 'epic': return 'from-violet-400 to-violet-600';
-      case 'rare': return 'from-cyan-400 to-[#0891B2]';
+      case 'rare': return 'from-accent to-[#0891B2]';
       default: return 'from-[#6B6B78] to-[#4A4A58]';
     }
   };

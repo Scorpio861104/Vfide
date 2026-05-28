@@ -72,7 +72,7 @@ export default function Error({
           </button>
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-cyan-400 text-accent rounded-lg font-bold hover:bg-cyan-400/10 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-8 py-3 border-2 border-accent text-accent rounded-lg font-bold hover:bg-accent/10 transition-colors"
           >
             <Home className="w-5 h-5" />
             Go Home

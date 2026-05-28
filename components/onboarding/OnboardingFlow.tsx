@@ -409,7 +409,7 @@ function OnboardingChecklist() {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
-                className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                className="h-full bg-gradient-to-r from-accent to-purple-500"
               />
             </div>
             <span className="text-sm font-medium text-accent">{progress}%</span>
@@ -493,7 +493,7 @@ export function OnboardingTrigger() {
       onClick={() => setShowChecklist(!showChecklist)}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      className="fixed bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-medium rounded-full shadow-lg hover:shadow-cyan-500/25 transition-shadow"
+      className="fixed bottom-4 right-4 z-30 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent to-purple-500 text-white font-medium rounded-full shadow-lg hover:shadow-accent/25 transition-shadow"
     >
       <Sparkles className="w-4 h-4" />
       <span className="text-sm">{progress}% Complete</span>

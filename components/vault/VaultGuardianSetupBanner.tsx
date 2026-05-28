@@ -99,8 +99,8 @@ export function VaultGuardianSetupBanner({ vaultAddress }: { vaultAddress: Addre
     title = `Only ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left to finalize guardian setup`;
     subtitle = 'After the deadline, guardian-mediated recovery rotations will be blocked until setup is completed.';
   } else {
-    containerClass = 'bg-gradient-to-br from-accent/10 to-blue-500/5 border-accent/30 hover:border-cyan-400/50';
-    iconBg = 'bg-cyan-500/20';
+    containerClass = 'bg-gradient-to-br from-accent/10 to-blue-500/5 border-accent/30 hover:border-accent/50';
+    iconBg = 'bg-accent/20';
     iconColor = 'text-accent';
     Icon = ShieldCheck;
     title = 'Finalize your guardian setup';

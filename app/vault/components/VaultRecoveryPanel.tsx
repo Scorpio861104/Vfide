@@ -39,7 +39,7 @@ export function VaultRecoveryPanel({ guardianCount, isUserGuardian }: VaultRecov
                 protections for recovery. Configure inheritance heirs in the panel below.
               </p>
             </div>
-            <div className="px-4 py-2 bg-cyan-500/20 border border-accent/30 rounded-xl text-center">
+            <div className="px-4 py-2 bg-accent/20 border border-accent/30 rounded-xl text-center">
               <div className="text-accent text-xs font-bold">CARD BOUND</div>
             </div>
           </div>
@@ -62,7 +62,7 @@ export function VaultRecoveryPanel({ guardianCount, isUserGuardian }: VaultRecov
             )}
           </div>
 
-          <div className="rounded-xl border border-accent/30 bg-cyan-500/10 p-4 text-sm text-accent">
+          <div className="rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm text-accent">
             Manage guardian setup and post-setup guardian changes from the{' '}
             <a href="/guardians" className="underline hover:text-accent">
               Guardians dashboard

@@ -28,7 +28,7 @@ export default function MerchantAnalyticsPage() {
             <span className="badge-live"><span className="badge-live-dot" />Merchant Intelligence</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-violet-400 bg-clip-text text-transparent flex items-center gap-3">
+            <span className="bg-gradient-to-r from-accent via-blue-400 to-violet-400 bg-clip-text text-transparent flex items-center gap-3">
               <BarChart3 size={32} className="text-accent" />Merchant Analytics
             </span>
           </h1>

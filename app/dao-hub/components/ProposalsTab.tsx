@@ -82,7 +82,7 @@ export function ProposalsTab() {
             <div className="flex items-center gap-3 mt-4">
               <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="h-full bg-cyan-400 rounded-full transition-all"
+                  className="h-full bg-accent rounded-full transition-all"
                   style={{ width: `${forPct}%` }}
                 />
               </div>

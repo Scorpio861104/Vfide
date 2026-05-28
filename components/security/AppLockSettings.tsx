@@ -127,7 +127,7 @@ export function AppLockSettings() {
         <h2 className="text-2xl font-bold text-white">App Lock</h2>
       </div>
 
-      <div className="rounded-lg bg-cyan-500/10 border border-accent/30 p-3 text-xs text-accent flex gap-2">
+      <div className="rounded-lg bg-accent/10 border border-accent/30 p-3 text-xs text-accent flex gap-2">
         <Info size={14} className="flex-shrink-0 mt-0.5" />
         <span>
           App Lock is a <em>device-only</em> speed-bump. It prompts on this device
@@ -222,7 +222,7 @@ export function AppLockSettings() {
               <button
                 onClick={submitPinSetup}
                 disabled={pinSaving}
-                className="flex-1 py-2 rounded-lg bg-cyan-600 hover:bg-accent text-white text-sm font-medium disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white text-sm font-medium disabled:opacity-50"
               >
                 {pinSaving ? 'Saving…' : 'Save PIN'}
               </button>
@@ -266,7 +266,7 @@ export function AppLockSettings() {
           <span className="self-center text-gray-400 text-sm">VFIDE</span>
           <button
             onClick={saveThreshold}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-accent text-white text-sm font-medium"
+            className="px-4 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white text-sm font-medium"
           >
             Save
           </button>
@@ -357,7 +357,7 @@ function ToggleRow({
         onClick={onChange}
         disabled={disabled}
         className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors ${
-          checked ? 'bg-cyan-600' : 'bg-gray-700'
+          checked ? 'bg-accent-dark' : 'bg-gray-700'
         } ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span

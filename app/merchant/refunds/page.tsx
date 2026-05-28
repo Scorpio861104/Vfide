@@ -218,7 +218,7 @@ export default function MerchantRefundsPage() {
           <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Refund Management
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Refund Management
             </div>
             <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3 tracking-tight">
                 <RotateCcw className="text-accent" size={28} />
@@ -233,7 +233,7 @@ export default function MerchantRefundsPage() {
             {!showStartForm && (
               <button
                 onClick={() => setShowStartForm(true)}
-                className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md shadow-cyan-500/20"
+                className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-bold flex items-center gap-2 shadow-md shadow-accent/20"
               >
                 <Plus size={16} />
                 Start a refund
@@ -340,7 +340,7 @@ export default function MerchantRefundsPage() {
           )}
 
           {actionMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-cyan-500/10 border border-accent/30 text-xs text-accent break-all">
+            <div className="mb-4 p-3 rounded-lg bg-accent/10 border border-accent/30 text-xs text-accent break-all">
               {actionMessage}
             </div>
           )}

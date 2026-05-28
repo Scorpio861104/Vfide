@@ -48,7 +48,7 @@ export function OverviewTab() {
             They can only approve a wallet rotation that moves the active signer for the vault to a new address.
           </p>
         </div>
-        <div className="bg-cyan-500/10 rounded-xl p-4 border border-accent/30 mt-3">
+        <div className="bg-accent/10 rounded-xl p-4 border border-accent/30 mt-3">
           <p className="text-accent text-sm">
             Guardians are a private trust list chosen by each vault holder (typically family/friends). This is not an open guardian network.
           </p>
@@ -73,7 +73,7 @@ export function OverviewTab() {
               transition={{ delay: i * 0.1 }}
               className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-colors"
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-accent to-blue-500 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-cyan-500/25">
+              <div className="w-10 h-10 bg-gradient-to-br from-accent to-blue-500 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-accent/25">
                 {item.step}
               </div>
               <div className="min-w-0">

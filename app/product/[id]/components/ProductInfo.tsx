@@ -47,7 +47,7 @@ export function ProductInfo({ product }: { product: Product }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <span className="text-xs px-2 py-0.5 bg-cyan-500/10 border border-accent/20 rounded text-accent capitalize flex items-center gap-1">
+        <span className="text-xs px-2 py-0.5 bg-accent/10 border border-accent/20 rounded text-accent capitalize flex items-center gap-1">
           <TypeIcon size={10} /> {product.product_type}
         </span>
       </div>
@@ -99,7 +99,7 @@ export function ProductInfo({ product }: { product: Product }) {
 
       {product.merchant_slug && (
         <Link href={`/store/${product.merchant_slug}`} className="flex items-center gap-3 p-3 bg-white/3 border border-white/5 rounded-xl hover:border-accent/20">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-accent font-bold text-xs">{product.merchant_name[0]}</div>
+          <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center text-accent font-bold text-xs">{product.merchant_name[0]}</div>
           <div className="flex-1"><div className="text-white text-sm font-medium">{product.merchant_name}</div><div className="text-xs text-gray-500">View store</div></div>
         </Link>
       )}

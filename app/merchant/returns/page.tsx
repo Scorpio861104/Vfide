@@ -89,7 +89,7 @@ export default function MerchantReturnsPage() {
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Returns & RMA
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Returns & RMA
             </div>
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight">
                 <RotateCcw className="text-accent" /> Returns & exchanges

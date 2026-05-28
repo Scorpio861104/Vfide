@@ -97,7 +97,7 @@ export default function ExplorerPage() {
             className="bg-gradient-to-br from-accent/10 to-blue-500/10 border border-accent/20 rounded-xl p-6"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-cyan-500/20 rounded-lg">
+              <div className="p-2 bg-accent/20 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-accent" />
               </div>
               <h3 className="text-sm font-medium text-gray-400">Total Transactions</h3>

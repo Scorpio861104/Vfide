@@ -178,7 +178,7 @@ export const MobileButton = React.forwardRef<HTMLButtonElement, MobileButtonProp
     `;
 
     const variantClass = {
-      primary: 'bg-cyan-400 text-zinc-900 hover:bg-cyan-400',
+      primary: 'bg-accent text-zinc-900 hover:bg-accent',
       secondary: 'bg-gray-100 text-zinc-900 hover:bg-gray-200 border border-gray-300',
       danger: 'bg-red-600 text-white hover:bg-red-700',
     }[variant];
@@ -336,7 +336,7 @@ export function MobileToggle({
         disabled={disabled}
         className={`
           relative w-14 h-8 rounded-full transition-colors
-          ${checked ? 'bg-cyan-400' : 'bg-zinc-700'}
+          ${checked ? 'bg-accent' : 'bg-zinc-700'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
         role="switch"

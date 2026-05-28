@@ -38,7 +38,7 @@ export default function PayrollPage() {
             <span className="badge-live"><span className="badge-live-dot" />Team Payments</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-emerald-400 bg-clip-text text-transparent">Payroll</span>
+            <span className="bg-gradient-to-r from-accent via-teal-400 to-emerald-400 bg-clip-text text-transparent">Payroll</span>
           </h1>
           <p className="text-white/50 text-lg">Manage team payments, streaming salaries, and payment history.</p>
         </motion.div>

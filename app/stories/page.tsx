@@ -96,7 +96,7 @@ export default function StoriesPage() {
             <span className="badge-live"><span className="badge-live-dot" />24h Community</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-3">
-            <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent flex items-center justify-center gap-3">
+            <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent flex items-center justify-center gap-3">
               <Sparkles size={36} className="text-accent" />Stories
             </span>
           </h1>
@@ -129,7 +129,7 @@ export default function StoriesPage() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="flex flex-col items-center gap-2 cursor-pointer shrink-0"
                   onClick={() => setShowCreator(true)}>
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-violet-400/20 border-2 border-dashed border-cyan-400/50 flex items-center justify-center hover:bg-cyan-400/10 transition-colors">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-violet-400/20 border-2 border-dashed border-accent/50 flex items-center justify-center hover:bg-accent/10 transition-colors">
                     <Plus size={28} className="text-accent" />
                   </div>
                   <p className="text-accent text-xs font-medium">Add Story</p>

@@ -336,7 +336,7 @@ function OverrideContent({
             type="button"
             onClick={handleOverride}
             disabled={isWritePending}
-            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 py-3 text-white font-bold disabled:opacity-50"
+            className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-accent py-3 text-white font-bold disabled:opacity-50"
           >
             {isWritePending ? (
               <span className="inline-flex items-center justify-center gap-2">

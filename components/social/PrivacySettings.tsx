@@ -114,7 +114,7 @@ export function PrivacySettings() {
           className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
             saved
               ? 'bg-emerald-500 text-zinc-950'
-              : 'bg-cyan-400 text-zinc-950 hover:bg-cyan-400'
+              : 'bg-accent text-zinc-950 hover:bg-accent'
           }`}
         >
           {saved ? (
@@ -147,7 +147,7 @@ export function PrivacySettings() {
                 key={option.value}
                 className={`block p-3 rounded-lg border cursor-pointer transition-all ${
                   settings.allowMessagesFrom === option.value
-                    ? 'bg-cyan-400/10 border-cyan-400/50'
+                    ? 'bg-accent/10 border-accent/50'
                     : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                 }`}
               >

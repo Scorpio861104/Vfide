@@ -25,7 +25,7 @@ export default function ProfilePage() {
           <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
           <div className="relative container mx-auto max-w-3xl px-4 py-20 text-center">
             <div className="badge-live mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
               Identity Management
             </div>
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">

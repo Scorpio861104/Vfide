@@ -11,7 +11,7 @@ export function Step({ number, title, description }: { number: number; title: st
       whileHover={{ x: 5 }}
       className="group flex items-start gap-4"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 font-bold text-white shadow-lg shadow-blue-500/20 transition-shadow group-hover:shadow-blue-500/40">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-accent font-bold text-white shadow-lg shadow-blue-500/20 transition-shadow group-hover:shadow-blue-500/40">
         {number}
       </div>
       <div>

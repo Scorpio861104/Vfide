@@ -105,7 +105,7 @@ export function IncomingRefunds() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <GlassCard hover={false} className="p-5">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
             <Inbox className="text-accent" size={20} />
           </div>
           <div className="flex-1 min-w-0">

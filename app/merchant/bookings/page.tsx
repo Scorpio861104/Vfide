@@ -200,7 +200,7 @@ export default function MerchantBookingsPage() {
                     <button
                       key={t}
                       onClick={() => setTab(t)}
-                      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t ? 'border-cyan-400 text-accent' : 'border-transparent text-zinc-400 hover:text-zinc-300'}`}
+                      className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === t ? 'border-accent text-accent' : 'border-transparent text-zinc-400 hover:text-zinc-300'}`}
                     >
                       {t === 'bookings' ? 'Appointments' : 'Availability slots'}
                     </button>
@@ -420,10 +420,10 @@ function CreateSlotModal({ services, onClose, onCreated, onError }: {
           <div>
             <span className="text-xs text-zinc-400 mb-1 block">When</span>
             <div className="flex gap-2 mb-2">
-              <button onClick={() => setMode('recurring')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'recurring' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setMode('recurring')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'recurring' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 Weekly recurring
               </button>
-              <button onClick={() => setMode('specific')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'specific' ? 'border-cyan-500 bg-cyan-500/10' : 'border-white/10 bg-zinc-900'}`}>
+              <button onClick={() => setMode('specific')} className={`flex-1 px-3 py-2 text-sm rounded-lg border ${mode === 'specific' ? 'border-accent bg-accent/10' : 'border-white/10 bg-zinc-900'}`}>
                 One-time date
               </button>
             </div>

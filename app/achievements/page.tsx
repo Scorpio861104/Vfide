@@ -39,7 +39,7 @@ export default function AchievementsPage() {
             <span className="badge-live"><span className="badge-live-dot" />Progress System</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-accent bg-clip-text text-transparent">
               Achievements
             </span>
           </h1>

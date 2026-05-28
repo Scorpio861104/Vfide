@@ -43,7 +43,7 @@ export function VaultOverviewStats({ vaultBalance, isLoadingBalance, guardianCou
             <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-white/60 text-sm">Total Balance</span>
-                <div className="p-2 rounded-xl bg-cyan-500/20">
+                <div className="p-2 rounded-xl bg-accent/20">
                   <DollarSign className="text-accent" size={18} />
                 </div>
               </div>

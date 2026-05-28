@@ -205,7 +205,7 @@ export function VaultSetupWizard({ forceOpen = false, onClose }: VaultSetupWizar
           {/* Wallet connect banner — shown when no wallet is connected so
               user can connect without exiting the wizard */}
           {!isConnected && (
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-cyan-500/8 px-5 py-2.5">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-accent/8 px-5 py-2.5">
               <div className="flex items-center gap-2 min-w-0">
                 <Wallet size={14} className="text-accent flex-shrink-0" aria-hidden />
                 <span className="text-xs text-accent/80 truncate">
@@ -288,7 +288,7 @@ function ContinuePrompt({
         <button
           type="button"
           onClick={onContinue}
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 hover:scale-[1.01]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-accent/25 hover:scale-[1.01]"
         >
           <Play size={16} aria-hidden />
           Continue to {nextMeta?.shortLabel ?? 'next chapter'}

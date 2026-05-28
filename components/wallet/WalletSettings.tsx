@@ -144,7 +144,7 @@ export function WalletSettings() {
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-cyan-500/10 rounded-lg">
+            <div className="p-3 bg-accent/10 rounded-lg">
               <Link2 className="text-accent" size={24} />
             </div>
             <div>
@@ -173,7 +173,7 @@ export function WalletSettings() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="mt-4 p-3 bg-cyan-500/10 rounded-lg"
+            className="mt-4 p-3 bg-accent/10 rounded-lg"
           >
             <div className="flex items-center gap-2 text-accent text-sm">
               <Check size={16} />

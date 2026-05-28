@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 
 const COLOR_STYLES = {
-  blue: 'from-blue-500/15 to-cyan-500/10 border-blue-500/30 text-blue-300',
+  blue: 'from-blue-500/15 to-accent/10 border-blue-500/30 text-blue-300',
   purple: 'from-purple-500/15 to-fuchsia-500/10 border-purple-500/30 text-purple-300',
   orange: 'from-orange-500/15 to-amber-500/10 border-orange-500/30 text-orange-300',
   cyan: 'from-accent/20 to-blue-500/15 border-accent/40 text-accent',
@@ -31,7 +31,7 @@ export function ComparisonRow({
       viewport={{ once: true }}
       whileHover={{ x: 4 }}
       className={`group rounded-2xl border bg-gradient-to-r p-4 transition-all ${tone} ${
-        highlight ? 'shadow-lg shadow-cyan-500/10' : ''
+        highlight ? 'shadow-lg shadow-accent/10' : ''
       }`}
     >
       <div className="flex items-center justify-between gap-4">

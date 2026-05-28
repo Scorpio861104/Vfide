@@ -331,8 +331,8 @@ function ToastItem({
     error: 'bg-red-500/10 border-red-500/30',
     warning: 'bg-yellow-500/10 border-yellow-500/30',
     info: 'bg-blue-500/10 border-blue-500/30',
-    loading: 'bg-cyan-500/10 border-accent/30',
-    promise: 'bg-cyan-500/10 border-accent/30',
+    loading: 'bg-accent/10 border-accent/30',
+    promise: 'bg-accent/10 border-accent/30',
   };
 
   const progressColors = {
@@ -411,7 +411,7 @@ function ToastItem({
                     className={`
                       text-sm font-medium rounded-lg px-3 py-1.5 transition-colors
                       ${toast.action.variant === 'primary' 
-                        ? 'bg-accent text-white hover:bg-cyan-600' 
+                        ? 'bg-accent text-white hover:bg-accent' 
                         : toast.action.variant === 'ghost'
                         ? 'text-gray-300 hover:text-white'
                         : 'bg-gray-700 text-white hover:bg-gray-600'

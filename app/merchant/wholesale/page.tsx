@@ -343,7 +343,7 @@ export default function MerchantWholesalePage() {
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> B2B Wholesale
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> B2B Wholesale
             </div>
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Package className="text-accent" /> Wholesale & group buying</h1>
               <p className="mt-2 text-gray-400">Use the live wholesale catalog to pool merchant orders and unlock better tier pricing.</p>

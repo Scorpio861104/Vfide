@@ -100,7 +100,7 @@ function OnboardingPageContent() {
             ) : (
               <div className="space-y-4">
                 {hasProgress && (
-                  <div className="rounded-xl border border-accent/20 bg-cyan-500/5 p-4 text-sm text-accent">
+                  <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 text-sm text-accent">
                     <p className="font-semibold text-white">Resuming where you left off</p>
                     <p className="mt-1 text-zinc-400">
                       {completedCount} of {totalChapters} chapters completed

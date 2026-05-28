@@ -37,7 +37,7 @@ export default function DocsPage() {
             Documentation & Guides
           </div>
           <h1 className="mb-2 text-4xl font-black text-white tracking-tight">
-            <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">
               Documentation & Help
             </span>
           </h1>

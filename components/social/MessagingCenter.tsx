@@ -341,7 +341,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm">
                 {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
               </div>
             </div>
@@ -430,7 +430,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
         ) : (
           <div className="p-3 bg-zinc-950 border border-zinc-800 rounded-lg">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center shrink-0">
                 <Lock className="w-5 h-5 text-zinc-950" />
               </div>
               <div className="flex-1">
@@ -464,7 +464,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-full bg-cyan-400/10 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-accent" />
             </div>
             <h3 className="text-lg font-bold text-zinc-100 mb-2">No messages yet</h3>
@@ -506,7 +506,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
                     <div
                       className={`px-4 py-2 rounded-2xl ${
                         isOwn
-                          ? 'bg-cyan-400 text-zinc-950'
+                          ? 'bg-accent text-zinc-950'
                           : 'bg-zinc-800 text-zinc-100'
                       }`}
                     >
@@ -640,7 +640,7 @@ export function MessagingCenter({ friend, hasVault = false }: MessagingCenterPro
             disabled={!inputMessage.trim() || isSending || !canEncryptForRecipient}
             aria-label={isSending ? 'Sending message' : 'Send message'}
             data-onboarding="message-button"
-            className="p-2 rounded-lg bg-cyan-400 text-zinc-950 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2 rounded-lg bg-accent text-zinc-950 hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />
           </button>

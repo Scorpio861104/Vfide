@@ -245,7 +245,7 @@ export default function MerchantPayoutsPage() {
               <span className="badge-live"><span className="badge-live-dot" />Earnings &amp; Payouts</span>
             </div>
             <h1 className="text-4xl font-bold mb-2">
-              <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-accent bg-clip-text text-transparent flex items-center gap-3">
                 <Banknote size={32} className="text-emerald-400" />Your Earnings
               </span>
             </h1>
@@ -328,7 +328,7 @@ export default function MerchantPayoutsPage() {
                             type="button"
                             onClick={() => openCashOut(b.tokenConfig)}
                             disabled={!canCashOut}
-                            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500/15 border border-accent/30 px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-cyan-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-accent/15 border border-accent/30 px-3 py-2 text-sm font-medium text-accent transition-colors hover:bg-accent/25 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             <ArrowUpRight size={14} />
                             Cash out

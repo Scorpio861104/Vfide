@@ -14,7 +14,7 @@ import { Key, Timer, Users, CheckCircle2, ArrowRightCircle, Lock } from 'lucide-
 const TIMELINE_STEPS = [
   {
     icon: Key,
-    bgColor: 'bg-cyan-500/20',
+    bgColor: 'bg-accent/20',
     borderColor: 'border-accent/50',
     iconColor: 'text-accent',
     title: 'Rotation Proposed',
@@ -46,7 +46,7 @@ const TIMELINE_STEPS = [
   },
   {
     icon: ArrowRightCircle,
-    bgColor: 'bg-cyan-500/20',
+    bgColor: 'bg-accent/20',
     borderColor: 'border-accent/50',
     iconColor: 'text-accent',
     title: 'Wallet Updated',
@@ -65,7 +65,7 @@ export function RecoveryTimeline() {
       >
         <h3 className="text-xl font-bold text-white mb-4">Wallet Rotation Timeline</h3>
         <div className="relative">
-          <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-gradient-to-b from-cyan-500/50 via-yellow-500/50 to-green-500/50" />
+          <div className="absolute left-4 top-8 bottom-8 w-0.5 bg-gradient-to-b from-accent/50 via-yellow-500/50 to-green-500/50" />
           <div className="space-y-6">
             {TIMELINE_STEPS.map((step, i) => (
               <motion.div

@@ -147,7 +147,7 @@ export default function MerchantPage() {
                   <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Processing Fee</div>
                 </div>
                 {processors.map((p) => (
-                  <div key={p.name} className={`flex items-center justify-between px-5 py-3.5 border-b border-white/5 last:border-0 transition-colors ${p.name === 'VFIDE' ? 'bg-cyan-500/8' : 'hover:bg-white/3'}`}>
+                  <div key={p.name} className={`flex items-center justify-between px-5 py-3.5 border-b border-white/5 last:border-0 transition-colors ${p.name === 'VFIDE' ? 'bg-accent/8' : 'hover:bg-white/3'}`}>
                     <div className={`font-semibold text-sm ${p.name === 'VFIDE' ? 'text-accent' : 'text-white'}`}>{p.name}</div>
                     <div className={`font-mono font-bold text-sm ${p.name === 'VFIDE' ? 'text-glow-cyan' : 'text-zinc-300'}`}>{p.fee}</div>
                   </div>

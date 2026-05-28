@@ -171,7 +171,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             }}
             className={`p-2 rounded-lg transition-colors ${
               showAddFriend 
-                ? 'bg-cyan-400 text-zinc-950' 
+                ? 'bg-accent text-zinc-950' 
                 : 'bg-accent/10 text-accent hover:bg-accent/20'
             }`}
           >
@@ -215,7 +215,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
               {filter === tab.key && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-cyan-400 rounded-lg"
+                  className="absolute inset-0 bg-accent rounded-lg"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
@@ -238,7 +238,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="border-b border-zinc-700 overflow-hidden"
           >
-            <div className="p-4 bg-gradient-to-b from-cyan-400/5 to-transparent">
+            <div className="p-4 bg-gradient-to-b from-accent/5 to-transparent">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-accent" />
@@ -264,7 +264,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAddFriend}
                 disabled={!newFriendAddress}
-                className="w-full py-2.5 bg-gradient-to-r from-cyan-400 to-[#00D5E0] text-zinc-950 rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-gradient-to-r from-accent to-[#00D5E0] text-zinc-950 rounded-xl font-semibold text-sm hover:from-[#00D5E0] hover:to-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 <UserPlus className="w-4 h-4" />
                 Add Friend
@@ -323,7 +323,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                     }}
                     className={`p-3 rounded-xl cursor-pointer transition-all group relative overflow-hidden ${
                       selectedFriend?.address === friend.address
-                        ? 'bg-cyan-400/20 border border-cyan-400/50'
+                        ? 'bg-accent/20 border border-accent/50'
                         : 'hover:bg-zinc-800 border border-transparent'
                     }`}
                   >
@@ -353,7 +353,7 @@ export function FriendsList({ onSelectFriend, selectedFriend }: FriendsListProps
                       <div className="relative">
                         <motion.div 
                           whileHover={{ scale: 1.1 }}
-                          className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm shadow-lg"
+                          className="w-11 h-11 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-zinc-950 font-bold text-sm shadow-lg"
                         >
                           {friend.alias ? friend.alias?.[0]?.toUpperCase() : friend.address.slice(2, 4).toUpperCase()}
                         </motion.div>

@@ -430,7 +430,7 @@ function CreateProductModal({ onClose, onCreated, onError }: { onClose: () => vo
           {type === 'physical' && (
             <div className="rounded-lg border border-white/10 bg-zinc-900/40 p-3 space-y-3">
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} className="accent-cyan-500" />
+                <input type="checkbox" checked={tracking} onChange={(e) => setTracking(e.target.checked)} className="accent-accent" />
                 <span>Track inventory</span>
               </label>
               {tracking && (

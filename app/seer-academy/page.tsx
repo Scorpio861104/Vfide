@@ -123,7 +123,7 @@ export default function SeerAcademyPage() {
                 <li>5. Build trust through consistent, legitimate activity over time.</li>
               </ul>
               <div className="mt-5 flex gap-3">
-                <Link href="/appeals" className="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-400/40 text-accent text-sm">
+                <Link href="/appeals" className="px-4 py-2 rounded-lg bg-accent/20 border border-accent/40 text-accent text-sm">
                   Open Seer Appeals
                 </Link>
                 <Link href="/seer-service" className="px-4 py-2 rounded-lg bg-purple-500/20 border border-purple-400/40 text-purple-200 text-sm">

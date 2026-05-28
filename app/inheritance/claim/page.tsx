@@ -133,7 +133,7 @@ function ClaimInner() {
               type="button"
               onClick={submitVault}
               disabled={!isAddress(vaultInput.trim())}
-              className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
+              className="rounded-lg bg-accent/20 px-4 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
             >
               Continue
             </button>
@@ -293,7 +293,7 @@ function ClaimWorkflow({
                 type="button"
                 onClick={() => claim.finalizeDistribution()}
                 disabled={claim.isWritePending}
-                className="rounded-lg bg-cyan-500/20 px-3 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
+                className="rounded-lg bg-accent/20 px-3 py-2 text-sm text-accent hover:bg-accent/30 disabled:opacity-50"
               >
                 {claim.isWritePending ? (
                   <span className="inline-flex items-center gap-1.5">
@@ -601,7 +601,7 @@ function WithdrawCard({
         type="button"
         onClick={handleWithdraw}
         disabled={isWritePending}
-        className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 py-3 text-white font-bold disabled:opacity-50"
+        className="mt-4 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-accent py-3 text-white font-bold disabled:opacity-50"
       >
         {isWritePending ? (
           <span className="inline-flex items-center justify-center gap-2">

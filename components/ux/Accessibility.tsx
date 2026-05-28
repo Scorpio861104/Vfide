@@ -169,7 +169,7 @@ export function FocusRing({
   return (
     <div className={`
       relative rounded-lg
-      ${!disabled ? 'focus-within:ring-2 focus-within:ring-cyan-500 focus-within:ring-offset-2 focus-within:ring-offset-gray-900' : ''}
+      ${!disabled ? 'focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-gray-900' : ''}
       ${className}
     `}>
       {children}

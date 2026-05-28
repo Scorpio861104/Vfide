@@ -249,7 +249,7 @@ export function ProposalsTab({
                       rows: filteredProposals.map((p) => [p.id, p.type, p.title, p.forVotes, p.againstVotes]),
                     });
                   }}
-                  className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-accent rounded-lg font-bold hover:border-cyan-400 transition-colors"
+                  className="px-4 py-2 bg-zinc-900 border border-zinc-700 text-accent rounded-lg font-bold hover:border-accent transition-colors"
                 >
                   📊 Export CSV
                 </button>
@@ -269,7 +269,7 @@ export function ProposalsTab({
                   key={type}
                   onClick={() => setFilterType(type)}
                   className={`px-4 py-2 rounded-lg font-bold whitespace-nowrap transition-all ${
-                    filterType === type ? 'bg-cyan-400 text-zinc-900' : 'bg-zinc-900 text-zinc-400 hover:text-accent'
+                    filterType === type ? 'bg-accent text-zinc-900' : 'bg-zinc-900 text-zinc-400 hover:text-accent'
                   }`}
                 >
                   {type === 'all' ? 'All' : type}
@@ -285,7 +285,7 @@ export function ProposalsTab({
               </div>
             ) : usePerformanceMode ? (
               <>
-                <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-accent">
+                <div className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm text-accent">
                   Performance mode active — large proposal sets are windowed for smoother scrolling.
                 </div>
                 <VirtualizedList
@@ -351,7 +351,7 @@ export function ProposalsTab({
           >
             <div className="p-6 border-b border-zinc-700 flex items-center justify-between">
               <div>
-                <div className="inline-block px-3 py-1 bg-cyan-400/20 border border-cyan-400 rounded text-accent text-sm font-bold mb-2">
+                <div className="inline-block px-3 py-1 bg-accent/20 border border-accent rounded text-accent text-sm font-bold mb-2">
                   {selectedProposal.type}
                 </div>
                 <h2 className="text-2xl font-bold text-zinc-100">

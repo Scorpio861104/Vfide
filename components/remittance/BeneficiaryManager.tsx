@@ -157,7 +157,7 @@ export function BeneficiaryManager({ selectedId, onSelect }: BeneficiaryManagerP
                     onSelect?.(beneficiary);
                   }
                 }}
-                className={`w-full rounded-xl border p-4 text-left transition-colors ${selected ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10 bg-white/5'}`}
+                className={`w-full rounded-xl border p-4 text-left transition-colors ${selected ? 'border-accent bg-accent/10' : 'border-white/10 bg-white/5'}`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>

@@ -66,7 +66,7 @@ function stateStyle(state: EscrowState) {
     case EscrowState.Open:
       return { ring: 'ring-amber-500/30', text: 'text-amber-300', icon: Clock };
     case EscrowState.Funded:
-      return { ring: 'ring-cyan-500/30', text: 'text-accent', icon: Lock };
+      return { ring: 'ring-accent/30', text: 'text-accent', icon: Lock };
     case EscrowState.Released:
       return { ring: 'ring-emerald-500/30', text: 'text-emerald-300', icon: CheckCircle2 };
     case EscrowState.Refunded:

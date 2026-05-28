@@ -134,7 +134,7 @@ export function TransactionPending({
             {(status === 'success' || status === 'error') && onClose && (
               <button
                 onClick={onClose}
-                className="mt-6 px-6 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-cyan-400 transition-colors"
+                className="mt-6 px-6 py-2 bg-zinc-800 border border-zinc-700 text-zinc-100 rounded-lg hover:border-accent transition-colors"
               >
                 Close
               </button>

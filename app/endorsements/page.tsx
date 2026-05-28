@@ -72,7 +72,7 @@ export default function EndorsementsPage() {
             <span className="badge-live"><span className="badge-live-dot" />Trust Network</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-3">
+            <span className="bg-gradient-to-r from-accent via-blue-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-3">
               <Star size={32} className="text-accent" />Endorsements
             </span>
           </h1>
@@ -100,7 +100,7 @@ export default function EndorsementsPage() {
         {/* Connected notice */}
         {address && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="mb-6 rounded-2xl border border-accent/20 bg-cyan-500/5 p-4">
+            className="mb-6 rounded-2xl border border-accent/20 bg-accent/5 p-4">
             <div className="flex items-center gap-2 text-accent mb-1 text-sm font-medium">
               ✓ Logged in as {address.slice(0, 6)}...{address.slice(-4)}
             </div>

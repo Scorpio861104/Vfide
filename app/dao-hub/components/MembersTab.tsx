@@ -89,7 +89,7 @@ export function MembersTab() {
               const isMe = c.address.toLowerCase() === address?.toLowerCase();
               return (
                 <div key={c.address} className={`flex items-center gap-3 p-3 rounded-lg ${
-                  isMe ? 'bg-cyan-500/10 border border-accent/20' : 'bg-white/3'
+                  isMe ? 'bg-accent/10 border border-accent/20' : 'bg-white/3'
                 }`}>
                   <span className="text-xs text-gray-600 w-5">{i + 1}</span>
                   <UserCircle size={22} className={i < 3 ? 'text-yellow-400' : 'text-gray-600'} />

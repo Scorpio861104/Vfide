@@ -172,7 +172,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowRequestForm(!showRequestForm)}
               disabled={!hasVault}
-              className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 flex-shrink-0"
+              className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50 flex-shrink-0"
             >
               {showRequestForm ? 'Cancel' : 'Start Rotation'}
             </motion.button>
@@ -218,7 +218,7 @@ export function RecoveryTab({ isConnected }: { isConnected: boolean }) {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => void handleRequestRecovery()}
                   disabled={isWritePending || !hasVault || !isAddress(newAddress) || !isVaultOwner || guardianCount < 2}
-                  className="w-full py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50"
+                  className="w-full py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50"
                 >
                   Propose Wallet Rotation
                 </motion.button>

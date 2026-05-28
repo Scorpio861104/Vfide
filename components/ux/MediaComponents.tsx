@@ -425,7 +425,7 @@ export function VideoPlayer({
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full"
+            className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full"
           />
         </div>
       )}
@@ -510,7 +510,7 @@ export function VideoPlayer({
                   handleSeek(fakeEvent);
                 }
               }}
-              className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3 focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-2"
+              className="w-full h-1 bg-gray-600 rounded-full cursor-pointer mb-3 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
             >
               <motion.div
                 className="h-full bg-accent rounded-full"

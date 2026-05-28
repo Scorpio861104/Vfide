@@ -122,7 +122,7 @@ export function RevenueTab() {
     // Note: Burn (40%) and Sanctum (10%) are handled upstream by ProofScoreBurnRouter — not in FeeDistributor.
     // The split below is of the 50% ecosystem share that reaches FeeDistributor.
     { name: 'DAO Payroll', description: 'Council + operations payroll (50% of ecosystem share)', bps: daoPayrollBps, address: daoPayrollPool, color: 'bg-purple-500' },
-    { name: 'Merchant Pool', description: 'Merchant rewards channel (30% of ecosystem share)', bps: merchantPoolBps, address: merchantPool, color: 'bg-cyan-500' },
+    { name: 'Merchant Pool', description: 'Merchant rewards channel (30% of ecosystem share)', bps: merchantPoolBps, address: merchantPool, color: 'bg-accent' },
     { name: 'Headhunter Pool', description: 'Referral bounties channel (20% of ecosystem share)', bps: headhunterPoolBps, address: headhunterPool, color: 'bg-emerald-500' },
   ];
 

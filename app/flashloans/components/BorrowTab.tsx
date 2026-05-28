@@ -65,7 +65,7 @@ export function BorrowTab() {
         <h3 className="text-white font-semibold mb-1">Loan request submitted!</h3>
         <p className="text-gray-400 text-sm mb-4">Your flash loan request has been created and is awaiting lender acceptance.</p>
         <button onClick={() => setSuccess(false)}
-          className="px-4 py-2 rounded-lg bg-accent/20 text-accent text-sm hover:bg-cyan-500/30 transition-colors">
+          className="px-4 py-2 rounded-lg bg-accent/20 text-accent text-sm hover:bg-accent/30 transition-colors">
           Create another
         </button>
       </div>
@@ -141,7 +141,7 @@ export function BorrowTab() {
 
         <button
           type="submit" disabled={loading || !address}
-          className="w-full py-2.5 rounded-lg bg-accent/20 text-accent font-semibold text-sm hover:bg-cyan-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-lg bg-accent/20 text-accent font-semibold text-sm hover:bg-accent/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading && <Loader2 size={14} className="animate-spin" />}
           {loading ? 'Submitting…' : 'Request Flash Loan'}

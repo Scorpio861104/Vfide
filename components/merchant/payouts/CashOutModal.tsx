@@ -202,7 +202,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
             <button
               type="button"
               onClick={handleOpenProvider}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-400"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent"
             >
               Open {PAYOUT_PROVIDERS.find((p) => p.id === provider)?.label}
               <ExternalLink size={14} />
@@ -332,7 +332,7 @@ export function CashOutModal({ token, availableWei, onClose, onSubmitted }: Cash
                 type="button"
                 onClick={() => void handleSubmit()}
                 disabled={!canSubmit}
-                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>

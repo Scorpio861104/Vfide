@@ -217,7 +217,7 @@ export default function DailyQuestsPanel() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'daily': return 'from-blue-500 to-cyan-500';
+      case 'daily': return 'from-blue-500 to-accent';
       case 'weekly': return 'from-purple-500 to-pink-500';
       case 'monthly': return 'from-yellow-500 to-orange-500';
       default: return 'from-gray-500 to-gray-600';

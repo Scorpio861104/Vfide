@@ -38,7 +38,7 @@ export default function HeadhunterPage() {
             <span className="badge-live"><span className="badge-live-dot" />Referral Bounties</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-amber-400 via-yellow-400 to-cyan-400 bg-clip-text text-transparent">Headhunter</span>
+            <span className="bg-gradient-to-r from-amber-400 via-yellow-400 to-accent bg-clip-text text-transparent">Headhunter</span>
           </h1>
           <p className="text-white/50 text-lg">Recruit users, earn bounties, and climb the referral leaderboard.</p>
         </motion.div>

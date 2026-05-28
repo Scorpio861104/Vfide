@@ -278,7 +278,7 @@ export default function PendingChangesPage() {
                 disabled={isWritePending}
                 className={`px-6 py-2.5 rounded-lg font-bold text-white flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                   confirmingAction.kind === 'apply'
-                    ? 'bg-gradient-to-r from-accent to-blue-500 shadow-cyan-500/30'
+                    ? 'bg-gradient-to-r from-accent to-blue-500 shadow-accent/30'
                     : 'bg-gradient-to-r from-red-500 to-orange-500 shadow-red-500/30'
                 }`}
               >
@@ -391,7 +391,7 @@ function PendingChangeCard({
         <button
           onClick={onApplyClick}
           disabled={!isAdmin || !change.canApply || isWritePending}
-          className="flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-cyan-500/20"
+          className="flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-lg font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-accent/20"
           title={
             !change.canApply
               ? 'Timelock has not yet expired'

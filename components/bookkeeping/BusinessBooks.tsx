@@ -146,7 +146,7 @@ export function BusinessBooks({ transactions = [], onAddExpense }: BusinessBooks
           </button>
           <button
             onClick={() => setShowAdd((value) => !value)}
-            className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-cyan-500/20 px-3 py-2 text-sm font-bold text-accent"
+            className="flex items-center gap-1.5 rounded-xl border border-accent/30 bg-accent/20 px-3 py-2 text-sm font-bold text-accent"
           >
             <Plus size={14} />
             Add Expense

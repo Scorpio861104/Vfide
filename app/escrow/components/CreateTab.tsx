@@ -120,7 +120,7 @@ export function CreateTab() {
 
   return (
     <div className="space-y-5 max-w-xl">
-      <div className="bg-cyan-500/5 border border-accent/20 rounded-2xl p-5">
+      <div className="bg-accent/5 border border-accent/20 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-2">
           <ShieldCheck size={18} className="text-accent" />
           <h3 className="text-white font-semibold">Pay with escrow protection</h3>
@@ -216,7 +216,7 @@ export function CreateTab() {
         <button
           onClick={() => void handleSubmit()}
           disabled={!canSubmit}
-          className="w-full px-4 py-3 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-accent-dark hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2"
         >
           {isWritePending ? (
             <>

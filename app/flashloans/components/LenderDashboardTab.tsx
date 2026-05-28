@@ -165,7 +165,7 @@ export function LenderDashboardTab() {
   if (!info?.registered) {
     return (
       <div className="space-y-5">
-        <div className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-6">
+        <div className="rounded-2xl border border-accent/20 bg-accent/5 p-6">
           <div className="flex items-center gap-2 mb-3">
             <Wallet size={16} className="text-accent" aria-hidden="true" />
             <h3 className="text-white font-semibold">Become a Lender</h3>

@@ -39,7 +39,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
                 className={`
                   w-10 h-10 rounded-full flex items-center justify-center
                   border-2 transition-colors
-                  ${isCompleted ? 'border-cyan-400' : isCurrent ? 'border-cyan-400' : 'border-zinc-700'}
+                  ${isCompleted ? 'border-accent' : isCurrent ? 'border-accent' : 'border-zinc-700'}
                 `}
               >
                 {isCompleted ? (
@@ -69,7 +69,7 @@ export function ProgressSteps({ steps, currentStep, className = '' }: ProgressSt
               <div className="flex-1 h-0.5 mx-2 -mt-6">
                 <div
                   className={`h-full transition-colors ${
-                    isCompleted ? 'bg-cyan-400' : 'bg-zinc-700'
+                    isCompleted ? 'bg-accent' : 'bg-zinc-700'
                   }`}
                 />
               </div>

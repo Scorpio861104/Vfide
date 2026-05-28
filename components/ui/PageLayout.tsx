@@ -59,7 +59,7 @@ export function PageWrapper({
               scale: [1, 1.2, 1] 
             }}
             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 -left-20 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl"
+            className="absolute top-20 -left-20 w-96 h-96 bg-accent/5 rounded-full blur-3xl"
           />
           <motion.div
             animate={{ 
@@ -115,7 +115,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ 
   icon, 
-  iconGradient = 'from-cyan-400 to-cyan-600',
+  iconGradient = 'from-accent to-accent-dark',
   title, 
   subtitle,
   badge,
@@ -137,7 +137,7 @@ export function PageHeader({
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              className={`w-20 h-20 bg-gradient-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-cyan-400/20`}
+              className={`w-20 h-20 bg-gradient-to-br ${iconGradient} rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-accent/20`}
             >
               {icon}
             </motion.div>
@@ -343,7 +343,7 @@ export function TabNavigation({
             className={`
               flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300
               ${activeTab === tab.id 
-                ? 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black shadow-lg shadow-cyan-400/20' 
+                ? 'bg-gradient-to-r from-accent to-accent-dark text-black shadow-lg shadow-accent/20' 
                 : 'glass text-zinc-400 hover:text-zinc-100 hover:bg-white/10'
               }
             `}
@@ -387,7 +387,7 @@ export function TabNavigation({
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="activeTabUnderline"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-500"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent to-emerald-500"
                 />
               )}
             </button>
@@ -412,7 +412,7 @@ export function TabNavigation({
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTabPill"
-              className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-emerald-500 rounded-lg"
+              className="absolute inset-0 bg-gradient-to-r from-accent to-emerald-500 rounded-lg"
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
             />
           )}

@@ -97,7 +97,7 @@ export function VaultHeader({
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-6 h-6 border-2 border-accent/20 border-t-cyan-500 rounded-full"
+                className="w-6 h-6 border-2 border-accent/20 border-t-accent rounded-full"
               />
               <p className="text-white/60">Loading vault information...</p>
             </div>
@@ -118,7 +118,7 @@ export function VaultHeader({
                     onClick={openConnectModal}
                     disabled={!mounted}
                     aria-label="Connect your wallet"
-                    className="px-6 py-3 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50"
+                    className="px-6 py-3 bg-gradient-to-r from-accent to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50"
                   >
                     Connect Wallet
                   </motion.button>

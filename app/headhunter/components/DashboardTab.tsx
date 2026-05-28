@@ -63,7 +63,7 @@ export function DashboardTab() {
         <button
           type="button"
           onClick={() => void handleCopy()}
-          className="rounded-xl border border-accent/30 bg-cyan-500/15 px-4 py-2 font-semibold text-accent"
+          className="rounded-xl border border-accent/30 bg-accent/15 px-4 py-2 font-semibold text-accent"
         >
           {copied ? 'Copied' : 'Copy'}
         </button>

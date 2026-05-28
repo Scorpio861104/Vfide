@@ -93,7 +93,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
       {/* Header */}
       <div className="p-4 flex items-start justify-between">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-xl">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-xl">
             {post.author.avatar}
           </div>
           <div>
@@ -207,7 +207,7 @@ export function PostCard({ post, onLike, onBookmark }: { post: SocialPost; onLik
         <button
           onClick={onBookmark}
           className={`p-2 rounded-lg transition-colors ${
-            post.bookmarked ? 'text-accent bg-cyan-400/10' : 'text-zinc-400 hover:bg-zinc-700'
+            post.bookmarked ? 'text-accent bg-accent/10' : 'text-zinc-400 hover:bg-zinc-700'
           }`}
         >
           <Bookmark className={`w-5 h-5 ${post.bookmarked ? 'fill-current' : ''}`} />

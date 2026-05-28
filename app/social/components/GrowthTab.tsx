@@ -74,7 +74,7 @@ export function GrowthTab() {
               <div key={label} className="flex-1 flex flex-col items-center gap-1">
                 <p className="text-xs text-gray-500">{count}</p>
                 <div
-                  className="w-full rounded-t bg-cyan-500/60"
+                  className="w-full rounded-t bg-accent/60"
                   style={{ height: `${(count / maxCount) * 100}%`, minHeight: '4px' }}
                 />
                 <p className="text-[10px] text-gray-600 rotate-45 mt-1 origin-left">{label}</p>

@@ -770,7 +770,7 @@ export function VaultInheritancePanel({ vaultAddress, userAddress }: VaultInheri
                         <button
                           onClick={handleProposeConfig}
                           disabled={!secretsDownloaded || !isBasisPointsValid || txStatus === 'signing' || txStatus === 'submitted'}
-                          className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-accent text-white font-bold text-sm transition-colors disabled:opacity-40"
+                          className="px-4 py-2 rounded-lg bg-accent-dark hover:bg-accent text-white font-bold text-sm transition-colors disabled:opacity-40"
                         >
                           {txStatus === 'signing' ? <Loader2 size={14} className="animate-spin inline mr-1" /> : null}
                           Propose Config

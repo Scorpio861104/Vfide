@@ -36,7 +36,7 @@ export default function SeerServicePage() {
             <span className="badge-live"><span className="badge-live-dot" />AI-Powered Intelligence</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">Seer Service</span>
+            <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent">Seer Service</span>
           </h1>
           <p className="text-white/50 text-lg">AI-powered insights and predictive analytics for your DeFi activity.</p>
         </motion.div>

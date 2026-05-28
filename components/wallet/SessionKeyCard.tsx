@@ -24,7 +24,7 @@ export function SessionKeyCard({ session, onRevoke }: SessionKeyCardProps) {
       <div
         role="button"
         tabIndex={0}
-        className="w-full flex items-center justify-between p-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-cyan-400 focus-visible:outline-offset-[-2px] rounded-lg"
+        className="w-full flex items-center justify-between p-4 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] rounded-lg"
         aria-expanded={expanded}
         aria-controls={`session-${session.id}-details`}
         onClick={() => setExpanded(!expanded)}

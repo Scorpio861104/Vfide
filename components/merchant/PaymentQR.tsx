@@ -183,7 +183,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-cyan-400/10 to-blue-500/10 border-2 border-accent/30 rounded-xl p-6">
+      <div className="bg-gradient-to-br from-accent/10 to-blue-500/10 border-2 border-accent/30 rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <QrCode className="w-8 h-8 text-accent" />
           <div>
@@ -290,7 +290,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
               onClick={sharePayment}
               disabled={!securePayloadReady}
               aria-label="Share payment link"
-              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-cyan-400 hover:bg-cyan-300 rounded-lg text-zinc-900 font-bold transition-colors disabled:opacity-60"
+              className="min-h-[44px] flex items-center justify-center gap-2 px-4 py-3 bg-accent hover:bg-accent rounded-lg text-zinc-900 font-bold transition-colors disabled:opacity-60"
             >
               <Share2 size={18} />
               <span>Share</span>
@@ -342,7 +342,7 @@ export function PaymentQR({ defaultAmount, defaultOrderId }: PaymentQRProps) {
                 onClick={() => setAmount(preset)}
                 className={`min-h-[44px] px-4 py-2.5 rounded-lg text-sm font-bold transition-colors ${
                   amount === preset
-                    ? 'bg-cyan-400 text-zinc-900'
+                    ? 'bg-accent text-zinc-900'
                     : 'bg-zinc-700 text-zinc-100 hover:bg-zinc-600'
                 }`}
               >

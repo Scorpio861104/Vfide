@@ -111,7 +111,7 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
               onClick={() => setFilter(tab.key as 'all' | 'pending' | 'history')}
               className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                 filter === tab.key
-                  ? 'bg-cyan-400 text-zinc-950'
+                  ? 'bg-accent text-zinc-950'
                   : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
@@ -142,13 +142,13 @@ export function FriendRequestsPanel({ onAccept, onReject }: FriendRequestsPanelP
                   transition={{ delay: idx * 0.05 }}
                   className={`p-4 rounded-lg border transition-all ${
                     isPending
-                      ? 'bg-zinc-800 border-zinc-700 hover:border-cyan-400/50'
+                      ? 'bg-zinc-800 border-zinc-700 hover:border-accent/50'
                       : 'bg-zinc-950 border-zinc-800 opacity-60'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-zinc-950 font-bold shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-zinc-950 font-bold shrink-0">
                       {request.fromAlias
                         ? request.fromAlias?.[0]?.toUpperCase()
                         : request.from.slice(2, 4).toUpperCase()}

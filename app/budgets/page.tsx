@@ -83,7 +83,7 @@ export default function BudgetsPage() {
       <div className="relative container mx-auto px-4 max-w-4xl space-y-6">
         {/* Device-only notice */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-accent/20 bg-cyan-500/5 p-3 text-xs text-accent">
+          className="rounded-2xl border border-accent/20 bg-accent/5 p-3 text-xs text-accent">
           Budgets are saved on this device only — they won&apos;t appear on other devices you sign in from.
           Spending totals are still computed from your full transaction history.
         </motion.div>
@@ -180,7 +180,7 @@ export default function BudgetsPage() {
                 <div key={cat.name} className="flex items-center gap-3">
                   <div className="w-24 text-sm text-white/70 truncate">{cat.name}</div>
                   <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full"
+                    <div className="h-full bg-gradient-to-r from-accent to-emerald-500 rounded-full"
                       style={{ width: `${cat.percentage}%` }} />
                   </div>
                   <div className="w-20 text-right text-sm text-white/70">${cat.amount.toFixed(2)}</div>

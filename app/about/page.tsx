@@ -74,7 +74,7 @@ export default function AboutPage() {
         <section className="relative pt-20 pb-16 px-4">
           <div className="container mx-auto max-w-4xl text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-cyan-500/10 px-4 py-1.5 text-xs uppercase tracking-widest text-accent mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-xs uppercase tracking-widest text-accent mb-6">
                 <Globe size={12} /> Built for the world&apos;s 1.4 billion unbanked
               </div>
               <h1 className="text-5xl md:text-6xl font-black tracking-tight mb-6">

@@ -108,7 +108,7 @@ export function StatCard({
   loading?: boolean;
 }) {
   const colorMap = {
-    cyan: { bg: 'bg-cyan-500/20', text: 'text-accent', glow: 'shadow-cyan-500/20' },
+    cyan: { bg: 'bg-accent/20', text: 'text-accent', glow: 'shadow-accent/20' },
     green: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
     gold: { bg: 'bg-amber-500/20', text: 'text-amber-400', glow: 'shadow-amber-500/20' },
     purple: { bg: 'bg-purple-500/20', text: 'text-purple-400', glow: 'shadow-purple-500/20' },
@@ -166,7 +166,7 @@ export function QuickAction({
         whileTap={{ scale: 0.98 }}
         className={`ring-effect flex flex-col items-center gap-3 rounded-2xl p-4 text-center font-semibold transition-all ${
           isPrimary
-            ? 'bg-gradient-to-br from-accent to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+            ? 'bg-gradient-to-br from-accent to-blue-600 text-white shadow-lg shadow-accent/25'
             : 'border border-white/10 bg-white/5 text-white/80 hover:border-white/20 hover:bg-white/10 hover:text-white'
         }`}
       >

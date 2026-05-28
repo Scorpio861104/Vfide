@@ -186,7 +186,7 @@ export function StoryCreator({
                       onClick={() => setSelectedBackground(index)}
                       className={`aspect-square rounded-lg transition-all ${
                         selectedBackground === index
-                          ? 'ring-2 ring-cyan-400 scale-110'
+                          ? 'ring-2 ring-accent scale-110'
                           : 'hover:scale-105'
                       }`}
                       style={{ background: bg.gradient }}
@@ -213,7 +213,7 @@ export function StoryCreator({
                   role="button"
                   tabIndex={0}
                   aria-label="Add photo or video to story"
-                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-cyan-400 focus-visible:outline-2 focus-visible:outline-cyan-400 transition-colors"
+                  className="aspect-9/16 max-w-sm mx-auto border-2 border-dashed border-zinc-700 rounded-xl flex flex-col items-center justify-center p-8 cursor-pointer hover:border-accent focus-visible:outline-2 focus-visible:outline-accent transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -285,7 +285,7 @@ export function StoryCreator({
           <button
             onClick={handleCreate}
             disabled={(mode === 'text' && !textContent.trim()) || (mode === 'media' && !mediaPreview)}
-            className="flex-1 rounded-lg bg-cyan-400 py-3 font-semibold text-zinc-950 transition-colors hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+            className="flex-1 rounded-lg bg-accent py-3 font-semibold text-zinc-950 transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
           >
             Share Story
           </button>

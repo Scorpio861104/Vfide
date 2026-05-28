@@ -182,7 +182,7 @@ export default function SocialHubPage() {
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-4xl font-bold mb-2">
-                <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-accent via-violet-400 to-pink-400 bg-clip-text text-transparent">
                   Social
                 </span>
               </h1>
@@ -230,7 +230,7 @@ export default function SocialHubPage() {
         {!isConnected ? (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="glass-card-premium max-w-lg mx-auto text-center py-16 px-8">
-            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
               <Sparkles className="text-accent" size={28} />
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Join the Conversation</h2>

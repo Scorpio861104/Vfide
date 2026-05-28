@@ -51,7 +51,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
                 max={10000}
                 value={simulatedScore}
                 onChange={(e) =>  setSimulatedScore(Number(e.target.value))}
-                className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-cyan-500"
+                className="h-3 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-accent"
               />
               <div className="mt-2 flex justify-between text-xs text-white/40">
                 <span>0</span>
@@ -76,7 +76,7 @@ export function FeeSimulatorTab({ currentScore }: { currentScore: number }) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-accent/30 bg-cyan-500/10 p-4">
+            <div className="rounded-xl border border-accent/30 bg-accent/10 p-4">
               <p className="text-sm text-accent">
                 💡 <strong>Tip:</strong> Your current score of {currentScore} gives you a {calculateFee(currentScore).toFixed(2)}% fee rate.
                 {currentScore < 8000 && ' Increase your score to 8000 to unlock the minimum 0.25% rate!'}

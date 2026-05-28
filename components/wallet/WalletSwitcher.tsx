@@ -109,7 +109,7 @@ export function WalletSwitcher() {
         <button
           onClick={handleAddWallet}
           disabled={!bestConnector}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Plus size={14} />
           <span>Add Wallet</span>
@@ -127,14 +127,14 @@ export function WalletSwitcher() {
               layout
               className={`p-3 rounded-lg border transition-colors ${
                 isCurrentWallet 
-                  ? 'bg-cyan-500/10 border-accent/30' 
+                  ? 'bg-accent/10 border-accent/30' 
                   : 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-600'
               }`}
             >
               <div className="flex items-center gap-3">
                 {/* Icon */}
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  isCurrentWallet ? 'bg-cyan-500/20' : 'bg-zinc-700'
+                  isCurrentWallet ? 'bg-accent/20' : 'bg-zinc-700'
                 }`}>
                   <Wallet size={18} className={isCurrentWallet ? 'text-accent' : 'text-zinc-400'} />
                 </div>

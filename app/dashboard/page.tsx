@@ -79,7 +79,7 @@ export default function DashboardPage() {
                   transition={{ duration: 0.5 }}
                 >
                   <div className="badge-live mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Dashboard
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Dashboard
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
                     Welcome back

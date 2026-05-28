@@ -174,7 +174,7 @@ export function LiveSystemStats() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-zinc-950/50 backdrop-blur-xl rounded-xl p-2 sm:p-3 md:p-4 border border-cyan-400/20"
+        className="bg-zinc-950/50 backdrop-blur-xl rounded-xl p-2 sm:p-3 md:p-4 border border-accent/20"
       >
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 text-center">
           <div>

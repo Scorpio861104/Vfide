@@ -151,7 +151,7 @@ export default function MerchantTipsPage() {
                           type="checkbox"
                           checked={settings.enabled}
                           onChange={(e) => setSettings((s) => ({ ...s, enabled: e.target.checked }))}
-                          className="accent-cyan-500 mt-1"
+                          className="accent-accent mt-1"
                         />
                         <div>
                           <div className="font-medium">Show tip prompt at checkout</div>
@@ -214,7 +214,7 @@ export default function MerchantTipsPage() {
                           type="checkbox"
                           checked={settings.allow_custom_amount}
                           onChange={(e) => setSettings((s) => ({ ...s, allow_custom_amount: e.target.checked }))}
-                          className="accent-cyan-500 mt-1"
+                          className="accent-accent mt-1"
                         />
                         <div>
                           <div className="font-medium">Allow custom tip amount</div>

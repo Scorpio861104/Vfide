@@ -76,7 +76,7 @@ export function HistoryTab() {
     <div className="space-y-3">
       {badges.map((badge, i) => (
         <div key={i} className="bg-white/3 border border-white/10 rounded-xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+          <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
             {badge.badge_icon ?? '🏅'}
           </div>
           <div className="min-w-0 flex-1">

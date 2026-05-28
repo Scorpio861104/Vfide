@@ -262,7 +262,7 @@ export default function ChallengeWindowPage() {
                   disabled={!isAdmin}
                   className={`w-full text-left p-4 rounded-xl border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     isSelected
-                      ? 'border-cyan-400 bg-cyan-500/10'
+                      ? 'border-accent bg-accent/10'
                       : 'border-white/10 bg-white/5 hover:border-white/20'
                   }`}
                 >
@@ -290,7 +290,7 @@ export default function ChallengeWindowPage() {
               }}
               disabled={!isAdmin}
               className={`w-full text-left p-4 rounded-xl border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                useCustom ? 'border-cyan-400 bg-cyan-500/10' : 'border-white/10 bg-white/5 hover:border-white/20'
+                useCustom ? 'border-accent bg-accent/10' : 'border-white/10 bg-white/5 hover:border-white/20'
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
@@ -364,7 +364,7 @@ export default function ChallengeWindowPage() {
           <button
             onClick={() => void handleSave()}
             disabled={!canSubmit}
-            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-accent/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isWritePending ? (
               <>

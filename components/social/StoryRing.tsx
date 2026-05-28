@@ -36,7 +36,7 @@ export function StoryRing({
   };
 
   const ringClasses = hasUnviewed
-    ? 'ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#0A0A0F]'
+    ? 'ring-2 ring-accent ring-offset-2 ring-offset-[#0A0A0F]'
     : 'ring-2 ring-zinc-700 ring-offset-2 ring-offset-[#0A0A0F]';
 
   // Get the latest story thumbnail
@@ -76,7 +76,7 @@ export function StoryRing({
 
         {/* Story Count Badge */}
         {activeStories.length > 1 && (
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-cyan-400 text-zinc-950 text-xs font-bold rounded-full flex items-center justify-center">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-accent text-zinc-950 text-xs font-bold rounded-full flex items-center justify-center">
             {activeStories.length}
           </div>
         )}

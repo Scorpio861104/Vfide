@@ -66,7 +66,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
             <div className="text-accent font-mono font-bold">${parseFloat(product.price).toFixed(2)}</div>
             {hasDiscount && <div className="text-gray-500 text-xs line-through">${parseFloat(product.compare_at_price!).toFixed(2)}</div>}
           </div>
-          <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`} className="p-2 bg-cyan-500/20 rounded-lg text-accent hover:bg-cyan-500/30 transition-colors">
+          <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`} className="p-2 bg-accent/20 rounded-lg text-accent hover:bg-accent/30 transition-colors">
             {added ? <Check size={16} /> : <ShoppingCart size={16} />}
           </button>
         </div>
@@ -90,7 +90,7 @@ export function ProductCard({ product, merchantSlug, viewMode, themeColor: _them
           <div className="absolute top-2 left-2 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded">-{discountPct}%</div>
         )}
         <button onClick={handleAddToCart} aria-label={`Add ${product.name} to cart`}
-          className="absolute bottom-2 right-2 p-2 bg-black/60 backdrop-blur-sm rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-cyan-500/80">
+          className="absolute bottom-2 right-2 p-2 bg-black/60 backdrop-blur-sm rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent/80">
           {added ? <Check size={16} /> : <ShoppingCart size={16} />}
         </button>
       </div>

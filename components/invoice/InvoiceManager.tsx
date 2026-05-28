@@ -137,7 +137,7 @@ function InvoiceRow({ invoice, formatCurrency, formatDate, onSend, onCancel: _on
   return (
     <div className="flex items-center justify-between p-4 bg-white/3 border border-white/5 rounded-xl hover:border-white/10 transition-colors">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
           <FileText size={18} className="text-accent" />
         </div>
         <div>

@@ -70,7 +70,7 @@ export function BottomTabBar() {
                   {isActive && (
                     <motion.div
                       layoutId="tab-indicator"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
                     />
                   )}
                 </div>

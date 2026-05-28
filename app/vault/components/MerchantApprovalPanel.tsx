@@ -228,7 +228,7 @@ export function MerchantApprovalPanel({ vaultAddress }: MerchantApprovalPanelPro
                 type="button"
                 onClick={handleApproveStablecoin}
                 disabled={!merchantPortalReady || !stablecoinReady || isApprovingStablecoin}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-accent disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/40"
               >
                 {isApprovingStablecoin ? <Loader2 className="animate-spin" size={16} /> : null}
                 Approve Stablecoin

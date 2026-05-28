@@ -97,7 +97,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: idx * 0.05 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-zinc-900 border border-zinc-700 rounded-lg hover:border-cyan-400/50 transition-colors gap-3 sm:gap-0"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-zinc-900 border border-zinc-700 rounded-lg hover:border-accent/50 transition-colors gap-3 sm:gap-0"
       >
         <div className="flex items-center gap-4 w-full sm:w-auto">
           <div className={`p-3 rounded-full ${
@@ -107,7 +107,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
               ? 'bg-red-400/20'
               : tx.type.includes('vault')
               ? 'bg-blue-500/20'
-              : 'bg-cyan-400/20'
+              : 'bg-accent/20'
           } ${getColor(tx.type)}`}>
             {getIcon(tx.type)}
           </div>
@@ -211,7 +211,7 @@ export function TransactionHistory({ transactions = [], loading = false }: Trans
         </div>
       ) : usePerformanceMode ? (
         <div className="space-y-3">
-          <div className="rounded-lg border border-accent/30 bg-cyan-400/5 px-3 py-2 text-sm text-accent">
+          <div className="rounded-lg border border-accent/30 bg-accent/5 px-3 py-2 text-sm text-accent">
             Performance mode active — long transaction histories are windowed for smoother scrolling.
           </div>
           <VirtualizedList

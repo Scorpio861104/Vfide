@@ -65,7 +65,7 @@ export function ConnectTab() {
               onClick={() => setDeviceType(d)}
               className={`p-4 rounded-xl border text-sm font-semibold capitalize transition-colors ${
                 deviceType === d
-                  ? 'bg-cyan-500/20 border-accent/40 text-accent'
+                  ? 'bg-accent/20 border-accent/40 text-accent'
                   : 'bg-white/3 border-white/10 text-gray-400 hover:border-white/20'
               }`}
             >

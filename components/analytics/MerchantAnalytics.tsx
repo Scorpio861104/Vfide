@@ -159,7 +159,7 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
                   initial={{ height: 0 }}
                   animate={{ height: `${heightPct}%` }}
                   transition={{ delay: i * 0.02 }}
-                  className="flex-1 bg-gradient-to-t from-cyan-500/40 to-accent/80 rounded-t min-h-[2px]"
+                  className="flex-1 bg-gradient-to-t from-accent/40 to-accent/80 rounded-t min-h-[2px]"
                   title={`${day.date}: $${day.amount.toFixed(2)}`}
                 />
               );
@@ -183,7 +183,7 @@ function StatCard({ label, value, change, icon: Icon, color }: {
   color: 'cyan' | 'emerald' | 'amber';
 }) {
   const colorMap = {
-    cyan: { bg: 'bg-cyan-500/20', text: 'text-accent' },
+    cyan: { bg: 'bg-accent/20', text: 'text-accent' },
     emerald: { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
     amber: { bg: 'bg-amber-500/20', text: 'text-amber-400' },
   };

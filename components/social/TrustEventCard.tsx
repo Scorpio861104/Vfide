@@ -72,7 +72,7 @@ const EVENT_CONFIG: Record<TrustEventType, {
   milestone: {
     icon: <TrendingUp size={20} />,
     color: '#06B6D4',
-    bgGradient: 'from-accent/10 to-cyan-500/3',
+    bgGradient: 'from-accent/10 to-accent/3',
     verb: (e) => `reached ProofScore ${Number(e.data.score).toLocaleString()}`,
     detail: () => 'Trust built through consistent commerce and community participation',
   },

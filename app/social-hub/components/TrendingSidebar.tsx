@@ -97,7 +97,7 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
           ) : null}
           {suggested.map((user) => (
             <div key={user.address} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-violet-400 flex items-center justify-center text-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-violet-400 flex items-center justify-center text-lg">
                 {user.avatar}
               </div>
               <div className="flex-1 min-w-0">
@@ -113,7 +113,7 @@ export function TrendingSidebar({ trending, suggested }: { trending: TrendingTop
                 aria-disabled="true"
                 aria-label={`Follow ${user.name} (not yet available)`}
                 title="Following requires a social-graph API that isn't built yet."
-                className="px-3 py-1 bg-cyan-400/40 text-zinc-950/60 text-sm font-semibold rounded-full cursor-not-allowed"
+                className="px-3 py-1 bg-accent/40 text-zinc-950/60 text-sm font-semibold rounded-full cursor-not-allowed"
               >
                 Follow
               </button>

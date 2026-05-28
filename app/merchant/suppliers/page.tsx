@@ -91,12 +91,12 @@ export default function MerchantSuppliersPage() {
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="badge-live mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Supply Chain
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" /> Supply Chain
             </div>
             <h1 className="flex items-center gap-3 text-3xl font-black tracking-tight"><Truck className="text-accent" /> Suppliers & purchase orders</h1>
               <p className="mt-2 text-gray-400">Maintain your supplier directory and keep a clean record of restock requests and deliveries.</p>
             </div>
-            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-accent">
+            <button type="button" onClick={() => setShowAdd((current) => !current)} className="inline-flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-semibold text-accent">
               <Plus size={16} /> Add supplier
             </button>
           </div>

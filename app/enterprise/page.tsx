@@ -42,7 +42,7 @@ export default function EnterprisePage() {
             <span className="badge-live"><span className="badge-live-dot" />Business Infrastructure</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">Enterprise Gateway</span>
+            <span className="bg-gradient-to-r from-accent via-indigo-400 to-violet-400 bg-clip-text text-transparent">Enterprise Gateway</span>
           </h1>
           <p className="text-white/50 text-lg">High-volume payment infrastructure for businesses — API access, fiat ramps, and finance tools.</p>
         </motion.div>

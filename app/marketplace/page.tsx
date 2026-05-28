@@ -67,7 +67,7 @@ export default function MarketplacePage() {
               <Package size={12} /> Live Market
             </div>
             <h1 className="text-4xl font-black text-white mb-2 tracking-tight">
-              <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">Marketplace</span>
+              <span className="bg-gradient-to-r from-white to-accent-light bg-clip-text text-transparent">Marketplace</span>
             </h1>
           </div>
 

@@ -132,7 +132,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                     onClick={() => setActivity(level)}
                     className={`rounded-lg border px-3 py-2 text-xs font-medium capitalize transition-colors ${
                       activity === level
-                        ? 'border-cyan-500 bg-accent/15 text-accent'
+                        ? 'border-accent bg-accent/15 text-accent'
                         : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
                     }`}
                   >
@@ -153,7 +153,7 @@ export function ScoreSimulatorTab({ currentScore }: { currentScore: number }) {
                 max={24}
                 value={months}
                 onChange={(e) => setMonths(Number(e.target.value))}
-                className="w-full accent-cyan-500"
+                className="w-full accent-accent"
               />
               <div className="flex justify-between text-xs text-white/40 mt-1">
                 <span>1 month</span>

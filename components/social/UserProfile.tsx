@@ -148,7 +148,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
           className="flex flex-col md:flex-row md:items-end gap-4 -mt-20 mb-6"
         >
           <div className="shrink-0">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-400 p-1 shadow-2xl">
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl bg-gradient-to-br from-accent to-violet-400 p-1 shadow-2xl">
               <div className="w-full h-full rounded-xl bg-zinc-900 flex items-center justify-center text-6xl md:text-8xl">
                 {user.avatar}
               </div>
@@ -192,7 +192,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
               <button
                 disabled
                 title="Profile editing requires a /api/social/profile PUT endpoint that isn't built yet."
-                className="px-6 py-3 bg-cyan-400/20 border border-cyan-400/40 text-accent/60 rounded-lg cursor-not-allowed font-semibold"
+                className="px-6 py-3 bg-accent/20 border border-accent/40 text-accent/60 rounded-lg cursor-not-allowed font-semibold"
               >
                 Edit Profile
               </button>
@@ -201,7 +201,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                 <button
                   disabled
                   title="Following requires a social-graph API that isn't built yet."
-                  className="px-4 py-2 bg-cyan-400/40 text-zinc-950/60 rounded-lg cursor-not-allowed font-semibold"
+                  className="px-4 py-2 bg-accent/40 text-zinc-950/60 rounded-lg cursor-not-allowed font-semibold"
                 >
                   {user.isFollowing ? 'Following' : 'Follow'}
                 </button>
@@ -218,7 +218,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
             <div className="relative">
               <button
                 onClick={() => setShowShareMenu(!showShareMenu)}
-                className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-cyan-400 transition-colors"
+                className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-zinc-400 rounded-lg hover:border-accent transition-colors"
               >
                 <Share2 className="w-5 h-5" />
               </button>
@@ -276,7 +276,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
           transition={{ delay: 0.2 }}
           className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8"
         >
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-cyan-400 transition-colors">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 text-center hover:border-accent transition-colors">
             <div className="text-accent text-2xl font-bold mb-1">{user.proofScore.toLocaleString()}</div>
             <div className="text-xs text-zinc-400">Proof Score</div>
           </div>
@@ -328,7 +328,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                         : badge.rarity === 'uncommon'
                           ? 'border-green-500 bg-green-500/10'
                           : badge.rarity === 'rare'
-                            ? 'border-cyan-400 bg-cyan-400/10'
+                            ? 'border-accent bg-accent/10'
                             : badge.rarity === 'epic'
                               ? 'border-violet-400 bg-violet-400/10'
                               : 'border-yellow-500 bg-yellow-500/10'
@@ -361,7 +361,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`px-4 py-3 font-semibold text-sm whitespace-nowrap border-b-2 transition-all ${
                   activeTab === tab.key
-                    ? 'border-cyan-400 text-accent'
+                    ? 'border-accent text-accent'
                     : 'border-transparent text-zinc-400 hover:text-zinc-100'
                 }`}
               >
@@ -391,7 +391,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-cyan-400/50 transition-colors"
+                  className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 hover:border-accent/50 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <div className="text-2xl shrink-0">{item.icon}</div>
@@ -474,7 +474,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
                   className={`bg-zinc-900 border rounded-lg p-4 transition-colors ${
-                    achievement.isUnlocked ? 'border-cyan-400' : 'border-zinc-700'
+                    achievement.isUnlocked ? 'border-accent' : 'border-zinc-700'
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -489,7 +489,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                           initial={{ width: 0 }}
                           animate={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
                           transition={{ duration: 1, delay: 0.2 }}
-                          className={`h-full ${achievement.isUnlocked ? 'bg-gradient-to-r from-cyan-400 to-violet-400' : 'bg-zinc-700'}`}
+                          className={`h-full ${achievement.isUnlocked ? 'bg-gradient-to-r from-accent to-violet-400' : 'bg-zinc-700'}`}
                         />
                       </div>
                       <div className="flex justify-between items-center mt-2">
@@ -532,7 +532,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                         : badge.rarity === 'uncommon'
                           ? 'border-green-500 bg-green-500/10'
                           : badge.rarity === 'rare'
-                            ? 'border-cyan-400 bg-cyan-400/10'
+                            ? 'border-accent bg-accent/10'
                             : badge.rarity === 'epic'
                               ? 'border-violet-400 bg-violet-400/10'
                               : 'border-yellow-500 bg-yellow-500/10'
@@ -550,7 +550,7 @@ export function UserProfileComponent({ user, isOwnProfile = false }: UserProfile
                           : badge.rarity === 'uncommon'
                             ? 'text-green-400 bg-green-500/20'
                             : badge.rarity === 'rare'
-                              ? 'text-accent bg-cyan-400/20'
+                              ? 'text-accent bg-accent/20'
                               : badge.rarity === 'epic'
                                 ? 'text-violet-400 bg-violet-400/20'
                                 : 'text-yellow-400 bg-yellow-500/20'

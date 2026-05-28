@@ -34,7 +34,7 @@ export default function PaperWalletPage() {
             <span className="badge-live"><span className="badge-live-dot" />Cold Storage</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-amber-400 via-yellow-400 to-cyan-400 bg-clip-text text-transparent">Paper Wallet</span>
+            <span className="bg-gradient-to-r from-amber-400 via-yellow-400 to-accent bg-clip-text text-transparent">Paper Wallet</span>
           </h1>
           <p className="text-white/50 text-lg mb-4">Generate cold storage backup wallets for maximum security.</p>
           <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">

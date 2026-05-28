@@ -68,7 +68,7 @@ export function VaultTab() {
       {/* Proof score */}
       <div className="bg-white/3 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-cyan-500/10 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center">
             <TrendingUp size={18} className="text-accent" />
           </div>
           <div>

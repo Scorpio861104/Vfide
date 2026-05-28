@@ -170,7 +170,7 @@ export function SwapTab() {
           type="button"
           onClick={prepareRoute}
           disabled={!canSubmit}
-          className="w-full py-2.5 rounded-lg bg-accent/20 text-accent font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-500/30 transition-colors"
+          className="w-full py-2.5 rounded-lg bg-accent/20 text-accent font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent/30 transition-colors"
         >
           Prepare Swap Route
         </button>
@@ -178,7 +178,7 @@ export function SwapTab() {
         {routeSummary && (
           <div
             role="status"
-            className="bg-cyan-500/10 border border-accent/30 rounded-lg p-3 text-xs text-accent"
+            className="bg-accent/10 border border-accent/30 rounded-lg p-3 text-xs text-accent"
           >
             {routeSummary}
           </div>

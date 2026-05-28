@@ -505,7 +505,7 @@ export function MultiStepForm({
         <div className="relative">
           <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+              className="h-full bg-gradient-to-r from-accent to-purple-500"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.3 }}
@@ -679,7 +679,7 @@ export function TagInput({
       <div
         className={`
           flex flex-wrap gap-2 p-3 bg-zinc-900/50 border-2 rounded-xl
-          transition-colors focus-within:border-cyan-500
+          transition-colors focus-within:border-accent
           ${error ? 'border-red-500' : 'border-zinc-700'}
         `}
         onClick={() => inputRef.current?.focus()}

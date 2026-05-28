@@ -39,7 +39,7 @@ export default function BuyPage() {
             <span className="badge-live"><span className="badge-live-dot" />On-Ramp</span>
           </div>
           <h1 className="text-4xl font-bold mb-2">
-            <span className="bg-gradient-to-r from-cyan-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent via-accent to-violet-400 bg-clip-text text-transparent">
               Buy Crypto
             </span>
           </h1>

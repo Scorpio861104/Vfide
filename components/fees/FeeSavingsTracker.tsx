@@ -80,7 +80,7 @@ export function FeeSavingsCard({ totalVolume, transactionCount, buyerFeeBps, cla
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-2xl p-6 ${className}`}
+      className={`bg-gradient-to-br from-emerald-500/10 to-accent/10 border border-emerald-500/20 rounded-2xl p-6 ${className}`}
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-2 rounded-xl bg-emerald-500/20">

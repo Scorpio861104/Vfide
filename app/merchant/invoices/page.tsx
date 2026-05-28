@@ -60,7 +60,7 @@ interface InvoiceSummary {
 const STATUS_META: Record<InvoiceStatus, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
   draft:     { label: 'Draft',     icon: FileText,      color: 'text-zinc-300',    bg: 'bg-zinc-700/30 border-zinc-600/30' },
   sent:      { label: 'Sent',      icon: Mail,          color: 'text-blue-300',    bg: 'bg-blue-500/10 border-blue-500/30' },
-  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-accent',    bg: 'bg-cyan-500/10 border-accent/30' },
+  viewed:    { label: 'Viewed',    icon: Clock,         color: 'text-accent',    bg: 'bg-accent/10 border-accent/30' },
   paid:      { label: 'Paid',      icon: CheckCircle2,  color: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/30' },
   overdue:   { label: 'Overdue',   icon: AlertTriangle, color: 'text-amber-300',   bg: 'bg-amber-500/10 border-amber-500/30' },
   cancelled: { label: 'Cancelled', icon: XCircle,       color: 'text-zinc-400',    bg: 'bg-zinc-800/40 border-zinc-700/40' },
@@ -145,7 +145,7 @@ export default function MerchantInvoicesPage() {
                   <span className="badge-live"><span className="badge-live-dot" />Invoicing</span>
                 </div>
                 <h1 className="text-4xl font-bold mb-2">
-                  <span className="bg-gradient-to-r from-cyan-400 via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
+                  <span className="bg-gradient-to-r from-accent via-emerald-400 to-blue-400 bg-clip-text text-transparent flex items-center gap-3">
                     <FileText size={32} className="text-accent" />Send invoices, get paid in VFIDE
                   </span>
                 </h1>
@@ -470,7 +470,7 @@ function CreateInvoiceModal({
           </div>
 
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={sendImmediately} onChange={(e) => setSendImmediately(e.target.checked)} className="accent-cyan-500" />
+            <input type="checkbox" checked={sendImmediately} onChange={(e) => setSendImmediately(e.target.checked)} className="accent-accent" />
             <span>Send immediately (otherwise saves as draft)</span>
           </label>
 

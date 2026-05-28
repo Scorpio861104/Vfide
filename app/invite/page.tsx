@@ -120,7 +120,7 @@ export default function InviteFriendsPage() {
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-full mb-4">
             <Users className="w-8 h-8 text-pink-400" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-400 via-purple-500 to-accent bg-clip-text text-transparent mb-4">
             Invite Friends
           </h1>
           <p className="text-gray-400 text-lg">

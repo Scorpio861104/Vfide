@@ -33,7 +33,7 @@ export function AddGuardianForm({
         </h3>
         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25">
+          className="px-4 py-2 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25">
           {showForm ? 'Cancel' : '+ Add Guardian'}
         </motion.button>
       </div>
@@ -66,7 +66,7 @@ export function AddGuardianForm({
             </div>
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={onAdd} disabled={!isValidAddress || isWritePending || !hasVault}
-              className="w-full py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="w-full py-3 bg-gradient-to-r from-accent to-blue-500 text-white rounded-xl font-bold shadow-lg shadow-accent/25 disabled:opacity-50 disabled:cursor-not-allowed">
               {isWritePending ? 'Processing...' : 'Add Guardian'}
             </motion.button>
           </motion.div>

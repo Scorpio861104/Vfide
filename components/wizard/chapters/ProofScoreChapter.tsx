@@ -82,7 +82,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           </ul>
         </div>
 
-        <div className="rounded-xl border border-accent/30 bg-cyan-500/5 p-4 text-sm text-accent">
+        <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm text-accent">
           <p className="font-semibold text-white">Your first payment</p>
           <p className="mt-1 text-white/80">
             Each completed payment, on-time loan repayment, and merchant endorsement nudges your
@@ -91,7 +91,7 @@ export function ProofScoreChapter({ onComplete, onSkip }: ProofScoreChapterProps
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/marketplace"
-              className="inline-flex items-center gap-1 rounded-lg bg-cyan-500/20 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-cyan-500/30"
+              className="inline-flex items-center gap-1 rounded-lg bg-accent/20 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/30"
             >
               Browse merchants <ExternalLink size={12} aria-hidden />
             </Link>

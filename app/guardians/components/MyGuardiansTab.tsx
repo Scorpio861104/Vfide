@@ -492,7 +492,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
       )}
 
       {guardianSetupComplete && hasPendingGuardianChange && (
-        <div className="rounded-2xl p-6 border border-accent/30 bg-cyan-500/10">
+        <div className="rounded-2xl p-6 border border-accent/30 bg-accent/10">
           <h3 className="text-lg font-bold text-white mb-2">Pending Guardian Change</h3>
           <p className="text-sm text-gray-200 mb-3">
             {pendingGuardianActive ? 'Add guardian' : 'Remove guardian'} {pendingGuardianAddress}. This proposal can be applied after the 24-hour timelock expires or cancelled before then.
@@ -615,7 +615,7 @@ export function MyGuardiansTab({ isConnected }: { isConnected: boolean }) {
                 className="p-4 bg-black/20 border border-white/10 rounded-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-cyan-500/20"><Users className="text-accent" size={20} /></div>
+                    <div className="p-2 rounded-full bg-accent/20"><Users className="text-accent" size={20} /></div>
                     <div>
                       <div className="text-white font-bold flex items-center gap-2">
                         Guardian {index + 1}

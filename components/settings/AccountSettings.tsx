@@ -135,7 +135,7 @@ export function AccountSettings() {
         {!editing ? (
           <button
             onClick={() => setEditing(true)}
-            className="px-4 py-2 bg-cyan-400 text-zinc-950 rounded-lg font-semibold hover:bg-cyan-400 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-accent text-zinc-950 rounded-lg font-semibold hover:bg-accent transition-colors flex items-center gap-2"
           >
             <Edit2 className="w-4 h-4" />
             Edit Profile

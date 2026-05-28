@@ -161,7 +161,7 @@ export function PayoutAddressManager({ currentPayoutAddress }: PayoutAddressMana
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           className={`p-3 rounded-lg border ${
-            canApply ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-cyan-500/10 border-accent/30'
+            canApply ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-accent/10 border-accent/30'
           }`}
         >
           <div className="flex items-start gap-2 mb-3">
@@ -213,7 +213,7 @@ export function PayoutAddressManager({ currentPayoutAddress }: PayoutAddressMana
         </div>
       )}
       {actionMessage && !actionError && (
-        <div className="p-2 rounded-lg bg-cyan-500/10 border border-accent/30 text-xs text-accent">
+        <div className="p-2 rounded-lg bg-accent/10 border border-accent/30 text-xs text-accent">
           {actionMessage}
         </div>
       )}

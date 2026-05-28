@@ -498,7 +498,7 @@ function GuardianAlertSection({ vault }: { vault: `0x${string}` }) {
 
       <button
         onClick={copyMessage}
-        className="w-full py-3 rounded-lg bg-cyan-600 hover:bg-accent text-white font-medium transition-colors flex items-center justify-center gap-2"
+        className="w-full py-3 rounded-lg bg-accent-dark hover:bg-accent text-white font-medium transition-colors flex items-center justify-center gap-2"
       >
         {copied ? <Check size={16} /> : <Copy size={16} />}
         {copied ? 'Copied' : 'Copy alert message'}

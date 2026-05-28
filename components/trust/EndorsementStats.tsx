@@ -74,7 +74,7 @@ export function EndorsementStats({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-500/30 rounded-lg p-3 text-center"
+        className="bg-gradient-to-br from-blue-900/20 to-accent/20 border border-blue-500/30 rounded-lg p-3 text-center"
       >
         <div className="flex items-center justify-center gap-1 mb-1">
           <Clock className={`${iconSize} text-blue-400`} />

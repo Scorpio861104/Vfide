@@ -235,7 +235,7 @@ export function OnboardingProgressBar() {
               <div key={step.id} className="flex items-center gap-1.5">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                   step.completed ? 'bg-emerald-500 text-white' :
-                  step.current ? 'bg-accent text-white ring-2 ring-cyan-500/30' :
+                  step.current ? 'bg-accent text-white ring-2 ring-accent/30' :
                   'bg-white/10 text-gray-500'
                 }`}>
                   {step.completed ? <Check size={12} /> : i + 1}

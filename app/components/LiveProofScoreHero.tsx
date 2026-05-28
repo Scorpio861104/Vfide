@@ -218,7 +218,7 @@ export function LiveProofScoreHero() {
           <div className="mb-2 flex items-center justify-between text-xs">
             <span className="text-gray-500">Drag to see how trust changes the fee</span>
             {!interacted && (
-              <span className="rounded-full bg-cyan-500/10 px-2 py-0.5 text-accent">
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-accent">
                 {reduce ? '' : 'auto-demo · '}drag to take over
               </span>
             )}
@@ -231,7 +231,7 @@ export function LiveProofScoreHero() {
             value={score}
             onChange={handleScoreChange}
             aria-label="Sample ProofScore"
-            className="w-full cursor-pointer accent-cyan-400"
+            className="w-full cursor-pointer accent-accent"
             style={{
               accentColor: tier.hex,
             }}
