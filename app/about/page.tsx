@@ -99,14 +99,30 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold mb-6">The problem we&apos;re solving</h2>
               <div className="grid md:grid-cols-3 gap-6 text-sm">
                 {[
-                  { stat: "2.6%+", label: "Average payment processor fee", sub: "Stripe, Square, PayPal — merchants absorb it or pass it on." },
-                  { stat: "$45B", label: "Lost to remittance fees annually", sub: "Families sending money home pay 6–10% just to move their own money." },
-                  { stat: "1.4B", label: "Adults without a bank account", sub: "Excluded not by choice — by geography, documentation, or poverty." },
+                  {
+                    stat: "2.9%–4.4%",
+                    label: "Average payment processor fee",
+                    sub: "What merchants actually pay Stripe, Square, and PayPal — absorbed by sellers or passed to buyers.",
+                    source: "Square 2025",
+                  },
+                  {
+                    stat: "$58B",
+                    label: "Lost to remittance fees annually",
+                    sub: "6.36% average fee on $905B in global remittances. Families pay to move their own money home.",
+                    source: "World Bank 2024",
+                  },
+                  {
+                    stat: "1.4B",
+                    label: "Adults without a bank account",
+                    sub: "Excluded not by choice — by geography, documentation, or poverty.",
+                    source: "World Bank Findex 2024",
+                  },
                 ].map((item) => (
                   <div key={item.stat} className="glass-card-premium p-6">
                     <div className="text-4xl font-black text-cyan-400 mb-2">{item.stat}</div>
                     <div className="font-semibold text-white mb-1">{item.label}</div>
-                    <div className="text-zinc-400">{item.sub}</div>
+                    <div className="text-zinc-400 mb-2">{item.sub}</div>
+                    <div className="text-xs text-zinc-600 font-medium">Source: {item.source}</div>
                   </div>
                 ))}
               </div>
