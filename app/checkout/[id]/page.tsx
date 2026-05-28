@@ -218,11 +218,24 @@ export default function CheckoutPage() {
       const hash = result.hash;
       setTxHash(hash);
 
-      await fetch(`/api/merchant/checkout/${paymentLinkId}`, {
+      const patchRes = await fetch(`/api/merchant/checkout/${paymentLinkId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'pay', tx_hash: hash }),
       });
+
+      // Even if backend recording fails the on-chain payment succeeded.
+      // We still show 'paid' so the user isn't alarmed, but we log a warning
+      // so the merchant can reconcile manually via the tx hash.
+      if (!patchRes.ok) {
+        const patchErr = await patchRes.json().catch(() => ({})) as { error?: string };
+        // Duplicate submission — backend already recorded this hash, treat as success.
+        if (patchRes.status === 409) {
+          // no-op: already in pending_confirmation
+        } else {
+          logger.warn('[checkout] invoice status update failed:', patchErr.error ?? patchRes.status, 'tx:', hash);
+        }
+      }
 
       if (typeof window !== 'undefined' && invoice.merchant_address) {
         const normalized = invoice.merchant_address.toLowerCase();

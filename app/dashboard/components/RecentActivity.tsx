@@ -22,6 +22,8 @@ export function RecentActivitySection() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchActivity = async () => {
       if (!address) {
         setActivities([]);
@@ -31,7 +33,7 @@ export function RecentActivitySection() {
 
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/activities/${address}`);
+        const response = await fetch(`/api/activities/${address}`, { signal: controller.signal });
         if (!response.ok) {
           return;
         }

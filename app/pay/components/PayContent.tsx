@@ -150,6 +150,7 @@ export function PayContent() {
   }, [paymentSource, signature, expiryFromQuery, qrExpiryInvalid, qrMessage, merchant]);
 
   useEffect(() => {
+    let cancelled = false;
     if (paymentSource !== 'qr') return;
     if (!['missing', 'invalid', 'expired'].includes(signatureState)) return;
 
@@ -186,7 +187,8 @@ export function PayContent() {
     }).catch(() => {
       // Best-effort telemetry: do not interrupt checkout UX.
     });
-  }, [
+    return () => { cancelled = true; };
+    }, [
     signatureState,
     paymentSource,
     merchant,

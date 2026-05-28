@@ -320,8 +320,10 @@ export function useRefundHistory(role: RefundRole, viewerAddress?: Address) {
   }, [portalConfigured, target, publicClient, portalAddress, role]);
 
   useEffect(() => {
+    let cancelled = false;
     void refetch();
-  }, [refetch]);
+    return () => { cancelled = true; };
+    }, [refetch]);
 
   // Watch for new events while the page is mounted.
   useWatchContractEvent({

@@ -26,13 +26,15 @@ export function StreamsTab() {
   const [filter, setFilter] = useState<'all' | 'sending' | 'receiving'>('all');
 
   useEffect(() => {
+    let cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/streams?address=${address}&role=all`)
       .then((r) => r.json())
       .then((data) => setStreams((data.streams ?? []).filter((s: Stream) => s.status === 'active')))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { cancelled = true; };
+    }, [address]);
 
   const filtered = streams.filter((s) => {
     if (filter === 'sending') return s.sender_address.toLowerCase() === address?.toLowerCase();

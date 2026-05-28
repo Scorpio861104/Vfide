@@ -13,12 +13,14 @@ export default function InvitePage() {
   const [status, setStatus] = useState<'loading' | 'valid' | 'invalid' | 'claimed'>('loading');
 
   useEffect(() => {
+    let cancelled = false;
     if (!code) { setStatus('invalid'); return; }
     fetch(`/api/users/invite?code=${code}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => setStatus(d?.valid ? 'valid' : 'invalid'))
+      .then(d => { if (cancelled) return; setStatus(d?.valid ? 'valid' : 'invalid'); })
       .catch(() => setStatus('invalid'));
-  }, [code]);
+    return () => { cancelled = true; };
+    }, [code]);
 
   return (
     <>

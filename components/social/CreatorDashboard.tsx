@@ -69,6 +69,7 @@ export function CreatorDashboard() {
   const { playSuccess, playNotification: _playNotification } = useTransactionSounds();
 
   useEffect(() => {
+    let cancelled = false;
     const loadStats = async () => {
       if (!address) {
         setStats({
@@ -174,7 +175,8 @@ export function CreatorDashboard() {
     };
 
     void loadStats();
-  }, [address]);
+    return () => { cancelled = true; };
+    }, [address]);
 
   const usdEarnings = (parseFloat(stats.totalEarnings) * ethPrice).toFixed(2);
 

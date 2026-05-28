@@ -25,12 +25,14 @@ export function SettingsTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     fetch(`/api/seer/analytics?windowHours=${window}`)
       .then((r) => r.json())
       .then(setAnalytics)
       .finally(() => setLoading(false));
-  }, [window]);
+    return () => { cancelled = true; };
+    }, [window]);
 
   return (
     <div className="space-y-5">

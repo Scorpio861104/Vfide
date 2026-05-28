@@ -31,13 +31,15 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     if (!productId) return;
     setLoading(true);
     fetch(`/api/merchant/products?id=${productId}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { setProduct(d?.product || null); setRelated(d?.related || []); setLoading(false); })
+      .then(d => { if (cancelled) return; setProduct(d?.product || null); setRelated(d?.related || []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [productId]);
+    return () => { cancelled = true; };
+    }, [productId]);
 
   if (loading) {
     return (

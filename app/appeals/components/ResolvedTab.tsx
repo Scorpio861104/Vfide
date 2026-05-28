@@ -26,6 +26,7 @@ export function ResolvedTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     const analyticsP = fetch('/api/seer/analytics?windowHours=720').then((r) => r.json()).catch(() => null);
     const ticketsP = address
@@ -38,7 +39,8 @@ export function ResolvedTab() {
         setResolved(all.filter((tk) => tk.status === 'resolved'));
       })
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { cancelled = true; };
+    }, [address]);
 
   return (
     <div className="space-y-6">

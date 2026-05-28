@@ -27,6 +27,7 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
   const [addedToCart, setAddedToCart] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     fetch(`/api/merchant/products?id=${productId}`)
       .then(r => r.ok ? r.json() : null)
@@ -38,7 +39,8 @@ export function ProductDetailModal({ productId, onClose, onAddToCart }: ProductD
         }
         setLoading(false);
       }).catch(() => setLoading(false));
-  }, [productId]);
+    return () => { cancelled = true; };
+    }, [productId]);
 
   const handleAddToCart = () => {
     if (!product) return;

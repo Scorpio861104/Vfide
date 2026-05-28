@@ -100,33 +100,41 @@ export function MyLoansTab() {
   // confirmation independently so that whichever flips first triggers
   // the right refresh.
   useEffect(() => {
+    let cancelled = false;
     if (cancelConfirmed && actingOn) {
       refetch();
       refetchStats();
       setActingOn(null);
     }
-  }, [cancelConfirmed, actingOn, refetch, refetchStats]);
+    return () => { cancelled = true; };
+    }, [cancelConfirmed, actingOn, refetch, refetchStats]);
   useEffect(() => {
+    let cancelled = false;
     if (repayConfirmed && actingOn) {
       refetch();
       refetchStats();
       setActingOn(null);
     }
-  }, [repayConfirmed, actingOn, refetch, refetchStats]);
+    return () => { cancelled = true; };
+    }, [repayConfirmed, actingOn, refetch, refetchStats]);
   useEffect(() => {
+    let cancelled = false;
     if (claimConfirmed && actingOn) {
       refetch();
       refetchStats();
       setActingOn(null);
     }
-  }, [claimConfirmed, actingOn, refetch, refetchStats]);
+    return () => { cancelled = true; };
+    }, [claimConfirmed, actingOn, refetch, refetchStats]);
   useEffect(() => {
+    let cancelled = false;
     if (signConfirmed && actingOn) {
       refetch();
       refetchStats();
       setActingOn(null);
     }
-  }, [signConfirmed, actingOn, refetch, refetchStats]);
+    return () => { cancelled = true; };
+    }, [signConfirmed, actingOn, refetch, refetchStats]);
 
   if (!address) {
     return (

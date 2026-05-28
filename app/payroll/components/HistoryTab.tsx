@@ -23,6 +23,7 @@ export function HistoryTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/streams?address=${address}&role=all`)
@@ -32,7 +33,8 @@ export function HistoryTab() {
         setStreams(all.filter((s) => s.status !== 'active'));
       })
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (

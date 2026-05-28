@@ -29,12 +29,14 @@ export function ProposalsTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     fetch('/api/proposals?limit=50')
       .then((r) => r.json())
       .then((data) => setProposals(data.proposals ?? []))
       .catch(() => setError('Failed to load proposals'))
       .finally(() => setLoading(false));
-  }, []);
+    return () => { cancelled = true; };
+    }, []);
 
   if (loading) {
     return (

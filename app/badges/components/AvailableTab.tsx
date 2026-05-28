@@ -23,12 +23,14 @@ export function AvailableTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     fetch('/api/badges')
       .then((r) => r.json())
       .then((data) => setBadges(data.badges ?? []))
       .catch(() => setError('Failed to load available badges'))
       .finally(() => setLoading(false));
-  }, []);
+    return () => { cancelled = true; };
+    }, []);
 
   if (loading) {
     return (

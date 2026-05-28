@@ -196,8 +196,10 @@ export function useEscrowList(
   }, [escrowConfigured, target, publicClient, escrowAddress, role, options.fallbackToIteration]);
 
   useEffect(() => {
+    let cancelled = false;
     void refetch();
-  }, [refetch]);
+    return () => { cancelled = true; };
+    }, [refetch]);
 
   return {
     escrows,

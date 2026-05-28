@@ -99,7 +99,7 @@ export function useNotifications() {
 
       const prefs = safeLocalStorage.getItem(PREFS_KEY);
       if (prefs) {
-        setPreferences({ ...DEFAULT_PREFS, ...JSON.parse(prefs) });
+        try { setPreferences({ ...DEFAULT_PREFS, ...JSON.parse(prefs) }); } catch { /* corrupted prefs — use defaults */ }
       }
     } catch {
       // Ignore storage errors

@@ -23,13 +23,15 @@ export function GrowthTab() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     if (!address) return;
     setLoading(true);
     fetch(`/api/activities?userAddress=${address}&limit=200`)
       .then((r) => r.json())
       .then((data) => setActivities(data.activities ?? []))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { cancelled = true; };
+    }, [address]);
 
   const weeklyBuckets = activities.reduce<Record<string, number>>((acc, a) => {
     const label = getWeekLabel(new Date(a.created_at));

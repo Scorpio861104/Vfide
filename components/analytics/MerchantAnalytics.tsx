@@ -34,12 +34,14 @@ export function MerchantAnalytics({ merchantAddress }: MerchantAnalyticsProps) {
   const [period, setPeriod] = useState<'7d' | '30d' | '90d'>('30d');
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     fetch(`/api/merchant/analytics?address=${merchantAddress}&period=${period}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { setData(d); setLoading(false); })
+      .then(d => { if (cancelled) return; setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [merchantAddress, period]);
+    return () => { cancelled = true; };
+    }, [merchantAddress, period]);
 
   const exportRows = useMemo(() => {
     if (!data) return [];

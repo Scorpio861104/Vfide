@@ -126,6 +126,7 @@ function SocialHubPageInner() {
   const [postsLoading, setPostsLoading] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     if (!isConnected || mainTab !== 'feed') { setPosts([]); setPostsLoading(false); return; }
     // UX-4: Set loading=true before fetch so the count shows skeleton not "0"
     setPostsLoading(true);
@@ -134,7 +135,8 @@ function SocialHubPageInner() {
       .then((d) => setPosts(Array.isArray(d.posts) ? d.posts : []))
       .catch(() => setPosts([]))
       .finally(() => setPostsLoading(false));
-  }, [isConnected, mainTab]);
+    return () => { cancelled = true; };
+    }, [isConnected, mainTab]);
 
   const filteredPosts = useMemo(() => {
     if (feedFilter === 'following') return posts.filter((p) => p.isFollowing);

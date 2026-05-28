@@ -30,6 +30,7 @@ export default function StoriesContent() {
   const [_isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchStories = async () => {
       setIsLoading(true);
       try {
@@ -45,7 +46,8 @@ export default function StoriesContent() {
       }
     };
     fetchStories();
-  }, []);
+    return () => { cancelled = true; };
+    }, []);
 
   useEffect(() => {
     if (!address) return;

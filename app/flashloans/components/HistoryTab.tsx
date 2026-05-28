@@ -23,6 +23,7 @@ export function HistoryTab() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     if (!address) return;
     setLoading(true);
     setError(null);
@@ -31,7 +32,8 @@ export function HistoryTab() {
       .then((data) => setLanes(data.lanes ?? []))
       .catch(() => setError('Failed to load loan history'))
       .finally(() => setLoading(false));
-  }, [address]);
+    return () => { cancelled = true; };
+    }, [address]);
 
   if (!address) {
     return (

@@ -46,6 +46,7 @@ export function MerchantPOS() {
 
   // Fetch products from DB on mount
   useEffect(() => {
+    let cancelled = false;
     if (!address) return
     fetch(`/api/merchant/products?merchant=${encodeURIComponent(address)}`)
       .then(r => r.ok ? r.json() : null)
@@ -70,7 +71,8 @@ export function MerchantPOS() {
         setProductsLoaded(true)
       })
       .catch(() => setProductsLoaded(true))
-  }, [address, productsLoaded])
+    return () => { cancelled = true; };
+    }, [address, productsLoaded])
   
   // Cart
   const [cart, setCart] = useState<CartItem[]>([])

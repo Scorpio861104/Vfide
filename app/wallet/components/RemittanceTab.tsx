@@ -32,8 +32,12 @@ export function RemittanceTab() {
   const [amount, setAmount] = useState('100');
   const [selectedCorridor, setSelectedCorridor] = useState(0);
 
-  const buyerFee = Math.max(0.25, parseFloat(amount || '0') * 0.025);
-  const netAmount = parseFloat(amount || '0') - buyerFee;
+  // Protocol fee is hardcoded to 0% (MerchantPortal.protocolFeeBps = 0).
+  // Recipient receives the full sent amount. Any burn fee is determined by
+  // the sender's ProofScore and settled separately in VFIDE, not deducted here.
+  const parsedAmount = parseFloat(amount || '0') || 0;
+  const buyerFee = 0;
+  const netAmount = parsedAmount;
 
   return (
     <div className="max-w-3xl mx-auto py-6 space-y-8">
@@ -85,8 +89,8 @@ export function RemittanceTab() {
             <div className="text-white font-bold">0.00%</div>
           </div>
           <div className="bg-zinc-800/50 rounded-xl p-3">
-            <div className="text-zinc-500 text-xs mb-1">Corridor fee</div>
-            <div className="text-white font-bold">${buyerFee.toFixed(2)}</div>
+            <div className="text-zinc-500 text-xs mb-1">Network gas</div>
+            <div className="text-white font-bold">~$0.01</div>
           </div>
           <div className="bg-zinc-800/50 rounded-xl p-3">
             <div className="text-zinc-500 text-xs mb-1">Arrives</div>

@@ -119,12 +119,14 @@ export function SubscriptionManager({
       const amountWei = parseUnits(tier.price, 18);
       const intervalSeconds = BigInt(tier.duration * 86400);
 
-      // Step 1: Approve SubscriptionManager to pull VFIDE for recurring payments
+      // Step 1: Approve SubscriptionManager for exactly one subscription payment.
+      // Granting maxUint256 would leave an open infinite allowance if step 2 fails.
+      // The contract pulls amountWei per interval; we grant exactly that per call.
       const approveHash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.VFIDEToken,
         abi: VFIDETokenABI,
         functionName: 'approve',
-        args: [subscriptionManagerAddress!, maxUint256],
+        args: [subscriptionManagerAddress!, amountWei],
       });
       if (publicClient) {
         await publicClient.waitForTransactionReceipt({ hash: approveHash });

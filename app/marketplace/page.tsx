@@ -23,12 +23,14 @@ export default function MarketplacePage() {
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     fetch(`/api/merchant/products?q=${query}&status=active`)
       .then(r => r.ok ? r.json() : { products: [] })
-      .then(d => { setProducts(d.products || []); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, [query]);
+      .then(d => { if (!cancelled) { setProducts(d.products || []); setLoading(false); } })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+    }, [query]);
 
   const toggleWishlist = (id: string) => {
     setWishlist(prev => {

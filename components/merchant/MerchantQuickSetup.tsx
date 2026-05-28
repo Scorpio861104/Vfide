@@ -137,11 +137,17 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
         }
 
         const images = imageUrl ? [{ url: imageUrl, alt: product.name }] : [];
-        await fetch('/api/merchant/products', {
+        const productRes = await fetch('/api/merchant/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: product.name.trim(), price: parseFloat(product.price), description: product.description.trim() || undefined, product_type: 'physical', images, status: 'active' }),
         });
+        if (!productRes.ok) {
+          const productData = await productRes.json().catch(() => ({}));
+          toast.error((productData as { error?: string }).error || `Failed to save product: ${product.name}`);
+          setIsSubmitting(false);
+          return;
+        }
       }
 
       setCompletedSlug(slug);
@@ -149,7 +155,7 @@ export function MerchantQuickSetup({ onComplete }: { onComplete?: (slug: string)
       toast.success('Your store is live!');
       onComplete?.(slug);
     } catch { toast.error('Something went wrong. Please try again.'); }
-    setIsSubmitting(false);
+    finally { setIsSubmitting(false); }
   };
 
   // Show a gate if score is known and below MIN_MERCHANT

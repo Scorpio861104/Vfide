@@ -103,14 +103,14 @@ export default function DashboardPage() {
                   <TrendingUp size={15} className="text-cyan-400" />
                   <div>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ProofScore</p>
-                    <p className="text-lg font-bold text-glow-cyan leading-none">{proofScore!.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-glow-cyan leading-none">{(proofScore ?? 0).toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
                   <Zap size={15} className="text-amber-400" />
                   <div>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider">Fee Rate</p>
-                    <p className="text-lg font-bold text-amber-400 leading-none">{(feeRate! / 100).toFixed(2)}%</p>
+                    <p className="text-lg font-bold text-amber-400 leading-none">{((feeRate ?? 381) / 100).toFixed(2)}%</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
@@ -136,9 +136,9 @@ export default function DashboardPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="analytics-card p-6 flex flex-col items-center"
             >
-              <ProofScoreRing score={proofScore!} size={160} />
+              <ProofScoreRing score={proofScore ?? 0} size={160} />
               <div className="w-full mt-5">
-                <ProofScoreTierProgress score={proofScore!} />
+                <ProofScoreTierProgress score={proofScore ?? 0} />
               </div>
             </m.div>
 
