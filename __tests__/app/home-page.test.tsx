@@ -121,10 +121,9 @@ describe('Home page pathways', () => {
   it('renders hero content and primary actions', () => {
     renderHomePage();
 
-    // Clarity sweep: H1 was rewritten from "Keep what you earn" to a
-    // category-naming headline. The two-door CTA now leads with Shop
-    // and Sell rather than two merchant-targeted CTAs.
-    expect(screen.getByRole('heading', { name: /Payments and commerce/i })).toBeTruthy();
+    // Copy sweep: H1 leads with the permanent zero-fee fact.
+    // The two-door CTA (Shop / Sell) is unchanged.
+    expect(screen.getByRole('heading', { name: /The merchant fee is/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Sell on VFIDE/i }).getAttribute('href')).toBe('/merchant/setup');
     expect(screen.getByRole('link', { name: /Shop on VFIDE/i }).getAttribute('href')).toBe('/marketplace');
   });

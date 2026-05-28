@@ -79,7 +79,8 @@ const FEATURES = [
 const TRUST_POINTS = [
   'Non-custodial: your keys, your coins',
   'Open-source contracts on Base',
-  'Guardian-assisted recovery if you lose access',
+  'Guardian = a trusted contact who helps rotate wallet access if you lose it (never holds your funds)',
+  'Sanctum = 20% of every fee flows to a protocol-level charity fund, disbursed on-chain',
   'Every transaction has an on-chain audit trail',
 ];
 
@@ -131,28 +132,23 @@ export default function Home() {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="badge-live mb-6 w-fit"
                 >
-                  Self-custodial commerce · Now on Base
+                  No Stripe. No PayPal. No fees for sellers — ever.
                 </motion.div>
 
-                {/*
-                  HEADLINE FIX (clarity sweep):
-                  The previous H1 read "Keep what you earn" with no
-                  context — beautiful but didn't tell a first-time
-                  visitor what VFIDE is. The new H1 names the product
-                  category in five words, and the subhead is the
-                  one-sentence "what is it" answer agreed with product.
-                */}
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-5 leading-[1.05] tracking-tight">
-                  Payments and commerce,{' '}
-                  <span className="gradient-text-hero">on your terms</span>
+                  The merchant fee is{' '}
+                  <span className="gradient-text-hero">zero. Permanently.</span>
                 </h1>
 
                 <p className="text-lg sm:text-xl text-zinc-300 mb-3 max-w-md leading-relaxed">
-                  VFIDE is a self-custodial payments and commerce protocol on Base.
+                  Not a promotion. Not a limited offer. Hardcoded into the contract —
+                  no DAO can change it, no update can override it.
                 </p>
                 <p className="text-base text-zinc-400 mb-8 max-w-md leading-relaxed">
-                  Zero merchant fees. You hold your keys. A reputation that
-                  lowers your fees the more you use it.
+                  Buyers pay a small trust fee that drops as their{' '}
+                  <span className="text-cyan-400 font-semibold">ProofScore</span>{' '}
+                  (on-chain reputation) grows — down to 0.25% at the top tier.
+                  You hold your own keys. No KYC for basic use.
                 </p>
 
                 {/*
@@ -415,12 +411,13 @@ export default function Home() {
                 Zero fees. Open source. Self-custody.
               </div>
               <h2 className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight tracking-tight">
-                Ready to own your{' '}
-                <span className="gradient-text-hero">payments?</span>
+                Sell anything.{' '}
+                <span className="gradient-text-hero">Keep everything.</span>
               </h2>
               <p className="text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
-                Join thousands building the future of decentralized commerce.
-                Your ProofScore starts now.
+                The protocol doesn&apos;t take a cut from sellers. It never will —
+                that&apos;s written into the contract, not a policy.
+                Your ProofScore starts building the moment you connect.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link
