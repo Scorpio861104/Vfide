@@ -43,9 +43,17 @@ export function PayContent() {
   const legacyMerchant = searchParams.get("to");
   const merchant = searchParams.get("merchant") || legacyMerchant || "";
   const requestedAmount = (searchParams.get("amount") || "").trim();
+  // For QR payments: orderId MUST match what the merchant signed exactly.
+  // MerchantPOS requires orderId before signing; PaymentQR now auto-generates one.
+  // If orderId is missing from a QR URL, the merchant signed with '' — use ''.
+  // For non-QR (direct checkout), generate a stable fallback.
   const [orderId] = useState(() => {
     const fromQuery = searchParams.get("orderId") || searchParams.get("reference");
-    return fromQuery?.trim() ? fromQuery.trim() : `QR-${Math.floor(Date.now() / 1000)}`;
+    if (fromQuery?.trim()) return fromQuery.trim();
+    const src = searchParams.get("source") || "";
+    // QR payments: empty orderId → match the signature (signed with '')
+    if (src === "qr") return "";
+    return `CHK-${Math.floor(Date.now() / 1000)}`;
   });
   const paymentSource = searchParams.get("source") || "checkout";
   const signature = (searchParams.get('sig') || '').trim();

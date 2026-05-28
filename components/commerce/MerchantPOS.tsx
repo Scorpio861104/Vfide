@@ -1027,6 +1027,11 @@ export function MerchantPOS() {
                 <div className="flex justify-between text-zinc-100/60">
                   <span>QR Status</span>
                   <span className="font-bold text-zinc-100">{qrSignature && qrExpiresAt ? 'Signed' : 'Not signed'}</span>
+                  {qrSignature && qrExpiresAt && (
+                    <span className="text-xs text-amber-300 ml-2">
+                      expires {new Date(qrExpiresAt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
                 </div>
                 <div className="flex justify-between text-zinc-100/60">
                   <span>VFIDE Fee</span>
