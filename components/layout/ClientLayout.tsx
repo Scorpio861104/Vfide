@@ -11,31 +11,15 @@ import { RealtimeProvider, UserProvider } from '@/lib/data';
 import { WizardMount } from '@/components/wizard/WizardMount';
 import { WizardStateProvider } from '@/components/wizard/useWizardState';
 import { MonumentBackdrop } from '@/app/components/MonumentBackdrop';
+import { TIER_HEX as TIER_HEX_SHARED, scoreToTierName as scoreToTierNameShared } from '@/lib/proofScore/tiers';
 import { useProofScore } from '@/hooks/useProofScore';
 import { MonumentOverrideProvider, useMonumentOverride } from './MonumentOverrideContext';
 
 // Routes where the fixed monument should be hidden — they manage their own variants.
 const MONUMENT_BLACKLIST = new Set(['/']);
 
-const TIER_HEX: Record<string, string> = {
-  Risky:      '#FF4444',
-  'Low Trust':'#FFA500',
-  Neutral:    '#17E8F0',
-  Governance: '#60A5FA',
-  Trusted:    '#34D399',
-  Council:    '#A78BFA',
-  Elite:      '#00FF88',
-};
-
-function scoreToTierName(score: number): string {
-  if (score >= 8000) return 'Elite';
-  if (score >= 7000) return 'Council';
-  if (score >= 5600) return 'Trusted';
-  if (score >= 5400) return 'Governance';
-  if (score >= 5000) return 'Neutral';
-  if (score >= 3500) return 'Low Trust';
-  return 'Risky';
-}
+const TIER_HEX = TIER_HEX_SHARED;
+const scoreToTierName = scoreToTierNameShared;
 
 /**
  * GlobalMonument — viewport-fixed MonumentBackdrop wired to:

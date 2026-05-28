@@ -93,7 +93,11 @@ const loadConfig = (): BiometricConfig => {
       };
     }
 
-    let parsed; try { parsed = JSON.parse(stored); } catch { localStorage.removeItem(STORAGE_KEY); return; }
+    let parsed;
+    try { parsed = JSON.parse(stored); } catch {
+      localStorage.removeItem(SECURITY_STORAGE_KEYS.biometric);
+      return { enabled: false, credentials: [], platformSupport: { webauthn: false, fingerprint: false, faceId: false, hardwareKey: false } };
+    }
     return {
       ...parsed,
       credentials: parsed.credentials.map((c: { id: string; createdAt: string; lastUsed: string | null; name: string }) => ({

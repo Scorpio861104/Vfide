@@ -233,7 +233,7 @@ export default function CheckoutPage() {
         if (patchRes.status === 409) {
           // no-op: already in pending_confirmation
         } else {
-          logger.warn('[checkout] invoice status update failed:', patchErr.error ?? patchRes.status, 'tx:', hash);
+          logger.warn(`[checkout] invoice status update failed: ${patchErr.error ?? patchRes.status} tx: ${hash}`);
         }
       }
 

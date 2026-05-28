@@ -12,6 +12,7 @@ import { FeeSavingsCard } from '@/components/fees';
 import { OnboardingProgressBar } from '@/components/onboarding';
 import { NonCustodialNotice } from '@/components/compliance';
 import { useProofScore } from '@/hooks/useProofScore';
+import { getTier } from '@/lib/proofScore/tiers';
 import { OverviewTab } from './components/OverviewTab';
 import { BadgesTab } from './components/BadgesTab';
 import { ScoreSimulatorTab } from './components/ScoreSimulatorTab';
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const { address } = useAccount();
   const { score: proofScore, burnFee: feeRate, isDisconnected: _scoreDisconnected } = useProofScore();
+  const tier = getTier(proofScore ?? 5000);
   const [txCount, setTxCount] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
 
@@ -60,12 +62,16 @@ export default function DashboardPage() {
       <OnboardingProgressBar />
 
       <div className="min-h-screen bg-zinc-950 md:pt-[3.5rem] relative">
-        {/* Ambient orbs */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07]"
-            style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
-          <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05]"
-            style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
+        {/* Ambient orbs — colour follows ProofScore tier */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          <div
+            className="absolute -top-40 -left-20 w-[600px] h-[600px] rounded-full opacity-[0.07] transition-colors duration-[1000ms]"
+            style={{ background: `radial-gradient(circle, ${tier.hex} 0%, transparent 70%)` }}
+          />
+          <div
+            className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.05] transition-colors duration-[1000ms]"
+            style={{ background: `radial-gradient(circle, ${tier.hex} 0%, transparent 70%)` }}
+          />
         </div>
         <div className="grid-pattern pointer-events-none absolute inset-0 opacity-20" />
         {/* ── Dashboard hero header ── */}
@@ -78,8 +84,8 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <div className="badge-live mb-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> Dashboard
+                  <div className="badge-live mb-2" style={{ color: tier.hex }}>
+                    <span className="w-1.5 h-1.5 rounded-full animate-pulse transition-colors duration-[1000ms]" style={{ backgroundColor: tier.hex }} /> Dashboard
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
                     Welcome back
@@ -100,10 +106,10 @@ export default function DashboardPage() {
                 className="flex items-center gap-3 flex-wrap"
               >
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
-                  <TrendingUp size={15} className="text-cyan-400" />
+                  <TrendingUp size={15} className="transition-colors duration-[1000ms]" style={{ color: tier.hex }} />
                   <div>
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider">ProofScore</p>
-                    <p className="text-lg font-bold text-glow-cyan leading-none">{(proofScore ?? 0).toLocaleString()}</p>
+                    <p className="text-lg font-bold leading-none transition-colors duration-[1000ms]" style={{ color: tier.hex }}>{(proofScore ?? 0).toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="glass-card-premium px-4 py-2.5 flex items-center gap-2.5">
